@@ -18,14 +18,14 @@ use CG\Web as w;
  */
 
 require_once __DIR__ . '/rweb-subs.inc';
-require_once __DIR__ . '/../cg-backend.inc';
+require_once R_ROOT . '/cg-backend.inc';
 //include_once __DIR__ . '/rweb-txs.inc';
 
 define('UPLOAD_DIR', dirname($_SERVER['DOCUMENT_ROOT']) . '/public_ftp/incoming');
 
 /**
  * Show a form called from a form linked to in an email or during signup, without signing in.
- * For example, /do/doEvents~NEWAAA~abcd123~ (in MailChimp: /do/doEvents~*|ID|*~*|ECODE|*~)
+ * For example, /do/doEvents~<code> (in MailChimp: /do/doEvents~*|CODE|*)
  */
 function formProx($form, &$sta, $args) {
   extract(just('page', $args0 = $args));
@@ -54,8 +54,7 @@ function cttyList() {
   asort($cttys);
   unset($cttys[$seed = r\serverUid()]);
   $cttys[$seed] = t('Seedpack (no community yet)'); // last
-/**/ echo json_encode($cttys);
-  exit();
+  return exitJust(u\jsonize($cttys));
 }
 
 /**
@@ -76,8 +75,7 @@ function inviteExample() {
   global $mya;
   $s = file_get_contents("$rUrl/templates/invite.html");
   $note = str_replace("\n", '', t('invite default', 'name', ''));
-/**/  echo tr($s, '_personalNote signed fullName phone CODE', $note, u\fmtDate($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), '');
-  exit();
+  return exitJust(tr($s, '_personalNote signed fullName phone CODE', $note, u\fmtDate($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), ''));
 }
 
 function formVideos($form, &$sta) {
@@ -96,18 +94,17 @@ function formUser($form, &$sta) {return \user_login($form, $sta);} // called fro
  * @param bool $show: <show the risk calculation>
  */
 function formRerisk($form, &$sta, $type = '', $id = '', $show = FALSE) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   global $showRiskCalc; 
   
   $showRiskCalc = '';
 
   if ($type == 'acct') {
-    k\acctRisk1($id, getv('riskThresholds', [0,0,0,0]), $risk, $calc);
+    k\acctRisk1($uid = $id, getv('riskThresholds', [0,0,0,0]), $risk, $calc);
     $w = ''; $m = K_RED;
   } elseif ($type == 'tx') {
-    $x = r\x($id);
-    k\txRisk1($x->xid, $risk, $calc);
-    $w = u\fmtAmt($x->amount);
+    k\txRisk1($xid = $id, $risk, $calc);
+    $w = u\fmtAmt(db\get('amt', 'txs', compact('xid')));
     $m = t('@K_RED / @K_THRESHOLD');
   }
 
@@ -123,30 +120,6 @@ EOF;
   say($showRiskCalc);
   w\go("sadmin/$type-info/$id", t('info saved'));
 }
-
-/**
- * Output an account photo or thumbnail if the caller is authorized.
- * @param string $page: account-photo or account-thumb
- * @param string $args: other parameters, including:
- *   $qid: account letter-code
- *   $orig: show the original photo before it was cropped
- * @return the photo or thumb if the account is a company or the cardCode is valid. Otherwise a generic picture.
- */
-function formAccountPhoto($form, &$sta, $page = '', $args = '') {
-  global $mya;
-  extract(just('qid orig', $args, NULL));
-  list($zot, $type) = explode('-', $page);
-
-  $a = nn($qid) ? r\acct($qid, $mya ? $mya->agentId : '') : ($mya ?: FALSE);
-  if ($a and ($a->co or $a->can(B_READ))) $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
-
-  $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
-  header("Content-type: image/jpeg");
-/**/  echo nn($photo) ?: \file_get_contents(R_ROOT . "/images/icons/$imgFlnm");
-  return exit();
-}
-
-//function formIcon($orig = FALSE) {return memberPhoto(@r\acct()->mainQid, TRUE, $orig);} // Output a small version of the current account's photo.
 
 /**
  * Handle the uploaded photo: crop, resize, rotate, and save.
@@ -167,7 +140,7 @@ function photoUpload($uid = '', $sid = '') {
   $mya = r\acct($uid);
   $tempFilename = $mya->tempPhotoFilename;
   $quality = $mya->co ? 100 : 50; // jpeg compression/quality (0=worst quality, 100=best quality)
-  if ($mya->co) foreach (ray('cropH cropW') as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
+  if ($mya->co) foreach (ray('w h x1 y1 cropH cropW') as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
 
   if ($recrop = u\starts($url, 'http')) $url = $tempFilename; // picture is already saved and is just being recropped
 
@@ -183,7 +156,7 @@ function photoUpload($uid = '', $sid = '') {
   $func = 'imagecreatefrom' . ($ext == 'bmp' ? 'wbmp' : $ext);
 ///   flog(compact(ray('uid sid f0 f params params2 sessionVars quality cropH cropW what actualW actualH type zotAttr ext func')));
   if (!$img0 = $func($url)) return w\photoRet(t('image creation error'));
-//  if (!$mya->co)
+
   try {
     if (!$recrop) imagejpeg($img0, $tempFilename, 100); // save for a few days in case we have to recrop
   } catch (\Exception $e) {
@@ -199,7 +172,6 @@ function photoUpload($uid = '', $sid = '') {
     return w\photoRet(t('Your photo could not be uploaded (%err). Try a smaller version or <%a>email it</a> to us?', ray('_err _a', $e->getMessage(), w\emailtag(NULL, t('Here is a photo for my %PROJECT card')))));
   }
   
-//  return w\photoRet(str_replace(DRUPAL_ROOT, BASE_URL, $tempFilename), 'success');
   return w\photoRet("$base_url/account-photo", 'success');
 }
 
@@ -210,28 +182,26 @@ function photoUpload($uid = '', $sid = '') {
 function formAccounts($form, &$sta) {
   global $base_url, $rUrl, $mya;
 
-  if (!$mya) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
+  if (!$mya) return [];
   $myid = $mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
-  if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
+  if ($mya->anyAdmin) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
     $submit = submit('Go Account!!');
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
     // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
     js('x/typeahead.bundle.min');
     jsx('new-acct');
-    
     return compact('accounts');
   }
   
   if (!$accounts = be\accountChoices()) return [];
-//  if (!in_array($myid, @$accounts) and $mya->can()) array_splice($accounts, 1, 0, $myid); // admin or cadmin
   $choices = $ltrs = [];
 
   foreach ($accounts as $uid => $choice) {
     $a = r\acct($uid);
-    if (!$a and isDEV) continue; // ignore this if testing -- "current" account has been undermined is all
-    if ($mya->cAdmin2 or $mya->isAdmin2) {
+    if (!$a and isDEV) continue; // ignore missing account if testing -- "current" account has been undermined is all
+    if ($mya->anyAdmin) {
       $qid = $a->mainQid;
       if ($mya->cAdmin2 and !$mya->admin) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
       if ($a->isCtty) { // show communities in a separate category
@@ -260,17 +230,10 @@ function formAccounts($form, &$sta) {
   return compact('accounts');
 }
 
-function formAccounts_validate($form, &$sta) {
-  extract(just('newAcct accounts', $sta['input']));
-//  t('Type part of name, phone, email, record ID, or qid.')
-  if (mb_strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
-  if (!$a = w\whois($newAcct, 'newAcct', [], t('You are already in that account.'), FALSE)) return FALSE;
-  u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]
-}
-
 function formAccounts_submit($form, &$sta) {
-  extract(just('a', $sta['input']));
-  changeWho('', 'acct=' . $a->id, $sta);
+//  extract(just('a', $sta['input']));
+  $uid = whoId($sta);
+  changeWho('', 'acct=' . $uid, $sta);
 }
 
 /**
@@ -279,17 +242,19 @@ function formAccounts_submit($form, &$sta) {
  */
 function changeWho($zot, $args = '', &$sta = '') {
   global $mya;
-  extract(just('acct page', $args));
-
-  $page = str_replace(',', '/', nn($page)) ?: 'summary'; // go to summary, unless admin
+  extract(just('acct page', $args, NULL));
+  
+  if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
+  $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
 
   if (nn($acct) == 'signout') return signout();
-  if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
-  if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
-  $mya = r\acct($acct, $mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
-  if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
+  if (!$mya = r\acct($acct, $agt = $mya->agentId)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya, $agt))); // tentative new account (agent is the same, so adminishness is the same)
+  if (!$mya->can()) {
+    if (!$mya->cAdmin2 and !$mya->isAdmin2) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
+    if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+  }
   r\setAcct($mya, $sta); // set new current account
-
   return w\go($page);
 }
 
@@ -298,6 +263,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
+  global $mya;
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
@@ -308,7 +274,9 @@ function signout($continue = FALSE) {
     db\del('sessions', 'ssid', $sid);
     session_unset();
   }
-  global $mya; $mya = NULL;
+  
+  if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
+  r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
@@ -323,9 +291,9 @@ function formSystemDown($form, &$sta) {return array('zot' => item(t('system down
  * Pay or charge a nonmember (continued from Charge page)
  */
 function formTxNonmember($form, &$sta, $args = '') {
-  if (!$args or !$info = unserialize(u\deurlify($args))) return w\go('', t('Url Error'), 'err');
+  if (!$args or !$info = unserialize(u\deurlify($args))) return w\softErr(t('Url Error'));
   extract($info = just('who amount goods purpose', $info));
-  if (count($info) != 4) return w\go('', t('Url Error'), 'err');
+  if (count($info) != 4) return w\softErr(t('Url Error'));
   
   $title = t('Invoice a Non-member');
   $subtext = t('Sending an invoice to %email (%amount for %purpose)', 'email amount purpose', $who, u\fmtAmt($amount), $purpose);
@@ -352,7 +320,7 @@ function formEmpty($form, &$sta = '', $args = '') {
   if ($form and !is_array($form)) say(plain($form));
   extract(just('say err msg', $args, NULL));
   
-  $title = t('Miscellaneous'); // this is suppressed with CSS
+  $title = NBSP;
   if ($msg) say(plain($msg), $err);
   $subtext = $say ? t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"') : NULL;
   return cgform(compact(ray('title subtext')));
@@ -361,19 +329,19 @@ function formEmpty($form, &$sta = '', $args = '') {
 /**
  * Return a one-use auth code
  */
-function authcode() {
-  extract($args = just('company cocode', $_GET, NULL));
-  if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
-  $now = now();
-  exit(substr(u\cry('P', u\randomString(1) . serialize(compact('cocode', 'now'))), 2));
+function authcode($args = '', $exit = TRUE) {
+  extract($args = just('company cocode', $args ?: $_GET, NULL));
+  if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) return exitJust(t('bad company account ID or cocode'));
+  $ray = ray('cocode now r', $cocode, now(), u\randomString(1));
+  if ($exit) exitRay($ray, TRUE); else return u\cryRay($ray);
 }
 
 /**
  * Certify that a business is indeed a Common Good participant.
  */
 function formCgBiz($form, &$sta, $id) {
-  if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
-  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about Common Good, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
+  if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\softErr(t('That is not a %PROJECT Business.'));
+  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
 }
 
 /**
@@ -440,7 +408,7 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
 function formShowDeposits($form, &$sta) {
   global $mya;
   if (!$mya or $mya->id != CGID) return w\softErr(t('You are not authorized to view that page.'));
-  include_once __DIR__ . '/../admin/admin-forms.inc';
+  include_once R_ROOT . '/admin/admin-forms.inc';
   return w\formDeposits($form, $sta);
 }
 
@@ -467,13 +435,12 @@ function chartData($args = '') {
   
   $data = showAllCharts(nn($ctty, 0));
 /**/  if (!nn($data)) die(t('No such chart data.')); // die not u\FAIL or u\EXPECT
-/**/  echo $data;
-  exit();
+  return exitJust($data);
 }
 
 function showAllCharts($ctty = 0) {
   foreach (ray('days weeks months quarters years') as $period) $res[$period[0]] = showCharts(nn($ctty, 0), $period);
-  return json_encode($res);
+  return u\jsonize($res);
 }
 
 function formFooter() {
@@ -487,11 +454,12 @@ function formFooter() {
   : ($mya ? '' : t('|<%aSignin>Sign in</a> |', '_aSignin', atag('/signin')));
 
   $helpType = $mya ? '' : 'other';
+  $helpModal = modal('help-modal', '', '', '', 'X');
   
   $markup = "<hr><div id=\"footer-menu\">$extraLinks" . t(<<<EOF
-|   <%aSite>About %PROJECT</a> |
+|   <%aSite>About Us</a> |
     <%aAgree>The Agreement</a> |
-    <%aSecurity>Privacy & Security</a> |
+    <%aSecurity>Security</a> |
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
@@ -500,7 +468,7 @@ copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-det
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>
 IP: %ip</span>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>&nbsp;
+$helpModal
 EOF
   , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |
@@ -518,8 +486,7 @@ EOF
  */
 function whosin($ctty = '') {
   $ctty = '!' . $ctty; // promo site omits the leading '!' from the community's QID
-  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit();
-/**/  echo $list;
-  exit();
+  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit(); // empty list
+  return exitJust($list);
 }
 

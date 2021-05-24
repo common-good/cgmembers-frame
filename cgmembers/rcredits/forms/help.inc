@@ -14,6 +14,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
 
   $signedIn = ($mya = r\acct()) ? TRUE : FALSE; // no need to use eLinkAcct here, just pass args on to help()
   if ($signedIn and $mya->cAdmin and $what and strpos($what2 = u\deurlify($what), '&')) {
+/**/    die('this is not secure and secure attachments are temporarily disabled');
     extract(just('filename type', $what2));
     $s = file_get_contents($filename);
     list ($zot, $type) = explode('/', "$type/");
@@ -39,7 +40,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
 }
 
 function formHelp_validate($form, &$sta) {
-  if ($err = $_FILES['files']['error']['file'] and $err != 4) return say('file save error', 'file');
+  if (nn($_FILES) and $err = $_FILES['files']['error']['file'] and $err != 4) return say('file save error', 'file');
 }
 
 function formHelp_submit($form, &$sta) {
@@ -50,8 +51,8 @@ function formHelp_submit($form, &$sta) {
   $time = now();
   $msg = 'msg to admin';
 
-  foreach ($_FILES['files'] as $k => $v) $file[$k] = $v['file'];
-  if ($tmp = $file['tmp_name']) { // got an attachment
+  if (nn($_FILES)) foreach (nni($_FILES, 'files', []) as $k => $v) $file[$k] = $v['file'];
+  if (nn($file) and $tmp = nni($file, 'tmp_name')) { // got an attachment
     $msg .= '|secure attach';
     $filename = UPLOAD_DIR . "/$mya->id-$time";
     extract(just('name type size', $file));
@@ -59,8 +60,7 @@ function formHelp_submit($form, &$sta) {
     $aAttach = atag($link);
     if (!rename($tmp, $filename)) return say('file save error', 'file');
   } else { $aAttach = $name = $type = $size = ''; } 
-//  $message = u\crypt($message);
-//  db\insert('r_tous', compact('uid', 'time', 'message'));
+
   $body = tr("$msg|$message");
   $subs = compact(ray('who body aAttach name type size'));
   r\tellAdmin(t('Secure message'), $subs, nn($aAttach) ? NULL : $uid); // tell CO only if there is no attachment

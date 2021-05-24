@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('INVEST_COFLDS', 'fullName city serviceArea dob gross'); // investment flds in users table
+define('INVEST_COFLDS', 'fullName city zips dob gross'); // investment flds in users table
 define('INVEST_FLDS', 'clubid investment offering price return types terms assets character strength web history soundness'); // investment flds in r_investments
 define('INVEST_ALLFLDS', 'company ' . INVEST_COFLDS . ' bizCats ' . INVEST_FLDS);
 
@@ -21,7 +21,7 @@ function formInvestPropose($form, &$sta, $args = '') {
   $company = textFld(REQ . t('Company:'), [t('Company to invest in'), t('Choose a %PROJECT member company (or type its account ID) or <%a>click here</a> to add them.', '_a', 'a id="add-co"')]);
   $fullName = textFld(t('Company:'), [t('The company\'s full name')]);
   $city = textFld(t('City:'), [t('City where company is located')]);
-  $serviceArea = textFld(t('Service area:'), [t('Company service area')]);
+  $zips = textFld(t('Service area:'), [t('Company service area (list of zipcodes)')]);
   $dob = dateFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately?')]);
   $gross = numFld(t('Annual Gross:'), [t('Gross income')]);
   $bizCats = selectFld(t('Biz categories:'), t('Hold down the Ctrl key to select more than one'), ['multiple' => TRUE], coCats());
@@ -55,11 +55,11 @@ function formInvestPropose($form, &$sta, $args = '') {
 
   $submit = t('Propose');
 
-  w\whoFldSubmit('company', t('Propose this investment in %name?'), ray('coOnly', TRUE));
+  w\whoFldSubmit('company', t('Propose this investment in %name?'), 'self-investing', '', ray('coOnly', TRUE));
   
   jsx('invest-proposal');
   
-  return cgform(compact(ray('title subtext company fullName city serviceArea dob gross bizCats investment equity equitySet loanSet terms assets character strength web history soundness submit')));
+  return cgform(compact(ray('title subtext company fullName city zips dob gross bizCats investment equity equitySet loanSet terms assets character strength web history soundness submit')));
 }
 
 function formInvestPropose_validate($form, &$sta) {
@@ -67,8 +67,8 @@ function formInvestPropose_validate($form, &$sta) {
   extract($info = just(INVEST_ALLFLDS, $sta['input'], NULL));
 
   if ($company) {
-    if (!$a = whois($company, 'company', $info, t('no self-investing'))) return FALSE;
-    $company = $a->id;
+//    if (!$a = whois($company, 'company', $info, t('self-investing'))) return FALSE;
+//    $company = $a->id;
   } else {
     if ($err = u\badDate($dob, '', now())) return say($err, 'dob');
     if ($err = u\badAmount($gross, '>=0', 2, '')) return sayFieldErr($err, 'gross');
@@ -94,7 +94,10 @@ function formInvestPropose_submit($form, &$sta) {
   if ($fullName) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));
     $a->setCategories($bizCats);
-  } else $a = r\acct($company);
+  } else {
+    $uid = whoId($sta);
+    $a = r\acct($uid);
+  }
   list ($coid, $proposedBy) = [$a->id, $mya->agentId];
   $return /= 100; // convert % to fraction
   

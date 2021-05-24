@@ -36,14 +36,19 @@ function formPrefs($form, &$sta) {
 //  if ($mya->ok and $mya->share) $share = w\shareFld($mya); // don't show this during signup (it's on the donation page)
 
   $noticeRadios = array(t('daily'), t('weekly'), t('monthly'));
-  $dft = $mya->can(B_WEEKLY) ? 1 : ($mya->can(B_MONTHLY) ? 2 : 0);
-  $notices = radiosFld(t('Email Notices:'), t('How often, at most, do you want an email digest of your %PROJECT notices? (No email if no notices.)'), dft($dft), $noticeRadios);
-//  $smsNotices2 = boxFld('smsNotices', t('SMS notices:'), t('Send me a text message when I receive a payment, charge, or invoice (requires a <a href="' . $base_url . '/settings/boxes">connected cell phone</a>).'), $mya->can(B_BYSMS)); // (currently disabled)
 
   $secretBal = boolFld(t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->can(B_SECRET));
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
-  $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Hide my phone and email address from companies and individuals I do business with. Let members identify my account by name or account ID only &mdash; not by phone or email."), $mya->can(B_NOSEARCH));
-  $debtOk = $mya->underage ? NULL : boolFld(t('Debt Okay:'), t('Let me use my %PROJECT card as a <i>credit</i> card, allowing my account balance to go negative, limited by my credit limit (currently %limit), based on my average monthly account activity. I understand when I use my credit line  (that is, when my balance goes negative) it is a loan from my %PROJECT community and I will aim to bring my balance back up above zero within 30 days.', 'limit', u\fmtAmt(-$mya->floor)), $mya->can(B_DEBT));
+  $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Let members identify my account only by phone, email, or account ID &mdash; not by name."), $mya->can(B_NOSEARCH));
+  
+  $desc = t('"Let me use my %PROJECT card as a <i>credit</i> card, allowing my account balance to go negative, limited by my credit limit (currently %limit), based on my average monthly account activity. I understand when I use my credit line  (that is, when my balance goes negative) it is a loan from my %PROJECT community and I will aim to bring my balance back up above zero within 30 days."', 'limit', u\fmtAmt(-$mya->floor));
+  if (!$mya->hasBank or !$mya->refill) {
+    $desc .= t(' <b>NOTE:</b> This setting is disabled unless you <%a>choose automatic refills from a bank account</a>, with a target balance.', '_a', atag('/settings/fund'));
+    $extra = disabled();
+  } else list ($desc, $extra) = ['', []];
+  
+  $debtOk = $mya->underage ? NULL : boolFld(t('Debt Okay:'), $desc, $mya->can(B_DEBT), NULL, $extra);
+  
   $posttext = item(t(<<<EOF
 <h4>** Disclaimers required by the IRS:</h4>
 <p>Your choice of how to receive statements applies to all statements you receive from now on. You can change your preference at any time by returning to this Preferences page (on the Settings menu) or by notifying the Regional Administrator by mail: %regName, %regAddr. Any change will be confirmed in writing (electronically if you accept electronic statements, otherwise by US Mail). You may also ask the Regional Administrator for a paper copy without changing your preference for electronic statements in the future.</p>
@@ -52,14 +57,14 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin smsNotices2 notices secretBal debtOk nosearch food backing';
+  $advancedFields = 'achMin secretBal nosearch food backing';
   
 //  $submit = submit(t('Update Preferences'));
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  foreach (ray("title roundup snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $form[$k] = $$k;
-  return cgform($form + w\setupFoot() + compact('posttext'));
+  $info = []; foreach (ray("title roundup snap debtOk statements showAdvancet $advancedFields") as $k) if (isset($$k)) $info[$k] = $$k;
+  return cgform($info + w\setupFoot() + compact('posttext'));
 }
 
 function formPrefs_validate($form, &$sta) {
@@ -76,14 +81,14 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input'], NULL));
+  extract(just('food snap roundup statements nosearch debtOk secretBal', $sta['input'], NULL));
 ///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
   $fields = 'food snap';
   $food /= 100;
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
-  $bits = ray('roundup weekly monthly paper secret debt nosearch', $roundup, $notices == 1, $notices == 2, $statements, $secretBal, $debtOk, $nosearch);
+  $bits = ray('roundup paper secret debt nosearch', $roundup, $statements, $secretBal, $debtOk, $nosearch);
   $info = compact(ray($fields)) + $bits;
 
   if ($statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);

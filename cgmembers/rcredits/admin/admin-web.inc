@@ -87,8 +87,8 @@ function export($params) {
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : ($chimp ? 'id name phone email city state zip community type ecode asof'
-  : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
+  : ($chimp ? 'id name phone email city state zip community type code'
+  : 'id fullName manages lastTx solar snap phone email address city state zip community type code modified created');
   u\csv($fields = ray($fields), $delimiter);
 
   // add actual accounts
@@ -99,7 +99,7 @@ function export($params) {
   if ($types == 0) $where .= ' AND NOT :IS_CO';
   if ($types == 1) $where .= ' AND :IS_CO';
 
-  $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
+  $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:CANONIC_ACCTS AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
   
   $q = db\q($sql, ray('cttyId', $cttyA->id));
   while ($row = $q->fetchAssoc()) {
@@ -118,8 +118,9 @@ function export($params) {
         $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
       } else $bankName = '';
     } else {
-//      list ($first_name, $last_name) = u\parseName($fullName);
-      $name = $a->fullName;
+      list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
+      if (strlen($firstname) < 2 and strlen($mid) > 2) $firstname = $mid;
+      $name = $firstname ?: $a->fullName; // Company name or person's first name
       $email = $a->email;
       $phone = $a->phone;
       list ($address, $city, $state, $zip) = $a->postalAddr
@@ -127,7 +128,7 @@ function export($params) {
       : [$a->address, $a->city, $a->st, $a->zip];
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
-      $ecode = "$a->emailCode";
+      $code = $a->doCode(); 
       $asof = $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;

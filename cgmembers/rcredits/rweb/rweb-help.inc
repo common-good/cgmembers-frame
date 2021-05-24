@@ -58,7 +58,7 @@ X
   if ($i == 'general') return t(<<< X
     <p>Here's what to click, to find what you want. Some items will not appear, if your account is not yet active or if you do not have permission.</p>
     <ul>
-      <li><b>Summary</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
+      <li><b>Dashboard</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
       <li><b>Charge</b>: Invoice another participant.</li>
       <li><b>Pay</b>: Transfer %RCREDITS to another participant.</li>
       <li><b>Bank</b> Transfer money to or from your bank account.</li>
@@ -86,13 +86,13 @@ X
 
   if ($i == 'smartphone') return t(<<< X
     <p>To use the smartphone interface, you will need to install an app to read QR codes (for example QRDroid on Android phones or Qrafter for iPhones). You can pay participating businesses by scanning their QR code, then visiting the scanned URL.</p>
-    <p>Your customers (or employer) can pay you by scanning the QR code on your member ID card. You can print an Advance ID card for your individual account, using the link on the Summary page.</p>
+    <p>Your customers (or employer) can pay you by scanning the QR code on your member ID card. You can print an Advance ID card for your individual account, using the link on the Dashboard page.</p>
 X
   );
 
   if ($i == 'sms') return t('The Text Message Interface is intended to be easy enough that you can just muddle your way through the first time. Give it a shot. You can even <i>sign up</i> with Text Messaging. Send your texts to +1 413.285.2867 OR use the <%aSMS>Test SMS form</a> to simulate sending a text.', '_aSMS', atag('/sms'));
 
-  if ($i == 'summary') return t(<<< X
+  if ($i == 'dashboard') return t(<<< X
     <p>This page shows an overview of your %PROJECT Account.</p>
     <p><b>Account ID</b> has two parts. The part before the period is a 3-character identifier for your region (%regName). The part after the period uniquely identifies your account, within your region. If you have several accounts, this part will be different for each one.</p>
   <p><b>Balance</b> is the amount in your %PROJECT Account.</p>
@@ -258,9 +258,9 @@ X
          <li>transfer US Dollars from your bank account.</li>
      </ul>
      <p>Complementarily, if the system ends and you have a positive balance, you can:</p>
-     <ul><li>continue to make purchases with your credits for a limited time OR</li>
-         <li>trade them to another member in exchange for US Dollars OR</li>
-         <li>transfer them to your bank account.</li>
+     <ul><li>continue to make purchases with your credit for a limited time OR</li>
+         <li>pay it to another member in exchange for cash OR</li>
+         <li>transfer it to your bank account.</li>
      </ul>
      <p>We all make this agreement so if the system closes down, everyone is protected.</p>
 		 <p>However, if you and your %PROJECT Community have made mistakes in handling the Community's Dollar Pool and you need to close down when there are no longer enough Dollars in the Pool to redeem the %RCREDITS in circulation, the value of everyone's %RCREDITS will be proportionately diminished, as you are settlings the accounts and closing down.</p>
@@ -561,7 +561,7 @@ X
     $res = join("\n", $res);
     return t(<<< X
       <div id="bit-help">
-      <p>Community Administrators can see and set/unset most of these bits on each account's Summary page.</p>
+      <p>Community Administrators can see and set/unset most of these bits on each account's Dashboard page.</p>
       <table>$res</table>
       </div bit-help>
 X

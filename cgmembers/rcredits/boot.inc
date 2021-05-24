@@ -105,32 +105,34 @@ define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.
  * nonces are for spin.min.js on iPhone (but it doesn't work)
  */
 function setCSP() {
-  $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
+  global $styleNonce; $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
-  $styleSource = $_SERVER['REQUEST_URI'] == 'cgbutton' 
+  $uri = $_SERVER['REQUEST_URI'];
+
+  $styleSource = ($uri == 'co/cgbutton' or ($uri == 'community/invite' and nni($_POST, 'example')))
   ? "'unsafe-inline'"  // allow inline styles when creating button
   : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
-
-  \drupal_add_http_header('Content-Security-Policy', 
-      "base-uri 'self';"
+  
+  header('Content-Security-Policy: '
+    . "base-uri 'self';"
     . "block-all-mixed-content;"
     . "default-src 'self';"
-          . "connect-src 'self';"
-          . "font-src 'self';"
-          . "frame-src " . FRAME_SOURCES . ';' // we use iframes for admin member download and for graphs
-          . "manifest-src 'self';"
-          . "media-src 'self';"
-          . "object-src 'none';"
-          . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
-          . "img-src 'self' https://cg4.us data:;" // data: is for photo upload
-          . "style-src 'self' $styleSource;"
-          . "worker-src 'none';"
+    . "connect-src 'self';"
+    . "font-src 'self';"
+    . "frame-src " . FRAME_SOURCES . ';' // we use iframes for admin member download and for graphs
+    . "manifest-src 'self';"
+    . "media-src 'self';"
+    . "object-src 'none';"
+    . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
+    . "img-src 'self' https://cg4.us data:;" // data: is for photo upload and QR code
+    . "style-src 'self' $styleSource;"
+    . "worker-src 'self';"
     . "form-action 'self';"
     . "frame-ancestors 'none';"
 //    . "report-uri /csp-report.php?sid=$sid;"
   );
 
-  \drupal_add_http_header('X-Frame-Options', 'DENY');
+  header('X-Frame-Options: DENY');
   // Use <iframe sandbox="allow-scripts" ...> for cg4.us frame showing charts
 
 }

@@ -11,71 +11,33 @@ use CG\Cron as cr;
 /**
  * @file
  * Functions to run periodically.
- 
- To run a single CRON function "zot" from the PHP window, use:
- f('cr.zot', arg1,...);
- 
- To run all the daily functions starting with a particular function "zot", use:
- CG\Cron\zot(arg1,...); // to run all daily functions, zot=everyDay
- 
-  On development machines:
-  include __DIR__ . '/../rcron/rcron.inc';
-  cr\everyDay(); while (db\exists('queue')) cr\run(); debug ('done'); 
- 
- * = written
- ** = tested
-
-TODO:
-- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM r_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM r_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
-
-
-DAILY (every 5 mins for 5 mins, starting at 2am)
-- * usdTxsThere() rollback lost USD transactions, mark completed deposits/withdrawals
-- checkAccts() check for consistency, security, scams
-- ** stats(): calculate daily statistics and record in r_stats and in the stats field of user records
-- ** paySuppliers(): automatic payment exchanges to suppliers
-- UNUSED ** payEmployees(): Each employee (and supplier) gets relieved of their excess rCredits immediately if they don't have enough USD to trade the employer for them.
-- ** gifts(): donations to CGF (not shares)
-- UNUSED * redistribute(): (selling of unwanted rCredits) looks at accounts over their maximum (maximum is ignored for companies that do payment exchanges)
-- ** homogenize(): spread the USD out a little in the system (just until we can do ACH debits)
-- ** pool(): hold some USD in the community account (just until we can do ACH debits)
-- ** bank(): automatic transfers from bank accounts
-- [later] notify and maybe fine late borrowers (might figure interest at the same time, since it requires examining each balance -- but only actually credit the interest monthly, otherwise discard it)
-- ** tickle(): things to do 2/30/60/90 (etc) days after login/access/created date
-  . 1mo: notice - suggest sending invitations
-      $email = $mya->email;
-      $invited = ($nonperson or db\count('r_invites', 'inviter=:myid AND email<>:email', compact('myid', 'email')) >= 1);
-          $step4 = t('<a>Invite someone</a> to sign up for rCredits! No one can join without an invitation. You can help by sending one. You might particularly want to invite companies and individuals you buy from or sell to (for example your employer or employees).');
-
-  . 1mo: suggest another donation if first was small
-  . 6mo: allow cashing out rewards if system stable? Probably not.
-- [later] statements for those who want daily statements
-- weekly / monthly / quarterly / annual stuff
-- ** notices(): send notices (daily, weekly, or monthly digest)
-- CREATE RULES FROM TEMPLATES
-
-WEEKLY
-- soldOut() and missedOut() tell members what they did that was dumb (sold rC or missed a chance to buy them)
-- after first month, lower floor according to sales (only if B_DEBT)
-
-MONTHLY
-- inflation adjustment (monthly, calculating daily bals from history) is credited to the new month. calculated as the sum of t*bal*APR, where bal is each balance they had during the preceding month and t is the number of years that balance lasted. (see daily notify and fine, above)
-- share to CGF
-- adjust rewards pct for each account (based on growth of account's wider economic ctty)
-- archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
-
-YEARLY
-- 1099s
-
-NOTES:
-- Timer Cron is disabled on the staging site. Here's what the cron job would be:
+ *
+ * To run a SINGLE cron function "zot" from the PHP window, use: f('cr.zot', arg1,...);
+ * To run all the daily functions starting with a particular function "zot", use:
+ * cr\zot(arg1,...); // to run ALL daily functions, zot=everyDay
+ *
+ * Note: Timed cron is disabled on the staging site. Here's what the cron job would be:
   <star>/5 * * * * curl https://new2.CommonGood.earth/cron.php?cron_key=w8x3lfzNQK1bxMz6RMTuF54mMInAs4b8SiVJO9zvWYg
-  where <star> means * (not the same as for the production site) 
+  where <star> means * (not the same key as for the production site) 
+ 
+ * @todo:
+- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM r_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM r_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
+DAILY (every 5 mins for 5 mins, starting at 2am)
+- checkAccts() check accounts (and their activity) more thoroughly for consistency, security, scams
+- notify and maybe fine late borrowers
+- suggest another donation (after a year?) if first was small
+WEEKLY
+- tell members what they did that was dumb
+MONTHLY
+- distribute community dividends (based on growth of account's wider economic ctty)
+- archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
+YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
-
+const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
+const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
+const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
 
 /**
@@ -85,8 +47,6 @@ function run() {
   global $channel; $channel = TX_CRON; // set this even if called from PHP window by admin
 // NO (happens too often)  u\log('running cron');
   // Allow execution to continue even if the request gets canceled.
-  if (between(now(), strtotime('2:40am'), strtotime('2:44am'))) return; // swiftMailer crashes during this period
-  
   ignore_user_abort(TRUE);
 
   // Prevent session information from being saved while cron is running.
@@ -137,7 +97,7 @@ function doTask($item) {
 
   extract(just('uid', $item, NULL));
   if ($uid) $mya = r\acct($uid); // fudge current account
-  if (!in($op, 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
+  if (!in($op, LOGLESS_OPS) and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
 
   $func($item);
 }
@@ -224,8 +184,8 @@ function everyDay() {
   \setV('companies', nn($companies) ?: []);
   
   $sql = <<< X
-  SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName 
-  FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
+  SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, cu.fullName AS cttyName 
+  FROM users u LEFT JOIN r_company c ON u.zip RLIKE c.zips LEFT JOIN users cu ON cu.uid=c.uid
   WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack AND !u.activated
 X;
   $q = db\q($sql, ['seedpack' => r\serverUid()]);
@@ -237,44 +197,56 @@ X;
   
   if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
 
-//  $where = "RIGHT(fullName, 8)=' PARTNER' COLLATE utf8_bin AND pass='' AND NOT :IS_CO AND activated=0";
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
-    r\deleteAccount($a);
+    f('a.deleteUid', $a->id);
   } , $where);
+  eachA(function ($a) { // delete robots
+    if (!$a->member and !$a->ok and $a->nextStep() == 'verifyemail' and now() - $a->created > 7*DAY_SECS and $a->steps+0 == 1 and strhas($a->source, 'self ()')) {
+      $s = str_replace('self () ', '', $a->source);
+      $s = str_replace('knows: ', '', $s);
+      if (!strhas($s, ' ')) f('a.deleteUid', $a->id);
+    }
+  });
+
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+	$where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+//  $res = db\get('uid,bankAccount', 'r_usd d', $where);
 	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = \db_transaction();
-	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
+	foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
 	if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
-	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+	if ($uids) db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
 
 /**
  * Generate rules, transactions, and invoices from template.
  * Instantiate surtx rules first so they apply to subsequent transactions.
+ * Action options are: 
+ *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
+ *   pay or charge: recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
  */
 function recurs() {
   $sql = <<< EOF
-    SELECT t.*, MAX(
-      IF(t.action=:ACT_SURTX, r.start, 
-      IF(t.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+    SELECT tp.*, MAX(
+      IF(tp.action=:ACT_SURTX, ru.start, 
+      IF(tp.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
       i.created))
     ) AS maxStart
-    FROM tx_templates t 
-    LEFT JOIN tx_rules r ON r.template=t.id
-    LEFT JOIN txs x ON x.recursId=t.id
-    LEFT JOIN r_invoices i ON i.recursId=t.id
-    WHERE t.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
-    AND IFNULL(t.end, :NOW+1) > :NOW
-    GROUP BY t.id
-    ORDER BY (t.action=:ACT_SURTX) DESC, t.id
+    FROM tx_templates tp
+    LEFT JOIN tx_rules ru ON ru.template=tp.id
+    LEFT JOIN txs x ON x.recursId=tp.id
+    LEFT JOIN r_invoices i ON i.recursId=tp.id
+    WHERE tp.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
+    AND tp.start <= :NOW
+    AND IFNULL(tp.end, :NOW+1) > :NOW
+    GROUP BY tp.id
+    ORDER BY (tp.action=:ACT_SURTX) DESC, tp.id
 EOF;
 
   queueEach('recur', $sql);
@@ -301,7 +273,7 @@ function recur($template) {
     $fromA = r\acct($from); $toA = r\acct($to);
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
-      if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account
+      if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
     }
 
     if ($period and $period != 'once') {
@@ -313,15 +285,19 @@ function recur($template) {
     if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
     
     if ($action == 'pay') {
-      $ok = $fromA->payApproved($to, $amount, $purpose, FOR_GOODS, $data, $id);
-      if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
-      r\notify($from, 'recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
+      if (is_null($amount)) { // sweep
+        if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
+      }        
+      $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
+      if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
+      $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
     } else { // charge
-      list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
-      if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
+      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
+      if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
     if ($period == 'once') r\endRule(TRUE, $id);
-  } else FAIL(t('bad action in template: ') . pr($template));
+
+  } else { FAIL(t('bad action in template: ') . pr($template)); }
   
 }
 
@@ -333,7 +309,7 @@ function tickle() {
   $timeSince = "(ROUND((:NOW-@DATE)/:DAY_SECS, 0))";
 
   // Remind invitee to accept
-  $delays = '8';
+  $delays = '3,8,21';
   $elapsed = str_replace('@DATE', 'invited', $timeSince);
   $sql = <<< X
     SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
@@ -343,7 +319,7 @@ X;
 
   queueEach('tickleSignup', $sql);
 
-  $delays = '1,4,9'; // delays proposed by staff (ultimately every week)
+  $delays = '1,4,9,22'; // delays proposed by staff (ultimately every week)
   $elapsed = str_replace('@DATE', 'access', $timeSince);
   $sql = <<< X
     SELECT DISTINCT uid, $elapsed AS elapsed FROM users 
@@ -371,13 +347,9 @@ X;
 X;
 
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
-  
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
-	
-  warnAnnualGifts();
-  
   queueNext();
-}
+}	
 
 /**
  * Remind invitee to accept invitation.
@@ -385,10 +357,11 @@ X;
 function tickleSignup($item) {
   extract(just('email inviter code elapsed', $item));
   if (r\acct($email = u\decry('P', $email))) return; // invitee already began to open an account
-  $inviterName = r\acct($inviter)->fullName;
-  $nudge = t($elapsed < 7 ? 'reminder coming' : 'reminder one');
+  $inviterA = r\acct($inviter);
+  $inviterName = $inviterA->fullName;
+  $nudge = t($elapsed < 10 ? 'reminder coming' : 'reminder last');
   r\rMail('nonmember', $email, ray('fullName nudge code noFrame', $inviterName, $nudge, $code, TRUE));
-  r\notify($inviter, 'invite languishing', compact('email', 'elapsed'));
+  $inviterA->tellMisc('invite languishing', compact('email', 'elapsed'));
 }
 
 /**
@@ -399,14 +372,14 @@ function tickleStep($item) {
   $a = r\acct($uid);
 
   if (!$a->member and $step = $a->nextStep()) {
-    $msg = ($a->stepCount() == count(ray(r\taskSteps($a->co ? 'co' : 'person'))) - 1) ? 'do step one' : 'take another step';
-    r\notify($uid, "$msg|sign in|daily messages");
+    $msg = ($a->stepCount() >= 4) ? 'do step one' : 'take another step';
+    $a->tellMisc("$msg|sign in|daily messages");
     if ($elapsed >= 9 and $elapsed < 30) {
       $sql = 'SELECT DISTINCT inviter FROM r_invites i LEFT JOIN users u ON u.uid=i.inviter WHERE invitee=:uid AND u.:IS_OK';
       $q = db\q($sql, compact('uid'));
       while ($row = $q->fetchAssoc()) {
         extract($row);
-        r\notify($inviter, 'invitee slow', ray('fullName elapsed step', $a->fullName, $elapsed, $step));
+        r\acct($inviter)->tellMisc('invitee slow', ray('fullName elapsed step', $a->fullName, $elapsed, $step));
       }
     }
   } elseif ($a->member and !$a->ok) {
@@ -438,7 +411,7 @@ function activeMonthly($item) {
 		$limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
     $msg = 'new floor' . ($a->can(B_DEBT) ? '' : '|no floor effect');
 //	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
-  // DISABLED FOR now() if (!$a->slave) r\notify($uid, $msg, compact('limit'));
+  // DISABLED FOR now() if (!$a->slave) $a->tellMisc($msg, compact('limit'));
   }
   
   if ($a->cashoutM) $a->cashout();
@@ -449,34 +422,50 @@ function activeWeekly($item) {
   $a = r\acct($uid);
   if ($a->cashoutW) $a->cashout();
 }
- 
+
 /**
  * Warn members about upcoming annual donation (or lack thereof) -- a week before it's due.
  */
-function warnAnnualGifts() {
-	$advanceDays = 7;
-  
-	$sql = <<< X
-	  SELECT DISTINCT u.uid, r.amount, FROM_UNIXTIME(IFNULL(r.start, u.activated)) AS base, $advanceDays AS advanceDays,
-      ADDDATE(CURDATE(), INTERVAL $advanceDays DAY) AS target,
-      ADDDATE(CURDATE(), INTERVAL ($advanceDays-1) DAY) AS beforeTarget
-		FROM users u 
-    LEFT JOIN tx_templates r ON r.action=:ACT_PAY AND r.from=u.uid AND r.to=:CGID AND r.period='year' AND r.end IS NULL
-		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC
-    HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
-X;
-// activated is for testing, even though redundant with IS_OK
-
-  queueEach('warnAnnualGift', $sql);
+function annualGift() {
+  $join = "LEFT JOIN tx_templates tp ON tp.action=:ACT_PAY AND tp.from=u.uid AND tp.to=:CGID AND tp.period='year' AND tp.end IS NULL";
+  queueEach('warnAnnual1', annualSql('Donate', 'tp.amount', 'IFNULL(tp.start, u.activated)', $join));
+  queueNext();
 }
 
-function warnAnnualGift($item) {
-	extract(just('uid amount base target advanceDays', $item));
+/**  
+ * Warn members about upcoming backing renewal date (a week ahead).
+ */
+function renewBacking() {
+  $backMin = isPRODUCTION ? strtotime('7/17/2019') : 0; // because we didn't start renewing on time. Delete this minimum after 7/11/2020
+  $sql = annualSql('Backing', 'backing AS amount', "GREATEST(backingDate, $backMin)", '', 'backingNext IS NULL');
+  queueEach('warnAnnual1', $sql);
+  db\q('UPDATE users SET backing=IFNULL(backingNext, backing), backingDate=:today, backingNext=NULL WHERE backingDate+:YEAR_SECS<:NOW AND :IS_OK AND backing>0', ray('today', today())); // automatically renew (member decreased it or didn't update it in time)
+  queueNext();
+}
+ 
+/**
+ * Give the member a chance to renew their annual donation or backing.
+ */
+function warnAnnual1($item) {
+	extract(just('func uid amount base target', $item));
+  $tpls = ray('Donate:annual-gift, Backing:renew-backing');
 
 	$a = r\acct($uid);
-	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
-  $subs = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $aDonate);
-  r\notify($uid, 'annual-gift', $subs, TRUE);
+	$atag = w\atag("/do/do$func~" . $a->doCode());
+  $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
+  $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
+  $a->tellMisc($tpls[$func], $subs);
+}
+
+function annualSql($func, $amtFld, $dtFld, $join = '', $where = '1') {
+  return <<< X
+	  SELECT DISTINCT '$func' AS func, u.uid, $amtFld, FROM_UNIXTIME($dtFld) AS base,
+      ADDDATE(CURDATE(), INTERVAL :RENEW_ADVANCE_DAYS DAY) AS target,
+      ADDDATE(CURDATE(), INTERVAL (:RENEW_ADVANCE_DAYS-1) DAY) AS beforeTarget
+		FROM users u $join
+		WHERE u.:IS_OK AND u.uid>0 AND u.uid NOT :CANONIC AND $where
+    HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
+X;
 }
 
 /**
@@ -563,7 +552,7 @@ X;
 function whatsup($item) {
   extract(just('uid lastTx co', $item));
   $msg = 'whats up' . ($co ? '|co promo' : '');
-  r\notify($uid, $msg, ray('lastTx', u\fmtDate($lastTx)));
+  r\acct($uid)->tellMisc($msg, ray('lastTx', u\fmtDate($lastTx)));
 }
 
 /**
@@ -584,7 +573,7 @@ function everyYear() {
  */
 function taxInfo($item) {
   extract(just('uid year', $item));
-  r\notify($uid, 'see tax info', compact('year'));
+  r\acct($uid)->tellMisc('see tax info', compact('year'));
 }
 
 /**
@@ -612,7 +601,10 @@ function inflationAdjust($item) {
 function crumbs($item) {
   extract(just('uid donate date', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) {
+    $z = $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
+    if (!$z->ok) r\tellAdmin($z->msg, $z->subs);
+  }
 }
 
 /**
@@ -626,8 +618,8 @@ function sweep($item) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {
-      list ($ok, $index, $subs) = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
-      if (!$ok) r\tellAdmin($type . t(' sweep failed: ') . t($index, $subs));
+      $z = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+      if (!$z->ok) r\tellAdmin($type . t(' sweep failed: ') . $msg);
     }
   }
 }  
@@ -642,8 +634,8 @@ function cgc($item) {
     list ($a, $cgA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
     if ($a->ok) {
-      list ($ok, $msg, $subs) = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
-      if (!$ok) r\tellAdmin(t('Failed sharing 50% with community ') . $a->fullName . ': ' . t($msg, $subs));
+      $z = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+      if (!$z->ok) r\tellAdmin(t('Failed sharing 50% with community ') . "$a->fullName: $z->msg");
     }
   }
 }  
@@ -666,12 +658,10 @@ function checkAcct1($item) {
   extract($item);
   $a = r\acct($uid);
   if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedUid != $jid) r\tellAdmin('bad relation', $item);
-  if ($a->hasBank and !$a->masterA->vsecure['bankAccount']) {
-    $a->setRisk('hasBank', FALSE);
-    r\tellAdmin('hasBank(had) wo bank account', $item);
-  } elseif ($a->masterA->vsecure['bankAccount'] and !$a->hasBank) {
-    $a->setRisk('hasBank');
-    r\tellAdmin('bank account wo (until now) hasBank', $item);
+
+  if ($a->masterA->hasBank xor $a->masterA->risk('hasBank')) {
+    $a->setRisk('hasBank', $a->masterA->hasBank);
+    r\tellAdmin('hasBank was set wrong', $item);
   }
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
@@ -802,8 +792,8 @@ function cttyStats1($item) {
     }
     $cttyA = r\acct($ctty);
     $subs = ray('months', BAN_MONTHS);
-    if ($allNeg and !$cttyA->noneg) r\tellCo('credit ban on', $subs, $ctty);
-    if ($allPos and $cttyA->noneg) r\tellCo('credit ban off', $subs, $ctty);
+    if ($allNeg and !$cttyA->noneg) r\tellCAdmin('credit ban on', $subs, $ctty);
+    if ($allPos and $cttyA->noneg) r\tellCAdmin('credit ban off', $subs, $ctty);
   }
 }
 
@@ -830,6 +820,26 @@ X;
 }
 
 /**
+ * Report on individual members or member businesses that have large activity over the past day (definitely > $3k)
+ */
+function biggies() {
+  $admin = t('Consider whether any of these high totals reflect money laundering.'); // appears as "admin: ..."
+  $start = strtotime('yesterday');
+  $end = today() - 1;
+  $sql = <<<X
+    SELECT fullName, SUM(ABS(amount)) AS total 
+    FROM tx_entries JOIN users USING (uid) JOIN tx_hdrs h USING (xid)
+    WHERE h.created BETWEEN $start AND $end AND uid NOT :CANONIC
+    GROUP BY uid
+    HAVING total>1000
+    ORDER BY total DESC
+X;
+
+  if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . u\fmtDate(), compact(ray('admin list')));
+  queueNext();
+}
+
+/**
  * Calculate risks of financial misbehavior for each account.
  * Do companies first, so their risk can be used to help assess individual risk.
  * Do the whole thing twice, to take into account relations with suspicious individuals.
@@ -846,7 +856,7 @@ function acctRisk() {
 }
 
 function acctRisk1($item) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   global $newThresholds;
   
   $newThresholds = getv('newThresholds');
@@ -886,7 +896,7 @@ EOF;
 }
 
 function txRisk1($xid) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   k\txRisk1(is_array($xid) ? $xid['xid'] : $xid);
 }
 
@@ -933,32 +943,33 @@ X;
 
 function invoice1($item) {
   extract(just('nvid payer payee amount purpose status created funding', $item));
-  $a = r\acct($payer);
+  $a1 = r\acct($payer);
   $a2 = r\acct($payee);
   $payeeName = $a2->fullName;
   
   if ($status == TX_APPROVED) {
-		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
+		if (!$a1->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
 		$amtFld = 'amount';
-    $short = $a->balance > $amount ? 0 : round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
+    $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
-      list($paid, $msg) = be\payInvoice($nvid);
-      if (!$paid) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
+      $z = be\payInvoice($nvid);
+      $paid = $z->ok;
+      if (!$z->ok) r\tellAdmin(t('invoice payment failed in cron'), ray('msg', $z->msg) + $item);
     } else $paid = FALSE;
 		
-		if (!$paid or $a->balance < 0) {
-      if ($funding and $a->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
+		if (!$paid or $a1->balance < 0) {
+      if ($funding and $a1->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
         $funding = FALSE; // fund it again, if necessary
       }
       if (!$funding) {
-        if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
+        if ($a1->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = \db_transaction();
-        if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
+        if ($a1->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
         } else { // almost always because no bank account is connected
-          $msg = 'short invoice' . ($a->hasBank ? '|expect a transfer' : '|when funded|how to fund');
-          r\notify($payer, $msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
+          $msg = 'short invoice' . ($a1->hasBank ? '|expect a transfer' : '|when funded|how to fund');
+          $a1->tellOut($msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
         }
         unset($DBTX);
       }
@@ -967,9 +978,9 @@ function invoice1($item) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
     $nudge = $a2->staleNudge;
     if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
-      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->makeDo('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
-      r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
-      r\message($payee, 'stale invoice report', $subs); // tell the payee we're following up on it
+      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $payeeName, $a2->email, $a2->phone);
+      $a1->tellMisc('stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
+      $a2->tellMisc('stale invoice report', $subs); // tell the payee we're following up on it
     }
   }
 }
@@ -987,7 +998,7 @@ function invest1($item) {
   $a = r\acct($uid);
   if ($a->avail($request)) {
     r\handleInvestmentRequest($stakeid, $msg);
-    r\notify($uid, $msg);
+    $a->tellMisc($msg);
   } elseif (!$a->waitingFromBank()) {
     $a->getFunds($request, t('to fulfill your recent investment request'));
   }
@@ -999,37 +1010,131 @@ function invest1($item) {
 function notices() {
   global $timeFor; // for testing
   
-  $lastStart = getV('last_cron_start', []);
-  $day = nni($lastStart, 'day');
-  $timeFor_weekly = ($day and strftime('%w', $day) == R_WEEKLY_DAY);
-  $timeFor_monthly = ($day and strftime('%d', $day) == R_MONTHLY_DAY);
-  if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
+  $lastStart = getV('last_cron_start', []); // base timeForW and timeForM on cron start day, not current day (?!)
+  $timeForW = (int) (strftime('%w', nni($lastStart, 'day', now())) == R_WEEKLY_DAY);
+  $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
+  if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
-  $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
-  if ($timeFor_weekly) $where .= ' OR :IS_WEEKLY';
-  if ($timeFor_monthly) $where .= ' OR :IS_MONTHLY';
-  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid WHERE IF(activated, u.:IS_OK, NOT u.:IS_NONUDGE) AND NOT sent AND ($where)";
-
+  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent AND NOT (:CLOSED)";
   queueEach('notice1', $sql);
+  
+  $fields = 'pid,uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
+  $sql = <<< X
+    SELECT $timeForW AS timeForW, $timeForM AS timeForM, pid, $fields, '$fields' as fields FROM (
+      SELECT $fields FROM people WHERE uid IS NULL
+      UNION
+      SELECT $fields
+      FROM users u LEFT JOIN (SELECT pid, uid FROM people) p USING (uid)
+      WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_CO AND IF(activated, :IS_OK, NOT :IS_NONUDGE)
+    ) x
+X;
+  queueEach('postNotices1', $sql);
+  
   queueNext();
 }
 
 function notice1($item) {
-  extract(just('uid daily weekly monthly', $item));
-  $now = now();
-  if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
-    $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline styles online)
-    if (!r\notify($uid, 'notices', $args, TRUE)) return;
-    db\q('UPDATE r_notices SET sent=:now WHERE uid=:uid AND NOT sent', compact('uid', 'now'));
-  }
+  extract(just('uid notices timeForW timeForM', $item));
+
+  $having = "NOT sent AND IF(nType, 0, IF(wType, $timeForW, IF(mType, $timeForM, 1)))";
+  if (!$args = r\noticeArgs($uid, $having, $timeForW, $timeForM)) return;
+  $a = r\acct($uid);
+  $track = u\cryRay(ray('qid type', $a->mainQid, 'notice'));
+  $code = w\getEmailCode(compact('uid'));
+
+  if ($a->ok) {
+    $link = BASE_URL . '/do/doInvite~' . $a->doCode();
+    list ($question, $btnText) 
+    = ($a->co or $a->shouter) ? ['', t('Invite Someone!')] : [t('If you support %PROJECT, please say so! '), t('Endorse')];
+    $style = TEXT_BUTTON_STYLE . ' padding:3px 7px; margin-left:4px;'; // smaller for emails
+    $shout = '<p>' . $question . w\lnk($link, $btnText, ray('stule', $style)) . '</p>';
+  } else { $shout = ''; }
+  
+  $args += compact(ray('shout track code'));
+  if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)
+  if (!$a->tell('notices', $args)) return;
+  db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
 }
+
+/**
+ * Send a notice about recent posts to the given person.
+ * The person's notices field is a string of comma-delimited lines, each one in the form:
+ * $type:$freq, where
+ *   $type: what type of notice (offer, need, tip)
+ *   $freq: how often to notify (t=Text now/i=Email now/d=Daily/w=Weekly/m=Monthly)
+ *   $radius: notify if within this mile radius (NYI)
+ *   $words: notify if the post includes these words (NYI)
+ */
+function postNotices1($item) {
+  global $base_url;
+  require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
+  extract(just('fields timeForW timeForM', $item, NULL));
+  extract(just($fields, $item, NULL));
+  
+  $posts = '';
+  $radius = NEIGHBOR_MAX; // report everything within this many miles
+  $logo = tr("<image src=\"$base_url/rcredits/images/%PROJECT_LOGO\" style=\"width:30px; margin-right:10px;\" />");
+  $postLink = w\lnk('/community/posts/op=post', t('Post one!'));
+
+  foreach (ray($notices) as $type => $freq) {
+//    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
+    if (!in($type, 'offer need tip')) continue;
+    if (u\fmtDate(now()) != '15Sep2020') // one-time only, email all past posts
+    if ($freq != 'd' and !($freq == 'w' and $timeForW) and !($freq == 'm' and $timeForM)) continue;
+
+    $unit = ray('d:day,w:week,m:month')[$freq];
+    $since = strtotime("-1 $unit", now());
+    if (u\fmtDate(now()) == '15Sep2020') $since = 1;
+
+    $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since, FALSE);
+    if (!$q->rowCount()) continue;
+    $rows = fmtPostRows($q);
+    $Type = w\typeName($type, 2);
+    $posts .= <<< X
+<div style="display:table-cell; vertical-align:middle;">$logo</div>
+<div style="display:table-cell; vertical-align:middle;"><b style="font-size:32px; color:navy;">$Type</b></div>
+<div style="display:table-cell; vertical-align:middle; text-align:right; width:100%;">$postLink</div>
+<br>
+$rows
+X;
+  }
+  if (!$posts) return;
+
+  $posts = "<div style=\"font-family:Helvetica; max-width:512px; margin:0 auto;\">$posts</div>";
+  if (test()) $posts = strtr($posts, ['src='=>'surc=', 'style='=>'stule']); // avoid CSP errors
+
+  $noFrame = TRUE;  
+  $code = w\getEmailCode(compact($uid ? 'uid' : 'pid'));
+  r\rMail('post-notice', [u\decry('P', $email) => $fullName], compact(ray('fullName posts radius code noFrame')));
+}
+
+function fmtPostRows($q) {
+  require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
+
+  while ($row = $q->fetchAssoc()) {
+    extract(just('postid dist zip emergency item details city displayName', $row));
+
+    if ($emergency) $item = '<b style="color:red;">!! </b> ' . $item;
+    $btn = w\lnk('/community/posts/op=show&postid=' . $postid, t('View or Reply'), ray('style', TEXT_BUTTON_STYLE));
+    if ($dist = w\fmtDist($dist, $zip)) $city .= " - $dist mi";
+    if (strlen($details) > POST_DETAIL_MAXLEN) $details = substr($details, 0, POST_DETAIL_MAXLEN - 5) . '...';
+    $rows[] = <<< X
+<span style="font-size:22px">$item</span><br>
+<b style="color:#595959; font-size:18px;">$displayName</b><span style="color:#999999; font-size:16px;">, $city</span><br>
+<div style="margin-top:15px; color:#595959;">$details</div><br>
+<center>$btn</center><br>
+<hr style="color:silver;" />
+X;
+  }
+  return join('', nn($rows, []));
+}  
 
 /**
  * Last task queued once the everyDay() function has gotten things started.
  */
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
-  if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset serial field
+  if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);

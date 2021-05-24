@@ -118,7 +118,7 @@ function riskLine($q, $descs, &$red = '') {
     if ($v <= CANONIC_ACCTS) $v = $v < 0 ? t('ctty') : strtr($a->name, ray('bank-in bank-out', 'bank', 'bank'));
     if ($extra) {
       list ($region, $local) = $qo->parse();
-      $v = w\popHelp(is_numeric($v) ? $local : $v, $a->fullName, "$base_url/summary/$qid");
+      $v = w\popHelp(is_numeric($v) ? $local : $v, $a->fullName, "$base_url/dashboard/$qid");
     } else {
       $i = array_search($qid, $riskUids);
       if ($i === FALSE) {$i = count($riskUids); $riskUids[] = $qid;}

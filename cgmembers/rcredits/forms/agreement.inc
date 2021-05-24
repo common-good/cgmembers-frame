@@ -30,7 +30,6 @@ function formAgreement($form, &$sta) {
   } else $signedBy = NULL;
   $topics = ray('Members Member-Organizations CGC Dollar-Pool Backing Without-Limit Disputes Participation');
   foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
-  $args['_aDetails'] = atag('/help/agreement');
 
   $agreement = t(<<< X
 <div id="agreement">
@@ -44,10 +43,12 @@ function formAgreement($form, &$sta) {
   <li><b>Disputes.</b> When there is a dispute, I will follow the <%aDisputes>%PROJECT Dispute Resolution Process</a> and will honor its outcome.</li>
   <li><b>Changes.</b> I understand I will have the <%aParticipation>opportunity to participate</a> in any decision to change this Agreement, and if I use my account after changes have been approved, that means I agree to those changes.</li>
 </ol>
-<br><p class="full center"><%aDetails>Details (how it works for you)</a></p>
 </div>
 X
   , $args);  
+
+  $details = item(t('<%a>Details (how it works for you)</a>', '_a', atag('/help/agreement')));
+
 
   if (!$mya) {
     $subtext = t('If you haven\'t finished opening your account yet, <%aSignin>sign in</a> to sign this agreement and complete your account.', '_aSignin', atag('/signin'));
@@ -61,10 +62,11 @@ X
   }
 //  if ($subtext) $subtext = '<div id="instructions" class="well">' . $subtext . '</div>';
       
-  $agreement = w\item($agreement);
+  $agreement = "<div id=\"wrap-agreement\">$agreement</div>";
+  $agreement = w\item($agreement, BARE);
   jsx('agree', ['show' => !$mya ?: $mya->trialco]);
   
-  return cgform(compact(ray('title subtext agreement signedBy')) + (nn($setupFoot) ?: []));
+  return cgform(compact(ray('title subtext agreement details signedBy')) + (nn($setupFoot) ?: []));
 }
 
 function formAgreement_validate($form, &$sta) {
@@ -81,5 +83,5 @@ function formAgreement_submit($form, &$sta) {
   $aa = ($mya->cAdmin or ($mya->co and $mya->proSe)) ? $mya->helperA : $mya->agentA;
   $signedBy = $aa->fullName;
   $mya->update($info = compact('signed', 'signedBy'));
-  return w\goNextStep('agree');
+  return w\goNextStep('signup');
 }

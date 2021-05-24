@@ -17,14 +17,14 @@ function formCoupons($form, &$sta, $args = '') {
   
   jsx('coupons', 'minText', t('on your purchase of $%min or more'));
 
-  foreach (ray(COUPON_FLDS . ' buttons submit') as $k) $$k = NULL;
+  foreach (ray(COUPON_FLDS . ' midtext1 buttons1 midtext2 buttons2 submit') as $k) $$k = NULL;
   extract(just('type amount', $args, ''));
 
   switch ($type) {
   case 'redeem':
     $title = t('Redeem a General Gift Certificate');
     $subtext = t('Find the code on your gift certificate. If the the certificate is just for one company, there is no code &mdash; just go buy something at that business.');
-    $code = textFld(t('Certificate Code:'), [t('Code')], required());
+    $code = textFld(t('Code:'), [t('Code')], required());
     $submit = t('Redeem');
     break;
   case 'gift':
@@ -63,18 +63,24 @@ X
     break;
   default:
     $title = t('Discounts and Gift Certificates');
-    $subtext = t('<p>A <b>Discount</b> applies only at your business. If the minimum purchase amount equals the discount amount, it is equivalent to a traditional gift certificate.</p><p>A <b>General Gift Certificate</b> is redeemable at any %PROJECT business.</p>');
-    $buttons = 
-      w\btn('/community/coupons/type=discount', t('Create a Discount'))
-      . w\btn('/community/coupons/type=gift', t('Create a General Gift Certificate'))
-      . w\btn('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'))
-      . w\btn('/community/coupons/list', t('List Discounts You Offer'))
-      . w\btn('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
+    $subtext = t('<p>A <i>Discount</i> applies only at one business. If the minimum purchase amount equals the discount amount, it is equivalent to a traditional gift certificate.</p><p>A <i>General Gift Certificate</i> is redeemable at any %PROJECT business.</p>');
+    
+    $midtext1 = t('<b>Offering Discounts and Credit</b>');
+    $buttons1[] = lnk('/community/coupons/type=discount', t('Create a Discount'));
+    $buttons1[] = lnk('/community/coupons/type=gift', t('Create a General Gift Certificate'));
+    $buttons1[] = lnk('/co/accredit', t('Give a Customer Credit'));
+    $buttons1[] = lnk('/community/coupons/list', t('List Discounts You Offer'));
+    $buttons1 = item(u\ul($buttons1));
+
+    $midtext2 = t('<b>Getting Discounts and Credit</b>');
+    $buttons2[] = lnk('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'));
+    $buttons2[] = lnk('/community/coupons/list/ALL', t('Show All Discounts and Credits Available to You'));
+    $buttons2 = item(u\ul($buttons2));
   }
   
   $type = hidFld($type);
   
-  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
+  return cgform(compact(ray('title subtext midtext1 buttons1 midtext2 buttons2 ' . COUPON_FLDS . ' submit')));
 }
 
 function formCoupons_validate($form, &$sta) {
@@ -158,7 +164,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   extract($input = just(COUPON_FLDS . ' from to ruleId', $sta['input'], NULL));
 
   if (empty($amount) and in($mya->task, 'co co2')) {
-    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
+    return $mya->task == 'co' ? w\go($mya->nextStepUrl() ?: 'dashboard') : w\goNextStep('discount'); // new member pressed skip on discount form
   }
 
   switch ($type) {
@@ -166,8 +172,8 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     $fromA = r\acct($from);
 
     $amount = db\get('amount', 'tx_rules', ['id' => $ruleId]);
-    list ($ok, $index, $subs) = be\transfer('payment', $fromA, r\acct($to), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
-    u\EXPECT($ok, t('failed forced gift redemption by %who for rule %ruleId', 'who ruleId', $mya->fullName, $ruleId));
+    $z = be\transfer('payment', $fromA, r\acct($to), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
+    u\EXPECT($z->ok, t('failed forced gift redemption by %who for rule %ruleId', 'who ruleId', $mya->fullName, $ruleId));
     $mya->update('giftPot', ($mya->giftPot ?: 0) + $amount);
     db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // mark this used
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
@@ -175,7 +181,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   case 'gift':
     u\setDft($minimum, 0);
     u\setDft($purpose, t('on any purchase'));
-    $start = $mya->giftCoupons + 0;
+    $start = (int) $mya->giftCoupons;
     $end = $start + $count - 1;
     $info = ray('start from to action payeeType', now(), $myid, MATCH_PAYER, ACT_REDEEM, REF_ANYBODY);
     $info += compact(ray('amount portion purpose minimum useMax'));
@@ -207,8 +213,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
 function reportCoupon($thing, $info) {
   global $mya;
   w\say(t('Your %thing was created successfully.', compact('thing')));
-  r\tellCo(t('New Coupons!'), $info + ray('company', $mya->fullName));
-  if ($mya->co) $mya->stepDone('discount');
+  r\tellCAdmin(t('New Coupons!'), $info + ray('company', $mya->fullName));
 
   $args = u\urlify(http_build_query($info));
   if (test()) $args = u\deurlify($args);

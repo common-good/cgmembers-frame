@@ -29,7 +29,7 @@ function formContact($form, &$sta) {
 
         
   jsx('contact');
-//  return cgform($form, 'return setPostalAddr(false);');
+
   return cgform($form);
 }
 
@@ -65,7 +65,7 @@ function formContact_submit($form, &$sta) {
   extract($info = just('fullName name email phone faxetc zip state city address postalAddr tenure owns', $sta['input']));
   unset($info['owns']);
   
-  if ($mya->id == 1 OR $mya->isRegion) unset($info['name']); // don't change 'admin' or region shortname
+  if ($mya->id == 1 OR $mya->isRegion or $mya->partner) unset($info['name']); // keep for admin, region, or partner
   
   $info = u\normalizeCase(just('fullName city address postalAddr', $info)) + $info;
   if ("$address $city $state" != "$mya->address $mya->city $mya->state") $info += ray('latitude longitude', 0, 0); // regeolocate

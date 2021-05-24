@@ -3,6 +3,7 @@ use CG as r;
 use CG\Util as u;
 use CG\Db as db;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * @file
@@ -597,8 +598,12 @@ function setV($name, $value) {
   global $conf;
   require_once __DIR__ . '/cg-db.inc';
 
-  $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
-  u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+  if (is_null($value)) {
+    db\del('variable', 'name', $name);
+  } else {
+    $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
+    u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+  }
 
   cache_clear_all('variables', 'cache_bootstrap');
 
@@ -630,6 +635,23 @@ function delV($name) {
   unset($conf[$name]);
 }
 function variable_del($nm) {return delV($nm);} // for legacy Drupal
+
+/**
+ * Exit with a plaintext message.
+ * @return (only for tests): NULL
+ * @see also t\getExitMsg()
+ */
+function exitJust($s = '') {
+  if (test()) {
+    t\output('exiting with: ' . pr($s)); 
+/**/t\logRec('echo', $s);
+    return NULL;
+  }
+  
+/**/  echo pr($s);
+  exit();
+}
+function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
 
 /**
  * Retrieves the current page from the cache.
@@ -878,19 +900,13 @@ function drupal_send_headers($default_headers = [], $only_default = FALSE) {
  * @see drupal_page_set_cache()
  */
 function drupal_page_header() {
-  $headers_sent = &drupal_static(__FUNCTION__, FALSE);
-  if ($headers_sent) {
-    return TRUE;
+  if (!isDEV) { // leave caching enabled for faster development and testing
+    header('Cache-Control: no-cache, no-store, must-revalidate'); // for HTTP 1.1
+    header('Pragma: no-cache'); // for HTTP 1.0
+    header('Expires: 0'); // for Proxies
   }
-  $headers_sent = TRUE;
-
-  $default_headers = array(
-    'Expires' => 'Sun, 19 Nov 1978 05:00:00 GMT',
-    'Last-Modified' => gmdate(DATE_RFC7231, REQUEST_TIME),
-    'Cache-Control' => 'no-cache, must-revalidate, post-check=0, pre-check=0',
-    'ETag' => '"' . REQUEST_TIME . '"',
-  );
-  drupal_send_headers($default_headers);
+  header('Last-Modified: ' . gmdate(DATE_RFC7231, REQUEST_TIME));
+  header('ETag: "' . REQUEST_TIME . '"');
 }
 
 /**
@@ -1163,7 +1179,7 @@ function obj() {return (object) call_user_func_array('ray', func_get_args());}
  * @return array of the results [NOT trimmed, because values might be encrypted!]
  */
 function just($these, $info, $default = NULL) {
-  $ray = is_string($info) ? urlq2ray($info) : (array) $info;
+  $ray = urlq2ray($info);
   if (!is_array($these)) $these = ray($these);
   $res = array_intersect_key($ray, array_flip($these));
   if (func_num_args() > 2) foreach ($these as $i => $k) {
@@ -1178,6 +1194,7 @@ function just($these, $info, $default = NULL) {
  * @return an associative array of "GET" parameters.
  */
 function urlq2ray($q) {
+  if (!is_string($q)) return (array) $q;
   $s = mb_strpos($q, urlencode('=')) ? urldecode($q) : $q;
   $s = str_replace('\u003d', '=', $s);
   $s = str_replace('\u0026', '&', $s);
@@ -1210,12 +1227,13 @@ function justNot($these, $info) {
  * @param mixed $list: an assoc, array, or delimited string
  * @return <yes, $what is in $list>
  */
-function in($what, $list) {
+function raypos($list, $what) {
   if (func_num_args() == 2) {
     $list = is_array($list) ? array_values($list) : ray($list);
   } else $list = rayy(func_get_args(), 1);
-  return in_array($what, $list);
+  return array_search($what, $list);
 }
+function in($what, $list) {return raypos($list, $what) !== FALSE;}
 
 /**
  * Return "this string contains that string"
@@ -1232,7 +1250,7 @@ function strihas($string, $what) {return strhas($string, $what, TRUE);}
 function si(&$s, $i, $c) {$s = substr($s, 0, $i) . $c . substr($s, $i + 1);} // assign character
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
-function nni($ray, $i, $else = '') {return isset($ray[$i]) ? $ray[$i] : $else;} // same as nn but for indexed value
+function nni($ray, $i, $else = '') {return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;} // same as nn but for indexed value
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
 
@@ -1454,7 +1472,7 @@ function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
     $message = (is_array($message) or is_object($message)) ? pr($message) : trim($message);
     if (!isset($_SESSION['messages'][$type])) $_SESSION['messages'][$type] = [];
     if ($repeat or !in($message, $_SESSION['messages'][$type])) $_SESSION['messages'][$type][] = $message;
-    if (test()) db\insert('test', ray('type value test', $type, $message, \sceneId()), 'id');
+    if (test()) t\logRec($type, $message);
     
     drupal_page_is_cacheable(FALSE); // Mark this page as being uncacheable.
   }
@@ -1806,9 +1824,9 @@ function drupal_anonymous_user() {
  *   The most recently completed phase.
  */
 function drupal_bootstrap() {
+  global $mya;
   // Not drupal_static(), because does not depend on any run-time information.
 
-//  require_once DRUPAL_ROOT . '/sites/all/modules/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
 
@@ -1826,15 +1844,25 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
   
-  setCSP(); // must come after drupal_session_initialize
-  
+  $jsCode = isDEV ? nni($_GET, 'jsCode') : ''; // for testing
+  if (!$jsCode) setCSP(); // must come after drupal_session_initialize
+
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';
+  
   _drupal_bootstrap_full();
+  if (!db\exists('menu_links')) \menu_rebuild();
+
+  if ($jsCode and $qid = nni($_GET, 'qid')) {
+    r\setAcct(r\acct($qid));
+    return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
+  } elseif (!$mya = r\setAcct()) {
+    $qid = nni($_COOKIE, 'trust') ? r\cryptCook('qid') : '';
+    if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
+  }
 
   global $channel, $boxUser, $box;
-  $mya = r\setAcct();
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
   if ($mya) $boxUser = w\boxUser($box = w\box(), $mya->id); // so far used only when recording transactions
 

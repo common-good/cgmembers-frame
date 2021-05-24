@@ -49,7 +49,8 @@ $version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
 // handle scripts
-if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
+if (isDEV and $jsCode = nni($_GET, 'jsCode')) w\jsx('eval', compact('jsCode')); // for testing ajax
+if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(u\jsonize($scriptScraps))); // fragments
 $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
   u\EXPECT(count($s) >= count(ray(SCRIPTS_TOP)) + count($pageScripts), 'scripts! ' . pr(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), $pageScripts)) . pr($pageScripts));
@@ -61,7 +62,8 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
     if (u\starts($id, 'goo-')) $src = 'https://www.google.com/' . substr($id, 4); else $src .= "?v=$tm&$v"; // $v is either a small integer (from array_flip) or all script arguments
     $idRay = ray('id', "script-$id");
   } else { $idRay = []; } // no id for 3rd-party scripts
-  $nonceRay = strpos($src, 'spin.min') ? ray('nonce', $styleNonce) : []; // external nonce fails in Edge as of 12/14/2017
+  if (in($id, SCRIPT_MODULES)) $idRay['type'] = 'module';
+  $nonceRay = ray('nonce', $styleNonce); // but external nonce fails in Edge as of 12/14/2017
   
   if (strpos($v, ';')) { // temporary for inline
     $scripts .= w\tags('script', $v, $idRay) . "\n";
@@ -69,6 +71,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
 }
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.
+
 if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
 $favicon = <<<EOF

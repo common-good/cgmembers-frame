@@ -63,7 +63,7 @@ X;
         UPDATE txs t
         JOIN (
           SELECT MAX(id) AS id, payer, payee, amount, created FROM r_recurs
-          GROUP BY payer, payee, amount
+          GROUP BY payer, payee, amount, created
         ) r ON r.payer=t.uid1 AND r.payee=t.uid2 AND r.amount=t.amt2 AND r.created<=t.created+60 AND t.flags&(1<<9)
         SET t.recursId=r.id
 X;

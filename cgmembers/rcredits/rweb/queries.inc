@@ -14,7 +14,7 @@ use CG\Util as u;
  */
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
-$gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
+$gifts = "tp.amount * IF(tp.period='week', 52 / tp.periods, IF(tp.period='month', 12 / tp.periods, IF(period='quarter', 4 / tp.periods, 1)))";
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
@@ -44,8 +44,8 @@ $queries = [
   
   2 . 'Transaction Totals to Date' =>
     "SELECT COUNT(*) AS txCount, SUM(ABS(amt)) AS txDollars, 
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), amt, 0)) AS inPersonDollars,
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*amt, 0)) AS ccFeesSaved
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_APP), amt, 0)) AS inPersonDollars,
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_APP), .85*.02*amt, 0)) AS ccFeesSaved
     FROM txs t JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2
     WHERE :ctty IN (u1.community, u2.community)",
     
@@ -63,22 +63,22 @@ $queries = [
 
   t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
-     SUM(IF(u.balance<0, 1, 0)) AS negativeBalanceCount,
-     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalanceTotal,
-     SUM(IF(u.balance>=0, 1, 0)) AS positiveBalanceCount,
-     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalanceTotal
+     SUM(IF(u.balance<0, 1, 0)) AS negCount,
+     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalTotal,
+     SUM(IF(u.balance>=0, 1, 0)) AS posCount,
+     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
      FROM users u LEFT JOIN users c ON c.uid=u.community 
      WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
      GROUP BY c.fullName",
   
   t('Company and Member Balances and Credit Lines') =>
     "SELECT c.fullName AS community,
-            SUM(IF(u.:IS_CO, 0, u.balance)) AS memBalances,
+            SUM(IF(u.:IS_CO, 0, u.balance)) AS memBals,
             SUM(IF(u.:IS_CO, 0, -u.floor)) AS memCredit, 
-            SUM(IF(u.:IS_CO, 0, IF(u.:IS_REFILL, u.minimum, 0))) AS memTargetBalances,
-            SUM(IF(u.:IS_CO, u.balance, 0)) AS coBalances,
+            SUM(IF(u.:IS_CO, 0, IF(u.:IS_REFILL, u.minimum, 0))) AS memTargetBals,
+            SUM(IF(u.:IS_CO, u.balance, 0)) AS coBals,
             SUM(IF(u.:IS_CO, -u.floor, 0)) AS coCredit, 
-            SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBalances 
+            SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBals
      FROM users u LEFT JOIN users c ON c.uid=u.community
      WHERE IFNULL(u.jid,0)=0 AND c.uid<0 GROUP BY c.fullName",
 
@@ -90,7 +90,8 @@ $queries = [
     SUM(IF(uid2=:CG_CRUMBS_UID,amt,0)) AS crumbs,
     SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) AND NOT t.:IS_RECURS,amt,0)) AS other
     FROM txs t JOIN users u ON u.uid=t.uid1
-    WHERE u.community=:ctty AND (t.:IS_GIFT OR uid2 IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) OR t.:IS_RECURS)
+    WHERE u.community=:ctty 
+    AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID))
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
   t('Expected Member Donations to CG and Community') =>
@@ -101,7 +102,7 @@ $queries = [
             SUM(IF(u.:IS_ROUNDUP, 1, 0)) AS roundupy,
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
-    FROM users u LEFT JOIN tx_templates r ON (r.from=u.uid AND r.end IS NOT NULL AND r.to=:CGID) LEFT JOIN users c ON c.uid=u.community
+    FROM users u LEFT JOIN tx_templates tp ON (tp.from=u.uid AND tp.end IS NOT NULL AND tp.to=:CGID) LEFT JOIN users c ON c.uid=u.community
     WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT :CANONIC
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
@@ -132,11 +133,7 @@ $queries = [
         / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
       SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
         / SUM(IF(:IS_OK, 1, 0)) AS eachInvited
-    FROM (
-      SELECT uid,helper,source,flags,data,created FROM users
-      UNION SELECT NULL AS uid, NULL AS helper, source, 0 aS flags, '' AS data, created FROM signup s0 
-        WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName LIMIT 1) IS NULL
-    ) u
+    FROM users u
     LEFT JOIN tx_templates r ON r.from=u.uid AND r.to=:CGID AND r.end IS NULL
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
     GROUP BY origin

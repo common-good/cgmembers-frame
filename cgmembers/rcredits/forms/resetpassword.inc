@@ -16,42 +16,43 @@ include_once __DIR__ . '/signin.inc';
 function formResetPassword($form, &$sta, $args = '') {
   global $mya; // not yet saved in session
  
-  extract(just('id code', $args)); // linked from an email
+  extract(just('id qid code', $args, NULL)); // linked from an email (remove id after 6/1/2021)
+  u\setDft($qid, $id);
+  if (!$qid or !$code) return softErr('invalid link');
   
-  $a = r\acct($id);
+  $a = r\acct($qid);
     
   if (!$mya or $mya != $a) { // no longer signed in to the right account, so sign in
     w\signout(TRUE); // close the wrong old account, if any
-    if (flooding($uid = r\loginString(nn($id)), $sta, $err)) return w\softErr($err); // handle getting hammered
+    if (flooding($uid = r\loginString(nn($qid)), $sta, $err)) return w\softErr($err); // handle getting hammered
     if (!$mya = $a ?: r\acct($uid)) return w\softErr(t('That is not a recognized account ID and one-time password.'));
     if (!$mya->passwordOkay(nn($code), 'pass', $err)) return w\softErr($err);
     noFlood($sta);
   }
   
   $title = t('Choose a New Password');
-  $subtext = t('pass advice');
+  $subtext = tr('pass advice');
   $passFlds = w\pickPassword(TRUE, REQ);
   $submit = t('Submit');
-  $buttons = compact('submit');
   
   $uid = hidFld($uid);
 
-  return cgform(compact(ray('title subtext uid')) + $passFlds + $buttons);
+  return cgform(compact(ray('title subtext uid')) + $passFlds + compact('submit'));
 }
 
 function formResetPassword_validate($form, &$sta) {return formChangePassword_validate($form, $sta);}
 
 function formResetPassword_submit($form, &$sta) {
   global $mya;
-  extract(just('pass1 uid', $sta['input']));
+  extract(just('pw uid', $sta['input']));
 
   $mya = r\setAcct($uid, $sta);
 
   $mya->update('oneTimePass', '');
-  if ($pass1) {
+  if ($pw) {
     say('pass saved');
-    $mya->update('pass', $pass1);
+    $mya->update('pass', $pw);
   }
 
-  return w\go($mya->admin2 ? 'sadmin/followup' : 'summary');
+  return w\go($mya->admin2 ? 'sadmin/followup' : 'dashboard');
 }

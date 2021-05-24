@@ -52,14 +52,14 @@ Setup:
   |   1 | %today-7m |    250 | .ZZG | .ZZC | car     | %TX_SYS |
   |   2 | %today-6m |    250 | .ZZH | .ZZC | boat    | %TX_SYS |
   |   3 | %today-6m |    250 | .ZZI | .ZZC | fish    | %TX_SYS |
-  |   4 | %today-5m |     10 | .ZZC | .ZZA | cash E  | %TX_POS |
-  |   5 | %today-1m |   1100 | .ZZA | .ZZC | pop in  | %TX_POS |
-  |   6 | %today-3w |    240 | .ZZB | .ZZC | what G  | %TX_POS |
-  |   7 | %today-2w |     50 | .ZZD | .ZZC | cash P  | %TX_POS |
-  |   8 | %today-1w |    120 | .ZZD | .ZZC | offline | %TX_POS |
+  |   4 | %today-5m |     10 | .ZZC | .ZZA | cash E  | %TX_APP |
+  |   5 | %today-1m |   1100 | .ZZA | .ZZC | pop in  | %TX_APP |
+  |   6 | %today-3w |    240 | .ZZB | .ZZC | what G  | %TX_APP |
+  |   7 | %today-2w |     50 | .ZZD | .ZZC | cash P  | %TX_APP |
+  |   8 | %today-1w |    120 | .ZZD | .ZZC | offline | %TX_APP |
   |   9 | %today-6d |    100 | .ZZF | .ZZJ | cash V  | %TX_WEB |
-  |  10 | %today-1d |    120 | .ZZA | .ZZJ | this    | %TX_POS |
-  |  11 | %today-1d |    120 | .ZZB | .ZZJ | that    | %TX_POS |
+  |  10 | %today-1d |    120 | .ZZA | .ZZJ | this    | %TX_APP |
+  |  11 | %today-1d |    120 | .ZZB | .ZZJ | that    | %TX_APP |
   |  12 | %today-1d |     40 | .ZZJ | .ZZC | labor   | %TX_WEB |
   |  13 | %today-1d |     10 | .ZZA | cgf  | gift    | %TX_WEB |
   |  14 | %today-1d |     11 | .ZZB | cgf  | gift    | %TX_WEB |  

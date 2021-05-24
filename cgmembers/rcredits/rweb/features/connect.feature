@@ -10,13 +10,10 @@ Setup:
 
 Scenario: A member connects a bank account during signup
   When member ".ZZA" visits page "settings/fund"
-  Then we show "Getting Money In or Out" with:
-  | Choose how   |
-  | Connect How: |
-  |   employer   |
-  |   store      |
-  |   transfer   |  
-  | Save         |
+  Then we show "Connect a Checking Account" with:
+  | Routing |
+  | Account |
+  | Refills |
 
 #  # plus these hidden fields that appear when user selects Connect Yes:
 #  # (also the Save button changes to Connect)
@@ -42,7 +39,7 @@ Scenario: A member connects a bank account later
   Given member ".ZZA" visits page "settings/fund"
   And step done "fund"
   When member ".ZZA" visits page "settings/fund"
-  Then we show "Banking Settings" with:
+  Then we show "Connect a Checking Account" with:
   | Connect:               | No | Yes |
   | Save                   | | |
 
@@ -65,6 +62,18 @@ Scenario: A member connects a bank account later
   | Account: | xxxxxx1234 | |
   | Refills: | No | Yes |
   | Save     | | |
+  
+Scenario: An active member connects a bank account with a bad routing number
+  Given member ".ZZA" has "person" steps done: "signup agree fund"
+  When member ".ZZA" visits page "settings/fund"
+  Then we show "Connect a Checking Account" with:
+  | Connect | No | Yes |
+
+  When member ".ZZA" completes form "settings/fund" with values:
+  | op      | connect | routingNumber | bankAccount | bankAccount2 | refills | chox |*
+  | Connect |       1 | 987654321     | 1234        | 1234         |       0 |    2 |
+  Then we say "error": "bad routing number"
+  
 Skip (not finished below here)
  
    | Connect | connect | routingNumber | bankAccount | bankAccount2 | refills | target | achMin | saveWeekly |*

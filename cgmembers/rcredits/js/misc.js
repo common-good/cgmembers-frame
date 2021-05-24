@@ -64,10 +64,20 @@ if (!mobile) jQuery('.navbar-nav > li > a').hover(function() {
 });
 if (!mobile) jQuery('form div').hover(function() {jQuery('* [data-toggle="popover"]').popover('hide');});
 
-$('.form-horizontal :input:enabled:visible:first:not([tabindex="-1"])').focus();
+$('.form-horizontal :not([class="invisible"]):input:enabled:visible:first:not([tabindex="-1"])').focus();
 
 $('.test-next').click(function () {
   $('#testError' + $(this).attr('index'))[0].scrollIntoView(true); window.scrollBy(0, -100);
+});
+
+$('[class^="qbtn-"]').click(function () {
+  var pop = $('#help-modal');
+  var cl = $(this).attr('class');
+  post('qBtn', {topic:cl.substring(cl.indexOf('-') + 1)}, function (j) {
+    pop.find('.modal-title').html(j.title);
+    pop.find('.modal-body').html(j.body);
+    pop.modal('show');
+  });
 });
 
 function showMore(pgFactor) {
@@ -141,14 +151,19 @@ function noSubmit() {
 }
 function yesSubmit() {}
 
-function who(form, fid, question, amount, allowNonmember, coOnly) {
+/**
+ * Find out what account the user means (see w\whoFldSubmit).
+ * Create a hidden whoId field to store the record Id.
+ */
+function who(form, fid, question, amount, selfErr, restrict, allowNonmember) {
   jForm = $(form);
   var who = $(fid).val();
   if (yesSubmit) return true;
-  get('who', {who:who, question:question, amount:amount, coOnly:coOnly}, function(j) {
+  get('who', {who:who, question:question, amount:amount, selfErr:selfErr, restrict:restrict}, function(j) {
     if (j.ok) {
       if (j.who) {
-        $(fid).val(j.who);
+        setWhoId(j.who, jForm);
+        
         if (j.confirm != '') {
           yesno(j.confirm, function() {
             yesSubmit = true; jForm.submit();
@@ -166,6 +181,13 @@ function who(form, fid, question, amount, allowNonmember, coOnly) {
   return false;
 }
 
+function setWhoId(id, frm) {
+  var whoId = $('input[name="whoId"]', frm);
+  if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
+    whoId.val(id);
+  } else frm.append('<input type="hidden" name="whoId" value="' + id + '" />');
+}
+
 function which(jForm, fid, title, body) {
   $('<div id="which">' + body + '</div>').dialog({
     title: title,
@@ -174,26 +196,38 @@ function which(jForm, fid, title, body) {
     dialogClass: 'which'
   });
   $('.ui-dialog-titlebar-close').html('&times;');
-  $('.ui-dialog-titlebar-close').click(function() {noSubmit();});
-  $('#which option').click(function() {
-    yesSubmit = true;
-    $(fid).val($(this).val());
-    jForm.submit();
+  $('.ui-dialog-titlebar-close').click(function () {noSubmit();});
+
+  $('#which option').click(function () {clickWhich(fid, $(this).val(), $(this).text(), jForm);});
+  
+  $('#which select').keypress(function (e) {
+    if (e.which != 13) return;
+    var id = $(this).val();
+    var text = $(this).find('option[value="' + id + '"]').text();
+    clickWhich(fid, id, text, jForm);
   });
+}
+
+function clickWhich(fid, id, text, frm) { 
+    yesSubmit = true;
+    $(fid).val(text);
+    setWhoId(id, frm);
+    $('#which').hide();
+    frm.submit();
 }
 
 /**
  * Activate typeahead functionality for an account input element.
  * @param string sel: input element selector
- * @param bool coOnly: <include only companies>
+ * @param string restrict: MySQL restrictions, if any
  */
-function suggestWho(sel, coOnly) {
+function suggestWho(sel, restrict) {
   var members = new Bloodhound({
   //  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     prefetch: {
-      url: ajaxUrl + '?op=typeWho&data=' + coOnly + '&sid=' + ajaxSid,
+      url: ajaxUrl + '?op=suggestWho&data={"restrict":"' + restrict + '"}&sid=' + ajaxSid,
       cache: false
     }
   });
@@ -239,6 +273,19 @@ function SelectText(element) { // from http://stackoverflow.com/questions/985272
   }
 }
 
+/**
+ * Copy specified value to clipboard.
+ * @param string s: string to copy
+ * @return <success>
+ */
+function clipCopy(s) {
+  var area = document.createElement('textarea');
+  area.value = s;
+  document.body.appendChild(area);
+  area.select();
+  return document.execCommand('copy');
+}
+
 function getCookie(name) {
   var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : null;
@@ -269,7 +316,9 @@ function fmtAmt(n, digits) {
   return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
 
-function has(haystack, needle) {return (haystack.indexOf(needle) >= 0);}
+function has(hay, needle) {
+  return ((hay + '').indexOf(needle + '') >= 0);
+}
 /**
  * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
  */ /* FAILS

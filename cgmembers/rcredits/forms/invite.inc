@@ -14,6 +14,7 @@ function formInvite($form, &$sta, $args = '') {
   extract(just('edit example code', $args, NULL));
 
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
+  if ($mya->co) say(t('To endorse %PROJECT, use your personal account.'));
 
   $quote = db\get('quote', 'u_shouters', ray('uid', $mya->id)) ?: SHOUT_TEXT;
   if (!$mya->co and (!$mya->shouter or $edit)) return endorse($mya, $quote, $edit);
@@ -23,7 +24,7 @@ function formInvite($form, &$sta, $args = '') {
   $signed = u\fmtDate($mya->signed, TRUE);
   $code = $mya->iCardCode(IBY_EMAIL); // this code is different from the one emailed in form
   $info = compact(ray('fullName quote phone signed'));
-  $buttons = btn('/community/invite/all', t('Recent Endorsements'), '', '', away());
+  $buttons = btn('/community/invite/all', t('Recent Endorsements'));
 
   if ($example) return exampleInvite($info, $code);
 
@@ -31,8 +32,9 @@ function formInvite($form, &$sta, $args = '') {
 }
 
 function formInvite_validate($form, &$sta) {
-  extract(just('sign org position', $sta['input'], NULL));
-  if (isset($sign)) { // community invitation
+  extract(just('sawVideo org position', $sta['input'], ''));
+
+  if (isset($sawVideo)) { // community invitation (can't use isset($sign))
     if ($position and !$org) return say(t('If you are not associated with an organization, leave your title blank.'), 'title');
   } else { // individual invitation
     extract(just('email', $sta['input']));
@@ -44,16 +46,16 @@ function formInvite_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   global $base_url;
 
-  if (isset($sta['input']['sign'])) { // community invitation
-    extract(just('sign quote org position website usePhoto postPhoto sawVideo whyNot', $sta['input'], NULL));
+  if (isset($sta['input']['sawVideo'])) { // community invitation
+    extract($input = just('sign quote org position website usePhoto postPhoto sawVideo whyNot', $sta['input'], NULL));
     if ($sign) {
       foreach (ray('usePhoto postPhoto sawVideo') as $k) $$k = $$k ? 1 : 0;
       $website = preg_replace('~http(s?)://~', '', $website);
       list ($uid, $title) = [$mya->id, $position];
       db\updateOrInsert('u_shouters', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
-      say(t('Thank you! Your name has been added to the list.'));
+      say(t('Thank you for endorsing %PROJECT!')); // might be new or edited
     } else {
-      r\tellAdmin(t('non-endorsement'), compact(ray('sawVideo whyNot')));
+      r\tellAdmin(t('non-endorsement'), $input + ray('fullName', $mya->fullName));
       if ($whyNot) say(t('Thank you for telling us! We will use your feedback to improve.'));
     }
   } else { // individual invitation
@@ -75,7 +77,7 @@ function formInvite_submit($form, &$sta) {
  */
 function exampleInvite($subs, $code, $emailCoded = '') {
   header_remove('Content-Security-Policy'); // allow the template's CSS
-/**/  if (!$res = file_get_contents(BASE_URL . '/rcredits/templates/invite.html')) die('missing invitation template');
+/**/  if (!$res = file_get_contents(R_ROOT . '/templates/invite.html')) die('missing invitation template');
 /**/  echo tr($res, $subs + compact(ray('code emailCoded')));
   exit();
 }
@@ -89,12 +91,12 @@ function inviteOne($mya, $code, $info, $buttons, $args) {
   if ($mya->shouter) $buttons .= btn('/community/invite/edit=1', t('Edit Yours'));
   if (db\exists('r_invites', 'inviter=:id', ray('id', $mya->id))) $buttons .= btn('/community/invite/invited-whom', t('Who you invited'));
 
-  $_aInvite = atag(PROMO_URL . "/signup/code=$code");
-  $_aStd = atag("/community/invite/example=1&code=$code&$args", away());
+  $_aInvite = atag(BASE_URL . "/signup/code=$code");
+  $_aStd = atag("/community/invite/example=1&allow=acct&qid=$mya->mainQid&ecode=$mya->emailCode", away());
   $friend = $mya->co ? t('customer, employee, or supplier') : t('friend');
   $subs = hidFld(serialize($info));
   
-  $subtext = t('<p>Invite a %friend</b> to sign up for a free %PROJECT card! Type an email address below to send a message <%aStd>[like this]</a>. OR copy [<%aInvite>Sign up for %PROJECT</a>] into an email you write yourself.</p><p>Some people may need your help signing up &mdash; especially uploading or emailing a photo.</p>'
+  $subtext = t('<p>Invite a %friend</b> to sign up for a free %PROJECT card! Type an email address below and we\'ll send a message <%aStd>[like this]</a>. Or copy this link: [<%aInvite>Sign up for %PROJECT</a>] into an email you write yourself (or copy the whole example into an email).</p><p>Some people may need your help signing up &mdash; especially uploading or emailing a photo.</p>'
   , compact(ray('_aStd _aInvite friend')));
 
   $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
@@ -115,13 +117,13 @@ function endorse($mya, $quote, $edit) {
   $position = $title;
   
   $title = t('Invite People');
-  $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement:</p><h5>%SHOUT_TEXT<br><small>&mdash; %nm (and many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
+  $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement (you can also add your own words after you click Yes):</p><h5>%SHOUT_TEXT<br><small>&mdash; (your name here, along with many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
   
-  $sawVideo = boolFld(t('Watched Video?'), '', $edit ? $sawVideo : 0);
-  $sign = $edit ? hidFld(1) : boolFld(t('Sign:'), '', -1);
+  $sawVideo = boolFld(REQ . t('Saw Video?'), '', $edit ? $sawVideo : 0, NULL, clas('mlab-left'));
+  $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1, NULL, clas('mlab-left'));
   $whyNot = textFld(t('Why?'), [t('Reason'), t('If you\'re willing, please say why you\'re not endorsing %PROJECT.')]);
   $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission? When people are thinking about signing up, they will read this as you-talking-to-them. So you may want to tell them explicitly to sign up.'));
-  $quote = textFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list.')], dft($quote));
+  $quote = areaFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list. You can edit it any time. (max 4000 chars)')], dft($quote) + maxlen(4096));
   $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')], dft($org));
   $position = textFld(t('Title:'), [t('Your position there')], dft($position));
   $website = textFld(t('Website:'), [t('Organization website URL')], dft($website));
@@ -129,5 +131,5 @@ function endorse($mya, $quote, $edit) {
   $postPhoto = boxFld('postPhoto', NBSP, t('You may also include my photo and my answer (above) in a media post.'), $edit ? $postPhoto : 0);
 
   jsx('invite', 'edit', $edit);
-  return cgform(compact(ray('title subtext sawVideo sign whyNot question quote org position website usePhoto postPhoto')) + w\setupFoot());
+  return cgform(compact(ray('title subtext sign sawVideo whyNot question quote org position website usePhoto postPhoto')) + w\setupFoot());
 }

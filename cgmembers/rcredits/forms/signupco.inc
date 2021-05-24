@@ -23,27 +23,22 @@ function formSignupCo($form, &$sta, $args = '') {
   $title = t('Open a Company Account');
 
   extract(just('relate', $args, FALSE));
-  if ($mya) {
-    if ($mya->cAdmin) { // let admins open company accounts on behalf of others
-      if ($relate and !$mya->co) $a = $mya; else signout(TRUE);
-    } else $a = $mya->agentA;
-  } else { // no signed in (presumably from promo site)
+  if (!$mya) { // not signed in (presumably from promo site)
     $subtext = t(<<< X
       <p>To open a company account, the first step is to open an individual account. This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified.</p>
-      <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Summary page.</p>
+      <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Dashboard page.</p>
 X
     , '_a', w\atag('/signup/' . $args));
     return cgform(compact(ray('title subtext')));
   }
 
-  if (nn($a)) {
-    $agentQid = $a->mainQid;
-    if ($coInfo = $a->signupCo) {
-      extract(just('company companyPhone', $coInfo, '')); // predict co name
-      if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
-    }
-  } else $agentQid = '';
-  $agentQid = hidFld($agentQid);
+  $a = ($mya->cAdmin and $relate and !$mya->co) ? $mya : $mya->agentA; // admins open company accounts on behalf of others
+
+  if ($coInfo = $a->signupCo) {
+    extract(just('company companyPhone', $coInfo, '')); // predict co name
+    if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
+  }
+  $agentQid = hidFld($a->mainQid);
 
   $subtext = t(<<< X
     <p>Opening a Common Good Company Account is very much like opening a personal account. We will guide you through several short steps.</p>
@@ -63,7 +58,7 @@ X
   
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 
-  $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')], required());
+  $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')]);
   extract(ssnFields(FALSE, REQ));
 
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
@@ -71,35 +66,28 @@ X
   $zip = zipFld();
 
   $selling = textFld(t('Selling:'), [t('Products'),t('Enter a <b>VERY SHORT</b> transaction description (for example "food") for when you make a sale. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($mya->selling) + maxlen(SELLING_MAXLEN));
+  $sellCg = boolFld(t('Sell Credit:'), t('Do you want to accept customer cash in exchange for your %PROJECT credit (recommended)?'), 1);
   $source = $source ? hidFld($source) : sourceFld('');
-  $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
+  $needPhone = boolFld(t('Need Phone:'), t('Do you need %PROJECT to supply an Android phone, to run the CGPay app? (you will be charged a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
 
-  $submit = t('Submit');
+  $midtext = t('<h3>%PROJECT Agreement</h3><p>I commit this company to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', '_a', 'a id="show-agreement"');
+  extract(just('agreement details', formAgreement($form, $sta)));
+  $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling federalId dob source ownPhone submit args agentQid')));
+  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId dob source needPhone midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
   global $mya;
   
-  extract(u\normalizeCase(just('fullName legalName', $sta['input'])));
+  extract(u\normalizeCase(just('fullName legalName', $sta['input'], NULL)));
   extract(just('zip phone email selling federalId dob', $sta['input']));
 
-  foreach (ray('fullName legalName') as $field) {
+  foreach (ray('fullName legalName') as $field) if ($field != 'legalName' or $$field) {
     $$field = trim(str_replace('  ', ' ', u\normalizeCase(nn($$field))));
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
-
-/*  if ($agentQid = trim(strtoupper(nn($agentQid)))) {
-    if (!$a = r\acct($agentQid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'agentQid');
-    if ($mya) {
-      if ($mya->id != $a->id) u\FAIL('signed in to wrong account in signupco');
-    } else {
-      if (w\flooding($a->id, $sta, $err)) return say($err, 'pass');
-      if (!$a->passwordOkay(nn($pass), 'pass', $err)) return say('login failed', 'agentQid');
-    }
-  } */
 
   if (!formBasic_validate($form, $sta, TRUE, 'federalId dob')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
@@ -114,8 +102,8 @@ function formSignupCo_submit($form, &$sta) {
   global $mya;
   
   $dbFields = 'coType source selling fullName legalName email flags phone federalId dob zip state helper';
-  extract(just($dbFields . ' source2 ownPhone agentQid args', $sta['input']));
-  extract(just('code relate', nn($args)));
+  extract(just($dbFields . ' sellCg source2 needPhone agentQid args', $sta['input'], NULL));
+  extract(just('code', nn($args, []), NULL));
 
   signout(TRUE);
   $agentA = r\acct($agentQid);
@@ -123,16 +111,16 @@ function formSignupCo_submit($form, &$sta) {
   $helper = $agentA->id;
   $legalName = $legalName ?: $fullName;
   
-  list ($city, $state, $latitude, $longitude) = zipCity($zip);
-  $preid = getPreId($source);
+  list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
-  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
   r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)
   
-  foreach (ray(CO_DFTS) as $i) $newA->setCoBit(APP_CANS + $i);
+  foreach (ray(CO_APP_DFTS) as $i) $newA->setCoBit(APP_CANS + $i);
+  if ($sellCg) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $mya->setCoBit($k);
 
   list ($myid, $name) = [$newA->id, $newA->name];  
   $qid = $newA->mainQid;
@@ -141,16 +129,19 @@ function formSignupCo_submit($form, &$sta) {
   $pw1 = $newA->oneTimePass($name, TRUE);
 
   $newA->newRelation(ray('other otherNum owner permission', $agentA->id, 1, TRUE, r\perm(B_MANAGE)));
-  r\notify($myid, 'verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')), TRUE); 
+  $mya->tell('verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')));
 
-  if (nn($code)) w\invitation($code, $myid); // mark invitation used
+  if ($code) w\invitation($code, $myid); // mark invitation used
   
   say('info saved');
 
-  if ($ownPhone != 1) {
-    be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
+  if ($needPhone) {
+    $mya->payApproved(CGID, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
+    r\tellCAdmin(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'), $info);
     say('refundable deposit');
   }
 
+  $mya->update('signed, signedBy', now(), $agentA->fullName);
+  $mya->stepDone('agree');
   return w\goNextStep('signup'); 
 }

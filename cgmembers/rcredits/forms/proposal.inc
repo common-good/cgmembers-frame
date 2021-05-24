@@ -20,7 +20,7 @@ function formProposal($form, &$sta, $args = '') {
   global $base_url, $mya;
 	
   extract(just('ctty', $args, NULL));
-	if (!$ctty or !$cttyA = r\acct($ctty)) return w\go(''); // don't even bother with an error message if no ctty
+	if (!$ctty or !$cttyA = r\acct($ctty)) return w\go('dashboard'); // don't even bother with an error message if no ctty
 	list ($ctty, $cttyName) = [$cttyA->id, $cttyA->fullName];
 	list ($cttyEmail, $cttyPhone) = [$cttyA->email, u\fmtPhone($cttyA->phone)];
   
@@ -152,6 +152,6 @@ function formProposal_submit($form, &$sta) {
 	foreach (nni($input, 'recovery') ?: [] as $k => $v) u\setBit($recs, $k);
 	$input['recovery'] = nn($recs) ?: 0;
   db\insert('r_proposals', $info = just($dbFields, $input));
-  r\tellCO('funding proposal received', $info);
+  r\tellCAdmin('funding proposal received', $info);
   w\go('community', t('Your funding application has been submitted! The process of evaluating proposals may take several weeks. You will hear from us whether or not your proposal is chosen for funding.'));
 }

@@ -115,10 +115,6 @@ function hook_preprocess(&$variables, $hook) {
 
   // Add contextual links to the variables, if the user has permission.
 
-  if (!user_access('access contextual links')) {
-    return;
-  }
-
   if (!isset($hooks)) {
     $hooks = theme_get_registry();
   }

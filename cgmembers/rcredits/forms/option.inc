@@ -22,11 +22,11 @@ function formOption($form, &$sta, $args = '') {
   if (!$add = empty($oid)) {
     $fields = 'e.id AS eid, e.ctty, q.id AS qid, q.type, o.text, o.detail, o.minimum as min, o.maximum as max';
     if (is_numeric($oid) and $option = db\get($fields, 'r_options o LEFT JOIN r_questions q ON q.id=o.question LEFT JOIN r_events e ON e.id=q.event', 'o.id=:oid', compact('oid'))) extract($option); else $add = FALSE;
-    if ($ctty != $mya->community) return w\go('', t('Wrong community.'));
+    if ($ctty != $mya->community) return w\softErr(t('Wrong community.'));
 
     $id = hidFld($oid);
   } else {
-		if (empty($qid)) return w\go('', t('Missing question id.'));
+		if (empty($qid)) return w\softErr(t('Missing question id.'));
 		$type = db\get('type', 'r_questions', 'id=:qid', compact('qid'));
 	}
 

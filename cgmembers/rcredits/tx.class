@@ -73,7 +73,7 @@ class Tx {
     case 'payeeId': return $tx->payeeEntry->uid;
     case 'otherUid':
     case 'otherId': return $tx->otherEntry->uid;
-    case 'actorA': return r\acct($tx->actorId);
+    case 'actorA': return r\acct($tx->actorId, $tx->actorAgentId);
     case 'actorAmount': return $tx->getActorAmount();
     case 'payerAmount': return $tx->payerEntry->amount;
     case 'otherA': return r\acct($tx->otherId);
@@ -146,18 +146,6 @@ class Tx {
   public function addEntries($entries) {
     $this->entries += array_merge($this->entries, $entries);
   }
-
-  /**
-   * Read an existing transaction record, with its entries.
-   * @param xid $xid: transaction record id
-   * @return the new instance of Tx
-   *//*
-  public static function read($xid, $where = '1', $subs = []) {
-    $info = db\get('*', 'tx_hdrs', "xid=:xid AND $where", $subs + compact('xid'));
-    if (!$info) return FALSE;
-    if (!$info = self::readAll($xid)) return FALSE;
-    return new Tx($info);
-  }*/
   
   /**
    * Save this transaction in the database (header record plus all entries).
@@ -191,7 +179,6 @@ class Tx {
    * return a Tx object, an array of such, or FALSE
    */
   public static function read($xid = '', $uids = '', $starting=NULL, $ending=NULL) {
-///  public static function read($xid, $where = '1', $subs = []) {
 //    u\EXPECT([$xid, $uids, $starting, $ending], 'array|int integer|empty integer|empty');
 
     if ($uids) {
@@ -244,7 +231,8 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
 ///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
-    $where = "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1";
+    if (is_array($where) and !$subs) list ($where, $subs) = [u\where($where), $where];
+    $where = "e.uid IN (:uids) AND entryType=:E_PRIME AND $where ORDER BY t.created DESC LIMIT 1";
     $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, compact('uids') + $subs);
     if (empty($xid)) return FALSE;
     $tx = self::read($xid);
@@ -291,7 +279,7 @@ EOF;
       /* $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged'); */
     } else {
       /* $did = $toMe ? ($reverses ? t('re-charged') : t('charged')) */
-      /*   : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid')); */
+      /*   : (($this->channel == TX_APP and $me->co) ? t('credited') : t('paid')); */
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
@@ -305,16 +293,14 @@ EOF;
   /**
    * Determine whether the record can be undone
    * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
-   * @return the error assoc or FALSE if the current agent CAN undo it on behalf of the current account
+   * @return a txRet object on "no Undo", or FALSE if the current agent CAN undo it on behalf of the current account
    */
   function noUndo(&$subs = []) {
-    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
+    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return be\txRet(FALSE, 'already undone');
 
-    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actorA->agentUid);
-    $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
-    if ($err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0)) return $err;
+    list ($a1, $a2) = u\order($this->toMe, $this->actorA, $this->otherA); // second agent's permissions are irrelevant?
+    if ($zErr = r\txPermErr($a1, $a2, $this->toMe, $this->actorEntry->amount < 0)) return $zErr;
 
     return FALSE;
   }
 } // end of class tx
-

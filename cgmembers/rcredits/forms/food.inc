@@ -98,8 +98,8 @@ X
   
   jsx('amtChoice');
   
-  foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $form[$k] = $$k;
-  return cgform($form);
+  $info = []; foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $info[$k] = $$k;
+  return cgform($info);
 }
 
 function formFood_validate($form, &$sta) {
@@ -139,12 +139,12 @@ function formFood_submit($form, &$sta) {
     $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     if ($mya->payApproved($payee, $amount, $purpose, FOR_GOODS, ['recurs' => 1], $recursId)) {
-      r\notify($mya->id, 'recur pay', ray('amount when payee purpose', u\fmtAmt($amount), r\recurDesc($period, 1), t('the Food Fund'), $purpose));
+      $mya->tellOut('recur pay', ray('amount when payee purpose', u\fmtAmt($amount), r\recurDesc($period, 1), t('the Food Fund'), $purpose));
     } else $msg .= '|gift transfer later';
     say($msg);
   }
-  r\tellCo(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
+  r\tellCAdmin(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
 
   say(t('Thank you for supporting the Food Fund.'));
-  return r\acct() ? ($mya->member ? w\go('') : w\goNextStep('food', '')) : w\doSay();
+  return r\acct() ? ($mya->member ? w\go('dashboard') : w\goNextStep('food', '')) : w\doSay();
 }

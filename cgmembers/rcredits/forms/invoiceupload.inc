@@ -71,15 +71,16 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
   foreach ($txs as $one) {
     list ($uid, $email, $amt, $desc) = $one;
     $a2 = r\acct($uid);
-    list ($ok, $msg, $subs) = $inv 
+    $z = $inv 
       ? be\invoice($mya, $a2, $amt, $desc, FOR_GOODS)
       : be\transfer('payment', $mya, $a2, $amt, $desc, FOR_GOODS);
-    if (!nn($ok)) $err = TRUE;
+    if (!$z->ok) $err = TRUE;
+    $msg = $z->msg;
     if ($inv) {
-      $msg = str_replace('|balance unchanged', '', $msg); // otherwise this gets tiresome, repeated over and over
+      $msg = str_replace(tr('balance unchanged'), '', $msg); // otherwise this gets tiresome, repeated over and over
       if (!$err and !$a2->ok) $msg .= '|' . t('<b class="loud">NOTE: </b>%otherName will need to finish opening a %PROJECT account.');
     }
-    say($msg, $subs);
+    say($msg);
   }
   
   if (!nn($err)) {
@@ -99,7 +100,7 @@ function csvUploadInstructions($do, $dftDesc) {
     </ol>
   </li>
   <li><b>Save</b> the spreadsheet as a CSV file.</li>
-  <li><b>Upload</b> the CSV file here, to automatically %do that amount of %RCREDITS to each listed account.</li>
+  <li><b>Upload</b> the CSV file here, to automatically %do that amount to each listed account.</li>
 EOF
   , compact(ray('do dftDesc')));
 }

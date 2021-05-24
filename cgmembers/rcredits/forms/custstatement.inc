@@ -18,7 +18,7 @@ include_once __DIR__ . '/../statement.class';
 function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
-  if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
+  if (!$mya = r\acct()) return w\softErr(t('You must first sign in.'));
   extract(just('cust period way', $args, [NULL, NULL, 'OUT']));
 
   $a = is_null($cust) ? null : r\acct($cust);
@@ -53,20 +53,19 @@ function custStatement($args = []) {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/balance/20/R");
+  $fields = ray(t("Date/date/25/ /space/1/ /tid/20/C Description/description/83/ /space/1/ Invoiced/invoiced/20/R /space/1/ Credits/paid/20/R /space/10/ Balance/balance/20/R"));
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();
   $pdf->setFontSize(.9 * $size);
 
   $bal = 0;
-  $row0 = ['purpose' => t('Opening balance')];
+  $row0 = ['description' => t('Opening balance')];
   $space = '';
 
   foreach ($rows as $row) {
     if (!nn($classes)) $classes = array_keys($row);
-//    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
-    extract(just('tid created purpose invoiced paid', $row));
+    extract(just('tid created description invoiced paid', $row, NULL));
     $date = nn($created) ? u\fmtDate($created, TRUE) : '';
     if ($row != $row0) $bal += (float) $invoiced - (float) $paid; // nn($invoiced, 0) + nn($paid, 0) fails (PHP bug)
     $balance = $bal;
@@ -80,7 +79,7 @@ function custStatement($args = []) {
       if (in($fldName, $numFields) and isset($$fldName)) {
         $$fldName = ($$fldName == 0 and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
       }
-      if ($fldName == 'purpose') { // handle this field separately, last (see below)
+      if ($fldName == 'description') { // handle this field separately, last (see below)
         $purposeX = $pdf->GetX();
         $purposeWidth = $width;
       } else {
@@ -93,7 +92,7 @@ function custStatement($args = []) {
     // do the (potentially multiline) purpose last, so we don't mess up the pagination
     $pdf->SetTextColor();
     $pdf->SetX($purposeX);
-    $pdf->MultiCell($purposeWidth, 0, $purpose, 0, 'L', '', 1);
+    $pdf->MultiCell($purposeWidth, 0, $description, 0, 'L', '', 1);
     
 //    $pdf->SetY($nextY);
 
@@ -103,7 +102,7 @@ function custStatement($args = []) {
   $pdf->newLine();
   
   $closing = nn($classes)
-  ? ($bal ? t('Total due: $') . $balance : t('No payment is due.'))
+  ? ($bal ? t('Account Balance: $') . $balance : t('No payment is due.'))
   : t('There are no transactions this month.');
 
   $pdf->SetFillColorArray([255, 255, 0]); // yellow
@@ -121,18 +120,22 @@ function custStatement($args = []) {
 function getCustTxs($aUids, $bUids, $starting, $ending) {
   u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
   // Note that we show the company's tx description, not the customer's  
+  $reverseText = t('reverses tx #');
+  $special = be\specialTxFlds();
   
   $sql = <<< X
     SELECT DISTINCT CONCAT('tx #', xid) AS tid,
-      IF(uid1 IN (:aUids), -amt, amt) AS paid,
-      '' AS invoiced, created, 
-      (d.status=:DS_OPEN) AS disputed, IF(uid1 IN (:aUids), for1, for2) AS `purpose`
-    FROM txs_prime LEFT JOIN tx_disputes d USING(xid)
+      IF(uid1 IN (:aUids), -amt, amt) AS paid, $special, :E_PRIME AS type,
+      '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
+      IF(reversesXid, CONCAT('($reverseText', reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS description
+    FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
+    LEFT JOIN r_invoices i ON i.nvid=t.rel
     WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
       OR (uid2 IN (:aUids) AND uid1 IN (:bUids))
     UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, IF (payee IN (:aUids), amount, -amount) AS invoiced,
-      inv.created AS created, :IS_DISPUTED AS disputed, inv.`purpose` AS `purpose`
+    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, NULL AS nvid, NULL AS part, 'inv' AS type,
+      IF (payee IN (:aUids), amount, -amount) AS invoiced,
+      inv.created AS created, :IS_DISPUTED AS disputed, inv.`purpose` AS description
     FROM r_invoices inv
     WHERE (
       (payer IN (:aUids) AND payee IN (:bUids)) 
@@ -147,11 +150,12 @@ X;
   $txs = [];  // an array of arrays of entries
   $entries = [];
   $myBalance = 0.00; //balanceAsOf($aUids[0], $starting);
-  $entries[] = ['created'=>'', 'tid'=>'', 'purpose'=>t('Opening balance'), 'invoiced'=>'', 'paid'=>'', 'balance'=>$myBalance];
+  $entries[] = ray('description balance invoiced paid created tid', t('Opening balance'), $myBalance, '', '', '', '');
   foreach ($results as $result) {
     $entry = (array)$result;
     if (!empty($entry['paid'])) { $myBalance -= $entry['paid']; }
     $entry['balance'] = $myBalance;
+    $entry['description'] = be\txDesc($entry);
     $entries[] = $entry;
   }
 

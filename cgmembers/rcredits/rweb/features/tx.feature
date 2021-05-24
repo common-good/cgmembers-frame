@@ -28,18 +28,16 @@ Setup:
 #  | ".ZZA" | # agent to member           |
 
 Scenario: A member asks to charge another member for goods
-  When member ".ZZA" completes form "charge" with values:
+  When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we scrip "suggest-who" with subs:
-  | question                 | allowNonmember |*
-  | Charge %amount to %name? |              1 |
-#  Then we show "confirm charge" with subs:
-#  | amount | otherName | why                |*
-#  | $100   | Bea Two   | goods and services |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
+  # choice between Pay and Charge gets set in JS
 
 Scenario: A member confirms request to charge another member
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | purpose |*
   | charge | Bea Two | 100    | labor   |
   Then we say "status": "report tx|balance unchanged" with subs:
@@ -58,29 +56,23 @@ Scenario: A member confirms request to charge another member
   | .ZZC |       0 |
 
 Scenario: A member asks to pay another member for goods
-  When member ".ZZA" completes form "pay" with values:
+  When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we scrip "suggest-who" with subs:
-  | question              | allowNonmember |*
-  | Pay %amount to %name? |                |
-#  Then we show "confirm payment" with subs:
-#  | amount | otherName | why                |*
-#  | $100   | Bea Two   | goods and services |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
 
 Scenario: A member asks to pay another member for loan/reimbursement
-  When member ".ZZA" completes form "pay" with values:
+  When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_NONGOODS | loan    |
-  Then we scrip "suggest-who" with subs:
-  | question              | allowNonmember |*
-  | Pay %amount to %name? |                |
-#  Then we show "confirm payment" with subs:
-#  | amount | otherName | why                     |*
-#  | $100   | Bea Two   | loan/reimbursement/etc. |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
   
 Scenario: A member confirms request to pay another member
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "status": "report tx" with subs:
@@ -102,7 +94,7 @@ Scenario: A member confirms request to pay another member a lot
   Given balances:
   | uid  | balance       |*
   | .ZZB | %R_MAX_AMOUNT |
-  When member ".ZZB" confirms form "pay" with values:
+  When member ".ZZB" confirms form "tx/pay" with values:
   | op  | who     | amount        | goods | purpose |*
   | pay | Our Pub | %R_MAX_AMOUNT | %FOR_GOODS     | food    |
   Then transactions:
@@ -111,7 +103,7 @@ Scenario: A member confirms request to pay another member a lot
   
 Scenario: A member confirms request to pay a member company
   Given next DO code is "whatever"
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Our Pub | 100    | %FOR_GOODS     | stuff   |
   Then we say "status": "report tx" with subs:
@@ -135,10 +127,10 @@ Scenario: A member confirms request to pay a member company
 
 #NO. Duplicates are never flagged on web interface.
 #Scenario: A member confirms request to pay the same member the same amount
-#  Given member ".ZZA" confirms form "pay" with values:
+#  Given member ".ZZA" confirms form "tx/pay" with values:
 #  | op  | who     | amount | goods | purpose |*
 #  | pay | Bea Two | 100    | %FOR_GOODS     | labor   |  
-#  When member ".ZZA" confirms form "pay" with values:
+#  When member ".ZZA" confirms form "tx/pay" with values:
 #  | op  | who     | amount | goods | purpose |*
 #  | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
 #  Then we say "error": "duplicate transaction" with subs:
@@ -146,10 +138,10 @@ Scenario: A member confirms request to pay a member company
 #  | paid |
   
 #Scenario: A member confirms request to charge the same member the same amount
-#  Given member ".ZZA" confirms form "charge" with values:
+#  Given member ".ZZA" confirms form "tx/charge" with values:
 #  | op     | who     | amount | goods | purpose |*
 #  | charge | Bea Two | 100    | %FOR_GOODS     | labor   |  
-#  When member ".ZZA" confirms form "charge" with values:
+#  When member ".ZZA" confirms form "tx/charge" with values:
 #  | op     | who     | amount | goods | purpose |*
 #  | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
 #  Then we say "error": "duplicate transaction" with subs:
@@ -157,7 +149,7 @@ Scenario: A member confirms request to pay a member company
 #  | charged |
 
 #Scenario: A member leaves goods blank
-#  Given member ".ZZA" confirms form "pay" with values:
+#  Given member ".ZZA" confirms form "tx/pay" with values:
 #  | op  | who     | amount | goods | purpose |*
 #  | pay | Bea Two | 100    |       | labor   |  
 #  Then we say "error": "required field" with subs:
@@ -167,14 +159,14 @@ Scenario: A member confirms request to pay a member company
 Skip this is now allowed, as an implicit invitation (3 scenarios)
 Scenario: A member asks to charge another member before making an rCard purchase
   Given member ".ZZA" has no photo ID recorded
-  When member ".ZZA" completes form "charge" with values:
+  When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "error": "no photoid"
 
 Scenario: A member asks to charge another member before the other has made an rCard purchase
   Given member ".ZZB" has no photo ID recorded
-  When member ".ZZA" completes form "charge" with values:
+  When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "error": "other no photoid" with subs:
@@ -182,7 +174,7 @@ Scenario: A member asks to charge another member before the other has made an rC
   | Bea Two |
   
 Scenario: A member confirms payment of an invoice before making a Common Good Card purchase
-  Given member ".ZZA" confirms form "pay" with values:
+  Given member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
   Then we say "error": "first at home"
@@ -190,7 +182,7 @@ Scenario: A member confirms payment of an invoice before making a Common Good Ca
 Skip (not sure about this feature)
 Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
   Given member ".ZZB" has no photo ID recorded
-  When member ".ZZA" completes form "pay" with values:
+  When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "error": "other no photoid" with subs:
@@ -200,13 +192,16 @@ Resume
 
 Scenario: A new member asks to pay another member before making a Common Good Card purchase
   Given member ".ZZA" is unconfirmed
-  When member ".ZZA" completes form "pay" with values:
+  When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "error": "first at home"
+  Then we say "status": "first at home|when resolved"
 
 Scenario: A member pays another member repeatedly
-  When member ".ZZA" confirms form "pay" with values:
+  Given these "tx_templates":
+  | id | from | to   | amount | period | purpose | start | end | action | duration |*
+  |  3 | 0    | 0    |      0 | week   | bump-id | %now  |     | pay    | once     |
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | purpose | period | periods |*
   | pay | Bea Two | 100    |  labor  | week   |       1 |
   Then we say "status": "report tx|repeats" with subs:
@@ -217,16 +212,16 @@ Scenario: A member pays another member repeatedly
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        1 |
+  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "tx_templates":
   | id | from | to   | amount | period | purpose | start     | end | action | duration |*
-  |  1 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
-  And date field "start" rounded "yes" in "tx_templates" record "1" (id field "id")
+  |  4 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
+  And date field "start" rounded "yes" in "tx_templates" record "4" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "tx_templates/id/1/start"
 
 Scenario: A member pays another member later
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | purpose | start   |*
   | pay | Bea Two | 100    |  labor  | %mdy+3d |
   Then we say "status": "thing scheduled" with subs:

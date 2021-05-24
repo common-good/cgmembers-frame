@@ -20,7 +20,6 @@ function formTxs($form, &$sta, $args = '') {
   w\downloadCheck('history/transactions');
   
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
-  $optHelp = $agtViaBoxHelp . t('||Exchanges are 1-to-1 trades of US Dollars for %RCREDITS (usually automatic).|PExchanges are daily automatic payment exchanges of %RCREDITS between company and employee. The company pays the employee in US Dollars, then the employee trades back some US Dollars 1-to-1 for %RCREDITS. The net effect is that the employee gets paid partly in US Dollars, partly in %RCREDITS.');
 
   extract(just('options period starting ending do xid download downloaded', $args)); 
   
@@ -28,12 +27,7 @@ function formTxs($form, &$sta, $args = '') {
   if (nn($do)) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
-//  $descending = TRUE;
-//  foreach (ray('download agents channels boxes descending') as $k) if (isset($$k)) $optionSet[$k] = $$k;
-
   $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
-
-
   
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
   if (nn($download)) {
@@ -174,7 +168,7 @@ function formTxs_submit($form, &$sta) {
 
 /*     foreach ([$x_payer => $x_payerTid, $x_payee => $x_payeeTid] as $uid => $tid) { */
 /*       $who = $uid == $agent->id ? t('you') : $agent->fullName; */
-/*       r\notify($uid, $msg, compact(ray('who tid amount what'))); */
+/*       $a->tellMisc($uid, $msg, compact(ray('who tid amount what'))); */
 /*     } */
 /*   } */
 /*   return w\go('history', 'info saved'); */
@@ -194,9 +188,10 @@ function handleTx($do, $xid, &$sta, $args) {
     u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
 
     $DBTX = \db_transaction();
-    list ($ok, $msg, $info) = be\reverse($xid); // create an offsetting tx
+    $z = be\reverse($xid); // create an offsetting tx
+    if (!$z->ok) return go($url, $msg, 'err');
     $tx['deposit'] = now();
-    $tx['xid'] = $info['xid'];
+    $tx['xid'] = $z->subs['xid'];
     db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
     if (!$deposit) db\update('r_usd', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
     unset($DBTX);
@@ -305,12 +300,12 @@ function txSummary($starting, $ending, &$endBalance = '') {
 
 /**
  * Handle click 'OK' or 'NO' (approving or undoing a transaction)
+ * Currently only NO.
  */
 function txOKorNO($task, $xid) {
-  $a = r\acct();
-  $uids = empty($a->jid) ? [$a->uid] : [$a->uid, $a->jid];
-  $result = r\Tx::lastTx($uids, 'xid=:xid', compact('xid'));
-  if (empty($result)) return FALSE;
-  list ($ok, $message, $args) = be\undoTx($xid); // X (reverse it)
-  say($message, $args);
+  global $mya;
+  if (!$mya->lastTx(compact('xid'))) return err(t('That transaction does not exist.'));
+  
+  $z = be\undoTx($xid); // X (reverse it)
+  say($z->msg);
 }

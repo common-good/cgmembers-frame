@@ -9,7 +9,7 @@ class EasyTweaks extends AbstractMigration {
   public function up() {
 
     if ($this->hasTable('r_contracts')) $this->execute('DROP TABLE r_contracts');
-    pr('contract directory: ' . CONTRACT_DIR);
+    cgpr('contract directory: ' . CONTRACT_DIR);
 
     if (is_dir(OLD_CONTRACT_DIR)) unlink(OLD_CONTRACT_DIR);
     if (!is_dir(CONTRACT_DIR)) mkdir(CONTRACT_DIR, 0755) or die('cannot create contract directory');

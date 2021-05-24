@@ -19,8 +19,10 @@ function formTaxInfo($form, &$sta, $ending = '') {
   
   if (!$ending) $ending = strtotime('last day of December last year'); // can't use setDft because cmdline param is never null
   $regName = r\regionfield('legalName');
+  $dbaName = r\regionfield('fullName');
+  if ($dbaName != $regName) $regName .= t(' dba ') . $dbaName;
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
-  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr (%regPhone, %regEmail).</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
+  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
 
   if (now() < strtotime('1/1/2021')) { // 1099-B through 2020, 1099-K thereafter
     $title = t('Your "Barter" Income <small>(Forms 1099-B)</small>');
@@ -31,7 +33,7 @@ function formTaxInfo($form, &$sta, $ending = '') {
     $cats = [];
     $map = [t('rebate on') => t('rewards'), t('bonus on') => t('rewards')];
       
-    while ($row = be\get1099(TEN99B, $mya->id, $ending)) {
+    while ($row = be\get1099('B', $mya->id, $ending)) {
       extract(just('created amount payer for', $row));
       if ($amount <= 0) { // do not issue 1099-B for negative amounts (per IRC 1.6041-...(c)?)
         $negatives += $amount;
@@ -98,7 +100,7 @@ EOF
   
   } else {
     $title = t('Your Form 1099-K');
-    $row = be\get1099(TEN99K, $mya->id, $ending);
+    $row = be\get1099('K', $mya->id, $ending);
     extract(just('gross noCard txCount', $row));
     // if (r\no1099k($gross, $txCount, $mya->st))
     $subtext = t(<<<EOF

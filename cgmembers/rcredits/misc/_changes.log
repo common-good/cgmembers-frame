@@ -1,3 +1,789 @@
+2021-05-12 feature/routing-check
+. fixed bug that failed to verify routing number after account activation
+. reinstated usernames for sign-in (grandfathered)
+
+2021-05-07 feature/no-username
+. cleaned up pass.inc and resetpassword.inc
+. bug fix: verifyemail no longer thinks it's a hack when new user tries to resend verification message
+. username is no longer offered as an option to identify account (except, temporarily still, "admin")
+
+2021-05-07 feature/ach-limit
+. limit ACH total to bank's daily limit
+. fixed small bug in rsmart testing
+. fixed uninitialized var in dashboard
+. fixed bug in reporting repeating transaction success that failed to correlate first instance
+. cc donation now emails donor
+. made a cc donation test
+
+2021-04-21 feature/migration-ledge
+. switched startup.sql to begin after all the migrations to date
+. fixed bug in achify that failed to default bank
+
+2021-04-21 feature/qr-scan
+. fixed bugs in qr scan
+. fixed bugs in achify
+. fixed bug in show-qr that showed company photo instead of agent's
+. fixed bug in misc.js has() function, that failed on numeric haystack
+
+2021-04-20 feature/qr-test
+. added a test step to make sure the generated QR in showqr is what it should be
+. fixed bugs in cardCode related to admins not having an agent code for accounts they manage
+. made the showQR feature work for companies too
+. contactable now defaults to TRUE in work.inc
+
+2021-04-17 feature/ach2
+. adjusted achify to handle BS&L
+. admin deposits form no longer offers option to print new checks or show filename of ACH file
+. clarified in verifyid that other options are possible, by moving the link to the SSN line
+. wrapped suffixes in a div and made them automatically indent 5px
+. changed QR logo to a square one and fixed link bug
+. clicking on logo now goes to promo site
+. for cAdmins added a button to copy email subject to clipboard ("your Common Good account (WHATEVER)")
+. fixed bug in card scan that failed to show scanner name when done
+
+2021-04-17 feature/ach
+. generalized admin-achify.inc to handle an arbitrary bank
+. modified migrations to handle latest version of phinx (even though we're not updating it yet)
+. fixed bug in card.inc that treated disconnect operation as a hack attempt
+
+2021-04-12 feature/signin-to-scan
+. changed menu so scan-qr works without sign-in
+. minor formatting improvements
+. switched order of amount and purpose on card transaction page
+
+2021-04-11 feature/signin-to-scan
+. card scan (or card scan disconnect operation) end by showing a scan-again button
+
+2021-04-08 feature/signin-to-scan
+. used first() and then() functions to force signin for first web-based card scanning
+. reworked card.inc accordingly to handle choice of account (if the person has more than one)
+. summary page no longer asks for confirmation of helper (which was annoying)
+. made a "...completes..." step function to replace "...confirms..."
+. improved the way first/then is handled in tests
+
+2021-04-05 feature/signup-to-pay
+. renamed summary feature to dashboard
+. w\first() function to signin or signup then do something, and related w\then() function and weFirstThen() step function
+. totally rewrote logic of card scan with standard QR reader, to require sign-in (once)
+. made buttino function for tiny buttons
+. added expedite feature for admins on bank transfer page
+. fixed bug that kept admins from updating fields on summary page
+
+2021-03-29 feature/showqr
+. don't show qr unless member has completed steps for a Common Good card
+
+2021-03-25 feature/qr
+. added Show QR (using endroid QR) and Scan QR (JS-based) to dashboard
+. added generalized question-mark help button feature: w\qBtn($topic), typically in a field suffix() with helpModal in footer
+. fixed bugs in statements showing fiscal year or quarters
+. added checks for ophaned tx entries or hdrs to sanityCheck function
+. deleted "deleted" tx_entries_all ids: -314085, 314085, -314088, 314088, -314091, 314091, -314094, 314094, -314096, 314096, -314099, 314099, -314101, 314101, -314103, 314103, -314105, 314105, -314107, 314107, -314109, 314109, -314112, 314112, -314114, 314114, -314117, 314117, -314120, 314120, -314123, 314123, -314125, 314125, -314127, 314127, -314130, 314130 on production server (extraneous food fund donations)
+
+2021-03-20 feature/view-credit
+. improved company view of store credit and added a test for that
+. limited number of results on admin followup page
+. fixed the subject of the account approval email message
+. community admin with a company in another CGC can now get to that company
+. bug fix: button-maker now properly gives an option for donating to a CG-owned company
+. eliminated Sunset Park Solar name from anything displayed to member (at Co-op Power's request)
+. bug fix: qid is no longer displayed in helper input field for admin on summary page
+
+2021-03-14 feature/cgpay-expires
+. added expires parameter to CGPay interface
+
+2021-03-14 feature/noc4c
+. prevent buying store credit with store credit
+. bug fix: maximum rebate is now limited to price
+. cancelation of a store credit purchase now cancels the rule
+. bug fix: disputes failed, clicking X on txs page
+. fixed want/got order in some testing functions
+. disputed tx#s are now highlighted red
+. fixed bug: TX_FLAGS was missing a lot of entries
+. fixed bug: X now shows up for seller for disputed txs
+. added verbose flags to testing
+
+2021-03-13 feature/prefs
+. moved debtOk question out of advanced, disabled if no refill
+. improved description of nosearch bit
+. added missing jquery-ui CSS images
+
+2021-03-13 feature/fix-tx
+. fixed Pay and Charge JS
+
+2021-03-12 feature/fix-cron
+. bug fix: biggies didn't call queueNext()
+. added optional comment to cc donation
+. fixed missing jquery CSS image
+. each interface now logs to its own directory
+. disabled logging of SQL
+. fixed bug in ajax that made account selection fail
+. added option to donate by credit card to our food fund donation page (cgpay)
+. added option for admins to create a donate-to-CG button on the cgbutton page
+
+2021-03-11 feature/who-tweaks
+. restrictions on account choices are now handled consistently and well
+. improved which modal format
+
+2021-03-10 feature/find-anyone
+. completely revamped the way account lookups work, for beauty, speed, and finding anyone anywhere (using hidden whoId field)
+. we are no longer notified of new members (happens too often)
+. account field in panel now defaults to current account
+. fixed bug: crashed when disputing a tx by clicking X on the txs page
+. stateNum() now returns false if not found (instead of the argument)
+. added a test for ajax (to make sure it compiles at least)
+. partner signup never crashes now (softErr instead)
+. admin dashboard focuses on note field
+. pay/charge page focuses on who field
+. cron biggies report no longer includes canonic accounts
+
+2021-03-03 feature/immediate-credit
+. members now get $200 immediate credit if SSN is valid (25 for alternate IDs)
+. newly activated account gets funded immediately up to that creditline, if possible
+. Helga's now gets an emailCode on demo server
+. CGPay form no longer greets "Common Good Member", so not-yet-signed-up people will feel welcome also
+
+2021-03-02 feature/cgpay-bugs
+. bug fix: in button creator, changing link text now works
+. fixed order of fields in cgpay form
+. bug fix: sign up button now shows on cgpay form
+
+2021-03-01 feature/1099-again
+. refactored 1099s
+. fixed a couple little bugs
+. admin gets a daily email with transaction totals over $1,000
+. co phone orders now include company name!
+
+2021-02-25 feature/go-dft
+. bug fix: changed all go('') to either softErr or go('dashboard')
+. bug fix: null object in u\getLocus()
+. bug fix: (finally!) root goes to signin
+
+2021-02-25 feature/cred-link
+. added a link to credits and discounts on dashboard
+. mentioned this in the email to the member who gets a credit
+
+2021-02-25 feature/1099-nec
+. added 1099-NEC functionality
+. fixed jsonize bugs (from cgpay feature), including u\getLocus bug
+. fixed partnerErr reporting
+. fixed tellAdmin on cross-site ajax
+
+2021-02-21 feature/accredit
+. added an "accredit" page for companies to give a customer a credit
+. organized coupons menu page to separate giving from receiving
+. fixed a couple bugs that prevented store credit from showing up on discount/credit list for company or customer
+
+2021-02-20 feature/signed
+. fixed bug that left signed and signedBy fields unpopulated
+. fixed bug in co-list that used old pay-with-cg button instead of new cgpay button
+
+2021-02-18 feature/cgpay
+. redesigned and recoded cgpay so it can be a single step after designing on the cgbutton page
+. created jsonize and dejsonize to standardize the options (handling UTF8)
+. refactored out parsing URL parameters in tests
+. changed cryRay to json encode instead of serializing
+. decryRay now returns NULL on error instead of crashing (decry throws BadCry)
+. added clues to admin about which accounts are active and have a connected bank on recurring page
+. modified cgbutton form to create button code and HTML for most common use cases
+. fixed bug that sent members to root (signout / signup) after completing a form
+
+2021-02-12 feature/buy-credit-discounted
+. added a CGPay button feature to allow companies to sell store credit at a discount
+. CGPay transactions are now flagged as "button" purchases (TX_BUTTON flag)
+
+2021-02-07 feature/tweaks
+. fixed bugs in signup / notfound / empty URLs
+
+2021-02-07 feature/agree-step
+. added country field to signup, investment interest, and contact settings so Canadians can sign up (using a US bank still)
+. fixed bug that let a user create a personal account while signed in to a company account -- messing things up
+. email is now allowed to a closed account if (and only if) it's to reset a password
+. fixed bug that discarded rendered amount field in an item() in buy.inc
+. fixed bug that prevented normal cgpay button from working with for=other
+. company code can now be lowercase for cgpay button
+. added print card button to photo page (for admin)
+. relations are now allowed only with active accounts
+
+2021-02-03 feature/cgpay-json
+. added immediate json return option to CGPay interface (and updated documentation)
+. changed console page name to Dashboard
+. bug fix: underage bit now gets updated when dob changes
+. bug fix: link on dashboard to allow negative balances now works
+. bug fix: going to root redirects to signup page
+. added signin option to signup page
+. bug fix: credit line is now not mentioned in notices to underage accounts
+. fixed some errors in migrations identified by newer MariaDB (mostly null keys)
+
+2021-01-31 feature/copy-email
+. added a button for admin to copy account name and email to clipboard
+
+2021-01-30 feature/cgbutton
+. changed CGPay to always ask for user's password instead of sending an invoice for confirmation
+
+2021-01-30 feature/message
+. added encryption option to Message a Member feature
+. fixed a couple bugs in permissions for superAdmin
+. all cookies are now deleted when clearing for tests
+. fixed bug in SNAP tx reporting
+. added a standard time function in utils
+. footer is suppressed for card scans
+. fields with suffixes now default to short and inline-block
+. fixed bug in signup for people who found us through investment club express-interest form
+. solarOne errors now act like other partner errors (not fatal)
+. added signup option on signin page
+. fixed bug in message reporting change in recurring tx
+. made a model .feature test file
+. made a shorter version of the "member confirms" step function syntax
+. boxUser function now updates channel
+
+2021-01-18 feature/proxy-zips
+. seedpack nearby proxy choices now show up even if city is misspelled
+
+2021-01-18 feature/api-pw
+. companies now use the emailCode as their password for /api
+. bug fix: signup page now defaults to current user's data and the link to that signup step is correct
+. fixed bug in risk recalculation
+. fixed bugs in lastTx and refactored it
+
+2021-01-02 feature/bugs
+. new community notices are now set to seldom
+. fixed bug introduced in cc feature that screwed up croppic
+. fixed CSP nonce in boot.inc
+. fixed formatting of notices so there's room for the bullet and the date
+. fixed broken gift certificates and reformatted somewhat
+. fixed bug that didn't give email click donations option for one-time gift
+
+2020-12-30 feature/disconnect
+. when a device is associated with an account, to scan customer cards, a "Disconnect Device" choice appears on menu
+
+2020-12-29 feature/invest-amt
+. invest/interest form now asks for intended amount
+. email links to donate from inactive account now redirect to cc donation
+
+2020-12-29 feature/cc
+. fixed goods and services posts, which were labeled backwards
+. nonudge people are now included in newsletter list
+. added a cc page for credit card donations
+. created a postnGo utility function to redirect and POST at the same time
+. fixed bug that set signup step done for investment club interest
+. nonmember clicking donate link from email now goes to cc form
+. refactored w\captcha to return fields rather than values and added a badCaptcha validation function
+
+2020-12-27 feature/smart-undo
+. fixed warnings about missing params in rsmart charge()
+
+2020-12-27 feature/bugs
+. fixed some undefined variable warnings
+. donation attempts by nonmembers now encourage the person to sign up
+. agent form now facilitates conversaion from mistaken personal account
+. fixed undefined function bug in recurring donations
+. posts can now default to a community by specifying a zip in URL
+. fixed bug in posts that showed all posts to everyone
+. tip posts are now shown only where they are intended (like offers and needs)
+. fixed bug in unjoin that allowed a zero transaction
+
+2020-12-20 feature/survey
+. handling one-click investment club survey responses
+
+2020-12-06 feature/old-app
+. fixed old-app message in rsmart.inc
+. added info to gift alert to admin
+
+2020-12-03 hotfix/recur
+. fixed bug that stored wrong value for recursId in recurring transactions
+
+2020-12-03 feature/by-name
+. fixed bug that didn't allow pay by name within same community if latitude or longitude was wrong
+
+2020-12-01 feature/pgp-device-id
+. encrypt device id with pgp private key in smart.inc, so it is provably from us (demo site must use same key)
+. fixed log bug in errors.inc
+. moved makeDevice from cg.inc to acct class, as makeBox()
+. bumped expected POS version to 230!
+. added version to r_boxes, to track latest app version each device is running
+
+2020-11-29 feature/demo
+. rewrote makeTestAccounts to create test accounts from scratch instead of counting on copies of production accounts
+. vKey() now returns '' (non-fatal error) when superAdmin is not the user (shouldn't happen, but better not to crash there)
+. u\bits() now also performs its reverse function
+. fixed typo in formMakeCtty()
+. we no longer try to show altId to admin (only superAdmin)
+. made phinx config files more consistent (online), including renaming user/database new-demo to new_demo for MB migration
+. better handling of SwiftMailer errors
+. fixed but in encryption: encrypting numeric failed
+
+2020-11-24 feature/cttys
+. moved and enlarged community zip regex to r_company table by renaming serviceArea to zips
+. similarly enlarged and renamed zip field in r_regions
+. moved formMakeCtty to its own file in forms/
+
+2020-11-24 feature/ctty-loc3
+. ask for geolocation permission only on mobile
+
+2020-11-23 feature/ctty-loc
+. in posts.inc, default to showing current community posts
+. in posts.inc, get GPS data when user clicks Where
+. pages no longer cached on dev machines
+. fixed snap tx reporting bug
+. fixed warning in qo.class driven by hack attempts
+
+2020-11-19 feature/txret
+. refactored transaction functions to return a txRet object
+. fixed bug in error reporting on dev machines (now shows full trace reliably)
+. fixed bug in disconnect from bank account that tried to encrypt empty string
+. fixed several bugs in the draw feature (especially for joint accounts) and fixed production data
+. we now send an alert to admin whenever a snap purchase is made
+. Pay page now uses acct::payApproved(), so payments are successful even when they can't go through yet
+. fixed a really nasty bug that stored recursId in tx or invoice record with that numeric record ID value
+. we now warn admin if crumbs fail
+
+2020-11-10 feature/api-q
+. api function now expects "?" instead of "/" (standard GET query)
+. fixed bug in handleinvoice.inc that notice'd zero as the invoice amount when withdrawn or denied
+. fixed bug in api feature that showed page instead of exiting with message
+. reduced number of lines of code
+. we can now handle more than one test that gives an exit message, in one run
+. fixed formatting of periods on pay and charge pages
+
+2020-11-10 feature/cancel-inv
+. invoices are now canceled, not deleted (and fixed bug that prevented it)
+. other person gets a notice when a delayed payment is created
+. don't mention card in Finish step if they already have it
+. simplified how goback button works (
+
+2020-11-04 feature/cgpay-fix
+. fixed "missing code" error on simple cgpay button
+. fixed formatting on CG Button form
+. fixed language on steps on (admin) summary page
+. disallow self ZAP with negative balance or approved invoice
+
+2020-10-31 feature/goto-biz2
+. fixed bug that kept people from going to their company account
+. don't force individuals to type a zero for crumbs
+. added a helpful message when vKeyE cookie is not found
+. added more restrictions to license - it now requires registration and public description of any changes
+
+2020-10-30 feature/cooppower-ape
+. added community solar contracts for ape-ev and ape-ng
+. fixed formatting of console page
+
+2020-10-29 feature/reopen
+. Reopen link now works
+. shortcuts on console always show now when appropriate
+
+2020-10-29 hotfix/verifyid
+. Next/Finish button is now shown properly on verifyId report
+
+2020-10-28 feature/short-signup
+. individual signup is now pretty short, with optional longer signup to get a card
+. don't talk about unconfirmed invitations
+. underage bit now gets set with dob is set
+. better messages in several places, including for completion of steps
+. accounts are activated automatically when possible
+. improved formatting of Offers & Needs on narrow mobile screen
+. moved agreement to first signup page
+. connecting a checking account is now required (unless you ask for an exception)
+. donation period now defaults to year
+. proxy step now goes right on to next step when done
+. simple addition captcha now on signup page, to cut down on robots
+. invoice for company phone is now automatically approved
+. separated account activation out into separate non-admin file, so it can happen automatically sometimes
+. email verification for companies now works even if signed out
+. SSN verification is now the default, with other methods hidden unless asked for
+. "signup" table is no longer used, since that's almost all we ask for on signup page
+. handle '?' in redirected URLs in tests
+
+2020-10-23 feature/http-headers
+. changed HTTP page headers to prevent caching on all modern platforms
+
+2020-10-22 feature/partial2
+. handle reporting of partial transactions
+
+2020-10-20 feature/partial
+. handle partial payments of invoices
+. uncache submenus on account selection
+
+2020-10-18 feature/no-bank
+. keep "Bank" off the menu
+. moved menus out of rweb.module into rcredits.module
+. moved most menu code to a separate file and cached most submenus
+. changed __DIR__ . '/../ to R_ROOT . '/
+. rebuilds menus automatically on boot, if menu_links has been deleted (to force recreation)
+. access function moved to cg.inc
+. nni() now accepts objects
+. fixed warning in u\getLocus()
+. fixed warning in admin panel
+
+2020-10-15 feature/tweaks
+. suppress in-your-face endorsement ask on console page
+. better handling of errors in account change
+. minor fixes
+
+2020-10-14 feature/touchup
+. set collation so mb4 actually works
+. fixed password strength meter to reasonable behavior
+
+2020-10-14 feature/pw3
+. minor tweaks to pw feature
+
+2020-10-13 feature/pw
+. fixed reset-password page (rewrote without Drupal)
+
+2020-10-12 feature/mb4
+. convert database to ut48mb4
+
+2020-10-11 feature/format2
+. root now goes to console (again)
+. Offers & Needs page is now wide (again)
+. fixed bug in amtChoice JS
+. emailed lists of offers and needs now include links to post one
+. pages now default (again) to labels "above" on mobile
+. moved tx option buttons to above Submit
+
+2020-10-09 feature/console-fix
+. charge now works right
+
+2020-10-09 feature/relations-fix
+. newPerson now works and looks good on mobile
+
+2020-10-09 feature/bugs
+. patching up bugs from the console-tx feature:
+  - transactions now actually work
+  - Handy / Rebuild Menu now clears out all rweb menu items before rebuilding
+  - some format improvements
+  - company query results now show up
+
+2020-10-09 feature/console-tx
+. radically revised our strategy for formatting, based on a few standard page formats (wide, nolabs, mlab-above, etc)
+. fixed a number of formatting issues (especially for mobile), including check image on Connect page, label length, lists,...
+. reduced LINT warnings
+. transactions are now activated from the console by JS (to make the common case very fast)
+. fixed bug in ajax.inc that crashed cron (wrong function name)
+. removed Pay and Charge and Bank from the menu!
+. summary page is now for admins only and has a link to the console page
+. number of steps remaining is now never mentioned unless it's 1 or 2
+. changed admin SQL field on Data page to a textarea
+. changed honored field on Donate page to a textfield (not a textarea)
+. fixed search field on Posts page so it cooperates with other selectors, Enter works, and there's a clear-search button
+. temporarily removed photo from Summary page (difficult to place well)
+. pay and charge pages now return to console (for convenience)
+
+2020-10-06 feature/mobile2
+. shrink buttons to fit on console page
+. no more zero surtx entries
+. cron no longer tries to handle "i" (immediate) notices
+. improved format on console, card, and "empty" pages
+. suppress error on attempt to hack card page (hitting RC2.ME and RC4.ME)
+. added accout ID to console page
+. fixed bug that got the "next" date wrong on future-starting recurring payments
+. changed most "jQuery"s to "$" in scraps.js, in an attempt to fix browser-specific amtChoice problem
+. users created by bots are now deleted after a month
+
+2020-10-04 feature/license
+. changed license to reserve all rights except for intended use
+
+2020-10-04 feature/mobile
+. created a new mobile-friendly Console page to replace Summary (except for admins)
+. moved qr() function from qo class to admin.inc
+. fixed Qo::qr2() function so it works (previously unused, now used on Card page)
+. added "trust" and "qid" cookies, so user can sign in automatically and stay signed in
+. iPhone users (and anyone with a device that scans) can use a standard QR reader app to scan a Common Good card!
+. added Type dropdown to posts page, and colored posts green/blue/orange
+. fixed formatting of advanced buttons on Tx page
+. form Empty now displays a blank title (a silver stripe on mobile)
+. fixed errors in CSS (http://csslint.net)
+. added COVID, BLM, and O&N links to console page
+. eliminated "exchange" language, in favor of "transfer"
+
+2020-09-30 feature/invest-interest2
+. changed rdo.inc to allow doInvestInterest~ without code (for nonmembers)
+. bypassed weird bug that crashed on admin signin, trying to set additional cookies
+. changed all instances of /do/ to use the new syntax /do/<op>~<code>
+
+2020-09-30 feature/cookies
+. card page now uses cookies to track default account to charge from, default agent, and "trust this device"
+. card page: added JS, so the page actually works!
+
+2020-09-29 feature/sweep
+. null amount in a "pay" template now sweeps all but the account's target balance into another account
+
+2020-09-29 feature/never
+. "never" is now a frequency option for notices
+
+2020-09-29 feature/invest-interest
+. revised Invest page, which now redirects to InvestInterest page if signed out or no club in the area
+. introduced iclubq bit to track interest in investment club
+. reversed transactions now appear simply as (reverses tx #whatever) -- no description
+. \n is now accepted in test data (meaning EOL)
+. changed customer statements "Paid" column to "Credits"
+. fixed bug in expected donations query that omitted monthly, weekly, and quarterly donations
+. fixed bug in w\eLinkAcct() that caused failure of allow='any'
+. zapped B_WEEKLY and B_MONTHLY
+
+2020-09-28 feature/ape
+. added an admin function (moveTxsToSubco) to more Co-op Power transactions to a subsidiary
+. partner logos are now stored as the account photo (temporary, pending using SMT for solar signups)
+
+2020-09-28 feature/card
+. scanning a Common Good card with a standard QR reader now shows a page that simulates our app (not done yet)
+. new u\joinRays function
+. fixed qo::qr2() function
+
+2020-09-24 feature/post-expand
+. eliminated opening page of Offers & Needs (now shows posts everywhere by default)
+. fixed long-standing ugliness in acct::viable() function
+. fixed bugs in MakeCtty form (for admin)
+. changed shouters (endorsers) list to include website links even on promo site
+. fixed crash in justExit
+
+2020-09-16 feature/buy-status
+. revised pay-with-cg interface, including adding a "status" request
+. fixed a startup bug that didn't recognize flags as a real database field
+. improved admin export of SMT data
+
+2020-09-15 feature/partner-bit2
+. improved failure reporting
+
+2020-09-07 feature/partner-bit
+. replaced list of signup partners with a partner bit
+. revised Coop Power's salesforce field names
+. solar project is now identified by "name" field of the partner organization's CG account
+. renamed nyccec to ssps
+. changing a partner fullName now has no effect on its "name" field
+. SMT export generalized to include all projects
+. fixed bug that kept notices from being sent for not-yet-active accounts
+. activated postnotices in cron, with one-time catchup
+
+2020-09-06 feature/post-notices2
+. fixed bugs and formatting in post notices
+
+2020-09-05 feature/bugs
+. salesforce wasn't getting email and phone for cooppower projects and cg_account field name changed
+. addperson button was failing on relations page
+. cron was trying to send notices to closed accounts
+. help page was getting warnings
+. sometimes cAdmin was allowed to create a company account with no manager
+
+2020-09-04 feature/notices
+. users can now set frequency preferences for incoming and outgoing transactions and miscellaneous other
+. r\notify and r\message are now consolidated ("we tell" in tests)
+. fixed bug in scraps.js post-post: clicking "end now" failed
+
+2020-09-03 feature/post-notices
+. users can set preferences for frequency of notices about posts
+
+2020-08-26 feature/solar1-2
+. added pid parameter to solar1 signup
+. solar1 signup now adds people to Salesforce
+. crashes in PHP window on dev now report caller
+. fixed bug in tx undo error reporting
+. fixed bug in acct::hasVSecure by not encrypting (or decrypting) NULL
+. fixed bug that miscalculated permissions of agent (preventing tx reversals for example)
+
+2020-08-20 feature/recurring-next
+. fixed bug in recurring that showed wrong "Next" date
+. suppress "Done!" message for permission changes on relations page
+. changed endorsement quote to be an area field with maxlen 4096
+. added some security checks for output with e cho, die, and exit
+
+2020-08-20 feature/relations-ajax
+. toggles and permissions on relations page now use ajax
+. superAdmin can create transactions dated in the past
+. acct::hasBank now looks at acct::bankAccount instead of risks bit and risks bit is set automatically
+. invitation example now just suppresses CSP style check, not all of CSP
+. fixed bug that delete bank connection upon changing settings
+
+2020-07-31 feature/bizlists
+. added a test for authcode
+. separated out find-co.css for use on promo site
+
+2020-07-25 feature/misc
+. fixed message for when maxlen exceeded
+. fixed bug that permitted typing past maxlen on textarea fields
+. improved error message for when signed-in user tries to sign in
+. setting of altId is always recorded as a change, so we know who approved it (security accountability)
+. using header instead of drupal_set_header, to fix bug in cgbutton.inc that failed to show what button would look like
+. changed first-at-home rule to apply only if SSN check failed -- then must be close to home and in-person
+. added u\isMobile() function
+. added full-year statement links (for calendar year -- fiscal year works, but has no link)
+. now gives a better message for no-longer-valid invoice link
+. avoid unnecessary warning for undefined array index in help.inc
+. fixed several bug on invite page (thanks to Peg Hall)
+. fixed rare bug on relations page (typo)
+. improved selection of shouters for admins
+. for DOB field on mobile, a long press not converts the field from date field to text field
+. added referrer function so tests can detect what page user actually wanted
+. improved formatting in invitations
+. signout in tests is now more thorough
+
+2020-07-11 feature/export-makeover
+. revised admin export member spreadsheet feature to use new rdo format and fewer fields (switching from chimp to mailerlite)
+
+2020-07-09 feature/rdo-makeover
+. reworked doCodes and invoicing for greater consistency, ease, and security
+. eliminated use of r_do table!
+. endorse plea no longer shown for partial members (active accounts with no photo)
+. fixed bug that did delayed payments/charges immediately
+. fixed bug that scrambled company category choice list
+. fixed a couple warnings about undefined variables
+. fixed bug in testing that failed to clear dosay files
+
+2020-07-08 feature/findco-tight
+. added "nearby" checkbox to findco page
+
+2020-07-08 feature/redirect-new
+. fixed bug that gave error on direct access to new.commongood.earth when signed out
+
+2020-07-08 feature/create-migration
+. DOS batch file to create migrations according to a model
+
+2020-07-07 feature/renew-backing
+. made encryption of data for use in URLs more consistent (replaced makeDoCode and doCode with u\cryRay and u\decryRay)
+. db\insert, db\update, and db\updateOrInsert all now default to key='id'
+. members now receive an annual email asking them to renew their backing (it renews automatically if they don't act)
+. cleaned up top of cron.inc
+. added a couple invite reminders
+. added tracking to annual emails and periodic notices
+
+. deleted unused Drupal files:
+  - *.install
+  - mail.inc
+  - user.admin.inc
+. deleted unused Drupal functions:
+  - user_authenticate
+  - user_external_login_register
+  - user_user_operations_unblock
+  - user_user_operations_block
+  - user_multiple_role_edit
+  - user_block_user_action
+  - user_help
+  - user_field_info_alter
+  - user_field_extra_fields
+  - user_external_load
+  - user_login_finalize
+  - user_load_by_mail
+  - user_load_by_name
+  - user_validate_picture
+  - user_role_permissions
+  - user_login_name_validate
+  - user_login_default_validators
+  - user_login_final_validate
+  - user_mail (and related functions)
+  - user_role_load (and related functions)
+  - user_filters
+  - user_roles
+  - user_login (dies)
+  - system_mail
+  - system_send_email_action
+  - system_send_email_action_form
+
+2020-07-06 feature/inv-security
+. fixed a bug in invoicing that could have allowed anyone to approve payment of an invoice
+
+2020-07-06 feature/misc3
+. changed w\changeWho to report hack when someone tries to change to an account they don't have permission for
+. improved appearance of endorse popup on Summary page
+. improved functioning of shouters list for admins
+. change-account now allows page arguments
+. made some array initializations explicit
+
+2020-07-05 feature/misc3
+. fixed errors from several previous features
+. renamed tellCo to tellCAdmin
+. fixed default for function u\padRay
+. added a check in ajax.inc for cross-site call
+. improvements to shouters lists
+. gave admin view of DOB if not active yet
+. improved Endorse button appearance in emails
+. deleted some unused Drupal functions and files:
+  - block_menu
+  - _menu_site_is_offline
+  - _block_themes_access
+  - menu_form_node_form_alter
+  - system_admin_config_page
+  - system_modules
+  - user_file_download
+  - hook_query_TAG_alter
+  - _system_themes_access
+  - system_custom_theme
+  - hook_user_cancel_methods_alter
+  - hook_user_view
+  - user_search_access
+  - user_search_execute
+  - user_account_form
+  - user_block_view
+  - template_preprocess_user_picture
+  - user_view_access
+  - user_edit_access
+  - user_cancel_access
+  - user_menu_site_status_alter
+  - user_role_edit_access
+  - user_user_operations
+  - user_admin_account
+  - user_build_filter_query
+  - user_register_form
+  - user_save
+  - user_delete
+  _ user_cancel
+
+  - user.pages.inc :
+  - block.test
+  - user.test
+  - block.admin.inc:
+  - modules/user/*.tpl
+
+2020-07-03 feature/push-endorse
+. deleted some unused things from .gitignore and rcredits/.gitignore
+. fixed a couple undefined index warnings
+. fixed bug that kept text button from showing as button on cgbutton page
+. added bullets to weekly and monthly email statements
+. added ratings to shouters and a way for admin to bump them easily or edit the quote
+. added a request for a raw list of shouts to use on promo site
+. fixed text on connect page
+. clarified endorse page
+. fixed expiration bug in rdo
+. fixed bug that disallowed amounts over 100 on stepup page (for non-percents)
+. added popup endorse button on Summary page
+. fixed bug that suppressed DOB on Summary page for non-super admins
+. added endorse or invite button to notices
+. added highlighting to help developers when CSP catches something
+
+2020-06-30 hotfix/export-firrstname
+. added firstname and lastname to mailchimp export
+
+2020-06-30 hotfix/invite-link
+. changed invite link from promo site to member site (bug fix)
+
+2020-06-27 feature/move-change-uid
+. moved changeUid function to admin and made deleteUid work when account is current
+. suppressed submit-on-Enter on Summary page
+
+2020-06-26 feature/sellcg
+. ask in company signup whether they want to sell CG
+. fixed bug that kept tellAdmin from sending right replyTo address
+. fixed bug that kept accounts from being deleted when they had a rule or template
+
+2020-06-25 feature/misc2
+. unset account fields now generate a warning
+. fixed some undiscovered bugs (from the new warnings)
+. fixed formatting on AltId and Tickle
+. improved unsubscribe page to give choice boxes
+. fixed bug in endorsement (if member submits without saying sign or not sign)
+. added alert to CO to deliver a phone
+. flipped ownPhone (in signup-co.inc) to needPhone, to avoid invoice denials
+. fixed risks test
+. automated renaming of photo ID files on change of account uid
+
+2020-06-23 feature/misc
+. fixed bug in photo.inc so company photos now resize properly
+. fixed bug in photo.inc croppic.js javascript to display error messages properly
+. unsubscribe ZAP notes (any anonymous notes) are now labeled as "self"
+. SSN verification now uses Curl, to accommodate file_get_contents's inability to handle SSH on our new server
+. fixed display of DOB, Alt ID, etc.
+. added a flip bit so companies can choose between a Donate button and a Buy Credit button
+. fixed several small bugs that generated warnings and display anomalies
+. fixed bug in Actual Donations to CG query
+
 2020-06-17 feature/config-models
 . created better models for config files and documentation for their values
 . created (partially tested) .sh versions of batch files for recreating database and phinx commands
@@ -2680,7 +3466,7 @@ function special2() {
 . after saving summary, if any risk bits changed, rerun the risk calculation for that account
 . added a permissions bit for regulators (and bank partners) that is read-only
 . people still think they're done after the 0th step. Made it more obvious ("WAIT!" big)
-. changed TX_SMART to TX_POS (we expect to have another app or a more general app, that lets the payer initiate)
+. changed TX_SMART to TX_APP (we expect to have another app or a more general app, that lets the payer initiate)
 . changed "I don't have a bank" to "no bank" on paper signup
 . show quarterly/monthly etc. for gift on summary!
 . zapped r_ach table. (replacement is being created by transforming r_usd)

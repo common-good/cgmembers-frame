@@ -19,8 +19,8 @@ define('R_AGREE_9', 8); // number of the last point in the rCredits Agreement
 define('REQ', '*'); // marks required fields (use this as start of field's label)
 define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around them
 
-require_once __DIR__ . '/../cg-util.inc';
-require_once __DIR__ . '/../cg-strings.inc';
+require_once R_ROOT . '/cg-util.inc';
+require_once R_ROOT . '/cg-strings.inc';
 
 global $txDays; $txDays = array(1 => 'Day', 7 => '7 days', 30 => '30 days', 90 => '90 days', 180 => '6 months', 365 => '12 months', -1 => 'Year to date', -2 => 'Ever');
 
@@ -28,7 +28,6 @@ $GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, becau
 //  'new savings balance' => t('<p>IMPORTANT! Your %RCREDITS balance has been split to include a Credit Reserve containing your incentive rewards. Read <%a>last week\'s %PROJECT newsletter</a> for details.</p>', '_a', atag('http://us9.campaign-archive1.com/?u=b1d89f860859e1d9b906fa0b0&id=f1f54edd80&e=')),
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
-  'no page permission' => t('You do not have permission to visit this page. Return to your <%a>Summary</a> page.', '_a', atag('/summary')),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
@@ -48,17 +47,19 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
+  global $lastPage, $referrer; $referrer = nn($lastPage); // for testing
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [nn($lastGo), $page]; // for testing
 
   $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
 
-  t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
+  if (!strhas($page, 'test-results')) t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
   if ($msg) say($msg, $field);
  
   if (test()) {
+    $page = t\parseQ($page);
     $_POST = []; // make sure it doesn't act like we submitted the target page
-    return strhas($page, 'http://') ? '' : f('t.pageForm', $page);
+    return u\starts($page, 'http') ? '' : f('t.pageForm', $page);
   }
 
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
@@ -81,13 +82,13 @@ function go2($url1, $url2) {
 	}
 	
 	header_remove('Content-Security-Policy'); // allow the script
-/**/	echo <<< X
+  return exitJust(<<< X
 <html><script>
   window.open('$url2', '_blank');
   location.href = '$url1';
 </script></html>
-X;
-  exit();
+X
+  );
 }
 
 /**
@@ -182,8 +183,8 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $res[$k] = $$k;
-  return $res; // see rend()
+  $info = []; foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info; // see rend()
 }
 
 // only barely begun
@@ -206,24 +207,40 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 
 /**
  * Modify a page in standard ways before passing it through to Drupal core for processing.
+ * @param assoc $form: the form array
+ * @param string $fmt: format adjustments: (space-string array) narrow, wider, wide, nolabs, submenu
+ * @param string $mlabFmt: (space-string array) label format adjustments for mobile: narrow, left
  */
-function cgform($form, $labeled = TRUE) {
-  $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
- 
+function cgform($form, $fmt = '', $mlabFmt = '') {
+  foreach (ray('fmt mlabFmt') as $k) if (!is_array($$k)) $$k = ray($$k); // is_array for recursion
+  $tabled = !in('nolabs', $fmt);
+  $mlabsLeft = in('left', $mlabFmt);
+
+  $classes[] = 'form-horizontal'; // for bootstrap
+  foreach ($fmt as $k) $classes[] = "frm-$k";
+  foreach ($mlabFmt as $k) $classes[] = "frm-mlabs-$k";
+  $form['#attributes']['class'] = $classes;
+
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     if (empty($v)) {unset($form[$k]); continue;} // NULL is ignored
     
     if (!is_array($v)) { // these common fields can be specified simply
       $form[$k] = $v = in($k, ITEM_FLDS) ? item($v)
       : ($k == 'submit' ? submit($v)
+      : ($k == 'noEnter' ? submit('', '', '', disabled()) // prevent Enter from submitting form (must precede submits)
       : ($k == 'frm' ? hidFld($v)
-      : u\FAIL("field $k is not an array: " . pr($v)) ));
+      : u\FAIL("field $k is not an array: " . pr($v)) )));
     }
     
     $type = nni($v, '#type');
     if ($type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
-    if ($type == 'fieldset') $form[$k] = cgform($v, $labeled);
-    if ($labeled and is_array($form[$k])) $form[$k]['#tabled'] = TRUE; // remember that form is laid out in a table (labels in left column)
+    if ($type == 'fieldset') $form[$k] = $v = cgform($v, $fmt, $mlabFmt);
+    if (nni($v, '#field_suffix')) $form[$k]['#class'][] = 'short';
+
+    if ($tabled and $type != 'hidden') {
+      $form[$k]['#tabled'] = TRUE; // remember in each field that form is laid out in a table (labels in left column)
+      if ($mlabsLeft) $form[$k]['#class'][] = 'mlab-left';
+    }
   }
 
   $uri = $_SERVER['REQUEST_URI'];
@@ -288,22 +305,21 @@ function wrap($name, $html, $ray) {
   $boxy = in($type, 'radio checkbox') ? $type : '';
 
   $class = [$class];
-  $class[] = $boxy ? 'option' : 'control-label col-sm-offset-1 col-xs-2';
+  $class[] = $boxy ? 'option' : 'control-label';
   if ($invisible) $class[] = 'sr-only';
   $label = w\tag('label', $boxy ? $html . $label : $label, compact('for', 'class'));
     
   if (!$bare) {
     $help = $help ? "\n      <div class=\"help-block\">$help</div>" : '';
-    $lineup = $type == 'item' ? ' lineup' : '';
     $core = <<<EOF
     $label
-    <div class="control-data col-xs-10 col-sm-6$lineup">
+    <div class="control-data">
       $html$help
     </div>
 EOF;
   } else $core = $boxy ? $label : $label . $html;
 
-  $id = $lineup ? " id=\"edit-$for\"" : '';
+  $id = $type == 'item' ? " id=\"edit-$for\"" : '';
   $outerClass = "form-group wrap-$for";
   $outerClass .= ' ' . ($boxy ?: "type-$type");
   if ($box) $outerClass .= ' box1';
@@ -366,7 +382,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
+      foreach (ray('balance bal credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
         $align = 'R';
         if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }
@@ -424,6 +440,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
       u\setDft($x['min'], 0);
+      if ($dft) $x['default_value'] = str_replace(',', '', $dft); // commas prevent it from displaying (HTML bug as of 10/15/2020)
     } elseif ($type == 'date') {
       if ($dft) $x['default_value'] = date('Y-m-d', $dft);
     }
@@ -626,15 +643,34 @@ function badSignature(&$sta) {
  * Return onSubmit script for a typeahead member account field (and include needed script files).
  * @param string $field: the field name
  * @param string $question: what to ask, for confirmation or disambiguation (with params %amount and %name)
+ * @param string $selfErr: index to error message for identifying oneself
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param assoc $extra: less common parameters:
  *   amount: UNUSED amount substitution for question (defaults to form.amount.value)
  *   allowNonmember: <allow a non-member email address>
- *   coOnly: <restrict results to companies>
+ *   custom: <don't use the suggest-who scrap (use custom JS scrap instead)>
  */
-function whoFldSubmit($field, $question, $extra = []) {
-  extract(just('amount allowNonmember coOnly', $extra, ''));
+function whoFldSubmit($field, $question, $selfErr, $restrict, $extra = []) {
+  global $testWho; $testWho = compact(ray('field selfErr restrict'));
+  extract(just('amount allowNonmember coOnly custom', $extra, ''));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly')));
+  if (!$custom) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
+}
+
+/**
+ * Return the uid for the account entered in a form. Called from _submit()
+ * @param assoc $sta: the form's status array
+ * @return the uid of the account, stored in a hidden field
+ * @see also whoFldSubmit
+ */
+function whoId($sta) {
+  if (test()) {
+    global $testWho; extract(just('field selfErr restrict', $testWho, NULL));
+    if (!$a = whois(nni($sta['input'], $field), $field, [], $selfErr, $restrict)) return FALSE;
+    return $a->id;
+  }
+  if (!$uid = nni($sta['input'], 'whoId')) return isDEV ? u\FAIL('no whoId') : softErr(t('You need to enable Javascript to use this website.'));
+  return $uid;
 }
 
 /**
@@ -681,11 +717,11 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
 
   $req = basename($_SERVER['REQUEST_URI']);
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
-  if ($req == 'user' and $mya) return w\go('summary'); // summary not ''
+  if ($req == 'user' and $mya) return w\go('dashboard'); // dashboard not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
   $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
 
-  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
+//  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
     \drupal_set_breadcrumb(makeBread());
     setPageTitle($form);
@@ -724,21 +760,35 @@ define('FORBID_ATTRS', '/(.{0,40}\\s(href|src|style|on[a-z]+)\\s*=.{0,40})/i'); 
  * @param string $page: the body of the page, not including our selected scripts
  */
 function sanitizePage($page) {
+
   // preg_quote needed in case URL has a ~ in it
   $except = join('|', 
     ['<img src="' . preg_quote(BASE_URL, '~'), 
      '<img src="https://cg4.us/', 
+     '<img src="data:',
      '<iframe src="(' . str_replace(' ', '|', preg_quote(FRAME_SOURCES, '~')) . ')',
      'href="(mailto:|http|#|/|"|sadmin)',
      '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
     ]);
 
+  $uri = $_SERVER['REQUEST_URI'];
+  if ($uri == 'scan-qr') $except .= '|<video';
+
   $page = preg_replace("~$except~", '', $page);
 
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
-  $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
-  if (isPRODUCTION) w\hack($msg);
-/**/ die($msg);
+    $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
+    if (isPRODUCTION) w\hack($msg);
+    
+  	if (isDEV) {
+      header_remove('Content-Security-Policy'); // let us show styles
+      $page = str_replace('pre>', 'WASPRE>', $page);
+      $m = htmlentities($matches[0]);
+      $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+/**/  die($msg);
+    }
+    
+/**/ die(plain($msg));
   }
 }
 
@@ -750,8 +800,7 @@ function sanitizePage($page) {
 function photoRet($msg, $status = 'error') {
   $res = compact('status') + ray($status == 'success' ? 'url' : 'message', $msg);
   u\loga('photoRet', $res);
-/**/	echo json_encode($res, JSON_UNESCAPED_SLASHES);
-  exit();
+  return exitJust(u\jsonize($res, JSON_UNESCAPED_SLASHES));
 }
 
 /**
@@ -761,40 +810,10 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pass1 = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
-  $pass2 = textFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
-  $strong = hidFld(0, ['id' => 'edit-strong']);
-  focusOn('pass1');
-  
-  $password = [
-    'strengthTitle' => 'Strength:',
-    'makeLonger' => 'Make it longer',
-    'weak' => 'Weak (not strong enough)',
-    'fair' => 'Fair (but not strong enough)',
-    'good' => 'Good (but not strong enough)',
-    'strong' => 'Strong (but not strong enough)',
-    'verystrong' => 'Very strong (strong enough)',
-    'mighty' => 'Mighty (strong enough)',
-    'paranoid' => 'Paranoid? (plenty strong)',
-    'hasWeaknesses' => 'To make your password stronger:',
-    'tooShort' => 'Make it at least 6 characters',
-    'addLowerCase' => 'Add lowercase letters',
-    'addUpperCase' => 'Add uppercase letters',
-    'addNumbers' => 'Add numbers',
-    'addPunctuation' => 'Add punctuation',
-    'sameAsUsername' => 'Make it different from your username',
-    'confirmSuccess' => 'yes',
-    'confirmFailure' => 'no',
-    'confirmTitle' => 'Passwords match:',
-    'username' => $mya ? strtolower($mya->mainQid) : '',
-  ];
-
-  $settings = json_encode(compact('password'));
-  js('drupal'); // for password strength meter
-  js('user');
-  $settings = item("<!--//--><![CDATA[//><!--\njQuery.extend(Drupal.settings, {$settings});\n//--><!]]>");
-
-  return compact(ray('pass1 pass2 strong settings'));
+  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully'), autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
+  jsx('pw');
+  focusOn('pw');
+  return compact(ray('pw'));
 }
   
 /**
@@ -810,12 +829,16 @@ function box() {
 /**
  * Return the box record id for the given machine code and account record ID.
  * @param int $code: machine identifier
+ * @param int $uid: current account ID (can be a company)
+ * @param string $version: app version (web version is not used here)
  */
-function boxUser($code, $uid) {
+function boxUser($code, $uid, $version = NULL) {
+  global $channel;
   if ($id = nni($_COOKIE, $cookid = 'boxnum' . $uid) and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact(ray('code uid')))) {
-    db\update('r_boxes', ray('id access', $id, now()), 'id');
-  } else $id = r\makeDevice($uid, $code, TX_WEB);
+    $access = now();
+    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
+  } else $id = r\acct($uid)->makeBox($code, TX_WEB, $version);
   return r\setCook($cookid, $id, now() + SESSION_LIFE);
 }
 
@@ -915,6 +938,7 @@ function svar($name) {
 }
 
 /**
+ * NOT ACTUALLY USED?!! (not for anything necessary)
  * Offer choices for user to choose from
  * 1. If called with all arguments, the arguments are stored in svar('pop') and the form is reloaded
  * 2. If called as which('info'), this function returns $info from svar('pop')
@@ -929,27 +953,8 @@ function svar($name) {
  * @param string $question: the question to ask
  */
 function which($choices = '', $resultField = '', $info = '', $question = 'Which one?') {
-  $formName = current_path();
-  
-  if (is_array($choices)) { // called with all args (#1)
-    svar('pop', compact(ray('formName choices resultField info question')));
-    w\go($formName); // reload page
-  }
-
-  if (!is_array($pop = svar('pop'))) return [];
-  extract(svar('pop'), EXTR_PREFIX_ALL, 'pop');
-  if ($formName != $pop_formName) return [];
-  if ($choices == 'info') return $pop_info; // called as which('info') (#2)
-  if ($choices) return [];
-  
-  svar('pop', NULL); // called with no args (#3)
-  $tribs['size'] = 12;
-  $choice = selectFld('', '', $tribs, $pop_choices);
-  $choice = render($choice);
-  $legend = t('Which one?');
-  $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
-  jsx('which', 'field', $pop_resultField);
-  return compact('popup');
+  u\FAIL('which');
+//  $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
 }
 
 /**
@@ -977,9 +982,6 @@ function modal($id, $legend, $prompt, $body, $closer = '') {
       <div class="modal-body">
         $body
       </div>
-      <!--div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div-->
     </div>
 
   </div>
@@ -991,48 +993,29 @@ EOF;
  * Return a submenu page (list) for a given menu or named menu section.
  * @param string $title: header for the menu
  * @param mixed $menu: menu section name or assoc of menu items
+ * @param string $menuName: menu name if $menu is an assoc
  * @return the menu as a Drupal form (not yet rendered)
  */
-function subMenu($title, $menu) {
+function subMenu($title, $menu, $menuName =  NULL) {
   $title = item($title, '', '', clas('submenu'));
-  $list = item(subMenuHtml($menu), BARE);
-  return compact('title', 'list');
+  $list = item(subMenuRaw($menu, $menuName), BARE);
+  return cgform(compact('title', 'list'), 'submenu');
 }
 
-function subMenuHtml($menu) {
-  global $base_url;
-
-  if (!is_array($menu)) $menu = \rweb_menu($menu);
-  $list = '';
-  foreach ($menu as $k => $v) {
-    for ($i = 0; $i < 7; $i++) $v[] = ''; // keep list() from dying
-    list ($type, $head, $args, $perms, $func, $detail, $icon) = $v;
-    if ($type == 'call' or !w\webAccess($perms)) continue;
-    if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
-    $text = <<<EOF
-    <h4 class="list-group-item-heading">
-      <span class="glyphicon glyphicon-$icon"></span> &nbsp;
-      $head
-    </h4>
-    $detail
-EOF;
-//    $onclick = "jQuery(this).find('.glyphicon').css('color', 'darkblue');"; // glyph looks funny when ladda-spinning
-//    $list .= spinLink("/$k", $text, '', 'list-group-item', '', compact('onclick'));
-    $list .= spinLink("/$k", $text, '', 'list-group-item', '');
+/**
+ * Return the submenu's HTML (cached)
+ *   $html = subMenuRaw($menuName);
+ *   $html = subMenuRaw($menuRay, $menuName);
+ * @param mixed $menu: menu name or menu assoc
+ * @param string $menuName: menu name if first param isn't.
+ */
+function subMenuRaw($menu, $menuName = NULL) {
+  if (is_array($menu) or !$res = w\svar($menuName = "menu-$menu")) {
+    include_once R_ROOT . '/cg-menu.inc';
+    $res = r\subMenuHtml($menu);
+    w\svar($menuName, $res);
   }
-  return $list;
-}
-
-function keep_values(&$form) {
-  if (!$info = which('info')) return $form;
-  foreach ($form as $key => $value) {
-    if (isset($info[$key])) {
-      $form[$key]['#default_value'] = $info[$key];
-    } elseif (substr($key, 0, 1) != '#') foreach ($form[$key] as $key2 => $value2) { // fieldset
-      if (isset($info[$key2])) $form[$key][$key2]['#default_value'] = $info[$key2];
-    }
-  }
-  return $form; // for convenience we both modify the form and return it
+  return $res;
 }
 
 function memberStep($step, $done, $text, $links = '', $newWindow = FALSE) {
@@ -1152,7 +1135,7 @@ function emailDup($email, $uid, $suppressErr = FALSE) {
   global $base_url;
   $email = mb_strtolower($email);
   $crypt = u\cry('P', $email);
-  if (!$who = db\get('fullName', 'users', 'email=:crypt and uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
+  if (!$who = db\get('fullName', 'users', 'email=:crypt AND uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
   if (!$suppressErr) {
     $_a = atag("/settings/password/$email");
     $emailTagged = str_replace('@', '+whatever@', $email);
@@ -1164,6 +1147,12 @@ function emailDup($email, $uid, $suppressErr = FALSE) {
   return TRUE;
 }
 
+function emailDupCo($email) {
+  $email = mb_strtolower($email);
+  $crypt = u\cry('P', $email);
+  return db\exists('users', 'email=:crypt AND :IS_CO', compact('crypt'));
+}
+
 /**
  * Tell the staff about a new member.
  */
@@ -1173,12 +1162,12 @@ function tellStaffNewMember($params) {
   $state = nn($state) ? r\realState($state) : 'state unknown';
   $acctType = isset($acctype) ? ray(CO_TYPES)[$acctType] : NULL;
   $helper = nn($helper) ? r\acct($helper)->fullName : 'unknown';
-  $copts = u\jsonEncode(nn($copts));
+  $copts = u\jsonize(nn($copts));
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
   $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
-  r\tellCO($message, $params);
+  r\tellCAdmin($message, $params);
 }
 
 /**
@@ -1255,9 +1244,10 @@ function contactFields($defaults = []) {
 
   $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
+  $dbFlds = 'phone address city state zip country tenure owns postalAddr source';
+  $fields = 'phone physical address city state country zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
-  extract($defaults + (array) $mya->account($fields));
+  extract($defaults + (array) $mya->account($dbFlds));
 
   if (nn($postalAddr)) list ($address2, $city2, $state2, $zip2) = u\parseAddr(nn($postalAddr));
   if (!nn($state2)) $state2 = 0; // otherwise default fails in countrys.js
@@ -1292,16 +1282,9 @@ function contactFields($defaults = []) {
   //  js('http://ziplookup.googlecode.com/git/public/ziplookup/zipLookup.min.js', 'file', 'header');
 //    js('zipLookup.js', 'file', 'footer');
     jsx('addr');
-
-/*    $countryAttrib = w\onchange("
-      print_state(this.options[this.selectedIndex].value,'','state');
-      print_state(this.options[this.selectedIndex].value,'','state2');
-    ");
-*/
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
-//    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
-//    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
+    $country = selectFld(t('Country:'), t(''), dft($country ?: US_COUNTRY_ID), r\countryList()); // can't use required() here
     $physical = item('', t('Physical Address'));
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(nn($address)));
     $city = textFld(t('City:'), [t('City where you live')], required(nn($city)));
@@ -1311,7 +1294,6 @@ function contactFields($defaults = []) {
     $sameAddr2 = ($step0 ? nn($state2) : !(nn($mya) and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Mailing Address')) 
     : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0);
-//    : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0, w\onchange('setPostalAddr(true)'));
     
     $postalAddr = hidFld();
     $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(nn($address2)));
@@ -1319,8 +1301,8 @@ function contactFields($defaults = []) {
     $state2 = stateFld(nn($state2));
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(nn($zip2)));
     
-    $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!nn($mya) or !$mya->co) and !nn($source)) {
+  //    $other = $step0 ? item('', t('Other Information')) : NULL;
       $source = $step0 ? sourceFld() : NULL;
     } else $source = hidFld(nn($source));
   }
@@ -1338,10 +1320,15 @@ function contactFields($defaults = []) {
 
 function stateFld($dft) {return selectFld(REQ . t('State:'), t(''), dft($dft), ['' => '--'] + db\keyed('id,name', 'r_states', 'country_id=:R_COUNTRY_ID'));}
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
-function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(nn($zip)));}
+function zipFld($zip = NULL) {return textFld(REQ . t('Postal Code:'), [t('Physical location postal code')], dft(nn($zip)));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
-function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number. (check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
+function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
+function ssnFld($req = REQ, $extra = []) {
+  $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
+  return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
+}
+function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 
 /**
  * Standardize the "selling" field input.
@@ -1359,22 +1346,6 @@ function zBadSelling(&$selling) {
   $selling = join("\n", $new);
   return FALSE;
 }
-
-/**
- * Interpret cookie to get source of new member and record it in the signup table.
- * @param string $source2: where the partner or cookie says the new member came to us from, if known
- */
-function getPreId($source2 = NULL) {
-  if (!$preid = nni($_COOKIE, 'preid')) {
-    $preid = now() . u\randomString(9, 'digits');
-    setcookie('preid', $preid, now() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
-  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
-
-  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
-    $preid = $oldPreid;
-  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}  
-  return $preid;
-}
   
 /**
  * Return a list of company categories.
@@ -1382,7 +1353,7 @@ function getPreId($source2 = NULL) {
 function coCats() {
   $sql = <<<EOF
     SELECT iid, IF(parent IS NULL, UCASE(industry), CONCAT('--', industry)) AS cat, parent 
-    FROM r_industries ORDER BY IFNULL(parent, 0), iid
+    FROM r_industries ORDER BY IFNULL(parent, iid), iid
 EOF;
   return db\q($sql)->fetchAllKeyed();
 }
@@ -1394,12 +1365,11 @@ EOF;
  */
 function ssnFields($personal = TRUE, $req = '') {
   if ($personal) {
-    $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
-    $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy) &mdash; must match the date on your ID.')], autofill('off'));
+    $federalId = ssnFld($req);
+    $dob = dobFld($req);
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?')]);
+    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()]);
   }
   
   return compact(ray('federalId dob'));
@@ -1415,13 +1385,29 @@ function adminField($label) {
   return ($mya->cAdmin and $mya->federalId) ? item(R_ON_FILE, $label) : NULL;
 }
 
+/**
+ * Return a code to confirm, cancel, or edit the given post or message.
+ * @param assoc $idSub: [record ID field name => record ID]
+ * @param assoc $other: things to encode
+ */
+function getEmailCode($idSub, $other = []) {
+  return u\cryRay($idSub + $other, 8);
+}
+
 function onFile($field, $sta) {
   return (nn($sta['complete form'][$field]['#value']) == R_ON_FILE and nni($sta['input'], $field) == R_ON_FILE);
 }
 
+/**
+ * Return a select field for use in a table of such dropdowns.
+ * @param string $name: base field name (actual name will have the line ID appended)
+ * @param string $value: default value
+ * @param assoc $options: options to choose from: key=>optionName
+ * @param string $id: line ID
+ */
 function dropdown($name, $value, $options, $id) {
   $name = "$name-$id";
-  $zot = array('zot' => selectFld('', '', compact('value', 'name'), $options));
+  $zot = array('zot' => selectFld(BARE, '', compact('value', 'name'), $options));
   return \render($zot);
 }
 
@@ -1489,12 +1475,14 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
-  extract(just('qid ecode allow', $eLink));
-  $a = r\acct($qid = nn($qid)); // current or specified account
+  extract(just('qid ecode', $eLink, ''));
+  extract(just('allow', $eLink)); // don't overwrite, if none
+  
+  $a = r\acct($qid); // current or specified account
   if ($allow != 'any') {
     if (!$a) return !w\go('', 'requires signin');
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
-    if ($qid and nn($ecode) != $a->emailCode) return !w\hack('bad ecode');
+    if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
   return $a;
@@ -1502,8 +1490,8 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 
 function hack($message, $info = []) {
   r\tellAdmin(t('HACK attempt: ') . $message, $info + $_SERVER);
-/**/	if (isDEV) debug("$message: " . pr($info));
-  if (test()) return []; // to simulate a form
+/**/	if (isDEV) debug("HACK - $message: " . pr($info));
+  if (test()) return w\err('hack', 'err'); // to simulate a form
   return r\signedIn() ? signout() : w\go('');
 }
 
@@ -1646,26 +1634,27 @@ function rangeDates($period, $starting = '', $ending = '') {
 
 /**
  * Figure out who the user means, offering choices to disambiguate
- * If the intended person or company does not exist, 
+ * if the intended person or company does not exist.
+ * Called only from whoId() and only when testing
  * @param string $who: what the user typed
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
- * @param string $selfMsg: index to error message to give if user self-refers
- * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
+ * @param string $selfErr: index to error message to give if user self-refers
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
- *   no return (refreshes page) if ambiguous
+ *   no return if ambiguous (shows selection form)
  */
-function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying = FALSE) {
+function whois($who, $field_name, $info, $selfErr, $restrict) {
   global $mya;
-  if (u\isAcct($result = be\identify($who, $mya, $paying, $selfMsg))) return $result;
-  list ($msg, $args, $choices) = $result;
-//  foreach (ray('form_build_id form_token form_id op') as $one) unset($info[$one]); // just for neatness
+//  u\EXPECT(test(), 'whois when not testing');
+  $res = be\identify($who, $mya, $selfErr, $restrict);
+  if (is_object($res)) return $res;
+  if (is_string($res)) return say($res, $field_name);;
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);
   $info['return'] = plain(str_replace('/', R_URL_SLASH, $return)); // even urlencoded slashes confuse Drupal
-  foreach ($choices as $uid => $fullName) $choices[$uid] = r\qid($uid) . ': ' . $fullName;
-  if (empty($choices)) return say($msg, $args, $field_name); else which($choices, $field_name, $info, t($msg, $args));
+  which($res, $field_name, $info, t('Which account?'));
 }
   
 /**
@@ -1675,49 +1664,10 @@ function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying =
  */
 function doSay($msg = '', $err = '') {
   if (isDEV) file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
-  return w\go('empty/say=1', $msg, $err);
+  say($msg, $err);
+  return w\go('empty/say=1');
 }
-
-/**
- * Add an item to the menu structure (called when reinstalling or rebuilding menus).
- * @param string $path: URL path to this item (without the domain)
- * @param string $title: human-readable label for operation
- * @param int $type: menu item type (see hook_menu)
- * @param string $function: what function to call when item is activated (with or without namespace qualifiers)
- * @param string $args: space-delimited list of arguments to pass to the function
- * @param string $perms: space-delimited list of permission bit names (lowercase without B_ )
- * @return the menu item array as expected by Drupal for hook_menu
- */
-function menu($path, $title, $type, $function, $args, $perms = '') {
-  global $menuWeight; $menuWeight += !nn($menuWeight) ?: 1;
-
-  foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
-  
-  $adminPerms = (strihas($perms, 'admin'));
-  $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
-  $smart = ($path == 'pos');
-
-  $formName = ($args and !is_numeric($args[0])) ? $args[0] : $function;
-  $alt = $smart ? 'rsmart/rsmart.inc' : ($admin ? 'admin/admin-forms.inc' : 'rweb/rweb.inc');
-  $file = strtolower("../forms/$formName.inc");
-  if (!file_exists(R_ROOT . "/rweb/$file")) $file = "../$alt";
-  
-  $item = array(
-    'title' => $title,
-    'type' => $type,
-    'page callback' => ($smart ? 'CG\\Smart\\' : 'CG\\Web\\') . $function,
-    'page arguments' => $args,
-    'access callback' => $perms ? 'CG\\Web\\webAccess' : TRUE,
-    'access arguments' => $perms ? array($perms) : NULL,
-    'weight' => $menuWeight - 1,
-    'menu_name' => 'main-menu', 
-    'module' => $smart ? 'rsmart' : 'rweb',
-    'file' => $file,
-    'options' => ray('class', $title),
-  );
-
-  return $item;
-}
+function doErr($msg) {return doSay($msg, 'err');}
 
 /**
  * Return a help message for the page.
@@ -1863,8 +1813,8 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
       $x2x = [];
       foreach ($txTypes as $k => $desc) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
-        $cnt = ${"d_{$k}Count"};
-        $cnt .= empty($cnt + 0) ? '' : (' @ ' . u\fmtAmt($v / $cnt) . ' avg');
+        $cnt = (float) ${"d_{$k}Count"};
+        $cnt = number_format($cnt) . ($cnt ? (' @ ' . u\fmtAmt($v / $cnt) . ' avg') : '');
         $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }
@@ -1971,7 +1921,7 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $headers .= "<th>$year</th>";
+      $headers .= "<th><a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a></th>";
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";
@@ -1984,21 +1934,6 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
 }
 
 /**
- * Create a menu entry (see rweb.module)
- */
-function userMenuItem($router_path, $link_title) {
-  $menu_name = 'user-menu';
-  $link_path = $router_path;
-  if (db\exists('{menu_links}', 'menu_name=:menu_name AND link_path=:link_path', compact('menu_name', 'link_path'))) return; // done
-  $module = 'menu';
-  $customized = TRUE;
-  $depth = 1;
-  $mlid = 0;
-  $item = compact(ray('mlid menu_name router_path link_path link_title module customized depth'));
-  menu_link_save($item);
-}
-
-/**
  * Consolidate or extract hidden fields.
  */
 function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) : unserialize(unplain($ray));}
@@ -2007,31 +1942,6 @@ function focusOn($focusFieldName) {
   u\EXPECT(!empty($focusFieldName), 'focus on null');
   $focusFieldName = str_replace('_', '-', $focusFieldName);
   jsx('focus-on', 'field', $focusFieldName);
-}
-
-/**
- * Return TRUE if the current account has all the required permissions.
- */
-function webAccess($perms = NULL) {
-  global $mya;
-
-  foreach (ray($perms) as $perm) {
-    if ($not = (substr($perm, 0, 1) == '-')) $perm = substr($perm, 1);
-
-    $pass =
-      $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
-    : ($perm == 'dev' ? isDEV
-    : ($perm == 'signedIn' ? (bool) $mya
-    : ($perm == 'iclub' ? ($mya and $mya->iclub)
-    : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
-    : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
-    : ($perm == 'prose' ? ($mya and $mya->proSe)
-    : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
-    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
-    if ($not ? $pass : !$pass) return FALSE;
-  }
-  return TRUE;
 }
 
 function css($sheet, $weight = -99) {
@@ -2069,7 +1979,7 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
       $skip = $noSkip ? '' : skipButton();
       $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
-      $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
+      if ($remains < 3) $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
     } else $res['nextStep'] = submit(t('Finish'));
   } else $res['submit'] = submit($label, '', '', $extra);
   return $res;
@@ -2124,9 +2034,9 @@ function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($t
  */
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];
-  $class = nni($extras, 'class');
-  $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
-  return atag($href, $extras + ['role' => 'button']);
+  $class = nni($extras, 'class', []);
+  $class[] = "btn btn-$size btn-$style";
+  return atag($href, ray('class role', $class, 'button') + $extras);
 }
 
 /**
@@ -2134,7 +2044,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
  */
 function atag($href, $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];
-  if (nni($extras, 'role') != 'button') $extras += ['tabindex' => '-1'];
+  if (nni($extras, 'role') != 'button') $extras += notab();
   if (substr($href, 0, 1) == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);
   if ($href and !u\starts($href, BASE_URL)) {
@@ -2148,9 +2058,13 @@ function emailtag($email = NULL, $subject = '', $body = '') {
   return "a href=\"mailto:$email?$subject$body\" target=\"_blank\"";
 }
 function btn($href, $text, $style = '', $size = '', $extras = []) {
-  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras) . ">$text</a>";
+  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
+
+function buttino($href, $text, $style = 'default', $size = '', $extras = []) {
+  return btn($href, $text, $style, '', $extras + clas('buttino'));
+}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
 function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'xs', compact('class', 'data'));}
 
@@ -2165,12 +2079,12 @@ function skipStep($substitute = NULL, $justDid = '') {
 
   if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
-  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg), '');
+  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg) ?: 'dashboard');
     
   unset($stepsLeft[0]);
   if (!in($step, S_OPTIONAL)) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-  $nextStep = $mya->nextStepUrl($justDid, $msg);
+  $nextStep = $mya->nextStepUrl($justDid, $msg) ?: 'dashboard';
   if ($justDid and $msg) w\say($msg);
   return w\go($nextStep);
 }
@@ -2178,10 +2092,10 @@ function skipStep($substitute = NULL, $justDid = '') {
 /**
  * Return account and password fields for sign-in.
  */
-function signinFlds($acct, $acctDesc = '', $passDesc = '') {
-  $acct = textFld(t('Account ID:'), [t('Your account ID'), $acctDesc], required($acct) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(t('Password:'), [t('Your password'), $passDesc], required() + w\autofill('section-rSignin rPass'));
-  return [$acct, $pass];
+function signinFlds($qid, $acctDesc = '', $passDesc = '') {
+  $qid = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
+  return [$qid, $pass];
 }
 
 /**
@@ -2193,6 +2107,23 @@ function signupCoDisplay($info, &$company = '') {
   if (!$info) return '';
   extract(just('owner employee company', $info, ''));
   return "$owner $employee: $company";
+}
+
+/**
+ * Return fields with a simple arithmetical expression and twice its small integer answer.
+ */
+function captcha() {
+  global $testCaptchaAnswer;
+  $answer = test() ? $testCaptchaAnswer : mt_rand(2, 999);
+  $n1 = $answer - 1;
+  $cq = numFld(REQ . "$n1 + 1 =", ['?'], suffix(t(' (to keep the robots out)')));
+  $ca = hidFld($answer * 2); // don't make it too easy
+  return [$cq, $ca];
+}
+
+function badCaptcha($sta) {
+  extract(just('cq ca', $sta['input'], NULL));
+  return ($cq * 2 == $ca) ? FALSE : !say(t('Wrong sum. Try again.'), 'cq');
 }
 
 /**
@@ -2250,7 +2181,7 @@ function opText($sta) {
  */
 function goNextStep($step, $msg = NULL, $info = []) {
   global $mya;
-  $url = $mya ? $mya->nextStepUrl($step, $msg, $info) : 'signin';
+  $url = $mya ? ($mya->nextStepUrl($step, $msg, $info) ?: 'dashboard') : 'signin';
   return w\go($url, $msg);
 }
 
@@ -2259,13 +2190,54 @@ function backButton() {
   return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
 }
 
+/**
+ * Check for missing required parameters.
+ */
+function missingArgs($args, $require) {
+  foreach (ray($require) as $k) if (empty($args[$k])) return tr('missing field', 'field', $k);
+  return FALSE;
+}
+
+/**
+ * Sign in or sign up, before doing the given task.
+ * @param string $first: signin or signup
+ * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @return (does not return -- redirects to signin or signup)
+ */
+function first($first, $then = NULL) {
+  global $testFirst, $testThen;
+  
+  u\setDft($then, $_SERVER['REQUEST_URI']);
+  if (!is_array($then)) $then = ray('url', $then);
+  list ($testFirst, $testThen) = [$first, $then];
+  $then = u\cryRay($then);
+  return w\go("$first/then=$then");
+}
+
+function then($then) {
+  global $testThen;
+  if ($then == 'TESTCODE' and test()) $then = u\cryRay($testThen);
+  if (!$ray = u\decryRay($then)) return;
+  extract(just('url', $ray, NULL));
+  if ($url) return w\go($url);
+}
+
+/**
+ * Output the given array and exit.
+ * @param array $ray: the array to output
+ * @param bool $cry: <encrypt it>
+ */
+function exitRay($ray, $cry = FALSE) {
+  return exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
+}
+
 // one-line functions that need no explanation
 
 function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
 function dft($v) {return ray('default_value', nn($v, NULL));}
 function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
-function suffix($field_suffix = '') {return compact('field_suffix');}
+function suffix($suffix = '') {return ray('field_suffix', "<div class=\"suffix\">$suffix</div>");}
 function prefix($prefix) {return compact('prefix');}
 function maxlen($maxlength) {return compact('maxlength');}
 function vmin($min) {return compact('min');}
@@ -2277,11 +2249,16 @@ function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft
 function op($sta) {global $testOp; return test() ? $testOp : substr(nni($sta['input'], 'opid'), 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
-function err($msg) {return say($msg, 'err');}
+function err($msg, $subs = [], $fldName = 'err') {return say($msg, $subs, $fldName);}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
-function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
-function clearHeaders() {if (!headers_sent()) header_remove();}
+function softErr($msg) {sayEmpty($msg, 'err');}
+function sayEmpty($msg, $type = '') {say($msg, $type); return w\go('empty');}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
+function notab() {return tabindex(-1);}
+function tabindex($n) {return ['tabindex' => $n];}
+function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
+function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}
+function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}

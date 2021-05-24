@@ -8,7 +8,7 @@ require_once __DIR__ . '/util.inc';
 class PostTips extends AbstractMigration {
 
   public function up() {
-    $this->table('posts')->changeColumn('type', 'enum', ray('values null comment', ray('need offer tip'), TRUE, 'item type'));
+    $this->table('posts')->changeColumn('type', 'enum', ray('values null comment', ray('need offer tip'), TRUE, 'item type'))->update();
     
     $this->execute('UPDATE posts SET cat=21 WHERE cat=3'); // change clothing to stuff
     $this->execute('UPDATE posts SET cat=17 WHERE cat=12'); // change social service advice to info

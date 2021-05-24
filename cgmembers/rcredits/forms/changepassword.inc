@@ -13,31 +13,25 @@ use CG\Db as db;
 function formChangePassword($form, &$sta) {
   global $mya;
   $title = t('Choose a New Password');
-  $subtext = t('Mixed-case, digits, punctuation, and plain old length make your password strong. We recommend 4 random words.');
-  $pass = $mya->cAdmin ? NULL : passFld(t('Current (old) Password:'), '', required());
+  $subtext = tr('pass advice');
+  $pass = $mya->cAdmin ? NULL : passFld(REQ . t('Current (old) Password:'));
   $submit = t('Save');
   return cgform(compact('title', 'subtext') + w\pickPassword(TRUE, REQ) + compact('pass', 'submit'));
 }
 
-/**
- * Check new password strength, match with second typing, and validity of existing password, if any.
- * ("if any" because this function is called by formResetPassword_validate() and formVerify_validate)
- */
 function formChangePassword_validate($form, &$sta) {
   global $mya;
-  extract(just('pass1 pass2 strong pass', $sta['input']));
+  extract(just('pass', $sta['input'], NULL));
 
   if (!$mya or !$mya->cAdmin) {
-    if (!$strong and u\weakPass(nn($pass1))) return say('weak pass', 'pass1');
     if (isset($pass) and !$mya->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
   }
-  if ($pass1 != $pass2) return say('mismatch', ['thing' => t('password')], 'pass1');
 }
 
 function formChangePassword_submit($form, &$sta) {
-  extract($info = just('pass1', $sta['input']));
+  extract($info = just('pw', $sta['input']));
   global $mya;
-  $mya->update('pass', $pass1);
+  $mya->update('pass', $pw);
   say(t('Your new password has been saved.'));
-  return w\go('/settings/security');
+  return w\go('dashboard');
 }

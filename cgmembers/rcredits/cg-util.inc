@@ -10,9 +10,14 @@ use CG as r; // get rid of this
 use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
+use CG\Testing as t;
 
-define ('URL_CHARS', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'); // 66 valid URLchars
-define ('HEX_CHARS', '0123456789abcdef');
+const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
+const HEX_CHARS = '0123456789abcdef';
+const MOBILE_REGEX = '/\b(?:a(?:ndroid|vantgo)|b(?:lackberry|olt|o?ost)|cricket|docomo|hiptop|i(?:emobile|p[ao]d)|kitkat|m(?:ini|obi)|palm|(?:i|smart|windows )phone|symbian|up\.(?:browser|link)|tablet(?: browser| pc)|(?:hp-|rim |sony )tablet|w(?:ebos|indows ce|os))/i'; // thanks to Justin DoCanto et al.: https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device-in-php
+const PGP_TRASH_LEN = 30; // do not change this, without re-encrypting everything encrypted with its previous value
+// NOTE: whether this number is 0 or 200 makes ZERO difference in the strlen of the encrypted value. 30 is plenty
+
 
 // Some useful Drupal db methods: fetchAllKeyed(m, n), fetchAssoc and fetchAllAssoc(fld), fetchObject and fetchAll(), fetchCol(n), fetchField()
 
@@ -79,29 +84,11 @@ function badDob(&$dob, $co) {
 }
 
 /**
- * Say whether the given SSN is bad.
- * @param string $ssn: the social security number to test (RETURNED stripped of all but the digits)
- * @param int $dob: the person's birth date (null if the ssn is actually an EIN)
- * @return an error index if the SSN is bad, else FALSE
- * From the SSA site:
-     We do not assign a Social Security number with the first three digits of: 000, 666, 900 - 999.
-     Nor do we assign Social Security number with "00" in the fourth and fifth position, 
-     or "0000" in the last four positions of the numbers.
-     Additionally, prior to June 25, 2011, we had never assigned a Social Security number with the first three digits of: 000, 666, 772 - 799, 800 - 899, 900 - 999.
+ * Say whether the given SSN is the wrong length (since they are random, that's all we can tell).
  */
 function badSsn(&$ssn, $dob = '') {
-//  if (in_array($ssn, ray('5551234567 777777777 888888888 999999999'))) return FALSE; // test numbers
-  if (strlen(u\digits($ssn)) != 9) $bad = TRUE; // zap all but the digits (call by ref)
-  if (FALSE AND nn($dob)) { // ssn (not ein) -- We once got a valid SSN that violated these rules, so skip this.
-    $c1 = substr($ssn, 0, 1);
-    $s1 = substr($ssn, 0, 3);
-    $s2 = substr($ssn, 3, 2);
-    $s3 = substr($ssn, 5);
-    if ($c1 == '9' or $s1 == '000' or $s1 == '666' or $s2 == '00' or $s3 == '0000') $bad = TRUE;
-    if (substr($ssn, 0, 8) == '98765432') $bad = TRUE; // advertising numbers, according to Wikipedia
-    if ($dob < strtotime('25Jun2011')) if ($c1 == '8' or ($c1 == '7' and $s1 > '771')) $bad = TRUE;
-  }
-  return nn($bad) ? (nn($dob) ? 'bad ssn' : 'bad federal id') : FALSE;
+  if (strlen(u\digits($ssn)) == 9) return FALSE;
+  return nn($dob) ? 'bad ssn' : 'bad federal id';
 }
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
@@ -122,7 +109,9 @@ function ssnAddr($v) {return ucWords(mb_strtolower(nn($v->address) . ', ' . nn($
  */
 function badZip(&$z, $country = US_COUNTRY_ID) {
   $z = preg_replace('/[^A-Za-z0-9\\-]/', '', $z);
-  $pattern = $country == US_COUNTRY_ID ? '/^\\d{5}(\\-\\d{4})?$/' : '/*/'; // allow any postal code for other countries, for now
+  $pattern = $country == US_COUNTRY_ID ? '/^\\d{5}(\\-\\d{4})?$/' // United States
+  : ($country == CA_COUNTRY_ID ? '/^(?!.*[DFIOQU])[A-VXY]\\d[A-Z] ?\\d[A-Z]\\d$/' // Canada
+  : '/*/' ); // allow any postal code for other countries, for now
   return (!preg_match($pattern, $z)) ? 'bad zip' : FALSE;
 }
 
@@ -302,11 +291,11 @@ function tribs($ray) {
 }
 
 /**
- * URL encode an arbitrary non-empty ascii string compactly.
+ * URL encode an arbitrary ascii string compactly.
  * Note that this uses non-mb functions, to encode bytes rather than characters.
  */
 function urlify($s) {
-  u\EXPECT($s !== '', 'empty string in urlify');
+  if ($s === '') return '';
   $len = strlen($s = bin2hex($s0 = $s));
   for ($i = 0, $result = ''; $i < $len - 2; $i += 3) $result .= x32a2(substr($s, $i, 3));
   if ($taili = $len % 3) $result .= '~' . substr($s, -$taili);
@@ -320,6 +309,7 @@ function urlify($s) {
  * @return string: the original un-encoded string (FALSE if error)
  */
 function deurlify($s) {
+  if ($s === '') return '';
   $s0 = $s;
   list ($s, $tail) = explode('~', $s . '~');
   for ($i = 0, $res = ''; $i < strlen($s) - 1; $i += 2) $res .= a22x3(substr($s, $i, 2));
@@ -353,7 +343,7 @@ define('MIN_PHONE_DIGITS', 7);
 function fmtPhone($phone, $how = '+') {
   $sep = $how == '-' ? '-' : ' '; // digit group separator
   $foreign = ''; // set to 'n' format if the phone is outside US
-  $phone = (preg_replace('~[\(\) \-\./]~', '', $phone)); // ignore typical punctuation
+  $phone = u\noPhonePunc($phone, ''); // ignore typical punctuation (except +)
   if (substr($phone, 0, 2) == '+1') {
     $phone = substr($phone, 2);
   } elseif (substr($phone, 0, 1) == '1') {
@@ -440,7 +430,7 @@ function nonce($minLen = 1) {
  */
 function randPass($len = 4) {
   global $nextPass; if (test() and nn($nextPass)) return $nextPass;
-  $list = explode("\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $list = explode("\n", file_get_contents(SHARED_DIR . '/config/words.txt'));
   $listLen = count($list);
   for ($i = 0; $i < $len; $i++) $res[] = str_replace("\r", '', $list[rand(0, $listLen - 1)]); // \r only in Windows
   return join(' ', $res);
@@ -470,6 +460,8 @@ This function uses the ignore_errors context parameter. Without this set (the de
 When using POST with REST, take care: PHP's HTTP redirection handler will drop your POST payload if the endpoint issues a redirect. If you experience problems using POST with the function below, it might be due to redirects. Most of the POST calls I've run into issue redirects if the URL is missing a trailing '/' character. In other words, if you experience problems where it seems like your parameters are not being sent in, try appending a '/' to the end of the URL and try it again.
  */
 function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $method = 'POST', $request_format = 'url') {
+  if (test()) { global $testHit; $testHit = compact('url', 'content'); }
+  
   $ignore_errors = TRUE;
   $headers = array('Content-Type' => $request_format == 'json' ? 'application/json' : 'application/x-www-form-urlencoded') + $extra_headers;
 
@@ -480,7 +472,7 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   if ($content) {
     $content = http_build_query($content);
     if ($method == 'POST') {
-      if ($request_format == 'json') $content = u\jsonEncode($content);
+      if ($request_format == 'json') $content = u\jsonize($content);
       $http += compact('content');
     } else $url .= '?' . $content;
   }
@@ -498,10 +490,39 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
   
   $result = $responseFormat == 'xml' ? simplexml_load_string($response)
-    : ($responseFormat == 'json' ? json_decode(utf8_encode($response))
+    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($response))
     : ($response) );
   EXPECT(!is_null($result), "$method $url returned error: $response");
   return $result;
+}
+
+function get($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $request_format = 'url') {
+  return post($url, $content, $responseFormat, $extra_headers, 'GET', $request_format);
+} 
+
+/**
+ * POST and redirect (together)
+ */
+function postnGo($url, $data) {
+  if (test()) return w\go($url); // in tests, just verify the "go" part
+  $guts = '';
+  foreach ($data as $k => $v) {
+    foreach (ray('k v') as $x) $$x = htmlentities($$x);
+    $guts .= <<<X
+      <input type="hidden" name="$k" value="$v" />\n
+X;
+  }
+  $clickHere = t('Click here to continue.');
+  
+  header_remove('Content-Security-Policy');
+/**/  echo <<<X
+    <form id="me" action="$url" method="GET">
+      $guts
+      <noscript><input type="submit" value="$clickHere" /></noscript>
+    </form>
+    <script>document.getElementById('me').submit();</script>
+X;
+  return exitJust();
 }
 
 function randomInt($len = NULL) {
@@ -621,7 +642,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
   
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
-  $ch = nn($channel) ? ray(TX_CHANNELS)[$channel] : t('hack');
 //  $useTextLogToo = FALSE; // isDEV;
 
   $qid = $mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
@@ -633,9 +653,9 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     if (nni($info, 'form_id')) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
     if (nni($info, 'toEmail')) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
-    $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
+    $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
-/**/ flog($s = "$qid/$time/$ch/$type/$info");
+/**/ flog($s = "$qid/$time/$type/$info");
 //  if (!test())
 //  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  
@@ -662,11 +682,24 @@ function seeAssoc($info) {
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
-  $xml = tr(R_SSN_REQUEST, 'username password ssn', R_SSN_USER, R_SSN_PASS, $ssn);
+  $xml = tr(R_SSN_REQUEST, '_username _password _ssn', R_SSN_USER, R_SSN_PASS, $ssn);
   if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
-  try {
-    return file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
-  } catch (\Exception $e) { return NULL; }}
+  return getSSLPage('https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=' . urlencode($xml));
+}
+
+/**
+ * Curl page getter, because file_get_contents and u\get() fail
+ */
+function getSSLPage($url) {
+  $curl = curl_init();
+  curl_setopt($curl, CURLOPT_URL, $url);
+  curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+// NO! curl_setopt($ch, CURLOPT_SSLVERSION, 3); 
+  curl_setopt($curl, CURLOPT_HEADER, false);
+  $res = curl_exec($curl);
+  curl_close($curl);
+  return $res;
+}
 
 /**
  * Parse the bank ID number (BIN) into a US routing number and account number.
@@ -734,6 +767,32 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
 define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type letter)
 
 /**
+ * encrypt an array for use in URLs
+ * @param int $pad: add an arbitrary padding element (to make the key harder to divine)
+ */
+function cryRay($ray, $pad = 0) {
+  if ($pad) $ray['pad'] = u\randomString($pad, 'word'); // complicate (don't encrypt non-printing characters here)
+  $res = ry('P', u\jsonize($ray));
+  if (test()) t\doCode($res); // must be on separate line (PHP bug)
+  return $res;
+}
+
+/**
+ * decrypt a URL array.
+ */
+function decryRay($code) {
+  if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
+
+  try {$res = u\dery('P', $code);}
+  catch (\BadCry $e) {return NULL;}
+
+  try {$res = u\dejsonize($res) ?: unserialize($res);}
+  catch (\Exception $e) {return NULL;}
+  
+  return is_array($res) ? $res : NULL;
+}
+
+/**
  * Perform the given type of encryption (or decryption).
  * @param char $type: purpose of the encryption / decryption, as follows (each has its own methods, password, and IV):
  *   R regional admin private key for very secure data (the key is encrypted on the admin's flash drive)
@@ -742,19 +801,24 @@ define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type l
  *   P searchable data (last step of encryption is b64)
  *   C cookie
  *   H photo
+ *   D device (PGP then b64)
  * @param string $data: the data to be encrypted / decrypted
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
- * TEST with foreach (ray('S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
+ * @throws BadCry
+ * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	global $cryHows, $mya;
 	
-	if ($data === '') return $data; // no point encrypting/decrypting nothing
+	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
+  if (is_numeric($data)) $data = strval($data);
 	
+  if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
+  
 	if ($de) {
-    u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');
+    if (!u\starts($data, CRYPT_FLAG . $type)) throw new \BadCry('encrypted value must begin with crypt flag');
     if ($type == 'V' and !$vKey = r\vKey()) return $data; // if we can't decrypt, return the data as is (for acct::recordChanges)
     $data = substr($data, strlen(CRYPT_FLAG . $type));
   }
@@ -785,14 +849,12 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 			case 'scram': $data = strScramble($data, $pw . $iv, $de); break;
 			case 'b64': $data = $de ? u\b64decode($data) : u\b64encode($data); break; // final encrypt step if present
 			case 'pgp':
-				$trashLen = 30; // do not change this, without re-encrypting everything encrypted with its previous value
-				// NOTE: whether this number is 0 or 200 makes ZERO difference in the strlen of the encrypted value. 30 is plenty
 				if ($de) { // decrypt with supplied private key
   			  $success = openssl_private_decrypt($data, $res, u\fmtKey($vKey, 'PRIVATE')) ? $res : FALSE;
 ///					if (!$success) die(print_r(debug_backtrace(), -1));
-				  $data = $success ? substr_replace($res, '', -$trashLen) : '';
+				  $data = $success ? substr_replace($res, '', -PGP_TRASH_LEN) : '';
 				} else { // encrypt with public key
-  				$data .= openssl_random_pseudo_bytes($trashLen); // add randomness
+  				$data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
     			$success = openssl_public_encrypt($data, $res, u\fmtKey($pw, 'PUBLIC')) ? $res : FALSE;
 					$data = $res;
 				}
@@ -825,7 +887,59 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-	return u\starts($data, CRYPT_FLAG) ? cry($type, $data, TRUE, $pwInstead) : $data;
+	return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
+}
+
+/**
+ * Encrypt / Decrypt with our PGP key pair.
+ * Test with $cry = u\cryPGP('success'); debug (u\decryPGP($cry));
+ * @param string $data: what to encrypt
+ * @param bool $priv: <use private key> (otherwise encrypt with public key)
+ * @param string $trash: (RETURNED) the randomness added before encryption
+ */
+function cryPGP($data, $priv = TRUE, &$trash = '') {
+  if (!$trash) $trash = openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
+  return cryPGP0('en', $data . $trash, $priv, $res) ? $res : '';
+}
+
+/**
+ * Decryt with our PGP key pair (for testing at least).
+ */
+function decryPGP($data, $priv = FALSE) {
+  $success = cryPGP0('de', $data, $priv, $res);
+	return $success ? substr_replace($res, '', -30) : '';
+}
+
+function cryPGP0($way, $data, $priv, &$res = '') {
+  $func = 'openssl_' . ($priv ? 'private' : 'public') . "_{$way}crypt";
+  $k = u\fmtKey(u\unfmtKey(PGP_KEY), 'PRIVATE');
+  return $func($data, $res, $priv ? $k : u\pubKey($k)) ? $res : FALSE;
+}
+
+/**
+ * Format an RSA-encoded assymmetric key from our config file, adding BEGIN and END lines.
+ * @param string $k: the raw key
+ * @param string $f: PRIVATE or PUBLIC
+ */
+function fmtKey($k, $f) {
+  $d = '-----';
+  if ($f == 'PRIVATE') $f = 'RSA ' . $f; // fails in PHP for private without "RSA" or public with "RSA"
+  $k = chunk_split(base64_encode($k), 64);
+  return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";
+}
+
+function unfmtKey($k) {
+  $k2 = preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strhas($k, '.') ? file_get_contents($k) : $k);
+  return base64_decode($k2) ?: $k2;
+}
+
+/**
+ * Extract the public key from the private key.
+ * @param string $k: a formatted private key (see u\fmtKey)
+ * @return: the corresponding public key, formatted
+ */
+function pubKey($k) {
+  return openssl_pkey_get_details(openssl_pkey_get_private($k))['key'];
 }
 
 // NEW encryption
@@ -925,6 +1039,7 @@ function ctype_print_unicode($input) {
 /**
  * Say whether the string date is bad.
  * @param string $s: typed date (returned with date converted to internal format, unless error)
+ * NOTE: sometimes we get a date as yyyy-mm-dd and sometimes like mm/dd/yyyy
  * @param int $min: minimum date (if any)
  * @param int $max: maximum date (if any)
  * @return FALSE if date is okay, else an error index
@@ -933,7 +1048,7 @@ function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
   if (!$dt = u\s2t(nn($s))) return 'bad date'; // slashes makes it mdy (else dmy assumed)
   if ($min !== '' and ($dt < $min or $dt > $max)) {
     $err = $dt < $min ? 'date too early' : 'date too late';
-    if (!is_numeric(@substr($s, -3, 1))) $err .= '|year is 4 digits';
+    if (mb_strlen($s) < 9) $err .= '|year is 4 digits';
     return $err;
   }
   $s = $dt;
@@ -954,7 +1069,7 @@ function badPhone(&$phone, $country = US_COUNTRY_ID) {
 
 /**
  * Return a table row with the given data (header or not).
- * @param mixed $row: an array with field names or assoc with field names and values
+ * @param mixed $row: an array with field headers or assoc with field names and values
  */
 function tableRow($row) {
   if ($th = is_numeric(key($row))) $row = array_flip($row);
@@ -1010,13 +1125,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
-  if (!nn($res)) {
-    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+  if (!nn($res) or !$res = u\dejsonize($res, FALSE) or !is_object($res)) {
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)), compact('res'));
     return $none;
   }
-  $res = json_decode($res);
 
-  foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
+  foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)
@@ -1225,18 +1339,25 @@ function showCaller($skip = 0) {
 }
 
 /**
- * Show what bits are set in the given integer.
- * @param int $n: the integer bit array
+ * Show what bits are set in the given integer or what integer a string of bit names represents.
+ * @param mixed $n: the integer bit array OR space-delimited string of bit names
  * @param string $descs: string array of bit names ('': use bit numbers, default: flag bit names)
  * @return: a list of the bits set n the integer
  */ 
 function bits($n, $descs = B_LIST) {
-  $res = '';
   if ($descs) {
     $descs = ray($descs);
     if (!is_numeric(@key($descs))) $descs = array_keys($descs); // ignore extra info after colon in bit name
   }
-  for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? $descs[$i] : $i);
+
+  if (is_numeric($n)) { // integer bit array
+    $res = '';
+    for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? nni($descs, $i, $i) : $i);
+  } else { // string of bit names
+    $res = 0;
+    $descs = array_flip($descs);
+    foreach (ray($n) as $b) $res |= u\bit(nni($descs, $b) ?: u\consta('b', $b));
+  }
   return $res;
 }
 
@@ -1525,6 +1646,20 @@ EOF;
   return $sql;
 }
 
+/**
+ * return (or set) URL parameters, handling tests appropriately
+ */
+function _GET($ray = NULL) {
+  if (!test()) return $_GET;
+
+  global $T_GET;
+  if (isset($ray)) {
+    t\fixData($ray);
+    $T_GET = $ray;
+  }
+  return $T_GET;
+}
+
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}
@@ -1563,7 +1698,8 @@ function setDft(&$param, $value) {return $param = isset($param) ? $param : $valu
 function ifSet(&$param, $value) {if (isset($param)) $param = $value;} // opposite of setDft
 function log($message, $type = 'state', $info = []) {return u\loga($type, compact('message') + $info);}
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
-function jsonEncode($s) {return json_encode($s) ?: json_encode(u\purify($s));} // , JSON_UNESCAPED_SLASHES
+function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
+function dejsonize($s, $retRay = TRUE) {return json_decode($s, $retRay);}
 function redash($s) {return str_replace('—', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
@@ -1591,9 +1727,6 @@ function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
-function fmtKey($k, $f) {$d = '-----'; $k = chunk_split(base64_encode($k), 64); return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";}
-function unfmtKey($k) {return base64_decode(preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strpos($k, ':') ? file_get_contents($k) : $k));}
-function pubKey($k) {return openssl_pkey_get_details(openssl_pkey_get_private(fmtKey(unfmtKey($k), 'PRIVATE')))['key'];}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
@@ -1604,4 +1737,14 @@ function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
-function padRay($ray, $n, $fill = []) {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
+function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
+function isMobile() {return (bool) preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
+function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
+function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
+function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
+function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
+function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
+function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
+function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
+function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
+function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists

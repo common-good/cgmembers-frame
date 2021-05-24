@@ -31,13 +31,13 @@ Setup:
   | .ZZC |    3000 |
   Given transactions: 
   | xid | created   | amount | payer | payee | purpose | taking | reversesXid |*
-  |  44 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0        |             |
-  |  45 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1        |             |
-  |  46 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0        |             |
-  |  47 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0        |             |
-  |  48 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1        |             |
-  |  49 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0        |             |
-  |  50 | %today-5d |    -10 | .ZZB | .ZZA | cash E  | 0        |          44 |
+  |  44 | %today-5m |     10 | .ZZB  | .ZZA  | cash E  | 0      |             |
+  |  45 | %today-4m |   1100 | .ZZC  | .ZZA  | usd F   | 1      |             |
+  |  46 | %today-3m |    240 | .ZZA  | .ZZB  | what G  | 0      |             |
+  |  47 | %today-2w |     50 | .ZZB  | .ZZC  | cash P  | 0      |             |
+  |  48 | %today-1w |    120 | .ZZA  | .ZZC  | this Q  | 1      |             |
+  |  49 | %today-6d |    100 | .ZZA  | .ZZB  | cash V  | 0      |             |
+  |  50 | %today-5d |    -10 | .ZZB  | .ZZA  | cash E  | 0      |          44 |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1585 |
@@ -60,7 +60,7 @@ Scenario: A member looks at transactions for the past year
   | Tx# | Date    | Name          | Purpose                  | Amount   |  Balance | Action |
   |  6  | %mdy-4d | --            | to bank                  |   -33.00 | 1,585.00 |        |
   |  5  | %mdy-4d | --            | to bank                  |   -22.00 | 1,618.00 |        |
-  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44)    |   -10.00 | 1,640.00 |        |
+  | 50  | %mdy-5d | Bea Two       | (reverses tx #44)           |   -10.00 | 1,640.00 |        |
   | 49  | %mdy-6d | Bea Two       | cash V                   |  -100.00 | 1,650.00 |        |
   | 48  | %mdy-1w | Corner Pub    | this Q                   |  -120.00 | 1,750.00 |        |
   | 46  | %mdy-3m | Bea Two       | what G                   |  -240.00 | 1,870.00 |        |
@@ -83,7 +83,7 @@ Scenario: A member looks at transactions for the past few days
   | Tx# | Date    | Name          | Purpose               | Amount  |  Balance |
   |  6  | %mdy-4d | --            | to bank               |  -33.00 | 1,585.00 |
   |  5  | %mdy-4d | --            | to bank               |  -22.00 | 1,618.00 |
-  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44) |  -10.00 | 1,640.00 |
+  | 50  | %mdy-5d | Bea Two       | (reverses tx #44)        |  -10.00 | 1,640.00 |
   | 49  | %mdy-6d | Bea Two       | cash V                | -100.00 | 1,650.00 |
   | 48  | %mdy-1w | Corner Pub    | this Q                | -120.00 | 1,750.00 |
   And without:
@@ -97,8 +97,8 @@ Scenario: A member looks at transactions for the past few days
 Scenario: A member looks at transactions with roundups
   Given transactions:
   | xid | amount | payer | payee            | purpose          | taking | goods      | channel | type     |*
-  |  41 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_POS | prime    |
-  |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_POS | donation |
+  |  41 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_APP | prime    |
+  |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_APP | donation |
   Then balances:
   | uid  | balance |*
   | .ZZA | 1535.00 |
@@ -116,7 +116,7 @@ Scenario: A member looks at transactions with roundups
   |     |         | %PROJECT Region | roundup donation         |   -0.05 |          |    | 
   |  6  | %mdy-4d | --              | to bank                  |  -33.00 | 1,585.00 |    |
   |  5  | %mdy-4d | --              | to bank                  |  -22.00 | 1,618.00 |    |
-  | 50  | %mdy-5d | Bea Two         | cash E (reverses #44)    |  -10.00 | 1,640.00 |    |
+  | 50  | %mdy-5d | Bea Two         | (reverses tx #44)           |  -10.00 | 1,640.00 |    |
   | 49  | %mdy-6d | Bea Two         | cash V                   | -100.00 | 1,650.00 |    |
   | 48  | %mdy-1w | Corner Pub      | this Q                   | -120.00 | 1,750.00 |    |
 

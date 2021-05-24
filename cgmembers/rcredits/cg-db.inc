@@ -26,7 +26,7 @@ define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rat
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
-  //  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
+
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
@@ -82,10 +82,10 @@ function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $whe
  * (replaces the functionality of drupal_write_record, which does not update bigint fields properly)
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (must not be empty)
+ * @param string $key: record key name (defaults to 'id')
  * @return: TRUE (FALSE on failure)
  */
-function update($table, $info, $key) {
+function update($table, $info, $key = 'id') {
   logSql(compact(ray('table info key')));
 
   if (!isset($info['modified']) and hasField($table, 'modified')) {
@@ -140,10 +140,10 @@ function insert($table, $info, $key = 'id') {
  * Insert or update a database record 
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (must not be empty)
+ * @param string $key: record key name (defaults to 'id')
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
-function updateOrInsert($table, $info, $key) {
+function updateOrInsert($table, $info, $key = 'id') {
   if (nni($info, $key) and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
@@ -161,6 +161,8 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
 }
+
+function row($table, $where = '1', $subs = []) {return rows('*', $table, $where, $subs);}
 
 /**
  * Return an array of matching data.
@@ -181,8 +183,9 @@ function keyed($fields, $table, $where = '1', $subs = []) {
  * Log the given update, insert, or delete query
  */
 function logSql($args) {
+  return; // disabled for now (3/12/2021)
   global $mya;
-  $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonEncode($args);
+  $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonize($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
   if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
   file_put_contents(SQL_LOG, "$args\n", FILE_APPEND); // new log file every month
@@ -255,7 +258,7 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
     list ($where, $subs) = [u\where($where), $where];
-  } elseif (!is_array($subs)) { list ($where, $subs) = ["$where=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
+  } elseif (!is_array($subs)) { list ($where, $subs) = ["`$where`=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
   
   if (is_numeric($where)) u\FAIL(t('Wrong syntax for call to db\del')); // don't accidentally delete all records in a table
   

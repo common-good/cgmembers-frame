@@ -24,6 +24,8 @@ function formRelations($form, &$sta, $args = '') {
     $header[] = t('Customer');
     $classes[] = 'customer';
   }
+  $header[] = '';
+  $classes[] = 'delete';
   $classes = u\prefixValues('rel-', $classes);
 
   if ($mya->hasCustomers) {
@@ -42,11 +44,9 @@ function formRelations($form, &$sta, $args = '') {
     ORDER BY fullName, IF(:myid=s.main, s.other, s.main), (:myid=s.other)
 EOF;
   $result = db\q($sql, compact('myid'));
-  $rows = $raws0 = $raws = [];
+  $rows = [];
   while ($row = $result->fetchAssoc()) {
     extract($row);
-    $raws0[$reid] = $row; // original ("0") raw values from table
-    $raws[] = compact(ray('draw employee owner customer permission')); // original conceptual ("raw") values for what's show on screen
     $a = r\acct($other);
     $otherCo = $a->co;
     $otherPerson = !$otherCo;
@@ -57,7 +57,7 @@ EOF;
       $idLink = "<a href=\"$base_url/request-employee-rcard/$other\">$text</a>";
     }
 
-    $ii = count($rows) . "-$reid"; // "row-reid"
+    $ii = $reid;
     $drawn = toggle('draw', $draw, $ii);
 //    $employer = toggle('employeeOk', @$employeeOk2, $ii, @$employeeOk2 xor @$employee2);
     $employee = !$otherCo ? toggle('employee', $employee, $ii) : R_NONE;
@@ -67,13 +67,12 @@ EOF;
 // NO    if (!$mya->can(B_JOINED)) $permissions[$permission = B_JOINT] .= '?'; // pending agreement
     if ($co or $otherCo or !$mya->ok or !$a->ok) unset($permissions[r\perm(B_JOINT)]); // no joint accounts with a company or nonmember
     $perm = $otherPerson ? dropdown('permission', $permission, $permissions, $ii) : R_NONE;
-    $amountValue = ''; // was amountField('amount', number_format($amount,0), $ii);
-
+    $delete = btn('', '&cross;', 'default', '', ray('name', "delete-$ii"));
+    
     $rows[] = $showCustomers
-    ? [$fullName, $drawn, $employee, $owner, $perm, $customer] // what to show on screen
-    : [$fullName, $drawn, $employee, $owner, $perm];
+    ? [$fullName, $drawn, $employee, $owner, $perm, $customer, $delete] // what to show on screen
+    : [$fullName, $drawn, $employee, $owner, $perm, $delete];
   }
-  $sta['rawValues'] = compact('raws0', 'raws');
   
   $aExact = "a href=\"$base_url/help/payment-exchanges\"";
   $_aInvite = atag('/community/invite');
@@ -93,86 +92,50 @@ EOF;
 
   $title = t('Relations');
   $list = fld('item', '', '', array('markup' => $list));
-  $newPerson = textFld(t('Add Someone:'), [t('Name, id, email, or phone')]);
-  $go = submit(t('Save Changes'));
+  $newPerson = textFld(BARE, [t('Name, id, email, or phone')]);
+  $submit = submit(BARE . t('Add'));
+  $submitGroup = fieldset('submitGroup', compact(ray('newPerson submit')), t('Add Who:'));
+
   $showCustomers = hidFld($showCustomers);
 
-  $form = compact(ray('title subtext buttons list newPerson go showCustomers'));
+  $form = compact(ray('title subtext buttons list submitGroup showCustomers'));
 
-  if (!$mya->member and !$mya->stepDone['relations']) $form += w\setupFoot();
-  w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
-//  w\jsx('toggle');
+// no such step  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
+  w\whoFldSubmit('newPerson', t('Create a new relation with %name?'), 'self-relation', '');
+  w\jsx('relations');
 
-  return cgform($form);
+  return cgform($form, 'wider');
 }
 
 function formRelations_validate($form, &$sta) {
-//  if (confirming_v($sta)) return;
   global $mya;
-  if ($newPerson = nn($sta['input']['newPerson'])) {
-    $a = whois($newPerson, 'newPerson', $sta['input'], 'no self-relation');
+
+  $uid = whoId($sta);
+  if (r\relation(1, $mya->id, $uid)) return say('already related', 'newPerson');
+
+/*  if ($newPerson = nn($sta['input']['newPerson'])) {
+    $a = whois($newPerson, 'newPerson', $sta['input'], 'self-relation', TRUE);
     $id = $a ? $a->id : '';
     if ($id and r\relation(1, $mya->id, $id)) {
       say('already related', 'newPerson');
     } else $sta['input']['newPerson'] = $id; // save for submission handling
   }
-  $managers = 0; // for company accounts there needs to be at least one manager
-  foreach ($sta['input'] as $key => $value) {
-    if (!strpos($key, '-')) continue;
-    list ($keya, $rawnum, $reid) = explode('-', $key);
-    if ($keya == 'permission') {
-      if ($value >= r\perm(B_MANAGE)) {
-        $managers++;
-      } else {
-        $other = r\relation('other', $reid);
-        if ($other == $mya->id) return say('need a manager', 'permission');
-      }
-    }
-  }
-//  if ($mya->co and !$managers and !$mya->cAdmin) return say('need a manager', 'permission');
+  */
 }
 
 function formRelations_submit($form, &$sta) {
-//  if (confirming_s($sta)) return;
   global $mya;
 
-  $vs = $sta['input'];
-  if ($other = nni($vs, 'newPerson')) { // adding a new relation
+  extract(just('showCustomers', $sta['input'], ''));
+  $uid = whoId($sta);
+
+  if ($other = $uid) { // adding a new relation
     $permission = r\perm(B_READ);
     $mya->newRelation(compact('other', 'permission'));
     $who = r\acct($other)->fullName;
     say('report new relation', compact('who'));
   }
-  $changes = [];
-  extract(just('raws0 raws', $sta['rawValues']));
-  $joinPerm = r\perm(B_JOINT);
-
-  $DBTX = \db_transaction();
-
-  // handle all fields even when they don't appear (because they're false)
-  foreach (array_keys($raws0) as $i => $reid) {
-    foreach (ray('permission draw employee owner customer') as $fld) {
-      $k = "$fld-$i-$reid"; // rawnum
-      $v = 0 + ($fld == 'permission' ? nni($vs, $k, 0) : (int) nni($vs, $k, 0));
-      $vX = 0 + $raws[$i][$fld];
-
-      if ($v != $vX) { // changed
-        if ($fld == 'permission' and ($v == $joinPerm or $vX == $joinPerm)) {
-          if ($v == $joinPerm) {
-            if (nn($gotJoin)) {say('too many joins', 'err'); continue;} else $gotJoin = TRUE;
-          }
-          $msg = r\setJoin($reid, nn($gotJoin)); // handle joining or unjoining accounts
-          say($msg);
-        }
-        $changes[$reid][$fld] = $v;
-        $changes[$reid]['original'] = nni($raws0, $reid); // save for update reporting and permission-checking
-      }
-    }
-  }
-
-  if (!empty($changes)) say(be\updateRelations($changes));
-  unset($DBTX);
   
-  $show = nni($vs, 'showCustomers') ? 'showCustomers=1' : '';
+  $show = $showCustomers ? 'showCustomers=1' : '';
   return w\go("/settings/relations/$show");
 }

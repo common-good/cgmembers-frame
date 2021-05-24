@@ -7,13 +7,13 @@ SO I can be part of the Common Good Economy
 
 Setup:
   Given members:
-  | uid | fullName  | phone | email | city  | state | zip   | floor | flags   | pass      |*
-  | .ZZA | Abe One  |     1 | a@    | Atown | AK    | 01000 |     0 | member  | %whatever |
-  | .ZZC | Our Pub  |     3 | c@    | Ctown | CA    | 03000 |     0 | co      |           |
-  | .ZZZ | Zeta Zot |    26 | z@    | Ztown | MS    | 09000 |     0 | co      | zpass     |
+  | uid | fullName  | phone | email | city  | state | zip   | floor | flags   | pass      | helper |*
+  | .ZZA | Abe One  |     1 | a@    | Atown | AK    | 01000 |     0 | member  | %whatever | cgf    |
+  | .ZZC | Our Pub  |     3 | c@    | Ctown | CA    | 03000 |     0 | co      |           | .ZZA   |
+  | .ZZZ | Zeta Zot |    26 | z@    | Ztown | MS    | 09000 |     0 | co      | zpass     | cgf    |
   And relations:
-  | main | other | permission |*
-  | .ZZC | .ZZA  | manage     |
+  | main | other | permission | otherNum |*
+  | .ZZC | .ZZA  | manage     | 1        |
   And member is logged out
 
 Scenario: A company tries to sign up directly
@@ -31,19 +31,42 @@ Scenario: Someone wants to open a company account
   | Postal Code   | |
   | Company Phone | |
   | Selling       | |
+  | Sell Credit   | |
   | Federal ID    | |
   | Founded       | |
   | Referred By   | |
-  | Own Phone     | |
+  | Need Phone    | |
   
 Scenario: A company signs up
   Given next random code is "WHATEVER"
   When member ".ZZA" completes form "signup-co/relate=1" with values:
-  | fullName | legalName | federalId | dob      | zip   | phone        | email | selling | source  | coType | ownPhone |*
-  | New Co   |           | 04-3849283 | %mdY-3y | 01004 | 413-253-0004 | d@    | fish    | thither | LLC    |        0 |
+  | fullName  | New Co       |**
+  | legalName |              |
+  | federalId | 04-3849283   |
+  | dob       | %mdY-3y      |
+  | zip       | 01004        |
+  | phone     | 413-253-0004 |
+  | email     | d@           |
+  | selling   | fish         |
+  | sellCg    | 1            |
+  | source    | thither      |
+  | coType    | LLC          |
+  | needPhone | 1            |
   Then members:
-  | uid  | fullName | legalName | federalId | dob          | zip   | phone        | email | coType | selling |*
-  | .AAA | New Co   | New Co    | 043849283 | %daystart-3y | 01004 | +14132530004 | d@    | LLC    | fish    |
+  | uid       | .AAA         |**
+  | fullName  | New Co       |
+  | legalName | New Co       |
+  | federalId | 043849283    |
+  | dob       | %daystart-3y |
+  | zip       | 01004        |
+  | phone     | +14132530004 |
+  | email     | d@           |
+  | selling   | fish         |
+  | source    | thither      |
+  | coType    | LLC          |
+  And company flags:
+  | uid  | coFlags     |*
+  | .AAA | sellcg      |
   And relations:
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |
@@ -56,15 +79,38 @@ Scenario: A company signs up
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And we say "status": "refundable deposit"
-  And member ".AAA" steps left "verifyemail agree contact backing photo donate company crumbs discount"
+  And member ".AAA" steps left "verifyemail fund contact backing photo donate company crumbs discount"
+  And members have:
+  | uid  | signed | signedBy |*
+  | .AAA | %today | Abe One  |
 
   Given member is logged out
-  When member "?" visits page "settings/verifyemail/id=NEWAAA-A&code=WHATEVER&verify=1"
-  Then we show "Verified!"
-  And member ".AAA" steps left "agree contact backing photo donate company crumbs discount"
+  When member "?" visits page "settings/verifyemail/qid=NEWAAA-A&verify=1&code=WHATEVER"
+  Then we show "Welcome to %PROJECT" with:
+  | Account |
+  | Password |
+  And we say "status": "verified email"
+  And we say "status": "info saved|step completed"
+  And we say "status": "continue co setup"
+  And member ".AAA" steps left "fund contact backing photo donate company crumbs discount"
 
+Scenario: A company verifies email while signed in
+  Given member ".ZZC" has "co" steps done: "signup fund contact backing photo donate company crumbs discount"
+  And members have:
+  | uid  | flags  |*
+  | .ZZA | ok     |
+  And member ".ZZC" one-time password is "WHATEVER"
+  When member "C:A" visits page "settings/verifyemail/qid=NEWZZC-A&verify=1&code=WHATEVER"
+  Then we show "You: Our Pub"
+  And we say "status": "verified email"
+  And we say "status": "info saved|ok complete|co complete|join thanks"
+  And member ".ZZC" steps left ""
+  And members have:
+  | uid  | flags             |*
+  | .ZZC | co,ok,member,ided |
+  
 Scenario: A company supplies company information
-  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate"
+  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate"
   And members have:
   | uid  | website   | selling |*
   | .ZZC | ourpub.co | drinks  |
@@ -81,7 +127,7 @@ Scenario: A company supplies company information
   | Annual Gross    | |
   | Founded         | |
   | Website         | ourpub.co |
-  | Description     | |
+  | Describe        | |
   | App permissions | |
   | Nudge Every     | |
   | Tips            | |
@@ -119,8 +165,8 @@ Scenario: A company supplies company information
   And we say "status": "info saved|step completed"
   And member ".ZZC" steps left "crumbs discount"
 
-Scenario: A company supplies incoming tithe choices
-  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company"
+Scenario: A company supplies crumbs choices
+  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company"
   When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
   Then members have:
@@ -131,8 +177,14 @@ Scenario: A company supplies incoming tithe choices
   And member ".ZZC" steps left "discount"
 
 Scenario: A company account manager creates a discount
-  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company crumbs"
-  When member ".ZZC" completes form "community/discount" with values:
+  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company crumbs"
+  And members have:
+  | uid  | task   |*
+  | .ZZC | co     |
+  And members have:
+  | uid  | flags     |*
+  | .ZZA | ok,member |
+  When member "C:A" completes form "community/discount" with values:
   | amount | minimum | start | end     | useMax | type     |*
   |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
   Then these "coupons":
@@ -152,13 +204,23 @@ Scenario: A company account manager creates a discount
   | company   | Our Pub |
   | gift      | |
   | forOnly   | |
-  And we show "Community" with:
-  | Donate |
-  | Discount |
+  And we show "You: Our Pub" with:
+  | Balance: | $0 |
   And without:
   | Finish |
-  And we say "status": "info saved|setup complete|company approval|join thanks"
+  And we say "status": "info saved|ok complete|co complete|join thanks"
   And member ".ZZC" steps left ""
-  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
-  | quid | status |*
-  | .ZZC | member |
+#  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
+#  | quid | status |*
+#  | .ZZC | member |
+
+Scenario: An unverified company agent completes a company account
+  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company discount"
+  And members have:
+  | uid  | flags  |*
+  | .ZZA |        |
+  When member "C:A" completes form "community/crumbs" with values:
+  | crumbs | 3 |**
+  Then we say "status": "info saved"
+  And we say "status": "tentative complete|co complete"
+  And member ".ZZC" steps left ""

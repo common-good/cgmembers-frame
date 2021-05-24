@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('PHOTOID_DIR', R_PICTURE_DIR . '/photoids');
-
 /**
  * Ask new member to verify their identity.
  */
@@ -15,19 +13,23 @@ function formVerifyId($form, &$sta, $args = '') {
   global $mya;
   
   if ($mya->stepIsDone('ssn') and !$mya->admin) return w\goNextStep(''); // don't allow DIY redo after SSN is verified
-  extract(just('setMethod', $args, -1));
+  extract(just('setMethod', $args, 0));
 
-  jsx('verifyid', 'method', $setMethod);
+  if (u\isMobile()) js('x/jquery.finger.min');
+  jsx('verifyid', 'method usa', $setMethod, $mya->usa);
   $title = t('Identity Verification');
-  $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-  $legalName = textFld(t('Your Legal Name:'), [t('Legal name (if different)'), t('If your legal name is longer or different from the name on your %PROJECT card ("%fullName"), type it here. Otherwise you can leave it blank.', 'fullName', $mya->fullName)]);
-  $methodChoices = ray(t('|Upload driver\'s license.|Upload other state-issued photo ID.|Type your social security number and birth date. This is simplest and is required by the IRS if you <i class="loud">accept</i> more than $20,000 a year in payments through %PROJECT and by the states of Vermont and Massachusetts if you accept more than $%MINIMA1099MAVT a year (not including purchase rebates offered by %PROJECT businesses).'));
-  $method = radiosFld(' ', '', required(-1), $methodChoices);  
+  $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>.', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
+  $legalName = textFld(t('Your Legal Name:'), [t('Legal name'), t('If your legal name is different (or longer), correct it here.')], dft($mya->fullName));
+  $methodChoices = ray(t('|<b>Immediate and automatic</b> &mdash; Type your social security number and birth date.|Upload driver\'s license (to be verified by an administrator).|Upload government-issued photo ID (to be verified by an administrator).'));
+  //  This is simplest and is required by the IRS if you <i class="loud">accept</i> more than $20,000 a year in payments through %PROJECT, and by the states of Vermont and Massachusetts if you accept more than $%MINIMA1099MAVT a year (not including purchase rebates offered by %PROJECT businesses).
+  $method = radiosFld(REQ, '', dft(0), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
-  extract(ssnFields(!$mya->co), FALSE);
+  $federalId = ssnFld(FALSE, suffix(lnk('', t('Show other options'))));
+  $dob = dobFld(FALSE);
+  $submit = t('Submit');
 
-  $form = compact(ray('title subtext method idtype file legalName federalId dob')) + w\setupFoot(t('Submit'), [], TRUE);
+  $form = compact(ray('title subtext method idtype file legalName federalId dob submit'));
   return cgform($form);
 }
 
@@ -37,7 +39,7 @@ function formVerifyId_validate($form, &$sta) {
 
   if (!is_dir(PHOTOID_DIR)) mkdir(PHOTOID_DIR, 0755) or u\FAIL('cannot create photo ID directory'); // required for tests
 
-  $ssnMethod = ($method == 2); // user chose SSN verification
+  $ssnMethod = ($method == 0); // user chose SSN verification
   $checkFlds = $ssnMethod ? 'federalId dob' : 'dob';
   if (!formBasic_validate($form, $sta, FALSE, $checkFlds)) return w\go('/settings/verifyid/setMethod=' . $method);
   if ($ssnMethod) return;

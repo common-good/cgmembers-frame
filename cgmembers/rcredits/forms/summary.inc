@@ -17,71 +17,43 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite'));
-  $special = ($mya->ok and !$mya->co) ? compact('special') : [];
-  
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
-  $stepUrl = $mya->nextStepUrl('', $msg);
-  $extras = '<br>' . u\fmtPhone($mya->phone) . " ($mya->faxetc)<br>$mya->email ";
-
-  if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
-    $form = adminSummary();
-    foreach (ray('photo legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
-      $$k = $form[$k];
-      unset($form[$k]);
-    }
-
-    if (!$mya->isCtty and $mya->cAdmin) {
-      if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
-      $extras .= ' ' . a\recropLink();
-    }
-    
-    if ($stepUrl == 'summary') {
-      if (nn($msg)) say(t('New member is told: ') . t($msg));
-    } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
-    
-  } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
-    if (nn($msg)) say($msg);
-    if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
+  $form = adminSummary();
+  foreach (ray('legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
+    $$k = $form[$k];
+    unset($form[$k]);
   }
 
-//  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
-  $gifts = u\fmtAmt($mya->totalGifts());
-//  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
-  $cttyBene = NULL;
-//  $cttyBene = item("$cttyBene " . t('overall, including your %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
-    
-  // $showCustomers = item(w\lnk('/community/data/qName=6Customers', t('Customer List')));
+  $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
+  if (!$mya->isCtty and $mya->cAdmin) {
+    if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
+    $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
+  }
 
-  if ($mya->canManage and $mya->member) {
-    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
-    $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
-    $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
-//    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
-//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : lnk('/settings/food', t('Food Fund'), 'warning');
-//    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
-    $goFood = '';
-    if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
-  } else $invite = $makeCo = $makeJoint = $goFood = $reports = '';
+  if (!$stepUrl = $mya->nextStepUrl('', $msg)) {
+    if (nn($msg)) say(t('New member is told: ') . t($msg));
+  } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
+    
+  $gifts = u\fmtAmt($mya->totalGifts());
 
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\lnk('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  foreach (ray('invite makeJoint makeCo goFood reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
-  $shortcuts = item(join('', nn($shortcuts, [])), t('Shortcuts:'));
 
-  $title = t('Account Summary');
-  $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
-  $address = $mya->cAdmin ? item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:')) : NULL;
+  $title = item(t('Account Summary'), '', suffix($buttons));
+  $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
+  $address = $mya->cAdmin 
+  ? item(($mya->trialco ? $mya->contact : $mya->postalAddr)
+    . '<br>' . u\fmtPhone($mya->phone) . "<br><span id=\"acctEmail\">$mya->email</span> "
+    . btn('', 'c', 'default', '', clas('copyEmail'))
+    , t('Contact:'))
+  : NULL;
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
 //    $balanceDesc = '';
-  $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
+  $balanceDesc = $mya->activated ? t(' (see <%a>History</a>)', '_a', atag('/history')) : '';
   $balance = item($balance . $balanceDesc, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account
@@ -94,34 +66,21 @@ function formSummary($form, &$sta) {
     $creditLine = $mya->underage ? NULL : item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
-/*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
-    $invites = max($successes, db\count('r_invites', 'inviter=:myid', compact('myid')));
-    $doInvite = $mya->cAdmin 
-    ? w\btn('/community/invite/print', t('front')) . ' ' . w\btn($mya->invitationBack(), t('back'))
-    : t('<small>[<%a>invite someone</a>]</small>', '_a', atag('/community/invite'));
-    $invites = item(t('You have invited at least %invites people (%successes are now members). ', compact('invites', 'successes')) . $doInvite, t('Invitations:'));
-  */
-  
-    $choiceList = choiceListFld();
-    
   } else $acctType = t('community account');
 
   if ($mya->cAdmin) {
-    $extra = " id#$mya->id";
-    if (FALSE and $bankInfo = $mya->bankInfo) {
-      extract($bankInfo, EXTR_PREFIX_ALL, 'b');
-      $bankInfo = "$b_name (routing #$b_route)\n$b_address, $b_city, $b_state $b_zip";
-      $extra .= ' ' . w\popHelp(t('bank info'), $bankInfo, '#'); //strtr(t(' <@a>bank info</a>'), ['@a'=>$bankInfo]); // strtr circumvents Drupal crap
-    }
-  } else $extra = '';
+    $extra = " id#$mya->id " . btn('', 'c', 'default', '', clas('copyAcct'));
+    $copyAcct = t('your %PROJECT%co account (%qid)', 'co qid', $mya->co ? t(' company') : '', $mya->mainQid);
+    $copyEmail = "$mya->fullName <$mya->email>";
+//    if ($mya->jid) $copyEmail .= 
+  } else $extra = $copyAcct = $copyEmail = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
-  $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
+  $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
-  foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
+  $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
-//  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
     $class = ['class' => ['admin']];
     $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
@@ -132,9 +91,10 @@ function formSummary($form, &$sta) {
 
   if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
   
-  jsx('summary');
+  jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
   
-  return cgform($special + $form);
+  return cgform($form, 'wide');
+
 }
 
 function formSummary_validate($form, &$sta) {
@@ -147,21 +107,20 @@ function formSummary_validate($form, &$sta) {
   if ($dob and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
   if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, describe the ID type in one or two words at the start of the number; for example "US Passport #12345". If there is no state, choose "AA".'), 'altId');
   
-/*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
-    unset($sta['input']['federalId']);
-  } elseif (@$federalId and $err = u\badSsn($federalId, $mya->dob)) return say($err, ['what' => 'federalId'], 'federalId');
-*/
   if (nn($helper)) {
-    if (!$h = whois($helper, 'helper', $sta['input'])) return say(t('I don\'t know what helper account you mean.'), 'helper');
-    $helper = $h->id;
+//    $helper = whoId($sta);
+    if (!$hA = $mya->helperA or $helper != $hA->fullName) {
+      if (!$hA = whois($helper, 'helper', $sta['input'], 'self-help', '')) return say(t('I don\'t know what helper account you mean.'), 'helper');
+    }
+    $helper = $hA->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
   if (nn($active) and !$mya->ok and !$mya->isCtty) { // activating
     if (!nn($helper)) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nni($adminable, B_MEMBER, NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
-    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
-    if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
+//    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
+    if (!$mya->co and !nn($dob) and !$mya->hasDob and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
   if (!nn($active) and $mya->ok) { // de-activating
@@ -177,10 +136,10 @@ function formSummary_submit($form, &$sta) {
   $op = op($sta);
 
   if (!$mya->admin2) return; // hack attempt
-  if ($op == 'secureMsgs') return w\go('', showSecureMessages());
+  if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
-  if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
+  extract($args = just('uid legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
+  if (!$mya->cAdmin) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
     $tickleDone = $mya->ok ? ($note and $mya->tickle) : 'activate';
@@ -198,19 +157,14 @@ function formSummary_submit($form, &$sta) {
     $mya->stepDone('verifyid');
   }
 
-/*
-  if ($federalId and $federalId != $mya->federalId) {
-    $mya->update(compact('federalId')); // must precede activate()
-    $mya->update('ssnData', '');
-  } */
-  
   if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
     if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
-      $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
-      r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
+      $helperA = r\acct($helper);
+      $_a1 = $helperA->doLink('confirmInvite', $mya->id); // link to confirm invitedness
+      $helperA->tell('confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
   }
 
@@ -219,19 +173,21 @@ function formSummary_submit($form, &$sta) {
     if ($active xor $mya->ok) { // changing activation status
       $mya->setBit(B_OK, $active);
       if ($active) {
+        include_once R_ROOT . '/cg-activate.inc';
         if ($mya->activated) $notes = r\stampNote('reactivated') . $notes;
-        activate($helper);
+        r\activate($mya, $helper);
       } else { $notes = r\stampNote('account closed') . $notes; }
     }
   }
   
   $fields = 'notes';
-  foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= " $k"; // don't overwrite
+  foreach (ray('legalName tickle moves helper') as $k) if (nn($$k)) $fields .= " $k"; // don't overwrite
   $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
   unset($DBTX);
   
   say('info saved');
+  if ($mya->superAdmin and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup');
 }
 
 function setRisksAndFlags($a, $risks, $adminable) {
@@ -245,118 +201,6 @@ function setRisksAndFlags($a, $risks, $adminable) {
 }
 
 /**
- * Activate the account.
- * @param int $helper: account record ID of account that invited this one
- */
-function activate($helper) {
-  global $mya;
-  u\EXPECT($mya and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
-
-  $DBTX = \db_transaction();
-  u\EXPECT($helper, 'no helper!');
-  $mya->update(compact('helper')); // must precede welcome message
-  $mya->setBit(B_OK, TRUE); // must precede welcome message
-  $mya->setBit(B_NONUDGE, FALSE);
-  
-  if ($firstTime = !$mya->activated) { // first time activation
-      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
-//    u\EXPECT($mya->co or $mya->dob, 'no dob!');
-    // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
-    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-12-31 11:59:59pm") : now());
-    if (!$mya->co and now() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
-    $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
-    $mya->update('vsecure', $mya->vsecure); // V-encrypt
-    $mya->eachPartner(function($coA, $mya, $custCode) { // tell partner: account is activated
-      if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
-    });
-    $msg = 'approved';
-//    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
-
-    if (!$mya->stepsDone($mya->co ? 'co' : 'person')) $msg .= '|suggest completion';
-    
-    $subs = ray('inviterName youName', $mya->helper ? $mya->helperA->fullName : '', $mya->fullName);
-    
-    r\message($mya->id, $msg, $subs);
-    
-  }
-
-  if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
-    if ($mya->ssnErr and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-
-    if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
-      $fullName = $mya->fullName;
-      $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $mya->helper)) + 0;
-      if ($helped == ORGANIZER_GRANT_MIN) {
-//            r\message($mya->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
-        list ($name, $topic) = [$mya->helperA->fullName, t('eligible')];
-        r\tellAdmin('eligible for grant', compact(ray('name topic')));
-      }
-    }
-  }
-  
-  unset($DBTX); 
-}
-
-/**
- * Return the right specifics to include in the welcome email.
- *//*
-function getSpecifics($mya) {
-  $forOver1000 = t('This is a trial account. You will need to complete some additional steps to accept more than $1,000 through %PROJECT.');
-  $onlineOnly = t('Your account is limited to payments online. ');
-  $acceptPayments = $onlineOnly . t('To accept payments through %PROJECT you will need to complete some additional steps.');
-  $finishCo = t(' <%a>Click here</a> to get started on that, by opening a personal account. Then sign back in to your company account and click "Finish" under Next Steps.', '_a', w\atag(BASE_URL . '/signup'));
-  $cardComing = t('You may now make purchases through the Common Good system, including using your Common Good card at member businesses. Expect your Common Good card to arrive in the mail within a few days.');
-  $getCard = t('To request a free %PROJECT card,');
-  $getSell = t(' accept payments through %PROJECT,');
-  $otherSteps = t(' or participate in the %PROJECT democracy, sign back in to your account and choose from the Next Steps listed there.');
-  
-  list ($cardWorthy, $canSell) = [$mya->stepsDone('card'), $mya->stepsDone('sell')];
-  
-  return str_replace(t('To or '), t('To '), $mya->co
-  ? ($mya->trialco ? $forOver1000 . $finishCo : ($mya->stepsDone('co2') ? '' : ($acceptPayments . $finishCo)))
-  : (($cardWorthy ? $cardComing . t(' To') : ($onlineOnly . $getCard)) . ($canSell ? '' : $getSell) . $otherSteps));
-}*/
-
-/**
- * Return a list of important next steps for the account.
- * @todo: add comment as an option?
- */
-function choiceListFld() {
-  global $mya;
-  if ($mya->cAdmin) return NULL;
-  
-  $warning = t('<b class="loud">NOTE!</b> Once you click this step, your account will be temporarily deactivated and you will need to finish all steps before it can be reactivated.');
-  $choices0 = explode("\n", t(<<< X
-    community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
-    community:donate:Give:Make a donation to %PROJECT.
-    community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy.</small>
-    scraps:co:Finish:Finish opening your complete company account.
-X
-  ));
-    
-  foreach($choices0 as $one) {
-    list ($dir, $task, $title, $text) = explode(':', trim($one));
-
-    if ($dir == 'community') {
-      $kch = "<div>$title</div><div>$text</div>";
-    } else {
-      $steps = $mya->stepCount($task);
-      $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
-    }
-    ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
-  }
-    
-  list ($task, $finishCh) = $mya->co ? ['co', $coCh] : ['person', $personCh];
-  $choices = $mya->stepCount($task) ? $finishCh : [];
-  $choices += $inviteCh + $donateCh + $commentCh;
-  $choiceList = t('<h3>Next Steps</h3>') . "\n";
-  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
-  return item($choiceList . "\n");
-}  
-
-/**
  * Return Summary fields exclusively for community admins (admin, admin2, cAdmin, cAdmin2).
  */
 function adminSummary() {
@@ -366,6 +210,8 @@ function adminSummary() {
   $uid = $mya->id;
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
   if ($mya->proSe and !$mya->superAdmin) return []; // nothing special on admin's own account
+  
+  $noEnter = TRUE; // prevent submission by pressing Enter
   
   if ($others = db\lst('fullName', 'sessions s JOIN users u ON u.uid=s.uid', ':uid=IFNULL(s.acct, s.uid) AND s.uid<>:agentId', ray('uid agentId', $uid, $mya->agentId))) {
     w\say(t('<b class="loud">Other people</b> signed in to this account: %others', compact('others')));
@@ -383,8 +229,9 @@ function adminSummary() {
 
     if ($mya->cAdmin and !$mya->proSe) {
       require_once R_ROOT . '/admin/admin.inc';
-      $html = $mya->photoHtml(FALSE, TRUE);
+/*      $html = $mya->photoHtml(FALSE, TRUE);
       $photo = item("<a href=\"$base_url/settings/photo\">$html</a>");
+      */
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));
       
@@ -403,18 +250,20 @@ function adminSummary() {
       $risk = item(round($mya->risk) . ' ' . button(t('Recalc'), "$base_url/rerisk/acct/$uid/1"), t('Risk Score:'));
       if (!$mya->co) $trust = item(number_format($mya->trust, 1), t('Trust:'));
 
-    if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
-        if ($helper = $mya->helper ?: ($mya->co ? $mya->by : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
+      if (!$mya->ok or $mya->helper == 1) {
+        if ($helper = $mya->helper ?: ($mya->co ? $mya->agentId : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
           $hA = r\acct($helper);
-          $helper = "$hA->mainQid: $hA->fullName";
+          $helper = $hA->fullName;
         }
-        $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper)); //  + autocomplete()
-      } else $helper = item($mya->helper ?: t('N/A'), t('Helped by:'));
+        $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper));
+        w\whoFldSubmit('helper', '', 'self-help', '', ray('custom', 1));
+
+      } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
     $tasks = item(a\showTasks($mya), t('Tasks:'));
-    $steps = item(a\showSteps($mya), t('Steps Done:'), t('|agree=sign agreement | fund=connect bank (or not) | work=identify employer/calling | company=company info | discount=offer a discount'));
+    $steps = item(a\showSteps($mya), t('Steps Done:'), t('|fund=connect bank account | work=identify employer/calling | company=company info | discount=offer a discount | backing=support your community\'s %PROJECT economy | stepup=support local nonprofits'));
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   
@@ -491,15 +340,23 @@ function adminSummary() {
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
+    $dob = $altSt = $altId = NULL;
 
-    if ($mya->superAdmin or !$mya->hasDob) {
-      $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
-      $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')));
-      $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
-    } else { $dob = $altId = $altSt = NULL; }
-
+    if (!$mya->co) {
+      if ($mya->superAdmin or !$mya->hasId) {
+        $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
+        $dob = rendA('dob', $dob);
+      }
+      if ($mya->hasFid) {
+        if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
+      } elseif ($mya->superAdmin) { // altId is V-encrypted
+        $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+        $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+      }
+    }
+    
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
     $source = item($mya->source, t('Source:'));
   }
 
@@ -509,7 +366,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  $info = []; foreach (ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray("noEnter details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
   return $info;
 }
 
@@ -522,7 +379,7 @@ function adminSummary() {
 function submitTickle($v, $text, $size = 'xs') {
   if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
   if ($v) $v = date('Y-m-d', strtotime("+$v days"));
-  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v)));
+  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v) + notab()));
 }
 
 /**
@@ -598,7 +455,7 @@ function callDetails($type = '', $when = '') {
     $_volunteerLink = t('<%a>volunteer</a>', '_a', 'a href="#volunteer" data-toggle="collapse"');
     $volunteer = t('<li><b>Volunteer</b>. (if supportive) Would you like to %volunteerLink with %PROJECT?<ul id="volunteer" class="collapse"><li>%volunteer</li></ul></li>', compact(ray('_volunteerLink _volunteer')));
     $coAsk = '';
-    $options = t('Do you know about our joint account option? Sign in at %CG_DOMAIN and visit the Relations page on the Settings menu, to join an existing account with yours. Or to open a new account joined to yours, click "Make this a Joint Account" on your Summary page.');
+    $options = t('Do you know about our joint account option? Sign in at %CG_DOMAIN and visit the Relations page on the Settings menu, to join an existing account with yours. Or to open a new account joined to yours, click "Make this a Joint Account" on your Dashboard page.');
     if (!$mya->roundup) $options .= t(' And do you know about the roundups option? Roundups let you always pay a whole dollar amount and donate the change to the community fund. Choose it on the Preferences page on the Settings menu. Or just ask and we\'ll set it for you.');
   }
   $giftDetails = t('(Wait for answer, then ask:) What amount would you like to give and do you prefer yearly, quarterly, or monthly? Suggested amounts are $50 for individuals and $250 for companies, but any amount is wonderful.');

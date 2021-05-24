@@ -15,7 +15,7 @@
 function drupal_path_initialize() {
   // Ensure $_GET['q'] is set before calling drupal_normal_path(), to support
   // path caching with hook_url_inbound_alter().
-  if (empty($_GET['q'])) $_GET['q'] = 'summary';
+  if (empty($_GET['q'])) $_GET['q'] = '';
   return $_GET['q'];
 //  $_GET['q'] = drupal_get_normal_path($_GET['q']);
 }

@@ -25,7 +25,7 @@ function formInvestDividends($form, &$sta, $args = '') {
     $amount = item(t('You cannot issue dividends at this time.'));
     $submit = NULL;
   } else {
-    $amount = numFld(t('Total Dividends to Issue:'), '', required($amt));
+    $amount = numFld(REQ . t('Total Dividends to Issue:'), '', dft($amt));
     $submit = t('Issue Dividends');
   }
   $back = backButton();
@@ -48,8 +48,8 @@ function formInvestDividends_submit($form, &$sta) {
 
   $DBTX = \db_transaction();
 
-  list ($ok, $index, $subs) = be\transfer('payment', $icA, $cgA, $amount - $pool, t('community dividend'), FOR_USD);
-  u\EXPECT($ok, 'community dividend error');
+  $z = be\transfer('payment', $icA, $cgA, $amount - $pool, t('community dividend'), FOR_USD);
+  u\EXPECT($z->ok, 'community dividend error');
 
 	$q = db\q('SELECT uid FROM r_stakes', compact('clubid'));
   while ($row = $q->fetchAssoc()) {
@@ -58,12 +58,11 @@ function formInvestDividends_submit($form, &$sta) {
     $pct = myShareOfClub($uid, $clubid);
 		$amt = round($pct * $pool, 2);
 		if ($amt > 0) {
-			list ($ok, $index, $subs) = be\transfer('payment', $icA, $a, $amt, t('dividend'), FOR_USD);
-      u\EXPECT($ok, 'dividend error');
+			$z = be\transfer('payment', $icA, $a, $amt, t('dividend'), FOR_USD);
+      u\EXPECT($z->ok, 'dividend error');
       
       if ($a->reinvest) {
-			  list ($ok, $index, $subs) = be\transfer('payment', $a, $icA, $amt, t('re-investment of dividends'), FOR_USD, ray('stake', 1));
-        u\EXPECT($ok, 'dividend reinvestment error');
+			  $ok = $a->payApproved($clubid, $amt, t('re-investment of dividends'), FOR_USD, ray('stake', 1));
         db\q('UPDATE r_stakes SET stake=GREATEST(0, stake+request+:amt), request=LEAST(0, request+:amt) WHERE clubid=:clubid AND uid=:uid', compact(ray('clubid uid amt')));
         $reCount++;
         $reSum += $amt;

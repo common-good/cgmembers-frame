@@ -13,7 +13,7 @@ use CG\Util as u;
 
 class TxEntry {
   const REQUIRED_FIELDS = 'amount uid agentUid';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description rule';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description rule relType relatedId';
   const E_FIELDS = self::INSERT_FIELDS . ' id xid';
 
   public $id;           // record ID (second entry in a pair should have a positive ID, first is the inverse)
@@ -47,7 +47,7 @@ class TxEntry {
     $e = $this;
     switch ($f) {
     default:
-      u\EXPECT(FALSE, "unexpected field $f requested");
+      u\EXPECT(FALSE, "unexpected field:" . $f);
     }
   }
 

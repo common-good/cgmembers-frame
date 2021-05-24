@@ -107,7 +107,7 @@ Scenario: The club adds a proposed investment
   
   When member "I:B" completes form "invest/propose" with values:
   | company | investment |equity |offering |price |return | terms | assets   | character |strength |web |history |soundness |*
-  | .ZZC    | improve it |     1 | $10,000 |   10 |   4.6 | Terms | $951,000 | trusty    |      75 | 60 |     80 |       90 |
+  | c@      | improve it |     1 | $10,000 |   10 |   4.6 | Terms | $951,000 | trusty    |      75 | 60 |     80 |       90 |
   Then we say "status": "investment proposal saved"
   And these "investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
@@ -292,7 +292,7 @@ Scenario: The club sells shares
   | | Sell Shares |  
 
   # finish sale
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -338,7 +338,7 @@ Scenario: The club sells its remaining shares in an investment
   And invoices:
   | nvid | payer | payee | amount | purpose                               | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | redeeming investment: 6 shares at $10 | investment |  
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -497,7 +497,7 @@ Scenario: The investment club issues dividends
   Then we show "Issue Dividends" with:
   | Available for Dividends | $5,500 |
   | | (10.0% is reserved for Common Good) |
-  | Total Dividends to Issue | $5,500 |
+  | Total Dividends to Issue | $5500 |
   | Issue Dividends | |
   
   When member "I:B" completes form "invest/dividends" with values:
@@ -690,7 +690,7 @@ Scenario: The club sells shares
   | | Request Repayment |  
 
   # finish sale
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -735,7 +735,7 @@ Scenario: The club sells its remaining shares in an investment
   And invoices:
   | nvid | payer | payee | amount | purpose        | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | loan repayment | investment |  
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":

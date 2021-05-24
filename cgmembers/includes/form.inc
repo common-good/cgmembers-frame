@@ -1348,12 +1348,12 @@ function _form_validate(&$elements, &$form_state, $form_id = NULL) {
 
   // Validate the current input.
   if (!isset($elements['#validated']) || !$elements['#validated']) {
-    if (isset($elements['#value']) and $elements['#type'] != 'password' and !is_array($elements['#value'])) $elements['#value'] = trim($elements['#value']); // cgf 6/15/2020
+    if (isset($elements['#value']) and nni($elements, '#type') != 'password' and !is_array($elements['#value'])) $elements['#value'] = trim($elements['#value']); // cgf 6/15/2020
     // The following errors are always shown.
     if (isset($elements['#needs_validation'])) {
       // Verify that the value is not longer than #maxlength.
       if (isset($elements['#maxlength']) && drupal_strlen($elements['#value']) > $elements['#maxlength']) {
-        form_error($elements, $t('!name cannot be longer than %max characters but is currently %length characters long.', array('!name' => empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'], '%max' => $elements['#maxlength'], '%length' => drupal_strlen($elements['#value']))));
+        form_error($elements, $t('%name cannot be longer than %max characters but is currently %length characters long.', ray('name max length', empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'], $elements['#maxlength'], drupal_strlen($elements['#value']))));
       }
 
       if (isset($elements['#options']) && isset($elements['#value'])) {
@@ -1804,7 +1804,7 @@ function form_builder($form_id, &$element, &$form_state) {
     $element['#defaults_loaded'] = TRUE;
   }
   // Assign basic defaults common for all form elements.
-  if (!is_array($element)) {
+  if (isDEV and !is_array($element)) {
 /**/ echo 'invalid form element:';
 /**/ foreach (@$form_state['complete form'] as $k => $v) if ($k[0] != '#' and !is_array($v)) echo "\n*** Field \"$k\" should be an array! (value $v) ***\n";
 /**/ print_r(compact('element'));

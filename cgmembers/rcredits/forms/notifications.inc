@@ -8,6 +8,9 @@ use CG\Db as db;
 
 /**
  * Choose how often to send each type of notification.
+ 
+                    UNUSED (yet?) See notices.inc
+
  */
 function formNotifications($form, &$sta) {
   global $notifyWhens, $notifyNowBys;

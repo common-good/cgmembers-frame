@@ -10,14 +10,48 @@ args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
-  function fid(field) {return '#edit-' + vs[field].toLowerCase();}
   function fform(fid) {return $(fid).parents('form:first');}
-  function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');};
-  function reportError(j) {if (!j.ok) $.alert(j.message, 'Error');};  
+  function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');}
+  function reportErr(j) {if (!j.ok) $.alert(j.message, 'Error');}
+  function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
+
+  function suggestWhoScrap() {
+    var fid = fieldId();
+    var form = fform(fid);
+    suggestWho(fid, vs['restrict']);
+    $(fid).focus(); // must be after suggestWho
+    form.submit(function (e) {
+      if ($(fid).val() == '') return true; // in case this field is optional
+      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['selfErr'], vs['restrict'], vs['allowNonmember']);
+      if (!ok) {e.preventDefault(); return false;}
+    });
+  }
 
   switch(what) {
 
-  case 'funding-criteria': jQuery('.critLink').click(function () {jQuery('#criteria').modal('show');}); break;
+  case 'message':
+    var secrets = $('#secrets');
+    secrets.hide();
+    $('#edit-addSecret').click(function () {
+      $(this).hide();
+      secrets.show().find('textarea').focus();
+    });
+    break;
+    
+  case 'pw':
+    var min = 5.14; // minimum score
+    $('#edit-pw').keyup(function () {
+      var e = pwScore($(this).val());
+      var pct = 100 * (1 - Math.min(min, e) / min);
+      if (!$('.form-item-showPass').length || $('#edit-showpass-1').is(':checked')) {
+        $('.form-item-submit').toggle(pct == 0);
+      }
+      $(this).css('background-size', pct + '% 100%');
+    });
+    $('#edit-pw').keyup();
+    break;
+    
+  case 'funding-criteria': $('.critLink').click(function () {$('#criteria').modal('show');}); break;
   case 'download': window.open(vs['url'] + '&download=1', 'download'); break;
 
   case 'chimp':
@@ -27,32 +61,91 @@ function doit(what, vs) {
     break;
 
   case 'get-ssn': get('ssn', {}, function () {}); break;
+  
+  case 'card':
+    $('#edit-desc').val($('#edit-for :selected').text()); // set desc field to initial value
+    if (vs['choice0Count'] == 0) cardOther();
+    $(vs['choice0Count'] == 0 ? '#edit-desc' : '#edit-amount').focus();
+    $('#edit-for').change(function () {
+      $('edit-desc').val($('#edit-for :selected').text()); // set desc field to selected value
+      var i = $(this).find(':selected').val();
+      var other = (i == $(this).find('option').length - 1);
+      var goish = (i >= vs['choice0Count'] && !other);
+      if (other) cardOther();
+      $('#edit-charge, #edit-pay').toggle(!goish);
+      $('#edit-go').toggle(goish);
+    });
+    break;
+    
+  case 'cardChoose':
+    $('.form-item-account.radio').click(function () {
+      $(this).find('input').prop('checked', true);
+      $(this).parents('form:first').submit();
+    });
+    break;
+    
+  case 'cc':
+    var note = $('.form-item-comment');
+    note.hide();
+    $('.form-item-submit a').click(function () {note.show().find('textarea').focus();});
+    break;
     
   case 'deposits':
     $('.filename').click(function () {
-      var area = document.createElement('textarea');
-      area.value = $(this).attr('data-flnm');
-      document.body.appendChild(area);
-      area.select();
-      alert(document.execCommand('copy') ? 'filename copied to clipboard' : 'copy to clipboard failed');
+      var res = clipCopy($(this).attr('data-flnm'));
+      alert(res ? 'filename copied to clipboard' : 'copy to clipboard failed');
     });
     break;
 
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
+    $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
+    $('#edit-note').focus();
+
+    var fid = '#edit-helper';
+    var form = fform(fid);
+    suggestWho(fid, '1');
+    break;
+    
+  case 'dashboard':
+    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    $('#endorse a').click(function () {$('#endorse').hide();});
+    $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
+    $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
+    $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
     break;
     
   case 'tx':
-    $('.btn-delay').click(function () {
+    $('.btn-pay, .btn-charge').click(function () {
+      var pay = has($(this).attr('class'), 'btn-pay');
+      var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
+      $('#dashboard').hide();
+      $('.w-pay').toggle(pay);
+      $('.w-charge').toggle(!pay);
+      $('#edit-title h3').html(desc);
+      $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
+      $('#tx').show();
+      $('#edit-who').focus();
+
+      // question, allowNonmember, and restrict cannot be passed to jsx, because (bool) pay is calculated herein
+      vs['question'] = desc + vs['question'];
+      vs['allowNonmember'] = !pay;
+      vs['restrict'] = pay ? ':IS_OK' : '';
+      suggestWhoScrap();
+    });
+    $('#btn-delay').click(function () {
+      $(this).hide();
       $('.form-item-start').show();
       $('#edit-start').focus();
     });
-    $('.btn-repeat').click(function () {
+    $('#btn-repeat').click(function () {
+      $(this).hide();
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
     });
     break;
-    
+
   case 'invest':
     $('.form-item-expenseReserve a').click(function () {
       var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));
@@ -65,7 +158,6 @@ function doit(what, vs) {
     $('#dp-offset').click(function () {post('dpOffset', {amount:vs['amount']}, report);});
     break;
     
-
   case 'change-ctty':
     $('#edit-community').on('change', function () {
       var newCtty = this.value;
@@ -76,25 +168,20 @@ function doit(what, vs) {
       /*        post('changeCtty', {newCtty:newCtty, retro:retro}, function(j) {
                 if (!j.ok) $.alert(j.message, 'Error');
                 }); */
-      post('changeCtty', {newCtty:newCtty, retro:retro}, reportError);        
+      post('changeCtty', {newCtty:newCtty, retro:retro}, reportErr);        
     }
     break;
 
   case 'focus-on': $('#edit-' + vs['field']).focus(); break;
-
-  case 'agree':
-    if (vs['show']) $('#wrap-agreement').show();
-    $('#show-agreement').click(function () {$('#wrap-agreement').show();}); 
-    break;
     
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();
     $('#showAdvanced').click(function () {showAdv();});
-    function showAdv() {jQuery('#advanced').show(); jQuery('#simple').hide();}
+    function showAdv() {$('#advanced').show(); $('#simple').hide();}
     $('#edit-period').change(function () {
       var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();
     });
-    $('#showSimple').click(function () {jQuery('#advanced').hide(); jQuery('#simple').show();});
+    $('#showSimple').click(function () {$('#advanced').hide(); $('#simple').show();});
     break;
     
   case 'new-advanced-dates':
@@ -136,48 +223,101 @@ function doit(what, vs) {
     });
     break;
 
-  case 'signupco':
-    $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
+  case 'relations':
+    $('input[type="checkbox"]').change(function () {
+      var data = {name: $(this).attr('name'), v:$(this).prop('checked')};
+      post('relations', data, reportErr);
+    });
+    $('#relations .btn[name^="delete-"]').click(function () {
+      var data = {name: $(this).attr('name'), v:0};
+      var that = $(this);
+      post('relations', data, function (j) {
+        report(j);
+        if (j.ok) that.closest('tr').remove(); // delete line
+      });
+    });
+    $('#relations select').change(function () { // permission
+      var data = {name: $(this).attr('name'), v:$(this).val()};
+      var that = $(this);
+      post('relations', data, function (j) {
+        if (j.ok) {
+          if (j.message) $.alert(j.message, 'Success');
+        } else {
+          $.alert(j.message, 'Error');
+          that.val(j.v0);
+        }
+      });
+    });
+    break;
+    
+  case 'eval': // evaluate arbitrary expression after decrypting it (on dev machine only)
+    post('eval', {jsCode:vs['jsCode']}, function (j) {
+      if (j.ok) eval(j.js);
+    });
     break;
     
   case 'cgbutton':
-    cgbutton();
+    var cgPayCode;
+
     $('#edit-item').focus();
-    $('.form-item-button input').click(function () {cgbutton($(this).val());});
-    $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val());});
+    $('.form-item-button input').click(function () {cgbutton();});
+    $('#edit-size').change(function () {cgbutton();});
+    $('#edit-item, #edit-amount, #edit-credit, #edit-text').change(function () {getCGPayCode();});
+    $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
-      var val = $(this).val();
-      $('#edit-for').val(vs['forVals'].split(',')[val]);
-      $('.form-item-item, .form-item-amount').toggle(val == 2);
-      $(val == 2 ? '#edit-item' : '#edit-size').focus();
-      cgbutton();
+      var fer = $(this).val();
+      var credit = (fer < 2);
+      $('#edit-for').val(vs['forVals'].split(',')[fer]);
+      $('.form-item-credit').toggle(fer == 0); // show credit option only for credit (not for gift)
+      $('.form-item-item').toggle(!credit);
+      $(credit ? '#edit-size' : '#edit-item').focus();
+      getCGPayCode();
     });
+    $('.form-item-for input:checked').click(); // this also triggers getCGPayCode() and cgbutton()
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
 
-    function cgbutton(type) {
+    function getCGPayCode() { // get a CGPay buttonn code
+      post('cgPayCode', {
+        item:$('#edit-item').val(),
+        amount:$('#edit-amount').val(),
+        credit:$('#edit-credit').val(),
+        fer:$('.form-item-for input:checked').val(),
+        expires:$('#edit-expires').val()
+      }, function (j) {
+        if (j.ok) {
+          cgPayCode = j.code;
+          cgbutton();
+        } else {
+          setButtonHtml('');
+          report(j);
+        }
+      });
+    }
+    
+    function cgbutton() {
+      var type = $('.form-item-button input:checked').val();
       if (type == undefined) type = 2;
       var isButton = (type == 2);
       $('.form-item-size').toggle(isButton);
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/pay-with-cg';
-      var fer = 'credit gift other'.split(' ')[$('input[name="for"]:checked').val()];
-      var item = encodeURI($('#edit-item').val());
+      var url = baseUrl + '/cgpay';
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
-      var amt = $('#edit-amount').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
-      var style = (type == 0 || type == 2) ? '' : ' style="display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;"';
-      var html = vsprintf('<a href="%s/company=%s&for=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], fer, item, amt, style, img]);
+      var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
+      var html = vsprintf('<a href="%s?code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
       
-      if ((isButton ? size : text) != '') {
-        $('#edit-html').text(html);
-        $('#button').html(html);
-        $('.form-item-example .control-data').html(html);
-      }
+      if ((isButton ? size : text) != '') setButtonHtml(html);
       $('.form-item-size img').height(size == '' ? 0 : size);
+    }
+    
+    function setButtonHtml(html) {
+      $('#edit-html').text(html);
+      $('#button').html(html);
+      $('.form-item-example .control-data').html(html);
     }
     break;
     
@@ -197,35 +337,34 @@ function doit(what, vs) {
 
   case 'legal-name': // probably not needed with new signup system
     $('edit-fullname').change(function () {
-      var legal=jQuery('#edit-legalname'); 
+      var legal=$('#edit-legalname'); 
       if (legal.val()=='') legal.val(this.value);
     });
     break;
     
   case 'verifyid':
+    $('.form-item-federalId a').click(function () {$('.form-item-method').toggle();});
     if (vs['method'] >= 0) verifyid(vs['method']);
     $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
-    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
+//    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-1').prop("checked", true);});
+    $('#edit-dob').on('press', function(e) {
+      $(this).attr('type', 'text').css('background-color', '#e6ffcc'); // make it not a date type field and go green
+      $(this).click(); // show keyboard
+    });
+    
+    if (vs['usa'] != 1) {
+      $('#edit-method-2').click();
+      $('#frm-verifyid .form-item-submit a').hide();
+    }
     break;
 
   case 'which':
-    var fid = fid('field');
-    //      if ($(fid).val() == '') break; // don't suggest everyone
-    var form = fform(fid);
-    //      this.form.elements[vs['field']].value=this.options[this.selectedIndex].text;
+    var form = fform(fieldId());
     $('#which').modal('show');
     break;
 
-  case 'suggest-who':
-    var fid = fid('field');
-    var form = fform(fid);
-    suggestWho(fid, vs['coOnly']);
-    $(fid).focus(); // must be after suggestWho
-    form.submit(function (e) {
-      if ($(fid).val() == '') return true; // in case this field is optional
-      return who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
-    });
-    
+  case 'suggest-who': // called from whoFldSubmit with: field, question, amount, selfErr, restrict, allowNonmember
+    suggestWhoScrap();
     break;
     
   case 'new-acct':
@@ -233,14 +372,14 @@ function doit(what, vs) {
     var form = $('#frm-accounts');
     suggestWho(fid, '');
     form.submit(function (e) {
-      return who(form, fid, '', false, true, false);
+      return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
     });
     break;
 
   case 'invest-proposal':
     $('#add-co').click(function () {
-      $('.form-item-fullName, .form-item-city, .form-item-serviceArea, .form-item-dob, .form-item-gross, .form-item-bizCats').show();
-      require('#edit-fullname, #edit-city, #edit-servicearea, #edit-dob, #edit-gross, #edit-bizcats', true, true);
+      $('.form-item-fullName, .form-item-city, .form-item-zips, .form-item-dob, .form-item-gross, .form-item-bizCats').show();
+      require('#edit-fullname, #edit-city, #edit-zips, #edit-dob, #edit-gross, #edit-bizcats', true, true);
       $('.form-item-company').hide();
       require('#edit-company', false, true);
       $('#edit-fullname').focus();
@@ -294,7 +433,7 @@ function doit(what, vs) {
     break;
 
   case 'work':
-    suggestWho('#edit-company', 1);
+    suggestWho('#edit-company', ':IS_CO');
     break;
   
   case 'stepup':
@@ -305,7 +444,7 @@ function doit(what, vs) {
         if (first) first = false; else $(this).parents('.row').hide();
       }
     });
-    suggestWho('[id^="edit-org"]', 1);
+    suggestWho('[id^="edit-org"]', ':IS_CO');
 
     $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
     
@@ -324,74 +463,82 @@ function doit(what, vs) {
     break;
 
   case 'groups':
-    suggestWho('#edit-newmember');
+    suggestWho('#edit-newmember', '');
     break;
     
   case 'rules':
     $('#edit').click(function () {location.href = baseUrl + '/sadmin/rules/id=' + $('#edit-id').val();});
-    suggestWho('#edit-payer, #edit-payee, #edit-from, #edit-to');
+    suggestWho('#edit-payer, #edit-payee, #edit-from, #edit-to', '');
     break;
     
   case 'posts':
-    $('.form-item-radius .btn').click(function () { // click the Go button
-      $('#edit-submit').click();
+    function askAddr() {$('#locset').toggle(); $('#edit-locus').focus();}
+    
+    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
+
+    $('#edit-point').click(function () { // click the Go button
+      $('#edit-submitter').click();
       return false; // cancel original link click
     });
-    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
-    break;
-    
-  case 'post-tabs':
-// NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
-    var frm = $('#edit-search').parents('form:first');
-    
-    frm.submit(function (event) {event.preventDefault();}); // or return false;
-   
-    $('#edit-search').change(function () { // search
-      var box = $('#tabs .container');
 
-      $('.filter').val(99); // show "(search)" on both filter dropdowns
-      
-      var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
-      box.find('.tbody .row').show(); // show all (then eliminate non-matches)
-      if (s == '') return $('.filter').val('');
-
-      var i, words = s.toUpperCase().split(' '); // array of words
-      var cols = '.cat .item .details'.split(' ');
-
-      box.find('.tbody .row').each(function () {
-        colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
-        for (i in words) if (colText.indexOf(words[i]) < 0) $(this).hide(); // show only if it has all words
-      });
+    $('#edit-where').click(function () {
+      if (vs['noLocYet'] == 1 && vs['isMobile'] == 1 && navigator.geolocation) navigator.geolocation.watchPosition(
+        function (z) {location.href = `${baseUrl}/community/posts/latitute=${z.coords.latitude}&longitude=${z.coords.longitude}`;}, 
+        function (error) {askAddr();}
+      ); else askAddr();
     });
 
-    $('#tabs').tabs();
-    $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
-/*    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();}); */
-    $('#tabs .tbody .row').click(function () {location.href = $(this).find('a').attr('href');});
+    $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
        
-    $('.filter').mousedown(function () {$(this).parent().click();});
-    
-    $('.filter').change(function () {
-      var box = $($(this).parent().attr('href'));
-      var opt = $(this).find(':selected');
+    $('#edit-nogo').click(function () {$('#edit-search').val('').change();});
 
-      if (opt.val() == -1) { // search
-        $('#edit-search').change();
-      } else if (opt.val()) { // show some
-        var cat = opt.text().replace(/ /g, '');
-        if (cat == vs['myPosts']) cat = 'mine';
-        box.find('.tbody .row').hide(); // hide all
-        box.find('.row.' + cat).show(); // and everything in the chosen category
-        box.find('.row.none').show(); // and the "nothing found in this area" row, if any
-      } else box.find('.tbody .row').show(); // show all
+    $('#edit-search').keydown(function () { // user pressed Enter in search box
+      if (event.which == 13) {
+        $(this).blur();
+        event.preventDefault();
+      }
     });
+
+    $('#edit-type, #edit-cat, #edit-terms, #edit-sorg, #edit-search').change(function () {
+      var box = $('#list');
+      var type = $('#edit-type').find(':selected').val();
+      var cat = $('#edit-cat').find(':selected').val();
+      var terms = $('#edit-terms').find(':selected').val();
+      var sorg = $('#edit-sorg').find(':selected').val();
+      var s = $('#edit-search').val().trim().replace(/\s{2,}/g, ' '); // the search string without extraneous spaces
+      var cnt;
+
+      var sel = '.tbody .row';
+      if (type >= 0) sel += '.t' + type;
+      if (cat > 0) sel += (cat == vs['myPosts']) ? '.mine' : ('.c' + cat);
+      if (terms >= 0) sel += '.x' + terms;
+      if (sorg >= 0) sel += '.s' + sorg;
+      box.find('.tbody .row').hide(); // hide all
+      box = box.find(sel); // initial selection before search
+      cnt = box.show().length; // show everything in the chosen category (and count them)
+    
+      if (s.length) { // searching, so narrow the selection
+        var i, words = s.toUpperCase().split(' '); // array of words
+        var cols = '.cat .item .details'.split(' ');
+
+        box.each(function () { // eliminate non-matches
+          colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase(); // the item's text
+          for (i in words) if (colText.indexOf(words[i]) < 0) { // does it fail to match any search word?
+            $(this).hide(); // show only if it has all words
+            cnt -= 1;
+          }
+        });
+      }
+      $('#none').toggle(cnt <= 0); // and the "nothing found in this area" row, if any
+    });
+     
     
     $('#edit-view').click(function () {
-      if ($('#tabs.memo').length > 0) { // if memo view, switch to list view
-        $('#tabs').removeClass('memo');
+      if ($('#list.memo').length > 0) { // if memo view, switch to list view
+        $('#list').removeClass('memo');
         $(this).text(vs['memoView']);
       } else { // list view, switch to memo
-        $('#tabs').addClass('memo');
+        $('#list').addClass('memo');
         $(this).text(vs['listView']);
       }
     });
@@ -402,13 +549,13 @@ function doit(what, vs) {
     $('input[name="type"]').change(function () {
       var type = vs['types'].split(' ')[$(this).val()];
       var need = (type == 'need');
+      $('.form-item-service').toggle(type != 'tip');
       $('.form-item-radius').toggle(!need); 
-      $('.form-item-exchange').toggle(need);
-      if (type == 'tip') $('#edit-radius').val(0); // tips default to everywhere
+//      $('.form-item-exchange').toggle(need);
+      if ($('#edit-radius').val() == '') $('#edit-radius').val(type == 'tip' ? 0 : 10); // tips default to everywhere
     });
-    
     $('.form-item-end a').click(function () {
-      $('#edit-end').val(new Date(Date.now()).toLocaleString().split(',')[0]);
+      $('#edit-end').attr('type', 'text').val(new Date(Date.now()).toLocaleString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'}).split(',')[0]);
       $('#edit-submit').focus();
     });
     break;
@@ -431,21 +578,13 @@ function doit(what, vs) {
       }
     }); */
     break;
+
+  case 'signupco':
+    $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
+    break;
     
-  case 'signup':
-    var form = $('#frm-signup');
-//    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
-    form.submit(function (e) {return setPostalAddr(false);});
-    if (vs['preid']) $('#edit-phone').change(function () {
-      data = {
-        preid: vs['preid'],
-        fullName: $('#edit-fullname').val(),
-        legalName: $('#edit-legalname').val(),
-        email: $('#edit-email').val(),
-        phone: $('#edit-phone').val()
-      };
-      post('presignup', data, null);
-    });
+  case 'agree':
+    $('#show-agreement').click(function () {$('#wrap-agreement').toggle();}); 
     break;
     
   case 'prejoint': $('#edit-old-0').click(function () {this.form.submit();}); break;
@@ -461,32 +600,32 @@ function doit(what, vs) {
     $('#edit-org').keyup(function () {
       if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
     });
-    if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
+    if (vs['edit'] == 1) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
-  case 'amtChoice':
-    var other = jQuery('.form-item-amount'); 
-    var amtChoice = jQuery('#edit-amtchoice');
-    var amtChoiceWrap = jQuery('.form-item-amtChoice');
-    if (amtChoice.val() == -1) {
-      amtChoiceWrap.hide();
-      other.show(); 
-    } else {
-      amtChoiceWrap.show();
-      other.hide();
-    }
+  case 'shouters':
+    $('.rating').click(function () {
+      post('bumpShout', {qid:$(this).attr('qid')}, null);
+      var rating = $(this).attr('rating');
+      $(this).attr('rating', rating == '3' ? 0 : (parseInt(rating) + 1));
+    });
+    break;
     
-    amtChoice.click(function () {
-      if(amtChoice.val() == -1) {
+  case 'amtChoice':
+    var amtChoiceWrap = $('.form-item-amtChoice');
+    var amtChoice = $('#edit-amtchoice');
+    var other = $('.form-item-amount'); 
+
+    amtChoice.change(function () {
+      if(amtChoice.val() == '-1') {
         other.show(); 
         amtChoiceWrap.hide();
-        jQuery('#edit-amount').focus();
+        $('#edit-amount').focus();
       } else other.hide();
     });
+    amtChoice.change();
     
-    $('#edit-amount').change(function () {
-      if ($(this).val() == 0) $('#edit-often').val('Y');
-    });
+    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('Y');});
     break;
     
   case 'contact':
@@ -496,12 +635,15 @@ function doit(what, vs) {
     form.submit(function (e) {return setPostalAddr(false);});
     break;
 
-  case 'verifyemail': // have to use jQuery here instead of $ because of Drupal conflict
+  case 'verifyemail':
+    var pw = $('.form-item-pw');
     if (vs['verify'] == 1) {
-      reqNot(jQuery('.form-item-pass1'));
-      reqNot(jQuery('.form-item-pass2'));
-    } else showPassFlds();
-    jQuery('#edit-showpass-1').click(showPassFlds);
+      reqNot(pw);
+    } else pw.show().focus();
+    $('.form-item-showPass input').click(function() {
+      pw.toggle();
+      if (pw.is(':visible')) $('#edit-pw').focus();
+    });
     break;
     
   case 'veto':
@@ -566,14 +708,12 @@ function doit(what, vs) {
     });
     break;
     
-    /*    case 'relations':
-          $('div.checkbox').click(function () {
-          var box = $('input', this);
-          alert(box.prop('checked'));
-          //box.prop('checked', !box.prop('checked'));
-          });
-          break;*/
-    
+  case 'notice-prefs':
+    $('.k-freq select').change(function () {
+      post('setNotice', {code:vs['code'], type:$(this).attr('name').replace('freq-', ''), freq:$(this).val()}, reportErr);
+    });
+    break;
+        
   default:
     alert('ERROR: Unknown script scrap (there is no default script).');
     alert($('#script-scraps').attr('src').replace(/^[^\?]+\??/,''));
@@ -592,9 +732,9 @@ function verifyid(method) {
   var file = $('.form-item-file');
 
   req(dob);
-  if (method == 0) {reqNot(ssn); req(file); reqNot(idtype);}
-  if (method == 1) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
-  if (method == 2) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+  if (method == 0) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+  if (method == 1) {reqNot(ssn); req(file); reqNot(idtype);}
+  if (method == 2) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
 }  
 
 function setInvestFields() {
@@ -603,6 +743,28 @@ function setInvestFields() {
   $('.form-item-loanSet').toggle(!equity);
   require('#edit-offering, #edit-price, #edit-return', equity, true);
   require('#edit-offering--2, #edit-price--2, #edit-return--2', !equity, true);
+}
+
+/**
+ * Return the log of the entropy of a given password
+ * No. For now, return 1 point for each: UTF8, upper, lower, digit, punc, 7 chars
+ */
+function pwScore(s) {
+  var e = u(s, 'U') + u(s, 'A') + u(s, 'a') + u(s, 'n') + u(s, 'p'); // character universe size (0-224)
+//  return s.length * Math.log(Math.max(1, e));
+  return e + s.length / 7;
+
+  /**
+   * Return the size of the character universe (U=unicode, A=cap, a=lower, n=digit, p=punc)
+   * But utf8mb4 characters are 75% discounted, because emojis make them easy to select.
+   * Actually no. Just return 1 for a match and 0 otherwise (for now).
+   */
+  function u(s, u) {
+    var us = {U:'[^\u0000-\u007f]+', A:'[A-Z]+', a:'[a-z]+', n:'[0-9]+', p:'[^[A-Za-z0-9]+'};
+    var score = {U:(256-32)/4, A:26, a:26, n:10, p:128-26-26-10-32};
+//    return (new RegExp(us[u]).test(s) ? score[u] : 1);
+    return (new RegExp(us[u]).test(s) ? 1 : 0);
+  }
 }
 
 /**
@@ -625,11 +787,13 @@ function require(items, yesno, xx) {
   }
 }
 
-function showPassFlds() {
-  jQuery('.form-item-pass1,.form-item-pass2,#edit-settings').show();
-  jQuery('#edit-pass1').focus();
+function cardOther(focus) {
+  $('.form-item-for').hide();
+  $('#edit-desc').val('').attr('required', 'required');
+  $('.form-item-desc').show();
+  if (focus) $('#edit-desc').focus();
 }
-  
+
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
 function reqNot(fld) {fld.find('input').removeAttr('required'); fld.hide();}
 function reqQ(fld, show) {if(show) req(fld); else reqNot(fld);}

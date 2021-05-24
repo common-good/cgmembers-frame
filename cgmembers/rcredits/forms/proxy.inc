@@ -18,25 +18,25 @@ function formProxy($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args);
   $dft = $mya->proxy($priority);
   $dftOther = $mya->proxy(3 - $priority);
-  if (!$choices = w\proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&$args", 'no local proxy');
-  if (!$mya->member and count($choiceList) <= 2) { // no real choices, so don't make the member choose
-    if (!$dft) $mya->proxy($priority, $choiceList[0]);
-    if (!$dftOther) $mya->proxy(3 - $priority, $choiceList[$dft ? 0 : 1]);
+  if (!$choices = proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&$args", 'no local proxy');
+  if (!$mya->ok and count($choiceList ?: []) <= 2) { // no real choices, so don't make the member choose
+    if (!$dft) $mya->proxy($priority, nni($choiceList, 0, PLACEHOLDER_1_UID));
+    if (!$dftOther) $mya->proxy(3 - $priority, nn($choiceList, $dft ? 0 : 1, PLACEHOLDER_2_UID));
     say('no local proxy');
     return w\goNextStep('proxies');
   }
 
   $title = $priority == 1 ? t('Your #1 Proxy') : t('Your <%b>Alternate</b> Proxy', '_b', 'b class="loud"');
-  $title = item($title . t(' (choose one)'), BARE);
+  $title = $title . t(' (choose)');
   foreach (['warning', 'success', 'primary', 'slight'] as $i => $v) {
     $b["_b$i"] = "b class=\"btn btn-xs btn-$v\"";
   }
   
   $limitedChoice = $mya->cttyA->isRegion ? t('<p>You are outside any organized %PROJECT Community, so your choices will be very limited until more people sign up in your area. But no worries. You will have the opportunity to revise your proxy choices before your community votes on anything.</p>') : '';
-  $subtext = item(t('<p>Choose and click someone you know and trust. OR, if you prefer to have the system assign you a proxy for now, choose Placeholder One or Placeholder Two. You can change your choices at any time.</p><p>Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice, BARE);
+  $subtext = t('<br><p>Choose and click someone you know and trust. OR, if you prefer to have the system assign you a proxy for now, choose Placeholder One or Placeholder Two. You can change your choices at any time.</p><p>Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice;
   $list = $choices;
   $priority = hidFld($priority);
-  return cgform(compact(ray('title subtext list priority')), '', FALSE);
+  return cgform(compact(ray('title subtext list priority')), 'wide nolabs');
 }
 
 function formProxy_validate($form, &$sta) {
@@ -62,7 +62,7 @@ function formProxy_submit($form, &$sta) {
   if (!r\acct()) { // called from email link
     return $priority == 1 ? w\go("/prox/page=Proxy&priority=2&$args") : w\doSay(t('Success!'));
   } elseif ($mya->proxy(1+2 - $priority)) { // do we already have the other proxy?
-//    return w\go($mya->ok ? '/settings/proxies' : 'status');
+    if (!$mya->stepIsDone('proxies')) return goNextStep('proxies');
   } else say('proxy to go');
 
   return w\go('/settings/proxies', 'info saved');
@@ -83,8 +83,8 @@ function proxyChoices($a, $dfts, &$choiceList) {
       WHERE :uid IN (person, proxy)) q
 EOF;
 
-  $cttyCrit = $a->cttyA->isRegion  // must have same params either way (hence :ctty=:ctty)
-  ? "(:ctty=:ctty AND city='$a->city' AND state=$a->state AND :IS_OK)"
+  $cttyCrit = $a->seedpacker  // must have same params either way (hence :ctty=:ctty)
+  ? "(:ctty=:ctty AND (city='$a->city' OR zip='$a->zip') AND state=$a->state AND :IS_OK)"
   : '(community=:ctty AND :IS_OK)';
   
   if (!$friends = db\lst('uid', $table, 1, compact('uid'))) $friends = '0'; // list of account's friends
@@ -109,10 +109,11 @@ EOF;
   $q = db\q($sql, ray('uid state city zip ctty', $uid, $a->state, $a->city, $a->zip, $a->community));
   $res = '';
   $cityX = '(none)'; // required for placeholders to work right
+  $choiceList = [];
   while ($row = $q->fetchAssoc()) { // show choices in reverse order, so inviter(s) are at top
     extract($row);
     if (!$current = in($uid, $dfts)) $choiceList[] = $uid;
-    $state = ($state == $a->state or !$state) ? '' : (', ' . $a->$st);
+    $state = ($state == $a->state or !$state) ? '' : (', ' . $a->st);
 /*    if ($weight < PHP_INT_MAX / 2) { // show city and maybe state
       $state = $state == $a->state ? '' : (', ' . r\realState($state));
     } else list ($city, $state) = [t('Top Suggestions'), '']; */

@@ -25,13 +25,6 @@ function formAdminPanel($form, &$sta, $args = '') {
   global $mya;
   if (!$mya->cAdmin) hack('panel');
   
-  if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
-    foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
-      $a = r\acct($uid);
-      if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
-    }
-  }
-
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
@@ -43,20 +36,11 @@ function formAdminPanel($form, &$sta, $args = '') {
   $inviteeStatus = submi(t('Invitee Status'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
-  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: svar('adminingAcct')));
+  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: (svar('adminingAcct') ?: $mya->mainQid)));
   
   if ($mya->superAdmin) {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-    /*    if (now() < strtotime('6/20/2017')) {
-          global $base_url;
-          $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
-          foreach($members as $k) {
-          $list[] = <<<EOF
-          <a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
-EOF;
-          }
-          $start = item(join('', $list));
-          } */
+
     $do1099ktest = submi(t('1099-K TEST'));
     $do1099k = submi('1099-K');
     $reconcile = submi('Reconcile Ctty Fund');
@@ -80,13 +64,13 @@ EOF;
     if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
   }
 
-  foreach (ray($tables) as $one) $do[$one] = submi($one);
+  $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
   $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do);
   
   $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData');
-  foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
+  $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
   return cgform(compact(ray('title do acctSet')));
@@ -133,7 +117,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
   } elseif ($op == 'resetSSN' and $a) {
@@ -147,10 +131,10 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeChanges') {
     w\go("sadmin/changes/$a->mainQid");
   } elseif ($op == 'ssnLink') {
-    w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
+    w\say($a->fullName. t(' SSN Link:') . tr('<br><br> &nbsp; %BASE_URL/do/doSsn~%code &nbsp; ', 'code', $a->doCode()));
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
-    include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099s(TEN99K, nn($test1099));
+    include_once R_ROOT . '/cg-yearly.inc';
+    r\Special\do1099s('K', nn($test1099));
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'toSMT') {
@@ -165,7 +149,7 @@ function formAdminPanel_submit($form, &$sta) {
         if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
         u\EXPECT([$a], 'Acct');
         if ($signupCo = $a->signupCo) {
-          extract(just('isOwner employee employeeOk contractor', $signupCo, NULL));
+          extract(just('company isOwner employee employeeOk contractor', $signupCo, ''));
           $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, $isOwner ? t('owner') : (($employee or $employeeOk) ? t('employee') : ($contractor ? t('contractor') : '')), $company);
         }
       }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
@@ -223,90 +207,13 @@ function formSeeChanges($form, &$sta, $qid = '') {
     $list = item("<table>$list</table>");
   } else $list = t('No changes');
   
-  return cgform(compact(ray('title list')));
+  return cgform(compact(ray('title list')), 'nolabs');
 }
 
 function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
 
 /**
- * Create a new community or region.
- */
-function formMakeCtty($form, &$sta) {
-  $title = t('Make a New Community');
-  $subtext = t('<p>Typically the name of a %PROJECT community is the place name followed by "%PROJECT"; for example, "<b>Greenfield Area %PROJECT</b>". Legal names should include the state (for disambiguation), spelled out; for example, "Greenfield Massachusetts %PROJECT".</p><p>By contrast, region names begin with "%PROJECT"; for example, "<b>%PROJECT Western Mass</b>".</p><p>Email should reflect the legal name, for example "<b>greenfield@ma.%CG_DOMAIN</b>".</p>');
-  $region = textFld(t('Region:'), [t('Region code'), t('3-letter code of community\'s region')], required());
-  $zips = textFld(t('Zip Regex:'), [t('Zipcodes to include'), t('|Type a regular expression for all zipcodes to be included (by default) in the community. For example, ^013|01002 would include all zipcodes starting 013 plus zipcode 01002. Individual members can also be moved manually in or out of this community.')]);
-
-  // from w\contactFields
-  $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')], dft($phone));
-  $postalAddr = textFld(REQ . t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], dft(nn($postalAddr)));
-
-  $submit = submit();
-  
-  $form = compact('title', 'subtext') + nameAndEmailFlds(-1) + ssnFields(FALSE)
-    + compact(ray('phone postalAddr region zips submit'));
-  //         + ssnFields(FALSE) + contactFields(['zot'=>0], FALSE) // prevent contact fields from defaulting
-  //  foreach (ray('tenure owns') as $k) unset($form[$k]);
-  return cgform($form);
-}
-
-function formMakeCtty_validate($form, &$sta) {
-  global $mya;
-  $myid = $mya->id;
-  extract(u\normalizeCase(just($normals = 'fullName legalName postalAddr', $sta['input'], NULL)));
-  extract(just('zips region email phone federalId', $sta['input'], NULL));
-
-  if (preg_match("~$zips~", null) === FALSE) return say(t('bad Zips REGEX'), 'zips');
-  if (!$region or !preg_match('/[A-Z]{3}/i', $region)) return say(t('bad region code'), 'region');
-
-  if (!$fullName) $fullName = $legalName;
-  foreach (ray('fullName legalName') as $field) {
-    if ($err = u\badName($$field)) return say($err, compact('field'), $field);
-  }
-  if (!emailOkay($email, $mya->co, $mya)) return; 
-  if ($err = u\badPhone($phone)) return say($err, 'phone');
-  //  $name = mb_strtolower(substr($email, 0, mb_strpos($email, '@')));
-  $name = u\shortName($fullName);
-  if ($otherName = db\get('fullName', 'users', 'name=:name', compact('name'))) return say('shortname taken', compact('otherName'), 'fullName');
-  //  $name = r\uniqueName($fullName);
-
-  if ($err = u\badSsn($federalId)) return say($err, ['what' => 'federalId'], 'federalId');
-  
-  list ($address, $city, $state) = u\parseAddr($postalAddr); // zip doesn't apply, since it is used for defining the territory
-  if (!$address) return say('Bad postal address', 'postalAddr');
-  if (!$state = r\stateNum($state)) return say('Bad state', 'postalAddr');
-
-  $region = strtoupper($region);
-  if (!db\exists('r_regions', 'region=:region', compact('region'))) return say(t('That region does not exist.'), 'region');
-
-  u\preray(compact(ray($normals . ' name email phone address city state region federalId')), $sta['input']); // fix formatting
-}
-
-function formMakeCtty_submit($form, &$sta) {
-  $fields = 'name fullName legalName email phone federalId postalAddr address city state';
-  extract(just('zips region ' . $fields, $sta['input']));
-
-  $zip = $zips; // store the regex defining the region or community
-  $flags = u\bit(B_CO) | u\bit(B_OK) | u\bit(B_UP);
-  $rebate = 0;
-  $country = R_COUNTRY_ID;
-  $region = r\qo("!$region")->id;
-  $type = CO_PARTNERSHIP;
-  $fields .= ' zip flags rebate region address state country type';
-
-  $DBTX = \db_transaction();
-  $info = compact(ray($fields));
-  
-  if (!$a = new r\Acct($info)) return say('cannot create account', 'zot');
-  $a->update('community', $a->id);
-  
-  unset($DBTX); // commit
-  say('info saved');
-}
-
-/**
  * Show a list of standard calls to make (to help new members, check-in, ask for donation, etc.)
- * @param int $uid: (optional) account to deal with
  * @param bool $one: (optional) <show just my community>
  * @param bool $recent: (optional) <show latest notes first>
  */
@@ -314,13 +221,9 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  extract(just('uid one recent', $args, null));
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('dashboard');
   
-  if (!empty($uid)) {
-    r\setAcct($uid, $sta); // switch to that user
-    return formSummary($form, $sta);
-  }
+  extract(just('one recent', $args, null));
 
   $title = t('Admin Action Page');
   $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
@@ -347,6 +250,7 @@ function formFollowup($form, &$sta, $args = []) {
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL OR :isDEV)
     ORDER BY $by
+    LIMIT 50
 EOF;
   
   $fields = ray('ctty type call name phone notes');
@@ -389,7 +293,7 @@ EOF;
     if (in($color, $whities)) $color .= ' fu-whitey';
     $type = "<span class=\"fu-$color\">$type</span>";
     $call = u\fmtDate($tickle ?: $created);
-    $name = w\lnk("$base_url/change-account/acct=$uid&page=summary", $fullName ?: $uid);
+    $name = w\lnk("$base_url/change-account/acct=$uid", $fullName ?: $uid);
     if ($co) $name = "<span class=\"co\">$name</span>";
     $phone = u\fmtPhone(u\decry('P', $phone), '-');
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
@@ -401,7 +305,7 @@ EOF;
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title subtitle list')), FALSE);
+  return cgform(compact(ray('title subtitle list')), 'wide nolabs');
 }
 
 /**
@@ -428,7 +332,7 @@ function formMemberList($form, &$sta) {
     $phone = str_replace('+1 ', '', u\fmtPhone($phone0 = $a->phone));
     $postalAddr = $a->postalAddr;
     $email = $a->email;
-    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid&page=summary\">$fullName</a>";
+    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid\">$fullName</a>";
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);
 
@@ -451,7 +355,7 @@ EOF;
   }
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title list')), FALSE);
+  return cgform(compact(ray('title list')), 'wide nolabs');
 }
 
 /**
@@ -477,20 +381,21 @@ function formDownloadMemberList($form, &$sta, $args = '') {
   $title = t('Download Member List');
   $expMo = r\rdoMonth();
   $subtext = t(<<<EOF
-               <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program.</p>
-                                                                                                                                                                                                                                                                                                                    <p>Action links for individual accounts take the form %code, where expMonth is the number of an expiration month (the current month is number %expMo). For example, a link from MailChimp to the democracy page, expiring next month, would be:</p>
-               <blockquote>%example</blockquote>
-               <p>Other action choices might be listed here someday. :)</p>
+    <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp or MailerLite and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program (type contains "member" or "company" or "member company").</p>
+    <p>Action links for individual accounts take the form %code. For example, a link from MailChimp to the democracy page would be:</p>
+    <blockquote>$base_url/%eg1 (MailerLite) OR<br>
+    $base_url/%eg2 (MailChimp)</blockquote>
+    <p>Other action choices might be listed here someday. :)</p>
 EOF
-    , 'cttyName code expMo _example', $cttyA->fullName, 'do/action~qid~ecode~monthNum', $expMo, $base_url . '/do/doEvents~*|ID|*~*|ECODE|*~' . ($expMo + 1));
+    , 'cttyName code eg1 eg2', $cttyA->fullName, '<site>/do/<op>~<code>', 'do/doEvents~{$code}', 'do/doEvents~*|code|*');
   
-$chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
+$chimp = boolFld(t('Export to email list?'), '', TRUE);
   
-$allCttys2 = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
+$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : hidFld(FALSE); // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', compact(ray('allCttys status types anonymous')));
   
 $submit = t('Download');
   
@@ -509,10 +414,10 @@ function formDownloadMemberList_submit($form, &$sta) {
  * Generates the execute form.
  */
 function formPhp($form, &$sta, $res = '') {
-  $res = item($res);
-  $code = areaFld('', '', dft(getV('code')));
+  $res = item($res, BARE);
+  $code = areaFld(BARE, '', dft(getV('code')));
   $submit = t('Execute Code');
-  return cgform(compact('res', 'code', 'submit'), FALSE);
+  return cgform(compact('res', 'code', 'submit'), 'wide nolabs');
 }
 
 /**
@@ -563,9 +468,8 @@ EOF;
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
   $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amountIn)<b class="newout">New OUT:</b> %countOut (%amountOut)', compact(ray('countIn amountIn countOut amountOut')));
   if ($mya->superAdmin) {
-    $go = w\btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks'))
-      . ' ' . w\btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file'));
-    $go = item($go, ' ');
+//    $go = btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks')) . ' ' . 
+    $go = item(btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file')));
   }
   
   $deposits = item(a\deposits(), ' ');
@@ -633,7 +537,7 @@ X;
  */
 function depositDetails($args) {
   extract(just('way date total count only', $args, NULL));
-  include_once __DIR__ . '/../pdf.class';
+  include_once R_ROOT . '/pdf.class';
   $pdf = new r\Pdf();
 
   if (!$in = (!isset($way) or strtoupper($way) == 'IN')) $total = str_replace('-', '', $total);
@@ -728,12 +632,20 @@ EOF;
 
 /**
  * Create an ACH Batch file for all relevant transfer requests.
+ * @params string $args: URL argument list including:
+ *   date: 0 for pending transfers (the default), unixtime for a redo
+ *   way: in or out (defaults to neither, meaning both)
+ *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
+ *   bank: BSL or Citizens
  */
 function achBatch($args) {
   include DRUPAL_ROOT . '/rcredits/admin/admin-achify.inc';
-  extract(just('way date mark', $args));
-  //  achify("deposit=$date");
-  w\achify("deposit=$date AND amount<=0 AND created<=:NOW"); // temporarily only money going OUT or verifying bank account
+  extract(just('date way mark bank', $args, ''));
+
+  u\setDft($date, 0);
+  if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+  w\achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank); // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  
   if (test()) return;
 }
 
@@ -750,7 +662,7 @@ function achBatch($args) {
  
 function printChecks($args) {
   extract(just('way date mark limit', $args));
-  include_once __DIR__ . '/../pdf.class';
+  include_once R_ROOT . '/pdf.class';
   $ck = new r\Pdf();
   $ck->setPrintHeader(FALSE);
   $ck->setPrintFooter(FALSE);
@@ -786,32 +698,26 @@ function printChecks($args) {
  */
 function memberId($id, $agent = '', $retroactive = FALSE) {
   global $mya;
-  require_once __DIR__ . '/../pdf.class';
+  require_once R_ROOT . '/pdf.class';
+  require_once R_ROOT . '/forms/showqr.inc'; // for qrUrl()
   
   $a = r\acct($id, $agent);
   $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
-  if (!$a or ($cttyErr and !$retroactive)) exit('No such account ia: ' . $id . ':' . $agent);
+  if (!$a or ($cttyErr and !$retroactive)) u\FAIL('No such account ia: ' . $id . ':' . $agent);
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)
-  list ($fmt, $region, $tail, $agentCode) = $a->qo->qr();
-  $tail = $fmt . $tail . $agentCode;
   
   $acctName = $a->bestName;
   $nameFont = mb_strlen($acctName) > 38 ? 'font-stretch:condensed;'
     : (mb_strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
   
-  if (!$proSe = $a->proSe) {
-    if (!$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);
-    $aa = $a->agentA; // hereafter it's all about the agent
-  } else $aa = $a;
+  list ($aa, $proSe) = [$a->agentA, $a->proSe];
 
-  list ($cardFld, $role, $ptQid, $yName, $bg) = $proSe 
-    ? ['cardCode', t('Member'), 10, 1.70, 'bg'] 
-    : ['cardCode2', t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
+  list ($role, $ptQid, $yName, $bg) = $proSe 
+    ? [t('Member'), 10, 1.70, 'bg'] 
+    : [t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
 
-  $server = isPRODUCTION ? 'RC2.ME' : 'RC4.ME';
-  $qrUrl = "HTTP://$region.$server/$tail" . $aa->$cardFld;
   $permitted = ($proSe or B_RELATED + r\relation('permission', $a->id, $aa->id) >= B_BUY);
   $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : R_NOT_VALID; // '@' tells tcpdf it's an image, not a file; $a->canBuy fails because admin has permission
 
@@ -851,7 +757,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $sp = '<span style="font-size:50%;"> </span>';
   $url = str_replace('.', $sp . '<b style="display:inline; font-stretch:expanded; font-size:120%;">.</b>' . $sp, CG_DOMAIN);
   $pdf->say($url,  $xSite, $ySite, '', '', "7;color:white;font-stretch:normal;", 'L');
-  $pdf->write2DBarcode($qrUrl, 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
+  $pdf->write2DBarcode(w\qrUrl($a), 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
 
   $pdf->say($acctName, $m+$xText, $m+$yName, '', '', "12;B;$nameFont", 'L');
   if ($proSe) $pdf->say($qid, $m+$xText, $m+$hCard-.19, '', '', "6.5;color:#666666;letter-spacing:.7px;", 'L');
@@ -889,41 +795,11 @@ function formSMS_submit($form, $sta) {
 }
 
 /**
- * Run acceptance tests.
- */
-function tests($arg = '') {
-  if (!isDEV) return;
-  
-  \drupal_get_messages(); // clear messages
-  db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
-  $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart'));
-  jsx('test');
-  test(TRUE);
-
-  if (!getv('cgf_uid')) {
-    a\setupBasicAccounts();
-    return w\go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
-  }
-
-  include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
-  //  $_SESSION = [];
-  if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', now() - 42000,
-              $params["path"], $params["domain"],
-              $params["secure"], $params["httponly"]
-              );
-  }
-  if (session_id() and session_status() == PHP_SESSION_ACTIVE and nn($_SESSION)) session_destroy();
-  db\q('TRUNCATE sessions');
-  \drupal_goto('sadmin/test-results'); // has to be a form available when logged out
-}
-
-/**
  * Log back in to admin automatically (called after testing, in case session got destroyed).
  */
-function formTestResults($form, &$sta) {
+function formTestResults($form, &$sta, $args = '') {
   if (!isDEV) return;
+  extract(just('top', $args, NULL));
   
   r\setAcct(1, $sta);
   test(FALSE);
@@ -933,20 +809,28 @@ function formTestResults($form, &$sta) {
     extract($row);
     $list[] = "<div class=\"$type messages\">$value</div>\n";
   }
-  $list = item(join('', nn($list, [])));
+  $list = item(join('', nn($list, [])), BARE);
   \drupal_get_messages(); // throw out any existing messages
+//  $title = $top ? t('Tests') : NULL;
 
-  return cgForm(compact(ray('list')));
+  return cgForm(compact(ray('list')), 'wide');
 }
 
 /**
  * Delete an account (superAdmin only)
- * @param int $uid: account to delete
+ * @param mixed $uid: account to delete (uid, qid, acct or 'this')
  */
 function deleteAccount($uid) {
   global $mya;
-  r\deleteAccount($uid);
+
+  if (is_object($a = $uid)) $uid = $a->id;
+  if ($uid == 'this') {
+    $uid = $mya->id;
+  } elseif (!is_numeric($uid)) { $uid = r\acct(strtoupper($uid))->id; } // qid
+  
+  if (!$uid) return w\softErr(t('You must not delete account zero.'));
   if ($uid == $mya->id) r\setAcct(1); // don't leave us on a deleted account (switch to superAdmin)
+  a\deleteUid($uid);
   return w\go('/sadmin/followup');
 }
 
@@ -961,13 +845,10 @@ function checkSanity() {
 
 function util($arg) {
   switch ($arg) {
-  /* case 'modal': */
-  /*   drupal_goto('modal'); */
-  /*   break; */
-  /* case 'reset': */
-  /*   r\reset(); */
-  /*   break; */
   case 'reset-menu':
+    w\uncacheSubmenus();
+    db\q("DELETE FROM menu_router WHERE page_callback LIKE 'CG%'"); // otherwise we get leftover junk
+    db\q("DELETE FROM menu_links WHERE module='rweb'");
     \menu_rebuild();
     break;
   case 'remove-test-data':
@@ -991,7 +872,7 @@ function util($arg) {
   return w\go('sadmin');
 }
 
-function handyLinks() {
+function formHandy($form, &$sta) {
   global $base_path, $base_url, $base_root;
 
   $links = [
@@ -1002,35 +883,12 @@ function handyLinks() {
     'sadmin/variables|Edit and delete site variables.|Variables|copy',
   ];
 
-  /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
-        'devel/cache/clear?destination=sadmin|Clear the CSS cache and all database cache tables which store page, node, theme and variable caches.|Empty cache|new-window',
-        'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
-        'devel/elements|View the active form/render elements for this site.|Elements|align-center',
-        'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
-        'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
-  */
-  //    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
-  //    'rcredits/test?menu=1|Test Menu|',
-  //    'rcredits/util/changeAgent|Change Agent to Bea|',
-  //    'sms|Simulate an SMS transaction|Simulate SMS',
-  //    'admin/config/development/testing|Test|Test',
-  //    'deletetests.php|Delete old tests|Delete old tests',
-  //    'rcredits/util/reset|Reset rCredits|',
-  //    'devel/entity/info|View entity information across the whole site.|Entity info',
-  //    'devel/php|Execute some PHP code|Execute PHP Code',
-  //    'devel/field/info|View fields information across the whole site.|Field info',
-  //(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
-  //    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
-  //    'devel/run-cron|Run cron|Run cron',
-  //    'devel/session|List the contents of SESSION.|Session viewer',
-  //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
-
   foreach ($links as $link) {
-    list ($url, $detail, $label, $icon) = explode('|', u\padRay($link, 4));
+    list ($url, $detail, $label, $icon) = u\padRay(explode('|', $link), 4);
     if (!$label) $label = $detail;
     $handy[$url] = ['', $label, '', ANY, '', $detail, $icon];
   }
-  return w\subMenu(t('<h2>Handy Links</h2>'), $handy);
+  return w\subMenu(t('<h2>Handy Links</h2>'), $handy, 'handy');
 }
 
 /**

@@ -17,8 +17,8 @@ function formSecurity($form, &$sta, $arg = '') {
   if ($arg == 'gotPhoto') say('got photo');
 
 //  button(t('password'), "$base_url/settings/security/change-password", '', 'warning'), t('Change:'), ['', $mya->ok ? t('triggers new card', 'field', 'photo') : ' ']);
-  $btns = btn("$base_url/settings/security/change-password", t('password'), 'warning')
-  . ' ' . btn("$base_url/settings/photo", t('photo'), 'warning');
+  $btns = btn("$base_url/settings/security/change-password", t('password'))
+  . ' ' . btn("$base_url/settings/photo", t('photo'));
   
   $title = t('Security Information');
   $change = item($btns, t('Change:'), ['', $mya->ok ? t('triggers new card', 'field', 'photo') : ' ']);

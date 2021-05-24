@@ -30,7 +30,7 @@ function formInvestRate($form, &$sta, $args = '') {
   $ds = ray(t('Company, City, Service area, Founded, Annual gross, Co description, Project/Purpose, Type, Offering size, Share price, Predicted return, Terms, Company assets, Owner character, Financial strength, Web presence, Repayment history, Overall soundness'));
   $ds = array_combine(array_merge($ks, $fields), $ds);
 
-  $vs = [$coA->fullName, $coA->city, $coA->serviceArea, u\fmtDate($coA->dob, TRUE), $coA->gross, $coA->coDesc()];
+  $vs = [$coA->fullName, $coA->city, $coA->zips, u\fmtDate($coA->dob, TRUE), $coA->gross, $coA->coDesc()];
   $vs = array_combine($ks, $vs); 
   foreach ($fields as $k) $vs[$k] = $res[$k]; // add investment record fields to $vs in the order of $fields (don't use just())
 

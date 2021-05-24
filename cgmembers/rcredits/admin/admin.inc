@@ -4,8 +4,6 @@
  * CG admin
  error_reporting(E_ALL);
  ini_set("display_errors", 1);
-
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
 */
 namespace CG\Admin;
 
@@ -15,6 +13,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Admin as a;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * Set up the basic user accounts and relations on the server.
@@ -22,19 +21,19 @@ use CG\Web as w;
  * To prepare for export for developers, f('t.clear');
  */
 function setupBasicAccounts() {
-  $keys = ray('uid community name fullName email zip country minimum flags');
+  $keys = ray('uid community name fullName email country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
   if (isDEV and !isPRODUCTION) db\q('TRUNCATE users'); // !isPRODUCTION is a safety measure
   if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0], 'uid'); // required for signed-out messages (w\say())
   
-  $q = db\q('SELECT region,fullName,st,zip,postalAddr,federalId,hasServer FROM r_regions');
+  $q = db\q('SELECT region,fullName,st,zips,postalAddr,federalId,hasServer FROM r_regions');
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
     if (!$hasServer) continue;
     //    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
     if ($uid = db\get('uid', 'users', "name=CONCAT(:region, '.')", compact('region'))) {
-      r\acct($uid)->update(compact(ray('zip federalId flags')));
+      r\acct($uid)->update(compact(ray('zips federalId flags')));
     } else {
       $fullName = $fullName ?: db\get('name', 'r_states', 'abbreviation=:st', compact('st'));
       $email = u\shortName($fullName) . '@' . CG_DOMAIN;
@@ -42,106 +41,245 @@ function setupBasicAccounts() {
       $uid = r\serverUid($region);
       $activated = R_LAUNCH;
       $state = r\stateNum($st);
-      $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
+      $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += compact(ray('postalAddr state federalId activated'));
-      new r\Acct($info);
+      list ($address, $city, $zot1, $zot2) = u\parseAddr($postalAddr); // don't overwrite state or zip
+      $info += compact(ray('postalAddr address city state federalId activated'));
+      $serverA = new r\Acct($info);
+      $serverA->update(compact('zips'));
     }
   }
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   if (!isDEV) return; // don't mess with existing members on stage or production server
   
-  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), '', 0, 0, u\bit([B_ADMIN, B_CO]));
+  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
   if (isDEV) $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', mb_strtolower($v));
-    $values = array($k, 0, $name, $v, 'z@o.t', '', 0, 0, 0);
+    $values = array($k, 0, $name, $v, 'z@o.t', 0, 0, 0);
     $info = array_combine($keys, $values);
     new r\Acct($info);
   }  
 
   $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
   
-  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
+  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo)));
+  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo)));
   
-  $server = r\serverUid();
-  if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
-    r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
-    if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
+  $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
+  if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
-    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
-    $info = array_combine($keys, $values);
-    list ($phone, $address, $city, $state, $postalAddr) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR);
-    $helper = 1; //$wws->id;
-    $info += compact(ray('email phone address city state postalAddr helper'));
-    $cgf = new r\Acct($info);
-    setV('cgf_uid', $cgf->id);
-    $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
-//    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
-    $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
+  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo);
+  $info = array_combine($keys, $values);
+  $info += ray('phone address city state postalAddr zip helper',
+    u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
+  $cgf = new r\Acct($info);
+  setV('cgf_uid', $cgf->id);
+  $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
+  $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
-  }
 }
 
 /**
  * Re-setup the test cards on the STAGING server, after importing data from the PRODUCTION server.
  * Set bogus email addresses and phones so we DEFINITELY don't accidentally email someone (happened once)
  */
-define('TEST_ACCTS', 'aaa aab aad aaq aak abb');
-define('DEV_ACCTS', ''); // developer accounts
-define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ NEWAKD'); // community organizers, staff, and programmers to treat as cAdmins on test server (not the superAdmin's personal account, so the superAdmin can sign in as an ordinary individual user).
- 
+
 function makeTestAccounts() {
-  if (isPRODUCTION) return; // protects us even if the constant is not set
-///   print_r("makeTestAccounts()<br>");
+  global $mya;
+  if (isPRODUCTION or !$mya->superAdmin) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
 
-  // for Corner Pub, include cardCode so we can test the company proSe as well as with an agent
-  $a = a('aab', '', true);
-  $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
-  $a->update('name fullName selling cardCode', 'cornerstore', 'Corner Store', $selling, 'CvRM3AwXJppPmf');
-  //  $a->setBit(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
+  if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
-  $a = a('aaa', '', true);
-  $a->update('name fullName cardCode2', 'mariamanager', 'Maria Manager', 'WeHlioM5JZv1O9G');
-  a\photoFromFile($a);
-  
-  $a = a('aad', '', true);
-  $a->update('name fullName cardCode2', 'cathycashier', 'Cathy Cashier', 'ME04nW44DHzxVDg');
-  a\photoFromFile($a);
-  
-  $a = a('aaq', '', true);
-  $a->update('name fullName', 'helgas', 'Helga\'s Hardware');
-  //  $a->setBit(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
-  a\photoFromFile($a);
-  
-  $a = a('aak', '', true);
-  $a->update('name fullName cardCode cardCode2', 'curtcustomer', 'Curt Customer', 'NyCBBlUF1qWNZ2k', 'utbYceW3KLLCcaw');
-  a\photoFromFile($a);
-  
-  $a = a('abb', '', true);
-  $a->update('name fullName cardCode', 'susanshopper', 'Susan Shopper', 'ZzhWMCq0zcBowqw');
-  a\photoFromFile($a);
-  
-  foreach (ray(TEST_ACCTS) as $k) a($k)->update('email phone pin', 'test@example.com', '+14130000000', '1234'); // prevent accidental texts and emails to real accts
+  $testAccts = [
+  'aaa' => ['Maria Manager', '', 'WeHlioM5JZv1O9G'],
+  'aab' => ['Corner Store', TRUE, 'CvRM3AwXJppPmf'], // include cardCode so we can test the company proSe (or with agent)
+  'aad' => ['Cathy Cashier', '', 'ME04nW44DHzxVDg'],
+  'aak' => ['Curt Customer', '', 'NyCBBlUF1qWNZ2k'],
+  'aaq' => ['Helga\'s Hardware', TRUE, 'Y9d8fuwiejKfd'],
+  'abb' => ['Susan Shopper', '', 'ZzhWMCq0zcBowqw'],
+  ];
 
-  if (!db\exists('users', 'uid=-2')) new r\Acct(ray('uid community name fullName email flags', -2, -2, 'example', t('Common Good Example'), 'ctty@example.com', u\bit([B_CO, B_CGC, B_UP]))); // create a bogus community
-  foreach (ray(TEST_ACCTS . ' ' . DEV_ACCTS) as $k) a($k)->update('community', -2); // isolate everyone into it
+  $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
   
-  a\makeTestAdmins();
+  foreach ($testAccts as $qid => $vs) {
+    extract(array_combine(ray('fullName co cardCode'), $vs));
+    $uid = t\uid(strtoupper(".$qid"));
+    $name = u\shortName($fullName);
+    $emailCode = $cardCode;
+    $flags = u\bits('ok member confirmed carded ided debt');
+    if ($co) $flags |= u\bit('co');
+    $email = "$qid@example.com";
+    $phone = u\fmtPhone('413' . u\randomString(7, 'digits'));
+    $federalId = u\randomString(9, 'digits');
+    $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
+    list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
+    $state = r\stateNum($state);
+    $info = $info0 + compact(ray('uid fullName name flags cardCode emailCode email phone federalId postalAddr address city state zip'));
+
+    if ($a = a($qid)) $a->update($info); else $a = new r\Acct($info);
+    a\photoFromFile($a);
+  }
+  
+  foreach (ray('aaa aad aak') as $qid) {
+    $coA = a($qid == 'aak' ? 'aaq' : 'aab');
+    $coA->setDftAppCans();
+    list ($a, $perm) = [a($qid), $qid == 'aad' ? B_SCAN : B_MANAGE];
+    if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $qid == 'aad' ? 2 : 1));
+    $a->update('cardCode2', $a->cardCode); // this is new for Maria (aaa) and Curt (aak)
+  }
+  
+  a('aaa')->setBit(B_ADMIN);
+  a('aab')->update('selling', "groceries\ngifts\nsundries\ndeli\nbaked goods");
+  a('aaq')->update('selling', 'hardware');
+  
+  w\say(t('Done!'));
 }
 
 /**
- * Let COs test, let techs manage testville
+ * Assign the given account a new id (or delete it).
+ * @param int $oldUid: record ID of the account to change or delete
+ * @param int $newUid: the new record ID to give the account (defaults to next available)
+ * @param bool $unusable: whether to mark the old account record ID as unusuable
+ * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount)
  */
-function makeTestAdmins() {
-  if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
+function deleteUid($oldUid) {a\changeUid($oldUid, 0, FALSE, TRUE);}
+function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
+  global $mya;
+  if (is_object($oldUid)) $oldUid = $oldUid->id;
+  if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
+  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
+  $nm = $a->fullName;
+  $oldQid = r\qid($oldUid);
+
+  $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
+    // messages
+    'people:uid',
+    // posts
+    // post_cats
+    // r_areas
+    // r_bad
+    'r_ballots:voter',
+    'r_ballots:proxy',
+    // r_banks
+    'r_boxes:uid:D',
+    'r_changes:uid:D',
+    'r_changes:changedBy',
+    'r_company:uid:D',
+    // r_countries
+    'r_criteria:ctty:D',
+    'r_do:uid:D',
+    'r_events:ctty',
+    'r_honors:uid:D', // honors are deletable if donation never completed
+    // r_industries
+    'r_investments:coid',
+    'r_investments:clubid',
+    'r_invites:inviter',
+    'r_invites:invitee:D',
+    'r_invoices:payer:D',
+    'r_invoices:payee:D',
+    'r_ips:uid:D',
+    'r_near:uid1:D',
+    'r_near:uid2:D',
+    // r_nonces
+    'r_notices:uid:D',
+    // r_options
+    // r_pairs
+    'r_photos:uid:D',
+    'r_proposals:ctty',
+    'r_proxies:person:D',
+    'r_proxies:proxy:D',
+    // r_questions
+    'r_ratings:uid',
+    // r_regions
+    'r_relations:main:D',
+    'r_relations:other:D',
+    // r_states
+    // r_shares',
+    'r_stakes:uid',
+    'r_stakes:clubid',
+    'r_stats:ctty:D',
+    'r_tous:uid:D',
+    // r_transit
+    'r_usd:payee',
+    // r_usd2
+    'r_user_industries:uid:D',
+    // r_votes
+    'sessions:uid:D',
+    'tx_disputes:uid',
+    'tx_disputes:agentUid',
+    'tx_entries:uid',
+    'tx_entries:agentUid',
+    'tx_hdrs:actorId',
+    'tx_hdrs:actorAgentId',
+    'tx_rules:to:D',
+    'tx_rules:payer:D',
+    'tx_rules:payee:D',
+    'tx_rules:from:D',
+    'tx_templates:to:D',
+    'tx_templates:payer:D',
+    'tx_templates:payee:D',
+    'tx_templates:from:D',
+    // u_groups
+    'u_groupies:uid:D',
+    'u_shouters:uid:D',
+    'users:jid', // users should be last, because it's the main table for what we're deleting/changing
+    'users:uid:D',
+    'users:helper',
+    'users:community',
+    // variable
+  );
+  
+  $DBTX = \db_transaction();
+
+  if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
+    db\del('users', 'uid', $oldUid);
+    $unusable = $delete = FALSE; // don't actually delete anything except the account record
+    $newUid = r\serverUid(); // Seedpack uid
+  }
+
+  if (!$delete and !$newUid) {
+    $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityId();
+    $newUid = r\Acct::nextId($region);
+  }
+
+  foreach ($subs as $one) {
+    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
+    if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
+    
+    if ($delete) {
+      if (!$deletable) {
+        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+          $DBTX->rollback(); 
+          return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
+        }
+      } else {
+        db\del($table, $field, $oldUid);
+      }
+    } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
+  }
+
+  if ($unusable and !$delete) {
+    list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
+    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
+  }
+  
+  unset($DBTX); // commit
+
+  if (!$delete) {
+    $newQid = r\qid($newUid);
+    foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
+      foreach (glob("$dir/$oldQid.*") as $flnm) rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
+    }
+  }
+
+  if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
 }
 
 /**
@@ -229,7 +367,7 @@ EOF;
                     : ($customer ? t('buys from')
                        : t('probably works for'))))));
     }
-    $ret .= ($ret ? ', ' : '') . "$role <a href=\"$base_url/change-account/acct=$them&page=summary\">$who</a>$extra";
+    $ret .= ($ret ? ', ' : '') . "$role <a href=\"$base_url/change-account/acct=$them\">$who</a>$extra";
   }
   return $ret;
 }
@@ -342,7 +480,7 @@ function fixStats() {
  * Download from http://www.fededirectory.frb.org/agreement.cfm
  * branch is o (main office) or B (branch)
  * type is 0=fed bank 1=use routing 2=use newRouting
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.getBanks');
 */
 function getBanks() {
@@ -352,7 +490,7 @@ function getBanks() {
   $fields = array_combine(ray($fieldNames), $lens);
   db\q('TRUNCATE r_banks');
   
-  $s = explode("\n", file_get_contents(__DIR__ . '/../FedACHdir.txt'));
+  $s = explode("\n", file_get_contents(R_ROOT . '/misc/FedACHdir.txt'));
   foreach ($s as $line) {
     if (!$line) continue; // handle possible blank line at end
     $i = 0;
@@ -373,7 +511,7 @@ function getBanks() {
  * @param string $filename: the photo filename (defaults to account's shortname)
  * @param string $err: (RETURNED) the error message, if any
  * @return <success>
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  debug (f('a.photoFromFile', a('aaa'), $err));
  debug ($err);
  currently called only from a.makeTestAccounts()
@@ -394,7 +532,7 @@ function photoFromFile($a, $filename = '', &$err = '') {
 /**
  * Move a field out of data or secure and into its own field in users.
  * (call after reinstall)
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.moveFieldFrom', 'helper', 'data');
 */
 function moveFieldFrom($field, $from = 'data') {
@@ -414,7 +552,7 @@ function moveFieldFrom($field, $from = 'data') {
 
 /**
  * Move a field into data or secure in users.
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.moveFieldTo', 'question', 'secure');
 */
 function moveFieldTo($field, $to = 'data') {
@@ -432,7 +570,7 @@ function moveFieldTo($field, $to = 'data') {
  * General purpose utility, usually called from eachAcct, as above.
  * For example:
  *    changeIt($a);
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  foreach (array(3201932, 3244519, 3350610, 3510402) as $one) {
  f('a.changeIt', $one);
  OR changeIt(a('aaa'));
@@ -488,7 +626,9 @@ EOF;
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
-          $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
+          $details .= 
+//          ' ' . w\btn('', t('flnm'), 'default', 'xs', w\clas('filename') + ray('data-flnm', "CGach-$date.csv")) . 
+          ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
         if ($count) $details .= ' ' . ($deposit
           ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))
@@ -578,7 +718,10 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $bankAccount = u\decry('V', $bankAccount);
   if ($bankAccount != $a->bankAccount) {
     r\tellAdmin(t('bank account misMatch in deposit (xid=%xid): %b1 (now), %b2 (deposit)', 'xid b1 b2', $xid, $a->bankAccount, $bankAccount));
-    if ($a->bankAccount) $bankAccount = $a->bankAccount;
+    if ($a->bankAccount) {
+      list ($b2, $bankAccount) = [$bankAccount, $a->bankAccount];
+      if (!$b2) db\update('r_usd', compact(ray('txid bankAccount')), 'txid'); // fix it (else save for analysis)
+    }
   } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
@@ -628,13 +771,13 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   
   $ck->say(u\n2english($dollars) . " and $cents/100", $m, $y += .65, 6.9, $lineH, '', '', 'B');
   $ck->say('DOLLARS', $m + 6.9, '', '', $lineH, '8');
-  //  $ck->Image(__DIR__ . '/../images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
+  //  $ck->Image(R_ROOT . '/images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
   
   $ck->say("<b>$b_name</b><br><small>$b_address<br>$b_city, $b_state $b_zip</small>", $m + 1, $y += .4, '', '', '9');
   
   $ck->say($signature, $W - $W / 3, $y + .35, $W / 3 - $m, $lineH, 'CAPS', 'C', 'B'); // $y+ not +=
   $ck->say($belowLine, '', $y + .35 + $lineH, $W / 3 - $m, $lineH, '8;CAPS', 'C');
-  //  if (!$signature) $ck->Image(__DIR__ . '/../images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
+  //  if (!$signature) $ck->Image(R_ROOT . '/images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
   
   $ck->say('MEMO:', $m, $y += .5, '', $lineH, '8');
   $ck->say($memo, $m + .5, '');
@@ -648,35 +791,6 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
-}
-
-/**
- * Do automatic stuff that can be done only when superAdmin signs in
- */
-function adminSignin() {
-  global $box;
-  //  $pw2 = @$_COOKIE['pw2'];
-  //  u\EXPECT($pw2, 'no pw2!');
-  
-  /*  $q = db\q("SELECT txid,payee,bankAccount FROM r_usd WHERE bankAccount NOT LIKE ':CRYPT_FLAG%'");
-      while ($row = $q->fetchAssoc()) {
-      extract($row);
-      if (substr($bankAccount, 0, 2) == 'US') {
-      $bankAccount = r\crypt($bankAccount . '', 0, $pw2);
-      db\update('r_usd', compact('txid', 'bankAccount'), 'txid');
-      w\say(t('bank account super-encrypted in exchange record #%txid.', compact('txid')));
-      } else r\tellAdmin('bad bank account in exchange record', ray('txid b0 hex', $txid, $b0, bin2hex($b0)));
-
-      $a = r\acct($payee);
-      if ($b0 = $bankAccount = $a->bankAccount and !u\starts($a->secure['bankAccount'], CRYPT_FLAG)) {
-      if (substr($bankAccount, 0, 2) == 'US') {
-      //        $bankAccount = u\crypt($bankAccount . '', 0, $pw2);
-      $a->update(compact('bankAccount')); // might be different (newer) than in r_usd (super-encryption is automatic)
-      w\say(t('bank account super-encrypted for user %user', 'user', $a->fullName));
-      } else r\tellAdmin('bad bank account', ray('b0 hex', $b0, bin2hex($b0)));
-      }
-      }
-  */
 }
 
 /*
@@ -768,7 +882,7 @@ function showInactive() {
 }
 
 function cardLink($link) {return spinLink("/print-rcard/$link", t('Card'), '', 'primary', 'xs', w\away());}
-function recropLink() {return spinLink('/settings/photo/recrop=1', t('Recrop Photo'), '', 'primary', 'xs');}
+function photoLink($recrop = 0) {return spinLink("/settings/photo/recrop=$recrop", $recrop ? t('Recrop Photo') : t('Photo'), '', 'primary', 'xs');}
 
 function nextMember($id = 0) {
   $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
@@ -884,22 +998,32 @@ function anonymize() {
  * Export solar1 data to SMT
  */
 function toSMT() {
-  $q = db\q("SELECT * FROM users WHERE source='solar1'");
+  $q = db\q('SELECT * FROM users WHERE uid>:CANONIC_ACCTS');
   $hdrDone = FALSE;
 
   while ($row = $q->fetchAssoc()) {
     extract(just('uid', $row));
     $a = r\acct($uid);
-    list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
+    if ($a->closed) continue;
     foreach (ray('isSavings fullName postalAddr tenure owns partnerInfo created notes') as $k) $$k = $a->$k;
+    if (!$partnerInfo) continue;
+
+    if (!$a->hasBank) continue;
+    list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
+    if (empty($bankAccount)) continue;
+    
+    u\setDft($smtid, 0); // for testing
+    u\setDft($noContract, 0); // for testing
+    
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
     list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
+    $project = NULL; // null out previous value
     extract($partnerInfo ?: []);
+    u\setDft($project, $source == 'solar1' ? 'ssps' : 'cooppower');
     $cgAccount = $a->member ? $a->mainQid : '';
     $phone = u\fmtPhone($phone, '-');
-    $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
-    if (empty($bankAccount)) continue;
+    $out = compact(ray('smtid pid project fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
 ///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
       u\csvStart('solar1-export-' . date('Y-m-d') . '.csv');
@@ -910,6 +1034,33 @@ function toSMT() {
   }
   if (!$hdrDone) return w\go('/sadmin/panel', t('nothing to send to SMT'));
   exit();
+}
+
+/**
+ * Move customer transactions to a subsidiary company. (used 9/2020 for Co-op Power subsidiaries)
+ * @param string $coQid: the main company's QID
+ * @param string $custQids: space-delimited list of customer's QIDs to move txs and invoices from coQid to co2Qid
+ * @param string $co2Qid: the subsidiary company's QID
+ */
+function moveTxsToSubco($coQid, $custQids, $co2Qid) {
+  $coA = r\acct($coQid); $coid = $coA->id;
+  $co2A = r\acct($co2Qid); $co2id = $co2A->id;
+  foreach (ray($custQids) as $qid) {
+    if (!$a = r\acct($qid)) continue;
+    $uids[] = $uid = $a->id;
+    $xids = db\col('xid', 'txs', ':uid IN (uid1, uid2) AND :coid IN (uid1, uid2)', compact(ray('uid coid')));
+    if (!$xids) continue;
+    $tableFlds = ray('tx_entries_all:uid agentUid, tx_hdrs_all:actorId actorAgentId, tx_disputes_all:uid agentUid');
+    $subs = compact(ray('coid co2id xids'));
+    foreach ($tableFlds as $tnm => $flds) {
+      list ($f1, $f2) = ray($flds);
+      db\q("UPDATE $tnm SET $f1=:co2id, $f2=IF($f2=:coid, :co2id, $f2) WHERE $f1=:coid AND xid IN (:xids)", $subs);
+    }
+  }
+
+  $subs = compact(ray('coid co2id uids'));
+  db\q('UPDATE r_invoices SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
+  db\q('UPDATE r_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
 }
   
 /*

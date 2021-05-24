@@ -102,7 +102,7 @@ X;
 </div>
 X;
 
-  return cgform(compact(ray('title subtext uids xlys list')) + setupFoot());
+  return cgform(compact(ray('title subtext uids xlys list')) + setupFoot(), 'nolabs');
 }
 
 function formStepUp_validate($form, &$sta) {
@@ -127,7 +127,7 @@ function formStepUp_validate($form, &$sta) {
     
     foreach (ray('amt max') as $fld) if ($$fld) { // amt is not empty, skip max if empty
       $$fld = str_replace('$', '', $$fld); // max might have a $
-      if ($err = u\badAmount($$fld, '>=0', 1, 100)) return er($sta, $err, "$fld-$xly-$uid");
+      if ($err = u\badAmount($$fld, '>=0', 1, strhas($when, 'pct') ? 100 : '')) return er($sta, $err, "$fld-$xly-$uid");
       $input["$fld-$xly-$uid"] = $$fld;
     }
   }

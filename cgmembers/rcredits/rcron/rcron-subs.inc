@@ -36,8 +36,8 @@ function queueNext($task = NULL) {
   } 
     
   u\setDft($task, str_replace(__NAMESPACE__ . '\\', '', caller()));
-  u\loga('queueNext', json_encode(compact('task')));
-  cr\queue(u\nextAfter($task, ray(DAILY_TASKS)));
+  u\loga('queueNext', u\jsonize(compact('task')));
+  cr\queue(u\nextAfter($task, ray(DAILY_OPS)));
 //  if (isDEV) while (db\exists('queue')) cr\run();
 }
 
@@ -72,7 +72,7 @@ function queue($op, $item = []) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);
-    if ($op != 'acctRisk1') u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . json_encode($item0));
+    if ($op != 'acctRisk1') u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . u\jsonize($item0));
     db\insert('queue', ray('item created', $item, now()));
   }
 }

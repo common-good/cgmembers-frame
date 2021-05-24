@@ -229,7 +229,7 @@ function hook_block_view($delta = '') {
       break;
 
     case 'recent':
-      if (user_access('access content')) {
+      if (TRUE) {
         $block['subject'] = t('Recent content');
         if ($nodes = node_get_recent(variable_get('node_recent_block_count', 10))) {
           $block['content'] = array(

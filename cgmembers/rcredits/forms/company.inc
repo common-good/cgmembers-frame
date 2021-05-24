@@ -15,11 +15,11 @@ function formCompany($form, &$sta, $arg = '') {
   $myCats = db\q('SELECT iid FROM r_user_industries WHERE uid=:myid', compact('myid'))->fetchCol();
   $links = t('<%a>See your public %PROJECT web page</a> (in a new window)', 
     '_a', atag("/member/$mya->name", ['id' => 'show-webpage'] + w\away()));
-  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website or use this code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', $mya->emailCode, atag('/company/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
+  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website (or emails) or use this secret code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', u\ry('P', $mya->emailCode), atag('/company/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';
-  if (!$mya->stepDone['company'] and !$mya->coCan(APP_CANS + APP_CAN_BITS)) foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
+  if (!$mya->stepIsDone('company') and !$mya->coCan(APP_CANS + APP_CAN_BITS)) $mya->setDftAppCans(); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
   
   foreach ($canDescs as $i => $desc) {
     $outbox = <<<EOF
@@ -57,7 +57,7 @@ EOF;
   $website = textFld(t('Website:'), [t('Website address'), t('Especially if you want to accept payments on your website, be sure to list it here.')], dft($mya->website));
   $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page.')); //, '', ['class'=>'help-block']);
 //  $description = fld('text_format', t('Description:'), [t('Arbitrarily complex description')], ['format' => 'filtered_html'] + dft(strtr($mya->description, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])));
-  $description = areaFld(t('Description:'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->description));
+  $description = areaFld(t('Describe:'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->description));
   $shortDesc = textFld(REQ . t('Short Desc:'), [t('Short description'), t('Short description of your company\'s products and services, all lowercase. Maximum 35 characters.')], maxlen(35) + dft($mya->shortDesc));
   $employees = intFld(t('Employees:'), [t('Employee count'), t('How many employees do you have?')], required($mya->employees));
   $gross = numFld(t('Annual Gross:'), [t('Approximate annual gross income')], required($mya->gross));
@@ -95,7 +95,7 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, nn($atm));
-  foreach (ray('description shortDesc website selling employees gross staleNudge dob') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('description shortDesc website selling employees gross staleNudge dob') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
     if (nn($categories)) $mya->setCategories($categories);
   return w\goNextStep('company', NULL, $rawInfo);

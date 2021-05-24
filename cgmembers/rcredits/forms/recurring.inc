@@ -22,31 +22,29 @@ function formRecurring($form, &$sta, $args = '') {
     if (isset($reid)) $result = stopAutoPay($reid);
   }
 
+  $hdrs = ray(t(',Who,Amount,Purpose,How often?,Starting,Next,Ending,'));
   $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnd:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
   $from = "<img src=\"$rUrl/images/icons/arrow-left-green.png\" border=0 />";
   
-  $html = <<<EOF
-  <table>
-    <th></th>
-    <th>Who</th>
-    <th>Amount</th>
-    <th>Purpose</th>
-    <th>How often?</th>
-    <th>Starting</th>
-    <th>Next</th>
-    <th>Ending</th>
-    <th></th>
-EOF;
+  $html = "<table>\n";
+  foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
 
   $sql = <<< X
-    SELECT id as recId, IF(:myid=t.from,t.to,t.from) AS fWho, t.from=:myid AS paying, 
-      amount, purpose AS fPurpose, period, periods, start, t.end 
-    FROM tx_templates t 
-    WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (t.from,t.to) 
-    ORDER BY t.to=:myid
+    SELECT id as recId, IF(:myid=tp.from,tp.to,tp.from) AS fWho, tp.from=:myid AS paying, 
+      tp.amount, tp.purpose AS fPurpose, tp.period, tp.periods, tp.start, tp.end,
+      MAX(
+        IF(tp.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+        i.created)
+      ) AS maxStart
+    FROM tx_templates tp
+    LEFT JOIN txs x ON x.recursId=tp.id
+    LEFT JOIN r_invoices i ON i.recursId=tp.id
+    WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tp.from,tp.to) 
+    GROUP BY tp.id
+    ORDER BY tp.end IS NOT NULL, tp.to=:myid, tp.start DESC, tp.id DESC
 X;
   $q = db\q($sql, compact('myid'));
   
@@ -56,7 +54,7 @@ X;
     $fPeriod = ucfirst(r\recurDesc($period, $periods));
     $fCreated = u\fmtDate($start, TRUE);
     $finished = ($end and $end < now());
-    $fNext = $finished ? '' : u\fmtDate(u\dateIncr($start, $periods, $period), TRUE);
+    $fNext = $finished ? '' : u\fmtDate(max($start, now(), u\dateIncr($maxStart, $periods, $period)), TRUE);
     $fEnd = $end ? u\fmtDate($end, TRUE) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;
@@ -78,18 +76,20 @@ X;
   
   $html .= "</table>\n";
 
-  $transactions = item('<div>' . $html . '</div>');
-  $title = t('Recurring Payments'); // . $mya->bestName;
+  $transactions = item('<div>' . $html . '</div>', BARE);
+  $title = t('Automated Payments'); // . $mya->bestName;
 
   return cgform(compact(ray('title transactions')));
 }
 
 function addLine($info, $classes, $url) {
-  global $rUrl;
+  global $rUrl, $mya;
 
   extract($info);
-  $fWho = r\acct($fWho)->bestName;
-  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop recurring transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+  $a = r\acct($fWho);
+  $fWho = $a->bestName;
+  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+  if ($mya->admin) foreach (ray('ok:O, closed:-, hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

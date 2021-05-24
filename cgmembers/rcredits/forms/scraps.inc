@@ -12,13 +12,18 @@ use CG\Db as db;
 function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
-  if (in($arg, S_MEM_TASKS)) { // called from Summary page when member clicks to launch a followup task
+  if (in($arg, S_MEM_TASKS)) { // called from Dashboard page when member clicks to launch a followup task
     $note = r\stampNote(t('member clicked "Finish"'));
     $mya->update('notes', $note . $mya->notes);
 
     $mya->setTask($arg);
     $nextStep = $mya->nextStep();
     w\go($nextStep ? (ray(S_ALL)[$nextStep] ?: "settings/$nextStep") : '');
+  }
+  
+  if ($arg == 'reopen') {
+    r\tellAdmin(t('Reopen account') . " $mya->fullName ($mya->mainQid)");
+    return sayEmpty(t('<h2>Request Received</h2>Your request to reopen your account has been received. Expect to hear back from us within a day or two.'));
   }
   
   $title = t('');

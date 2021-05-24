@@ -36,7 +36,7 @@ function formAgent_validate($form, &$sta) {
   $agent = strtoupper(trim($agent));
   if (!$a = r\acct($agent) or $a->co or !$a->member) return say(t('That is not an account ID of a completed personal account.'), 'agent');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
-  if ($phone != $a->phone) return say(t('The phone number on that account does not match.'), 'phone');
+  if (!$mya->phone and $phone != $a->phone) return say(t('The phone number on that account does not match.'), 'phone'); // accept anything if phone is already set
   if (!formBasic_validate($form, $sta, TRUE, 'federalId dob')) return;
   u\preRay(compact(ray('agent phone')), $sta['input']);
 }

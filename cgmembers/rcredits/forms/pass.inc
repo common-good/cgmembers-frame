@@ -6,23 +6,26 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-function formPass($form, $sta, $id = '') {
-  $id = urldecode(u\urlArgs());
+/**
+ * Request a new password.
+ */
+function formPass($form, $sta, $qid = '') {
+  $qid = urldecode(u\urlArgs());
   $title = t('Request New Password');
-  $name = textFld(t('Account:'), t('Username (the letters of your full name, all lowercase), Email, or Account ID'), required(u\neq($id, 'password', '')));
+  $qid = textFld(REQ . t('Account:'), t('Your account ID or email address'), dft(u\neq($qid, 'password', '')));
   $submit = t('Request');
 
-  $form = compact(ray('title name submit'));
-  focusOn('name');
+  $form = compact(ray('title qid submit'));
+  focusOn('qid');
   return cgform($form);
 }
 
 function formPass_validate($form, &$sta) {
-  extract(just('name', $sta['input'], NULL));
-  if (!$name) return say('missing field', ['field' => 'account'], 'name');
-  if (!$uid = r\loginString($name)) return say('bad account id', 'name');
+  extract(just('qid', $sta['input'], NULL));
+  if (!$qid) return err('missing field', ['field' => 'account'], 'qid');
+  if (!$uid = r\loginString($qid)) return err('bad account id', 'qid'); // "bad account id" is a key
   $a = r\acct($uid);
-  if ($a->co and !$a->trialco) return say('no co pass', ['company' => $a->fullName], 'name');
+  if ($a->co and !$a->trialco) return err('no co pass', ['company' => $a->fullName], 'qid');
   $sta['input']['uid'] = $uid;
 }
 
@@ -34,18 +37,14 @@ function formPass_validate($form, &$sta) {
 function formPass_submit($form, &$sta, $goto = '') {
   extract(just('uid', $sta['input'], NULL));
   $a = r\acct($uid); // defaults to current account when called from formResend_submit (without uid)
-  $myid = $uid ?: $a->id;
-  $qid = r\acct($myid)->mainQid;
-  $name = $a->name;
-  $code = $a->oneTimePass($name);
+  $qid = $a->mainQid;
+  if ($a->co) $qid .= '-A'; // happens only when opening a company account
+  $code = $a->oneTimePass();
   $verify = (bool) $goto;
-//  list ($region, $code) = [strtolower(R_SERVER_ID), $pw];
-  r\notify($myid, $verify ? 'verify' : 'password-reset', compact(ray('name qid code')), TRUE);
+  $a->tell($verify ? 'verify' : 'password-reset', compact(ray('qid code')));
   if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) {
     $page = $goto ?: 'reset';
-    say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/id=%name&code=%code&verify=%verify">reset</a>', compact(ray('page name code verify'))));
+    say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/qid=%qid&code=%code&verify=%verify">reset</a>', compact(ray('page qid code verify'))));
   }
-//  r\tellAdmin('password reset', compact(ray('name myid code')));
-//  say($goto ? t('Email sent') : 'password reset');
   return w\go($goto ?: '/empty', $goto ? t('Email sent') : 'password reset');
 }

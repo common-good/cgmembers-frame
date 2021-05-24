@@ -8,87 +8,104 @@ use CG\Db as db;
 
 /**
  * Complete a "no signin required" request
- *   called when the user clicks an email link: new.CommonGood.earth/do/do<form>~<qid>~<emailCode>~mo~v
- *   like new.CommonGood.earth/do/doProxies~NEWAAA~23lkjlk6j~2~$16.
- * @param string code: an encoded serialized array of parameters, possibly including:
- *   op: what to do (REQUIRED)
- *   v: an amount or identifier
- *   mo: month link was created, relative to first rdo (see rdoMonth())
- *   sql: a database request, if any
- *   subs: substitutions for the database request
+ *   called with:
+ *     <baseurl>/do/<op>~<code> (for example: new.CommonGood.earth/do/doProxies~PabcDEF123
+ *     <baseurl>/do/<code>
+ *     <baseurl>/do/<error message (with a space in it)>
+ * @param string $form: a form to complete without signing in
+ * @param string code: an array encrypted with u\cryRay, possibly including:
+ *   op:    what to do (REQUIRED). Must be of the form do<form> (for example doProxies) if the call is <op>~...
+ *   qid:   the account QID
+ *   ecode: the account's email security code (deprecated. delete 10/1/2020)
+ *   mo:    month that the link should expire, relative to first rdo (see rdoMonth()) (deprecated. delete 10/1/2020)
+ *   v:     an amount or identifier, specific to the operation
+ *   sql:   a database request, if any
+ *   subs:  substitutions for the database request
  *   
  * Possible values for op:
- *   (numeric): record id in r_do -- other parameters for one-time op are serialized in that record's data field
- *      including the true op. The record also includes uid and expiration time.
  *   min: change minimum to $v
  *   sql: do the database operation in $sql
  *   addr: show an address for account QID $v (for shipping or thank-you card)
  *   inv: pay invoice number $v
  *   confirmInvite: confirm an invitation
  *   do<form>: allow member to visit one specific page
- * Alternatively, code can be an error message (recognized by having a space in it).
- * @param string $args: urlencoded array of arguments passed from an email (from whence $_POST is not reliably received by Drupal)
- * @see also r\makeDo()
+ * @see also acct::doLink()
  */
-function rdo($code, $args = '') {
-/**/	flog(pr(compact(ray('code args'))));
+function rdo($code) {
+/**/	flog(pr(compact(ray('code'))));
   global $channel;
   if (test()) foreach (['error', 'status'] as $k) u\deleteFile(f('t.dosayFilename', $k));
-  if (strpos($code, ' ')) return doSay(plain($code), 'err');
-  if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
-    list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
-/// 		flog($lug = pr(compact(ray('op qid ecode mo v code'))));
-    if (!$op or !$qid or !$a = r\acct($qid) or $ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
-  } else {
-    if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'), 'err');
-    if ($once = is_numeric($doid = nni($info, 'op'))) {
-      if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.'), 'err'); // already used OR deleted because it expired
+
+  if (strpos($code, ' ')) return doErr(plain($code));
+  
+  if (strhas($code, '~')) { // newsletter link (doWhatever~code)
+    list ($op, $code) = explode('~', $code);
+    if (!$code and $op == 'doDonate') return w\go('cc'); // special case for donations from nonmembers
+    $info = u\decryRay($code);
+    extract(just('qid expire v sql subs', $info, NULL));
+    extract(just('op', $info)); // overwrite op, if op is specified
+    if (!$qid or !$a = r\acct($qid)) {
+      $nonMemberErr = t('That link is only for current members. <%a>Click here to sign up!</a>', '_a', atag('/signup'));
+      if (!u\starts($op, 'do') and !in($op, 'survey')) return doErr($nonMemberErr); // doFormName works for nonmembers too (if allow='any')
+    }
+  } else { // normal email link
+    if (!$info = u\decryRay($code)) return doErr(t('That link is archaic.'));
+    if ($once = is_numeric($doid = nni($info, 'op'))) { // deprecated reference to a record in r_do (remove after 10/1/2020)
+      if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doErr(t('That link is no longer valid.')); // already used OR deleted because it expired
       extract($row);
       $info = unserialize($data) + $row; // get new op, etc.
       $a = r\acct($uid);
+      extract(just('op v mo sql subs', $info, '')); // mo has no effect here
+    } else {
+      extract(just('op qid expire v sql subs', $info, NULL));
+      $a = $qid ? r\acct($qid) : NULL;
     }
-    extract(just('op v mo expires sql subs', $info, ''));
+    if (in($op, 'nosecret debtok rsv sql addr inv confirmInvite vote yesno join') and !$a) return doErr(t('That link does not correspond to a %PROJECT account.'));
   }
   
-  $expires = ($mo and r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
-
-  if ($expires and now() >= $expires) return doSay('link expired', 'err');
+  if (nn($expire) and now() >= $expire) return doErr(t('link expired'));
 
   $channel = TX_LINK;
   
   if (u\starts($op, 'do') and $formName = substr($op, 2)) {
+    if ($op == 'doDonate' and !$a->ok) return w\go('cc'); // special case for donations from nonmembers
     $file = strtolower(R_ROOT . "/forms/$formName.inc");
     if (file_exists($file)) include_once $file;		
-    return w\showForm($formName, "qid=$a->mainQid&ecode=$ecode&$v");
+    return w\showForm($formName, nn($a) ? "qid=$a->mainQid&ecode=$a->emailCode&$v" : '');
   }
-//  if ($op == 'min') $res = $a->update('minimum', $v); // not used (rewrite as a confirmation form)
+
   if ($op == 'nosecret') $res = $a->setBit(B_SECRET, FALSE);
   if ($op == 'debtok') $res = $a->setBit(B_DEBT, TRUE);
   if ($op == 'rsv') {return w\go("savings/qid=$qid&ecode=$ecode");}
   if ($op == 'sql') $res = db\q($sql, $subs);
 
+  if ($op == 'survey') {
+      extract(just('email amt', $_GET, NULL));
+      if (!$amt or !is_numeric($amt)) return doErr(t('Survey click failed.'));
+      if ($qid) $a->update('iintent', $amt); else r\tellAdmin(t('Investment Intent'), compact(ray('email amt')));
+      return doSay(t('Your investment intent is noted. Thank you for responding! We will send you a note when it\'s time to invest and launch a club in your area.'));
+  }
+  
   if ($op == 'addr') {
-    $a = r\acct($v);
-    $phone = $a->co ? t('Phone: ') . u\fmtPhone($a->phone) : '';
-    $addr = t('Physical address: ') . $a->location(TRUE);
-    return doSay(tr('%nm<br>%postal<br>%addr<br>%phone<br>', 'nm postal addr phone', $a->fullName, $a->postalAddr, $addr, $phone));
+    if (!$a2 = r\acct($v)) return doErr(t('That account no longer exists.'));
+    $phone = $a2->co ? t('Phone: ') . u\fmtPhone($a2->phone) : '';
+    $addr = t('Physical address: ') . $a2->location(TRUE);
+    return doSay(tr('%nm<br>%postal<br>%addr<br>%phone<br>', 'nm postal addr phone', $a2->fullName, $a2->postalAddr, $addr, $phone));
   } 
   
   if ($op == 'inv') {
-    $err = r\badUnpaidInv($v);
-    if ($err) return doSay($err, 'err');
-    return w\go("/handle-invoice/nvid=$v&toMe=1&code=$code");
+    if ($err = r\badUnpaidInv($v)) return doErr($err);
+    return w\go("/handle-invoice/nvid=$v&code=$code");
   } 
   
   if ($op == 'confirmInvite') {
-    $a = r\acct($v);
     $a->setBit(B_CONFIRMED);
     return doSay(t('Your invitation to %nm is confirmed!', 'nm', $a->fullName));
   }
   
   if ($op == 'vote' or $op == 'yesno') { // NOTE: about a third of the time, $_POST comes in empty (even from the same computer)
     $issue = $v;
-    if ($issue != '20141220') return doSay('link expired', 'err');
+    if ($issue != '20141220') return doErr('link expired');
 //    $vote = 0;
 //    foreach (ray('wl sl wd ed no') as $k => $vv) $vote |= u\setBit($vote, $k, isset($_POST[$vv]));
     extract(just('yes no', $args, NULL));
@@ -115,9 +132,7 @@ function rdo($code, $args = '') {
     }
   }
 
-  if (!nn($res)) return doSay(t('Request failed.'), 'err');
-  if ($once) db\q('DELETE FROM r_do WHERE doid=:doid', compact('doid'));
-
+  if (!nn($res)) return doErr(t('Request failed.'));
   return doSay(nn($say) . t('Your request was successfully completed.'));
 }
 

@@ -9,10 +9,12 @@ use CG\Db as db;
 require_once R_ROOT . '/forms/signup.inc'; // for validation
 require_once R_ROOT . '/pdf.class';
 
-define('SF_URL', 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8');
-define('CRM_URL', 'SMT solar customer management URL');
-define('BILL_DIR', R_PICTURE_DIR . 'electric-bills');
-define('CONTRACT_DIR', R_PICTURE_DIR . 'contracts');
+const SF_URL = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
+const CRM_URL = 'SMT solar customer management URL';
+const BILL_DIR = R_PICTURE_DIR . 'electric-bills';
+const CONTRACT_DIR = R_PICTURE_DIR . 'contracts';
+const FORM_KEYS2 = 'type fullName email phone address city state zip years owns pid';
+const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,email:email,phone:phone,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:00NA000000BoIaW,project:CSS_Project__c,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
 
 /**
  * Accept and process signup data from a partner organization.
@@ -29,7 +31,7 @@ function formPartnerSignup($form, &$sta, $args = '') {
   if ($end) return partnerEnd();
   if ($signed) return signedContract($signed, $sta);
   
-  if (!$pA = pA($_POST['pid'])) return partnerErr(t('bad partner'), 'pid');
+  if (!$pA = pA(nni($_POST, 'pid'))) return partnerErr(t('bad partner'), 'pid');
   return gotSignup($pA);
 }
 
@@ -38,18 +40,18 @@ function formPartnerSignup($form, &$sta, $args = '') {
  * Create a PDF of the signed contract, based on the $code, and store it where we told the partner's Salesforce to expect it.
  * Next, see how the customer wants to pay.
  * If they choose Common Good, initiate an appropriate short multi-step signup sequence.
- * @param string $code: a doCode of an assoc of all data needed for the contract, plus a permanent or temporary cgAccount.
+ * @param string $code: an encrypted array of all data needed for the contract, plus a permanent or temporary cgAccount.
  * @return a form to display to request payment information
  */
 function signedContract($code, &$sta = '') {
   global $pagePartner, $mya;
   
-  if (!$info = r\doCode($code)) return softErr(t('That is not a valid link.'));
-  signout(TRUE); // after doCode, so tests work
+  if (!$info = u\decryRay($code)) return softErr(t('That is not a valid link.'));
+  signout(TRUE); // after decryRay, so tests work
   extract(just('cgAccount pid customer m_company co', $info, FALSE));
   if (!$pA = pA($pid)) return softErr(t('bad partner'));
   $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
   if (!$cgAccount or !$mya = cgA($cgAccount)) return softErr(t('You have already completed your signup with ') . $partnerName);
   
   $myid = hidFld($mya->id);
@@ -128,17 +130,16 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
 function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
-  extract(just('routingNumber bankAccount processor data myid', $sta['input']));
-  extract(just('info pid', unserialize($data)));
-  if (!$pA = r\acct($pid)) u\FAIL('no partner account');
-  if (!$mya = r\acct($myid)) u\FAIL('no customer account');
+  extract(just('routingNumber bankAccount processor data myid', $sta['input'], NULL));
+  extract(just('info pid', $data ? unserialize($data) : [], NULL));
+  if (!$pid or !$pA = r\acct($pid)) return partnerErr('no partner account');
+  if (!$myid or !$mya = r\acct($myid)) return partnerErr('no customer account');
   r\setAcct($mya, $sta); // part way through, so gotta sign back in
   
   $bankAccount = "USkk$routingNumber$bankAccount";
   $last4bank = substr($bankAccount, -4, 4);
   $bankOk = FALSE;
-  $hasBank = TRUE;
-  $mya->update(compact(ray('bankAccount last4bank hasBank bankOk')));
+  $mya->update(compact(ray('bankAccount last4bank bankOk')));
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(just('sorch fullName name address2 city2 email phone state2 zip2 tenure owns', $sta['input']));
@@ -165,7 +166,7 @@ function partnerEnd() {
   if (!$info = $mya->partnerInfo) return softErr(t('no partner info in partner end'));
   extract(just('pid customer noContract', $info));
   if (!$pA = pA($pid)) return softErr(t('bad partner'));
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
 
   $title = t('Congratulations!');
   $subtext = t('<p>You have completed your solar subscription sign-up. %contractAttached</p><p>We will let you know when your array is ready to start delivering credits to your electric account and when we will start billing you for those credits. Let us know if you have any questions!</p><p><b>Learn more</b> about the organizations working together on this community solar program:</p>', 'contractAttached', nn($noContract) ? '' : t('We emailed you the signed contract.')) . getLinks($mya->zip);
@@ -189,22 +190,18 @@ function partnerEnd() {
 }
 
 /**
- * Analyze and handle joint signup data from signup form on partner website. Send a contract, display a view-only page, and wait.
- * @param acct $pA: the partner account
- * @param assoc $_POST: (implicit) the data submitted in the form
+ * Handle data from partner input form.
+ * @param assoc $input: the POSTed data
+ * @param assoc $sfData: (RETURNED) data for salesforce
+ * @return processed input fields, compacted (to be extract()ed )
  */
-function gotSignup($pA) {
-  global $mya, $pagePartner;
+function handleInput($input, &$sfData = []) {
+  $sfFlds = ray(SF_MAP); // salesforce fields (mapped from POST fields)
+  $formKeys = join(' ', array_keys($sfFlds)); // keys from form corresponding to keys expected in Salesforce
+  $keys = $formKeys . ' ' . FORM_KEYS2;
   
-  signout(TRUE); // current account is irrelevant and could be confusing, so sign out
-  $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
-  
-  $sfFlds = ray('first_name:first_name,last_name:last_name,orgName:company,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:cg_account,partnerName:host,oid:oid,retURL:retURL'); // salesforce fields (mapped from POST fields)
-  $keys = array_keys($sfFlds); // keys from form corresponding to keys expected in Salesforce
-  $sfKeys = array_values($sfFlds); // keys of data to send to Salesforce
-
-  extract($info = just(join(' ', $keys) . ' type fullName email phone address city state zip years owns pid', $_POST));
+  foreach (ray('fullName orgName city address m_city m_address') as $k) if (isset($input[$k])) $input[$k] = u\normalizeCase($input[$k]);
+  extract($info = just($keys, $input));
 
   // set Salesforce parameters
   $oid = '00DA0000000gGh5';
@@ -218,13 +215,12 @@ function gotSignup($pA) {
   // validate data
   $co = ($type == '1');
   
-  foreach ($keys as $k) {
+  foreach (ray($formKeys) as $k) {
     if (!in($k, 'referrer orgName cgAccount m_person') and empty($$k)) return partnerErr('parameter must not be empty', $k);
     if ($co and empty($orgName)) return partnerErr('parameter must not be empty', 'orgName');
     if ($err = u\badName($$k)) return partnerErr($err, $k);
   }
 
-  foreach (ray('fullName orgName city address m_city m_address') as $k) $info[$k] = $$k = u\normalizeCase($info[$k]);
   $info += compact(ray('co customer'));
 
   if ($err = u\badZip($zip)) return partnerErr($err, 'zip');
@@ -235,11 +231,30 @@ function gotSignup($pA) {
   if ($err = u\badAmount($years, '>=0')) return partnerErr(tr($err) . ' ' . t('The number of years you have been at that address must be a number.'), 'years');
   if (test() and is_numeric($state)) $state = r\realState($state);
   foreach (ray('state m_state') as $k) if (!${$k . 'Id'} = r\stateNum($$k)) return partnerErr('bad state', $k);
-  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->uid, $customer))) {
+  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pid, $customer))) {
     return softErr(t('You are already signed up with %partnerName.', compact('partnerName')));
   }
 
   foreach ($sfFlds as $k => $v) $sfData[$v] = $$k; // save Salesforce data
+  return compact(ray($keys . ' m_stateId')) + $info;
+}
+
+/**
+ * Analyze and handle joint signup data from signup form on partner website. Send a contract, display a view-only page, and wait.
+ * @param acct $pA: the partner account
+ * @param assoc $_POST: (implicit) the data submitted in the form
+ */
+function gotSignup($pA) {
+  global $mya, $pagePartner;
+  
+  signout(TRUE); // current account is irrelevant and could be confusing, so sign out
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
+  $_POST += ray('pid project partnerName', $pA->uid, $pA->name, $pA->fullName);
+
+  $info = handleInput($_POST, $sfData);
+  if (!$sfData) return;
+
+  extract($info);
 // NO! bad security  $sfData['contractUrl'] = contractUrl($customer);
 
   // handle Common Good signup
@@ -277,27 +292,26 @@ function gotSignup($pA) {
     u\EXPECT($mya, 'cannot create account');
     if (isset($owns)) $mya->setRisk('rents', !$owns);
     $sfData['cg_account'] = $info['cgAccount'] = $mya->mainQid . '*'; // asterisk means account is tentative
-
-/*    if ($co) {
-      $mya->setTask('partnerco');
-    } else { */
+  }
+  
+  if (!$mya->member) {
     $mya->setTask('partner');
-    if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
-    $mya->stepDone('verifyid');
-//    }
     $mya->stepDone('contact');
-
+    if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
   }
 
+  $mya->stepDone('verifyid');
+  $mya->setBit('confirmed');
+
   $mya->update('partnerInfo', $info); // store for final step and beyond
-  $flnm = fillContract($pA->name, $info, [], FALSE); // get populated contract
+  $flnm = fillContract($project, $info, [], FALSE); // get populated contract
   emailContract($pA, $info, FALSE, $flnm);
   unlink($flnm);
   sendToCRM($pA, $sfData);
   tellPartner($pA, $info, $flnms);
 
   $title = t('Sign the Contract');
-  $subtext = t('<p>You have completed the first step of your solar subscription sign-up.</p><p>We emailed you a contract. Please click the button in that email within 3 days, to sign the contract.</p><p>If you do not see the email, look for it in your Spam folder.</p><p>You can also preview the standard contract <%a>here</a>.</p><p>If you have questions, please call us at %phone!', '_a phone', atag("/rcredits/images/contracts/$pA->name.pdf"), u\fmtPhone($pA->phone, '-'));
+  $subtext = t('<p>You have completed the first step of your solar subscription sign-up.</p><p>We emailed you a contract. Please click the button in that email within 3 days, to sign the contract.</p><p>If you do not see the email, look for it in your Spam folder.</p><p>You can also preview the standard contract <%a>here</a>.</p><p>If you have questions, please call us at %phone!', '_a phone', atag("/rcredits/images/contracts/$project.pdf"), u\fmtPhone($pA->phone, '-'));
   
   return cgform(compact(ray('title subtext')));
 }
@@ -306,24 +320,28 @@ function gotSignup($pA) {
  * Handle joint signup data from SMT (uploaded by Solar One). Combine functionality of gotSignup() and signedContract().
  * @param assoc $info: encoded parameters passed in URL
  * NOTE: to remove specialized code for Solar One, search this file (only) for Solar One and solar1.
+ * to test, run partnersignup tests, then: .../partner/solar1=1
  */
 function gotSolarOne($info) {
-  global $mya, $pagePartner;
+  global $mya, $pagePartner, $solarOneInfo; // $solarOneInfo is for error handling
 
-  /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray('smtid co fullName orgName address city state zip email phone m_number source', '654321', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
+  $keys = 'smtid pid co fullName orgName address city state zip email phone m_number source';
+  /*debug(*/ if (isDEV and !is_array($info) and $info == 1) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
-  if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding');
-  
-  $keys = 'smtid co fullName orgName address city state zip email phone m_number source';
+  if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding', '(system)');
+  $solarOneInfo = $info; // for error handling
+
   extract($info = just($keys, $info));
+  if (!nn($pid)) $pid = $info['pid'] = 'NEWBHS'; // grandfather solar1's qid
 
   $noContract = TRUE;
   $m_company = 'Con Ed';
   $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
-  $pA = pA($pid = (isDEV ? 'NEWAIL' : 'NEWBHS'));
+  $pA = pA($pid);
   $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $project = $pA->name;
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
 
   // validate data
   
@@ -345,7 +363,16 @@ function gotSolarOne($info) {
 
   if ($ta = r\acct($email) and $ta->hasBank and $ta->partnerInfo['customer'] == $customer) return partnerContinue($ta, $sta);
 
-  $info = compact(ray($keys . ' m_company customer pid noContract')); // recreate info with possibly improved values
+  $info = compact(ray($keys . ' m_company customer pid noContract project')); // recreate info with possibly improved values
+  
+  // concoct dummy input for handleInput, just to get sfData
+  foreach (ray('address city state zip') as $k) $info['m_' . $k] = $$k;
+  $info['type'] = $co ? 1 : 0;
+  foreach (ray('m_amount years owns') as $k) $info[$k] = 1;
+  
+  handleInput($info, $sfData);
+  if (!$sfData) return solarOneErr('sfData error', 'sfData');
+  sendToCRM($pA, $sfData);
 
   $flags = u\bit(B_NONUDGE); // no way to sign in yet, so don't bug them
   if ($co) {
@@ -370,6 +397,7 @@ function gotSolarOne($info) {
   if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
   $mya->stepDone('verifyid');
   $mya->stepDone('contact');
+  $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
 // ----- end of gotSignup() functionality
@@ -380,11 +408,14 @@ function gotSolarOne($info) {
     r\setAcct($mya, $sta);
     $title = t('Next Step');
     $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
-    $go = item(button(t('Continue'), $mya->nextStepUrl()));
+    $go = item(button(t('Continue'), $mya->nextStepUrl() ?: 'dashboard'));
     return cgform(compact(ray('title subtext go')));
   }
 
   $title = t('Enter Your Payment Information');
+  
+  $owed = $pid == 'NEWBLV' ? t('$80') : t('$85 plus your membership fee of $1.50, for a total due of $86.50');
+  
   $subtext = t(<<< X
     <p>The next step in your community solar sign-up is to tell us how you will pay for your solar credits.</p>
     <p>You will continue to get a bill from Con Ed as usual that shows how much electricity you used and what Con Ed is billing you for it. That bill will also have a credit that shows how much money you received from your solar subscription.</p>
@@ -396,15 +427,15 @@ function gotSolarOne($info) {
 
     <p>The bill from the NYC Community Energy Co-op would then say:<br>
     <blockquote>You received a $100 subscription solar credit on your Con Edison bill.  <br>
-    You owe the NYC Community Energy Co-op $85 plus your membership fee of $1.50, for a total due of $86.50.</blockquote></p>
+    You owe the NYC Community Energy Co-op %owed.</blockquote></p>
 X
-  , compact(ray('m_company partnerName')));
+  , compact(ray('m_company partnerName owed')));
 
   $processorPre = item(t('Now choose which payment option you want to use to process your payments. We have two options for you:'), t('Payment Option:'));
   
   $processor = radiosFld('', '', required(0), [t('<b>%PROJECT</b>, a secure payment processing system (recommended<sup>*</sup>)<br><br>OR'), t('<b>Standard ACH</b>')]);
   
-  $midtext1 = t('<p><sup>*</sup> The Sunset Park Solar Team recommends using %PROJECT because it focuses on community reinvestment (like setting up a lending pool for local projects, for example). Check out their website for more information: <%a>CommonGood.earth</a>.</p>', 'partnerName _a', $partnerName, atag(PROMO_URL));  
+  $midtext1 = t('<p><sup>*</sup> The Solar Team recommends using %PROJECT because it focuses on community reinvestment (like setting up a lending pool for local projects, for example). Check out their website for more information: <%a>CommonGood.earth</a>.</p>', 'partnerName _a', $partnerName, atag(PROMO_URL));  
   
   $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
   
@@ -453,9 +484,11 @@ X
  * @return an array of new pathnames (NULL if none)
  */
 function renameUploads($files, $meter) {
-  if (!is_dir(BILL_DIR)) mkdir(BILL_DIR, 0755) or u\FAIL('cannot create electric bill directory'); // required for tests
+  if (!is_dir(BILL_DIR)) {
+    if (!mkdir(BILL_DIR, 0755)) return partnerErr('cannot create electric bill directory'); // required for tests
+  }
   if ($files) foreach ($files as $f => $one) {
-    if (!$one['name']) {if (isDEV) break; else u\FAIL('missing file');}
+    if (!$one['name']) {if (isDEV) break; else return partnerErr('missing file');}
     extract(just('name type tmp_name error size', $one));
     if ($size > 10 * MAX_ID_SIZE * 1024 * 1024) {
       w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to %partner by postal mail or as attachments to an email (%partnerEmail).</p>', 'partner partnerEmail', $pA->fullName, $pA->email), 'err');
@@ -486,14 +519,17 @@ function tellPartner($pA, $info, $flnms) {
 
 /**
  * Cancel the signup and alert an admin (should never happen).
+ * @param string $msg: error message
+ * @param string $k: field name
  */
-function partnerErr($msg, $k) {
+function partnerErr($msg, $k = '') {
+  global $solarOneInfo;
   $subs = compact('msg', 'k');
-  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST);
+  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER + urlq2ray(nn($solarOneInfo)));
   return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 
-/**/ function solarOneErr($msg, $k) {die("$msg (field $k)");}
+function solarOneErr($msg, $k) {return partnerErr($msg, $k);}
   
 /**
  * Send data to the partner's CRM(s)
@@ -503,7 +539,7 @@ function sendToCRM($pA, $data) {
 
   if (test()) return;
   $data['created'] = date('Y-m-d');
-  foreach (ray('created host upfront') as $k) unset($data[$k]);
+  foreach (ray('created upfront') as $k) unset($data[$k]);
 //  $data['debugEmail'] = 'wspademan@gmail.com';
 //  $data['debug'] = 1;
   $res = u\post(SF_URL, $data); // send data to partner's Salesforce (fails on DEV)
@@ -542,23 +578,23 @@ function emailContract($pA, $info, $sign, $contractFlnm) {
     r\rMail($tpl, [$email => $fullName], $subs + compact('extra', 'links'), $partnerReply, $contractFlnm);
   } else {
     r\tellAdmin(t('New %partnerName customer: %fullName', compact('partnerName', 'fullName')), $info);
-    $code = r\makeDoCode($info);
+    $code = u\cryRay($info);
     r\rMail('partner-contract', [$email => $fullName], $subs + compact('code'), $partnerReply, $contractFlnm);
   }
 }
 
 /**
  * Create a PDF of the specified contract, filled with the given data.
- * @param string $host: the name of the contract image (without path or extention) in the contracts folder
+ * @param string $project: the name of the contract image (without path or extention) in the contracts folder
  * @param assoc $data: data to use to fill the contract
  * @param array $map: UNUSED an array of coordinates for filling the contract. Each entry is [field, page, x, y, attributes].
  * @param boot $sign: <include signature and date (current date if none given)> "signature" field is fullName in handwriting
  * @return the path to the contract
  * NOTE: use https://smallpdf.com/pdf-to-jpg to convert
  */
-function fillContract($host, $data, $map, $sign = FALSE) {
+function fillContract($project, $data, $map, $sign = FALSE) {
   global $mya;
-  $dir = R_ROOT . "/images/contracts/$host/";
+  $dir = R_ROOT . "/images/contracts/$project/";
   $pages = array_slice(scandir($dir), 2); // ignore . and ..
   
   extract(just('customer fullName contact postalAddr email phone m_company m_number m_address m_city m_state m_zip', $data));
@@ -584,15 +620,15 @@ function fillContract($host, $data, $map, $sign = FALSE) {
     $pdf->Image($dir . $page, 0, 0, $W, $H, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
     
     list ($buyerX, $buyerY, $sigX, $sigY, $sigNameY, $dateX, $dateY, $sigPage, $font) = 
-       $host == 'cooppower' ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans']
-    : ($host == 'nyccec' ? [.71, 3.5, .71, 9.25, 0, 6.25, 9.25, 8, '11;Times']
+       TRUE ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans'] // was $project == 'cooppower'
+    : ($project == 'nyccec' ? [.71, 3.5, .71, 9.25, 0, 6.25, 9.25, 8, '11;Times']
     : NULL); // invalid partner should get caught way before this (NULL causes death)
     
     if ($pi == 0) $pdf->say("$buyer<br><br>$meter", $buyerX, $buyerY, 5, 1.75, $font, 'L'); // text, x, y, w, h, sizesEtc, align
     if ($sign and $pi == $sigPage) {
       list ($name, $signer) = nn($contact) ? [$fullName, $contact] : ['', $fullName];
       $pdf->say(u\fmtDate(now(), TRUE), $dateX, $dateY, 5, 1.75, $font, 'L');
-      if ($host == 'cooppower') {
+      if (TRUE) { // was $project == 'cooppower'
         $sellerX = 5.2;
         $pdf->say($name, $sigX, 8.3, 5, 1.75, $font, 'L');
         $pdf->say($signer, $sigX, $sigNameY, 5, 1.75, $font, 'L');
@@ -600,7 +636,7 @@ function fillContract($host, $data, $map, $sign = FALSE) {
         $pdf->say(u\fmtDate(now(), TRUE), $sellerX, $dateY, 5, 1.75, $font, 'L');
         $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
         $pdf->say('Mark Skinder', $sellerX, $sigY, 5, 1.75, '22;B;DSGabriele', 'L');
-      } elseif ($host == 'nyccec') {
+      } elseif ($project == 'nyccec') {
         
       }
       $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
@@ -636,7 +672,7 @@ function getLinks($zip) {
     list ($org, $_url, $desc) = explode(',', $one);
     $res[] = tr('<a href="%url">%org</a>', compact(ray('org _url desc')));
   }
-  return '<ul><li>' . join("</li><li>\n", $res) . '</li></ul>';
+  return u\ul($res);
 }
 
 /**
@@ -646,14 +682,16 @@ function partnerContinue($a, &$sta) {
   r\setAcct($a, $sta); // part way through, so gotta sign back in
   $title = t('Next Step');
   $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
-  $go = item(button(t('Continue'), $a->nextStepUrl()));
+  $go = item(button(t('Continue'), $a->nextStepUrl() ?: 'dashboard'));
   return cgform(compact(ray('title subtext go')));
 }  
 
 function contractFlnm($customer) {
-  if (!is_dir(CONTRACT_DIR)) mkdir(CONTRACT_DIR, 0755) or u\FAIL('cannot create contract directory'); // required for tests
+  if (!is_dir(CONTRACT_DIR)) {
+    if (!mkdir(CONTRACT_DIR, 0755)) return partnerErr('cannot create contract directory'); // required for tests
+  }
   return CONTRACT_DIR . "/$customer.pdf"; // customer-specific flnm
 }
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}
-function pA($pid) {return (nn($pid) and $pA = r\acct($pid) and in($pA->name, SIGNUP_PARTNERS)) ? $pA : FALSE;}
+function pA($pid) {return (nn($pid) and $pA = r\acct($pid) and $pA->partner) ? $pA : FALSE;}
 function cgA($qid) {return r\acct(str_replace('*', '', $qid));}

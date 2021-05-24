@@ -9,17 +9,24 @@ use CG\Db as db;
 /**
  * Present a choice of data queries
  */
-function formData($form, &$sta, $args = '', $isco = FALSE) {
+function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  $isco = ($isco == 'co');
+  extract(just('qName sql q d isco', $args, NULL));
+  u\setDft($isco, $isco0 == 'co');
   require queryFile($isco);
-  extract(just('qName sql', $args));
+  
+  if ($q) {
+    $d = substr($q, 0, 1);
+//    if (strhas('0123456789', $d)) $q = $d . $q; // leading digit, if any
+    $url = $isco ? '/history/company-reports' : '/community/data';
+    w\go("$url/qName=" . urlencode($q));
+  }
   
   $sql0 = urldecode(nn($sql));
   $qName0 = nn($qName);
 
-  $btn = w\submi('Go', 'success', 'xs', ['parents' => ['go']]);
-  $sql = $mya->admin ? textFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096) + suffix(\render($btn))) : NULL;
+  $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
+  $submit = $mya->admin ? submit(t('Go')) : NULL;
 
   if ($mya->admin and $sql0) {
     $title = t('MySQL Query');
@@ -38,20 +45,20 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   } elseif (!empty($qName0)) {
     $sql = nn($queries[$qName0]);
     if (!empty($sql)) {
-      $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
-      $subtext = $subtext ?: '&nbsp;';
+      $title = t('Query Results');
+      $subtext = '<h4>' . w\queryPermitted($qName0, $sql, $subtext) . "</h4><p>$subtext</p>"; // alters $sql
       $report = strhas($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
       $form = compact(ray('title subtext report'));
     }
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
-    $isco = hidFld($isco ?: 0);
-    $form = compact(ray('title subtext sql isco'));
 
     foreach ($queries as $k0 => $v) {
-      if ($k = w\queryPermitted($k0)) $form[$k0] = submit($k, 'default', 'xs');
+      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0&isco=$isco", $k);
     }
+    $links = item(u\ul($links), NBSP);
+    $form = compact(ray('title subtext sql submit links'));
   }
   return cgform($form);
 }
@@ -64,16 +71,9 @@ function formData_validate($form, &$sta) {
 }
 
 function formData_submit($form, &$sta) {
-  extract(just('isco sql', $sta['input']));
-  require queryFile($isco);
+  extract(just('sql', $sta['input'], NULL));
 
-  if (op($sta) == 'go') return w\go('/community/data/sql=' . urlencode($sql));
-  $op = w\opText($sta);
-
-  $d = substr(op($sta), 0, 1);
-  if (strhas('0123456789', $d)) $op = $d . $op; // leading digit, if any
-  $url = $isco ? '/history/company-reports' : '/community/data';
-  w\go("$url/qName=" . urlencode($op));
+  if ($sql) return w\go('/community/data/sql=' . urlencode($sql));
 }
 
 function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/rweb/queries.inc');}

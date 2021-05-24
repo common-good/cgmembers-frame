@@ -34,7 +34,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  * Add additional setup for any or all features or tests
  */
 function extraSetup() {
-  t\clear(TX_POS);
+  t\clear(TX_APP);
 }
 
 /**
@@ -118,7 +118,6 @@ function agentAsksDeviceToIdentify($agent, $device, $qr) {
  *     TEST identify DeviceHasNoIdentifierYetForTrialCompany
  *     TEST identify ACashierSignsInSigningAnotherCashierOut
  *     TEST identify AManagerSignsIn
- *     TEST identify AManagerAsksUsToIdentifyTheManagersOwnCard
  *     TEST identify ACashierScansACustomerCard
  *     TEST identify TheDefaultCashierScansACustomerCard
  *     TEST identify ACustomerScansTheirOwnCardForSelfservice
@@ -137,6 +136,7 @@ function weRespondWith($args) {
     $got = nni($rposResult, $k);
     if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
+    if ($k == 'device' and $got) $got = u\decry('D', $got);
     if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
       if ($k == 'canMgr') $got = nni($rposResult, 'can') >> (APP_CAN_BITS + 1);
       $got &= APP_CAN_MASK;
@@ -147,14 +147,10 @@ function weRespondWith($args) {
         if ($got & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
       }
     }
-    if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
+
     if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
     
-    if ($v != $got) {
-      $v = pr(nn($v));
-      t\output("Expected $k=$v, got:" . pr($got));
-      return FALSE;
-    }
+    if (!t\eq($v, $got)) return FALSE;
   }
   return TRUE;
 }
@@ -177,11 +173,7 @@ function agentAsksDeviceForAPictureOfMemberWithCardCode($agent, $device, $member
  * in: MAKE identify DeviceAsksForAPictureToGoWithTheQR
  *     MAKE identify DeviceAsksForAPictureWithTheWrongCardCode
  */
-function memberHasPicture($id, $picture) {
-  global $testOnly; if ($testOnly) return FALSE;
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
-  return t\makePicture($picture, $a);
-}
+function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 
 /**
  * we respond with picture (ARG)
@@ -244,7 +236,7 @@ function devices($list) {return t\devices($list);}
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  *     TEST transact Setup
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo Setup
  *     TEST undo AnAgentAsksToUndoAChargeWithInsufficientBalance
@@ -323,7 +315,7 @@ function withBalance($subs) {
  *     TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -346,8 +338,8 @@ function withUndo($subs) {
 //    $subs['created'] = t\lastMinuteSubs($subs['created']);
     $undo = t('confirm undo', $subs);
   } else $undo = $subs;
-/**/  t\output("Expecting undo: $undo\nGot: $got");
-  return ($got == $undo);
+
+  return t\eq($undo, $got);
 }
 
 /**
@@ -388,6 +380,7 @@ function weReturnErrorWithSubs($msg, $subs) {
  *     TEST exchange DeviceGivesNoPurposeForGoodsAndServices
  *     TEST exchange DeviceSendsWrongProof
  *     TEST identify DeviceShouldHaveAnIdentifier
+ *     TEST identify AManagerAsksUsToIdentifyTheManagersOwnCard
  *     TEST identify ACustomerScansTheirOwnCardForSelfserviceWithWrongPIN
  *     TEST identify TheDefaultCashierScansADeactivatedCard
  *     TEST identify AnUnauthorizedCashierScansIn
@@ -396,7 +389,6 @@ function weReturnErrorWithSubs($msg, $subs) {
  *     TEST offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithTxDateAfterTheChange
  *     TEST startup DeviceRequestsABadOp
  *     TEST startup DeviceShouldHaveAnIdentifier
- *     TEST startup DeviceGivesABadCode
  *     TEST startup AnAgentForAnInactiveCompanyTriesAnOp
  *     TEST transact ACashierAsksToPaySelf
  *     TEST transact DeviceGivesNoMemberId
@@ -443,7 +435,6 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *
  * in: MAKE startup DeviceRequestsABadOp
  *     MAKE startup DeviceShouldHaveAnIdentifier
- *     MAKE startup DeviceGivesABadCode
  *     MAKE startup AnAgentForAnInactiveCompanyTriesAnOp
  */
 function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
@@ -462,7 +453,7 @@ function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
  *     TEST offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -499,7 +490,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  *     MAKE offline ACashierChargedSomeoneOfflineButItActuallyWentThrough
  *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     MAKE transact ACashierAsksToChargeSomeone
+ *     MAKE transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     MAKE transact ACashierAsksToRefundSomeone
  *     MAKE transact ACashierAsksToChargeAnotherMemberWithInsufficientBalance
  *     MAKE transact ACashierAsksToRefundAnotherMemberWithInsufficientBalance
@@ -556,7 +547,7 @@ function reconcilingOnChargingForAtForce($agent, $device, $member, $amount, $goo
  * in: TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
  *     TEST joint ACashierAsksToChargeSomeone
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -571,7 +562,7 @@ function withDid($subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
   $expect = $subs ? t('just did', $subs[0]) : '';
-  return (nni($rposResult, 'did') == $expect) ?: t\output("Expected: $expect\n Got: " . nni($rposResult, 'did'));
+  return t\eq($expect, nni($rposResult, 'did'));
 }
 
 /**
@@ -601,7 +592,7 @@ function withMessageWithSubs($msg, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
   $expect = $subs ? t($msg, $subs[0]) : '';
-  return (nni($rposResult, 'message') == $expect) ?: t\output("Expected: $expect\n Got: " . nni($rposResult, 'message'));
+  return t\eq($expect, nni($rposResult, 'message'));
 }
 
 /**
@@ -642,6 +633,7 @@ function membersHave($list) {return t\membersHave($list);}
 function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $signin = 0) {
   global $testOnly; if ($testOnly) return FALSE;
   list ($member, $code) = t\parseQr($qr);
+  if ($device) $device = u\cry('D', $device);
   return t\hitServer('identify', compact(ray('member code pin signin')), $agent, $device);
 }
 
@@ -682,7 +674,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
  * in: TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierChargedSomeoneOffline
  *     TEST offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithAppOffline
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST transact ACashierInTheSameCommunityAsksToChargeSomeoneUnconfirmed
  *     TEST undo AnAgentAsksToUndoACharge
@@ -805,3 +797,12 @@ function countIs($what, $count) {return t\count($what, $count);}
  *     MAKE time ACashierSignsIn
  */
 function agentAsksDeviceToSignIn($agent, $device, $qr) {return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, NULL, 1);}
+
+/**
+ * next code is (ARG) encrypted with (ARG)
+ *
+ * in: MAKE identify DeviceHasNoIdentifierYet
+ *     MAKE identify DeviceHasNoIdentifierYetForAnIndividual
+ *     MAKE identify DeviceHasNoIdentifierYetForTrialCompany
+ */
+function nextCodeIsEncryptedWith($phrase, $method) {return t\cryNextCode($method, $phrase);}

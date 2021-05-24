@@ -1,4 +1,4 @@
-Feature: Gift
+Feature: Coupon
 AS a participating business
 I WANT to issue gift coupons and discount coupons
 SO I can reward my employees and attract customers
@@ -32,11 +32,9 @@ Scenario: A member company creates a gift coupon
   | uid  | giftCoupons |*
   | .ZZC |          11 |
   When member ".ZZC" visits page "community/coupons/list"
-  Then we show "Discounts and Gift Certificates From You" with:
-  | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  Then we show "Discounts/Gift Certificates From You" with:
+  | Type     | Amount | For          | Ending     | Min Purchase | Max |~Action  |
+  | gift (3) | $10    | any purchase | indefinite |           $0 | 1x  | reprint |
   
 Scenario: A member redeems a gift coupon
   Given members have:
@@ -82,11 +80,11 @@ Scenario: A member company creates a dollar amount discount coupon
   | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
   |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
   When member ".ZZC" visits page "community/coupons/list"
-  Then we show "Discounts and Gift Certificates From You" with:
-  | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
-  | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
+  Then we show "Discounts/Gift Certificates From You" with:
+  | Type     | Amount | For                             | Ending  | Min Purchase | Max |~Action  |
+  | discount | $12    | on your purchase of $20 or more | %mdY+9d |          $20 | 1x  | reprint |
   When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
+  Then we show "Discounts in Your Region" with:
   | Company    | Discount | On                              | Ending  | For    | Uses Left |
   | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | anyone | 1 of 1    |
   
@@ -94,7 +92,7 @@ Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
   | coupid | amount | fromId | minimum | useMax | start     | end                | sponsor | on |*
   |      1 |     12 |   .ZZC |      20 |      1 | %daystart | %(%daystart+10d-1) |.ZZC | on your purchase of $20 or more |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
   Then we say "status": "report tx" with subs:
@@ -111,11 +109,11 @@ Scenario: A member redeems a dollar amount discount coupon
   | .ZZB |       0 |
   | .ZZC |      88 |
   When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
+  Then we show "Discounts in Your Region" with:
   | Company    | Discount | On                              | Ending  | For    | Uses Left |
   | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | anyone | 0 of 1    |
   
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 40     | fun     |
   Then balances:
@@ -127,7 +125,7 @@ Scenario: A member redeems a percentage discount coupon
   Given coupons:
   | coupid | fromId | amount | minimum | useMax | flags | start     | end                | sponsor | on  |*
   |      7 |   .ZZC |    -12 |      20 |      2 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
@@ -136,11 +134,11 @@ Scenario: A member redeems a percentage discount coupon
   | .ZZB |       0 |
   | .ZZC |      44 |
   When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
+  Then we show "Discounts in Your Region" with:
   | Company    | Discount | On                              | Ending  | For    | Uses Left |
   | Corner Pub | 12.0%    | on your purchase of $20 or more | %mdY+9d | anyone | 1 of 2    |
 
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
@@ -148,7 +146,7 @@ Scenario: A member redeems a percentage discount coupon
   | .ZZA |     -88 |
   | .ZZB |       0 |
   | .ZZC |      88 |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
@@ -156,7 +154,7 @@ Scenario: A member redeems a percentage discount coupon
   | .ZZA |    -138 |
   | .ZZB |       0 |
   | .ZZC |     138 |
-  When member ".ZZB" confirms form "pay" with values:
+  When member ".ZZB" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
@@ -176,12 +174,12 @@ Scenario: A member redeems a percentage discount coupon
 #   | id | uid  | coupid | uses | when |*
 #   |  1 | .ZZA |      1 |    0 |    0 |
 #   When member ".ZZC" visits page "community/coupons/list"
-#   Then we show "Discounts and Gift Certificates From You" with:
+#   Then we show "Discounts/Gift Certificates From You" with:
 #   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
 #   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
 #   | for only: NEWZZA ||||||||
 #   When member ".ZZA" visits page "community/coupons/list/ALL"
-#   Then we show "Automatic Discounts in Your Region" with:
+#   Then we show "Discounts in Your Region" with:
 #   | Company    | Discount | On                              | Ending  | For    | Uses Left |
 #   | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | you+   | 1         |
   
@@ -193,11 +191,11 @@ Scenario: A member redeems a percentage discount coupon
 #   | id | uid  | coupid | when |*
 #   |  1 | .ZZA |      1 |    0 |
 #   When member ".ZZA" visits page "community/coupons/list/ALL"
-#   Then we show "Automatic Discounts in Your Region" with:
+#   Then we show "Discounts in Your Region" with:
 #   | Company    | Discount | On           | Ending  | For    | Uses Left |
 #   | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $20       |
 # 
-#   When member ".ZZA" confirms form "pay" with values:
+#   When member ".ZZA" confirms form "tx/pay" with values:
 #   | op  | who        | amount | purpose |*
 #   | pay | Corner Pub | 6      | fun     |
 #   Then balances:
@@ -209,11 +207,11 @@ Scenario: A member redeems a percentage discount coupon
 #   | id | uid  | coupid | when   |*
 #   |  1 | .ZZA |      1 | %today |
 #   When member ".ZZA" visits page "community/coupons/list/ALL"
-#   Then we show "Automatic Discounts in Your Region" with:
+#   Then we show "Discounts in Your Region" with:
 #   | Company    | Discount | On           | Ending  | For    | Uses Left |
 #   | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $14       |
   
-  # When member ".ZZB" confirms form "pay" with values:
+  # When member ".ZZB" confirms form "tx/pay" with values:
   # | op  | who        | amount | purpose |*
   # | pay | Corner Pub | 50     | fun     |
   # Then balances:
@@ -226,7 +224,7 @@ Scenario: A member redeems a discount coupon in dribs and drabs
   Given coupons:
   | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | amtMax |*
   |      1 |     20 |       0 | .ZZC   | %NULL  |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
   Then we say "status": "You paid Corner Pub $12."
@@ -235,7 +233,7 @@ Scenario: A member redeems a discount coupon in dribs and drabs
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
   Then we say "status": "You paid Corner Pub $12."
@@ -244,7 +242,7 @@ Scenario: A member redeems a discount coupon in dribs and drabs
   | .ZZA |      -4 |
   | .ZZB |       0 |
   | .ZZC |       4 |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
   Then we say "status": "You paid Corner Pub $12."
@@ -261,7 +259,7 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
   And coupons:
   | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor |*
   |      1 |     20 |       0 | .ZZC   |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
   Then we say "status": "You paid Corner Pub $12."
@@ -275,7 +273,7 @@ Scenario: A member redeems a discount coupon sponsored by a third party
   Given txRules:
   | id | action | amount | minimum | from | to           | payeeType | payee | purpose | start     | amtMax |*
   |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |
   Then we say "status": "You paid Corner Pub $10."
@@ -286,11 +284,11 @@ Scenario: A member redeems a discount coupon sponsored by a third party
   | .ZZC |      10 |
 
   When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts" with:
+  Then we show "Discounts in Your Region" with:
   | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
   | Bea Two |      $12 | on zots | --     | anyone | no limit  | $2          |
   
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |
   Then we say "status": "You paid Corner Pub $10."
@@ -301,6 +299,18 @@ Scenario: A member redeems a discount coupon sponsored by a third party
   | .ZZC |      20 |
 
   When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts" with:
+  Then we show "Discounts in Your Region" with:
   | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
   | Bea Two |      $12 | on zots | --     | anyone | no limit  | $0.00       |
+
+Scenario: A member company views customer store credit
+  Given these "tx_rules":
+  | id | action | payerType | payeeType | payer | payee | from         | to           | amount | portion | amtMax |*
+  |  1 | surtx  | account   | account   | .ZZA  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 1      |
+  |  2 | surtx  | account   | account   | .ZZB  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 2      |
+  |  3 | surtx  | account   | account   | .ZZA  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 3.45   |
+  When member ".ZZC" visits page "community/coupons/list"
+  Then we show "Discounts/Gift Certificates From You" with:
+  | Type         | Amount | For     | Ending     | Min Purchase | Max |~Action  |
+  | store credit | $4.45  | Abe One | indefinite |              |     |         |
+  | store credit | $2     | Bea Two | indefinite |              |     |         |

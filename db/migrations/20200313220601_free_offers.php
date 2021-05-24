@@ -35,7 +35,7 @@ class FreeOffers extends AbstractMigration {
     $t->save();
     
     $t = $this->table('people', ray('id primary_key comment', FALSE, 'pid', 'contact information for non-members'));
-    $t->addColumn('pid', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, TRUE, 'record ID'));
+    $t->addColumn('pid', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, FALSE, 'record ID'));
     $t->addColumn('displayName', 'string', ray('length null comment', 255, TRUE, 'first name or nickname'));
     $t->addColumn('fullName', 'string', ray('length null comment', 255, TRUE, 'full name'));
     $t->addColumn('address', 'string', ray('length null comment', 255, TRUE, 'physical address'));
@@ -62,7 +62,7 @@ class FreeOffers extends AbstractMigration {
     $t->create();
 
     $t = $this->table('posts', ray('id primary_key comment', FALSE, 'postid', 'offers and needs posted by members and non-members'));
-    $t->addColumn('postid', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, TRUE, 'record ID'));
+    $t->addColumn('postid', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, FALSE, 'record ID'));
     $t->addColumn('type', 'enum', ray('values null comment', ray('need offer'), TRUE, 'item type'));
     $t->addColumn('item', 'string', ray('length null comment', 255, TRUE, 'item offered or needed'));
     $t->addColumn('details', 'string', ray('length null comment', 255, TRUE, 'description of item'));

@@ -74,23 +74,23 @@ function formInvestBuySell_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
   if (op($sta) == 'buy') {
-    list ($ok, $index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
+    $z = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
     if ($equity) {
-      $extraMsg = $ok ? t('purchased shares', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
-    } else $extraMsg = $ok ? t('loaned', 'amount co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
-    if ($ok) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
+      $extraMsg = $z->ok ? t('purchased shares', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
+    } else $extraMsg = $z->ok ? t('loaned', 'amount co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
+    if ($z->ok) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
   } else { // sell
     $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, now()), 'shid');
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('loan repayment');
-    list ($ok, $index, $subs) = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
+    $z = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
     $extraMsg = $equity ? t('investment sale pending') : t('repayment request pending');
-    $extraMsg = $ok ? tr($extraMsg, 'co', $coA->fullName) : '';
+    $extraMsg = $z->ok ? tr($extraMsg, 'co', $coA->fullName) : '';
   }
   unset($DBTX);
 
-  say("$index|$extraMsg", $subs, $ok ? NULL : 'err');
+  say("$z->msg|$extraMsg", $z->subs, $z->ok ? NULL : 'err');
   return w\go("/invest/list/actual=1&clubqid=$clubqid");
 }

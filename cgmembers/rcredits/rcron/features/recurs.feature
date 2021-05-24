@@ -5,10 +5,10 @@ SO I can save on memory and labor.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | risks   | floor |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |         |  -200 |
-  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |         |     0 |
+  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
+  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
+  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |             |     0 |
   And transactions:
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
@@ -71,6 +71,14 @@ Scenario: A recurring payment happened long enough ago to repeat
   |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   And count "txs" is 3
   And count "invoices" is 0
+  
+Scenario: A delayed payment does not happen immediately
+  Given these "tx_templates":
+  | id | start   | from | to   | amount | period | purpose |*
+  |  8 | %now+1w | .ZZA | .ZZC |     10 | week   | pmt     |
+  Then count "txs" is 1
+  When cron runs "recurs"
+  Then count "txs" is 1
   
 Scenario: A recurring payment cannot be completed
   Given these "tx_templates":
