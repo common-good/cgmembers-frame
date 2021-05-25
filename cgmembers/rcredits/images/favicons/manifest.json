@@ -1,5 +1,5 @@
 {
-    "name": "",
+    "name": "Common Good Payments",
     "icons": [
         {
             "src": "/rcredits/images/favicons/android-chrome-192x192.png",
@@ -14,5 +14,11 @@
     ],
     "theme_color": "#ffffff",
     "background_color": "#ffffff",
-    "display": "standalone"
+    "display": "standalone",
+    "url": "https://new-testing.commongood.earth",
+    "manifestUrl": "/rcredits/images/favicons/manifest.json",
+    "lang": "",
+    "short_name": "CGPay",
+    "description": "Accept Common Good payments by scanning the QR code on a Common Good card or phone.",
+    "start_url": "/"
 }
