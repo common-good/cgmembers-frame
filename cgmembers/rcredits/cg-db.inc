@@ -91,7 +91,7 @@ function update($table, $info, $key = 'id') {
   if (!isset($info['modified']) and hasField($table, 'modified')) {
     $info['modified'] = now();
   }
-	
+  
   $sql = '';
   foreach ($info as $field => $v) {
     if ($field != $key) $sql .= ",`$field`=:$field";
@@ -118,7 +118,7 @@ function insert($table, $info, $key = 'id') {
   foreach (ray('start created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
     $info[$k] = now(); // set these automatically
   }
-	
+  
   $sql = '';
   foreach ($info as $field => $v) {
     /* if ($field == $key) u\FAIL('key value specified in database insert'); // may actually be needed */

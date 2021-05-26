@@ -357,9 +357,9 @@ function payInvoice($nvid, $payAmount = NULL) {
   extract(just('api request shid for', $data, NULL));
   
   $DBTX = \db_transaction();
-	$extra = ray('inv', $nvid) + just('api for', $data, NULL);
+  $extra = ray('inv', $nvid) + just('api for', $data, NULL);
   if ($payAmount < $amount) $extra['partial'] = 1;
-	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+  if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {

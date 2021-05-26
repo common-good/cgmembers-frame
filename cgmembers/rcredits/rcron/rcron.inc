@@ -214,14 +214,14 @@ X;
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+  $where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
 //  $res = db\get('uid,bankAccount', 'r_usd d', $where);
-	$uids = db\col('payee', 'r_usd d', $where);
-	$DBTX = \db_transaction();
-	foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
-	if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
-	unset($DBTX);
-	if ($uids) db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+  $uids = db\col('payee', 'r_usd d', $where);
+  $DBTX = \db_transaction();
+  foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
+  if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
+  unset($DBTX);
+  if ($uids) db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
 
 /**
@@ -349,7 +349,7 @@ X;
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
   queueNext();
-}	
+}  
 
 /**
  * Remind invitee to accept invitation.
@@ -408,9 +408,9 @@ function activeMonthly($item) {
 
   $ratio = $floor ? $floorX / $floor : 1;
   if ($ratio > 1.2 or $ratio < .8) { // big change (or any change in sign)
-		$limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
+    $limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
     $msg = 'new floor' . ($a->can(B_DEBT) ? '' : '|no floor effect');
-//	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
+//    r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
   // DISABLED FOR now() if (!$a->slave) $a->tellMisc($msg, compact('limit'));
   }
   
@@ -447,11 +447,11 @@ function renewBacking() {
  * Give the member a chance to renew their annual donation or backing.
  */
 function warnAnnual1($item) {
-	extract(just('func uid amount base target', $item));
+  extract(just('func uid amount base target', $item));
   $tpls = ray('Donate:annual-gift, Backing:renew-backing');
 
-	$a = r\acct($uid);
-	$atag = w\atag("/do/do$func~" . $a->doCode());
+  $a = r\acct($uid);
+  $atag = w\atag("/do/do$func~" . $a->doCode());
   $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
   $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
   $a->tellMisc($tpls[$func], $subs);
@@ -459,11 +459,11 @@ function warnAnnual1($item) {
 
 function annualSql($func, $amtFld, $dtFld, $join = '', $where = '1') {
   return <<< X
-	  SELECT DISTINCT '$func' AS func, u.uid, $amtFld, FROM_UNIXTIME($dtFld) AS base,
+    SELECT DISTINCT '$func' AS func, u.uid, $amtFld, FROM_UNIXTIME($dtFld) AS base,
       ADDDATE(CURDATE(), INTERVAL :RENEW_ADVANCE_DAYS DAY) AS target,
       ADDDATE(CURDATE(), INTERVAL (:RENEW_ADVANCE_DAYS-1) DAY) AS beforeTarget
-		FROM users u $join
-		WHERE u.:IS_OK AND u.uid>0 AND u.uid NOT :CANONIC AND $where
+    FROM users u $join
+    WHERE u.:IS_OK AND u.uid>0 AND u.uid NOT :CANONIC AND $where
     HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
 X;
 }
@@ -538,7 +538,7 @@ X;
   queueEach('crumbs', $sql);
   queueEach('sweep', "SELECT $start AS start,$end AS end"); // must come after all crumbs
 
-	// figure amount to share with each official Common Good Community
+  // figure amount to share with each official Common Good Community
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
@@ -909,7 +909,7 @@ function getFunds() {
   $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
   queueEach('completeUsdTx', $sql);
   
-	queueEach('getFunds1', 'SELECT uid FROM users WHERE :MASTER AND balance < minimum AND uid > :CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
+  queueEach('getFunds1', 'SELECT uid FROM users WHERE :MASTER AND balance < minimum AND uid > :CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
 
   queueNext();
 }
@@ -923,8 +923,8 @@ function completeUsdTx($item) {
 function getFunds1($item) {
   extract(just('uid jid', $item));
   $a = r\acct($uid);
-	$amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
-	if ($amount > 0) $a->getFunds($amount, t('to target'));
+  $amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
+  if ($amount > 0) $a->getFunds($amount, t('to target'));
 }
 
 /**
@@ -948,17 +948,17 @@ function invoice1($item) {
   $payeeName = $a2->fullName;
   
   if ($status == TX_APPROVED) {
-		if (!$a1->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-		$amtFld = 'amount';
-    $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //	consider credit already used for advances from the bank
+    if (!$a1->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
+    $amtFld = 'amount';
+    $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //  consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
       $z = be\payInvoice($nvid);
       $paid = $z->ok;
       if (!$z->ok) r\tellAdmin(t('invoice payment failed in cron'), ray('msg', $z->msg) + $item);
     } else $paid = FALSE;
-		
-		if (!$paid or $a1->balance < 0) {
+    
+    if (!$paid or $a1->balance < 0) {
       if ($funding and $a1->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
         $funding = FALSE; // fund it again, if necessary
       }
@@ -973,7 +973,7 @@ function invoice1($item) {
         }
         unset($DBTX);
       }
-		}
+    }
   } elseif ($status == TX_PENDING) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
     $nudge = $a2->staleNudge;

@@ -54,7 +54,7 @@ function formEvents($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args, $mya ? 'acct' : 'individual'); // allow any signed in account, so user can switch to personal account, below
 
   $cttyA = $mya->cttyA;
-	if ($aA = r\acct()) list ($cAdmin, $superAdmin) = [$aA->cAdmin, $aA->superAdmin]; // get signed-in account, if any
+  if ($aA = r\acct()) list ($cAdmin, $superAdmin) = [$aA->cAdmin, $aA->superAdmin]; // get signed-in account, if any
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
@@ -77,7 +77,7 @@ function formEvents($form, &$sta, $args = '') {
         if (!$superAdmin) return compact('title');
       }
 
-	  $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
+    $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
       $voting = $do ? NULL : ($type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink)); // end is displayable end date
     }
 
@@ -92,10 +92,10 @@ function formEvents($form, &$sta, $args = '') {
     $middle = file_get_contents(__DIR__ . '/greenfieldma2017.html');
 //    $middle = v\showProposalGrades($mya, $args); // FUDGE for 19 Jan 2017 (pending reworking the overall flow and logic of voting phases)
   } elseif ($do == 'proposals') {
-		
+    
   } elseif ($do == 'results') {
-//		$middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : v\showResults($eid, $noProxies);
-		$middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
+//    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : v\showResults($eid, $noProxies);
+    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
   } elseif ($do == 'options') { // UNUSED
     list($middle, $phase, $endDate) = v\questionList($eid, $question, $do);
   } elseif ($do == 'ballot') {
@@ -107,7 +107,7 @@ function formEvents($form, &$sta, $args = '') {
     $middle = v\done($mya);
     if (!r\acct()) return doSay($middle, 'err');
   } elseif ($do == 'grade') {
-//	  if (!$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
+//    if (!$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
     $extraFields = v\showProposal($mya, -$question, $middle, TRUE); // middle here is an error message, if anything
   } else {
     $extraFields = NULL;
@@ -123,10 +123,10 @@ EOF;
       extract($row, EXTR_PREFIX_ALL, 'e');
       $buttons = $cAdmin ? button(t('Edit'), "$base_url/community/events/event/do=edit&eid=$e_id", '', 'warning') : '';
       if ($cAdmin or $e_end < now()) {
-				$btn = button('%text', "$base_url/community/events/do=results&eid=$e_id%noprox", '', 'success');
-				$buttons .= ' &nbsp; ' . tr($btn, 'text noprox', t('Results'), '');
-//				if ($cAdmin) $buttons .= ' ' . tr($btn, 'text noprox', t('Without Proxies'), '&noProxies=1');
-			}
+        $btn = button('%text', "$base_url/community/events/do=results&eid=$e_id%noprox", '', 'success');
+        $buttons .= ' &nbsp; ' . tr($btn, 'text noprox', t('Results'), '');
+//        if ($cAdmin) $buttons .= ' ' . tr($btn, 'text noprox', t('Without Proxies'), '&noProxies=1');
+      }
       $e_end = u\fmtDate($e_end);
       $list .= <<<EOF
 <tr><td>$e_end</td><td>$e_event</td><td>$buttons</td></tr>

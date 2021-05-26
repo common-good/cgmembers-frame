@@ -339,8 +339,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #messages ul {list-style-type:none;}
 
 @media (max-width:768px) {
-	.page-community-events #messages,
-	.page-prox #messages {position:absolute; z-index:999;} /* not ideal for some pages, but better than hidden */
+  .page-community-events #messages,
+  .page-prox #messages {position:absolute; z-index:999;} /* not ideal for some pages, but better than hidden */
   #messages .messages {margin:40px 0 0 0;}
 }
 
@@ -1078,7 +1078,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   float:left;
   margin:0;
   cursor:pointer;
-  background-image:url('../images/icons/cropper-icons.png');	
+  background-image:url('../images/icons/cropper-icons.png');  
   width:30px;
   height:30px;
   text-align:center;

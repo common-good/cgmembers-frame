@@ -61,12 +61,12 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
     if (isDEV and !$routing) $routing = $account = '211672476';
-		
-		$amount *= 100;
+    
+    $amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $txCode = $amount == 0 ? 23 
     : ($bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37));
-		$amount = abs($amount);
+    $amount = abs($amount);
 
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 

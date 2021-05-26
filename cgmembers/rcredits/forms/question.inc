@@ -40,7 +40,7 @@ function formQuestion($form, &$sta, $args = '') {
         $optHdr = $realOpts ? '<tr><th>Option</th></tr>' : '';
         $list = "<table>$optHdr$list</table>";
       } else $list = t('no options yet');
-			
+      
       $list = item('<h4>' . $header . '</h4>' . $list);
     } else { // single option is really just details
       $row = $q->fetchAssoc();
@@ -82,12 +82,12 @@ function formQuestion_validate($form, &$sta) {
 function formQuestion_submit($form, &$sta) {
   global $base_url;
   extract($info = just('id event text detail linkDiscussion type budget optOrder', $sta['input']));
-	
+  
   $qid = db\updateOrInsert('r_questions', $info, 'id'); // qid is valid only if question is new
   if (!v\realOpts($type) and !nn($id)) { // these question types have a single option
     db\insert('r_options', ray('question text maximum', $qid, '', $type == 'R' ? $budget : 0));
   }
-	
+  
   //  w\go("community/events/event/do=edit&eid=$event", 'info saved');
   w\go('community/events/question/qid=' . (nn($id) ?: $qid), 'info saved');
 }

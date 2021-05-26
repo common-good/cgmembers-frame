@@ -541,14 +541,14 @@ function iCardAcct($code0, &$iCode = NULL) {
  * @return: the value
  */
 function setCook($key, $value, $expires = NULL, $raw = FALSE) {
-	u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
+  u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
   $_COOKIE[$key] = $value; // make it available also before going to a new page
   if (test()) return $value;
 
   u\setDft($expires, now() + 365250 * DAY_SECS);
-	$func = $raw ? 'setrawcookie' : 'setcookie';
+  $func = $raw ? 'setrawcookie' : 'setcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
-	u\EXPECT($res, 'cookie failed');
+  u\EXPECT($res, 'cookie failed');
   return $value;
 }
 
@@ -563,7 +563,7 @@ function deleteAllCooks() {foreach ($_COOKIE as $k => $v) deleteCook($k); $_COOK
  * If superAdmin is not signed in, return FALSE.
  */
 function vKey() {
-	global $mya, $channel;
+  global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
@@ -571,7 +571,7 @@ function vKey() {
   if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
   if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
-	return u\decry('R', $vKeyE, $pw);
+  return u\decry('R', $vKeyE, $pw);
 }
 
 /**
@@ -943,7 +943,7 @@ function getStats($ctty, $created, $cttyCrit, $do = NULL) {
       SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND :IS_CO, 1, 0)) AS bAccts,
       SUM(IF(NOT activated OR activated>:created, 1, 0)) AS newbs
     FROM users u
-    WHERE $cttyCrit AND $creCrit	
+    WHERE $cttyCrit AND $creCrit  
 X;
 
   // get users table financial data (must happen before topN/botN)

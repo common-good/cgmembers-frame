@@ -28,7 +28,7 @@ class Pdf extends \TCPDF {
   /**
    * Create a PDF object.
    */
-	public function __construct() {
+  public function __construct() {
     parent::__construct('P', 'in', 'LETTER');
     $this->pageW = $this->getPageWidth();
     $this->pageH = $this->getPageHeight();

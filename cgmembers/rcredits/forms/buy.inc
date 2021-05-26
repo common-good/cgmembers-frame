@@ -228,7 +228,7 @@ function formBuy_submit($form, &$sta) {
 function buyErr($msg, $info) {
   if ($for0 = nni($info ?: [], 'for0')) $info['for'] = $for0;
   $code = u\cryRay($info + ray('op', 'charge'));
-	say($msg, $info, 'err');
+  say($msg, $info, 'err');
   return w\go("pay-with-cg/$code");
 }
 

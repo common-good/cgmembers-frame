@@ -15,12 +15,12 @@ function formPhoto($form, &$sta, $arg = '') {
   global $mya;
 
   $chooserStyle = 'btn-md btn-primary';
-	extract(just('ok err recrop', $arg, NULL));
-	$recrop = $recrop ? "$base_url/account-photo/orig=1/" . now() : '';
+  extract(just('ok err recrop', $arg, NULL));
+  $recrop = $recrop ? "$base_url/account-photo/orig=1/" . now() : '';
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));
-	$recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
+  $recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
   $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
 
   if ($ok) {

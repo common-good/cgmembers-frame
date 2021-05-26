@@ -78,10 +78,10 @@ function go2($url1, $url2) {
 
   foreach (ray('url1 url2') as $k) {
     if (substr($$k, 0, 1) == '/') $$k = substr($$k, 1); // supplying the slash is preferred, to agree with w\atag()
-		if (!u\starts($$k, 'http')) $$k = "$base_url/" . $$k;
-	}
-	
-	header_remove('Content-Security-Policy'); // allow the script
+    if (!u\starts($$k, 'http')) $$k = "$base_url/" . $$k;
+  }
+  
+  header_remove('Content-Security-Policy'); // allow the script
   return exitJust(<<< X
 <html><script>
   window.open('$url2', '_blank');
@@ -116,8 +116,8 @@ function uploadFile(&$err = '', $fld = 'file') {
     if (!in($filetype, 'text/csv text/plain')) return !$err = t('bad file type', compact('filetype'));
   }
   if ($file->size > MAX_UPLOAD_SIZE) return !$err = t('That file is too big.');
-	if (!$file->size) return !$err = t('That file is empty.');
-	return $file->tmp_name;
+  if (!$file->size) return !$err = t('That file is empty.');
+  return $file->tmp_name;
 }
 
 function htmlItem($name, $id, $value, $class, $other = []) {return $value;}
@@ -780,7 +780,7 @@ function sanitizePage($page) {
     $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
     if (isPRODUCTION) w\hack($msg);
     
-  	if (isDEV) {
+    if (isDEV) {
       header_remove('Content-Security-Policy'); // let us show styles
       $page = str_replace('pre>', 'WASPRE>', $page);
       $m = htmlentities($matches[0]);
@@ -1490,7 +1490,7 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 
 function hack($message, $info = []) {
   r\tellAdmin(t('HACK attempt: ') . $message, $info + $_SERVER);
-/**/	if (isDEV) debug("HACK - $message: " . pr($info));
+/**/  if (isDEV) debug("HACK - $message: " . pr($info));
   if (test()) return w\err('hack', 'err'); // to simulate a form
   return r\signedIn() ? signout() : w\go('');
 }
@@ -2008,8 +2008,8 @@ function amtErr($field, &$sta, $restriction = '', $fractionLimit = 2) {
 }
 
 function tags($tag, $content = '', $tribs = []) {
-	$tribs = $tribs ? ' ' . u\tribs($tribs) : '';
-	return "<$tag$tribs>$content</$tag>";
+  $tribs = $tribs ? ' ' . u\tribs($tribs) : '';
+  return "<$tag$tribs>$content</$tag>";
 }
 
 /**
