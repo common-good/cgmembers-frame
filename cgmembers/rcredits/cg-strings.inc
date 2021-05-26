@@ -144,7 +144,6 @@ $GLOBALS['tStrings'] = array(
   'new floor' => t('Your credit limit has been changed to %limit, based on your average use of %RCREDITS over the past 6 months.'),
   'no floor effect' => t('This currently has no effect, because you chose not to let your balance go negative. To change this setting, sign in at %CG_DOMAIN, click the Settings gear, then the Preferences tab. Put a check mark next to "Debt Okay" and save your preferences.'),
   'available now' => t('The funds are available immediately in your %PROJECT Account.'),
-  'transfer canceled' => t('Your transfer request #%xid has been canceled.'),
   'invite languishing' => t('After %elapsed days, your friend at %email has not accepted your invitation to %PROJECT. Call maybe? (the invitation may be in their spam folder or lost).'),
   'invitee slow' => t('Your friend %fullName has not finished opening a %PROJECT Account (%elapsed days after accepting your invitation). The next step is: "%step". Call maybe, to offer help?'),
   'reminder coming' => t('We will send you another reminder or two.'),
@@ -172,6 +171,8 @@ EOF
   'recur stopped' => t('Success: The recurring transaction is ended.'),
   'recur already ended' => t('That recurring transaction is already ended.'),
   'recur not yours' => 'invalid recur id', // don't let on that these are different
+  'already reversed' => t('Transaction #%xid is already reversed.'),
+  'already reverse requested' => t('You already requested a reversal of transaction #%xid.'),
   'thing scheduled' => t('Your %thing has been scheduled.'),
   'refundable deposit' => t('%PROJECT will supply a smartphone running the CGPay app. Your account has been invoiced $%EQUIP_DEPOSIT as a refundable deposit.'),
   'see tax info' => t('Your 1099-K information form for calendar year %year (or any tax year you select) is available any time. Sign in at %CG_DOMAIN and select "Tax Info" on the History menu. This form is just for your information and you are not required to file it with your tax return.'),

@@ -1445,18 +1445,6 @@ function xfee($for, $amount) {
   return '' . round(mb_strpos($for, BY_CARD) ? -R_XFEE_CARD * $amount : R_XFEE_CHECK, 2);
 }
 
-function disputeTx($xid, $reason = '') {
-  global $mya;
-  
-  if (empty($mya)) return FALSE;
-  if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
-
-  $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
-  u\EXPECT($result, "error inserting dispute record");
-
-  return TRUE;
-}
-
 /**
  * Mark a rule (or template) ended (now) and delete any related unpaid invoices.
  * @param bool $recurs: template not rule

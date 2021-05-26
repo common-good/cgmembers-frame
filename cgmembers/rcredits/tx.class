@@ -95,14 +95,14 @@ class Tx {
 
   private function getPayerEntry() {
     foreach ($this->entries as $i => $entry) {
-      if ($entry->entryType == E_PRIME and $i % 2 != 0) return $entry;
+      if (in($entry->entryType, [E_PRIME, E_BANK]) and $i % 2 != 0) return $entry;
     }
     return NULL;
   }
 
   private function getPayeeEntry() {
     foreach ($this->entries as $i => $entry) {
-      if ($entry->entryType == E_PRIME and $i % 2 == 0) return $entry;
+      if (in($entry->entryType, [E_PRIME, E_BANK]) and $i % 2 == 0) return $entry;
     }
     return NULL;
   }
@@ -262,7 +262,7 @@ EOF;
       
     $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
     
-    $toMe = $other->isBank() ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
+    $toMe = $other->isBank() ? ($amount < 0 xor $tx->xid < 0) : $me->isMe($payeeE->uid);
     
     $reverses = !empty($tx->reverses);
     $role = $toMe ? 'payee' : 'payer';

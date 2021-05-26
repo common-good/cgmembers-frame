@@ -110,7 +110,7 @@ function stopRecur($id) {
   if (!$row) return w\err('invalid recur id');
 
   extract($row);
-  if ($end) return w\err('recur already ended');
+  if ($end and $end <= now()) return w\err('recur already ended');
   if (!in_array($mya->id, [$from, $to])) return w\err('recur not yours');
 
   db\update('tx_templates', ray('id end', $id, now()), 'id');

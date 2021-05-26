@@ -236,54 +236,59 @@ X;
  * @return a txRet object
  */
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
-  global $mya;
+  global $mya, $channel;
 
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
-  $tx = $mya->lastTx("xid=:xid AND $where", compact('xid') + $subs);
+  $xidSub = compact('xid');
+  $tx = $mya->lastTx("xid=:xid AND $where", $xidSub + $subs);
   if (empty($tx)) return txRet(FALSE, 'undo no match', $subs);
   if (!$force and $zErr = $tx->noUndo($subs)) return $zErr;
 
+  if (db\exists('tx_hdrs', 'reversesXid=:xid', $xidSub)) return txErr(t('already reversed', $xidSub), $subs);
+  if (db\exists('r_invoices', 'reversesXid=:xid AND status NOT IN (:TX_CANCELED, :TX_DENIED)', $xidSub)) return txErr(t('already reverse requested', $xidSub), $subs);
+  $otherE = $tx->otherEntry;
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
-  if (!$byMe and !$toMe) { // someone charged me (either unilaterally or I approved it)
+  $posUndo = ($channel == TX_APP and $tx->created >= now() - REVERSE_WINDOW);
+
+  if ($toMe or $posUndo) { // someone paid me (at my initiative or theirs)
+    return reverse($xid); // create an offsetting transaction
+  } elseif ($byMe) { // I paid someone (on my initiative)
+///    debug("other=$tx->otherId actor=$tx->actorId amt=$otherE->amount posUndo=$posUndo toMe=$toMe");
+    return invoice($tx->actorA, $tx->otherA, $otherE->amount, $otherE->description, $tx->goods, ray('reversesXid', $xid), $tx->recursId);
+  } else { // !$toMe and !$byMe: someone charged me (either unilaterally or I approved it)
+    if (db\exists('tx_disputes', compact('xid'))) return txErr(t('already reverse requested', $xidSub), $subs);
+    $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
+  
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
     $tx->otherA->tellOut('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
-    $amount = u\fmtAmt($tx->otherEntry->amount);
+    $amount = u\fmtAmt($otherE->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
     $other = $tx->otherA->fullName;
     return txRet(TRUE, 'report undo', compact(ray('amount other tofrom solution otherUid')));
-  } else {
-    $z = reverse($xid, $newTx); // create an offsetting transaction
-    sendNotifications('undo', $newTx, 0);
-    return $z;
   }
 }
 
 /**
  * Create an offsetting transaction (nearly the same as the original but with the entries negated).
  * @param int $xid: record ID of the transaction to reverse
- * @param object $newTx: (RETURNED) the reversing transaction
- * @return a txRet object
+ * @returns object $txRet: result, message, and subs
  */
-function reverse($xid, &$newTx = '') {
-  global $mya, $channel;
+function reverse($xid) {
   $subs = compact('xid');
 
-  $DBTX = \db_transaction();
-  if (db\exists('tx_hdrs', 'reversesXid=:xid', $subs)) return txErr(t('already reversed'), $subs);
   if (!$tx = r\Tx::read($xid)) return txErr(t('no transaction'), $subs);
+  $e = $tx->otherEntry; // get payer half of prime entry pair  
 
-  // It seems OK to reverse it
+  $DBTX = \db_transaction();
 
-  $e = $tx->entries[1]; // get payer half of prime entry pair  
-  if ($ruid = $e->rule and $e->entryType == E_PRIME and $cred = creditPeops($ruid)) { // purchased credit, so end the rule
+  if ($ruid = $e->rule and $cred = creditPeops($ruid)) { // returning a purchase of credit, so end the rule
     db\update('tx_rules', ray('id end', $ruid, now()), 'id');
     extract(just('buyerA coA', $cred));
-//    $gift = ($e->uid == $buyerA->id);
-    $amt = u\fmtAmt(-$e->amount);
+    $amt = u\fmtAmt($e->amount);
     $buyerA->tellIn('your credit canceled', ray('amount co', $amt, $coA->fullName), t('Credit canceled'));
     $coA->tellOut('customer credit canceled', ray('customer amount', $buyerA->fullName, $amt), t('Credit canceled'));
   }   
@@ -301,25 +306,23 @@ function reverse($xid, &$newTx = '') {
     $newTx->entries[] = $newE;
   }
   $xid = $newTx->insert();
-  if (!$xid) {
-    $DBTX->rollback();
-    return txErr(t('tx save err'), $newTx);
-  }
-
+  
   unset($DBTX);
+
+  sendNotifications('undo', $newTx, 0);
 
   $message = 'report undo' . ($tx->otherA->isCanonic ? '' : '|report tx');
 
   $ok = TRUE;
-  $did = ($tx->actorEntry->amount > 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
+  $did = ($e->amount < 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
   $txid = $xid; // txid is xid in transaction reports
-  $created = $created0 = $newTx->created;
-  $balance = $mya->can(B_SECRET) ? '*0' : $mya->balance;
+  $created = $newTx->created;
+  $balance = $tx->otherA->can(B_SECRET) ? '*0' : $tx->otherA->balance;
   $solution = 'reversed';
   $otherName = $tx->otherA->fullName;
-  $amount = u\fmtAmt(abs($newTx->otherEntry->amount));
-  $why = $tx->otherEntry->description;
-  $subs = compact(ray('ok did xid txid created0 created balance solution otherName amount why'));
+  $amount = u\fmtAmt(abs($e->amount));
+  $why = $e->description;
+  $subs = compact(ray('ok did xid txid created balance solution otherName amount why'));
   
   return txRet(TRUE, $message, $subs);
 }
@@ -670,7 +673,10 @@ function sendNotifications($type, $tx, $shortfall) {
   case 'undo':
     $mya = r\acct();
     $byMe = $mya->isMe($tx->actorId);
-    if ($byMe and !$toMe) {
+    if ($tx->otherA->isBank()) {
+      $notice = 'bank tx canceled';
+      $did = 'reversed';
+    } elseif ($byMe and !$toMe) {
       $notice = ($tx->goods == FOR_GOODS) ? 'new refund' : 'new payment';
       $did = ($tx->goods == FOR_GOODS) ? 'refunded' : 'credited';
     } elseif ($byMe and $toMe) {
@@ -798,16 +804,16 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
-  extract(just('created status', $extra, [now(), null]));
+  extract(just('created status reversesXid', $extra, [now(), NULL, NULL]));
   $flags = 0;
   foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
-    u\setBit($flags, $k, $v);
+    if ($k != 'reversesXid') u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created);
   if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
   if (r\dupTx($payee, $payer, -$amount)) return txErr(t('duplicate transaction'), $subs);
@@ -816,18 +822,15 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
-  /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
-    //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     $payerA->tell('new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       $z = be\payInvoice($nvid);
-      if (!$z->ok) { r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs + $info);
-      } else { $status = TX_PAID; }
+      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs + $info);
     }
   }
 

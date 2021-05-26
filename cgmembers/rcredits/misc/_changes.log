@@ -1,3 +1,14 @@
+2021-05-23 feature/unpay
+. fixed bug whereby a payer could unilaterally reverse a payment they made
+. set time limit in rSmart for cashier to reverse a refund or a cash-in (invoice the customer if too late to reverse)
+. removed no PO Box restriction from partner signup (made solar1 signups fail)
+. increased our ACH daily limit to 40k
+. generalized partnerEnd template for other partners served by solar1
+. removed unused "undoes" tx flags from txs IDs 954,1020,1029,1031,1105,1193,1196,1255,1294
+. added a reversedXid field to invoices that can be passed through to the transaction
+. fixed customer statements so they show DENIED invoices just like any other invoice, but marked DENIED
+. enhanced tx.class so payerEntry and payeeEntry can apply to bank transactions too
+
 2021-05-12 feature/routing-check
 . fixed bug that failed to verify routing number after account activation
 . reinstated usernames for sign-in (grandfathered)
@@ -2055,22 +2066,22 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
 . changed changes field to changesX and automatically populates new r_changes table
 . added r_usd2 table for service charges and inter-account transfers (to help reconcile Community Fund bank account)
 . eachA(function ($a) {
-		$chs = $a->changesX;
-		if (!strlen($chs)) return;
-		if (db\exists('r_changes', ray('uid', $a->id))) return;
-		$chs = u\decry('S', $chs);
+    $chs = $a->changesX;
+    if (!strlen($chs)) return;
+    if (db\exists('r_changes', ray('uid', $a->id))) return;
+    $chs = u\decry('S', $chs);
 /**/  if (!$chs = unserialize($chs)) {debug("$a->fullName: bad serial or encryption"); return;}
-		$rec = []; // track historical field values
-		foreach ($chs as $dt => $info) {
-			foreach ($info as $k => $v) {
-				$newValue = isset($rec[$k]) ? $rec[$k] : (in($k, VSECURE_FLDS) ? $a->vsecure[$k] : $a->$k);
-				$rec[$k] = $v;
-				$record = ray('uid created field oldValue newValue changedBy', $a->uid, $dt, $k, $v, $newValue, 0);
-				db\insert('r_changes', $record); // add a r_changes record for each changed field
-			}
-		}
-	});
-		
+    $rec = []; // track historical field values
+    foreach ($chs as $dt => $info) {
+      foreach ($info as $k => $v) {
+        $newValue = isset($rec[$k]) ? $rec[$k] : (in($k, VSECURE_FLDS) ? $a->vsecure[$k] : $a->$k);
+        $rec[$k] = $v;
+        $record = ray('uid created field oldValue newValue changedBy', $a->uid, $dt, $k, $v, $newValue, 0);
+        db\insert('r_changes', $record); // add a r_changes record for each changed field
+      }
+    }
+  });
+    
 2018-09-14 v3.42d
 . changed mail field to "email"
 . refactored some things in acct.class
@@ -2103,21 +2114,21 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
 
 2018-08-16 v3.42
 . ALTER TABLE r_usd DROP COLUMN tid;
-	ALTER TABLE x_usd DROP COLUMN tid;
+  ALTER TABLE x_usd DROP COLUMN tid;
 . reorder r_usd and x_usd columns to agree with cg-install.inc and REBUILD
 . created a bankOk flag bit, set automatically after verifying connected bank account with a zero ACH
 . $q = db\q('SELECT DISTINCT uid FROM r_usd t JOIN users u ON u.uid=t.payee WHERE deposit>0 AND u.:HAS_BANK');
-	while ($row = $q->fetchAssoc()) {
-		$a = r\acct($row['uid']);
-		$a->setBit(B_BANKOK);
-	}
+  while ($row = $q->fetchAssoc()) {
+    $a = r\acct($row['uid']);
+    $a->setBit(B_BANKOK);
+  }
 . $q = db\q('SELECT DISTINCT txid,uid FROM r_usd t JOIN users u ON u.uid=t.payee WHERE deposit=0 AND NOT u.:IS_BANKOK');
-	while ($row = $q->fetchAssoc()) {
-	  extract($row);
-		$a = r\acct($uid);
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $a = r\acct($uid);
     $a->verifyBank();
-		db\update('r_usd', ray('txid created', $txid, NOW + DAY_SECS), 'txid');
-	}
+    db\update('r_usd', ray('txid created', $txid, NOW + DAY_SECS), 'txid');
+  }
 . fixed bug that duplicated recurring gift if invoice was pending
 . fixed bug that kept current cashout setting from being shown on Connect page
 
@@ -2132,36 +2143,36 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
 . created r_honors and r_recurs tables, reworking how donations are handled, generalizing to allow recurring gifts to other organizations
 . INSERT INTO r_honors (uid,honor,honored,created) SELECT uid,IF(honor='other','honor',honor) AS honor,honored,giftDate AS created FROM r_gifts WHERE honored<>'';
   INSERT INTO r_recurs (payer,payee,amount,period,created,ended) 
-	  SELECT g.uid AS payer,26742000000002 AS payee,g.amount,g.often AS period,MIN(g2.giftDate) AS created,
-	  IF(MIN(g.completed)=0,0,MAX(g.completed)) AS ended
-		FROM r_gifts g LEFT JOIN r_gifts g2 ON g2.uid=g.uid AND g2.often=g.often
-		WHERE g.often IN ('Y','Q','M')
-		GROUP BY g.uid,g.often
-		ORDER BY MIN(g2.giftDate)
+    SELECT g.uid AS payer,26742000000002 AS payee,g.amount,g.often AS period,MIN(g2.giftDate) AS created,
+    IF(MIN(g.completed)=0,0,MAX(g.completed)) AS ended
+    FROM r_gifts g LEFT JOIN r_gifts g2 ON g2.uid=g.uid AND g2.often=g.often
+    WHERE g.often IN ('Y','Q','M')
+    GROUP BY g.uid,g.often
+    ORDER BY MIN(g2.giftDate)
 . $q = db\q('SELECT g.uid FROM r_gifts g JOIN users u ON u.uid=g.uid WHERE often=1 AND activated=0');
-	while ($row = $q->fetchAssoc()) {
-		extract($row);
-		$a = a($uid);
-		$a->stepDone('donate', FALSE); // force re-donate (regular or not at all)
-	}
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $a = a($uid);
+    $a->stepDone('donate', FALSE); // force re-donate (regular or not at all)
+  }
 . find r_recurs dups and delete the oldest
   SELECT * FROM r_recurs r WHERE (SELECT COUNT(id) FROM r_recurs r2 WHERE r2.payer=r.payer)>1 ORDER BY id
 . find givers in r_gifts w no actual non-roundup non-crumb donation, with hasBank and no refill. Warn them about impending bank withdrawal to fund their chosen donation. Create an invoice for those with no regular donation or abandon them. Subject: IMPORTANT: your Common Good account
   $sql = 'SELECT g.uid,u.fullName,g.amount,g.often,g.honor,g.honored,g.giftDate FROM r_gifts g JOIN users u ON u.uid=g.uid LEFT JOIN r_txs t ON t.payer=u.uid AND t.payee=26742000000002 AND t.:IS_GIFT AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS WHERE t.xid IS NULL AND u.:HAS_BANK AND NOT u.:IS_REFILL AND NOT completed AND u.:IS_OK';
-	$q = db\q($sql); $s = '';
-	while ($row = $q->fetchAssoc()) {
-		extract($row);
-		$a = a($uid);
-		$created = u\fmtDate($giftDate);
-		$gift = u\fmtAmt($amt0 = $amount) . ($often == 'M' ? ' Monthly' : ($often == 'Q' ? ' Quarterly' : ($often == 'Y' ? ' Yearly' : '')));
-		if ($honored) $gift .= '[i] in ' . ($honor == 'memory' ? $honor : 'honor') . " of $honored [/i]";
-		$s .= "$fullName &lt;$a->email&gt;: [p]Dear $fullName,[/p][p]Due to a glitch in our Common Good donation system, your chosen contribution of $gift was never transferred from your bank account. We have fixed that problem, but I wanted to give you a heads-up before the transfer request takes effect.[/p][p]If for any reason this completion of your intended donation is problematic this week, please just let us know before Friday 8/10.[/p][p]With many thanks again for your support,[br]William[/p][br]\r\n\r\n";
-		if ($often == '1') {
-			$info = ray('payer,payee,amount,period,created,lastTx,invoiced', $a->id, CGID, $amt0, $often, NOW, 0, 0);
+  $q = db\q($sql); $s = '';
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $a = a($uid);
+    $created = u\fmtDate($giftDate);
+    $gift = u\fmtAmt($amt0 = $amount) . ($often == 'M' ? ' Monthly' : ($often == 'Q' ? ' Quarterly' : ($often == 'Y' ? ' Yearly' : '')));
+    if ($honored) $gift .= '[i] in ' . ($honor == 'memory' ? $honor : 'honor') . " of $honored [/i]";
+    $s .= "$fullName &lt;$a->email&gt;: [p]Dear $fullName,[/p][p]Due to a glitch in our Common Good donation system, your chosen contribution of $gift was never transferred from your bank account. We have fixed that problem, but I wanted to give you a heads-up before the transfer request takes effect.[/p][p]If for any reason this completion of your intended donation is problematic this week, please just let us know before Friday 8/10.[/p][p]With many thanks again for your support,[br]William[/p][br]\r\n\r\n";
+    if ($often == '1') {
+      $info = ray('payer,payee,amount,period,created,lastTx,invoiced', $a->id, CGID, $amt0, $often, NOW, 0, 0);
 /**/      debug($fullName . ': ' . (r\acceptGift($info) ? 'accepted NOW' : 'later'));
-		}
-	}
-/**/	echo $s;
+    }
+  }
+/**/  echo $s;
 
 2018-08-03
 . fixed stats bug that undercounted members by omitting slaves in joint accounts (284 vs 275)
@@ -2174,14 +2185,14 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
 . added a yes/no question type in voting
 . fixed bug that prevented joins (trying to copy bankAccount to other account)
 . fixed cron bug that increased joint account credit lines every month. Fixed data with:
-	eachA(function ($a) {
-		$uid = $a->id;
-		$monthly = db\get("GREATEST(SUM(IF(payee=$uid, amount, 0)), SUM(IF(payer=$uid, amount, 0)))/6",  'r_txs');
-		$floorX = $a->o_floor;
-		$rewards = $a->o_rewards;
-		$floor = round(min(-$monthly, max(-.9 * .9 * $rewards, $floorX)), 2);
+  eachA(function ($a) {
+    $uid = $a->id;
+    $monthly = db\get("GREATEST(SUM(IF(payee=$uid, amount, 0)), SUM(IF(payer=$uid, amount, 0)))/6",  'r_txs');
+    $floorX = $a->o_floor;
+    $rewards = $a->o_rewards;
+    $floor = round(min(-$monthly, max(-.9 * .9 * $rewards, $floorX)), 2);
     $a->update(compact('floor'));
-	}, 'jid');
+  }, 'jid');
 
 
 2018-07-07 v3.40y
@@ -2427,83 +2438,83 @@ X;
 . eachR('r_usd', function ($row) {
     $pw2 = r\cryptCook('pw2');
     extract(just('txid bankAccount', $row));
-		if (u\oldcrypted($bankAccount)) $bankAccount = u\decryptM($bankAccount, 0, $pw2);
-		if (!u\starts($bankAccount, 'USkk')) return w\say('bad bank account(?) in txid ' . $txid . ": $bankAccount");
-		$bankAccount = u\cry('V', $bankAccount);
+    if (u\oldcrypted($bankAccount)) $bankAccount = u\decryptM($bankAccount, 0, $pw2);
+    if (!u\starts($bankAccount, 'USkk')) return w\say('bad bank account(?) in txid ' . $txid . ": $bankAccount");
+    $bankAccount = u\cry('V', $bankAccount);
     db\update('r_usd', compact(ray('txid bankAccount')), 'txid');
   }, 'bankAccount IS NOT NULL');
 . eachR('r_photos', function ($row) {
     extract(just('uid photo', $row));
-		if (u\oldcrypted($photo)) $photo = u\decryptM($photo);
-		if (!$photo) return w\say('bad photo uid ' . $uid);
-		$photo = u\cry('H', $photo);
+    if (u\oldcrypted($photo)) $photo = u\decryptM($photo);
+    if (!$photo) return w\say('bad photo uid ' . $uid);
+    $photo = u\cry('H', $photo);
     db\update('r_photos', compact(ray('uid photo')), 'uid');
   }, '1');
 . eachR('users', function ($row) {
     extract(just('uid fullName phone mail', $row));
-		foreach (ray('mail phone') as $k) {
-		  $k0 = $$k;
-		  $$k = u\decry('P', $$k);
-			if ($k0 and !$$k) return w\say("bad $k for member $uid $fullName: $k0/" . $$k);  
-			$$k = u\cry('P', $$k);
-	  }
-		db\update('users', compact(ray('mail phone uid')), 'uid');
-  }, '1');	
+    foreach (ray('mail phone') as $k) {
+      $k0 = $$k;
+      $$k = u\decry('P', $$k);
+      if ($k0 and !$$k) return w\say("bad $k for member $uid $fullName: $k0/" . $$k);  
+      $$k = u\cry('P', $$k);
+    }
+    db\update('users', compact(ray('mail phone uid')), 'uid');
+  }, '1');  
 . eachR('users', function ($row) { 
     $pw2 = r\cryptCook('pw2');
     extract(just('uid fullName changes', $row));
-		if (strlen($changes)) { // do this first
-		  if (u\oldcrypted($changes)) $changes = u\decryptM(u\decryptM($changes, 1), 0);
-			if (u\crypted('S', $changes)) $changes = u\decry('S', $changes);
-			$changes = unserialize($changes) ?: [];
-			if (!is_array($changes)) return w\say('bad changes in member ' . $fullName);
-			foreach ($changes as $dt => $ch) {
-				if (is_array($ch)) foreach ($ch as $k => $v) {
-				  if (!strlen($v)) continue;
-				  if (in_array($k, ray(R_VSECURE_FLDS))) {
-					  if (u\oldcrypted($v)) $v = u\decryptM($v, 0, $pw2);
-            if (u\crypted('V', $v)) $v = u\decry('V', $v)						;
-					  if (!$v or !ctype_print($v)) {
-						  w\say("bad change in member $fullName dt=$dt k=$k v=$v");
-							$v = '?';
-					  }
-						$ch[$k] = u\cry('V', $v);
-				  } elseif (in_array($k, ray(R_HIDE_CHANGES))) unset($ch[$k]);
-				}
-				if (!is_array($ch)) w\say('bad change array in member ' . $fullName . ': ' . $ch);
-				if (is_array($ch) and $ch) $changes[$dt] = $ch; else unset($changes[$dt]);
-			}
-			if ($changes) $changes = u\cry('S', serialize($changes)); else $changes = '';
-			db\update('users', compact('changes', 'uid'), 'uid');
-		}
+    if (strlen($changes)) { // do this first
+      if (u\oldcrypted($changes)) $changes = u\decryptM(u\decryptM($changes, 1), 0);
+      if (u\crypted('S', $changes)) $changes = u\decry('S', $changes);
+      $changes = unserialize($changes) ?: [];
+      if (!is_array($changes)) return w\say('bad changes in member ' . $fullName);
+      foreach ($changes as $dt => $ch) {
+        if (is_array($ch)) foreach ($ch as $k => $v) {
+          if (!strlen($v)) continue;
+          if (in_array($k, ray(R_VSECURE_FLDS))) {
+            if (u\oldcrypted($v)) $v = u\decryptM($v, 0, $pw2);
+            if (u\crypted('V', $v)) $v = u\decry('V', $v)            ;
+            if (!$v or !ctype_print($v)) {
+              w\say("bad change in member $fullName dt=$dt k=$k v=$v");
+              $v = '?';
+            }
+            $ch[$k] = u\cry('V', $v);
+          } elseif (in_array($k, ray(R_HIDE_CHANGES))) unset($ch[$k]);
+        }
+        if (!is_array($ch)) w\say('bad change array in member ' . $fullName . ': ' . $ch);
+        if (is_array($ch) and $ch) $changes[$dt] = $ch; else unset($changes[$dt]);
+      }
+      if ($changes) $changes = u\cry('S', serialize($changes)); else $changes = '';
+      db\update('users', compact('changes', 'uid'), 'uid');
+    }
   }, '1');
 . eachR('users', function ($row) {
     $pw2 = r\cryptCook('pw2');
     extract(just('uid fullName activated secure', $row));
-		if (strlen($secure)) {
-		  $secure = u\crypted('S', $secure) ? u\decry('S', $secure) : u\decryptM(u\decryptM($secure, 1), 0);
-			$vsecure = [];
-			if (!$secure = unserialize($s0 = $secure)) return w\say('bad secure serial in member ' . $fullName . ' was ' . $s0);
-			if (!is_array($secure)) return w\say('bad secure array in member ' . $fullName . ': ' . $secure);
+    if (strlen($secure)) {
+      $secure = u\crypted('S', $secure) ? u\decry('S', $secure) : u\decryptM(u\decryptM($secure, 1), 0);
+      $vsecure = [];
+      if (!$secure = unserialize($s0 = $secure)) return w\say('bad secure serial in member ' . $fullName . ' was ' . $s0);
+      if (!is_array($secure)) return w\say('bad secure array in member ' . $fullName . ': ' . $secure);
 
-			$v = $secure['ssnData'];
-			if (!is_array($v) and u\oldcrypted($v)) {
-			  if (!$v = u\decryptM($v, 0, $pw2)) return w\say('bad ssnData encryption in member ' . $fullName);
-			}
-			if ($v and !is_array($v)) $v = unserialize($v);
-			if ($v) $secure['ssnData'] = $v; else unset($secure['ssnData']);
+      $v = $secure['ssnData'];
+      if (!is_array($v) and u\oldcrypted($v)) {
+        if (!$v = u\decryptM($v, 0, $pw2)) return w\say('bad ssnData encryption in member ' . $fullName);
+      }
+      if ($v and !is_array($v)) $v = unserialize($v);
+      if ($v) $secure['ssnData'] = $v; else unset($secure['ssnData']);
 
-			foreach (ray(R_VSECURE_FLDS) as $k) {
-				if (strlen($v = u\decryptM($secure[$k], 0, $pw2))) {
-				  $vsecure[$k] = $activated ? u\cry('V', $v) : $v;
-					unset($secure[$k]);
-				}
-			}
-			$secure = u\cry('S', serialize($secure));
-			$vsecure = u\cry('S', serialize($vsecure));
-			db\update('users', compact(ray('secure vsecure uid')), 'uid');
+      foreach (ray(R_VSECURE_FLDS) as $k) {
+        if (strlen($v = u\decryptM($secure[$k], 0, $pw2))) {
+          $vsecure[$k] = $activated ? u\cry('V', $v) : $v;
+          unset($secure[$k]);
+        }
+      }
+      $secure = u\cry('S', serialize($secure));
+      $vsecure = u\cry('S', serialize($vsecure));
+      db\update('users', compact(ray('secure vsecure uid')), 'uid');
     }
-  }, '1');	
+  }, '1');  
 . renamed photos to accommodate recropping
   $s = file_get_contents(DRUPAL_ROOT . '/photos/photos.txt');
 
@@ -2948,7 +2959,7 @@ function special2() {
 . implemented roundup feature (donation of fractional dollars on all payments)
 . "sharing" donations are now only in advanced settings (not asked about during signup)
 . created flags field in r_txs (rather elegantly) and moved the taking field there (along with a roundup flag)
-. ALTER TABLE r_txs	CHANGE taking flags bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'boolean permissions and state flags'
+. ALTER TABLE r_txs  CHANGE taking flags bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT 'boolean permissions and state flags'
 . ALTER TABLE r_log DROP COLUMN special
 . removed the give-back-rewards feature
 . changed 1099B function to NOT include rewards
@@ -3281,12 +3292,12 @@ function special2() {
 . stop consolidating incoming transfer checks for completed transfers
 . lack of photoID verification now just alerts admin (tx always goes through)
 . tasks
-	DROP TABLE r_regions and re-import
-	f('a.setupBasicAccounts');
-	test change password
-	test photo upload and re-upload
-	test (in WS) displaying foreign rCard (eg NY or VT)
-	test (in WS) admin signin auto-encryption of bank accounts
+  DROP TABLE r_regions and re-import
+  f('a.setupBasicAccounts');
+  test change password
+  test photo upload and re-upload
+  test (in WS) displaying foreign rCard (eg NY or VT)
+  test (in WS) admin signin auto-encryption of bank accounts
 . fixed: clicking on 1st or 4th graph gives warning: "Warning: hex2bin(): Hexadecimal input string must have an even length in CG\Util\deurlify() (line 354 of .../rcredits-util.inc)."  
 . on promo site: signup include "organizer" bit: "I want to help bring rCredits to my community. I will tell some friends and local business people about it and will meet locally with other interested people to plan. (You will receive an email every time someone else in your 3-digit zipcode area checks this box &mdash; until your community has selected a contact person.)
 . integrated boostrap theme from promo site
@@ -3499,39 +3510,39 @@ function special2() {
 . expired invites no longer count as dups
 . limit Fibonacci to 8 (just keep repeating every 8 days thereafter)
 . data tasks:
-	0. Backup NEW db and copy it to WS
-	1. Do all of the below on WS
-	. DROP TABLE r_banks
-	. upload r_banks and r_transit
-	. upload software
-	. reinstall: /devel/reinstall?destination=sadmin/handy
-	. ALTER TABLE users DROP column question, DROP column maximum;
-	  ALTER TABLE r_txs DROP column usdXid, DROP column r, DROP column completed;
-	  DROP TABLE r_ach;
-	  UPDATE users SET share=50 WHERE share>50;
-	. copy new fonts to TCPDF folder
-	. include_once __DIR__ . '/../rcredits/admin/admin.inc';
-	  f('a.eachAcct', function($a) {$a->setRisk('hasBank', (bool) $a->bankAccount); $a->setBit(1, FALSE); $a->setBit(4, FALSE); $a->setBit(8, FALSE);});
-	  a(-26742000000001)->setBit(1, FALSE);
-	  a(-25026000000001)->setBit(1, FALSE);
-	. make sure Dan's account can request a bank transfer
-	. make sure Admin users list shows no unused bits 
-	. make note of who has how much USD (11 rows):
-	  Sheila 20, scottR 40z, matthewG 10 (write this one off), CGF 8.52z, GFM 7.91z, heatherG 10z, leighR 60z, snows 6.75z, pint 6.40z, upinngil 9.85z, rWM 40,894.78
-	. make note of who has pending bank transfers, for how much (and keep track of them as they come in over the next few days) (11 rows): betsy 70xz, fred 120xz, jeffC 30xz / nancyHaz 40xz, tamaraMcK 10xz, ellenK 70xz, andyG 50xz, johnWaite 100xz / peter 190xz, mona 110xz, realpick 601.12xz
-	. a('abr')->update('bankAccount', ''); a('abr')->setRisk('hasBank', FALSE); // zap Stephen Cobb's locked account
-	. UPDATE users SET r=r+usd WHERE usd IS NOT NULL (11 rows)
-	. DELETE FROM r_usd WHERE amount<0 and NOT completed AND txid<6030837 (5 rows)
-	. UPDATE r_usd SET completed=NOW() WHERE amount<0 AND payee=0 AND completed=0 (11 rows)(oops NOW() becomes 2014)
-	. UPDATE r_usd SET deposit=1 WHERE amount<0 AND payee=0 AND completed>0 (686 rows)
-	2. Backup NEW rcredits module (in case we need to undo the update)
-	3. connect CGF's rCredits escrow account (in Dwolla)
-	4. Do #1 on NEW (except Dwolla stuff)
-		a. alert people who need to reconnect their bank account
-		b. alert people who were unable to have a connected bank account that they can now, if they want: Emi, Helen, Carol Letson, Marilyn Andrews, Ed Smith
-		c. alert people who are OK and hasBank but not old bank bit(not verified) that funds can be transferred to and from their account (and will be if they are below their minimum): Keegan Rodgers, Just Abundance, Inc., Delta Carney, Preston M. Browning, Jr., Kristie Faufaw, Christopher B Rawlings, Amylia Jackson, Henrietta M. Startup, Peter Garbus, Jennifer Ladd, Will Savitri, Just Soap, Richard G. Kelly, Daphne Bye, Clare Higgins, Artisan Beverage Cooperative
-		d. on WS:  include_once __DIR__ . '/../rcredits/admin/admin.inc'; f('a.makeTestCards');
-	
+  0. Backup NEW db and copy it to WS
+  1. Do all of the below on WS
+  . DROP TABLE r_banks
+  . upload r_banks and r_transit
+  . upload software
+  . reinstall: /devel/reinstall?destination=sadmin/handy
+  . ALTER TABLE users DROP column question, DROP column maximum;
+    ALTER TABLE r_txs DROP column usdXid, DROP column r, DROP column completed;
+    DROP TABLE r_ach;
+    UPDATE users SET share=50 WHERE share>50;
+  . copy new fonts to TCPDF folder
+  . include_once __DIR__ . '/../rcredits/admin/admin.inc';
+    f('a.eachAcct', function($a) {$a->setRisk('hasBank', (bool) $a->bankAccount); $a->setBit(1, FALSE); $a->setBit(4, FALSE); $a->setBit(8, FALSE);});
+    a(-26742000000001)->setBit(1, FALSE);
+    a(-25026000000001)->setBit(1, FALSE);
+  . make sure Dan's account can request a bank transfer
+  . make sure Admin users list shows no unused bits 
+  . make note of who has how much USD (11 rows):
+    Sheila 20, scottR 40z, matthewG 10 (write this one off), CGF 8.52z, GFM 7.91z, heatherG 10z, leighR 60z, snows 6.75z, pint 6.40z, upinngil 9.85z, rWM 40,894.78
+  . make note of who has pending bank transfers, for how much (and keep track of them as they come in over the next few days) (11 rows): betsy 70xz, fred 120xz, jeffC 30xz / nancyHaz 40xz, tamaraMcK 10xz, ellenK 70xz, andyG 50xz, johnWaite 100xz / peter 190xz, mona 110xz, realpick 601.12xz
+  . a('abr')->update('bankAccount', ''); a('abr')->setRisk('hasBank', FALSE); // zap Stephen Cobb's locked account
+  . UPDATE users SET r=r+usd WHERE usd IS NOT NULL (11 rows)
+  . DELETE FROM r_usd WHERE amount<0 and NOT completed AND txid<6030837 (5 rows)
+  . UPDATE r_usd SET completed=NOW() WHERE amount<0 AND payee=0 AND completed=0 (11 rows)(oops NOW() becomes 2014)
+  . UPDATE r_usd SET deposit=1 WHERE amount<0 AND payee=0 AND completed>0 (686 rows)
+  2. Backup NEW rcredits module (in case we need to undo the update)
+  3. connect CGF's rCredits escrow account (in Dwolla)
+  4. Do #1 on NEW (except Dwolla stuff)
+    a. alert people who need to reconnect their bank account
+    b. alert people who were unable to have a connected bank account that they can now, if they want: Emi, Helen, Carol Letson, Marilyn Andrews, Ed Smith
+    c. alert people who are OK and hasBank but not old bank bit(not verified) that funds can be transferred to and from their account (and will be if they are below their minimum): Keegan Rodgers, Just Abundance, Inc., Delta Carney, Preston M. Browning, Jr., Kristie Faufaw, Christopher B Rawlings, Amylia Jackson, Henrietta M. Startup, Peter Garbus, Jennifer Ladd, Will Savitri, Just Soap, Richard G. Kelly, Daphne Bye, Clare Higgins, Artisan Beverage Cooperative
+    d. on WS:  include_once __DIR__ . '/../rcredits/admin/admin.inc'; f('a.makeTestCards');
+  
 2014-10-21 (rWeb tests do not pass -- not usable yet)
 . hidable advanced settings for Txs
 . cron now calculates the right values for trust (was giving some negative values).
@@ -3737,10 +3748,10 @@ function special2() {
 . introduced cAdmin2 (community sub admin) permission, to allow assistant to see member list and modify account notes
 . changed "recurs Monthly" to "4th monthly" etc.
 . db changes:
-	new.rcredits.org/devel/menu/reset
-	ctty('aaa')->setBit(B_MEMBER);
-	ctty('aaa')->setBit(B_OK);
-	ctty('miw.aaa')->setBit(B_OK);
+  new.rcredits.org/devel/menu/reset
+  ctty('aaa')->setBit(B_MEMBER);
+  ctty('aaa')->setBit(B_OK);
+  ctty('miw.aaa')->setBit(B_OK);
 
 2014-02-25
 . eliminated preemptive "dupOk" field in signup.
@@ -3785,18 +3796,18 @@ function special2() {
 
 2014-02-12
 . fix data (already done on production server):
-	DELETE FROM r_txs WHERE xid IN (76,77,78);
-	
-	UPDATE r_txs t0 LEFT JOIN r_txs t1 ON t1.xid=t0.serial
-	  SET t0.payerTid=t1.payerTid, t0.type=1, t0.serial=t0.xid,
-	  t0.payerFor='payment exchange rebate', t0.payeeFor='payment exchange rebate'
-	  WHERE t0.type=-1 AND t1.payerFor='payment exchange' AND t1.amount=0;
-	  
-	UPDATE r_txs t0 LEFT JOIN r_txs t1 ON t1.xid=t0.serial
-	  SET t0.payeeTid=t1.payeeTid, t0.type=1, t0.serial=t0.xid,
-	  t0.payerFor='payment exchange bonus', t0.payeeFor='payment exchange bonus' 
-	  WHERE t0.type=-2 AND t1.payeeFor='payment exchange' AND t1.amount=0;
-	  
+  DELETE FROM r_txs WHERE xid IN (76,77,78);
+  
+  UPDATE r_txs t0 LEFT JOIN r_txs t1 ON t1.xid=t0.serial
+    SET t0.payerTid=t1.payerTid, t0.type=1, t0.serial=t0.xid,
+    t0.payerFor='payment exchange rebate', t0.payeeFor='payment exchange rebate'
+    WHERE t0.type=-1 AND t1.payerFor='payment exchange' AND t1.amount=0;
+    
+  UPDATE r_txs t0 LEFT JOIN r_txs t1 ON t1.xid=t0.serial
+    SET t0.payeeTid=t1.payeeTid, t0.type=1, t0.serial=t0.xid,
+    t0.payerFor='payment exchange bonus', t0.payeeFor='payment exchange bonus' 
+    WHERE t0.type=-2 AND t1.payeeFor='payment exchange' AND t1.amount=0;
+    
     DELETE FROM r_txs WHERE amount=0
 . fixed bug in cacheTotals that did not recognize when an account was BONA
 . fixed new bug in transaction logic that treated unconfirmed web/SMS transactions as confirmed (resulting in a duplicate transaction)
@@ -3926,10 +3937,10 @@ function special2() {
 . changed card code len to 14 (to avoid occasional complex QRs)
 . fixed bug whereby Community page mistakenly showed rCredits as issued, that the community exchanged for USD
 . non-code changes:
-	- fixed dobs if not numeric (run eachAcct)
-	- fixed data[verifyBy] to be if ('') SMS or (if 1 or not set) Voice (run eachAcct)
-	- changed all @rcredits-org.com email addresses to @rc4.me (see util in admin.inc)
-	- changed William's cardCode2 and printed him a new Company Agent card
+  - fixed dobs if not numeric (run eachAcct)
+  - fixed data[verifyBy] to be if ('') SMS or (if 1 or not set) Voice (run eachAcct)
+  - changed all @rcredits-org.com email addresses to @rc4.me (see util in admin.inc)
+  - changed William's cardCode2 and printed him a new Company Agent card
 
 2013-11-25
 . restored addPhone(), accidentally deleted during separation of rweb-subs.inc from rweb.inc

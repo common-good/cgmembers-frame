@@ -79,11 +79,13 @@ function fixData(&$info, $direct = FALSE) {
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
+    if (strhas($v, '@')) {
+      $info[$k] = t\fixEmail($v); // sometimes an email identifies an account ($$k not $v)
+    } elseif (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
       $fields .= ' ' . $k;
       $$k = t\uid($v);
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
-    } elseif (strhas($v, '@')) $info[$k] = t\fixEmail($$k); // sometimes an email identifies an account ($$k not $v)
+    }
   }
   foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
@@ -116,7 +118,7 @@ function fixFlags($flags) {
  */
 function fixEmail(&$email) {
   if (substr(nn($email), -1, 1) == '@') $email .= EMAILX;
-  return plain($email);
+  return $email = plain($email);
 }
 
 function doRecords($list, $thing) {
@@ -1400,7 +1402,6 @@ function clear($ch = 0) {
   /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
-  global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
   global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr;
   global $sms_devel; $sms_devel = TRUE;
@@ -1662,9 +1663,11 @@ function weMessage($index, $id, $subs) {
     extract($one, EXTR_PREFIX_ALL, 't');
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
-      foreach ($subs as $k => $v) if ($v != '?' and nn($t_subs[$k]) != $v) {
-        t\output("Wanted $k=\"$v\". Got " . nn($t_subs[$k]));
-        $matching = FALSE; break;
+      foreach ($subs as $k => $want) if ($want != '?') {
+        $got = nni($t_subs, $k);
+        if (in($k, R_DATE_FLDS) ? !sameTime($want, $got) : !eq($want, $got))  {
+          $matching = FALSE; break;
+        }
       }
       if ($matching and !preg_match('/[@\{]/', nn($t_topic))) return TRUE;
     }

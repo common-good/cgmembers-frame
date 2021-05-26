@@ -227,7 +227,7 @@ function handleInput($input, &$sfData = []) {
   if ($err = u\badZip($m_zip)) return partnerErr($err, 'm_zip');
   if (!emailOkay($email, TRUE, NULL, TRUE)) return partnerErr('', 'email');
   if ($err = u\badPhone($phone)) return partnerErr($err, 'phone');
-  if (u\poAddress($m_address)) return partnerErr('po in location', 'm_address');
+// NO! (makes solar1 fail)  if (u\poAddress($m_address)) return partnerErr('po in location', 'm_address');
   if ($err = u\badAmount($years, '>=0')) return partnerErr(tr($err) . ' ' . t('The number of years you have been at that address must be a number.'), 'years');
   if (test() and is_numeric($state)) $state = r\realState($state);
   foreach (ray('state m_state') as $k) if (!${$k . 'Id'} = r\stateNum($$k)) return partnerErr('bad state', $k);
@@ -356,7 +356,6 @@ function gotSolarOne($info) {
   if ($err = u\badZip($zip)) return solarOneErr($err, 'zip');
   if (!emailOkay($email, TRUE, NULL, TRUE)) return solarOneErr('', 'email');
   if ($err = u\badPhone($phone)) return solarOneErr($err, 'phone');
-  if (u\poAddress($address)) return solarOneErr('po in location', 'address');
   if (isset($years) and $err = u\badAmount($years, '>=0')) return solarOneErr(tr($err) . ' ' . t('The number of years you have been at that address must be a number.'), 'years');
   if (test() and is_numeric($state)) $state = r\realState($state);
   if (!$stateId = r\stateNum($state)) return solarOneErr('bad state', 'state');

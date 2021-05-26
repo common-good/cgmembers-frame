@@ -118,8 +118,8 @@ function cancelTx($way) {
   while ($xid = db\get('xid', 'r_usd', $where, $subs)) {
     $crit = compact('xid');
     db\del('r_usd', $crit);
-    say('transfer canceled', $crit);
-    r\tellAdmin("canceled bank transfer xid #$xid");
+    say('bank tx canceled', $crit);
+    r\tellAdmin("canceled bank transfer xid #$xid: $mya->fullName ($mya->mainQid)");
     $mya->tellInOut($way == 'in', t('bank tx canceled', $crit));
   }
 

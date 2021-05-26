@@ -28,13 +28,13 @@ Scenario: A brand new recurring payment can be completed
   | amount | when   | purpose | payee   |*
   |    $10 | weekly | pmt     | Bea Two |
   # and many other fields
-	And count "txs" is 2
-	And count "usd" is 0
-	And count "invoices" is 0
-	When cron runs "recurs"
-	Then count "txs" is 2
-	And count "usd" is 0
-	And count "invoices" is 0
+  And count "txs" is 2
+  And count "usd" is 0
+  And count "invoices" is 0
+  When cron runs "recurs"
+  Then count "txs" is 2
+  And count "usd" is 0
+  And count "invoices" is 0
 
 Scenario: A second recurring payment can be completed
   Given these "tx_templates":
@@ -85,26 +85,26 @@ Scenario: A recurring payment cannot be completed
   | id | start      | from | to   | amount | period | purpose |*
   |  8 | %yesterday | .ZZA | .ZZB |    200 | week   | pmt     |
   When cron runs "recurs"
-	Then invoices:
+  Then invoices:
   | nvid | created   | status       | amount | payer | payee | for  | flags  | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |	      8 |
-	And count "txs" is 1
-	And count "usd" is 0
-	And count "invoices" is 1
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |        8 |
+  And count "txs" is 1
+  And count "usd" is 0
+  And count "invoices" is 1
 
   When cron runs "invoices"
   Then these "usd":
   | txid | amount | payee | completed | deposit |*
   |    1 |    200 | .ZZA  |         0 |       0 |
-	Then count "txs" is 2
+  Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
-  And	invoices:
+  And  invoices:
   | nvid | created   | status       | amount | payer | payee | for  | flags          | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs,funding |	      8 |
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs,funding |        8 |
 
-	When cron runs "recurs"
-	Then count "txs" is 2
+  When cron runs "recurs"
+  Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
 
@@ -115,6 +115,6 @@ Scenario: A recurring payment invoice cannot be completed because member is unca
   |    1 | %today    | %TX_APPROVED |     50 | .ZZA | .ZZB | pmt | recurs |
   And member ".ZZA" has no photo ID recorded
   When cron runs "invoices"
-	Then count "txs" is 1
-	And count "invoices" is 1
+  Then count "txs" is 1
+  And count "invoices" is 1
 Resume
