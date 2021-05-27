@@ -12,7 +12,7 @@ const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credit
 const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 10000',
+  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 40000',
   'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999',
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)

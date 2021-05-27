@@ -124,16 +124,16 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | 5   | %today  |    500 | ctty | .ZZC | growth  |
   Then count "txs" is 2
 
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h"
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1n"
   Then transactions: 
   | xid | created | amount | payer | payee | purpose | taking |*
-  | 6   | %now-1h |   -100 | .ZZB | .ZZC | refund  |      1 |
+  | 6   | %now-1n |   -100 | .ZZB | .ZZC | refund  |      1 |
   And count "txs" is 3
 
   Given transactions: 
   | xid | created | amount | payer | payee | purpose |*
   | 7   | %today  |    300 | .ZZB | .ZZA | cash    |
-  When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h" force -1
+  When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1n" force -1
   Then we respond ok txid 8 created %now balance -300
   And with undo "6"
   And we notice "new refund" to member ".ZZB" with subs:

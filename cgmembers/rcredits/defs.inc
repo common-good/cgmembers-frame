@@ -157,7 +157,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
-const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
+const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
@@ -559,16 +559,16 @@ const FLOW_TO = 1;
 const FLOW_FROM = 2;
 const FLOW_BOTH = 3;
 
-// Transaction flags (for flags field in transaction records)
-const B_TAKING = 0; // payee initiated the transaction
-const B_DISPUTED = 1; // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
+// Transaction flags (for flags field in transaction and invoice records)
+const B_u0 = 0; //
+const B_u1 = 1; //
 const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
 const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
-const OLD_B_UNDONE = 4; // undone by another transaction -- signaled by existence of reversing transaction
-const OLD_B_UNDOES = 5; // undoes another transaction -- signaled by reversesXid not null
+const B_u5 = 4; // 
+const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
-const OLD_B_ROUNDUPS = 7; // monthly donation of rounded up cents -- no longer occurs
-// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
+const B_u7 = 7; // 
+const B_u8 = 8; // 
 const B_RECURS = 9; // recurring transaction
 const B_GIFT = 10; // grant or gift (of any type)
 const B_LOAN = 11; // community loan (UNUSED?)
@@ -580,7 +580,7 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'u0 u1 offline short u4 u5 crumbs u7 roundup recurs gift loan investment stake fine noask funding food partial button';
+const TX_FLAGS = 'u0 u1 offline short u4 u5 crumbs u7 u8 recurs gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_CANCELED = -9; // invoice canceled
@@ -612,6 +612,7 @@ const TX_BANK = 99; // used only internally, to mark bank transfers
 
 const TX_DEFAULT_PERIOD = 90; // number of days to show in transaction history, by default
 const TX_DEFAULT_INV_PERIOD = -2; // number of days to show in invoice history, by default (all of them)
+const REVERSE_WINDOW = 120; // seconds you're allowed in the app to reverse a refund or payment with only implicit agreement of the original payee
 
 const MIN_TX_ROWS = 3; // minimum number of transaction lines to show
 const NORMAL_TX_ROWS = 30; // normal number of transaction lines to show

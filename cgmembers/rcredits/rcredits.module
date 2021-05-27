@@ -78,7 +78,7 @@ function makeQueue($callback, $time = 15) {return array('worker callback' => "CG
  * Return the current time (or hypothetical current time for testing).
  */
 function now() {
-  global $tTime; // hypothetical time, if any, for running a test on development machine
+  global $tTime; // hypothetical time, if any (set in gherkin/test.php), for running a test on development machine
   return nn($tTime, time());
 }
 function today() {return strtotime('today', now());}

@@ -21,8 +21,8 @@ Scenario: A member company gives a customer credit
   | Credit:   |
   
   When member "C:B" confirms "co/accredit" with:
-  | customer | amount |*
-  | a@       |      3 |
+  | customer      | amount |*
+  | a@example.com |      3 |
   Then these "tx_rules":
   | id        | 1 |**
   | action    | %ACT_SURTX   |

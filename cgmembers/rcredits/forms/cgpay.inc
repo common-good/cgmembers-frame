@@ -16,7 +16,6 @@ include_once __DIR__ . '/signin.inc';
  
 function formCGPay($form, &$sta) {
   global $mya;
-
   $args = u\_GET() ?: $_POST;
 
   foreach ($args as $k => $v) if (!in($k, 'q code')) {
@@ -50,9 +49,9 @@ function formCGPay($form, &$sta) {
   }
 
   if ($mya and $mya->proSe) {
-    $name = $pass = NULL;
+    $qid = $pass = NULL;
   } else {
-    list ($name, $pass) = w\signinFlds($s_id); // keep the nn($a)? here in case we change the logic hereabout
+    list ($qid, $pass) = w\signinFlds($s_id);
   }
 
   $for0 = $for; // for errors
@@ -95,7 +94,7 @@ function formCGPay($form, &$sta) {
   $subtext = "<h4>$subtext</h4>";
   $submit = submit($verb, '', 'md', w\suffix(nn($option)));
 
-  $info = compact(ray('subtext amount amtDpy itemDpy item for name pass submit'));
+  $info = compact(ray('subtext amount amtDpy itemDpy item for qid pass submit'));
   foreach (ray(CGPAY_VARS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
 
   return cgform($info);
@@ -104,10 +103,9 @@ function formCGPay($form, &$sta) {
 function formCGPay_validate($form, &$sta) {
   global $mya;
 
-  extract(just('name amount for item', $input = $sta['input'], NULL));
+  extract(just('qid amount for item', $input = $sta['input'], NULL));
 
   if (isset($amount) and $err = u\badAmount($sta['input']['amount'], '>0')) return say($err, 'amount'); // fix amount
-  
   if (!$mya and !formSignin_validate($form, $sta)) return;
 
   if ($for and !in($for, [SELF_CREDIT, SELF_CREDIT50])) {

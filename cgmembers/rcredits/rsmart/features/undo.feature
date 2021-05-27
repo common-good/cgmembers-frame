@@ -79,10 +79,10 @@ Scenario: An agent asks to undo a charge when balance is secret
   | created | otherName  | amount | payerPurpose |*
   | %today  | Corner Pub | $80    | whatever     |
 
-Scenario: An agent asks to undo a refund
+Scenario: An agent asks to undo a refund soon enough
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose      | taking |*
-  | 4   | %today-1d |    -80 | .ZZA | .ZZC | refund       |      1 |
+  | xid | created | amount | payer | payee | purpose      | taking |*
+  | 4   | %now    |    -80 | .ZZA  | .ZZC  | refund       |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
   Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did        | otherName | amount | why   |*
@@ -90,13 +90,25 @@ Scenario: An agent asks to undo a refund
   And with did ""
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
-  | created | otherName  | amount | payerPurpose |*
-  | %today  | Corner Pub | $80    | refund       |
+  | otherName  | amount | payerPurpose |*
+  | Corner Pub | $80    | refund       |
+
+Scenario: An agent asks to undo a refund too late
+  Given transactions: 
+  | xid | created | amount | payer | payee | purpose      | taking |*
+  | 4   | %now-1h |    -80 | .ZZA  | .ZZC  | refund       |      1 |
+  When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
+  Then we respond with:
+  | ok | txid | created | balance | message                                     | did     | undo | creditLine |*
+  | 1  |      | %now    | 80      | You charged Abe One $80.%|balance unchanged | charged |      | 250        |
+  And we message "new invoice" to member ".ZZA" with subs:
+  | created | otherName  | amount | purpose |*
+  | %today  | Corner Pub | $80    | refund  |
 
 Scenario: An agent asks to undo a cash-out charge
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose  | goods      | taking |*
-  | 4   | %today-1d |     80 | .ZZA | .ZZC | cash out | %FOR_USD |      1 |
+  | xid | created | amount | payer | payee | purpose  | goods      | taking |*
+  | 4   | %now-1h |     80 | .ZZA | .ZZC | cash out | %FOR_USD |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
   Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did      | otherName | amount | why |*
@@ -109,8 +121,8 @@ Scenario: An agent asks to undo a cash-out charge
 
 Scenario: An agent asks to undo a cash-in payment
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose | goods      | taking |*
-  | 4   | %today-1d |    -80 | .ZZA | .ZZC | cash in | %FOR_USD |      1 |
+  | xid | created | amount | payer | payee | purpose | goods      | taking |*
+  | 4   | %now-1n |    -80 | .ZZA | .ZZC | cash in | %FOR_USD |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
   Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did        | otherName | amount | why |*
@@ -144,9 +156,9 @@ Scenario: An agent asks to undo a charge, with insufficient balance
 
 Scenario: An agent asks to undo a refund, with insufficient balance  
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose      | goods        | taking |*
-  | 4   | %today-1d |    -80 | .ZZA | .ZZC | refund       | %FOR_GOODS |      1 |
-  | 5   | %today    |    300 | .ZZA | .ZZB | cash out     | %FOR_USD   |      0 |
+  | xid | created | amount | payer | payee | purpose      | goods        | taking |*
+  | 4   | %now-1n |    -80 | .ZZA | .ZZC | refund       | %FOR_GOODS |      1 |
+  | 5   | %today  |    300 | .ZZA | .ZZB | cash out     | %FOR_USD   |      0 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
   Then we respond ok txid 6 created %now balance -300 saying:
   | solution | did        | otherName | amount | why   |*
@@ -180,8 +192,8 @@ Scenario: An agent asks to undo a charge, without permission
 
 Scenario: An agent asks to undo a refund, without permission
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose      | goods        | taking |*
-  | 4   | %today-1d |    -80 | .ZZB | .ZZC | refund       | %FOR_GOODS |      1 |
+  | xid | created | amount | payer | payee | purpose      | goods        | taking |*
+  | 4   | %now-1n |    -80 | .ZZB | .ZZC | refund       | %FOR_GOODS |      1 |
   When agent "C:D" asks device "devC" to undo transaction 4 code "ccB"
   Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did        | otherName | amount | why   |*
@@ -203,10 +215,10 @@ Scenario: A cashier reverses a transaction with insufficient funds
   Given transactions: 
   | xid | created   | amount | payer | payee | purpose |*
   | 4   | %today-1m |    100 | ctty | .ZZC | jnsaqwa |
-  And agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1h" force 0
+  And agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1n" force 0
   Then transaction headers: 
   | xid | created | actorId | actorAgentId |*
-  | 5   | %now-1h |    .ZZC |         .ZZB |
+  | 5   | %now-1n |    .ZZC |         .ZZB |
   And transaction entries:
   | xid | entryType | amount | uid  | agentUid | description |*
   |   5 | %E_PRIME  |    100 | .ZZA | .ZZA     | cash in     |
@@ -214,7 +226,7 @@ Scenario: A cashier reverses a transaction with insufficient funds
   Given transactions:
   | xid | created | amount | payer | payee | purpose |*
   | 6   | %today  |      1 | .ZZA | .ZZB | cash    |
-  When agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1h" force -1
+  When agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1n" force -1
   Then we respond ok txid 7 created %now balance -1
 #  And with proof of agent "C:B" amount -100.00 created "%now-1h" member ".ZZA" code "ccA"
   And with undo "5"

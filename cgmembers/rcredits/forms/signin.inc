@@ -58,7 +58,6 @@ function formSignin($form, &$sta, $arg = '') {
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('qid pass pw2 vKeyE trust', $sta['input'], NULL));
-
   if (isDEV and $qid == 'admin' and !a(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
     db\del('sessions', 'uid', '1');

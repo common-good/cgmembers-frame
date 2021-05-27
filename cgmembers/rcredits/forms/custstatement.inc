@@ -127,7 +127,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
     SELECT DISTINCT CONCAT('tx #', xid) AS tid,
       IF(uid1 IN (:aUids), -amt, amt) AS paid, $special, :E_PRIME AS type,
       '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
-      IF(reversesXid, CONCAT('($reverseText', reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS description
+      IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS description
     FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
     LEFT JOIN r_invoices i ON i.nvid=t.rel
     WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
@@ -135,28 +135,26 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
     UNION ALL
     SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, NULL AS nvid, NULL AS part, 'inv' AS type,
       IF (payee IN (:aUids), amount, -amount) AS invoiced,
-      inv.created AS created, :IS_DISPUTED AS disputed, inv.`purpose` AS description
+      inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
     FROM r_invoices inv
-    WHERE (
-      (payer IN (:aUids) AND payee IN (:bUids)) 
-        OR (payee IN (:aUids) AND payer IN (:bUids))
-       ) AND status>:TX_DENIED
+    WHERE ( (payer IN (:aUids) AND payee IN (:bUids)) OR (payee IN (:aUids) AND payer IN (:bUids)) )
+    AND status<>:TX_CANCELED
     ORDER BY created, paid<>0
 X;
 
-  $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
-  u\EXPECT($results, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
+  $q = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  u\EXPECT($q, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
 
-  $txs = [];  // an array of arrays of entries
-  $entries = [];
   $myBalance = 0.00; //balanceAsOf($aUids[0], $starting);
   $entries[] = ray('description balance invoiced paid created tid', t('Opening balance'), $myBalance, '', '', '', '');
-  foreach ($results as $result) {
-    $entry = (array)$result;
-    if (!empty($entry['paid'])) { $myBalance -= $entry['paid']; }
-    $entry['balance'] = $myBalance;
-    $entry['description'] = be\txDesc($entry);
-    $entries[] = $entry;
+  foreach ($q as $row) {
+    $row = (array) $row;
+    extract(just('paid disputed', $row));
+    $myBalance -= $paid ?: 0;
+    $row['balance'] = $myBalance;
+    if ($disputed) $disputed = '<font color="red">' . t('(DISPUTED) ') . '</font>';
+    $row['description'] = $disputed . be\txDesc($row);
+    $entries[] = $row;
   }
 
   return $entries;
