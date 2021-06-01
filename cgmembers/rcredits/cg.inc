@@ -622,12 +622,12 @@ function isEmployee($uid, $company = '') {
  * Return the community record ID for the given postal code.
  * @param string $zip: postal code to identify community (if none, assume something in server community)
  * @param bool $defaultZero: return 0 if zip does not match any community? (else return server uid)
- * @param string $field: field to return from users or r_company (normally uid)
+ * @param string $field: field to return from users or u_company (normally uid)
  */
 function communityId($zip = '', $defaultZero = FALSE, $field = 'uid') {
   if (!$zip) return serverUid();
   $where = 'country=:R_COUNTRY_ID AND :zip RLIKE zips AND uid<1';
-  return db\get($field, 'r_company JOIN users USING(uid)', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
+  return db\get($field, 'u_company JOIN users USING(uid)', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
 }
 
 /**
@@ -1443,18 +1443,6 @@ function xfee($for, $amount) {
   if (!r\usdin($for)) return '';
   if (mb_strpos($for, BY_CASH)) return 0;
   return '' . round(mb_strpos($for, BY_CARD) ? -R_XFEE_CARD * $amount : R_XFEE_CHECK, 2);
-}
-
-function disputeTx($xid, $reason = '') {
-  global $mya;
-  
-  if (empty($mya)) return FALSE;
-  if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
-
-  $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
-  u\EXPECT($result, "error inserting dispute record");
-
-  return TRUE;
 }
 
 /**

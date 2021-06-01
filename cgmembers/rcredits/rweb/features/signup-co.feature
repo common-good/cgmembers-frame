@@ -64,9 +64,7 @@ Scenario: A company signs up
   | selling   | fish         |
   | source    | thither      |
   | coType    | LLC          |
-  And company flags:
-  | uid  | coFlags     |*
-  | .AAA | sellcg      |
+#  | coFlags   | sellcg       |
   And relations:
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |
@@ -157,9 +155,7 @@ Scenario: A company supplies company information
   | website     | Rpub.com |
   | description | really good ale |
   | staleNudge  | 8 |
-  And company flags:
-  | uid  | coFlags     |*
-  | .ZZC | private,tip |
+  | coFlags     | private,tip,charge |
   And we show "Share When You Receive" with:
   | Crumbs |
   And we say "status": "info saved|step completed"

@@ -97,7 +97,7 @@ function weRespondWith($args) {
       }
     }
     if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
-    if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
+    if ($k == 'time' and t\sameTime($k, $v, $rposResult["time"])) continue; // %now time is approximate
     
     if ($v != $got) {
       $v = pr(@$v);
@@ -163,18 +163,18 @@ function memberWithPasswordSendsRequests($member, $password, $op, $requests) {
  *     TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
  *     TEST validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
  */
-function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $status, $num, $correctResponses) {
+function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $status, $num, $wants) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rAPIResult;
 
   extract($rAPIResult, EXTR_PREFIX_ALL, 't');
 
-  if (!t\eq($op, $t_op, 0)) return FALSE;
-  if (!t\eq($status, $t_status, 0)) {
+  if (!t\eq('op', $op, $t_op)) return FALSE;
+  if (!t\eq('status', $status, $t_status)) {
     if (nn($t_error)) t\output("Error was: " . pr($t_error));
     return FALSE;
   }
-  return t\jsonResponses($correctResponses, $t_responses);
+  return t\jsonResponses($wants, $t_responses);
 }
 
 /**
@@ -186,7 +186,7 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
   global $testOnly;
   global $rAPIResult;
 
-  foreach (ray('op status error') as $k) if (!t\eq($$k, $rAPIResult[$k], 0)) return FALSE;
+  foreach (ray('op status error') as $k) if (!t\eq($k, $$k, $rAPIResult[$k])) return FALSE;
   return TRUE;
 }
 

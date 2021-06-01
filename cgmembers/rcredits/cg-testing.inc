@@ -34,13 +34,13 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  */
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
-
-  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType code'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code'; // first key is probably an ID field, so keep it at the front
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
+  
   extract(just($fields, $info));
   
   if (nn($code) == 'TESTCODE') $code = $testCode;
@@ -50,6 +50,15 @@ function fixData(&$info, $direct = FALSE) {
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
+  }
+  if (isset($coFlags)) {
+    $res = 0;
+    foreach (ray($coFlags) as $one) {
+      $flag = u\bit(u\consta('co', $one));
+      if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS; // this probably fails (see rsmart.steps instead)
+      $res |= $flag;
+    }
+    $coFlags = $res;
   }
 
   if (nn($who)) $who = t\fullQid($who);
@@ -79,11 +88,13 @@ function fixData(&$info, $direct = FALSE) {
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
+    if (strhas($v, '@')) {
+      $info[$k] = t\fixEmail($v); // sometimes an email identifies an account ($$k not $v)
+    } elseif (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
       $fields .= ' ' . $k;
       $$k = t\uid($v);
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
-    } elseif (strhas($v, '@')) $info[$k] = t\fixEmail($$k); // sometimes an email identifies an account ($$k not $v)
+    }
   }
   foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
@@ -116,7 +127,7 @@ function fixFlags($flags) {
  */
 function fixEmail(&$email) {
   if (substr(nn($email), -1, 1) == '@') $email .= EMAILX;
-  return plain($email);
+  return $email = plain($email);
 }
 
 function doRecords($list, $thing) {
@@ -246,7 +257,7 @@ function doAccounts($info = []) {
   $fixFields = $moneyFields . ' fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 uid jid helper flags risks last4bank';
 
   foreach (ray($fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
-  foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
+  foreach (ray('acctType cc cc2') as $one) unset($info[$one]); // these are not real fields
 
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
   if (nn($picture) and !makePicture($picture, $a)) return FALSE;
@@ -424,18 +435,15 @@ function doSelling($info) {
 /**
  * List what flags the company has set
  */
-function doCompanyFlags($info) {
+function doCompanyFlags(&$info) {
   global $testOnly;
 
   extract(just('uid coFlags', $info));
   if (!$a = r\acct(t\uid($uid))) return t\output("Not an account: $uid");
-  $res = 0;
-  foreach (ray($coFlags) as $one) {
-    $flag = u\bit(u\consta('co', $one));
-    if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS; // this probably fails (see rsmart.steps instead)
-    $res |= $flag;
-  }
-  return $a->update('coFlags', $res);
+
+  if ($testOnly) {
+    return eq('coFlags', $a->coFlags, $coFlags);
+  } else return $a->update('coFlags', $coFlags);
 }
 
 /*
@@ -520,13 +528,14 @@ function notice($notice, $id, $subs = []) {
 function count($what, $count) {
 	global $testOnly;
   if (!$testOnly) return FALSE;
+  $desc = $what . t(' count');
 
   switch ($what) {
-    case 'accounts': return eq($count, db\count('users'));
+    case 'accounts': return eq($desc, $count, db\count('users'));
     case 'tx_hdrs': // fall through
-    case 'txs': return eq($count, db\count('tx_hdrs', 'xid > 0'));
-    case 'entries': return eq($count, db\count('tx_entries_all', 'xid > 0') / 2);
-    default: return eq($count, db\count('r_' . $what));
+    case 'txs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
+    case 'entries': return eq($desc, $count, db\count('tx_entries_all', 'xid > 0') / 2);
+    default: return eq($desc, $count, db\count('r_' . $what));
   }
 }
 
@@ -553,20 +562,23 @@ function doneStep($id, $step) {
  */
 function doMembersHave($info) {
   global $testOnly;
-  $balFields = just(T_BALANCE_FLDS, $info);
-  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;
 
+//  $balFields = just(T_BALANCE_FLDS, $info);
+//  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;
+
+  if (isset($info['coFlags']) and !doCompanyFlags($info)) return FALSE;
   $a = r\acct($id = t\uid($info['uid']));
-  $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
+
+//  $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
   if (isset($info['risks'])) $info['risks'] = getRisks($info['risks'], K_ACCT_RISKS);
-  fixData($info, TRUE);
+
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
-      if (in($k, R_DATE_FLDS) and sameTime($a->o($k), $v)) continue;
+      if (in($k, R_DATE_FLDS) and sameTime($k, $a->o($k), $v)) continue;
       if (t\badEq("db $k", $v, $a->o($k), $id, flagList($k))) return FALSE;
     }
     return TRUE;
-  } else return ($info ? $a->update1($info) : TRUE); // handle no fields other than balFields
+  } else return ($info ? $a->update1($info) : TRUE);
 }
 
 /**
@@ -747,8 +759,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
       $v1 = nni($info, $k, NULL);
-      if (!t\eq($v1, $v2 = $a->o($k) + 0)) {
-        output("$uid Calculated $k different from cache: $v1 <> $v2");
+      if (!t\eq("calculated $k vs cache", $v1, $a->o($k) + 0)) {
         if (!$ignoreCalc) return FALSE;
       }
     }
@@ -1330,24 +1341,24 @@ function strip($form) {
 
 /**
  * Compare two values and complain if they aren't close to equal.
- * eq($a, $b) for strings
- * eq($a, $b, $offBy) for numbers
- * eq($a, $b, $arrayIdentifier) for arrays
  * @return <the values are equal>
  */
-function eq($a, $b, $offBy = .0001) {
-  if ($a == '?') return TRUE;
-  $result = (is_numeric($a) and is_numeric($b)) ?
-    (abs($a - $b) < $offBy)
-    : ($a == $b or (empty($a) and empty($b)));
-/// if (!$result) echo 'not equal: ' . pr(compact('a','b'));
-  if (!$result) {
-    if (is_array($a)) {
-      output("unequal arrays ($offBy):<br>" . pr($a) . pr($b));
-    } else {output("wanted: $a, got: $b", 'error');}
-  }
-  return $result;
+function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
+  $want = str_replace('\\n', "\n", $want);
+  if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
+  if ($want == '?') return TRUE;
+  $match = (is_numeric($want) and is_numeric($got)) ?
+    (abs($want - $got) <= $offBy)
+    : ($want == $got or (empty($want) and empty($got)));
+    
+  if ($match) return TRUE;
+
+  if (is_array($want)) list ($want, $got) = [pr($want), pr($got)];
+
+  if ($id !== '') $id = "uid=$id ";
+  return t\output($id . t('%desc: wanted "%want" got "%got"', compact(ray('id desc want got'))));
 }
+function badEq($type, $want, $got, $id = '', $list = '') {return !eq($type, $want, $got, $id, $list);}
 
 /**
  * Fake $_SERVER params for testing
@@ -1400,7 +1411,6 @@ function clear($ch = 0) {
   /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
-  global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
   global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr;
   global $sms_devel; $sms_devel = TRUE;
@@ -1441,8 +1451,8 @@ function clear($ch = 0) {
              'r_changes',          // users
              'r_ratings',          // r_investments, users
              'r_shares',           // r_investments
-             'r_investments',      // users, or is that r_company?, club?
-             'r_company',          // users
+             'r_investments',      // users, or is that u_company?, club?
+             'u_company',          // users
              'r_do',               // users
              'r_pairs',            // r_options
              'r_options',          // r_questions
@@ -1526,18 +1536,6 @@ function getRisks($risks0, $descs) {
   $risks = 0;
   foreach (ray($risks0) as $bit) $risks |= u\bit($bits[$bit]);
   return $risks;
-}
-
-/**
- * Complain if the given value is not what was wanted.
- */
-function badEq($type, $want, $got, $id = '', $list = '') {
-  $want = str_replace('\\n', "\n", $want);
-  if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
-  if (t\eq($want, $got)) return FALSE;
-  if ($id !== '') $id = "uid=$id ";
-  t\output($id . t('%type: wanted "%want" got "%got"', compact(ray('id type want got'))));
-  return TRUE;
 }
 
 /**
@@ -1662,9 +1660,11 @@ function weMessage($index, $id, $subs) {
     extract($one, EXTR_PREFIX_ALL, 't');
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
-      foreach ($subs as $k => $v) if ($v != '?' and nn($t_subs[$k]) != $v) {
-        t\output("Wanted $k=\"$v\". Got " . nn($t_subs[$k]));
-        $matching = FALSE; break;
+      foreach ($subs as $k => $want) if ($want != '?') {
+        $got = nni($t_subs, $k);
+        if (in($k, R_DATE_FLDS) ? !sameTime($k, $want, $got) : !eq($k, $want, $got))  {
+          $matching = FALSE; break;
+        }
       }
       if ($matching and !preg_match('/[@\{]/', nn($t_topic))) return TRUE;
     }
@@ -1722,7 +1722,7 @@ function postCode($code) {
 
   foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {
     $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
-    if (t\sameTime($dt, $created)) $code['created'] = $dt; // wiggle room
+    if (t\sameTime('created', $dt, $created)) $code['created'] = $dt; // wiggle room
   }
   return u\cryRay($code, 8);
 }
@@ -1826,7 +1826,7 @@ function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
-function sameTime($a, $b) {return t\eq($a, $b, SAME_TIME);}
+function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
@@ -1845,26 +1845,22 @@ function hitAPI($op, $userId, $password, $requests) {
   return TRUE;
 }
 
-function jsonResponses($correctResponses, $actualResponses) {
+function jsonResponses($wants, $gots) {
   global $testOnly; if (! $testOnly) return FALSE;
-  foreach ($correctResponses as $correctResponse) {
-    fixData($correctResponse);
-    if (! oneJsonResponse($correctResponse, $actualResponses)) {
-      output("Correct response not found " . pr($correctResponse));
+  foreach ($wants as $want) {
+    fixData($want);
+    if (! oneJsonResponse($want, $gots)) {
+      output("Correct response not found " . pr($want));
       return FALSE;
     }
   }
   return TRUE;
 }
 
-function oneJsonResponse($correctResponse, $actualResponses) {
-  foreach ($actualResponses as $actualResponse) {
-    if (rayEq($correctResponse, $actualResponse)) {
-      return TRUE;
-    }
-  }
-  t\output("correct response '" . pr($correctResponse) .
-           "' is not present in actual responses: '" . pr($actualResponses));
+function oneJsonResponse($want, $gots) {
+  foreach ($gots as $got) if (rayEq($want, $got)) return TRUE;
+  t\output("correct response '" . pr($want) .
+           "' is not present in actual responses: '" . pr($gots));
   return FALSE;
 }
 
@@ -1875,7 +1871,7 @@ function rayEq($wantRay, $gotRay) {
     if ($v == '?') continue;
     if (! array_key_exists($k, $gotRay)) return t\output("$k missing from actual: " . pr($gotRay));
     $gotV = $gotRay[$k];
-    if (in($k, R_DATE_FLDS) and sameTime($gotV, $v)) continue;
+    if (in($k, R_DATE_FLDS) and sameTime($k, $gotV, $v)) continue;
     if (t\badEq("For $k", $v, $gotV, flagList($k))) return FALSE;
   }
   return TRUE;

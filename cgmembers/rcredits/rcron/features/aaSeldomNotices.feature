@@ -30,16 +30,16 @@ Scenario: It's time to warn about an upcoming annual donation to CG
   And these "tx_templates":
   | id | action | start       | from | to  | amount | period | purpose |*
   |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
-	And transactions:
+  And transactions:
   | xid | created     | amount | payer | payee | purpose | flags       | recursId |*
   |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift,recurs | 1        |
   When cron runs "annualGift"
-	Then we email "annual-gift" to member "d@example.com" with subs:
-	| amount | when    | atag | track |*
-	|     $1 | %mdY+7d |    ? |     ? |
-	And we email "annual-gift" to member "e@example.com" with subs:
-	| amount | when    | atag | track |*
-	|     $0 | %mdY+7d |    ? |     ? |
+  Then we email "annual-gift" to member "d@example.com" with subs:
+  | amount | when    | atag | track |*
+  |     $1 | %mdY+7d |    ? |     ? |
+  And we email "annual-gift" to member "e@example.com" with subs:
+  | amount | when    | atag | track |*
+  |     $0 | %mdY+7d |    ? |     ? |
 
 Scenario: It's time to renew backing
   Given members:
@@ -52,12 +52,12 @@ Scenario: It's time to renew backing
   | .ZZI | Ivy Nine | ok     |       9 | %yearAgo-1d | %NULL       |
   | .ZZJ | Joe Ten  | ok     |      10 | %yearAgo-1d | 4           |
   When cron runs "renewBacking"
-	Then we email "renew-backing" to member "d@example.com" with subs:
-	| amount | when    | atag | track |*
-	|     $4 | %mdY+7d |    ? |     ? |
-	And we email "renew-backing" to member "h@example.com" with subs:
-	| amount | when    | atag | track |*
-	|     $8 | %mdY+7d |    ? |     ? |
+  Then we email "renew-backing" to member "d@example.com" with subs:
+  | amount | when    | atag | track |*
+  |     $4 | %mdY+7d |    ? |     ? |
+  And we email "renew-backing" to member "h@example.com" with subs:
+  | amount | when    | atag | track |*
+  |     $8 | %mdY+7d |    ? |     ? |
   And we do not email "renew-backing" to member "e@example.com"
   And we do not email "renew-backing" to member "f@example.com"
   And we do not email "renew-backing" to member "g@example.com"

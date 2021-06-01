@@ -42,20 +42,21 @@ Scenario: A company looks at a customer statement
   || STATEMENT |
   And with:
 # NOTE: Description data must be in last position because that's the order it is generated in.
-# | Date    |        | Invoiced | Paid    |  Balance | Description     |
+# | Date    |        | Invoiced | Paid    |  Balance | Description        |
   | Date    |        | Description     | Invoiced | Credits  |  Balance |
   |         |        |          |         |     0.00 | Opening balance |
-  | %mdY-4m | tx #14 |          | -100.00 |   100.00 | that F          |
-  | %mdY-2m | inv #2 |   120.00 |         |   220.00 | this Q          |
-  | %mdY-1m | inv #3 |    80.00 |         |   300.00 | this CF         |
-  | %mdY-2w | tx #15 |          |   50.00 |   250.00 | cacao P         |
-  | %mdY-9d | tx #16 |          |  240.00 |    10.00 | what G          |
-  | %mdY-8d | tx #17 |          |  120.00 |  -110.00 | this Q          |
-  | %mdY-3d | tx #19 |          |   80.00 |  -190.00 | this CF         |
-  | %mdY-2d | inv #5 | 2,000.00 |         | 1,810.00 | realist         |
-  | %mdY-1d | tx #20 |          | -100.00 | 1,910.00 | pool CJ         |
+  | %mdY-4m | tx #14 |          | -100.00 |   100.00 | that F             |
+  | %mdY-2m | inv #2 |   120.00 |         |   220.00 | this Q             |
+  | %mdY-1m | inv #3 |    80.00 |         |   300.00 | this CF            |
+  | %mdY-2w | tx #15 |          |   50.00 |   250.00 | cacao P            |
+  | %mdY-9d | tx #16 |          |  240.00 |    10.00 | what G             |
+  | %mdY-8d | tx #17 |          |  120.00 |  -110.00 | this Q             |
+  | %mdY-5d | inv #4 |    90.00 |         |    20.00 | (DISPUTED) wrongly |
+  | %mdY-3d | tx #19 |          |   80.00 |  -100.00 | this CF            |
+  | %mdY-2d | inv #5 | 2,000.00 |         | 1,900.00 | realist            |
+  | %mdY-1d | tx #20 |          | -100.00 | 2,000.00 | pool CJ            |
   And with:
-  || Account Balance: $1,910.00 |
+  || Account Balance: $2,000.00 |
 
 Scenario: A statement goes onto multiple pages
   Given these "txs":

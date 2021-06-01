@@ -348,7 +348,7 @@ function charge($args, $type = 'charge') {
   if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
   } else $description = urldecode($description);
-  if ($err = u\badAmount($amount, '')) return posErr($err); // allow negatives! (for refund)
+  if ($err = u\badAmount($amount, '', 2, MAX_AMOUNT)) return posErr($err); // allow negatives! (for refund)
 
   if (!$a = getMember($member, '', $err, FALSE)) { // proof is proof enough (no cardCode needed)
     return badTx($args, "Account $member", $err);
@@ -385,10 +385,16 @@ function charge($args, $type = 'charge') {
       } else {
         $z = be\undoTx($xid, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
         if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
-        $undo = $xid; // undo = xid of reversed tx
-        $txid = $z->subs['xid'];
-        $created = $z->subs['created0'];
-        $message = $z->msg;
+        if (nni($z->subs, 'nvid')) { // invoiced!
+          $message = tr($z->msg, $z->subs);
+          $undo = $txid = '';
+          $did = t('charged');
+        } else {
+          $message = $z->msg;
+          $undo = $xid; // undo = xid of reversed tx
+          $txid = nni($z->subs, 'xid');
+        }
+        $created = $z->subs['created'];
         r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
       }
     } else u\FAIL(t('force param must be 0, 1, or -1'));

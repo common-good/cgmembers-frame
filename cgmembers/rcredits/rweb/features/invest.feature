@@ -106,8 +106,8 @@ Scenario: The club adds a proposed investment
   # and a lot more fields
   
   When member "I:B" completes form "invest/propose" with values:
-  | company | investment |equity |offering |price |return | terms | assets   | character |strength |web |history |soundness |*
-  | c@      | improve it |     1 | $10,000 |   10 |   4.6 | Terms | $951,000 | trusty    |      75 | 60 |     80 |       90 |
+  | company       | investment |equity |offering |price |return | terms | assets   | character |strength |web |history |soundness |*
+  | c@example.com | improve it |     1 | $10,000 |   10 |   4.6 | Terms | $951,000 | trusty    |      75 | 60 |     80 |       90 |
   Then we say "status": "investment proposal saved"
   And these "investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*

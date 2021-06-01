@@ -651,7 +651,7 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
   } else $cttyCrit = 0;
     
   $visible = $zipIrrelevant ? 1 
-  : ($admin ? '(SELECT 1 FROM r_company WHERE :zip RLIKE zips AND uid<1 LIMIT 1)' : 0);
+  : ($admin ? '(SELECT 1 FROM u_company WHERE :zip RLIKE zips AND uid<1 LIMIT 1)' : 0);
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
   if (!$all) $visible .= ' AND pid<>:myPid';
   list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];

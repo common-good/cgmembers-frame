@@ -44,7 +44,7 @@ function formStepUp($form, &$sta, $args = '') {
       
     ) x 
     LEFT JOIN users u ON u.uid=x.to
-    LEFT JOIN r_company c USING(uid)
+    LEFT JOIN u_company c USING(uid)
     WHERE (mine AND NOT xly)
       OR (u.:IS_CO AND c.coType=:CO_NONPROFIT AND (c.coFlags & (1<<:CO_PRIVATE))=0 AND (
         IF($noGeo, LEFT(u.zip,3) = LEFT(:zip,3), $distance < :NEIGHBOR_MAX * 2) OR u.uid IN (:globalOrgs)
