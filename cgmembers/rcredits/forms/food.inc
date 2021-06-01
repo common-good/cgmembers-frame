@@ -89,7 +89,6 @@ X
     $food = numFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
     $or = item(t('AND / OR'));
       
-//    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
     $amtChoice = selectFld(t('Donation:'), '', dft($amtChoice0), $giftLevels);
     $amount = numFld(t('Donation:'), [t('Amount')], dft($amount0));
     $period = selectFld(t('How often:'), '', dft($period0), $oftens);

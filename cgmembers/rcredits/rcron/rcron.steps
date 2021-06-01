@@ -590,7 +590,7 @@ function riskThresholds($ray) {
   $ray = u\prefixKeys('big', $ray[0]);
   if ($testOnly) {
     $thresholds = getv('riskThresholds', []);
-    return t\eq($ray, $thresholds, t('risk thresholds'));
+    return t\eq(t('risk thresholds'), $ray, $thresholds);
   } else {
     setv('riskThresholds', $ray);
     return TRUE;

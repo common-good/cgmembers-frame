@@ -129,7 +129,7 @@ Scenario: Device gives too big an amount
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $10,000,000 for "cash": "cash out" at %now
   Then we return error "amount too big" with subs:
   | max           |*
-  | %R_MAX_AMOUNT |
+  | %MAX_AMOUNT |
 
 Scenario: Device gives no purpose for goods and services
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "" at %now

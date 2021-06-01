@@ -25,7 +25,6 @@ function formInvestInterest($form, &$sta, $args = '') {
   if ($mya) {
     $fullName = $phone = $email = $zip = $country = $source = NULL;
   } else {
-    $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
     $source = sourceFld();
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
     $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here

@@ -98,6 +98,7 @@ function menu($submenu = '') {
     'co/relations' => ['sub', t('Authorized Users'), 'Relations 2', 'manage -depends', '', t(), 'magnet'],
     'co/reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
     'co/settings' => ['sub', t('Company Settings'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
+    'co/sponsor' => ['call', t('Fiscal Sponsorship'), 'Sponsor', ANY],
     
     'settings' => ['norm', t('Settings'), 'Settings', 'manage -closed -depends'],
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],

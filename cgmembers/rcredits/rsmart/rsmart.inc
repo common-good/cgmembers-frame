@@ -348,7 +348,7 @@ function charge($args, $type = 'charge') {
   if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
   } else $description = urldecode($description);
-  if ($err = u\badAmount($amount, '')) return posErr($err); // allow negatives! (for refund)
+  if ($err = u\badAmount($amount, '', 2, MAX_AMOUNT)) return posErr($err); // allow negatives! (for refund)
 
   if (!$a = getMember($member, '', $err, FALSE)) { // proof is proof enough (no cardCode needed)
     return badTx($args, "Account $member", $err);
