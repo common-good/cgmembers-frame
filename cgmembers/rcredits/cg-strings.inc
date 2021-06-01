@@ -293,7 +293,7 @@ EOF
   'your credit canceled' => t('Your %amount credit at %co has been canceled.'),
   'customer credit canceled' => t('%customer\'s credit of (originally) %amount has been canceled.'),
   'got application' => t('<p>Your application has been received! A %PROJECT staff member will contact you soon, to follow up.</p>'),
-  'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="https://%PROMO_URL" target="_blank">check it out</a>!</p>'),
+  'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
   
   // error messages
   'button expired' => t('That button has expired.'),
