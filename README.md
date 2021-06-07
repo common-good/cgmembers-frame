@@ -12,16 +12,16 @@ Installation
 
 ### Prerequisites
 
-1. Install Apache, MySQL 8+ or MariaDB 10.2+, and PHP 7+ with openssl and imagemagick modules.
-   1. Note for Mac users: As of July 2020, MAMP does not support MySQL 8, so it is recommended to use [Homebrew](https://brew.sh/) packages (otherwise migrations will not run). 
+1. Install Nginx or Apache, MariaDB 10.2+ or MySQL 8+, and PHP 7+ with openssl and imagick modules.
+   1. Mac: As of May 2021, MAMP does not support MySQL 8, so it is recommended to use [Homebrew](https://brew.sh/) packages (otherwise migrations will not run). 
+   2. Windows: Download the [imagick module for PHP](https://pecl.php.net/package/imagick) and put it in the PHP extension (“ext”) folder.
 2. If you’re going to work on the biodiesel pump interface, install Perl.
-3. On Windows, download the [imagick module for PHP](https://pecl.php.net/package/imagick) and put it in the PHP extension (“ext”) folder.
 4. Install git and [git-flow](https://github.com/nvie/gitflow/wiki/Installation). 
 5. Clone the repository. 
 
 ### Database and config files
 
-1. Create an empty MySQL database (default name "cg").
+1. Create an empty database (default name "cg").
 2. Create a db user (default "root" with empty password). Grant the user all privileges to the database and SUPER privileges on the server. 
 3. Copy `config.json` and `phinx.json` from `cgmembers/rcredits/misc/config-models/` to `config/`.
 4. Edit `config.json` to match your environment. 
