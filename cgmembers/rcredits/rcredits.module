@@ -108,18 +108,18 @@ function btxid($bankTxId = '') {
 ///  debug(date('m/d/Y H:i:s a', $dt));
 }
 function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in r_usd and r_usd2)
-	list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
+  list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
   list ($txidLen, $acctLen) = isDEV ? [1, 4] : [7, 5];
   $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);
   return 0 + $res; // (intval fails here)
 }
 
 function a($id = '', $agent = '', $create = FALSE) { // return an account object
-	global $lastA;
+  global $lastA;
   if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
-	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
-	$lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
-	return $lastA;
+  if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
+  $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+  return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
 /**/ function da($idfield) {list ($id, $field) = ray($idfield); debug(a($id)->$field);}
@@ -215,10 +215,10 @@ function funcNickname($func) {
 function eachR($tnm, $func, $where = '1', $subs = []) {
   if (!is_callable($func)) $func = funcNickname($func);
   if (!$q = db\q("SELECT * FROM $tnm WHERE $where", $subs)) return w\say(t('Bad query'));
-	while ($row = $q->fetchAssoc()) $func($row);
-	w\say('Done');
+  while ($row = $q->fetchAssoc()) $func($row);
+  w\say('Done');
 }
-	
+  
 /**
  * Utility to do something to each member account (see example below)
  * call: eachA($func);

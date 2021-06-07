@@ -404,7 +404,7 @@ function callDetails($type = '', $when = '') {
 
   $subs = ray('id', $mya->id);
   $gifts = ($mya->giftsDesc() ?: $mya->totalGifts())
-	?: db\get('amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:id AND t.to=:CGID AND end IS NULL', $subs); // a promised gift counts here, if none yet
+  ?: db\get('amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:id AND t.to=:CGID AND end IS NULL', $subs); // a promised gift counts here, if none yet
         
   $welcome = t('<li><b>Welcome</b> to %PROJECT. Thanks for participating!</li>');
   if (!$mya->co and $myCo = $mya->firstCo()) {

@@ -12,7 +12,7 @@ Setup:
   | .ZZD | Dee Four        |  -250 | ok,confirmed,debt          | Dton | 01000 | %now    | 123456789 |
   | .ZZE | Eve Five        |  -250 | ok,confirmed,debt          | Eton | 01000 | %now    | 123456789 |
   | .ZZF | Fred Six        |  -250 | ok,confirmed,debt          | Fton | 01000 | %now    | 123456789 |
-	| .ZZI | Investment Club |     0 | ok,confirmed,co            | Iton | 01*   | %now    | 123456789 |
+  | .ZZI | Investment Club |     0 | ok,confirmed,co            | Iton | 01*   | %now    | 123456789 |
 
   And relations:
   | main | other | permission |*
@@ -30,7 +30,7 @@ Setup:
 
 Scenario: A member joins the investment club
   When member ".ZZA" visits page "invest"
-	Then we show "Join Your"
+  Then we show "Join Your"
 
   When member ".ZZA" completes form "invest" with values:
   | signedBy |*
@@ -38,9 +38,9 @@ Scenario: A member joins the investment club
   And member ".ZZA" visits page "invest"
   Then we show "Investment Club" with:
   | List Investments ||
-	| Club Value: | $0 ($0 liquid) |
-	| Your Share: | $0 (0.00%) |
-	| Invest: |  |
+  | Club Value: | $0 ($0 liquid) |
+  | Your Share: | $0 (0.00%) |
+  | Invest: |  |
   | Invest MORE ||
   And we say "status": "now a member"
   And these "stakes":
@@ -49,16 +49,16 @@ Scenario: A member joins the investment club
 
 Scenario: A member company joins the investment club
   When member "C:A" visits page "invest"
-	Then we show "Join Your"
+  Then we show "Join Your"
 
   When member "C:A" completes form "invest" with values:
   | signedBy |*
   | Abe One  |
   And member "C:A" visits page "invest"
   Then we show "Investment Club" with:
-	| Club Value | $0 ($0 liquid) |
-	| Your Share | $0 (0.00%) |
-	| Invest |  |
+  | Club Value | $0 ($0 liquid) |
+  | Your Share | $0 (0.00%) |
+  | Invest |  |
   And we say "status": "now a member"
   
 Scenario: A member buys a stake in the club
@@ -90,10 +90,10 @@ Scenario: An administrator views the investment page
   Then we show "Investment Club" with:
   | Liquid:                   |  $0 | ||
   | Requests to Cash Out (0): |  $0 | Cash Out ||
- 	| Investments (0):          |  $0 | List | Propose |
-	| Loss Reserve:             |  $0 | ||
-	| Expense Reserve:          |  $0 | Save ||
-	| Club Net Value:           |  $0 | ||
+   | Investments (0):          |  $0 | List | Propose |
+  | Loss Reserve:             |  $0 | ||
+  | Expense Reserve:          |  $0 | Save ||
+  | Club Net Value:           |  $0 | ||
   | Total Member Stakes (0):  |  $0 | ||
   | Available for Dividends:  |  $0 | Issue Dividends ||
 
@@ -369,8 +369,8 @@ Scenario: Members increase and decrease their stakes
 
   When member ".ZZA" visits page "invest"
   Then we show "Investment Club" with:
-	| Club Value | $5,590 ($5,000 liquid) |
-	| Your Share | $1,677 (30.0%) |
+  | Club Value | $5,590 ($5,000 liquid) |
+  | Your Share | $1,677 (30.0%) |
   | Buy or sell: | in addition to your current request |
   | Invest MORE | Invest LESS |
 
@@ -396,8 +396,8 @@ Scenario: Members increase and decrease their stakes
   
   When member ".ZZA" visits page "invest"
   Then we show "Investment Club" with:
-	| Club Value | $5,610 ($5,020 liquid) |
-	| Your Share | $1,683 (30.0%) |
+  | Club Value | $5,610 ($5,020 liquid) |
+  | Your Share | $1,683 (30.0%) |
   | Change request | $-20 |
   | Buy or sell: | in addition to your current request |
   | Invest MORE | Invest LESS |
@@ -406,10 +406,10 @@ Scenario: Members increase and decrease their stakes
   Then we show "Investment Club" with:
   | Liquid:                   | $5,020 | ||
   | Requests to Cash Out (1): |    $20 | Cash Out ||
- 	| Investments (1):          |   $600 | List | Propose |
-	| Loss Reserve:             |    $10 | ||
-	| Expense Reserve:          |     $0 | Save ||
-	| Club Net Value:           | $5,610 | ||
+   | Investments (1):          |   $600 | List | Propose |
+  | Loss Reserve:             |    $10 | ||
+  | Expense Reserve:          |     $0 | Save ||
+  | Club Net Value:           | $5,610 | ||
   | Total Member Stakes (2):  |   $100 | ||
   | Available for Dividends:  | $5,510 | Issue Dividends ||
 

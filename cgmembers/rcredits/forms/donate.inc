@@ -31,18 +31,18 @@ function formDonate($form, &$sta, $args = '') {
 //       5 => t('Cloth ........ $5'),
   );
 
-	if ($recurs = db\get('id,period,amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:payer AND t.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
-		extract($recurs);
-		$recursId = hidFld($id);
+  if ($recurs = db\get('id,period,amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:payer AND t.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
+    extract($recurs);
+    $recursId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
-	} else $recursId = NULL;
+  } else $recursId = NULL;
   
   if (!$mya->activated or !$recurs) {
-		unset($oftens['once']); // no one-time donation unless the account is activated and has a recurring donation
+    unset($oftens['once']); // no one-time donation unless the account is activated and has a recurring donation
     unset($oftens[0]);
-		$recurOnly = t(': monthly, quarterly, or yearly');
+    $recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));
-	} else $noOneTime = '';
+  } else $noOneTime = '';
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
    
 //  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
@@ -72,8 +72,8 @@ function formDonate_submit($form, &$sta) {
     $was = (object) db\get('amount, period, periods', 'tx_templates', ray('id', $recursId));
     $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
     r\endRule(TRUE, $recursId);
-		say(t('Your previous recurring gift has been canceled.'));
-	} else $was = t('no previous recurring donation');
+    say(t('Your previous recurring gift has been canceled.'));
+  } else $was = t('no previous recurring donation');
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));

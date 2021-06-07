@@ -64,9 +64,9 @@ Scenario: A member connects a bank account
   | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
   Then we show "Account Preferences"
   And we say "status": "info saved|step completed"
-	And members have:
-	| uid  | risks   |*
-	| .ZZB | hasBank |
+  And members have:
+  | uid  | risks   |*
+  | .ZZB | hasBank |
   And member ".ZZB" steps left "preferences verifyemail"
 
 Scenario: A member sets preferences

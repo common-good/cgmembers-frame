@@ -135,8 +135,8 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
     include_once R_ROOT . '/cg-yearly.inc';
     r\Special\do1099s('K', nn($test1099));
-	} elseif ($op == 'reconcile') {
-		w\go('sadmin/reconcile-ctty-fund');
+  } elseif ($op == 'reconcile') {
+    w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'toSMT') {
     a\toSMT();
   } elseif ($op == 'inviteeStatus') {
@@ -201,7 +201,7 @@ function formSeeChanges($form, &$sta, $qid = '') {
     $changedBy = $changerName ?: "($changedBy)";
     $list[] = "<tr><td>$date</td><td>$field</td><td>$oldValue</td><td>$newValue</td><td>$changedBy</td></tr>";
   }
-	
+  
   if (count($list) > 1) {
     $list = join("\n", $list);
     $list = item("<table>$list</table>");
@@ -221,7 +221,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('dashboard');
+  if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('dashboard');
   
   extract(just('one recent', $args, null));
 

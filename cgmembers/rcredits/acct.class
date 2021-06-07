@@ -525,7 +525,7 @@ class Acct {
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
-	
+  
   /**
    * Encrypt if appropriate
    */
@@ -540,7 +540,7 @@ class Acct {
     }
     return $v;
   }
-		
+    
   /**
    * Create a new relationship record for the current account (as "main") relating to some agent.
    * NOTE: Assume no other company agent for this company is trying to create a relation at the same time.
@@ -802,7 +802,7 @@ EOF;
       $ai->update('jid', $aj->id);
       foreach ($fields as $k) $$k = nn($$k, 0) + ($ai->o($k) ?: 0);
     }
-		
+    
     $a->masterA->setBit(B_REFILL, $a->o_refill or $b->o_refill);
     $achMin = max($a->o_achMin, $b->o_achMin); // one of the $fields
     $minimum = $a->o_minimum + $b->o_minimum;
@@ -1167,7 +1167,7 @@ o;
     if ($combinable <= 0) $combinable = $combineTxid = 0;
     return $amt;
   }
-	
+  
   /**
    * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
    */
@@ -1280,7 +1280,7 @@ o;
 
     return TRUE;
   }
-	
+  
   /**
    * Create a zero USD transfer record to verify the bank account.
    */
@@ -1295,7 +1295,7 @@ o;
       if ($txid = db\insert('r_usd', $info + compact(ray('txid channel')), 'txid')) break;
     }
     u\EXPECT($txid, 'ran out of low txids');
-  }			
+  }      
 
   /**
    * Automatically cashout accounts that choose to, leaving average weekly gross (over past 6 months) in the account. Weekly gross is figured as -6/26th of the floor (because there are 26 weeks in 6 months and floor is based on 1/6 of 6 months' gross).
@@ -1317,7 +1317,7 @@ o;
   public function suggestAuto() {
     $a = $this;
     global $channel; if (!in_array($channel, [TX_APP])) return;
-		
+    
     $web = ($channel == TX_WEB);
 
     if (!$web) $msg[] = 'you were short';
@@ -1332,11 +1332,11 @@ o;
       $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->doLink('debtok');
       $msg[] = 'try debt';
     }
-		
+    
     $msg = join('|', $msg);
     if ($web) return t($msg, $args); else $a->tellMisc($msg, $args);
   }
-	
+  
   /**
    * Return the next suggested date, type, and description to contact this member for a standard checkin.
    * @param mixed $done: <asking because a checkin was just completed> or "activate"
@@ -1656,7 +1656,7 @@ X;
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
     return u\b64encode($vKeyE); // ready for signin form on flash drive
   }
-	
+  
   /**
    * Call a function for each co-branding partner for whom the current account is a customer.
    * @param function(coA, custA, custCode) $func: the function to call, with three parameters:

@@ -895,23 +895,23 @@ function nextMember($id = 0) {
  * This function is currently called only from a PHP window.
  */
 function donationTrend($co = FALSE, $since = NULL) {
-	u\setDft($since, now() - YEAR_SECS);
-	$co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
-	$where = "$co AND u.:IS_OK AND u.created>:since";
-	
-	$sql =<<< X
-	  SELECT AVG(g.amount*perYear(period, periods)) AS regular
-		FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
-		WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
+  u\setDft($since, now() - YEAR_SECS);
+  $co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
+  $where = "$co AND u.:IS_OK AND u.created>:since";
+  
+  $sql =<<< X
+    SELECT AVG(g.amount*perYear(period, periods)) AS regular
+    FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
+    WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
 X;
   $subs = compact('since');
-	$res = db\q($sql, $subs)->fetchAssoc();
-	
+  $res = db\q($sql, $subs)->fetchAssoc();
+  
   $sql = "SELECT AVG(u.:IS_ROUNDUP) AS roundupRatio, AVG(u.crumbs) AS crumbs FROM users u WHERE $where";
   $res += db\q($sql, $subs)->fetchAssoc();
-	
+  
   $accts = db\count('users u', $where, $subs);
-	
+  
   $sql = "SELECT SUM(amt) AS txTotal, COUNT(*) AS txCount, AVG(amt%1) AS cents FROM txs_prime t JOIN users u ON u.uid=uid1 WHERE $where";
   $res += db\q($sql, $subs)->fetchAssoc();
 

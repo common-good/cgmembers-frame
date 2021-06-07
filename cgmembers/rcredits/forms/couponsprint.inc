@@ -16,7 +16,7 @@ function couponsPrint($args = '') {
   
   if (strpos($args, 'type=') === FALSE) $args = u\deurlify($args);
   extract(just('type amount portion minimum useMax count automatic start end purpose', $args, NULL));
-	
+  
   if (!$gift = ($type == 'gift') and $type != 'discount') return w\hack('bad coupon args');
   $coGift = ($amount > 0 and $amount == $minimum);
   $amount =  $amount ? u\fmtAmt($amount, 's$') : u\fmtAmt($portion, '%s');
@@ -40,8 +40,8 @@ function couponsPrint($args = '') {
 
   $name = $mya->bestName;
   $coup = t('%PROJECT %type', 'type', ($gift or $coGift) ? t('Gift Certificate') : t('Discount Coupon'));
-	$off = ($gift or $coGift) ? '' : t(' OFF');
-	$goodFor = $off ? '' : t('Good for ');
+  $off = ($gift or $coGift) ? '' : t(' OFF');
+  $goodFor = $off ? '' : t('Good for ');
 
   $auto = ($automatic and $off) ? t('automatically') : '';
   

@@ -136,9 +136,9 @@ function rcredits_form($variables) {
 
   $frmName = str_replace('cgwebform', '', $element['#id']);
   if ($frmName == 'prox') {
-	  $args = basename($_SERVER['REQUEST_URI']);
-	  extract(just('page', $args));
-	  $frmName = strtolower($page);
+    $args = basename($_SERVER['REQUEST_URI']);
+    extract(just('page', $args));
+    $frmName = strtolower($page);
   }
   $element['#id'] = "frm-$frmName"; // CGF
   element_set_attributes($element, array('method', 'id'));

@@ -5,11 +5,11 @@ body, th, td {font-family:Arial;}
 div.clearer { clear:both; }
 
 .clearfix:after { /* thanks to www.positioniseverything.net/easyclearing.html */
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
 }
 
 /* div#bodywrap { text-align:left; margin-left:auto; margin-right:auto; width:658px; } */
@@ -107,55 +107,55 @@ h3 { margin-bottom:0px; }
 
 /* slider customization */
 *.CGslider-panel {
-	background-color: silver;
-	color: #333;
-	margin: 0;
-	height: 12px;
-	border: 2px solid;
-	border-color: #ddd #999 #999 #ddd;
-	top: 0px;
-	opacity: 1;
+  background-color: silver;
+  color: #333;
+  margin: 0;
+  height: 12px;
+  border: 2px solid;
+  border-color: #ddd #999 #999 #ddd;
+  top: 0px;
+  opacity: 1;
 }
 *.CGslider-panel:focus {
-	background-color: darkgreen;
+  background-color: darkgreen;
 }
 *.CGslider-panel:hover, *.CGslider-panel:focus :hover {
-	background-color: green;
+  background-color: green;
 }
 *.orientation-horizontal {
-	width: 120px;
-	padding: 4px 3px 4px 4px;
+  width: 120px;
+  padding: 4px 3px 4px 4px;
 }
 /* The Slider Slit */
 *.CGslider-slit {
-	background-color: #333;
-	border: 1px solid;
-	border-color: #999 #ddd #ddd #999;
+  background-color: #333;
+  border: 1px solid;
+  border-color: #999 #ddd #ddd #999;
 }
 *.CGslider-panel:focus *.CGslider-slit {
-	background-color: black; /* Blue color of slit in focused slider. */
-/*	border-color:green;
-	border-color-bottom:lightgreen; */
+  background-color: black; /* Blue color of slit in focused slider. */
+/*  border-color:green;
+  border-color-bottom:lightgreen; */
 }
 *.orientation-horizontal *.CGslider-slit {
-	height: 2px;
-	margin: 4px 2px 2px 2px;
-	top: -15px;
+  height: 2px;
+  margin: 4px 2px 2px 2px;
+  top: -15px;
 }
 /* The Slider Knob */
 *.CGslider-knob {
-	background-color: white;
-	border: 3px solid;
-	border-color: #999 #333 #333 #999;
+  background-color: white;
+  border: 3px solid;
+  border-color: #999 #333 #333 #999;
 }
 *.CGslider-knob:hover {
-	background-color: #777;
+  background-color: #777;
 }
 *.orientation-horizontal *.CGslider-knob {
-	width: 8px;
-	margin: 0;
-	height: 10px;
-	top: -2px;
+  width: 8px;
+  margin: 0;
+  height: 10px;
+  top: -2px;
 }
 
 #votenow div { margin:20px; margin-right:0px; margin-bottom:15px; float:left; }
@@ -194,7 +194,7 @@ div.qdetails div.detail { clear:both; text-align:left; margin-top:40px; }
 div.results { text-align:center; background-color:white; }
 table.resultstable { border-collapse:collapse; margin:0 auto;}
 table.resultstable td, table.resultstable th, .ballot table.resultstable td { 
-	text-align:right; padding-right:10px; padding-left:10px; background-color:silver; border:1px solid white; 
+  text-align:right; padding-right:10px; padding-left:10px; background-color:silver; border:1px solid white; 
 }
 table.resultstable th { text-align:center; background-color:darkgreen; color:white; border:0px; }
 table.resultstable td.optlinehdr { text-align:left; padding-top:2px; padding-bottom:2px; }

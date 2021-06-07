@@ -21,12 +21,12 @@ function seeSecure($a) {
   }
   $a->update('secure', nn($new, []));
 
-	if ($mya->superAdmin) {
-	  $vsecure = $a->vsecure;
-		foreach (ray(VSECURE_FLDS) as $k) if (isset($vsecure[$k])) {
-			$vnew[$k] = $vsecure[$k]; // reorder
-			$show[$k] = $a->$k; // some need decrypting
-		}
+  if ($mya->superAdmin) {
+    $vsecure = $a->vsecure;
+    foreach (ray(VSECURE_FLDS) as $k) if (isset($vsecure[$k])) {
+      $vnew[$k] = $vsecure[$k]; // reorder
+      $show[$k] = $a->$k; // some need decrypting
+    }
     $a->update('vsecure', nn($vnew));
   }
 

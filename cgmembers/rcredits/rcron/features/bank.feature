@@ -88,8 +88,8 @@ Scenario: an unbanked member barely below target cannot draw on another account
   | .ZZB | 99.99  |
   When cron runs "getFunds"
   Then we notice "cannot draw" to member ".ZZB" with subs:
-	| why       |*
-	| to bring your balance up to the target you set |
+  | why       |*
+  | to bring your balance up to the target you set |
 
 Scenario: a member is at target
   Given balances:
@@ -200,14 +200,14 @@ Scenario: a non-member has a target and refills
   Given members:
   | uid  | fullName | floor | minimum | flags         | achMin | bankAccount |*
   | .ZZE | Eve Five |     0 |     100 | refill,bankOk | 30     | USkk9000005 |
-	When cron runs "getFunds"
+  When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |    100 | %TX_CRON |
-	And count "txs" is 1
-	And count "usd" is 1
-	And count "invoices" is 0
-	
+  And count "txs" is 1
+  And count "usd" is 1
+  And count "invoices" is 0
+  
 Scenario: member's bank account has not been verified
   Given members have:
   | uid  | balance | flags     |*
@@ -216,7 +216,7 @@ Scenario: member's bank account has not been verified
   Then usd transfers:
   | txid | payee | amount | created | completed | deposit | xid |*
   |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
-	|    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
+  |    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
   And transactions:
   | xid | amount | payer   | payee | taking |*
   |   1 |      0 | bank-in | .ZZA |      1 |
@@ -228,9 +228,9 @@ Scenario: a member's bank account gets verified
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
   |    1 | .ZZA  |      0 | %today-4d |         0 | %today-3d |
-	When cron runs "everyDay"
+  When cron runs "everyDay"
   Then count "usd" is 0
-	And members have:
+  And members have:
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
 
@@ -246,7 +246,7 @@ Scenario: a member account needs more funding while not yet verified and somethi
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | created | completed | deposit | xid |*
-	|    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   1 |
+  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   1 |
   And transactions:
   | xid | amount | payer   | payee | taking |*
   |   1 |      0 | bank-in | .ZZA |      1 |

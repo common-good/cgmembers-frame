@@ -67,9 +67,9 @@ function fixData(&$info, $direct = FALSE) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = nn($adminable2) ?: [];
   }
- 	extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
+   extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
-	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
+  foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
@@ -139,8 +139,8 @@ function doRecords($list, $thing) {
   $func .= function_exists($func . $thing) ? $thing : 'Thing';
   foreach ($list as $one) {
     fixData($one, TRUE);
-		if (!$func($one, $thing)) return FALSE;
-	}
+    if (!$func($one, $thing)) return FALSE;
+  }
   return TRUE;
 }
 
@@ -526,7 +526,7 @@ function notice($notice, $id, $subs = []) {
  * Say whether the record count in a table is correct.
  */
 function count($what, $count) {
-	global $testOnly;
+  global $testOnly;
   if (!$testOnly) return FALSE;
   $desc = $what . t(' count');
 
@@ -1144,7 +1144,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   global $formSta, $lastGo;
   $xlastGo = nn($lastGo); // notice whether a goto happens, so we can skip post-processing
-	$lastGo = NULL;
+  $lastGo = NULL;
 
   t\logIn($id);
 
@@ -1186,7 +1186,7 @@ function pageForm($page) {
 
   $page = t\parseQ($page);
 
-	$page = t\fixPageArgs($page);
+  $page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
   if (!$page) $page = 'dashboard';
@@ -1704,13 +1704,13 @@ function seq($table = 'r_usd') {
  * Return the state and country, defaulted (if any) and fixed.
  */
 function fixState($state, $country) {
-	if (!nn($state) and !nn($country)) return [];
-	u\setDft($country, 'US');
-	if ($country == 'US' or $country == US_COUNTRY_ID) u\setDft($state, 'MA');
+  if (!nn($state) and !nn($country)) return [];
+  u\setDft($country, 'US');
+  if ($country == 'US' or $country == US_COUNTRY_ID) u\setDft($state, 'MA');
 
-	if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
-	if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
-	return compact(ray('state country'));
+  if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+  if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+  return compact(ray('state country'));
 }
 
 /**
@@ -1812,13 +1812,13 @@ function execWithTimeout($cmd, $timeout) {
   if ($country == US_COUNTRY_ID) u\setDft($state, 'MA');
   }
 
-	if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+  if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
   }
 
   function fixCountry(&$country) {
   global $testOnly;
   if (!$testOnly) u\setDft($country, R_COUNTRY_ID);
-	if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+  if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
   }
 
 */

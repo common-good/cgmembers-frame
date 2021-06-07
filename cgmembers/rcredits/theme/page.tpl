@@ -91,21 +91,21 @@ use \CG as r;
  */
 
 $menu1 = \theme('links__system_main_menu', array(
-	'links' => $main_menu,
-	'attributes' => array(
-		'id' => 'main-menu-links',
-		'class' => array('links', 'clearfix'),
-	),
-	'heading' => array(
-		'text' => t('Main menu'),
-		'level' => 'h2',
-		'class' => array('element-invisible'),
-	),
+  'links' => $main_menu,
+  'attributes' => array(
+    'id' => 'main-menu-links',
+    'class' => array('links', 'clearfix'),
+  ),
+  'heading' => array(
+    'text' => t('Main menu'),
+    'level' => 'h2',
+    'class' => array('element-invisible'),
+  ),
 ));
 
 foreach (ray('header accounts help action_links content footer highlighted') as $k) {
-	$$k = nni($page, $k);
-	$$k = nn($$k) ? \render($$k) : '';
+  $$k = nni($page, $k);
+  $$k = nn($$k) ? \render($$k) : '';
 }
 
 global $pagePartner; // branding for partner signups
@@ -133,20 +133,20 @@ $messages
 
   <div id="main-wrapper" class="clearfix"><div id="main" class="clearfix">
 
-		<div id="content" class="clearfix column"><div class="section">
-			<div id="highlighted">$highlighted</div>
-			<a id="main-content"></a>
-			<h1 class="title" id="page-title">$title</h1>
-	$help
-			<ul class="action-links">
-	$action_links
-			</ul>
-	$content
-	$feed_icons
-		</div></div> <!-- /.section, /#content -->
+    <div id="content" class="clearfix column"><div class="section">
+      <div id="highlighted">$highlighted</div>
+      <a id="main-content"></a>
+      <h1 class="title" id="page-title">$title</h1>
+  $help
+      <ul class="action-links">
+  $action_links
+      </ul>
+  $content
+  $feed_icons
+    </div></div> <!-- /.section, /#content -->
 
   </div></div> <!-- /#main, /#main-wrapper -->
-		
+    
   <div id="footer-wrapper"><div class="section"><div id="footer" class="clearfix">
 $footer
     </div></div></div> <!-- /#footer, /.section, /#footer-wrapper -->

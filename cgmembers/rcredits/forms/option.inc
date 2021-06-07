@@ -26,18 +26,18 @@ function formOption($form, &$sta, $args = '') {
 
     $id = hidFld($oid);
   } else {
-		if (empty($qid)) return w\softErr(t('Missing question id.'));
-		$type = db\get('type', 'r_questions', 'id=:qid', compact('qid'));
-	}
+    if (empty($qid)) return w\softErr(t('Missing question id.'));
+    $type = db\get('type', 'r_questions', 'id=:qid', compact('qid'));
+  }
 
   $title = item($add ? t('Add Option') : t('Edit Option'));
   $question = hidFld($qid);
   $text = textFld((v\realOpts($type) ? REQ : '') . t('Option:'), [t('Option Text')], dft(nn($text)));
   $detail = areaFld(t('Detail:'), [t('Option Detail')], dft(nn($detail)));
-	if ($type == 'R') {
-		$minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(nn($min)));
-		$maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(nn($max)));
-	}
+  if ($type == 'R') {
+    $minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(nn($min)));
+    $maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(nn($max)));
+  }
   
   if ($mya->cAdmin) $submit = submit();
   
@@ -46,8 +46,8 @@ function formOption($form, &$sta, $args = '') {
 
 function formOption_validate($form, &$sta) {
   extract($info = just('minimum maximum', $sta['input']));
-	if ($info) foreach ($info as $k => $zot) if ($err = u\badAmount($info[$k])) return w\say($err, $k);
-	u\preray($info, $sta['input']);
+  if ($info) foreach ($info as $k => $zot) if ($err = u\badAmount($info[$k])) return w\say($err, $k);
+  u\preray($info, $sta['input']);
 }
 
 function formOption_submit($form, &$sta) {

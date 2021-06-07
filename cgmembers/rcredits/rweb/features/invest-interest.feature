@@ -11,7 +11,7 @@ Setup:
 
 Scenario: A member expresses interest
   When member ".ZZA" visits page "invest"
-	Then we show "Investment Clubs" with:
+  Then we show "Investment Clubs" with:
   | Comments |
   | Keep me in the loop |
   And without:
@@ -19,7 +19,7 @@ Scenario: A member expresses interest
 
 Scenario: A non-member expresses interest
   When member "?" visits page "invest/interest"
-	Then we show "Investment Clubs" with:
+  Then we show "Investment Clubs" with:
   | Name |
   | Phone |
   | Email |

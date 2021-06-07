@@ -24,7 +24,7 @@ class Statement extends \TCPDF {
    * @param int $period: period date (for account statements)
    * If no period is specified, initialize a customer statement from the business rather than a monthly account statement from the community.
    */
-	public function __construct($a = NULL, $period = '') {
+  public function __construct($a = NULL, $period = '') {
 //    parent::__construct('P', 'in', 'LETTER');
     parent::__construct('P', 'mm', 'LETTER');
     u\setDft($a, r\acct());
@@ -65,7 +65,7 @@ class Statement extends \TCPDF {
     $this->Line(5, $h - 13, 5 + 200, $h - 13);
     $this->SetFont('helvetica', '', 9);
     $this->SetY(-13);
-		$this->Cell(0, 10, t('To manage your account, sign in at %CG_DOMAIN'), 0, '', 'C');
+    $this->Cell(0, 10, t('To manage your account, sign in at %CG_DOMAIN'), 0, '', 'C');
   }
 
   /**

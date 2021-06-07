@@ -107,7 +107,7 @@ function zipChange(z3s) {
 //        $('.message').html("Found Zipcode");
       },
       function(errMsg){ // zip couldn't be found,
-//	  alert(errMsg);
+//    alert(errMsg);
 //          $('.message').html("Error: " + errMsg);
       }
     );

@@ -282,10 +282,10 @@ EOF;
  * @param char $type: type of vote
  */
 function processvote($args, $type) {
-	global $quids, $now, $ermsg;
-	if (!$optionCount = $args['optionCount']) return;
+  global $quids, $now, $ermsg;
+  if (!$optionCount = $args['optionCount']) return;
 
-	for($opti = 0; $opti < $optionCount; $opti++) {
+  for($opti = 0; $opti < $optionCount; $opti++) {
     $isVeto = nni($args, "veto$opti") ? 1 : 0;
     if ($type != 'E') {
 
@@ -300,8 +300,8 @@ function processvote($args, $type) {
 ///    debug(compact(ray('args type quids now optionCount opti isVeto type grade id text modified')));
     $info = []; foreach (ray('id grade gradeMax text isVeto modified') as $k) if (isset($$k)) $info[$k] = $$k;
     db\update('r_votes', $info, 'id');
-	}
-	$ballot = $args['ballot'];
+  }
+  $ballot = $args['ballot'];
   $voter = db\get('voter', 'r_ballots', 'id=:ballot', compact('ballot'));
   db\update('r_ballots', ray('id proxy modified', $ballot, $voter, now()), 'id');
 }
@@ -317,7 +317,7 @@ function processvote($args, $type) {
  */
 function getCurrentVote($mya, &$extras, $question, $type, $optOrder) {
   $voter = $mya->id;
-	if (!$ballot = db\get('id', 'r_ballots', 'question=:question AND voter=:voter', compact('question', 'voter'))) {
+  if (!$ballot = db\get('id', 'r_ballots', 'question=:question AND voter=:voter', compact('question', 'voter'))) {
     $created = now();
     $ballot = db\insert('r_ballots', compact(ray('question voter created')));
   }
@@ -327,21 +327,21 @@ function getCurrentVote($mya, &$extras, $question, $type, $optOrder) {
     FROM r_ballots b INNER JOIN r_votes v ON v.ballot=b.id LEFT JOIN r_options o ON o.id=v.option
     WHERE b.id=:ballot ORDER BY v.displayOrder
 EOF;
-	$q = db\q($sql, $subs = compact('ballot'));
+  $q = db\q($sql, $subs = compact('ballot'));
 
   $rowCount = $q->rowCount();
 
-	$optCount = $question < 0
+  $optCount = $question < 0
   ? db\count('r_criteria', 'auto=0 AND ctty=0')
   : db\count('r_options', 'question=:question', compact('question'));
   
-	if($rowCount < $optCount) { // vote records not set up yet (or interrupted)
-		if($rowCount) db\q('DELETE FROM r_votes WHERE ballot=:ballot', compact('ballot'));
-		setupVote($extras, $voter, $question, $optOrder, $ballot);
-  	$q = db\q($sql, $subs);
+  if($rowCount < $optCount) { // vote records not set up yet (or interrupted)
+    if($rowCount) db\q('DELETE FROM r_votes WHERE ballot=:ballot', compact('ballot'));
+    setupVote($extras, $voter, $question, $optOrder, $ballot);
+    $q = db\q($sql, $subs);
     $optCount = $q->rowCount();
-	}
-	$extras['optionCount'] = w\hidFld($optCount);
+  }
+  $extras['optionCount'] = w\hidFld($optCount);
 
   $res = [];
   for ($i = 0; $row = $q->fetchAssoc(); $i++) {
@@ -363,44 +363,44 @@ EOF;
     
     $extras["vote$i"] = w\hidFld($vote);
 //    $extras["note$i"] = w\hidFld($note);
-	}
-	$extras['ballot'] = w\hidFld($ballot);
+  }
+  $extras['ballot'] = w\hidFld($ballot);
 
-	return $res + compact('optCount', 'ballot');
+  return $res + compact('optCount', 'ballot');
 }
 
 function setupVote(&$extras, $voter, $question, $optOrder, &$ballot) {
-	global $sql_record_id;
+  global $sql_record_id;
 
-	$opts = setupOptions($question, $optOrder);
+  $opts = setupOptions($question, $optOrder);
 
-	for($i = 0; $i<count($opts); $i++) {
-		setdbfield("option$i", BLANKGRADE);
-		setdbfield("veto$i", false);
-		setdbfield("votenote$i", '');
-		$option = $opts[$i];
-		$grade = BLANKGRADE;
+  for($i = 0; $i<count($opts); $i++) {
+    setdbfield("option$i", BLANKGRADE);
+    setdbfield("veto$i", false);
+    setdbfield("votenote$i", '');
+    $option = $opts[$i];
+    $grade = BLANKGRADE;
     $gradeMax = BLANKGRADE;
     $displayOrder = $i;
     $vote = db\insert('r_votes', compact(ray('ballot option grade gradeMax displayOrder')));
     $extras["vote$i"] = w\hidFld($vote);
 //    $extras["note$i"] = w\hidFld('');
-	}
+  }
 }
 
 function setupOptions($question, $optOrder='') {
   if ($question < 0) {
     $q = db\q('SELECT -id AS `option`, displayOrder FROM r_criteria WHERE auto=0 AND ctty=0');
   } else $q = db\q('SELECT id AS `option`, displayOrder FROM r_options WHERE question=:question', compact('question'));
-	$opts = [];
-	while ($row = $q->fetchAssoc()) { // make a list of the options
-		extract($row);
-		$opts[$displayOrder ?: count($opts)] = $option;
-	}
+  $opts = [];
+  while ($row = $q->fetchAssoc()) { // make a list of the options
+    extract($row);
+    $opts[$displayOrder ?: count($opts)] = $option;
+  }
 
-	if($optOrder == 'Z') array_reverse($opts);
-	if($optOrder == 'S') shuffle($opts);
-	return $opts;
+  if($optOrder == 'Z') array_reverse($opts);
+  if($optOrder == 'S') shuffle($opts);
+  return $opts;
 }
 
 function getOptsX($ballot, $type, $defaults) {
@@ -408,18 +408,18 @@ function getOptsX($ballot, $type, $defaults) {
 // RETURN the options in the order the voter is used to seeing them
 //  $sql = 'SELECT o.text, o.detail FROM (r_options o INNER JOIN r_votes v ON v.option=o.id) INNER JOIN r_ballots b on b.id=v.ballot WHERE b.id=:ballot ORDER BY v.displayOrder';
   $sql = 'SELECT IFNULL(o.text, c.text) AS text, IFNULL(o.detail, c.detail) AS detail FROM r_ballots b INNER JOIN r_votes v ON v.ballot=b.id LEFT JOIN r_options o ON o.id=v.option LEFT JOIN r_criteria c ON c.id=-v.option WHERE b.id=:ballot ORDER BY v.displayOrder';
-	$q = db\q($sql, compact('ballot'));
-	for($opti = 0, $opts=''; $row = $q->fetchAssoc(); $opti++) {
-		extract(just('text detail', $row));
-  	$rowclass = ($opti&1) ? 'odd' : 'even';
-		$opts .= call_user_func("CG\\Vote\\getOpts$type", $opti, $rowclass, $text, u\parseUp($detail), $defaults);
-	}
-	return $opts;
+  $q = db\q($sql, compact('ballot'));
+  for($opti = 0, $opts=''; $row = $q->fetchAssoc(); $opti++) {
+    extract(just('text detail', $row));
+    $rowclass = ($opti&1) ? 'odd' : 'even';
+    $opts .= call_user_func("CG\\Vote\\getOpts$type", $opti, $rowclass, $text, u\parseUp($detail), $defaults);
+  }
+  return $opts;
 }
 
 function getOptsB($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	$slider = "slider$opti";
-	$option = "option$opti";
+  $slider = "slider$opti";
+  $option = "option$opti";
 //  $onchange = 'changepct($opti);';
 
   $dft = nni($defaults, $option);
@@ -428,14 +428,14 @@ function getOptsB($opti, $rowclass, $opttext, $optdetail, $defaults) {
 EOF;
   $optionHtml = w\rendA($option, w\hidFld($dft));
 
-	$optStart = optStart($opti, $rowclass, $defaults);
-	$optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
+  $optStart = optStart($opti, $rowclass, $defaults);
+  $optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
 
-	return <<<EOF
+  return <<<EOF
 $optStart
 <div class='sliderandpct'>
 <div class='gliss'>
-	<div id='sliderdiv$opti' class='sliderN'>$sliderHtml</div>
+  <div id='sliderdiv$opti' class='sliderN'>$sliderHtml</div>
 </div gliss>
 <div class='pct'>$optionHtml</div pct>
 <nothing />
@@ -448,8 +448,8 @@ EOF;
  * Return HTML for a "range" type question.
  */
 function getOptsR($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	$slider = "slider$opti";
-	$option = "option$opti";
+  $slider = "slider$opti";
+  $option = "option$opti";
 //  $onchange = 'changepct($opti);';
 
   extract(just('min max minDft maxDft', $defaults));
@@ -459,14 +459,14 @@ EOF;
   $optionHtml = w\rendA($option, w\hidFld($minDft))
               . w\rendA('max', w\hidFld($maxDft));
 
-	$optStart = optStart($opti, $rowclass, $defaults);
-	$optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
+  $optStart = optStart($opti, $rowclass, $defaults);
+  $optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
 
-	return <<<EOF
+  return <<<EOF
 $optStart
 <div class='sliderandpct'>
 <div class='gliss'>
-	<div id='sliderdiv$opti' class='sliderN'>$sliderHtml</div>
+  <div id='sliderdiv$opti' class='sliderN'>$sliderHtml</div>
 </div gliss>
 <div class='pct'>$optionHtml</div pct>
 <nothing />
@@ -479,10 +479,10 @@ EOF;
  * Return HTML for an "essay" type question.
  */
 function getOptsE($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	$votenote = "votenote$opti";	
+  $votenote = "votenote$opti";  
   $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(nni($defaults, $votenote))));
 
-	return <<<EOF
+  return <<<EOF
 <div class="optdetailE">
 <div id="votenotediv$opti">$votenoteHtml</div votenotediv$opti>
 </div><!--optdetailE-->
@@ -490,11 +490,11 @@ EOF;
 }
 
 function getOptsY($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	$optStart = optStart($opti, $rowclass, $defaults);
-	$optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
-	$yesnoinputs = yesnoinputs($opti, $defaults);
+  $optStart = optStart($opti, $rowclass, $defaults);
+  $optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
+  $yesnoinputs = yesnoinputs($opti, $defaults);
 
-	return <<<EOF
+  return <<<EOF
 $optStart
 <div class='yesnoinputs'>
 $yesnoinputs
@@ -505,32 +505,32 @@ EOF;
 }
 
 function yesnoinputs($opti, $defaults) {
-	$v = "option$opti";
-	$oldval = $defaults[$v]; 
-	$yChecked = $nChecked = '';
-	if ($oldval != -1) {
-	  if ($oldval) $yChecked = ' selected'; else $nChecked = ' selected';
-	}
+  $v = "option$opti";
+  $oldval = $defaults[$v]; 
+  $yChecked = $nChecked = '';
+  if ($oldval != -1) {
+    if ($oldval) $yChecked = ' selected'; else $nChecked = ' selected';
+  }
 
-	return <<< X
-	<div id="gY$opti" class="gY$yChecked" index="$opti"></div>
-	<div id="gN$opti" class="gN$nChecked" index="$opti"></div>
-	<input type="hidden" id="opt$opti" name="$v" value="$oldval">
+  return <<< X
+  <div id="gY$opti" class="gY$yChecked" index="$opti"></div>
+  <div id="gN$opti" class="gN$nChecked" index="$opti"></div>
+  <input type="hidden" id="opt$opti" name="$v" value="$oldval">
 X;
 }
 
 function getOptsM($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	$optStart = optStart($opti, $rowclass, $defaults);
-	$optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
-	$gradeinputs = gradeInputs($opti, $defaults);
-	
-	/*
+  $optStart = optStart($opti, $rowclass, $defaults);
+  $optEnd = optEnd($opti, $rowclass, $opttext, $optdetail, $defaults);
+  $gradeinputs = gradeInputs($opti, $defaults);
+  
+  /*
 <div class='gradeheader'><table><tr>
 $gradehdr
 </tr></table></div gradeheader>
 */
 
-	return <<<EOF
+  return <<<EOF
 $optStart
 <div id='grades$opti' class='grades'>
 <div class='gradeinputs'>
@@ -544,25 +544,25 @@ EOF;
 }
 
 function gradeInputs($opti, $defaults) {
-	$v = "option$opti";
-	$oldval = $defaults[$v]; 
+  $v = "option$opti";
+  $oldval = $defaults[$v]; 
   $optGrade = ''; // no grade yet
 
-	for ($grade=0, $gradeinputs=''; $grade < strlen(GRADELTRS); $grade++) {
-		$ltr = substr(GRADELTRS, $grade, 1); // default display (dpy) is unadorned grade letter
-		if (round($oldval) == $grade and $oldval >= 0) {  // this works even for E (0)
-			$checked = ' selected';
-			$dpy = ($sign = $oldval - $grade) ? $dpy = '<div>' . ($sign > 0 ? '+' : '<b>&ndash;</b>') . '</div>' : '';
-			$optGrade = $grade;
-		} else $dpy = $checked = '';
-		$gradeinputs .= <<< X
-	<div id="g$ltr$opti" class="g$ltr$checked" index="$opti">$dpy</div>
+  for ($grade=0, $gradeinputs=''; $grade < strlen(GRADELTRS); $grade++) {
+    $ltr = substr(GRADELTRS, $grade, 1); // default display (dpy) is unadorned grade letter
+    if (round($oldval) == $grade and $oldval >= 0) {  // this works even for E (0)
+      $checked = ' selected';
+      $dpy = ($sign = $oldval - $grade) ? $dpy = '<div>' . ($sign > 0 ? '+' : '<b>&ndash;</b>') . '</div>' : '';
+      $optGrade = $grade;
+    } else $dpy = $checked = '';
+    $gradeinputs .= <<< X
+  <div id="g$ltr$opti" class="g$ltr$checked" index="$opti">$dpy</div>
 X;
-	}
-	$gradeinputs .= <<< X
-	<input type="hidden" id="opt$opti" index="$optGrade" name="$v" value="$oldval">
+  }
+  $gradeinputs .= <<< X
+  <input type="hidden" id="opt$opti" index="$optGrade" name="$v" value="$oldval">
 X;
-	return $gradeinputs;
+  return $gradeinputs;
 }
 
 function optStart($opti, $rowclass, $defaults) {
@@ -574,19 +574,19 @@ function optStart($opti, $rowclass, $defaults) {
     $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", nni($defaults, $v), ray('index', $opti)));
   }
   w\jsx('veto');
-	return <<<EOF
+  return <<<EOF
 <div id="#optRow$opti" class="optRow $rowclass">
 <div class="veto">$html</div veto>
 EOF;
 }
 
 function optEnd($opti, $rowclass, $opttext, $optdetail, $defaults) {
-	global $rUrl;
-	$votenote = "votenote$opti";	
+  global $rUrl;
+  $votenote = "votenote$opti";  
   $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(nni($defaults, $votenote))));
   $optImgWrapClass = $optdetail ? 'optImgWrap' : 'hidden';
 
-	return <<<EOF
+  return <<<EOF
 <div class="item">
   <div class="$optImgWrapClass">
     <img src="$rUrl/images/rvote/expand.gif" id="expand$opti" class="optImg expand" index="$opti" alt="show detail" title="show detail" width="13" height="13" />
@@ -603,11 +603,11 @@ EOF;
 }
 
 function tableHeader($type) {
-	global $rUrl;
-	$leftarrow = "<img src=\"$rUrl/images/rvote/arrow-left.gif\" alt='' />";
-	$rightarrow = "<img src=\"$rUrl/images/rvote/arrow-right.gif\" alt='' />";
+  global $rUrl;
+  $leftarrow = "<img src=\"$rUrl/images/rvote/arrow-left.gif\" alt='' />";
+  $rightarrow = "<img src=\"$rUrl/images/rvote/arrow-right.gif\" alt='' />";
 
-	if (FALSE and $type == 'M') return <<<EOF
+  if (FALSE and $type == 'M') return <<<EOF
 <div class='grades'>$leftarrow Bad | Good $rightarrow</div>
 EOF;
   return '';
@@ -615,25 +615,25 @@ EOF;
 
 /*
 function specialhdrs($question_type) {
-	global $rUrl/images/rvote;
-	$ans = jscript('ballot.js');
-	if($question_type == 'B') {
-		$ans .= "<link rel='stylesheet' type='text/css' href='$rUrl/images/rvote/inc/slider.css' />";
-		foreach(array('sliderutil.js', 'slider.js', 'questionB.js', 'overview.js') as $one) $ans .= jscript($one);
-	} else $ans .= jscript('questionM.js') ;
+  global $rUrl/images/rvote;
+  $ans = jscript('ballot.js');
+  if($question_type == 'B') {
+    $ans .= "<link rel='stylesheet' type='text/css' href='$rUrl/images/rvote/inc/slider.css' />";
+    foreach(array('sliderutil.js', 'slider.js', 'questionB.js', 'overview.js') as $one) $ans .= jscript($one);
+  } else $ans .= jscript('questionM.js') ;
 
-	return $ans;
+  return $ans;
 }
 */
 
 function done($mya) {
   global $proxiesForThisVoter;
 
-	if(ISDEMO) {
+  if(ISDEMO) {
     include_once R_ROOT . '/rvote/rvote-results.inc';
     $proxyCount = db\get('COUNT (DISTINCT voter)', 'r_ballots', 'proxy=:myid', ['myid' => $mya->id]) - 1;
     
-		$bodymiddle = t(<<<EOF
+    $bodymiddle = t(<<<EOF
 <h2>Thank You for Voting!</h2>
 
 <p>Normally it is important not to show election results until the election is over. Otherwise you get a "sheep" effect &mdash; later voters favoring options popular with earlier voters. For the wisest possible results, %PROJECT voting normally fosters independent judgment by saving the results until after everyone has voted.</p>
@@ -646,14 +646,14 @@ function done($mya) {
 EOF
   , compact('proxyCount'));
 
-		return $bodymiddle . showResults($mya->community); // show all results
-	}
+    return $bodymiddle . showResults($mya->community); // show all results
+  }
 
-	$bodymiddle = <<<EOF
+  $bodymiddle = <<<EOF
 <h2>Thank You for Voting!</h2>
 <p>Results will be announced here when the polls close. In the meantime, you may feel free to change any of your votes (simply sign in and select "Democracy Events" again on the Community menu).</p>
 EOF;
-	return $bodymiddle;
+  return $bodymiddle;
 }
 
 /**
@@ -674,8 +674,8 @@ function showVotes($ctty, $byVoter = TRUE, $proxies = 'direct') {
     $subs += compact('byVoter');
   } else {
     include_once R_ROOT . '/rvote/rvote-results.inc';
-		v\showResults($ctty); // refigure results if showing more than one
-	}
+    v\showResults($ctty); // refigure results if showing more than one
+  }
   
   $order = $byVoter ? 'u.fullName,q.id' : 'q.id,u.fullName';
 //  $ballots = $byVoter > 1 ? '(SELECT b2.id, b1.voter, b2.question FROM r_ballots b1 INNER JOIN r_ballots b2 ON (b2.voter=b1.proxy AND b2.question=b1.question))' : 'r_ballots';
@@ -760,7 +760,7 @@ EOF;
  */
 function votingWelcome($endDate, $proxLink) {
   include_once R_ROOT . '/rvote/rvote-results.inc';
-	
+  
   $title = t('Vote');
   $subtext = w\item(t(<<<EOF
   Before you vote, please make sure you are happy with your <%a>proxy choices</a> and adjust them as needed.<br><br>

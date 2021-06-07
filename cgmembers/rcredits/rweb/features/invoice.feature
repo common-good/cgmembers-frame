@@ -52,7 +52,7 @@ Scenario: A member confirms request to charge another member
   | .ZZA |     100 |
   | .ZZB |    -100 |
   | .ZZC |       0 |
-	
+  
 Scenario: A member makes partial payments
   Given invoices:
   | nvid | created | status      | amount | payer | payee | for   |*
