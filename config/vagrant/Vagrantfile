@@ -1,0 +1,46 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
+ENV['VAGRANT_EXPERIMENTAL'] = 'disks'
+
+Vagrant.configure("2") do |config|
+
+  ##### VM definition #####
+  # https://www.vagrantup.com/docs/vagrantfile/machine_settings
+  config.vm.hostname = "cg-dev-vagrant-cent-09"
+  config.vm.box = "centos/8"
+  config.vm.box_check_update = false
+  config.vm.disk :disk, name: "commongood", size: "16GB", primary: true
+
+  # do basic provisioning of box using Ansible
+  config.vm.provision :ansible do |ansible|
+    ansible.limit = "all"
+    ansible.verbose = "v"
+    ansible.playbook = "commongood-provision.yaml"
+  end
+
+  # apply customizations from Common Good doc: Step by step Development Environment Setup
+  #   https://docs.google.com/document/d/1oQU-PPown2TV02Xg9htxByzOhUopGH-areUrlZ94Te0/edit?pli=1
+  config.vm.provider :virtualbox do |v|
+    # https://www.virtualbox.org/manual/ch08.html#vboxmanage-modifyvm-general
+    v.memory = 1024
+    v.cpus = 1
+    v.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
+    v.customize ["modifyvm", :id, "--ioapic", "on"]
+    v.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+    v.customize ["modifyvm", :id, "--vram", "32"]
+    v.customize ["modifyvm", :id, "--nestedpaging", "on"]
+    v.customize ["modifyvm", :id, "--nic1", "nat"]
+    v.customize ["modifyvm", :id, "--nic2", "hostonly"]
+    v.customize ["modifyvm", :id, "--hostonlyadapter2", "vboxnet0"]
+    v.customize ["modifyvm", :id, "--bioslogofadein", "on"]
+    v.customize ["modifyvm", :id, "--bioslogodisplaytime", "1500"]
+    v.customize ["modifyvm", :id, "--bioslogoimagepath", "/Users/samcooley/vms/commongood-vagrant/CommonGood_logo-640x149.bmp"]
+    # see other possible customizations:
+    #   CG: Step by step Development Environment Setup
+    #   https://docs.google.com/document/d/1oQU-PPown2TV02Xg9htxByzOhUopGH-areUrlZ94Te0/edit?pli=1
+  end
+
+end
+

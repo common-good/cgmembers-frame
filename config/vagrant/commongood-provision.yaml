@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: Update OS
+    package:
+      name: '*'
+      state: latest
+
+  - name: Install Basic packages (no configuration)
+    package:
+      name: ['vim', 'zip', 'bash-completion', 'wget', 'tmux']
+
