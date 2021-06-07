@@ -158,7 +158,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
-const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
+const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill draws'; // only in master, for joint accounts
@@ -317,8 +317,8 @@ const R_PHOTO_WIDTH = 300; // rCard photo width, in pixels
 const R_PHOTO_HEIGHT = 400;
 const R_PIXEL_FACTOR = 200; // what to multiply the aspect ratio components by, to get pixel dimensions
 const THUMB_FACTOR = 12; // what to multiply the aspect ratio by, for thumbnail photo
-const R_INDIVIDUAL_GIFT = 50; // suggested donation for individuals
-const R_COMPANY_GIFT = 250; // suggested donation for companies
+const INDIVIDUAL_GIFT = 50; // suggested donation for individuals
+const COMPANY_GIFT = 250; // suggested donation for companies
 const R_BUYS_BEFORE_BONUS = 1; // number of purchases required before signup bonus (should probably be 3)
 const R_REGION_MAX = 3000000000; // maximum uids in a region (46k,3T ~sqrt(PHP_INT_MAX))
 const R_ACCT_REGION = '(-FLOOR((uid-1)/' . R_REGION_MAX . ')-1)'; // SQL region expression
@@ -360,7 +360,7 @@ const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
 
-const CO_PERSONAL = 0; // phase out (use type field in r_company instead)
+const CO_PERSONAL = 0; // phase out (use type field in u_company instead)
 const CO_SOLE_PROPRIETOR = 1;
 const CO_PARTNERSHIP = 2;
 const CO_LLC = 3; // used in testing
@@ -370,6 +370,7 @@ const CO_CUSTODIAN = 12;
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
+const CO_SPONSORED = 2; // fiscally sponsored by CG (name should always start with "Common Good FBO ", should have CG's EIN, and CO_PRIVATE)
 
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor

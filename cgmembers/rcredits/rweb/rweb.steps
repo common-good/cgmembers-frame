@@ -288,6 +288,11 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup AMemberGivesContactInfo
  *     MAKE signup AMemberChoosesToStepUp
  *     TEST signup ANewbieRegistersWithNoCase
+ *     MAKE sponsor Setup
+ *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     BOTH sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup
  *     MAKE stepup Setup
  *     MAKE tx Setup
@@ -457,6 +462,11 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberInvites
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
+ *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
@@ -487,6 +497,9 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  * we tell admin (ARG) with subs: (ARG)
  *
  * in: TEST changeaccount AMemberTriesToChangeToAnAccountWithoutPermission
+ *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -648,6 +661,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
+ *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
@@ -702,6 +719,8 @@ function with($content) {return weShow($content);}
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberInvites
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
@@ -780,6 +799,8 @@ function withoutOptions($options) {
  *     MAKE scancard Setup
  *     MAKE signupco Setup
  *     TEST signupco ACompanySignsUp
+ *     MAKE sponsor Setup
+ *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup
  *     MAKE tx Setup
  *     MAKE txs Setup
@@ -1133,7 +1154,7 @@ function weDownloadWith($name, $rows) {
     $csvRow = array_combine($headers, $csvRow); // add keys
     foreach ($row as $k => $v) {
       if (mb_strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
-      if (!t\eq($csvValue = nni($csvRow, $k), $v)) return t\output("key=$k csvValue<>expected value ($csvValue<>$v) csvRow:" . pr($csvRow));
+      if (!t\eq($k, nni($csvRow, $k), $v)) return FALSE;
     }
   }
   if (count($testCSV) != count($rows) + 1) return t\output('There are extra rows in testCSV: '. pr($testCSV) . ' rows: ' . pr($rows));
@@ -1279,6 +1300,7 @@ function statisticsGetSet($time) {
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberChoosesCrumbs
+ *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
@@ -1726,7 +1748,7 @@ function weScripWithSubs($script, $args = []) {
   if (!isset($scriptScraps[$script])) return t\output(t('Missing script scrap "%script".', compact('script')));
   $args = $args[0];
   $got = just(array_keys($args), $scriptScraps[$script]);
-  foreach ($args as $k => $v) if ($v != '?' and !t\eq($v, nni($got, $k))) return FALSE;
+  foreach ($args as $k => $v) if ($v != '?' and !t\eq($k, $v, nni($got, $k))) return FALSE;
   return TRUE;
 }
 
@@ -2100,8 +2122,7 @@ function weRedirectOffsiteTo($content) {
 /**
  * company flags: (ARG)
  *
- * in: TEST signupco ACompanySignsUp
- *     TEST signupco ACompanySuppliesCompanyInformation
+ * in: 
  */
 function companyFlags($flags) {return t\companyFlags($flags);}
 
@@ -2154,7 +2175,7 @@ function cookieIs($nm, $v) {
   global $testOnly;
 
   if (!$testOnly) r\setCook($nm, $v);
-  return t\eq($v, $_COOKIE[$nm]);
+  return t\eq("cookie $nm", $v, $_COOKIE[$nm]);
 }
 
 /**
@@ -2286,7 +2307,7 @@ function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
   if (!$actual = t\getExitMsg()) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return t\eq($what, '' . $actual);
+  return t\eq('show', $what, '' . $actual);
 }
 
 /**
@@ -2298,7 +2319,7 @@ function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$actualRay = t\getExitMsg()) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return t\rayEq($ray[0], unserialize($actualRay));
+  return t\rayEq('show', $ray[0], unserialize($actualRay));
 }
 
 /**
@@ -2396,6 +2417,11 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
+ *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
+ *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
+ *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -2408,8 +2434,8 @@ function weFirstThen($first, $then) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testFirst, $testThen;
 
-  if (!t\eq($first, $testFirst)) return FALSE;
-  if (!t\eq(urlq2ray($then), $testThen)) return FALSE;
+  if (!t\eq('first', $first, $testFirst)) return FALSE;
+  if (!t\eq('then', urlq2ray($then), $testThen)) return FALSE;
   return TRUE;
 }
 
@@ -2432,7 +2458,7 @@ function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $p
 function withQR($url) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testQr;
-  return (t\eq($url, $testQr));
+  return (t\eq('url', $url, $testQr));
 }
 
 /**
@@ -2446,3 +2472,13 @@ function nextCaptchaIs($ca) {
   global $testCaptchaAnswer; $testCaptchaAnswer = $ca;
   return TRUE;
 }
+
+/**
+ * member (ARG) submits (ARG) with: (ARG)
+ *
+ * in: MAKE sponsor ANonmemberAppliesForFiscalSponsorship
+ *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
+ *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
+ */
+function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}

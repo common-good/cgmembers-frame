@@ -152,7 +152,7 @@ X;
     extract(just('paid disputed', $row));
     $myBalance -= $paid ?: 0;
     $row['balance'] = $myBalance;
-    if ($disputed) $disputed = '<font color="red">' . t('(DISPUTED) ') . '</font>';
+    $disputed = $disputed ? t('(DISPUTED) ') : '';
     $row['description'] = $disputed . be\txDesc($row);
     $entries[] = $row;
   }

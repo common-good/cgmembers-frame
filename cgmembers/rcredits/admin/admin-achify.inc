@@ -39,7 +39,8 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
-  $entryDate = strftime('%y%m%d', strtotime(tr('+%n weekday', 'n', time() < strtotime($cutoff) ? 1 : 2)));
+  $entryDate = strftime('%y%m%d', u\nextBizDay(now() < strtotime($cutoff) ? today() : tomorrow()));
+  
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), strftime('%b%d')];
 

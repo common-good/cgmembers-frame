@@ -81,7 +81,9 @@ function now() {
   global $tTime; // hypothetical time, if any (set in gherkin/test.php), for running a test on development machine
   return nn($tTime, time());
 }
-function today() {return strtotime('today', now());}
+function today($dt = NOW) {return strtotime('today', $dt);}
+function yesterday($dt = NOW) {return strtotime('yesterday', today($dt));}
+function tomorrow($dt = NOW) {return strtotime('tomorrow', today($dt));}
 
 /**
  * Set or return a global variable.

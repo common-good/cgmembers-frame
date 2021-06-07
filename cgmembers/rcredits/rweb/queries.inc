@@ -49,6 +49,24 @@ $queries = [
     FROM txs t JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2
     WHERE :ctty IN (u1.community, u2.community)",
     
+  2 . 'Most Active Company Accounts' => <<< X
+    SELECT DISTINCT c.fullName AS company, p.fullName AS contact, c.phone, c.email, c.city, c.zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(c.:IS_OK, 'open', 'NO') AS open
+    FROM (SELECT uid, MAX(created) AS lastTx FROM tx_entries JOIN tx_hdrs USING(xid) GROUP BY uid) t
+    JOIN users c ON c.uid=t.uid
+    JOIN r_relations r ON r.main=c.uid
+    JOIN users p ON p.uid=r.other
+    WHERE c.:IS_CO GROUP BY c.uid
+    ORDER BY lastTx DESC
+X
+  ,
+  
+    2 . 'Most Active Individual Accounts' => <<< X
+    SELECT DISTINCT fullName AS name, phone, email, city, zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(u.:IS_OK, 'open', 'NO') AS open
+    FROM (SELECT uid, MAX(created) AS lastTx FROM tx_entries JOIN tx_hdrs USING(xid) GROUP BY uid) t
+    JOIN users u USING(uid)
+    WHERE NOT u.:IS_CO ORDER BY lastTx DESC
+X
+  ,
 
   t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,

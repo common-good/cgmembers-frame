@@ -53,7 +53,7 @@ function cleanAmount($amount) {
  *   The cleaned-up amount is returned by ref.
  * @param string $restriction: none (the default), >0, !=0, or >=0
  * @param bool $fractionLimit: maximum digits after the decimal (default 2)
- * @param numeric $max: maximum amount ('' if no maximum) (defaults to R_MAX_AMOUNT)
+ * @param numeric $max: maximum amount (defaults to none)
  * @return: FALSE if not a bad amount, else error message
  */
 function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL) {
@@ -67,8 +67,8 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   if ($restriction == '>=0' and $amount < 0) return 'negative amount';
   if ($restriction == '!=0' and $amount == 0) return 'zero amount';
 
-  if (is_null($max)) $max = R_MAX_AMOUNT;
-  if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
+//  if (is_null($max)) $max = MAX_AMOUNT;
+  if ($max and abs($amount) > $max) return t('amount too big', compact('max'));
   return FALSE;
 }
 
@@ -1659,6 +1659,30 @@ function _GET($ray = NULL) {
   }
   return $T_GET;
 }
+
+/**
+ * Return the next business day (avoiding U.S. holidays) after the given time
+ */
+function nextBizDay($dt = NOW) {
+  $dt = strtotime('+1 weekday', $dt); // advance to next weekday
+  $holidays = [ // holidays in same year as the next weekday (or previous year, if next weekday is Saturday 1/1)
+    holiwiggle('1/1', $dt),
+    'third monday of january',
+    'third monday of february',
+//    easter_date(),    
+    'last monday may',
+    holiwiggle('7/4', $dt),
+    'first monday of september',
+    'second monday of october',
+    holiwiggle('11/11', $dt),
+    'fourth thursday of november',
+    holiwiggle('12/25', $dt),
+  ];
+  foreach ($holidays as $h) if (strtotime($h, $dt) == $dt) return strtotime('+1 weekday', $dt); // holiday. advance one more weekday
+  return $dt;
+}
+
+function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return strftime('%Y%m%d', date('l', $h) == 'Saturday' ? yesterday($h) : (date('l', $h) == 'Sunday' ? tomorrow($h) : today($h)));}
 
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}

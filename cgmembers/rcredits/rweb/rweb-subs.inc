@@ -938,26 +938,6 @@ function svar($name) {
 }
 
 /**
- * NOT ACTUALLY USED?!! (not for anything necessary)
- * Offer choices for user to choose from
- * 1. If called with all arguments, the arguments are stored in svar('pop') and the form is reloaded
- * 2. If called as which('info'), this function returns $info from svar('pop')
- * 3. If called with NO arguments (from showForm()), this function returns a fieldset to insert as a popup layover div into
- * the form awaiting the choice. Clicking on a choice fills in the missing value and submits the form.
- * For #3, we expect svar('pop') to contain: $formName, $choices, $resultField, and $question
- *   $formName: the form name
- *   $choices: an array of choices
- * @param array $choices: associative array of things to choose from
- * @param string $resultField: name of field that gets the choice
- * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
- * @param string $question: the question to ask
- */
-function which($choices = '', $resultField = '', $info = '', $question = 'Which one?') {
-  u\FAIL('which');
-//  $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
-}
-
-/**
  * Create a modal dialog
  * @param string $id: the dialog id
  * @param string $legend: header
@@ -1654,7 +1634,7 @@ function whois($who, $field_name, $info, $selfErr, $restrict) {
   if (is_string($res)) return say($res, $field_name);;
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);
   $info['return'] = plain(str_replace('/', R_URL_SLASH, $return)); // even urlencoded slashes confuse Drupal
-  which($res, $field_name, $info, t('Which account?'));
+//  which($res, $field_name, $info, t('Which account?'));
 }
   
 /**

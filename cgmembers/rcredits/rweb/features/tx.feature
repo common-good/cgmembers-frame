@@ -93,13 +93,13 @@ Scenario: A member confirms request to pay another member
 Scenario: A member confirms request to pay another member a lot
   Given balances:
   | uid  | balance       |*
-  | .ZZB | %R_MAX_AMOUNT |
+  | .ZZB | %MAX_AMOUNT |
   When member ".ZZB" confirms form "tx/pay" with values:
   | op  | who     | amount        | goods | purpose |*
-  | pay | Our Pub | %R_MAX_AMOUNT | %FOR_GOODS     | food    |
+  | pay | Our Pub | %MAX_AMOUNT | %FOR_GOODS     | food    |
   Then transactions:
   | xid | created | amount        | payer | payee | purpose      | taking |*
-  |   1 | %today  | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
+  |   1 | %today  | %MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
 Scenario: A member confirms request to pay a member company
   Given next DO code is "whatever"

@@ -66,10 +66,7 @@ function formInvestPropose_validate($form, &$sta) {
   global $mya; $clubid = $mya->id;
   extract($info = just(INVEST_ALLFLDS, $sta['input'], NULL));
 
-  if ($company) {
-//    if (!$a = whois($company, 'company', $info, t('self-investing'))) return FALSE;
-//    $company = $a->id;
-  } else {
+  if (!$company) { // specification of company is taken care of by whoFldSubmit() and whoId()
     if ($err = u\badDate($dob, '', now())) return say($err, 'dob');
     if ($err = u\badAmount($gross, '>=0', 2, '')) return sayFieldErr($err, 'gross');
   }
