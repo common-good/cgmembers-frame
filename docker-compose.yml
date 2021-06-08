@@ -11,26 +11,26 @@ services:
       - db-data:/var/lib/mysql
     expose:
       - 3306
+    working_dir: /code
+    command: bash ./recreate.sh
 
   web:
-    image: nginx
-    # build:
-    #   context: .
-    #   dockerfile: ./Dockerfile
+    # image: nginx
+    build: .
     ports:
       - "5000:80"
     volumes:
       - .:/code
       - ./config/nginx:/etc/nginx
-    environment:
-      - NGINX_HOST=whatever
-      - NGINX_PORT=80
-    working_dir: /code
-    command: sh -c "
-      apt update -y && 
-      apt install -y ruby bundler git vim php && 
-      bundle install &&
-      nginx -g 'daemon off;' "
+    # environment:
+    #   - NGINX_HOST=whatever
+    #   - NGINX_PORT=80
+    # working_dir: /code
+    # command: sh -c "
+    #   apt update -y && 
+    #   apt install -y ruby bundler git vim php && 
+    #   bundle install &&
+    #   nginx -g 'daemon off;' "
 
 volumes:
   db-data:
