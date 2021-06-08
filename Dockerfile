@@ -1,8 +1,8 @@
-FROM nginx:latest
+FROM centos:7
 
 WORKDIR /code
-RUN apt update
-RUN apt install -y ruby bundler git vim php
+RUN yum update -y
+RUN yum install -y nginx ruby git vim php
 COPY Gemfile Gemfile.lock ./
-RUN bundle install
+# RUN bundle install
 CMD nginx
