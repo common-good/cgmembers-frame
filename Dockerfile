@@ -1,11 +1,11 @@
-FROM centos:7
+FROM nginx
 
 WORKDIR /code
-RUN yum update -y
-RUN yum install -y epel-release
-RUN yum install -y nginx php
+RUN apt update -y
+# RUN apt install -y epel-release
+RUN apt install -y php
 # ruby git vim php
 # COPY Gemfile Gemfile.lock ./
 # RUN bundle install
-CMD nginx -g 'daemon off;'
+# CMD nginx -g 'daemon off;'
 # CMD tail -f /dev/null
