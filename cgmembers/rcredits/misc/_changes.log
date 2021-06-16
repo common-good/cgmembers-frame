@@ -1,3 +1,8 @@
+2021-06-15 feature/requests
+. renamed r_invoices to tx_requests_all and made it a delete-by-view table
+. changed Invoices FROM You to Pending TO You (and similarly for Invoices TO You)
+. removed acct::getApprovedInvoices function (unused)
+
 2021-05-31 feature/sponsor
 . renamed r_company to u_company and added fields to it for fiscal sponsorship
 . created an application form for fiscal sponsorship

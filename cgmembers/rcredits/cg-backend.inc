@@ -45,7 +45,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
     LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     LEFT JOIN tx_templates tp ON tp.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
-    LEFT JOIN r_invoices i ON i.nvid=t.rel AND t.relType='I'
+    LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
     WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
     ORDER BY t.created, t.xid, t.eid, name
 EOF;
@@ -85,7 +85,7 @@ EOF;
 
 /**
  * Return SQL for nvid, part, and stepup in a tx entry.
- * Expects t=txs, i=r_invoices
+ * Expects t=txs, i=tx_requests
  */
 function specialTxFlds() {
   list ($finalTxt, $partTxt) = [t('final'), t('partial')];
@@ -246,7 +246,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   if (!$force and $zErr = $tx->noUndo($subs)) return $zErr;
 
   if (db\exists('tx_hdrs', 'reversesXid=:xid', $xidSub)) return txErr(t('already reversed', $xidSub), $subs);
-  if (db\exists('r_invoices', 'reversesXid=:xid AND status NOT IN (:TX_CANCELED, :TX_DENIED)', $xidSub)) return txErr(t('already reverse requested', $xidSub), $subs);
+  if (db\exists('tx_requests', 'reversesXid=:xid AND status NOT IN (:TX_DENIED)', $xidSub)) return txErr(t('already reverse requested', $xidSub), $subs);
   $otherE = $tx->otherEntry;
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
@@ -364,7 +364,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
     if ($payAmount == $amount or !invRemains($nvid)) { // == is for efficiency
-      db\update('r_invoices', ray('status nvid', $z->subs['xid'], $nvid), 'nvid');
+      db\update('tx_requests', ray('status nvid', $z->subs['xid'], $nvid), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
 
@@ -821,7 +821,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId'));
-  $nvid = db\insert('r_invoices', $info, 'nvid');
+  $nvid = db\insert('tx_requests', $info, 'nvid');
 
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
@@ -1248,10 +1248,10 @@ function checkSanity() {
   foreach ($xids as $xidO) {
     $xid = $xidO->xid;
     $tx = r\Tx::read($xid);
-    foreignKeyCheck('Tx', $xid, 'actorId', 'users', 'uid', $tx->actorId);
-    foreignKeyCheck('Tx', $xid, 'actorAgentId', 'users', 'uid', $tx->actorAgentId);
-    foreignKeyCheck('Tx', $xid, 'box', 'r_boxes', 'id', $tx->boxId);
-    foreignKeyCheck('Tx', $xid, 'reversesXid', 'tx_hdrs', 'xid', $tx->reversesXid);
+    foreignKeyCheck('Tx', $xid, 'actorId', 'users', 'uid', $tx);
+    foreignKeyCheck('Tx', $xid, 'actorAgentId', 'users', 'uid', $tx);
+    foreignKeyCheck('Tx', $xid, 'boxId', 'r_boxes', 'id', $tx);
+    foreignKeyCheck('Tx', $xid, 'reversesXid', 'tx_hdrs', 'xid', $tx);
     if (($tx->flags & ~u\bit(ray(TX_FLAGS))) != 0) { sanityErr("Tx $xid flags has extraneous bits set"); }
     if (!in_array($tx->goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS])) { sanityErr("Tx $xid goods is bad: $tx->goods"); }
 
@@ -1274,13 +1274,13 @@ function checkSanity() {
   foreach ($entryIds as $entryIdO) {
     $entryId = $entryIdO->id;
     $entry = r\TxEntry::read($entryId);
-    foreignKeyCheck('TxEntry', $entryId, 'xid', 'tx_hdrs', 'xid', $entry->xid);
-    foreignKeyCheck('TxEntry', $entryId, 'uid', 'users', 'uid', $entry->uid);
-    foreignKeyCheck('TxEntry', $entryId, 'agentUid', 'users', 'uid', $entry->agentUid);
+    foreignKeyCheck('TxEntry', $entryId, 'xid', 'tx_hdrs', 'xid', $entry);
+    foreignKeyCheck('TxEntry', $entryId, 'uid', 'users', 'uid', $entry);
+    foreignKeyCheck('TxEntry', $entryId, 'agentUid', 'users', 'uid', $entry);
     if ($entry->entryType > count(ray(E_TYPES))) sanityErr("TxEntry $entryId entryType is invalid: $entry->entryType");
 
     if (!empty($entry->rule)) {
-      foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry->rule);
+      foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry);
     }
     
     $total += $entry->amount;
@@ -1328,31 +1328,46 @@ function checkSanity() {
   foreach ($ids as $idO) {
     $id = $idO->id;
     $info = db\get('*', 'tx_disputes', ['id'=>$id]);
-    foreignKeyCheck('tx_disputes', $id, 'xid', 'tx_hdrs', 'xid', $info['xid']);
-    foreignKeyCheck('tx_disputes', $id, 'uid', 'users', 'uid', $info['uid']);
+    foreignKeyCheck('tx_disputes', $id, 'xid', 'tx_hdrs', 'xid', $info);
+    foreignKeyCheck('tx_disputes', $id, 'uid', 'users', 'uid', $info);
     if (!in_array($info['status'], [DS_OPEN, DS_ACCEPTED, DS_DENIED])) {
       $status = $info['status'];
       sanityErr("tx_disputes $id status field is invalid: $status");
     }
   }
 
-/*   // Check r_invoices */
-/*   $nvids = db\rows('nvid', 'r_invoices'); */
-/*   foreach ($nvids as $nvidO) { */
-/*     $nvid = $nvidO->nvid; */
-/*     $info = db\get('*', 'r_invoices', ['nvid'=>$nvid]); */
-/*     if ($info['status'] > 0) { */
-/*       foreignKeyCheck('r_invoices', $nvid, 'status', 'tx_hdrs', 'xid', $info['status']); */
-/*       $ */
+  // Check tx_requests */
+  $nvids = db\rows('nvid', 'tx_requests');
+  foreach ($nvids as $nvidO) {
+    $nvid = $nvidO->nvid;
+    $info = db\get('*', 'tx_requests', ['nvid'=>$nvid]);
+    if ($info['status'] > 0) {
+      foreignKeyCheck('tx_requests', $nvid, 'status', 'tx_hdrs', 'xid', $info);
+      foreignKeyCheck('tx_requests', $nvid, 'payer', 'txs', 'uid1', $info);
+      foreignKeyCheck('tx_requests', $nvid, 'payee', 'txs', 'uid2', $info);
+    }
+    foreignKeyCheck('tx_requests', $nvid, 'payer', 'users', 'uid', $info);
+    foreignKeyCheck('tx_requests', $nvid, 'payee', 'users', 'uid', $info);
+  }
 
 }
 
-function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
+/**
+ * Make sure the given field in the given table is what's expected.
+ * @param string $prefix: table being checked
+ * @param string $ref: key of record being checked
+ * @param string $field: name of field being checked
+ * @param string $table: table that should have a record with that field's value as its key
+ * @param string $keyFld: that table's key field name
+ * @param assoc $info: object or array with the desired value in its member indexed by $field
+ */
+function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $info) {
+  $keyVal = ((array) $info)[$field];
   if (!empty($keyVal) and !db\exists($table, [$keyFld=>$keyVal])) {
-    sanityErr("$prefix $ref $field refers to non-existent $table $keyVal");
+    sanityErr("$prefix $ref $field refers to non-existent $table record $keyVal");
   }
 }
 
 function sanityErr($s) {w\say("Sanity error: " . $s, 'err');}
 function invPayments($nvid) {return db\sum('amt', 'txs', "relType='I' AND rel=:nvid", compact('nvid'));}
-function invRemains($nvid) {return round(db\get('amount', 'r_invoices', compact('nvid')) - invPayments($nvid), 2);}
+function invRemains($nvid) {return round(db\get('amount', 'tx_requests', compact('nvid')) - invPayments($nvid), 2);}

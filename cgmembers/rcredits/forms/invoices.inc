@@ -11,25 +11,25 @@ include_once __DIR__ . '/../cg-txs.inc';
 
 /**
  * List Invoices
+ * @param string $ptf: pending, to, from
  */
-function formInvoices($form, &$sta, $toFrom, $args = '') {
-  w\downloadCheck('history/invoices-' . $toFrom);
+function formInvoices($form, &$sta, $ptf, $args = '') {
+  $toMe = ($ptf == 'to');
+  w\downloadCheck('history/invoices-' . $ptf);
 
-  $toMe = ($toFrom == 'to');
   extract(just('period starting ending download downloaded states nvid do', $args, NULL));
 
   $choices = array(t('open'), t('paid'), t('denied'));
-  extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$toFrom", $choices, '0,1,2')));
+  extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$ptf", $choices, '0,1,2')));
   
-  $list = item(invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFrom)); // must precede starting & ending
+  $list = item(pendingList($toMe, $starting, $ending, $states, $url, $download)); // must precede starting & ending
 
-  $title = t('Invoices ') . ($toMe ? t('TO You') : t('FROM You'));
-  $subtext =  $toMe ? t('pay or deny an invoice') : t('edit or delete an invoice');
-  $subtext = t('Click on a row to %subtext (unpaid invoices are listed first).', compact('subtext'));
-  $toFrom = hidFld($toFrom);
+  $title = $toMe ? t('Pending Payments TO You') : t('Pending Payments FROM You');
+  $subtext = t('Click on a row to edit or delete a pending payment (paid requests are listed last).');
+  $ptf = hidFld($ptf);
 
   //simple advanced
-  $form = compact('title', 'subtext') + $dateRange + compact(ray('list toFrom'));
+  $form = compact('title', 'subtext') + $dateRange + compact(ray('list ptf'));
   if ($downloaded) js('download', compact('url'));
   
   w\jsx('invoices', ray('args', "&ret=" . u\urlify($url)));
@@ -39,16 +39,16 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
 function formInvoices_validate($form, &$sta) {w\dateRangeValidate($sta, FALSE);}
 
 function formInvoices_submit($form, &$sta) {
-  dateRangeRedirect('history/invoices-' . $sta['input']['toFrom'], $sta);
+  dateRangeRedirect('history/invoices-' . $sta['input']['ptf'], $sta);
 }
 
 /**
- * Prepare the list of invoices
- * @return string table-based HTML listing the relevant invoices
+ * Prepare the list of pending payments
+ * @return string table-based HTML listing the relevant requests
  */
-function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFrom) {
+function pendingList($toMe, $starting, $ending, $states, $url, $download) {
 
-  $headHelp = t('Invoice number,Date invoice was created,Who sent you the invoice,What is the the invoice for,Total invoice amount,Click a row to change an invoice\'s status');
+  $headHelp = t('Invoice number,Date created,Who is to be paid,What is the payment for,Total amount,Click a row to change the status of the request');
   $classes = ray('nvid date name purpose amount buttons');
   $headers = t('Inv#,Date,Name,Purpose,Amount,Status');
   $headHelp = array_combine($classes, ray($headHelp));
@@ -59,22 +59,17 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
 
   $maxRows = $download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
   if ($download) {
-    $csv = x\setupDownload($starting, $ending, 'cg' . t('Invoices%way', 'way', $toFrom == 'to' ? t('To') : t('From')));
+    $csv = x\setupDownload($starting, $ending, 'cgPending' . ($toMe ? t('To') : t('From')));
     u\csv($downloadHeader);
   } else $csv = FALSE;
 
   $rows = [];
-  list ($yu, $me) = u\order($toMe, 'payee', 'payer');
+  list ($me, $yu) = u\order($toMe, 'payee', 'payer');
   $where = ":uid=i.$me AND i.created BETWEEN :starting AND :ending";
-  /*
-  This is broken anyway
-  if (strpos($states, '0') === FALSE) $where .= ' AND i.status<>:TX_PENDING';
-  if (strpos($states, '1') === FALSE) $where .= ' AND i.status<=0';
-  if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
-  */
+
   $sql = <<<EOF
     SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
-    FROM r_invoices i 
+    FROM tx_requests i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN tx_hdrs t ON t.xid=i.status
     LEFT JOIN tx_entries e ON e.xid=i.status AND e.uid=u.uid

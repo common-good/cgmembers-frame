@@ -182,8 +182,6 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_investments:clubid',
     'r_invites:inviter',
     'r_invites:invitee:D',
-    'r_invoices:payer:D',
-    'r_invoices:payee:D',
     'r_ips:uid:D',
     'r_near:uid1:D',
     'r_near:uid2:D',
@@ -218,6 +216,8 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_entries:agentUid',
     'tx_hdrs:actorId',
     'tx_hdrs:actorAgentId',
+    'tx_requests:payer:D',
+    'tx_requests:payee:D',
     'tx_rules:to:D',
     'tx_rules:payer:D',
     'tx_rules:payee:D',
@@ -1059,7 +1059,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
   }
 
   $subs = compact(ray('coid co2id uids'));
-  db\q('UPDATE r_invoices SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
+  db\q('UPDATE tx_requests SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
   db\q('UPDATE r_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
 }
   

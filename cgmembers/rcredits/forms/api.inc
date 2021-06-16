@@ -116,7 +116,7 @@ function generateInvoice($request) {
   extract(just('amount payerId billingDate dueDate nonce purpose status', $request, null));
   $payerA = r\acct($payerId);
   if (! $payerA) { return ray('nonce status payerId amount error', $nonce, 'BAD', $payerId, $amount, 'Payer not found'); }
-  $existing = db\get('nvid, status', 'r_invoices', ray('amount payer payee purpose created', $amount, $payerA->uid, $mya->uid, $purpose, $billingDate));
+  $existing = db\get('nvid, status', 'tx_requests', ray('amount payer payee purpose created', $amount, $payerA->uid, $mya->uid, $purpose, $billingDate));
   if ($existing) {
     extract(just('nvid status', $existing));
     $status = statusString($status) . '-DUPLICATE';
@@ -192,7 +192,7 @@ function getOneInvoiceStatus($request) {
   extract(just('cgInvoiceId amount payerId', $request));
   $payerA = r\acct($payerId);
   if (! $payerA) { return ray('cgInvoiceId amount payerId status error', $cgInvoiceId, $amount, $payerId, 'BAD', 'payer account missing'); }
-  $result = db\get('status, payee', 'r_invoices', ['nvid'=>$cgInvoiceId, 'amount'=>$amount, 'payer'=>$payerA->uid, 'payee'=>$mya->uid]);
+  $result = db\get('status, payee', 'tx_requests', ['nvid'=>$cgInvoiceId, 'amount'=>$amount, 'payer'=>$payerA->uid, 'payee'=>$mya->uid]);
   if ($result == FALSE) {
     return ray('cgInvoiceId amount payerId status error', $cgInvoiceId, $amount, $payerId, 'BAD', 'no invoice found');
   }

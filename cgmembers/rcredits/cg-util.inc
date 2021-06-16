@@ -478,13 +478,14 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
 
   $context = stream_context_create(compact('http'));
+  if (!isPRODUCTION and !strhas($url, BASE_URL)) return NULL; // non-production servers do not submit requests to other sites
+  
   if ($fp = fopen($url, 'rb', FALSE, $context)) {
     /// $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']); // for debugging
     $response = stream_get_contents($fp);
   } else $response = FALSE;
 
   if ($response === FALSE) {
-    if (test()) 
     r\tellAdmin("$method $url failed");
     return FALSE;
   }
@@ -1582,7 +1583,8 @@ function vetObjectInfo($info, $fields, $reqFields, $objectName) {
  * Return the value of the constant formed by the prefix and the var.
  */
 function consta($prefix, $var) {
-  $const = strtoupper(str_replace(' ', '_', $prefix . "_$var"));
+  if (!preg_match('/u\\d\\d?/', $var)) $var = strtoupper($var); // undefined, reserved constant
+  $const = str_replace(' ', '_', strtoupper($prefix) . "_$var");
   u\EXPECT(defined($const), "constant not defined: $const");
   return constant($const);
 }

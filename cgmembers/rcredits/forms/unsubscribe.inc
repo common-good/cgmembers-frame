@@ -17,7 +17,7 @@ function formUnsubscribe($form, &$sta, $args = '') {
   if (!u\crypted('P', $code) or !$qid or !$a = r\acct($qid)) return softErr(t('That is not a valid Unsubscribe link.'));
   db\q('UPDATE r_invites SET nonudge=:NOW WHERE email=:code', compact('code'));
   if ($a->balance < 0) return softErr(t('You have a negative balance of $%amt. You will need to add funds before closing your %PROJECT account.', 'amt', u\fmtAmt($a->balance)));
-  if (db\exists('r_invoices', 'payer=:id AND status=:TX_APPROVED', ray('id', $a->id))) return softErr(t('You have approved payment of one or more invoices that you have not yet actually paid. You will need to pay or refuse those invoices before closing your %PROJECT account. Sign in at :CG_DOMAIN and click History, then Invoices To You.'));
+  if (db\exists('tx_requests', 'payer=:id AND status=:TX_APPROVED', ray('id', $a->id))) return softErr(t('You have approved one or more payments that you have not yet actually paid. You will need to pay or cancel those before closing your %PROJECT account. Sign in at :CG_DOMAIN and click History, then Pending Payments.'));
   
   $msg = t('<p>Your request to unsubscribe is received.</p>');  
   $email = u\decry('P', $code);

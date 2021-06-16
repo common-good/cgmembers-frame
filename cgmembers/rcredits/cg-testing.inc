@@ -345,7 +345,7 @@ function doInvoices($info) {
 
   extract($info);
 
-  if ($testOnly) return verifyRecord('r_invoices', $info);
+  if ($testOnly) return verifyRecord('tx_requests', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
   u\EXPECT($missing == [], "missing fields " . pr($missing));
@@ -357,7 +357,7 @@ function doInvoices($info) {
   case 'approved': $invInfo['status'] = TX_APPROVED; break;
   }
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId', $info));  // extract directly, and might not be present
-  $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
+  $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
@@ -535,7 +535,7 @@ function count($what, $count) {
     case 'tx_hdrs': // fall through
     case 'txs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'entries': return eq($desc, $count, db\count('tx_entries_all', 'xid > 0') / 2);
-    default: return eq($desc, $count, db\count('r_' . $what));
+    default: return eq($desc, $count, db\count(strhas($what, '_') ? $what : "r_$what"));
   }
 }
 
@@ -587,7 +587,7 @@ function doMembersHave($info) {
 function flagList($fnm = 'flags', $tnm = 'users') {
   if ($tnm == 'users') {
     if ($fnm == 'flags') return B_LIST;
-  } elseif (in($tnm, 'txs tx_hdrs r_invoices')) {
+  } elseif (in($tnm, 'txs tx_hdrs tx_requests')) {
     if ($fnm == 'flags') return TX_FLAGS;
   }
   return '';
@@ -1439,58 +1439,58 @@ function clear($ch = 0) {
   \drupal_static_reset(); // clear out drupal central storage
 
   $tables = [             // RELATED TO
-             'cache',              // -
-             'flood',              // -
-             'messages',           // posts
-             'people',             // posts
-             'posts',              // -
-             'queue',              // -
-             'r_bad',              // -
-             'r_votes',            // r_ballots, r_options
-             'r_ballots',          // r_questions, users
-             'r_changes',          // users
-             'r_ratings',          // r_investments, users
-             'r_shares',           // r_investments
-             'r_investments',      // users, or is that u_company?, club?
-             'u_company',          // users
-             'r_do',               // users
-             'r_pairs',            // r_options
-             'r_options',          // r_questions
-             'r_questions',        // r_events
-             'r_events',           // -
-             'r_honors',           // users
-             'r_invites',          // users
-             'r_invoices',         // users
-             'x_invoices',         // users
-             'r_ips',              // users
-             'r_near',             // users
-             'r_notices',          // users
-             'r_photos',           // users
-             'x_photos',           // users
-             'r_proposals',        // -
-             'r_proxies',          // users
-             'r_relations',        // users
-             'x_relations',        // users
-             'r_stakes',           // users, club?
-             'r_stats',            // users
-             'r_tous',             // users
-             'r_usd',              // tx_hdrs, users
-             'x_usd',              // tx_hdrs, users
-             'r_usd2',             // tx_hdrs
-             'r_user_industries',  // r_industries, users
-             'semaphore',          // -
-             'sessions',           // users
-             'tx_disputes_all',    // tx_hdrs, users
-             'tx_entries_all',     // tx_hdrs, users, tx_rules
-             'tx_hdrs_all',        // users, r_boxes, self 
-             'tx_rules',           // users, u_groups, r_industries, tx_templates
-             'tx_templates',       // users, u_groups, r_industries
-             'r_boxes',            // users
-             'u_groupies',         // u_groups, users
-             'u_groups',           // -
-             'u_shouters',         // users
-             'x_users',            // standaloneish
-                          ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
+    'cache',              // -
+    'flood',              // -
+    'messages',           // posts
+    'people',             // posts
+    'posts',              // -
+    'queue',              // -
+    'r_bad',              // -
+    'r_votes',            // r_ballots, r_options
+    'r_ballots',          // r_questions, users
+    'r_changes',          // users
+    'r_ratings',          // r_investments, users
+    'r_shares',           // r_investments
+    'r_investments',      // users, or is that u_company?, club?
+    'u_company',          // users
+    'r_do',               // users
+    'r_pairs',            // r_options
+    'r_options',          // r_questions
+    'r_questions',        // r_events
+    'r_events',           // -
+    'r_honors',           // users
+    'r_invites',          // users
+    'x_invoices',         // users
+    'r_ips',              // users
+    'r_near',             // users
+    'r_notices',          // users
+    'r_photos',           // users
+    'x_photos',           // users
+    'r_proposals',        // -
+    'r_proxies',          // users
+    'r_relations',        // users
+    'x_relations',        // users
+    'r_stakes',           // users, club?
+    'r_stats',            // users
+    'r_tous',             // users
+    'r_usd',              // tx_hdrs, users
+    'x_usd',              // tx_hdrs, users
+    'r_usd2',             // tx_hdrs
+    'r_user_industries',  // r_industries, users
+    'semaphore',          // -
+    'sessions',           // users
+    'tx_disputes_all',    // tx_hdrs, users
+    'tx_entries_all',     // tx_hdrs, users, tx_rules
+    'tx_hdrs_all',        // users, r_boxes, self 
+    'tx_requests_all',    // users
+    'tx_rules',           // users, u_groups, r_industries, tx_templates
+    'tx_templates',       // users, u_groups, r_industries
+    'r_boxes',            // users
+    'u_groupies',         // u_groups, users
+    'u_groups',           // -
+    'u_shouters',         // users
+    'x_users',            // standaloneish
+  ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
 
   foreach (ray('bootstrap form') as $k) $tables[] = "cache_$k"; // don't empty cache_menu
   foreach ($tables as $table) db\q("TRUNCATE $table");

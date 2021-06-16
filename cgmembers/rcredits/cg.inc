@@ -138,10 +138,10 @@ function stampNote($note) {
  * @return the error message (FALSE if no error)
  */
 function badUnpaidInv($nvid, &$inv = '') {
-  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,recursId,created';
+  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,recursId,created,deleted';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
-  if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
-  if ($inv['status'] == TX_CANCELED) return 'inv is canceled';
+  if (!$inv = db\get($fields, 'tx_requests_all', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
+  if ($inv['deleted']) return 'inv is canceled';
   if ($inv['status'] >= TX_PAID) return 'inv already paid';
   return FALSE;
 }
@@ -1453,7 +1453,7 @@ function xfee($for, $amount) {
 function endRule($recurs, $id) {
   $tnm = $recurs ? 'tx_templates' : 'tx_rules';
   db\update($tnm, ray('id end', $id, now()), 'id');
-  if ($recurs) db\del('r_invoices', 'recursId=:id AND status<:TX_PAID', compact('id'));
+  if ($recurs) db\del('tx_requests', 'recursId=:id AND status<:TX_PAID', compact('id'));
 }
 
 function recurDesc($period, $periods = 1) {
@@ -1472,7 +1472,7 @@ function fullState($abbrev, $country = R_COUNTRY_ID) {return db\get('name', 'r_s
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
 function cgA() {return r\acct(CGID);}
-function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
+function denyInv($nvid) {return db\setData('tx_requests', $nvid, ['denied' => TRUE]);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}
 function usdin($for) {return u\abbreviates(S_USD_IN, is_array($for) ? $for[1] : $for, TRUE);}
 function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;}

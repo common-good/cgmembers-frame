@@ -35,7 +35,7 @@ YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
+const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs getFunds requests invest notices END';
 const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
@@ -241,7 +241,7 @@ function recurs() {
     FROM tx_templates tp
     LEFT JOIN tx_rules ru ON ru.template=tp.id
     LEFT JOIN txs x ON x.recursId=tp.id
-    LEFT JOIN r_invoices i ON i.recursId=tp.id
+    LEFT JOIN tx_requests i ON i.recursId=tp.id
     WHERE tp.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
     AND tp.start <= :NOW
     AND IFNULL(tp.end, :NOW+1) > :NOW
@@ -532,7 +532,7 @@ function everyMonth() {
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
     WHERE t.goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
     AND (SELECT 1 FROM txs_noreverse WHERE :IS_CRUMBS AND created>=$end AND uid1=u.uid LIMIT 1) IS NULL
-    AND (SELECT 1 FROM r_invoices WHERE :IS_CRUMBS AND created>=$end AND payer=u.uid LIMIT 1) IS NULL
+    AND (SELECT 1 FROM tx_requests WHERE :IS_CRUMBS AND created>=$end AND payer=u.uid LIMIT 1) IS NULL
     GROUP BY uid HAVING donate>0
 X;
   queueEach('crumbs', $sql);
@@ -928,20 +928,20 @@ function getFunds1($item) {
 }
 
 /**
- * Handle pending invoices.
+ * Handle pending requests (invoices and unfunded payments).
  */
-function invoices() {
+function requests() {
   $sql = <<< X
     SELECT DISTINCT i.*,i.:IS_FUNDING AS funding 
-    FROM r_invoices i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
+    FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
     ORDER BY i.nvid
 X;
-  queueEach('invoice1', $sql);
+  queueEach('request1', $sql);
   queueNext();
 }
 
-function invoice1($item) {
+function request1($item) {
   extract(just('nvid payer payee amount purpose status created funding', $item));
   $a1 = r\acct($payer);
   $a2 = r\acct($payee);
@@ -966,7 +966,7 @@ function invoice1($item) {
         if ($a1->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = \db_transaction();
         if ($a1->getFunds($amount, t('for invoice', compact('nvid')))) {
-          db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
+          db\setFlag('tx_requests', $nvid, B_FUNDING, TRUE);
         } else { // almost always because no bank account is connected
           $msg = 'short invoice' . ($a1->hasBank ? '|expect a transfer' : '|when funded|how to fund');
           $a1->tellOut($msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));

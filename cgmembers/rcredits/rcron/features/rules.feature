@@ -68,7 +68,7 @@ Scenario: Rules get instantiated
   |   3 |   1 | rebate | %today  |      3 | .ZZC  | .ZZB  | %REBATE_DESC | 1     | 1        |
   |   4 |   2 | prime  | %today  |      2 | .ZZB  | .ZZG  | donation     | %NULL | 2        |
   # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
-  And these "invoices":
+  And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose | recursId |*
   |    1 | %today  |    123 | .ZZA  | .ZZC  | invoice | 4        |
 

@@ -63,6 +63,7 @@ class TxEntry {
   static function read($id) {
     $info = db\get('*', 'tx_entries', ['id' => $id]);
     if (!$info) { return FALSE; }
+    unset($info['acctTid']); // no longer used
     return new TxEntry($info);
   }
 

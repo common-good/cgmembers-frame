@@ -97,7 +97,7 @@ function getReport($nm) {
         SELECT uid$them AS uid, SUM(amt) AS net0, 0 AS invs0
         FROM txs_prime WHERE $whereTx
         UNION SELECT $invThem AS uid,0 AS net0, SUM(amount) AS invs0
-        FROM r_invoices WHERE $whereInv AND status<:TX_PAID
+        FROM tx_requests WHERE $whereInv AND status<:TX_PAID
       ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
 X;
     $q = db\q($sql, compact('myid'));

@@ -42,11 +42,11 @@ Scenario: A brand new recurring donation to CG can be completed
   # and many other fields
   And count "txs" is 2
   And count "usd" is 0
-  And count "invoices" is 0
+  And count "tx_requests" is 0
   When cron runs "recurs"
   Then count "txs" is 2
   And count "usd" is 0
-  And count "invoices" is 0
+  And count "tx_requests" is 0
 
 Scenario: A second recurring donation to CG can be completed
   Given these "tx_templates":
@@ -69,7 +69,7 @@ Scenario: A donation invoice (to CG) can be completed
   | nvid | created   | status       | amount | payer | payee | for      | flags       | recursId |*
   |    2 | %today    | %TX_APPROVED |     50 | .ZZA | cgf | donation | gift,recurs |        8 |
   And member ".ZZA" has no photo ID recorded
-  When cron runs "invoices"
+  When cron runs "requests"
   Then transactions: 
   | xid | created | amount | payer | payee | purpose  | flags       | recursId |*
   |   2 | %today  |     50 | .ZZA  | cgf   | donation | gift,recurs |        8 |
@@ -87,12 +87,12 @@ Scenario: A recurring donation to CG cannot be completed
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,recurs |  
   And count "txs" is 1
   And count "usd" is 0
-  And count "invoices" is 1
+  And count "tx_requests" is 1
 
-  When cron runs "invoices"
+  When cron runs "requests"
   Then count "txs" is 2
   And count "usd" is 1
-  And count "invoices" is 1
+  And count "tx_requests" is 1
   And  invoices:
   | nvid | created   | status       | amount | payer | payee | for   | flags               |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,recurs,funding |  
@@ -100,7 +100,7 @@ Scenario: A recurring donation to CG cannot be completed
   When cron runs "recurs"
   Then count "txs" is 2
   And count "usd" is 1
-  And count "invoices" is 1
+  And count "tx_requests" is 1
 
 Scenario: A non-member chooses a donation to CG
   Given members:
@@ -114,4 +114,4 @@ Scenario: A non-member chooses a donation to CG
   When cron runs "recurs"
   Then count "txs" is 1
   And count "usd" is 0
-  And count "invoices" is 0
+  And count "tx_requests" is 0

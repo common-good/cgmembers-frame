@@ -53,6 +53,6 @@ Scenario: A member makes a food donation without adequate funds
   | id | from | to   | amount | period | purpose       | end |*
   |  1 | .ZZA | .ZZF |    100 | month  | food donation |     |
   And we say "status": "gift successful|gift transfer later"
-  And these "invoices":
+  And these "tx_invoices":
   | nvid | created   | status       | amount | payer | payee | for                     | flags  | recursId |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZF  | food donation (Monthly) | recurs |	       1 |

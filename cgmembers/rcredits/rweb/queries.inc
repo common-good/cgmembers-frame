@@ -181,7 +181,7 @@ $sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1
 // Who still owes CG a phone deposit
 SELECT fullName, nvid AS invoice, i.purpose FROM users u 
 LEFT JOIN (SELECT uid1 AS uid FROM txs_prime t0 WHERE t0.uid2=:CGID AND amt>=20) t USING(uid)
-LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM r_invoices i0 
+LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM tx_invoices i0 
   WHERE i0.payee=:CGID AND amount>=20 AND status<:TX_PAID) i USING(uid)
 WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 

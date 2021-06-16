@@ -63,8 +63,8 @@ Scenario: A member downloads transactions for the past year
   |     |         | TOTALS        |                    |      540 |   1210 |        |
 
 Scenario: A member downloads incoming invoices for the past year
-  When member ".ZZA" visits page "history/invoices-to/period=365&download=1"
-  Then we download "cgInvoicesTo%todayn-12m-%todayn.csv" with:
+  When member ".ZZA" visits page "history/pending-from/period=365&download=1"
+  Then we download "cgPendingFrom%todayn-12m-%todayn.csv" with:
   # For example cgInvoicesFrom20120525-20130524.csv
   | Inv# | Date    | Name    | Purpose | Amount | Status       |*
   |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |

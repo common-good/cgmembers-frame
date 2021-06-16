@@ -1188,17 +1188,6 @@ o;
   }
 
   /**
-   * Get the amount of any pending deposits of USD.
-   * @return the amount.
-   */
-  public function getApprovedInvoices() {
-    $a = $this;
-    $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
-    $res = db\sum('amount', 'r_invoices', 'payer IN (:ids) AND amount>0 and status=:TX_APPROVED', ['ids'=>$ids]);
-    return $res;
-  }
-
-  /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
    * Always bring the balance up to zero or (if autorefill is yes) the target balance PLUS the requested amount.
    * Called for investments, gifts, invoice payment, and autorefills. So the only way to stay negative is not to do any of these.

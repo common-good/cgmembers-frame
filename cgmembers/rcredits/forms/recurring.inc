@@ -41,7 +41,7 @@ function formRecurring($form, &$sta, $args = '') {
       ) AS maxStart
     FROM tx_templates tp
     LEFT JOIN txs x ON x.recursId=tp.id
-    LEFT JOIN r_invoices i ON i.recursId=tp.id
+    LEFT JOIN tx_requests i ON i.recursId=tp.id
     WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tp.from,tp.to) 
     GROUP BY tp.id
     ORDER BY tp.end IS NOT NULL, tp.to=:myid, tp.start DESC, tp.id DESC

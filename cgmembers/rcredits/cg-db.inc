@@ -199,7 +199,7 @@ function logSql($args) {
  * @param assoc $values: values to add to the data field in that record
  */
 function setData($table, $id, $values) {
-  $keys = ray('users r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users tx_requests tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $data = db\get('data', $table, "$key=:id", compact('id'));
@@ -222,7 +222,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users_txs r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users_txs tx_requests tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));
@@ -250,10 +250,9 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  */
 //function del($tnm, $idnm, $id = '', $subs = []) {
 function del($tnm, $where, $subs = [], $override = FALSE) {
-  if (strhas($tnm, 'tx_hdrs')
-    or strhas($tnm, 'tx_entries')
-    or strhas($tnm, 'txs_')
-  ) u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
+  foreach (ray('tx_hdrs tx_entries txs_') as $t) if (u\starts($tnm, $t)) {
+    u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
+  }
   
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));

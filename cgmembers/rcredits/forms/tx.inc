@@ -124,7 +124,7 @@ function formTx_submit($form, &$sta) {
     r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
   } else { // no delay: either a transaction or invoice was created, so set its recursId (pointing to template)
     extract(just('xid nvid', $subs, NULL)); // no other way to know whether payApproved created a tx or an invoice
-    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
+    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['tx_requests', 'nvid'];
     db\update($tnm, ray("$idFnm recursId", $subs[$idFnm], $id), $idFnm);
   }
 

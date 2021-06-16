@@ -392,7 +392,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .page-empty div.error {margin:10px 20px; padding:10px 10px 10px 20px;} 
 
 /* Partner Signup */
-.page-partner #user-picture img, .page-settings-partnerend #user-picture img {height:160px; margin:10px 0 0 230px;}
+.page-partner #user-picture, .page-settings-partnerend #user-picture {text-align:center;}
+.page-partner #user-picture img, .page-settings-partnerend #user-picture img {height:160px; margin:10px 0 0 5px;}
 .page-partner #messages, .page-settings-partnerend #messages {margin-top:40px;}
 .page-partner #main #content, .page-settings-partnerend #main #content {margin-top:40px;}
 @media (max-width:768px) {

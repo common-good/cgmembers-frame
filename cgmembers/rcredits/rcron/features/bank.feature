@@ -206,7 +206,7 @@ Scenario: a non-member has a target and refills
   |    1 | .ZZA  |    100 | %TX_CRON |
   And count "txs" is 1
   And count "usd" is 1
-  And count "invoices" is 0
+  And count "tx_requests" is 0
   
 Scenario: member's bank account has not been verified
   Given members have:
