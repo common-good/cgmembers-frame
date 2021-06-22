@@ -64,15 +64,23 @@ function timeFor($time, $period, $chosen) {
   return (!nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen)));
 }
 
-function queue($op, $item = []) {
+/**
+ * Add a task to the cron queue.
+ * @param string $op: the function name in rcron.inc
+ * @param assoc $item: a single assoc argument to that function, containing parameters
+ * @param bool $always: <queue it even when running tests> (normally FALSE)
+ */
+function queue($op, $item = [], $always = FALSE) {
   global $cronOp; // this is set when calling cron() from PHP window on test server
 
   $item = compact('op') + $item;
-  if (nn($cronOp) or test()) {
+  if ((nn($cronOp) or test()) and !$always) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);
-    if ($op != 'acctRisk1') u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . u\jsonize($item0));
+    $dup = $op == 'acctRisk1' ? FALSE : db\exists('queue', compact('item')); // allow dups just in this case
+    if ($dup and in($op, 'payRequests getFunds1')) return; // not an error, but don't duplicate (payRequests was 5-minute getFunds followup on balChange)
+    u\EXPECT(!$dup, 'item already in queue: ' . u\jsonize($item0));
     db\insert('queue', ray('item created', $item, now()));
   }
 }

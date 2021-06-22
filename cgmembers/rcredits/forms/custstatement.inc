@@ -129,16 +129,15 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
       '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
       IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS description
     FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
-    LEFT JOIN r_invoices i ON i.nvid=t.rel
+    LEFT JOIN tx_requests i ON i.nvid=t.rel
     WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
       OR (uid2 IN (:aUids) AND uid1 IN (:bUids))
     UNION ALL
     SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, NULL AS nvid, NULL AS part, 'inv' AS type,
       IF (payee IN (:aUids), amount, -amount) AS invoiced,
       inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
-    FROM r_invoices inv
+    FROM tx_requests inv
     WHERE ( (payer IN (:aUids) AND payee IN (:bUids)) OR (payee IN (:aUids) AND payer IN (:bUids)) )
-    AND status<>:TX_CANCELED
     ORDER BY created, paid<>0
 X;
 

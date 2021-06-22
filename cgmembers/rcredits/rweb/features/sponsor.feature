@@ -26,7 +26,7 @@ Scenario: A non-member applies for fiscal sponsorship
   | Referred By   |
   | Mission       |
   | Activities    |
-  | Annual Income |
+  | Expected Income |
   | Employees     |
   | Checks In     |
   | Checks Out    |
@@ -85,7 +85,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | Referred By   |
   | Mission       |
   | Activities    |
-  | Annual Income |
+  | Expected Income |
   | Employees     |
   | Checks In     |
   | Checks Out    |
@@ -151,7 +151,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   Then we show "Fiscal Sponsorship" with:
   | Mission       | |
   | Activities    | |
-  | Annual Income | 123456.78 |
+  | Expected Income | 123456.78 |
   | Employees     | 9 |
   | Checks In     | |
   | Checks Out    | |
@@ -237,7 +237,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | Country       |
   | Postal Code   |
   | Referred By   |
-  | Annual Income |
+  | Expected Income |
   | Employees     |
   | Comments      |
 

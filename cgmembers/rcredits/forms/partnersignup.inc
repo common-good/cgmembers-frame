@@ -367,7 +367,9 @@ function gotSolarOne($info) {
   // concoct dummy input for handleInput, just to get sfData
   foreach (ray('address city state zip') as $k) $info['m_' . $k] = $$k;
   $info['type'] = $co ? 1 : 0;
-  foreach (ray('m_amount years owns') as $k) $info[$k] = 1;
+  if (!nni($info, 'owns')) $info['owns'] =  0;
+  if (!nni($info, 'years')) $info['years'] =  1;
+  if (!nni($info, 'm_amount')) $info['m_amount'] =  '$100-$200';
   
   handleInput($info, $sfData);
   if (!$sfData) return solarOneErr('sfData error', 'sfData');

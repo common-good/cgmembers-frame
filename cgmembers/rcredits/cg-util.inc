@@ -478,13 +478,14 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
 
   $context = stream_context_create(compact('http'));
+  if (!isPRODUCTION and !strhas($url, BASE_URL)) return NULL; // non-production servers do not submit requests to other sites
+  
   if ($fp = fopen($url, 'rb', FALSE, $context)) {
     /// $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']); // for debugging
     $response = stream_get_contents($fp);
   } else $response = FALSE;
 
   if ($response === FALSE) {
-    if (test()) 
     r\tellAdmin("$method $url failed");
     return FALSE;
   }
@@ -746,7 +747,7 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
   
   if ($w0 != $w or $h0 != $h) { // resize
     $img1 = imagecreatetruecolor($w, $h); // resize the original image to size of editor
-	  imagecopyresampled($img1, $img0, 0, 0, 0, 0, $w, $h, $w0, $h0);
+    imagecopyresampled($img1, $img0, 0, 0, 0, 0, $w, $h, $w0, $h0);
   } else $img1 = $img0;
 
   if ($angle) { // rotate
@@ -754,11 +755,11 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
     $x1 += (imagesx($img1) - $w) / 2; // diff between rotated & original sizes
     $y1 += (imagesy($img1) - $h) / 2;
   }
-	
+  
   if ($cropW or $cropH) { // crop
-	  $img2 = imagecreatetruecolor($cropW, $cropH); // crop image into selected area
-	  imagecolortransparent($img2, imagecolorallocate($img2, 0, 0, 0));
-	  imagecopyresampled($img2, $img1, 0, 0, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
+    $img2 = imagecreatetruecolor($cropW, $cropH); // crop image into selected area
+    imagecolortransparent($img2, imagecolorallocate($img2, 0, 0, 0));
+    imagecopyresampled($img2, $img1, 0, 0, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
   } else $img2 = $img1;
   
   return $img2;
@@ -810,60 +811,60 @@ function decryRay($code) {
  * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
-	global $cryHows, $mya;
-	
-	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
+  global $cryHows, $mya;
+  
+  if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
   if (is_numeric($data)) $data = strval($data);
-	
+  
   if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
   
-	if ($de) {
+  if ($de) {
     if (!u\starts($data, CRYPT_FLAG . $type)) throw new \BadCry('encrypted value must begin with crypt flag');
     if ($type == 'V' and !$vKey = r\vKey()) return $data; // if we can't decrypt, return the data as is (for acct::recordChanges)
     $data = substr($data, strlen(CRYPT_FLAG . $type));
   }
 
-	$chow = $cryHows[$type];
-	foreach ($chow as $i => $v) if ($chow0 = nni($cryHows, $v)) $chow[$i] = $chow0[$i]; // allow reference to other how
-	list ($hows, $pw, $iv) = $chow;
-	$pw = u\b64decode($pwInstead ?: $pw);
-	u\EXPECT($pw, 'missing pw in cry');
-	
-	if ($iv == 'NONCE') {
-		if ($de) {
-			$iv = substr($data, 1, $nonceLen = ord($data[0]));
-			$data = substr($data, 1 + $nonceLen);
-		} else {
-    	$nonceLen = 37; // arbitrary length of nonce (must be >= 32)
-			$iv = openssl_random_pseudo_bytes($nonceLen);
-			$nonce = chr($nonceLen) . $iv; // since our IVs also serve as an arbitrary length mask, record its length
-		}
+  $chow = $cryHows[$type];
+  foreach ($chow as $i => $v) if ($chow0 = nni($cryHows, $v)) $chow[$i] = $chow0[$i]; // allow reference to other how
+  list ($hows, $pw, $iv) = $chow;
+  $pw = u\b64decode($pwInstead ?: $pw);
+  u\EXPECT($pw, 'missing pw in cry');
+  
+  if ($iv == 'NONCE') {
+    if ($de) {
+      $iv = substr($data, 1, $nonceLen = ord($data[0]));
+      $data = substr($data, 1 + $nonceLen);
+    } else {
+      $nonceLen = 37; // arbitrary length of nonce (must be >= 32)
+      $iv = openssl_random_pseudo_bytes($nonceLen);
+      $nonce = chr($nonceLen) . $iv; // since our IVs also serve as an arbitrary length mask, record its length
+    }
   } else $iv = u\b64decode($iv);
-	
-	$hows = $de ? array_reverse(ray($hows)) : ray($hows);
-	
-	foreach ($hows as $how) {
+  
+  $hows = $de ? array_reverse(ray($hows)) : ray($hows);
+  
+  foreach ($hows as $how) {
     switch ($how) {
-			case 'xor': $data = strXor($data, $pw . $iv); break; // deXor is the same
-			case 'rot': $data = strRotate($data, min(PHP_INT_MAX, hexdec(bin2hex(substr($pw, 0, 4)))) * ($de ? -1 : 1)); break;
-			case 'scram': $data = strScramble($data, $pw . $iv, $de); break;
-			case 'b64': $data = $de ? u\b64decode($data) : u\b64encode($data); break; // final encrypt step if present
-			case 'pgp':
-				if ($de) { // decrypt with supplied private key
-  			  $success = openssl_private_decrypt($data, $res, u\fmtKey($vKey, 'PRIVATE')) ? $res : FALSE;
-///					if (!$success) die(print_r(debug_backtrace(), -1));
-				  $data = $success ? substr_replace($res, '', -PGP_TRASH_LEN) : '';
-				} else { // encrypt with public key
-  				$data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
-    			$success = openssl_public_encrypt($data, $res, u\fmtKey($pw, 'PUBLIC')) ? $res : FALSE;
-					$data = $res;
-				}
-				break;
-			default: $data = crypt($data, $how, $pw, $iv, $de); // any standard AES
-		}
-	}
+      case 'xor': $data = strXor($data, $pw . $iv); break; // deXor is the same
+      case 'rot': $data = strRotate($data, min(PHP_INT_MAX, hexdec(bin2hex(substr($pw, 0, 4)))) * ($de ? -1 : 1)); break;
+      case 'scram': $data = strScramble($data, $pw . $iv, $de); break;
+      case 'b64': $data = $de ? u\b64decode($data) : u\b64encode($data); break; // final encrypt step if present
+      case 'pgp':
+        if ($de) { // decrypt with supplied private key
+          $success = openssl_private_decrypt($data, $res, u\fmtKey($vKey, 'PRIVATE')) ? $res : FALSE;
+///          if (!$success) die(print_r(debug_backtrace(), -1));
+          $data = $success ? substr_replace($res, '', -PGP_TRASH_LEN) : '';
+        } else { // encrypt with public key
+          $data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
+          $success = openssl_public_encrypt($data, $res, u\fmtKey($pw, 'PUBLIC')) ? $res : FALSE;
+          $data = $res;
+        }
+        break;
+      default: $data = crypt($data, $how, $pw, $iv, $de); // any standard AES
+    }
+  }
 
-	return $de ? $data : (CRYPT_FLAG . $type . nn($nonce) . $data);
+  return $de ? $data : (CRYPT_FLAG . $type . nn($nonce) . $data);
 }
 
 /**
@@ -876,18 +877,18 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
  * @return <value is encrypted> OR encryption type (FALSE if none)
  */
 function crypted($type, $s = NULL) {
-	if (func_num_args() == 1) {
+  if (func_num_args() == 1) {
     if (strlen($type) < strlen(CRYPT_FLAG) + 1) return FALSE;
-	  list ($type, $s) = [$type[strlen(CRYPT_FLAG)], $type];
-	  if (!$type or !strhas('PSV', $type)) return FALSE;
-		return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
+    list ($type, $s) = [$type[strlen(CRYPT_FLAG)], $type];
+    if (!$type or !strhas('PSV', $type)) return FALSE;
+    return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
 }
-	
+  
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-	return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
+  return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
 }
 
 /**
@@ -907,7 +908,7 @@ function cryPGP($data, $priv = TRUE, &$trash = '') {
  */
 function decryPGP($data, $priv = FALSE) {
   $success = cryPGP0('de', $data, $priv, $res);
-	return $success ? substr_replace($res, '', -30) : '';
+  return $success ? substr_replace($res, '', -30) : '';
 }
 
 function cryPGP0($way, $data, $priv, &$res = '') {
@@ -948,7 +949,7 @@ function crypt($data, $how, $key, $iv, $decrypt = FALSE) {
   u\EXPECT(compact(ray('data how key iv')), 'string string string string');
 
   $ivSize = openssl_cipher_iv_length($how);
-	$iv = substr($iv, 0, $ivSize);
+  $iv = substr($iv, 0, $ivSize);
   $key = substr($key, 0, 32); // 32 bytes for 256 bits
 
   $function = $decrypt ? 'openssl_decrypt' : 'openssl_encrypt';
@@ -1495,45 +1496,45 @@ function median($ray) {
  * XOR a string of bits with a mask
  */
 function strXor($a, $mask) {
-	$mlen = strlen($mask);
-	u\EXPECT($mlen, 'empty strXor mask');
-	$res = '';
-	for ($i = 0; $i < strlen($a); $i++) $res .= $a[$i] ^ $mask[$i % $mlen];
-	return $res;
+  $mlen = strlen($mask);
+  u\EXPECT($mlen, 'empty strXor mask');
+  $res = '';
+  for ($i = 0; $i < strlen($a); $i++) $res .= $a[$i] ^ $mask[$i % $mlen];
+  return $res;
 }
 
 /**
  * Rotate a string of bits to the left
  */
 function strRotate($s, $n) {
-	if (!$blen = strlen($s) * 8) return '';
-	$n = ($n % $blen) + ($n < 0 ? $blen : 0);
-	$chars = phpversion() >= 7 ? intdiv($n,	8) : (int) ($n / 8);
-	$s = substr($s, $chars) . substr($s, 0, $chars);
-	if (!$bits = $n & 7) return $s; // rotation fell on a character boundary
-	
-	$s .= substr($s, 0, 1);
-	$res = '';
-	for ($i = 0; $i < strlen($s) - 1; $i++) {
-		$res .= chr((ord($s[$i]) << $bits) + (ord($s[$i + 1]) >> (8 - $bits)));
-	}
-	return $res;
+  if (!$blen = strlen($s) * 8) return '';
+  $n = ($n % $blen) + ($n < 0 ? $blen : 0);
+  $chars = phpversion() >= 7 ? intdiv($n,  8) : (int) ($n / 8);
+  $s = substr($s, $chars) . substr($s, 0, $chars);
+  if (!$bits = $n & 7) return $s; // rotation fell on a character boundary
+  
+  $s .= substr($s, 0, 1);
+  $res = '';
+  for ($i = 0; $i < strlen($s) - 1; $i++) {
+    $res .= chr((ord($s[$i]) << $bits) + (ord($s[$i + 1]) >> (8 - $bits)));
+  }
+  return $res;
 }
 
 /**
  * Scramble a string by swapping each character with one some distance to its right (0 to 255).
  */
 function strScramble($s, $key, $un = FALSE) {
-	if (!$slen = strlen($s)) return '';
-	$klen = strlen($key);
-	u\EXPECT($klen, 'empty scramble key');
-	
-	for ($i0 = 0; $i0 < $slen; $i0++) {
-		$i = $un ? $slen - $i0 - 1 : $i0;
-		$j = ord($key[$i % $klen]) % $slen; // all modulus params in this function are >0 (no worries that in PHP -8 % 5 is -3
-		list ($s[$i], $s[$j]) = [$s[$j], $s[$i]];
-	}
-	return $s;
+  if (!$slen = strlen($s)) return '';
+  $klen = strlen($key);
+  u\EXPECT($klen, 'empty scramble key');
+  
+  for ($i0 = 0; $i0 < $slen; $i0++) {
+    $i = $un ? $slen - $i0 - 1 : $i0;
+    $j = ord($key[$i % $klen]) % $slen; // all modulus params in this function are >0 (no worries that in PHP -8 % 5 is -3
+    list ($s[$i], $s[$j]) = [$s[$j], $s[$i]];
+  }
+  return $s;
 }
 
 function strUnscramble($s, $key) {return strScramble($s, $key, TRUE);}
@@ -1550,18 +1551,18 @@ function noSecrets($ray) {
  * Return formatted parsedown text.
  */
 function parseUp($s) {
-	require_once DRUPAL_ROOT . '/vendor/parsedown/Parsedown.php'; // normally only once per form
+  require_once DRUPAL_ROOT . '/vendor/parsedown/Parsedown.php'; // normally only once per form
 
-	$pd = new \Parsedown();
-	$pd->setSafeMode(TRUE);
-	return strtr($pd->text($s), ["\\\n" => "<br>", '\\' => "<br>"]);
+  $pd = new \Parsedown();
+  $pd->setSafeMode(TRUE);
+  return strtr($pd->text($s), ["\\\n" => "<br>", '\\' => "<br>"]);
 }
 
 /*
 function unSerialFix($s) {
-	$s = html_entity_decode($s, ENT_QUOTES, 'UTF-8');
-	$s = preg_replace('!s:(\d+):"(.*?)";!e', "'s:'.strlen('$2').':\"$2\";'", $s );
-	$s = unserialize($s);
+  $s = html_entity_decode($s, ENT_QUOTES, 'UTF-8');
+  $s = preg_replace('!s:(\d+):"(.*?)";!e', "'s:'.strlen('$2').':\"$2\";'", $s );
+  $s = unserialize($s);
 }
 */
 
@@ -1582,7 +1583,8 @@ function vetObjectInfo($info, $fields, $reqFields, $objectName) {
  * Return the value of the constant formed by the prefix and the var.
  */
 function consta($prefix, $var) {
-  $const = strtoupper(str_replace(' ', '_', $prefix . "_$var"));
+  if (!preg_match('/u\\d\\d?/', $var)) $var = strtoupper($var); // undefined, reserved constant
+  $const = str_replace(' ', '_', strtoupper($prefix) . "_$var");
   u\EXPECT(defined($const), "constant not defined: $const");
   return constant($const);
 }

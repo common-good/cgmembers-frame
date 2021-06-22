@@ -48,7 +48,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     if (!$account or strtoupper($account) == t('TOTAL')) break; // should never happen unless user has a total line
     if ($err = u\badAmount($amt, '>=0')) {iuErr($err, $e); continue;}
     if (!$amt) {iuErr(t('The amount for this account is zero so it will not be %did', $e), $e, FALSE); continue;}
-	  if (!$account or !$a = r\acct($account)) {iuErr(t('Bad account ID'), $e); continue;} // not 'bad account'
+    if (!$account or !$a = r\acct($account)) {iuErr(t('Bad account ID'), $e); continue;} // not 'bad account'
     if (!$a->ok) {iuErr(t('This account is not yet activated'), $e); continue;}
     $a->setBit(B_CONFIRMED); // count this as equivalent to an invitation to the person
     if (!$email = trim(mb_strtolower($email)) or $a->email != $email) { // not the right email
@@ -60,8 +60,8 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     $total += $amt;
   }      
 
-	if (nn($iuErrs)) return say(join('<br>', $iuErrs), 'file');
-	
+  if (nn($iuErrs)) return say(join('<br>', $iuErrs), 'file');
+  
   if (!nn($txs)) return say('nothing to do', 'file');
   
   if (!$inv) {
@@ -106,7 +106,7 @@ EOF
 }
 
 function iuErr($msg, $e, $fatal = TRUE) {
-  global $iuErrs;	
+  global $iuErrs;  
   $msg = t('csv error', $e + compact('msg'));
   if ($fatal) $iuErrs[] = $msg; else w\say($msg);
 }

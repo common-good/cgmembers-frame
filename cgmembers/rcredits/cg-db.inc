@@ -91,7 +91,7 @@ function update($table, $info, $key = 'id') {
   if (!isset($info['modified']) and hasField($table, 'modified')) {
     $info['modified'] = now();
   }
-	
+  
   $sql = '';
   foreach ($info as $field => $v) {
     if ($field != $key) $sql .= ",`$field`=:$field";
@@ -118,7 +118,7 @@ function insert($table, $info, $key = 'id') {
   foreach (ray('start created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
     $info[$k] = now(); // set these automatically
   }
-	
+  
   $sql = '';
   foreach ($info as $field => $v) {
     /* if ($field == $key) u\FAIL('key value specified in database insert'); // may actually be needed */
@@ -199,7 +199,7 @@ function logSql($args) {
  * @param assoc $values: values to add to the data field in that record
  */
 function setData($table, $id, $values) {
-  $keys = ray('users r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users tx_requests tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $data = db\get('data', $table, "$key=:id", compact('id'));
@@ -222,7 +222,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users_txs r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users_txs tx_requests tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));
@@ -250,10 +250,9 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  */
 //function del($tnm, $idnm, $id = '', $subs = []) {
 function del($tnm, $where, $subs = [], $override = FALSE) {
-  if (strhas($tnm, 'tx_hdrs')
-    or strhas($tnm, 'tx_entries')
-    or strhas($tnm, 'txs_')
-  ) u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
+  foreach (ray('tx_hdrs tx_entries txs_') as $t) if (u\starts($tnm, $t)) {
+    u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
+  }
   
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
@@ -267,6 +266,10 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   if (in($tnm, DELETED_BY_VIEW)) {
     $q = db\q("UPDATE $tnm SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
     $ok = ($q->rowCount() > 0);
+    if ($tnm == 'tx_entries_all') { // deleting an entry changes the balance, so fix the wentNeg dates
+      $q = db\q("SELECT uid amount FROM $tnm WHERE deleted AND $where", $subs);
+      while ($row = $q->fetchAssoc()) be\balChange($row);
+    }
     return;
     
   } elseif (in($tnm, TRACK_DELETED)) {

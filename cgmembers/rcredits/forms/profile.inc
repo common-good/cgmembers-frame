@@ -31,7 +31,7 @@ function formProfile($form, &$sta, $company = '', $args = '') {
   $contact = item("$physical $country<br>$mailing<br>
     $phone<br>
     $siteList");
-	$desc = item($a->coDesc());	
+  $desc = item($a->coDesc());  
 
   return cgform(compact(ray('pic title contact desc')));
 }

@@ -525,7 +525,7 @@ class Acct {
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
-	
+  
   /**
    * Encrypt if appropriate
    */
@@ -540,7 +540,7 @@ class Acct {
     }
     return $v;
   }
-		
+    
   /**
    * Create a new relationship record for the current account (as "main") relating to some agent.
    * NOTE: Assume no other company agent for this company is trying to create a relation at the same time.
@@ -721,9 +721,9 @@ X;
   
   /**
    * Draw the wanted amount from other accounts, usually to make a purchase and maintain a non-negative balance.
-   * @param float $need: the amount wanted
+   * @param numeric $need: the amount wanted
    * @param string $why: purpose of transfer
-   * @return float: the amount drawn
+   * @return numeric: the amount drawn
    */
   public function draw($need, $why = '') {
     $a = $this;
@@ -802,7 +802,7 @@ EOF;
       $ai->update('jid', $aj->id);
       foreach ($fields as $k) $$k = nn($$k, 0) + ($ai->o($k) ?: 0);
     }
-		
+    
     $a->masterA->setBit(B_REFILL, $a->o_refill or $b->o_refill);
     $achMin = max($a->o_achMin, $b->o_achMin); // one of the $fields
     $minimum = $a->o_minimum + $b->o_minimum;
@@ -1167,7 +1167,7 @@ o;
     if ($combinable <= 0) $combinable = $combineTxid = 0;
     return $amt;
   }
-	
+  
   /**
    * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
    */
@@ -1176,91 +1176,77 @@ o;
   }
 
   /**
-   * Get the amount of any pending deposits of USD.
-   * @return the amount.
-   */
-  public function getPendingDeposits() {
-    $a = $this;
-    $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
-    $res = db\sum('amount', 'r_usd', 'payee IN (:ids) AND amount>0 and completed=0', ['ids'=>$ids]);
-///       debug("$a->id getPendingDeposits() => $res");
-    return $res;
-  }
-
-  /**
-   * Get the amount of any pending deposits of USD.
-   * @return the amount.
-   */
-  public function getApprovedInvoices() {
-    $a = $this;
-    $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
-    $res = db\sum('amount', 'r_invoices', 'payer IN (:ids) AND amount>0 and status=:TX_APPROVED', ['ids'=>$ids]);
-    return $res;
-  }
-
-  /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
-   * Always bring the balance up to zero or (if autorefill is yes) the target balance PLUS the requested amount.
-   * Called for investments, gifts, invoice payment, and autorefills. So the only way to stay negative is not to do any of these.
+   * Call with:
+   *   $got = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
+   *   $got = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
+   * Called for investments, gifts, invoice payment, and autorefills.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return <success> (the funds were requested or drawn)
+   * @return numeric: amount drawn from other accounts and/or requested from bank
    */
-  public function getFunds($amount, $why) {
+  public function getFunds($amount = NULL, $why = NULL) {
     $a = $this;
 
-    if ($amount <= 0) return FALSE;
-    return $a->hasBank ? $a->bank($amount, $why) : ($a->draw($amount, $why) >= $amount);
+    if ($amount <= 0) return 0;
+    $amtDone = $a->draw($amount, $why);
+    $amount -= $amtDone;
+    if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
+    
+    if ($amount) { // there was some to be gotten from bank
+      $msg = $amtDone >= $amount ? 'automatic when funded' : 'when funded|how to fund';
+      w\say($msg);
+      $a->tellOut($msg);
+    }    
+    return $amtDone;
   }
   
   /**
    * Transfer funds to or from a connected bank account.
    * @param numeric $amount: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
-   * @param assoc $tx: forced field values, if any (when reversing an unsuccessful request)
+   * @param bool $explicit: user requested this transfer explicitly
    * @param string $newwhy: (RETURNED) actual message to tell account-owner about the transfer
-   * @return <success> (a transfer request was made)
+   * @return numeric: the amount transferred
    */
-  public function bank($amount, $why = '', $tx = [], &$newwhy = '') {
+  public function bank($amount, $why = '', $explicit = FALSE, &$newwhy = '') {
     $a = $this;
-    global $channel;
     
     u\EXPECT($a->hasBank, 'banking with no bank');
 
-    $amount0 = $amount;
-    $automatic = ($channel == TX_CRON);
     $payee = $a->id;
-    if ($tx) extract($tx);
-    $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
+//    $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
+    $okNow = TRUE; // trust everyone unless and until this becomes a problem
     if (!$okNow) $a->verifyBank();
     $msg = 'banked';
     $done = FALSE;
     $previous = $total = NULL;
   
-    if ($amount > 0) {
+    if ($amount > 0) { // bringing money in
       $waiting = $a->waitingFromBank($combinable, $txid);
       $amount += $combinable;
-      if ($a->refill) {
-        $amount = max($amount, $a->achMin, R_ACHMIN, $a->minimum - $a->balance - $waiting);
-        $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if member has agreed to that deal
-      } elseif ($automatic and $a->balance < 0) $amount = max($amount, $amount - $a->balance - $waiting);
+      $amount0 = $amount;
+      if ($a->refill) { // round up, if member has agreed to that deal
+        $amount = max($amount, $a->achMin);
+        $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN));
+      }
 
       if ($combinable and $done = db\update('r_usd', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';
         list ($previous, $total) = [u\fmtAmt($combinable), u\fmtAmt($amount)];
         $xid = db\get('xid', 'r_usd', compact('txid'));
       }
-    }
+    } else $amount0 = $amount;
 
     if (!$done) {
-      u\setDft($created, $okNow ? now() : strtotime('+3 days'));
+      u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
 ///    debug(compact(ray('done created okNow completed amount waiting')) + ['floor' => $a->floor]);
 
       $DBTX = \db_transaction();
-      $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid);
+      list ($txid, $xid) = be\createUsdTransfer($a, $amount, $created, NULL);
       u\EXPECT((bool) $txid, 'saving usd record');
-      if (nn($completed)) $completed = be\completeUsdTx($txid, $automatic, $completed); // completed is then boolean
+      if (nn($completed)) $completed = be\completeUsdTx($txid, !$explicit, $completed); // completed is then boolean
       unset($DBTX);
     }
 
@@ -1273,14 +1259,14 @@ o;
     $subs = ray('action tofrom amount checkNum previous total why', $action, $tofrom, u\fmtAmt(abs(nn($amount))), $xid, $previous, $total, nn($why));
     $a->tellInOut($amount > 0, $msg, $subs);
     $newwhy = tr($msg, $subs); // for return
-    if ($amount > $amount0 and !$automatic) {
+    if ($amount > $amount0 and $explicit) {
       $whyIncrease = $a->refill ? t('to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.') : t('to bring your balance up to zero.');
       w\say(t('Your request has been increased ') . $whyIncrease);
     }
 
-    return TRUE;
+    return $amount;
   }
-	
+  
   /**
    * Create a zero USD transfer record to verify the bank account.
    */
@@ -1295,7 +1281,7 @@ o;
       if ($txid = db\insert('r_usd', $info + compact(ray('txid channel')), 'txid')) break;
     }
     u\EXPECT($txid, 'ran out of low txids');
-  }			
+  }      
 
   /**
    * Automatically cashout accounts that choose to, leaving average weekly gross (over past 6 months) in the account. Weekly gross is figured as -6/26th of the floor (because there are 26 weeks in 6 months and floor is based on 1/6 of 6 months' gross).
@@ -1305,9 +1291,9 @@ o;
     
     if (!$a->hasBank) return;
     if ($a->waitingFromBank($combinable) > 0) return; // no cashout if waiting to bring some in
-    $cashout = 10 * floor(($a->balance - -$a->floor * 6 / 26) / 10);
+    $cashout = round($a->balance - -$a->floor * 6 / 26 - 4.99, -1); // round average weekly activity down to nearest $10
     if ($cashout < R_ACHMIN) return;
-    if (!$a->bank(-$cashout)) return;
+    $a->bank(-$cashout);
   }
   
   /**
@@ -1317,7 +1303,7 @@ o;
   public function suggestAuto() {
     $a = $this;
     global $channel; if (!in_array($channel, [TX_APP])) return;
-		
+    
     $web = ($channel == TX_WEB);
 
     if (!$web) $msg[] = 'you were short';
@@ -1332,11 +1318,11 @@ o;
       $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->doLink('debtok');
       $msg[] = 'try debt';
     }
-		
+    
     $msg = join('|', $msg);
     if ($web) return t($msg, $args); else $a->tellMisc($msg, $args);
   }
-	
+  
   /**
    * Return the next suggested date, type, and description to contact this member for a standard checkin.
    * @param mixed $done: <asking because a checkin was just completed> or "activate"
@@ -1656,7 +1642,7 @@ X;
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
     return u\b64encode($vKeyE); // ready for signin form on flash drive
   }
-	
+  
   /**
    * Call a function for each co-branding partner for whom the current account is a customer.
    * @param function(coA, custA, custCode) $func: the function to call, with three parameters:
@@ -1796,6 +1782,7 @@ X;
     
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
+    $a->getFunds(nni($z->subs, 'shortfall') ?: $amount, t('to cover your payment request #%nvid', $z2->subs));
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
   }
 

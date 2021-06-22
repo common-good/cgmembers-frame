@@ -20,8 +20,8 @@ function formEvent($form, &$sta, $args='') {
   include_once R_ROOT . '/rvote/rvote.inc';
   include_once R_ROOT . '/rvote/rvote-results.inc';
   global $base_url, $mya;
-	
-	extract(just('do eid', $args, NULL));
+  
+  extract(just('do eid', $args, NULL));
 
   $typeDescs = ray(t('I:Meeting,V:Vote,G:Grading,P:RFP'));
   if (strpos($eid, '=')) extract(just('eid do', $eid)); // passed from rdo()
@@ -36,8 +36,8 @@ function formEvent($form, &$sta, $args='') {
 
   u\setDft($type, NULL);
   $vote = ($type == 'V');
-	$grading = ($type == 'G');
-	
+  $grading = ($type == 'G');
+  
   if ($do == 'report') {
     include_once R_ROOT . '/rvote/rvote-results.inc';
     $title = item($typeDescs[$type] . t(' Results'));
@@ -87,7 +87,7 @@ EOF;
       $list = item('<h4>' . $header . '</h4>' . $list);
     }
     $id = hidFld($eid);
-//		if ($vote) $subtext = btn("/community/events/question/eid=$eid", t('Add Question'), 'warning');
+//    if ($vote) $subtext = btn("/community/events/question/eid=$eid", t('Add Question'), 'warning');
   }
   
   // add or edit
@@ -99,7 +99,7 @@ EOF;
   $start = dateFld(REQ . t('Start:'), [t('Start Date')], dft(nn($start)));
   $end = dateFld(REQ . t('End:'), [t('End Date')], dft(nn($end)));
   if ($mya->cAdmin) $submit = submit();
-	$back = button(t('Back to Events'), "$base_url/community/events");
+  $back = button(t('Back to Events'), "$base_url/community/events");
   
   foreach (ray('title back id list type event details start end submit') as $k) if (isset($$k)) $form[$k] = $$k;
   return cgform($form);

@@ -52,7 +52,7 @@ Scenario: A member confirms request to charge another member
   | .ZZA |     100 |
   | .ZZB |    -100 |
   | .ZZC |       0 |
-	
+  
 Scenario: A member makes partial payments
   Given invoices:
   | nvid | created | status      | amount | payer | payee | for   |*
@@ -163,7 +163,7 @@ Scenario: A member approves an invoice with insufficient funds
   Then invoices:
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
-  And we say "status": "short invoice|when funded|how to fund" with subs:
+  And we say "error": "short invoice|when funded|how to fund" with subs:
   | short | payeeName | nvid |*
   | $50   | Abe One   |    1 |
   And balances:

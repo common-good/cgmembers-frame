@@ -130,7 +130,7 @@ function formFood_submit($form, &$sta) {
       $amount = 0;
       say(t('Your recurring contribution is unchanged.'));
     }
-	}
+  }
 
   if ($amount > 0) {
     $payee = db\get('uid', 'users', "name='foodfund'");

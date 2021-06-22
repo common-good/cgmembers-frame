@@ -59,9 +59,9 @@ Scenario: A member makes a recurring donation
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
-	Then these "tx_templates":
-	| id | start  | from | to  | amount | period | purpose  |*
-	|  1 | %today | .ZZA | cgf |     10 | month  | donation |
+  Then these "tx_templates":
+  | id | start  | from | to  | amount | period | purpose  |*
+  |  1 | %today | .ZZA | cgf |     10 | month  | donation |
   And transactions:
   | xid | created | amount | payer | payee | purpose  | recursId |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
@@ -74,9 +74,9 @@ Scenario: A member makes a recurring donation
   |    $10 |        $0.50 | 
   
 Scenario: A member makes a new recurring donation
-	Given these "tx_templates":
-	| start     | from | to  | amount | period |*
-	| %today-1d | .ZZA | cgf |     25 | year   |
+  Given these "tx_templates":
+  | start     | from | to  | amount | period |*
+  | %today-1d | .ZZA | cgf |     25 | year   |
   When member ".ZZA" visits page "community/donate"
   Then we show "donation replaces" with:
   | period | amt |*
@@ -89,9 +89,9 @@ Scenario: A member makes a new recurring donation
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |
   And we say "status": "gift successful"
-	And these "tx_templates":
-	| start  | from | to  | amount | period |*
-	| %today | .ZZA | cgf |     10 | month  |
+  And these "tx_templates":
+  | start  | from | to  | amount | period |*
+  | %today | .ZZA | cgf |     10 | month  |
   
 Scenario: A company makes a recurring donation
   When member ".ZZC" completes form "community/donate" with values:
@@ -101,7 +101,7 @@ Scenario: A company makes a recurring donation
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZC  | cgf   | donation |
   And we say "status": "gift successful"
-	
+  
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*

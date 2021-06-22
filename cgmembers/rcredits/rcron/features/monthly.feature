@@ -116,11 +116,11 @@ Scenario: Crumb and roundup donations are made
   | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations                              | gift        |
   # Note that tests simulate the previous month as the previous 30 days (created field is mdt1-1 when not testing)
   And count "txs" is 14
-  And count "invoices" is 0
+  And count "tx_requests" is 0
 
   When cron runs "everyMonth"
   Then count "txs" is 14
-  And count "invoices" is 0
+  And count "tx_requests" is 0
   # still
   
 Scenario: Crumbs are invoiced
@@ -136,11 +136,11 @@ Scenario: Crumbs are invoiced
   | xid | created        | amount | payer | payee | purpose           | flags |*
   | 13  | %(%daystart-1) |   1.00 | round | cgf | roundup donations | gift  |
   And count "txs" is 13
-  And count "invoices" is 1
+  And count "tx_requests" is 1
 
   When cron runs "everyMonth"
   Then count "txs" is 13
-  And count "invoices" is 1
+  And count "tx_requests" is 1
   
   Given transactions:
   | xid | created   | amount | payer | payee | purpose |*
@@ -149,15 +149,15 @@ Scenario: Crumbs are invoiced
 
   When cron runs "everyMonth"
   Then count "txs" is 14
-  And count "invoices" is 1  
+  And count "tx_requests" is 1  
 
-  When cron runs "invoices"
+  When cron runs "getFunds"
   Then transactions:
   | xid | created | amount | payer | payee | purpose                                     | flags       |*
   | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
   And count "txs" is 15
 
-  When cron runs "invoices"
+  When cron runs "getFunds"
   Then count "txs" is 15
   
 # NO (Seedpack gets no distribution) distribution of shares to CGCs

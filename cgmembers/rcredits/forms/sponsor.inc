@@ -12,22 +12,23 @@ use CG\Db as db;
 
 function formSponsor($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args, 'any');
+  $isCo = ($mya and $mya->co);
   
   u\setDft($source2, nni($_COOKIE, 'ad'));
   $source2 = hidFld($source2);
 
   $title = t('Fiscal Sponsorship Application');
-  $subtext = t('<p>%PROJECT provides fiscal sponsorship for compatible, mission-aligned organizations and projects working for social, racial, environmental, and economic justice. This allows you to accept tax-deductible contributions without having to apply to the IRS for nonprofit status. %PROJECT provides some extra benefits and charges a lower fee than most other fiscal sponsors &mdash; between 3% and 5%. Complete this form to apply, or give us a call.</p><p><span class="loud">If your project already has a %PROJECT account</span>, sign in to that account before applying.</p>');
+  $subtext = t('<p>%PROJECT provides fiscal sponsorship for compatible, mission-aligned organizations and projects working for social, racial, environmental, and economic justice. This allows you to accept tax-deductible contributions without having to apply to the IRS for nonprofit status. %PROJECT provides some extra benefits and charges a lower fee than most other fiscal sponsors. Complete this form to apply, or give us a call.</p><p><span class="loud">If your project already has a %PROJECT account</span>, sign in to that account before applying.</p>');
 
-  $mission = areaFld(REQ . t('Mission:'), [t('Organization\'s mission')], dft($mya ? $mya->mission : '') + maxlen(250));
-  $activities = areaFld(REQ . t('Activities:'), [t('Organization\'s activities'), t('What do you <i>do</i> to advance your mission?')], dft($mya ? $mya->activities : '') + maxlen(250));
-  $gross = numFld(REQ . t('Annual Income:'),[t('Gross annual income'), t('Annual income before expenses')], dft($mya ? $mya->gross : ''));
-  $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees do you have?')], dft($mya ? $mya->employees : ''));
-  $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks you expect to receive in a typical month.')], dft($mya ? $mya->checksIn : ''));
-  $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments you expect to make in a typical month.')], dft($mya ? $mya->checksOut : ''));
+  $mission = areaFld(REQ . t('Mission:'), [t('Organization\'s mission')], dft($isCo ? $mya->mission : '') + maxlen(250));
+  $activities = areaFld(REQ . t('Activities:'), [t('Organization\'s activities'), t('What do you <i>do</i> to advance your mission?')], dft($isCo ? $mya->activities : '') + maxlen(250));
+  $gross = numFld(REQ . t('Expected Income:'),[t('Gross annual income'), t('How much income do you expect in the next 12 months, before expenses?')], dft($isCo ? $mya->gross : ''));
+  $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees do you have?')], dft($isCo ? $mya->employees : ''));
+  $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
+  $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
   
-  if ($mya and $mya->co and ($mya->ok or $mya->admin)) {
+  if ($isCo and ($mya->ok or $mya->admin)) {
     if (!$mya->can(B_MANAGE)) return say('no sponsor perm', 'err');
     $contact = $fullName = $phone = $email = $zip = $country = $source = NULL;
     if ($mya->coCan(CO_SPONSORED) or (strhas($mya->fullName, t(' FBO ')) and $mya->federalId == CGF_EIN)) $gross = $employees = $comments = NULL;

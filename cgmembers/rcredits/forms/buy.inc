@@ -156,7 +156,7 @@ function status($args) {
   if ($co->emailCode != $cocode) return apiErr(t('bad cocode'));
   $s = mb_substr(serialize(compact('request')), 5); // for example, a:1:{s:7:"request";s:5:"abcde";} (start with s:7)
   $s = '%' . substr($s, 0, strlen($s) - 1) . '%'; // chop off last char
-  $status = db\get('status', 'r_invoices', 'payee=:coid AND data LIKE :request', ray('coid request', $co->id, $s));
+  $status = db\get('status', 'tx_requests', 'payee=:coid AND data LIKE :request', ray('coid request', $co->id, $s));
   exitJust($status === FALSE ? TX_NOSUCH : $status);
 }
 
@@ -228,7 +228,7 @@ function formBuy_submit($form, &$sta) {
 function buyErr($msg, $info) {
   if ($for0 = nni($info ?: [], 'for0')) $info['for'] = $for0;
   $code = u\cryRay($info + ray('op', 'charge'));
-	say($msg, $info, 'err');
+  say($msg, $info, 'err');
   return w\go("pay-with-cg/$code");
 }
 

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57r'; // software version
+const R_VERSION = '3.57s'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -83,8 +83,8 @@ const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must 
 const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
 const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
-const TRACK_DELETED = 'r_invoices r_photos r_relations r_usd users'; // remember rows in these tables if we delete them
-const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes'; // these tables are actually views on the _all version of
+const TRACK_DELETED = 'tx_requests r_photos r_relations r_usd users'; // remember rows in these tables if we delete them
+const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 const DEV_ONLY_MSG = 'only on development machine';
 const DEMO_CTTY = -2; // uid of demo community on demo server
@@ -159,7 +159,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill draws'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
@@ -565,7 +565,7 @@ const B_u0 = 0; //
 const B_u1 = 1; //
 const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
 const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
-const B_u5 = 4; // 
+const B_u4 = 4; // 
 const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_u7 = 7; // 
@@ -581,10 +581,9 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'u0 u1 offline short u4 u5 crumbs u7 u8 recurs gift loan investment stake fine noask funding food partial button';
+const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 recurs gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
-const TX_CANCELED = -9; // invoice canceled
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator
@@ -674,7 +673,7 @@ $GLOBALS['emailSubjects'] = array(
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
   'notices' => t('%PROJECT Notices for %qid %todayDesc'),
   'message' => t('%PROJECT %topic'),
-	'annual-gift' => t('your chosen annual gift to %PROJECT'),
+  'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'renew-backing' => t('your %PROJECT backing is ready to renew'),
   'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
   'confirm-message' => t('Confirm your message'),

@@ -13,9 +13,9 @@ Setup:
   | .ZZB | Bea Two  |       0 |     0 | ok                | USkk9000002 |
   | .ZZC | Our Pub  |      40 |   -10 | co,ok,debt,bankOk | USkk9000003 |
   | .ZZD | Dee Four |      80 |   -20 | ok,refill,debt    | USkk9000004 |
-	And relations:
-	| main | other | permission |*
-	| .ZZC | .ZZB  |     manage |
+  And relations:
+  | main | other | permission |*
+  | .ZZC | .ZZB  |     manage |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
   | 5001 |  .ZZA |     99 | %today-7d | %today-5d | %today-1d |
@@ -56,8 +56,7 @@ Scenario: a member draws credit from the bank with zero floor
   | get | %R_ACHMIN |
   Then usd transfers:
   | txid | payee | amount    | created | completed | channel | xid | deposit |*
-  | 5007 |  .ZZB |         0 | %now    |         0 |       0 |   0 |       0 |
-  | 5008 |  .ZZB | %R_ACHMIN | %now+3d |         0 | %TX_WEB |   8 |       0 |
+  | 5007 |  .ZZB | %R_ACHMIN | %now    |         0 | %TX_WEB |   8 |       0 |
   And transactions:
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   8 | %todayd |      0 | 256  | .ZZB | from bank |      1 |
@@ -172,10 +171,10 @@ Scenario: a slave member requests a transfer
   And members have:
   | uid  | jid  | flags |*
   | .ZZD | .ZZE | ok    |
-	And relations:
-	| main | other | permission |*
-	| .ZZD | .ZZE  |      joint |
-	| .ZZE | .ZZD  |      joint |
+  And relations:
+  | main | other | permission |*
+  | .ZZD | .ZZE  |      joint |
+  | .ZZE | .ZZD  |      joint |
   When member ".ZZE" completes form "get" with values:
   | op  | amount |*
   | put |     16 |

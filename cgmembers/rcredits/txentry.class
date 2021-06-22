@@ -2,6 +2,7 @@
 namespace CG;
 use CG as r;
 use CG\DB as db;
+use CG\Backend as be;
 use CG\Util as u;
 
 /**
@@ -63,6 +64,7 @@ class TxEntry {
   static function read($id) {
     $info = db\get('*', 'tx_entries', ['id' => $id]);
     if (!$info) { return FALSE; }
+    unset($info['acctTid']); // no longer used
     return new TxEntry($info);
   }
 
@@ -95,7 +97,12 @@ class TxEntry {
     $e = $this;
     $info = just(self::INSERT_FIELDS, (array)$e) + compact('xid');
     if ($id) $info += compact('id');
+
+    $DBTX = \db_transaction();
     $id = db\insert('tx_entries', $info, 'id');
+    be\balChange($info);
+    unset($DBTX);
+    
     return $id;
   }
 }

@@ -13,9 +13,9 @@ function formSignin($form, &$sta, $arg = '') {
   global $base_url;
   
   extract(just('then', $arg, NULL));
-	
+  
   signout(TRUE); // make sure we're signed out
-	if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
+  if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
   if (isDEV and !test()) db\q('TRUNCATE test');
 
   extract(just('qid pw2 vKeyE', nni($sta, 'input')));
@@ -70,7 +70,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   $a = r\acct($uid);
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
   w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
-	if (!$success) return say('login failed', 'qid');
+  if (!$success) return say('login failed', 'qid');
   $sta['input']['uid'] = $uid; // especially for cgpay
 
   if ($a->superAdmin) {
@@ -78,12 +78,12 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     if ($pw2 and !$a->pw2) a(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
     r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
-		if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
-		if ($vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
-			if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
-		  r\setCryptCook('vKeyE', $vKeyE, 0);
-			if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
-		}
+    if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
+    if ($vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
+      if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
+      r\setCryptCook('vKeyE', $vKeyE, 0);
+      if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
+    }
   }
   
   if (!$a->superAdmin) { // why does this fail for superAdmin? (but who cares?)

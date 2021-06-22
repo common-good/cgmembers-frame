@@ -37,7 +37,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
-  $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
+  $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Automated Payments</a>.', '_a', atag('/history/recurring')));
   
   $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
   $submit = t('Submit');
@@ -124,7 +124,7 @@ function formTx_submit($form, &$sta) {
     r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
   } else { // no delay: either a transaction or invoice was created, so set its recursId (pointing to template)
     extract(just('xid nvid', $subs, NULL)); // no other way to know whether payApproved created a tx or an invoice
-    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
+    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['tx_requests', 'nvid'];
     db\update($tnm, ray("$idFnm recursId", $subs[$idFnm], $id), $idFnm);
   }
 

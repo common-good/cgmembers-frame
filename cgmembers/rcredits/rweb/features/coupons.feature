@@ -102,7 +102,7 @@ Scenario: A member redeems a dollar amount discount coupon
   | eid | xid | type   | created | amount | payer | payee | purpose      | taking |*
   |   1 |   1 | prime  | %today  |    100 | .ZZA  | .ZZC  | fun          |      0 |
   |   3 |   1 | rebate | %today  |     12 | .ZZC  | .ZZA  | %REBATE_DESC |      1 |
-  # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
+  # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
   And balances:
   | uid  | balance |*
   | .ZZA |     -88 |

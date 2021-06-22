@@ -94,14 +94,11 @@ function formGet_validate($form, &$sta) {
   
 function formGet_submit($form, &$sta) {
   global $mya;
-  $mya = r\acct();
-  u\EXPECT([$mya], 'Acct');
-  //  $us = new r\usd($mya = r\acct());
+
   extract(just('amount', $sta['input']));
 
-  $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('at your request'), [], $why);
+  $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('at your request'), TRUE, $why);
   say($why); // expanded message
-//  r\tellAdmin('banked' . $extra, $subs);
 }
 
 /**

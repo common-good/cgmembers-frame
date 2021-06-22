@@ -37,10 +37,10 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $negReserve = $negatives * $negReservePct;
     $backing = db\sum('backing', 'users', 'community=:ctty', $subs);
     $backingReserve = $backing * $backingReservePct;
-    $invoicesFromUs = db\sum('amount', 'r_invoices', 'payee=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
+    $invoicesFromUs = db\sum('amount', 'tx_requests', 'payee=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     
     $balances = db\sum('balance', 'users', 'balance>0 AND uid>jid AND community=:ctty AND uid<>:ctty', $subs);
-    $invoicesToUs = db\sum('amount', 'r_invoices', 'payer=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
+    $invoicesToUs = db\sum('amount', 'tx_requests', 'payer=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     $otherAssets = $cttyA->otherAssets ?: 0;
     $otherLiabilities = $cttyA->otherLiabilities ?: 0;
   } else { // whole region (server) overall
@@ -55,10 +55,10 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $negReserve = $negatives * getv('negReserve', .05);
     $backing = db\sum('backing', 'users');
     $backingReserve = $backing * getv('backingReserve', .50);
-    $invoicesFromUs = db\sum('amount', 'r_invoices', 'payee<0 AND status IN (:TX_PENDING,:TX_APPROVED)');
+    $invoicesFromUs = db\sum('amount', 'tx_requests', 'payee<0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
     $balances = db\sum('balance', 'users', 'balance>0 AND (uid>jid OR uid<0) AND community<0');
-    $invoicesToUs = db\sum('amount', 'r_invoices', 'payer<0 AND payee>0 AND status IN (:TX_PENDING,:TX_APPROVED)');
+    $invoicesToUs = db\sum('amount', 'tx_requests', 'payer<0 AND payee>0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
     $otherAssets = $otherLiabilities = 0;
     foreach ($cttys = db\col('uid', 'users', 'uid<0') as $ctty) {

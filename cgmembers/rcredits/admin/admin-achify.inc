@@ -39,7 +39,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
-  $entryDate = strftime('%y%m%d', nextBizDay(now() < strtotime($cutoff) ? today() : tomorrow()));
+  $entryDate = strftime('%y%m%d', u\nextBizDay(now() < strtotime($cutoff) ? today() : tomorrow()));
   
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), strftime('%b%d')];
@@ -62,12 +62,12 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
     if (isDEV and !$routing) $routing = $account = '211672476';
-		
-		$amount *= 100;
+    
+    $amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $txCode = $amount == 0 ? 23 
     : ($bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37));
-		$amount = abs($amount);
+    $amount = abs($amount);
 
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 

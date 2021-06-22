@@ -153,7 +153,7 @@ Scenario: a member redeems store credit
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
   |   1 |   1 | %today  |     20 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
   |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
-  # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
+  # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
 
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*

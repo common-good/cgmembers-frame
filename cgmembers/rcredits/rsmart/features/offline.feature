@@ -173,6 +173,6 @@ Scenario: Device sends correct old proof for legit tx after member loses card, w
   | uid  | cardCode |*
   | .ZZB | ccB2     |
   // member reported lost card, we just changed cardCode, now the member (or someone) tries to use the card with app online:
-	// (use +1d not +1h, because t\hitServer rounds down to nearest day)
+  // (use +1d not +1h, because t\hitServer rounds down to nearest day)
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now+1d" force 1
   Then we return error "bad proof"

@@ -50,17 +50,18 @@ $queries = [
     WHERE :ctty IN (u1.community, u2.community)",
     
   2 . 'Most Active Company Accounts' => <<< X
-    SELECT c.fullName AS company, p.fullName AS contact, c.phone, c.email, c.city, c.zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(c.:IS_OK, 'open', 'NO') AS open
+    SELECT DISTINCT c.fullName AS company, p.fullName AS contact, c.phone, c.email, c.city, c.zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(c.:IS_OK, 'open', 'NO') AS open
     FROM (SELECT uid, MAX(created) AS lastTx FROM tx_entries JOIN tx_hdrs USING(xid) GROUP BY uid) t
     JOIN users c ON c.uid=t.uid
     JOIN r_relations r ON r.main=c.uid
     JOIN users p ON p.uid=r.other
-    WHERE c.:IS_CO ORDER BY lastTx DESC
+    WHERE c.:IS_CO GROUP BY c.uid
+    ORDER BY lastTx DESC
 X
   ,
   
     2 . 'Most Active Individual Accounts' => <<< X
-    SELECT fullName AS name, phone, email, city, zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(u.:IS_OK, 'open', 'NO') AS open
+    SELECT DISTINCT fullName AS name, phone, email, city, zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(u.:IS_OK, 'open', 'NO') AS open
     FROM (SELECT uid, MAX(created) AS lastTx FROM tx_entries JOIN tx_hdrs USING(xid) GROUP BY uid) t
     JOIN users u USING(uid)
     WHERE NOT u.:IS_CO ORDER BY lastTx DESC
@@ -180,7 +181,7 @@ $sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1
 // Who still owes CG a phone deposit
 SELECT fullName, nvid AS invoice, i.purpose FROM users u 
 LEFT JOIN (SELECT uid1 AS uid FROM txs_prime t0 WHERE t0.uid2=:CGID AND amt>=20) t USING(uid)
-LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM r_invoices i0 
+LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM tx_invoices i0 
   WHERE i0.payee=:CGID AND amount>=20 AND status<:TX_PAID) i USING(uid)
 WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 

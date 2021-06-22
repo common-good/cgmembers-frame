@@ -16,7 +16,7 @@ function formReconcileManually($form, &$sta, $args = '') {
   extract(just('asOf', $args));
   
   $title = t('Reconcile Community Fund Discrepancies');
-	$subtext = t('<p>Here is a list of all the transactions downloaded from the bank that have no clear corresponding transfer of dollars to or from the Community Fund.</p><ol><li>Select one or more downloaded (OFX) transactions (as few as possible).</li><li>Then select one or more corresponding batches, some of whose individual transfers add up to that same amount.</li><li>If the bank made a mistake and you need to compensate, put an amount in the "Create offset tx" field as well. This amount will be added to our record of how much is in the Community Fund bank account(s).</li><li>Click "Match".</li></ol>');
+  $subtext = t('<p>Here is a list of all the transactions downloaded from the bank that have no clear corresponding transfer of dollars to or from the Community Fund.</p><ol><li>Select one or more downloaded (OFX) transactions (as few as possible).</li><li>Then select one or more corresponding batches, some of whose individual transfers add up to that same amount.</li><li>If the bank made a mistake and you need to compensate, put an amount in the "Create offset tx" field as well. This amount will be added to our record of how much is in the Community Fund bank account(s).</li><li>Click "Match".</li></ol>');
   
   if (!$batches = getv('batches')) w\say(t('There are no unmatched bank transfer batches.'), 'err');
   if (!$txs = getv('ofxTxs')) $buttons = offerOffsetTransfer(getv('reconciledAsOf'));
@@ -32,7 +32,7 @@ function formReconcileManually($form, &$sta, $args = '') {
   }
   
   foreach ($batches as $batch => $batAmt) {
-		$batDt = substr($batch, 1) + 0; // unix date of batch
+    $batDt = substr($batch, 1) + 0; // unix date of batch
     $txidSign = $batch[0] == 'B' ? '<0' : '>0';
     $amtSign = $batAmt < 0 ? '<0' : '>0';
     $list = db\lst('amount', 'r_usd', "deposit=:batDt AND bankTxId=0 AND txid$txidSign AND amount$amtSign", compact('batDt'));
@@ -76,7 +76,7 @@ function formReconcileManually_submit($form, &$sta) {
   $DBTX = \db_transaction();
   foreach ($bts as $batch => $batAmt) {
     unset($bts0[$batch]);
-		$batDt = substr($batch, 1) + 0; // unix date of batch
+    $batDt = substr($batch, 1) + 0; // unix date of batch
     $txidSign = $batch[0] == 'B' ? '<0' : '>0';
     $amtSign = $batAmt < 0 ? '<0' : '>0';
     $sql = "UPDATE r_usd SET bankTxId=:bankTxId WHERE deposit=:batDt AND bankTxId=0 AND txid$txidSign AND amount$amtSign";

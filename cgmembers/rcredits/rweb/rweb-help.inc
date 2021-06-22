@@ -263,7 +263,7 @@ X
          <li>transfer it to your bank account.</li>
      </ul>
      <p>We all make this agreement so if the system closes down, everyone is protected.</p>
-		 <p>However, if you and your %PROJECT Community have made mistakes in handling the Community's Dollar Pool and you need to close down when there are no longer enough Dollars in the Pool to redeem the %RCREDITS in circulation, the value of everyone's %RCREDITS will be proportionately diminished, as you are settlings the accounts and closing down.</p>
+     <p>However, if you and your %PROJECT Community have made mistakes in handling the Community's Dollar Pool and you need to close down when there are no longer enough Dollars in the Pool to redeem the %RCREDITS in circulation, the value of everyone's %RCREDITS will be proportionately diminished, as you are settlings the accounts and closing down.</p>
 X
   ) . $back;
 
@@ -495,8 +495,8 @@ X
     <p><b>Control.</b> Of course your participation benefits the community far beyond mere money. The commmunity benefits by all of us together having greater control over our local economy, so we can plan and decide together how to use the power of money to make a better life for everyone.</p>
 X
   ) . $back;
-	
-	if ($i == '2018-question-1') return u\parseUp(t(<<< X
+  
+  if ($i == '2018-question-1') return u\parseUp(t(<<< X
 **Investments, grants, and incentives.** Investment terms can be whatever we negotiate with the recipient -- ranging from a zero-interest loan to a full-ownership stake with regular dividends indefinitely. 
 
 Incentives are a sort of diffuse grant. **Made-up Examples:** Get a 10% rebate on any purchase with your Common Good card during the month of December, while funds last. Or donate to a member nonprofit this month and Common Good Greenfield increases your donation by 50%.
@@ -516,8 +516,8 @@ Our Coordinating Committee thinks the risk of either of these events is very, ve
 There is also one argument for using nothing at all: Some people may choose not to participate in Common Good unless every Common Good Credit is backed by a US Dollar, so once we use ANY of the Dollar Pool, we would miss out on their participation. Our Coordinating Committee believes the number of participants attracted by our funding of worthwhile projects (a key part of our mission) will outweigh the number who shy away.
 X
   )) . $back;
-	
-	if ($i == '2018-question-2') return u\parseUp(t(<<< X
+  
+  if ($i == '2018-question-2') return u\parseUp(t(<<< X
 **About Grants.** Grant funding can make a huge difference to community-spirited projects. Grants are harder to get than loans, so they make a bigger publicity splash, which could more quickly propel the Common Good movement forward in the public eye, bringing in many new members and businesses. When we make a grant, we are permanently trading our financial assets for short-term publicity and one-shot support of something worthwhile.
 
 Once we grant funds from the Dollar Pool, the system can no longer end without someone losing out. When we make grants (or incentives) we are saying we are very confident the Common Good System will continue indefinitely -- and in the very unlikely event it fails, we would each pay our fair share of the grants we made together.

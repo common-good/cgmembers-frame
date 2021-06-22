@@ -80,15 +80,15 @@ Scenario: A company agent runs the demographics query
   | Median Tenure:  | 23 months at current location |
   | Owns vs. Rents: | 85.7% |
   
-  | Top Cities: | |
-  | City/Town     	| Count |
-  | Aton	          |     2 |
-  | Dton	          |     1 |
-  | Gton          	|     1 |
-  | Hton          	|     1 |
-  | Iton           	|     1 |
-  | Jton	          |     1 |
+  | Top Cities:     | |
+  | City/Town       | Count |
+  | Aton            |     2 |
+  | Dton            |     1 |
+  | Gton            |     1 |
+  | Hton            |     1 |
+  | Iton            |     1 |
+  | Jton            |     1 |
   
-  | Also Shop At: | |
-  | Company	        | Count |
-  | Jay Ten	        |     2 |
+  | Also Shop At:   | |
+  | Company         | Count |
+  | Jay Ten         |     2 |

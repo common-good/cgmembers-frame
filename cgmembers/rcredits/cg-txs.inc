@@ -27,7 +27,7 @@ function setupDownload($starting, $ending, $fileId = PROJECT_ID) {
   global $mya;
   $dt1 = strftime('%Y%m%d', $starting);
   $dt2 = strftime('%Y%m%d', $ending);
-  u\csvStart(($mya->cAdmin ? $mya->mainQid : $fileId) . "$dt1-$dt2.csv");
+  u\csvStart($fileId . "$dt1-$dt2.csv");
 }
 
 function txColoredState($disputed) {

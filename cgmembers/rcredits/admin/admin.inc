@@ -182,8 +182,6 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_investments:clubid',
     'r_invites:inviter',
     'r_invites:invitee:D',
-    'r_invoices:payer:D',
-    'r_invoices:payee:D',
     'r_ips:uid:D',
     'r_near:uid1:D',
     'r_near:uid2:D',
@@ -218,6 +216,8 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_entries:agentUid',
     'tx_hdrs:actorId',
     'tx_hdrs:actorAgentId',
+    'tx_requests:payer:D',
+    'tx_requests:payee:D',
     'tx_rules:to:D',
     'tx_rules:payer:D',
     'tx_rules:payee:D',
@@ -895,23 +895,23 @@ function nextMember($id = 0) {
  * This function is currently called only from a PHP window.
  */
 function donationTrend($co = FALSE, $since = NULL) {
-	u\setDft($since, now() - YEAR_SECS);
-	$co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
-	$where = "$co AND u.:IS_OK AND u.created>:since";
-	
-	$sql =<<< X
-	  SELECT AVG(g.amount*perYear(period, periods)) AS regular
-		FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
-		WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
+  u\setDft($since, now() - YEAR_SECS);
+  $co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
+  $where = "$co AND u.:IS_OK AND u.created>:since";
+  
+  $sql =<<< X
+    SELECT AVG(g.amount*perYear(period, periods)) AS regular
+    FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
+    WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
 X;
   $subs = compact('since');
-	$res = db\q($sql, $subs)->fetchAssoc();
-	
+  $res = db\q($sql, $subs)->fetchAssoc();
+  
   $sql = "SELECT AVG(u.:IS_ROUNDUP) AS roundupRatio, AVG(u.crumbs) AS crumbs FROM users u WHERE $where";
   $res += db\q($sql, $subs)->fetchAssoc();
-	
+  
   $accts = db\count('users u', $where, $subs);
-	
+  
   $sql = "SELECT SUM(amt) AS txTotal, COUNT(*) AS txCount, AVG(amt%1) AS cents FROM txs_prime t JOIN users u ON u.uid=uid1 WHERE $where";
   $res += db\q($sql, $subs)->fetchAssoc();
 
@@ -1059,7 +1059,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
   }
 
   $subs = compact(ray('coid co2id uids'));
-  db\q('UPDATE r_invoices SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
+  db\q('UPDATE tx_requests SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
   db\q('UPDATE r_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
 }
   
@@ -1108,25 +1108,4 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
     db\update('tx_entries', compact(ray('description xid')), 'xid');
   }
    
- *//*
-function bank20200312($uid, $amount, $xid) {
-  $a = a($uid);
-  
-/** /  if (!$a->hasBank) die($uid . ': banking with no bank');
-
-  $automatic = FALSE;
-  $msg = 'banked';
-
-  $created = $completed = $deposit = strtotime('2/27/2020');
-
-  $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid0);
-  u\EXPECT((bool) $txid, 'saving usd record');
-  u\EXPECT(!empty($xid0), 'empty xid in acct::bank txid=' . $txid);
-  db\q("UPDATE r_usd SET deposit=$deposit WHERE xid=$xid0");
-
-  be\completeUsdTx($txid, $automatic, $completed);
-/** /  debug("$xid0=>$xid");
-
-  return TRUE;
-}
-  */
+ */

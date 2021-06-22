@@ -24,7 +24,7 @@ function Opt(i, sliderInput) {
   this.i = i;
   this.veto = $('#edit-veto' + i);
   this.note = $('#edit-note' + i);
-	this.votenotediv = $('#votenotediv' + i);
+  this.votenotediv = $('#votenotediv' + i);
   this.votenote = $('#votenotediv' + i + ' textarea');
   this.optdetail = $('#optdetail' + i);
   this.input = $('#edit-option' + i);
@@ -37,19 +37,19 @@ function Opt(i, sliderInput) {
     if ($('.ballot.q' + t).length > 0) this.type = t;
   }
 
-	this.nudgeYesNo = function(me) {
+  this.nudgeYesNo = function(me) {
     this.lastMod = now();
     this.clearVeto(); // clear veto, if grading
 
-		var ltr = me.attr('id').charAt(1);
-		var optObj = $('#opt' + this.i);
+    var ltr = me.attr('id').charAt(1);
+    var optObj = $('#opt' + this.i);
     var ltrObj = $('#g' + ltr + this.i);
     optObj.val(ltr == 'Y' ? 1 : 0);
 
     $('.yesnoinputs > div').removeClass('selected');
     ltrObj.addClass('selected');
-	}
-	
+  }
+  
   /**
    * Toggle between grades: X, X+, and X-.
    * @param DOMelement me: the jQuery object clicked (a div with a smiley background)
@@ -58,12 +58,12 @@ function Opt(i, sliderInput) {
     this.lastMod = now();
     this.clearVeto(); // clear veto, if grading
 
-		var ltr = me.attr('id').charAt(1);
-		var basevalue = letters.indexOf(ltr);
+    var ltr = me.attr('id').charAt(1);
+    var basevalue = letters.indexOf(ltr);
 //    var basevalue = Math.round(me.value);
-		//    var prevValue = this.grades.find('input:checked').val();
+    //    var prevValue = this.grades.find('input:checked').val();
 //    if (prevValue == null) return; // no previous value, nothing to nudge
-		var optObj = $('#opt' + this.i);
+    var optObj = $('#opt' + this.i);
     var prevValue = optObj.val();
     var oldsign = (Math.round(prevValue) == basevalue) ? prevValue - basevalue : -.333; // pretend X- if new letter
 //    var ltr = letters.substr(basevalue, 1);
@@ -76,7 +76,7 @@ function Opt(i, sliderInput) {
 
     this.resetGrades(); // reset all the letters before fixing this one
     ltrObj.html((newsign < 0 ? '<div><b>&ndash;</b></div>' : (newsign == 0 ? '' : '<div>+</div>')));
-		ltrObj.addClass('selected');
+    ltrObj.addClass('selected');
   }
     
   /**
@@ -199,27 +199,27 @@ function optsTotal() {
 }
 
 function expandOpt(i) { // if i<0 expand only
-	var expandonly = (i<0);
-	if(expandonly) i = -i;
-	var img = byid('expand' + i);
-	var detail = '#optdetail' + i;
-	var detailtext = '#optdetailtext' + i;
-	var expand = (img.src.indexOf('expand')>0 ? true : false);
-	if(expand) {
-		img.src=img.src.replace('expand', 'contract');
-		img.alt='hide detail';
-		img.style.visibility = 'visible';
-//		if(expandonly) detailtext.style.height = (detailtext.style.height ? '' : '150px'); // vetoing (kludge for MSIE)
-		$(detail).show();
+  var expandonly = (i<0);
+  if(expandonly) i = -i;
+  var img = byid('expand' + i);
+  var detail = '#optdetail' + i;
+  var detailtext = '#optdetailtext' + i;
+  var expand = (img.src.indexOf('expand')>0 ? true : false);
+  if(expand) {
+    img.src=img.src.replace('expand', 'contract');
+    img.alt='hide detail';
+    img.style.visibility = 'visible';
+//    if(expandonly) detailtext.style.height = (detailtext.style.height ? '' : '150px'); // vetoing (kludge for MSIE)
+    $(detail).show();
     $(detailtext).show();
-	} else {
-		if(expandonly) return;
-		img.src=img.src.replace('contract', 'expand');
-		img.alt='show detail';
-		$(detail).hide();
+  } else {
+    if(expandonly) return;
+    img.src=img.src.replace('contract', 'expand');
+    img.alt='show detail';
+    $(detail).hide();
     $(detailtext).hide();
-	}
-	img.title = img.alt;
+  }
+  img.title = img.alt;
 }
 
 function roundTo(num, n) {

@@ -26156,7 +26156,7 @@ CREATE TABLE IF NOT EXISTS `r_usd` (
   `xid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'id of related tx_hdrs record',
   PRIMARY KEY (`txid`),
   KEY `created` (`created`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of USD (Dwolla) transactions in the region';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of bank transfers in the region';
 
 -- --------------------------------------------------------
 

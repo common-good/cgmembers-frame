@@ -122,7 +122,7 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
     
   if ($channel == TX_WEB or $channel == TX_SMS) {
     setRisk('absent'); // transaction by web or SMS (no in person)
-    if (!db\exists('r_invoices', 'status=:xid', compact('xid'))) setRisk('invoiceless'); // paid non-employee without an invoice
+    if (!db\exists('tx_requests', 'status=:xid', compact('xid'))) setRisk('invoiceless'); // paid non-employee without an invoice
   }
 
   if ($a1->risk+0 >= K_RED) setRisk('fromSuspect', $a1->risk / K_RED); // payment from suspicious account

@@ -30,11 +30,11 @@ Scenario: A brand new recurring payment can be completed
   # and many other fields
   And count "txs" is 2
   And count "usd" is 0
-  And count "invoices" is 0
+  And count "tx_requests" is 0
   When cron runs "recurs"
   Then count "txs" is 2
   And count "usd" is 0
-  And count "invoices" is 0
+  And count "tx_requests" is 0
 
 Scenario: A second recurring payment can be completed
   Given these "tx_templates":
@@ -70,7 +70,7 @@ Scenario: A recurring payment happened long enough ago to repeat
   | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
   |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   And count "txs" is 3
-  And count "invoices" is 0
+  And count "tx_requests" is 0
   
 Scenario: A delayed payment does not happen immediately
   Given these "tx_templates":
@@ -88,33 +88,30 @@ Scenario: A recurring payment cannot be completed
   Then invoices:
   | nvid | created   | status       | amount | payer | payee | for  | flags  | recursId |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |        8 |
-  And count "txs" is 1
-  And count "usd" is 0
-  And count "invoices" is 1
-
-  When cron runs "invoices"
-  Then these "usd":
+  And count "tx_requests" is 1
+  And these "usd":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    200 | .ZZA  |         0 |       0 |
-  Then count "txs" is 2
+  |    1 |    100 | .ZZA  |         0 |       0 |
+  And count "txs" is 2
   And count "usd" is 1
-  And count "invoices" is 1
-  And  invoices:
-  | nvid | created   | status       | amount | payer | payee | for  | flags          | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs,funding |        8 |
+  And count "tx_requests" is 1
 
   When cron runs "recurs"
+  And cron runs "getFunds"
   Then count "txs" is 2
+  And these "usd":
+  | txid | amount | payee | completed | deposit |*
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "usd" is 1
-  And count "invoices" is 1
+  And count "tx_requests" is 1
 
 Skip because member should be allowed to be invoiced?
 Scenario: A recurring payment invoice cannot be completed because member is uncarded
   Given invoices:
   | nvid | created   | status       | amount | payer | payee | for | flags  |*
-  |    1 | %today    | %TX_APPROVED |     50 | .ZZA | .ZZB | pmt | recurs |
+  |    1 | %today    | %TX_APPROVED |     50 | .ZZA  | .ZZB  | pmt | recurs |
   And member ".ZZA" has no photo ID recorded
-  When cron runs "invoices"
+  When cron runs "getFunds"
   Then count "txs" is 1
-  And count "invoices" is 1
+  And count "tx_requests" is 1
 Resume

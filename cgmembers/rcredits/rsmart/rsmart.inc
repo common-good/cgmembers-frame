@@ -189,10 +189,10 @@ function getTime($args) {
  * identify: [member, code, pin?, signin, counter?] 
  *   BEFORE version 2.30:
       => [ok, message, name, device, default, company, time, descriptions[], bad[], can, balance]
-   OR	=> [ok, message, first, name, place, company, balance, rewards, time, descriptions[], bad[], can]
+   OR => [ok, message, first, name, place, company, balance, rewards, time, descriptions[], bad[], can]
  *   NOW:
       => [ok, message, device, person, company, time, descriptions[], bad[], can, balance, creditLine]
-   OR	=> [ok, message, first, person, company, place, time, descriptions[], bad[], can, balance, creditLine]
+   OR  => [ok, message, first, person, company, place, time, descriptions[], bad[], can, balance, creditLine]
  
  * @params assoc $args:
  *   device: a unique device ID
@@ -286,7 +286,7 @@ function photo($args) {
   if (!$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
   if (!$a = getMember($member, $code, $err, TRUE)) return photoReturn($err);
 
-	$signingIn = (bool) strpos($member, '-'); // allow agents with no photo by faking a photo (>= 100 chars)
+  $signingIn = (bool) strpos($member, '-'); // allow agents with no photo by faking a photo (>= 100 chars)
   return photoReturn($a->agentA->photo ?: ($signingIn ? file_get_contents(R_ROOT . '/images/idcard/no-photo.jpg') : ''));
 }
 

@@ -67,9 +67,9 @@ function fixData(&$info, $direct = FALSE) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = nn($adminable2) ?: [];
   }
- 	extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
+   extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
-	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
+  foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
@@ -139,8 +139,8 @@ function doRecords($list, $thing) {
   $func .= function_exists($func . $thing) ? $thing : 'Thing';
   foreach ($list as $one) {
     fixData($one, TRUE);
-		if (!$func($one, $thing)) return FALSE;
-	}
+    if (!$func($one, $thing)) return FALSE;
+  }
   return TRUE;
 }
 
@@ -345,7 +345,7 @@ function doInvoices($info) {
 
   extract($info);
 
-  if ($testOnly) return verifyRecord('r_invoices', $info);
+  if ($testOnly) return verifyRecord('tx_requests', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
   u\EXPECT($missing == [], "missing fields " . pr($missing));
@@ -357,7 +357,7 @@ function doInvoices($info) {
   case 'approved': $invInfo['status'] = TX_APPROVED; break;
   }
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId', $info));  // extract directly, and might not be present
-  $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
+  $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
@@ -509,7 +509,6 @@ function notice($notice, $id, $subs = []) {
   $sql = 'SELECT message FROM r_notices WHERE uid=:uid AND sent=:sent ORDER BY msgid DESC';
   $info = ray('uid sent', $uid, nn($subs['sent']) ?: 0);
   $msgs = db\q($sql, $info)->fetchCol();
-  ///  debug(compact(ray('message sql info msgs')));
   foreach ($msgs as $msg) {
     if (strtr(strip_tags($msg), $map) == $message) {
       $thatThing['notice'] = $msg; // remember for "And that <thing> blah blah blah"
@@ -526,7 +525,7 @@ function notice($notice, $id, $subs = []) {
  * Say whether the record count in a table is correct.
  */
 function count($what, $count) {
-	global $testOnly;
+  global $testOnly;
   if (!$testOnly) return FALSE;
   $desc = $what . t(' count');
 
@@ -535,7 +534,7 @@ function count($what, $count) {
     case 'tx_hdrs': // fall through
     case 'txs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'entries': return eq($desc, $count, db\count('tx_entries_all', 'xid > 0') / 2);
-    default: return eq($desc, $count, db\count('r_' . $what));
+    default: return eq($desc, $count, db\count(strhas($what, '_') ? $what : "r_$what"));
   }
 }
 
@@ -587,7 +586,7 @@ function doMembersHave($info) {
 function flagList($fnm = 'flags', $tnm = 'users') {
   if ($tnm == 'users') {
     if ($fnm == 'flags') return B_LIST;
-  } elseif (in($tnm, 'txs tx_hdrs r_invoices')) {
+  } elseif (in($tnm, 'txs tx_hdrs tx_requests')) {
     if ($fnm == 'flags') return TX_FLAGS;
   }
   return '';
@@ -702,7 +701,7 @@ function usdTransfers($txs) {
     if (isset($xid) xor !$amount) { // specifying an xid means the test will list the txs explicitly. amount=0 needs no tx.
       $txid = db\insert('r_usd', $tx, 'txid');
     } else {
-      $txid = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
+      list ($txid) = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
       if (!$txid) return t\output('failure creating usd record: ' . $tx['txid']);
 
       if (nn($deposit)) {
@@ -1144,7 +1143,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   global $formSta, $lastGo;
   $xlastGo = nn($lastGo); // notice whether a goto happens, so we can skip post-processing
-	$lastGo = NULL;
+  $lastGo = NULL;
 
   t\logIn($id);
 
@@ -1186,7 +1185,7 @@ function pageForm($page) {
 
   $page = t\parseQ($page);
 
-	$page = t\fixPageArgs($page);
+  $page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
   if (!$page) $page = 'dashboard';
@@ -1439,58 +1438,58 @@ function clear($ch = 0) {
   \drupal_static_reset(); // clear out drupal central storage
 
   $tables = [             // RELATED TO
-             'cache',              // -
-             'flood',              // -
-             'messages',           // posts
-             'people',             // posts
-             'posts',              // -
-             'queue',              // -
-             'r_bad',              // -
-             'r_votes',            // r_ballots, r_options
-             'r_ballots',          // r_questions, users
-             'r_changes',          // users
-             'r_ratings',          // r_investments, users
-             'r_shares',           // r_investments
-             'r_investments',      // users, or is that u_company?, club?
-             'u_company',          // users
-             'r_do',               // users
-             'r_pairs',            // r_options
-             'r_options',          // r_questions
-             'r_questions',        // r_events
-             'r_events',           // -
-             'r_honors',           // users
-             'r_invites',          // users
-             'r_invoices',         // users
-             'x_invoices',         // users
-             'r_ips',              // users
-             'r_near',             // users
-             'r_notices',          // users
-             'r_photos',           // users
-             'x_photos',           // users
-             'r_proposals',        // -
-             'r_proxies',          // users
-             'r_relations',        // users
-             'x_relations',        // users
-             'r_stakes',           // users, club?
-             'r_stats',            // users
-             'r_tous',             // users
-             'r_usd',              // tx_hdrs, users
-             'x_usd',              // tx_hdrs, users
-             'r_usd2',             // tx_hdrs
-             'r_user_industries',  // r_industries, users
-             'semaphore',          // -
-             'sessions',           // users
-             'tx_disputes_all',    // tx_hdrs, users
-             'tx_entries_all',     // tx_hdrs, users, tx_rules
-             'tx_hdrs_all',        // users, r_boxes, self 
-             'tx_rules',           // users, u_groups, r_industries, tx_templates
-             'tx_templates',       // users, u_groups, r_industries
-             'r_boxes',            // users
-             'u_groupies',         // u_groups, users
-             'u_groups',           // -
-             'u_shouters',         // users
-             'x_users',            // standaloneish
-                          ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
+    'cache',              // -
+    'flood',              // -
+    'messages',           // posts
+    'people',             // posts
+    'posts',              // -
+    'queue',              // -
+    'r_bad',              // -
+    'r_votes',            // r_ballots, r_options
+    'r_ballots',          // r_questions, users
+    'r_changes',          // users
+    'r_ratings',          // r_investments, users
+    'r_shares',           // r_investments
+    'r_investments',      // users, or is that u_company?, club?
+    'u_company',          // users
+    'r_do',               // users
+    'r_pairs',            // r_options
+    'r_options',          // r_questions
+    'r_questions',        // r_events
+    'r_events',           // -
+    'r_honors',           // users
+    'r_invites',          // users
+    'x_invoices',         // users
+    'r_ips',              // users
+    'r_near',             // users
+    'r_notices',          // users
+    'r_photos',           // users
+    'x_photos',           // users
+    'r_proposals',        // -
+    'r_proxies',          // users
+    'r_relations',        // users
+    'x_relations',        // users
+    'r_stakes',           // users, club?
+    'r_stats',            // users
+    'r_tous',             // users
+    'r_usd',              // tx_hdrs, users
+    'x_usd',              // tx_hdrs, users
+    'r_usd2',             // tx_hdrs
+    'r_user_industries',  // r_industries, users
+    'semaphore',          // -
+    'sessions',           // users
+    'tx_disputes_all',    // tx_hdrs, users
+    'tx_entries_all',     // tx_hdrs, users, tx_rules
+    'tx_hdrs_all',        // users, r_boxes, self 
+    'tx_requests_all',    // users
+    'tx_rules',           // users, u_groups, r_industries, tx_templates
+    'tx_templates',       // users, u_groups, r_industries
+    'r_boxes',            // users
+    'u_groupies',         // u_groups, users
+    'u_groups',           // -
+    'u_shouters',         // users
+    'x_users',            // standaloneish
+  ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
 
   foreach (ray('bootstrap form') as $k) $tables[] = "cache_$k"; // don't empty cache_menu
   foreach ($tables as $table) db\q("TRUNCATE $table");
@@ -1704,13 +1703,13 @@ function seq($table = 'r_usd') {
  * Return the state and country, defaulted (if any) and fixed.
  */
 function fixState($state, $country) {
-	if (!nn($state) and !nn($country)) return [];
-	u\setDft($country, 'US');
-	if ($country == 'US' or $country == US_COUNTRY_ID) u\setDft($state, 'MA');
+  if (!nn($state) and !nn($country)) return [];
+  u\setDft($country, 'US');
+  if ($country == 'US' or $country == US_COUNTRY_ID) u\setDft($state, 'MA');
 
-	if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
-	if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
-	return compact(ray('state country'));
+  if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+  if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+  return compact(ray('state country'));
 }
 
 /**
@@ -1812,13 +1811,13 @@ function execWithTimeout($cmd, $timeout) {
   if ($country == US_COUNTRY_ID) u\setDft($state, 'MA');
   }
 
-	if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+  if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
   }
 
   function fixCountry(&$country) {
   global $testOnly;
   if (!$testOnly) u\setDft($country, R_COUNTRY_ID);
-	if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+  if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
   }
 
 */
