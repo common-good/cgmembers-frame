@@ -1108,25 +1108,4 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
     db\update('tx_entries', compact(ray('description xid')), 'xid');
   }
    
- *//*
-function bank20200312($uid, $amount, $xid) {
-  $a = a($uid);
-  
-/** /  if (!$a->hasBank) die($uid . ': banking with no bank');
-
-  $automatic = FALSE;
-  $msg = 'banked';
-
-  $created = $completed = $deposit = strtotime('2/27/2020');
-
-  $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid0);
-  u\EXPECT((bool) $txid, 'saving usd record');
-  u\EXPECT(!empty($xid0), 'empty xid in acct::bank txid=' . $txid);
-  db\q("UPDATE r_usd SET deposit=$deposit WHERE xid=$xid0");
-
-  be\completeUsdTx($txid, $automatic, $completed);
-/** /  debug("$xid0=>$xid");
-
-  return TRUE;
-}
-  */
+ */

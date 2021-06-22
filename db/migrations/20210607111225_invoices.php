@@ -14,5 +14,6 @@ class Invoices extends AbstractMigration {
 
     $this->execute('DROP VIEW IF EXISTS tx_requests');
     $this->execute('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL');
+    $this->execute('UPDATE tx_requests SET status=-1, deleted=UNIX_TIMESTAMP() WHERE status=-9');
   }
 }

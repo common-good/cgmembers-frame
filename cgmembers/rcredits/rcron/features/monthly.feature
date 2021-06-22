@@ -151,13 +151,13 @@ Scenario: Crumbs are invoiced
   Then count "txs" is 14
   And count "tx_requests" is 1  
 
-  When cron runs "requests"
+  When cron runs "getFunds"
   Then transactions:
   | xid | created | amount | payer | payee | purpose                                     | flags       |*
   | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
   And count "txs" is 15
 
-  When cron runs "requests"
+  When cron runs "getFunds"
   Then count "txs" is 15
   
 # NO (Seedpack gets no distribution) distribution of shares to CGCs

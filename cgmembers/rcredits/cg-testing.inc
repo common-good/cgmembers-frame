@@ -509,7 +509,6 @@ function notice($notice, $id, $subs = []) {
   $sql = 'SELECT message FROM r_notices WHERE uid=:uid AND sent=:sent ORDER BY msgid DESC';
   $info = ray('uid sent', $uid, nn($subs['sent']) ?: 0);
   $msgs = db\q($sql, $info)->fetchCol();
-  ///  debug(compact(ray('message sql info msgs')));
   foreach ($msgs as $msg) {
     if (strtr(strip_tags($msg), $map) == $message) {
       $thatThing['notice'] = $msg; // remember for "And that <thing> blah blah blah"
@@ -702,7 +701,7 @@ function usdTransfers($txs) {
     if (isset($xid) xor !$amount) { // specifying an xid means the test will list the txs explicitly. amount=0 needs no tx.
       $txid = db\insert('r_usd', $tx, 'txid');
     } else {
-      $txid = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
+      list ($txid) = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
       if (!$txid) return t\output('failure creating usd record: ' . $tx['txid']);
 
       if (nn($deposit)) {

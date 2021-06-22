@@ -16,6 +16,7 @@ $GLOBALS['tStrings'] = array(
   'account info' => t('Your balance for account %qid is %balance, including %rewards of incentive rewards. Total demand for %RCREDITS is %totalDemand.'),
   'invite reward' => t('inviting and/or assisting new member %fullName'),
   'when resolved' => t('Your payment will go through automatically when the issue has been resolved.'),
+  'automatic when funded' => t('Your payment will go through automatically once your bank transfer is complete.'),
   'report tx' => t('You %did %otherName %amount.'), // for %why.'),
   'success title' => t('<h3>Success!</h3>'),
   'left on invoice' => t('You have %remaining remaining to pay on this invoice.'),
@@ -92,11 +93,11 @@ $GLOBALS['tStrings'] = array(
   //  'new invoice' => t('<b>Invoice:</b> %otherName invoiced you %amount for "%purpose". To pay (or deny) this invoice, <%a>click here</a>.'),
 //  'new customer done' => t('<h2>Congratulations!</h2>Your sign-up with %partnerName is complete. Expect a confirmation note from them by email.'),
 
-  'short invoice' => t('Your balance is %short short, to pay the requested amount to %payeeName (#%nvid).'),
+  'short invoice' => t('Your balance is %short short to pay the requested amount to %payeeName (payment request #%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),
   'finish signup' => t('<b class="loud">IMPORTANT</b>: You must sign in at %CG_DOMAIN and finish setting up your %PROJECT account before this payment can be made.'),
-  'when funded' => t('This payment will be made as soon as you have enough money in your account.'),
-  'how to fund' => t('To put money in your account, trade Dollars for %PROJECT Credits at a participating business or with another member OR sign in at %CG_DOMAIN and click "Bank" on the menu, to connect a bank account and transfer funds.'),
+  'when funded' => t('Your payment(s) will be made as soon as you have enough money in your account.'),
+  'how to fund' => t('To put money in your account, trade cash for %RCREDITS at a participating business or with another member OR sign in at %CG_DOMAIN and click "Bank", to connect a bank account and transfer funds.'),
   'auto pay on' => t('From now on your invoices from %payeeName will be approved and paid automatically, drawing funds from your connected bank account as needed. (We do not expect there to be overdraft problems, of course, but if there are, you will be responsible for them.)'),
   'invoice denied' => t('<p><b>Invoice DENIED:</b> Your customer %payerName has declined to pay the following invoice:</p>
   <blockquote>%created %amount for "%purpose"</blockquote>
@@ -116,6 +117,8 @@ $GLOBALS['tStrings'] = array(
   'over max' => t('Your balance is over the maximum you set.'),
 //  'under min' => t('Your balance has fallen below the target you set.'),
   'to target' => t('to bring your balance up to the target you set'),
+  'to zero' => t('to bring your balance up to zero'),
+  'to pending' => t('to cover your pending payment requests'),
   'part way to target' => t('to bring your balance up part way to the target you set (as much as your current credit line allows)'),
   'for invoice' => t('to pay pending payment request #%nvid'),
   'for investment' => t('for an increased stake in the investment club'),

@@ -1,3 +1,12 @@
+2021-06-21 feature/get-funds
+. refactored getting funds for invoices, investments, and refills
+. we no longer test a bank account before trying a transfer
+. we no longer apply roundups and surtx's to non-purchase transactions (like investments)
+. we now try automatically to bring balances up to zero after 30 days
+. we track last bounce date, and disable credit line on a bounce
+. minor fixes to partnersignup to handle changes in Salesforce
+. monthly recalculation of floor is no longer dampened
+
 2021-06-15 feature/requests
 . renamed r_invoices to tx_requests_all and made it a delete-by-view table
 . changed Invoices FROM You to Pending TO You (and similarly for Invoices TO You)

@@ -159,7 +159,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill draws'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
@@ -584,7 +584,6 @@ const B_BUTTON = 19; // payment from CGPay button
 const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 recurs gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
-const TX_CANCELED = -9; // invoice canceled
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator

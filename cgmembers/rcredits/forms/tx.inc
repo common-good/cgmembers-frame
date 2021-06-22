@@ -37,7 +37,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
-  $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
+  $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Automated Payments</a>.', '_a', atag('/history/recurring')));
   
   $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
   $submit = t('Submit');

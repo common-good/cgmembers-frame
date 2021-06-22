@@ -35,7 +35,7 @@ YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs getFunds requests invest notices END';
+const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
 const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
@@ -401,8 +401,7 @@ function activeMonthly($item) {
   // adjust credit line
   $floorX = $a->o_floor; // current floor (of just this account, not summed with joint)
   
-  // temporarily (until 2019?) limit the rate of change of the floor (while changing to new system)
-  $floor = round(min(-$monthly, .9 * $floorX), 2);
+  $floor = -$monthly;
   if ($a->isCtty) $floor = -db\sum('amount', 'r_usd t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
   $a->update('floor', $floor);
 
@@ -902,15 +901,15 @@ function txRisk1($xid) {
 
 /**
  * 1. Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete)
- * 2. Get funds from a connected bank account or drawable CG account, as needed
- * This (in particular getFunds) should be called before invoices and investments, so those ADD to the minimum balance
+ * 2. Get funds from a connected bank account or drawable CG account, as needed, 
+ *    handling approved invoices and investment requests as we go
  */
 function getFunds() {
-  $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
+  queueEach('getFunds1', 'SELECT uid, request, stakeid FROM users LEFT JOIN r_stakes USING (uid) WHERE (request IS NULL OR request>0) AND :MASTER AND uid>:CANONIC_ACCTS AND :IS_OK');
+
+  $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);
   
-  queueEach('getFunds1', 'SELECT uid FROM users WHERE :MASTER AND balance < minimum AND uid > :CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
-
   queueNext();
 }
 
@@ -921,86 +920,86 @@ function completeUsdTx($item) {
 }
 
 function getFunds1($item) {
-  extract(just('uid jid', $item));
+  extract(just('uid request stakeid', $item, NULL));
   $a = r\acct($uid);
-  $amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
-  if ($amount > 0) $a->getFunds($amount, t('to target'));
+
+  // pay pending requests and add up the amounts still pending, so we include those in the amount of funds to get
+  $pending = 0;
+  $sql = <<< o
+    SELECT i.* FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
+    WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer=:uid
+    ORDER BY i.nvid
+o;
+  $q = db\q($sql, ['uid' => $a->id]);
+  while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
+  if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
+
+  if ($a->balance < 0 and !$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
+  
+  list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
+  ? [$a->minimum + $pending, t('to target')]
+  : [min($pending, $a->balance + $pending, 0), t('to pending')]; // this could be negative (just enough to pay pending)
+  
+  if ($target < $pending and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
+    if (!$a->debt or ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS)) { // time to get out of the negative
+      list ($target, $why) = [$pending, t('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
+    }
+  }
+  
+  $amount = $target - $a->balance - $a->waitingFromBank(); // scootch up to target, if below
+    
+  $a->getFunds($amount, $why);
+}
+
+/**
+ * Try to pay any pending transaction requests.
+ * @param assoc $nvid: request record ID
+ * @return numeric: remaining amount pending
+ */
+function payPending($a, $nvid) {
+  if (!$a->ok) return 0; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
+  
+  $z = be\payInvoice($nvid);
+  return nni($z->subs, 'shortfall', 0);
+}
+
+/**
+ * Handle requests to invest in an investment club.
+ * @return numeric: remaining amount requested
+ */
+function payInvestmentRequests($a, $request, $stakeid) {
+  if (!$a->avail($request)) return $request;
+
+  r\handleInvestmentRequest($stakeid, $msg);
+  $a->tellMisc($msg);
+  return 0;
 }
 
 /**
  * Handle pending requests (invoices and unfunded payments).
  */
-function requests() {
+function pendingRequests() {
   $sql = <<< X
-    SELECT DISTINCT i.*,i.:IS_FUNDING AS funding 
+    SELECT DISTINCT i.*
     FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
-    WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
+    WHERE i.status=:TX_PENDING AND u2.:IS_OK
     ORDER BY i.nvid
 X;
-  queueEach('request1', $sql);
+  queueEach('pendingRequest', $sql);
   queueNext();
 }
 
-function request1($item) {
-  extract(just('nvid payer payee amount purpose status created funding', $item));
+function pendingRequest($item) {
+  extract(just('nvid payer payee amount purpose status created', $item));
   $a1 = r\acct($payer);
   $a2 = r\acct($payee);
-  $payeeName = $a2->fullName;
   
-  if ($status == TX_APPROVED) {
-    if (!$a1->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-    $amtFld = 'amount';
-    $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //  consider credit already used for advances from the bank
-
-    if ($short <= 0) { // pay the invoice if we have enough funds
-      $z = be\payInvoice($nvid);
-      $paid = $z->ok;
-      if (!$z->ok) r\tellAdmin(t('invoice payment failed in cron'), ray('msg', $z->msg) + $item);
-    } else $paid = FALSE;
-    
-    if (!$paid or $a1->balance < 0) {
-      if ($funding and $a1->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
-        $funding = FALSE; // fund it again, if necessary
-      }
-      if (!$funding) {
-        if ($a1->roundup) $amount = ceil($amount); // take enough for the roundup
-        $DBTX = \db_transaction();
-        if ($a1->getFunds($amount, t('for invoice', compact('nvid')))) {
-          db\setFlag('tx_requests', $nvid, B_FUNDING, TRUE);
-        } else { // almost always because no bank account is connected
-          $msg = 'short invoice' . ($a1->hasBank ? '|expect a transfer' : '|when funded|how to fund');
-          $a1->tellOut($msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
-        }
-        unset($DBTX);
-      }
-    }
-  } elseif ($status == TX_PENDING) {
-    $daysAgo = max(1, round((now() - $created) / DAY_SECS));
-    $nudge = $a2->staleNudge;
-    if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
-      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $payeeName, $a2->email, $a2->phone);
-      $a1->tellMisc('stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
-      $a2->tellMisc('stale invoice report', $subs); // tell the payee we're following up on it
-    }
-  }
-}
-
-/**
- * Handle requests to invest in an investment club.
- */
-function invest() {
-  queueEach('invest1', 'SELECT stakeid,uid,request FROM r_stakes WHERE request>0');
-  queueNext();
-}
-
-function invest1($item) {
-  extract(just('uid,stakeid,request', $item));
-  $a = r\acct($uid);
-  if ($a->avail($request)) {
-    r\handleInvestmentRequest($stakeid, $msg);
-    $a->tellMisc($msg);
-  } elseif (!$a->waitingFromBank()) {
-    $a->getFunds($request, t('to fulfill your recent investment request'));
+  $daysAgo = max(1, round((now() - $created) / DAY_SECS));
+  $nudge = $a2->staleNudge;
+  if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
+    $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $a2->fullName, $a2->email, $a2->phone);
+    $a1->tellMisc('stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
+    $a2->tellMisc('stale invoice report', $subs); // tell the payee we're following up on it
   }
 }
 

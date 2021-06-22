@@ -80,7 +80,7 @@ Scenario: A member's rules come into play
   |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | donation     | 1    | %E_DONATION |
   |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_DONATION |
   |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | donation     | 3    | %E_DONATION |
-  # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
+  # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
   
   When member ".ZZB" visits page "history/transactions/period=365"
   Then we show "Transaction History" with:

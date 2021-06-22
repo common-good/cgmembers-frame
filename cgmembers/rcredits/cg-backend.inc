@@ -85,12 +85,13 @@ EOF;
 
 /**
  * Return SQL for nvid, part, and stepup in a tx entry.
+ * Don't include invoice number for payApproved requests
  * Expects t=txs, i=tx_requests
  */
 function specialTxFlds() {
   list ($finalTxt, $partTxt) = [t('final'), t('partial')];
   return <<< X
-    IF(t.relType='I', t.rel, NULL) AS nvid, 
+    IF(t.relType='I' AND NOT i.:IS_SELF, t.rel, NULL) AS nvid, 
     IF(t.:IS_PARTIAL, IF(t.xid=i.status, ' $finalTxt', ' $partTxt'), '') AS part
 X;
 }
@@ -341,7 +342,7 @@ function creditPeops($id) {
 }
 
 /**
- * Pay the given invoice, possibly without being signed in.
+ * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
  * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return a txRet object
@@ -355,7 +356,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   $payeeA = r\acct($payee);
   $data = unserialize($data);
   extract(just('api request shid for', $data, NULL));
-  
+
   $DBTX = \db_transaction();
   $extra = ray('inv', $nvid) + just('api for', $data, NULL);
   if ($payAmount < $amount) $extra['partial'] = 1;
@@ -364,7 +365,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
     if ($payAmount == $amount or !invRemains($nvid)) { // == is for efficiency
-      db\update('tx_requests', ray('status nvid', $z->subs['xid'], $nvid), 'nvid');
+      db\update('tx_requests', ray('nvid status', $nvid, $z->subs['xid']), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
 
@@ -375,7 +376,20 @@ function payInvoice($nvid, $payAmount = NULL) {
         if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
       } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
+  } else {
+    if ($shortfall = nni($z->subs, 'shortfall')) {
+      $index = 'short invoice' . ($payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund');
+      $subs = ray('short payeeName nvid', u\fmtAmt($shortfall), $payeeA->fullName, $nvid);
+      $payerA->tellOut($index, $subs);
+      if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid'))); // almost always because no bank account is connected
+
+      $z->index = $index; // replace short payment message with something more explicit about the invoice
+      $z->msg = tr($index, $subs);
+      u\preray($subs, $z->subs);
+    }
+    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
   }
+
   unset($DBTX);
   
   return $z;
@@ -509,16 +523,18 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   $needed = abs($amount);
 
-  // Apply rules
-  if ($amount > 0 and ($goods != FOR_USD)) {
-    $needed += handleSurTx($entries, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
-  }
+  if ($goods != FOR_USD) {
+    // Apply rules
+    if ($amount > 0) {
+      $needed += handleSurTx($entries, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
+    }
 
-  // Apply any roundup
-  if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
-    if ($cents = fmod($needed, 1.0)) {
-      txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_DONATION);  
-      $needed = ceil($needed); // == 1-$cents
+    // Apply any roundup
+    if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
+      if ($cents = fmod($needed, 1.0)) {
+        txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_DONATION);  
+        $needed = ceil($needed); // == 1-$cents
+      }
     }
   }
 
@@ -529,11 +545,12 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     } else {
       $DBTX->rollback();
       $short = u\fmtAmt($shortfall);
+      if ($loserA->refill) $shortfall += $loserA->avail($goods); // don't leave refillable accounts using credit line in acct::getFunds()
       $avail = u\fmtAmt($needed - $shortfall);
       $msg = $reallyTaking ? ($otherA->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
-      return txErr($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
+      return txErr($msg, compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
     }
   }
   
@@ -828,7 +845,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     $payerA->tell('new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
-    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
+    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);
       if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs + $info);
     }
@@ -1129,12 +1146,12 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  * @param acct $a: the account to or from which money is to be moved
  * @param numeric $amount: the amount to transfer
  * @param int $created: the UNIX time at which the transfer is deemed to be created.
- * @param string $txid: the internal transaction id for the transfer; normally NULL (assign a new id) but
- *                      can be specified (used during testing)
- * @param int $xid (RETURNED): the transaction ID associated with the transfer request
- * @return string $txid: the actual txid or FALSE on failure
+ * @param string $txid: desired record ID for the transfer; always NULL (assign a new id) unless testing
+ * @return [$txid, $xid]:
+ *   $txid: the r_usd record ID or FALSE on failure
+ *   $xid: the transaction ID associated with the transfer request
  */
-function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL, &$xid = NULL) {
+function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL) {
   u\EXPECT(compact(ray('a amount created txid')), 'acct int|float int|empty string|int|empty');
   global $channel;
   $automatic = ($channel == TX_CRON);
@@ -1157,14 +1174,14 @@ function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL, &$xid = NULL)
   if (!$xid or !$txid) {
     $DBTX->rollback();
     r\tellAdmin(t('bank transfer insert failed'), compact($amount, $completed));
-    return FALSE;
+    return [FALSE];
   }
   unset($DBTX);
   
   if ($amount < 0) { // transfer TO the bank (always completed immediately)
-    if (!completeUsdTx($txid, $automatic, $created)) return FALSE;
+    if (!completeUsdTx($txid, $automatic, $created)) return [FALSE];
   }
-  return $txid;
+  return [$txid, $xid];
 }
 
 /**
@@ -1350,6 +1367,23 @@ function checkSanity() {
     foreignKeyCheck('tx_requests', $nvid, 'payee', 'users', 'uid', $info);
   }
 
+}
+
+/**
+ * Handle balance changes for an account.
+ * @param assoc $info: assoc containing the uid and how much it just changed
+ */
+function balChange($info) {
+  extract(just('uid amount', $info));
+  $a = r\acct($uid)->masterA;
+  if ($a->isCanonic) return;
+  
+  $bal = $a->balance; // balance after insert
+  if ($bal - $amount >= 0 and !$a->wentNeg) { // !$a->wentNeg makes this self-correcting
+    if ($bal < 0) $a->update('wentNeg', now());
+  } elseif ($bal >= 0) $a->update('wentNeg', '');
+  
+//  if ($uid > 0) f('cr.queue', $amount > 0 ? 'payRequests' : 'getFunds1', compact('uid'), TRUE); // TRUE keeps this from looping in tests
 }
 
 /**

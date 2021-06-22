@@ -56,8 +56,7 @@ Scenario: a member draws credit from the bank with zero floor
   | get | %R_ACHMIN |
   Then usd transfers:
   | txid | payee | amount    | created | completed | channel | xid | deposit |*
-  | 5007 |  .ZZB |         0 | %now    |         0 |       0 |   0 |       0 |
-  | 5008 |  .ZZB | %R_ACHMIN | %now+3d |         0 | %TX_WEB |   8 |       0 |
+  | 5007 |  .ZZB | %R_ACHMIN | %now    |         0 | %TX_WEB |   8 |       0 |
   And transactions:
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   8 | %todayd |      0 | 256  | .ZZB | from bank |      1 |

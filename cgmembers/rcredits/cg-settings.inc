@@ -34,7 +34,7 @@ define('R_WEEKLY_DAY', '0'); // what day of the week to do weekly tasks
 define('R_MONTHLY_DAY', '01'); // what day of the month to do monthly tasks (2-digits)
 define('R_DEBT_FEE', 25); // fee for overdue reserve credit
 define('R_DEBT_PERCENT', 1.5); // percentage fee for overdue reserve credit
-define('R_DEBT_DAYS', 30); // how long to pay back reserve credit
+define('R_DEBT_DAYS', 30); // how long an account can be negative
 define('R_STATEMENT_COST', 10); // how much member must pay (in rCredits dollars) for monthly and annual statements by mail
 define('R_INFLATION_RATE', .05); // annual USD inflation rate (but never less than zero) (extra big is okay)
 //define('R_ADMIN_QID', 'NEW.AAA'); // William's account code

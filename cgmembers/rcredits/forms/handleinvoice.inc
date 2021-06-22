@@ -107,15 +107,11 @@ function formHandleInvoice_submit($form, &$sta) {
   $ok = TRUE; // messages default to status, rather than error
 
   if ($op == 'pay' and !$whyNot) {
-    $short = round($payAmount - $fromA->avail(), 2);
-    if ($fromA->ok and $short <= 0) {
-      extract(just('ok msg', be\payInvoice($nvid, $payAmount)));
+    if ($fromA->ok) {
+      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds
     } else {
-      db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid');
-      if ($fromA->ok) {
-        $msg = $fromA->hasBank ? 'expect a transfer' : 'when funded|how to fund';
-        $msg = t('short invoice', ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid)) . "|$msg";
-      } else $msg = t('finish signup|when funded');
+      db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
+      $msg = t('finish signup|when funded');
     }
     
     if ($always) {
@@ -134,5 +130,6 @@ function formHandleInvoice_submit($form, &$sta) {
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 
-  return w\go($ret, $msg ?: 'nothing done', $ok ? '' : 'ERR');
+  say($msg ?: 'nothing done', $ok ? '' : 'ERR');
+  return w\go($ret);
 }

@@ -193,7 +193,7 @@ function f($func) {
   if (strpos($func, ' ') and count($args) == 1) $args = ray($args[0]);
 //  $func = array_shift($args);
   array_shift($args);
-  if ($prefix == 'cr') $cronOp = $funcName; // $args ? $args[0] : ONE_CRON_OP;
+  if ($prefix == 'cr' and $funcName != 'queue') $cronOp = $funcName; // $args ? $args[0] : ONE_CRON_OP;
   return call_user_func_array(funcNickname($func), $args);
 }
 /**/ function d($s) {debug($result = call_user_func_array('f', func_get_args()));} // debug(f(...))

@@ -88,23 +88,20 @@ Scenario: A recurring payment cannot be completed
   Then invoices:
   | nvid | created   | status       | amount | payer | payee | for  | flags  | recursId |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |        8 |
-  And count "txs" is 1
-  And count "usd" is 0
   And count "tx_requests" is 1
-
-  When cron runs "requests"
-  Then these "usd":
+  And these "usd":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    200 | .ZZA  |         0 |       0 |
-  Then count "txs" is 2
+  |    1 |    100 | .ZZA  |         0 |       0 |
+  And count "txs" is 2
   And count "usd" is 1
   And count "tx_requests" is 1
-  And  invoices:
-  | nvid | created   | status       | amount | payer | payee | for  | flags          | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs,funding |        8 |
 
   When cron runs "recurs"
+  And cron runs "getFunds"
   Then count "txs" is 2
+  And these "usd":
+  | txid | amount | payee | completed | deposit |*
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "usd" is 1
   And count "tx_requests" is 1
 
@@ -112,9 +109,9 @@ Skip because member should be allowed to be invoiced?
 Scenario: A recurring payment invoice cannot be completed because member is uncarded
   Given invoices:
   | nvid | created   | status       | amount | payer | payee | for | flags  |*
-  |    1 | %today    | %TX_APPROVED |     50 | .ZZA | .ZZB | pmt | recurs |
+  |    1 | %today    | %TX_APPROVED |     50 | .ZZA  | .ZZB  | pmt | recurs |
   And member ".ZZA" has no photo ID recorded
-  When cron runs "requests"
+  When cron runs "getFunds"
   Then count "txs" is 1
   And count "tx_requests" is 1
 Resume

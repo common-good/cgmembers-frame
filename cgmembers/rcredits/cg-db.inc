@@ -266,6 +266,10 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   if (in($tnm, DELETED_BY_VIEW)) {
     $q = db\q("UPDATE $tnm SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
     $ok = ($q->rowCount() > 0);
+    if ($tnm == 'tx_entries_all') { // deleting an entry changes the balance, so fix the wentNeg dates
+      $q = db\q("SELECT uid amount FROM $tnm WHERE deleted AND $where", $subs);
+      while ($row = $q->fetchAssoc()) be\balChange($row);
+    }
     return;
     
   } elseif (in($tnm, TRACK_DELETED)) {
