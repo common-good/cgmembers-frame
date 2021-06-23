@@ -96,14 +96,8 @@ X
  */
 function formPartnerSignup_validate($form, &$sta, $args = '') {
   global $mya;
-  $accts = 'routingNumber bankAccount';
-  extract(just($accts, $sta['input']));
-  
-  foreach (ray($accts) as $one) $$one = preg_replace('/[\.\- ]/', '', nn($$one));
-  u\preray(compact(ray($accts)), $sta['input']);
-  if (!u\routingOk($routingNumber)) return say('bad routing number', 'routingNumber');
-  if (!u\bankAcctOk($bankAccount)) return say('bad account number', 'bankAccount');
-  
+
+  if (!checkBankAccount($sta)) return;
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(u\normalizeCase(just($normals = 'fullName address2 city2', $sta['input'])));
     extract(just('email phone state2 zip2 years months myid', $sta['input']));

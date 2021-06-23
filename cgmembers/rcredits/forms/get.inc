@@ -26,8 +26,8 @@ function formGet($form, &$sta, $args = '') {
   }
   
   $title = t('Transfer Funds');
-  $subtext = t('<p>When you transfer funds FROM your bank account to your Common Good account, you are buying Common Good credit. Your Common Good credit is backed partly by Dollars in your Common Good Community’s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>]. It may take several business days for your bank to send the funds.</p>
-  <p>Funds going TO your bank account also may take several days to arrive. If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund')) . t('note|ach warning');
+  $subtext = t('<p>When you transfer funds FROM your bank account, you are buying Common Good credit. That credit is backed partly by Dollars in your Common Good Community\'s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>].</p>
+  <p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund'));
 
   $subs = compact(ray('myid jid'));
   $toBank24 = db\get('-amount', 'r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', $subs + ['dayAgo' => strtotime('-1 day')]);

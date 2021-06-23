@@ -225,6 +225,7 @@ function menu($submenu = '') {
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'api' => ['call', 'API', '1', ANY, 'api'],
     'cc' => ['call', 'Credit Card Donation', 'CC 1', ANY],
+    'donate-fbo' => ['call', t('Donate'), 'DonateFBO', ANY],
   );
 
   foreach ($items as $k => $v) {

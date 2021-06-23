@@ -125,7 +125,7 @@ const CGF_PHONE = '+1 413 628 1723';
 const CGF_ADDRESS = '48 Buckland Road';
 const CGF_CITY = 'Ashfield';
 const CGF_ZIP = '01330';
-const CGF_POSTALADDR = 'PO Box 21, Ashfield, MA 01330-0021';
+const CGF_POSTALADDR = 'PO Box 21, Ashfield, MA 01330';
 const CGF_EIN = '205280780';
 const SLOGANS = 'for truth and justice,for community power,for community democracy,for community investment,for a sustainable future,to empower communities,for community abundance,for a better future,for economic democracy,for democratic economics';
 define('R_LAUNCH', strtotime('12/15/2013')); // original launch date
@@ -659,6 +659,7 @@ const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear 
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
+  'fbo-thanks' => t('Thank you for your donation!'),
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('new solar subscription'),
   'partner-contract' => t('Continue your Community Solar sign-up'),

@@ -827,10 +827,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 #frm-dashboard .form-item-buttons {margin-top:30px; text-align:left;}
 #frm-dashboard .form-item-buttons .btn {margin:0 20px 0 0;}
-#frm-dashboard .form-item-buttons a:first-child {margin-left:0;}
-#frm-dashboard .form-item-buttons .control-data {max-width:480px;}
 #frm-dashboard .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center;}
-#frm-dashboard .form-item-advanced .btn {margin:0 20px 0 0;}
+.btn-options {margin:0 20px 0 0;}
 
 #frm-dashboard #edit-choiceList a {display:table-row;}
 #frm-dashboard #edit-choiceList a div {display:table-cell; padding:2px 4px;}
@@ -1312,9 +1310,14 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /*#frm-donate .form-item-share .control-data {max-width:650px;}
 #frm-donate .form-item-share input {max-width:100px;} */
 /*#frm-donate #edit-period {display:block; float:left;}*/
-#frm-donate .form-item-period {display:block;}
+#frm-donate .form-item-period,
+#frm-donatefbo .form-item-period {display:block;}
+#frm-donatefbo #user-picture img {max-height:140px;}
+#frm-donatefbo .form-item-fullName {margin-top:50px;}
+#frm-donatefbo #edit-title,
+#frm-donatefbo .radio {margin-bottom:0;}
 
-#frm-donate #edit-honor {display:inline-block; width:150px; margin-right:10px;}
+#edit-honor {display:inline-block; width:150px; margin-right:10px;}
 #edit-honored {display:inline-block; max-width:150px;}
 
 /* Food Fund */

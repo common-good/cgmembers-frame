@@ -24,8 +24,7 @@ function formConnect($form, &$sta, $args = '') {
   $autoboxes = hidFld(serialize($orig));
   $minDesc = t('How much to keep in your %PROJECT Account, for purchases. When your balance goes below this amount, the system automatically refills it for you from your bank account. Refilling may take 3-5 business days.');
   $minDescNegative = $mya->balance < 0 ? t(' <b>If you choose a negative amount</b>, it will be increased by %bump a week until it is greater than zero.', 'bump', u\fmtAmt(MIN_WEEKLY_BUMP)) : '';
-  $minWarning = t('note|ach warning');
-  $target = numFld(t('Target Bal:'), [t('Your preferred "normal" balance'), "<p>$minDesc$minDescNegative</p><p>$minWarning</p>"], dft($mya->minimum ?: 0));
+  $target = numFld(t('Target Bal:'), [t('Your preferred "normal" balance'), "<p>$minDesc$minDescNegative</p>"], dft($mya->minimum ?: 0));
   $achMin = numFld(t('Min Transfer:'), [t('Minimum bank transfer amount'), t('This much (or more, if necessary) will be transferred from your bank account to your %PROJECT account when your balance goes below the Target Balance you chose, above. The suggested amount works well for most people.')], dft($mya->achMin ?: R_ACHMIN_DEFAULT));
 
 //  $savingsAdd = textFld(t('Extra Savings:'), [t('Extra savings amount'), t('Your incentive rewards go automatically into a Savings Reserve, for later or as needed. Your Savings Reserve works like a traditional reserve savings account that kicks in whenever you would otherwise overdraw your primary account -- except there are no fees. This also helps the community by keeping more funds in the system. You get a monthly inflation adjustment on any funds you hold in the %PROJECT system (at @inflate% APR). If you want to hold even more in your Savings Reserve (a great idea!) enter the additional amount here.', ['@inflate' => R_INFLATION_RATE * 100])], required($mya->savingsAdd));
@@ -63,7 +62,7 @@ function formConnect($form, &$sta, $args = '') {
    
     $routingNumber = $usa ? routingFld(FALSE) : NULL;
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <br><span>Savings accounts will not work, at this time.</span>'), maxlen(17));
+    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
 //    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
     $connectFields = fieldSet('connectFields2', compact(ray('routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);

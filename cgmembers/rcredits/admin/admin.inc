@@ -77,8 +77,8 @@ function setupBasicAccounts() {
 
   $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo);
   $info = array_combine($keys, $values);
-  $info += ray('phone address city state postalAddr zip helper',
-    u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
+  $info += ray('legalName phone address city state postalAddr zip helper',
+    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
