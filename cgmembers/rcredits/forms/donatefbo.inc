@@ -80,7 +80,8 @@ function formDonateFBO_submit($form, &$sta) {
   list ($city, $state) = r\zipCity($zip);
   $source = t('Donation FBO %nm (by %how)', 'nm how', $co->fullName, $payHow ? t('cc') : t('ach'));
   $notes = $comment ? r\stampNote($comment) : '';
-  $feeCovered = $amount * (($coverFSFee ? .03 : 0) + (($payHow == 1 and $coverCCFee) ? .03 : 0));
+  $feeCovered = $amount * (($coverFSFee ? .03 : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
+
   r\tellAdmin($source, compact(ray($input . ' feeCovered')));
   $amount = round($amount + $feeCovered, 2);
 
