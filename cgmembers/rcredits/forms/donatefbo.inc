@@ -23,7 +23,7 @@ function formDonateFBO($form, &$sta, $args = NULL) {
   $oftens = array_reverse(r\recurRay(TRUE));
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
   
-  $logo = item($co->photoHtml());
+  $logo = item($co->logo ? tr('<img src="%logo">', 'logo', $co->logo) : '');
   $title = t('Donate to ') . str_replace(PROJECT . t(' FBO '), '', $co->fullName);
   $subtext = t('<p><small>%PROJECT members <%aMember>go here</a> instead</small></p><p>Make a tax-deductible contribution of any amount to support %coName (for donations of stock, <%aStock>contact us</a>).</p>', '_aMember _aStock coName', atag($memberUrl), atag(r\promoLink('about-us/contact-us')), $co->id == CGID ? PROJECT : ($co->fullName . t(' through ') . PROJECT));
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft(nn($s_amount)));
