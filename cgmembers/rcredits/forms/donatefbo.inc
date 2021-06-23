@@ -15,7 +15,7 @@ function formDonateFBO($form, &$sta, $args = NULL) {
   global $mya; if ($mya) return go($memberUrl);
   $args = $args ? urlq2ray($args) : (u\_GET() ?: $_POST);
   $op = nni($args, 'op');
-  if ($op == 'done' or $op == 'cancel') return ccThanks($args);
+  if ($op == 'done') return ccThanks($args);
   if ($op == 'cancel') return softErr('We apologize. Our donation form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.');
   extract(getCGPayArgs($args)); // co, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
   
@@ -74,12 +74,12 @@ function formDonateFBO_validate($form, &$sta) {
 
 function formDonateFBO_submit($form, &$sta) {
   $dbFields = 'fullName email flags phone zip country source city state notes';
-  extract(just($input = $dbFields . ' amount period honor honored payHow routingNumber bankAccount isSavings comments coverFSFee coverCCFee co', $sta['input'], NULL));
+  extract(just($input = $dbFields . ' amount period honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee co', $sta['input'], NULL));
 
   $co = r\acct($co);
   list ($city, $state) = r\zipCity($zip);
   $source = t('Donation FBO %nm (by %how)', 'nm how', $co->fullName, $payHow ? t('cc') : t('ach'));
-  $notes = $comments ? r\stampNote($comments) : '';
+  $notes = $comment ? r\stampNote($comment) : '';
   $feeCovered = $amount * (($coverFSFee ? .03 : 0) + (($payHow == 1 and $coverCCFee) ? .03 : 0));
   r\tellAdmin($source, compact(ray($input . ' feeCovered')));
   $amount = round($amount + $feeCovered, 2);
@@ -177,7 +177,7 @@ function handleRecurs($a, $amount, $period, $coId, $action) {
   $data = ray('gift recurs', 1, (bool) $recursId);
   $a->payApproved($coId, $amount, t('donation'), $coId == CGID ? FOR_NONGOODS : FOR_GOODS, $data, $recursId);
   $gift = u\fmtAmt($amount) . ($recursId ? ' ' . r\recurDesc($period) : '');
-  $subs = ray('noFrame gift code', 1, $gift, $a->oneTimePass());
+  $subs = ray('fullName date noFrame gift code', $a->fullName, u\fmtDate(NULL, TRUE), 1, $gift, $a->oneTimePass());
   $co = r\acct($coId);
   foreach (ray('fullName postalAddr') as $k) $subs['co' . ucfirst($k)] = $co->$k;
   $subs['coPhone'] = u\fmtPhone($co->phone);

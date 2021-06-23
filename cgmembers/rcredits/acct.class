@@ -1193,7 +1193,7 @@ o;
     $amount -= $amtDone;
     if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
     
-    if ($amount) { // there was some to be gotten from bank
+    if ($amount and !($a->nonudge and !$a->ok)) { // there was some to be gotten from bank (no message for non-member donations)
       $msg = $amtDone >= $amount ? 'automatic when funded' : 'when funded|how to fund';
       w\say($msg);
       $a->tellOut($msg);

@@ -63,7 +63,9 @@ Scenario: Someone completes a credit card donation FBO
   | NEWAAA |     26 |      1 | .ZZC |
   Then we say "status": "gift thanks"
   And we email "fbo-thanks" to member "z@" with subs:
-  | coFullName   | Cor Pub |**
+  | fullName     | Zee Zot |**
+  | date         | %mdY    |
+  | coFullName   | Cor Pub |
   | coPostalAddr | 3 C, Cville, CA 10003 |
   | coPhone      | +1 333 333 3333 |
   | gift         | $26   |

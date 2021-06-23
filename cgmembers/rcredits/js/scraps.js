@@ -817,7 +817,7 @@ function cardOther(focus) {
 function hideComment() {
   var note = $('.form-item-comment');
   note.hide();
-  $('.form-item-submit a').click(function () {note.show().find('textarea').focus();});
+  $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
