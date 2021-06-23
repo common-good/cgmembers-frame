@@ -197,7 +197,7 @@ class Acct {
       case 'proSe': return ($a->id == $a->agentId);
       case 'qid': return $a->qo->qid;
       case 'uids': return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
-      case 'bestName': return $a->shortName ?: $a->fullName;
+      case 'bestName': return str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
       case 'isCtty': return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
       case 'isRegion': return (substr($a->name, -1, 1) == '.');
       case 'cttyA': return r\acct($a->community);
