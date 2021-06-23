@@ -55,6 +55,7 @@ EOF;
 
   $dob = $mya->hasDob ? NULL : ssnFields(FALSE, REQ)['dob'];
   $website = textFld(t('Website:'), [t('Website address'), t('Especially if you want to accept payments on your website, be sure to list it here.')], dft($mya->website));
+  $logo = textFld(t('Logo URL:'), [t('Logo web address')], dft($mya->logo));
   $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page.')); //, '', ['class'=>'help-block']);
 //  $description = fld('text_format', t('Description:'), [t('Arbitrarily complex description')], ['format' => 'filtered_html'] + dft(strtr($mya->description, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])));
   $description = areaFld(t('Describe:'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->description));
@@ -68,17 +69,18 @@ EOF;
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   } else { $fast = $atm = NULL; }
 
-  return cgform(compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  return cgform(compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website logo descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
-  $fields = 'selling employees gross staleNudge';
+  $fields = 'selling employees gross staleNudge logo';
   extract(just("$fields dob", $sta['input']));
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
   if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');
   if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return; // validate internalizes dob
+  if ($logo and !file_get_contents($logo)) return sayFieldErr(t('That Logo URL does not exist.'), 'logo');
 
   u\preray(compact(ray($fields)), $sta['input']);
 }
@@ -86,7 +88,7 @@ function formCompany_validate($form, &$sta) {
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($rawInfo = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input'], NULL));
+  extract($rawInfo = just('private description shortDesc website logo selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input'], NULL));
   
   $website = preg_replace('~https?://~i', '', nn($website));
 

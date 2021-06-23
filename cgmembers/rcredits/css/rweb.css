@@ -1312,7 +1312,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /*#frm-donate #edit-period {display:block; float:left;}*/
 #frm-donate .form-item-period,
 #frm-donatefbo .form-item-period {display:block;}
-#frm-donatefbo #user-picture img {max-height:140px;}
+#frm-donatefbo #edit-logo img {max-height:140px; max-width:100%;}
 #frm-donatefbo .form-item-fullName {margin-top:50px;}
 #frm-donatefbo #edit-title,
 #frm-donatefbo .radio {margin-bottom:0;}
