@@ -1864,7 +1864,8 @@ function drupal_bootstrap() {
 
   global $channel, $boxUser, $box;
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
-  if ($mya) $boxUser = w\boxUser($box = w\box(), $mya->id); // so far used only when recording transactions
+  $box = nni($_COOKIE, 'box') ?: r\setCook('box', u\code()); // a unique persistant identifier for the current machine (set randomly, if none yet)
+  if ($mya) $boxUser = w\boxUser($box, $mya->id); // so far used only when recording transactions
 
   return DRUPAL_BOOTSTRAP_FULL;
 }

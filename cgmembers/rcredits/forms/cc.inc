@@ -74,7 +74,7 @@ function formCC_validate($form, &$sta) {
 }
 
 function formCC_submit($form, &$sta) {
-  extract($info = just('fullName email zip amount comment', $sta['input'], NULL));
+  extract($info = just('fullName email zip amount comment purpose', $sta['input'], NULL));
   
   r\tellAdmin(t('CC donation initiated'), $info);
   unset($info['comment']); // don't send comment to PayPal
@@ -89,7 +89,8 @@ function formCC_submit($form, &$sta) {
   $no_shipping = 1;
   $rm = 0; // 0 for GET, 2 for POST
   $business = 'info@CommonGood.earth'; // CGF_EMAIL
-  $data = compact(ray('cmd business amount first_name last_name email zip return cancel_return no_shipping rm'));
+  $item_name = $purpose ?: t('for general support');
+  $data = compact(ray('cmd business amount first_name last_name email zip item_name return cancel_return no_shipping rm'));
 //  if ($permo) $data += ray('a3 t3 p3 src', $amount, 'M', 1, 1); // t3=DWMY, p3=periods, src=1 for recur
 //  if ($permo) unset($data['amount']);
   $url = 'https://www.paypal.com/donate';
@@ -112,7 +113,7 @@ function thank($ray) {
   $notes = r\stampNote(t('cc donation: $') . $amount) . ($mya ? $mya->notes : '');
   if ($mya) $fullName = $mya->fullName;
   r\tellAdmin(t('CC donation complete'), compact(ray('fullName email zip city state amount')) + ($mya ? [] : ray('NEW!', '1')));
-  $msg = 'cc thanks';
+  $msg = 'gift thanks';
 
   if ($mya) {
     $mya->update('notes', $notes);

@@ -7,6 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 include_once __DIR__ . '/signin.inc';
+include_once __DIR__ . '/donatefbo.inc'; // for getCGPayArgs() function
 
 /**
  * Pay with Common Good, arriving from some other site. The payment form, if any, 
@@ -17,29 +18,14 @@ include_once __DIR__ . '/signin.inc';
 function formCGPay($form, &$sta) {
   global $mya;
   $args = u\_GET() ?: $_POST;
-
-  foreach ($args as $k => $v) if (!in($k, 'q code')) {
-    if (strlen($v) > CGPAY_MAXLEN) return exitErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
-    if (!in($k, CGPAY_VARS2)) return exitErr(t('"%k" is not a parameter. Check your spelling?', compact('k')));
-  }
-
-  if ($err = missingArgs($args, 'code')) return exitErr($err);
-  if (!$ray = u\decryRay($args['code'])) return exitErr(t('The "code" parameter is not valid.'));
-  if ($dups = just($args, $ray)) return exitErr(t('Parameter "%k" attempts to override that parameter as encoded in "code".', 'k', $dups[0]));
-
-  extract(just(CGPAY_VARS, $ray, NULL)); // use this structure just to set the unused ones to NULL
-  extract(just(CGPAY_VARS2, $args, NULL), EXTR_PREFIX_ALL, 's'); // mostly suggested parameters (amount, id, item, name) except for request -- don't overwrite
+  if (!$res = getCGPayArgs($args)) return; // if there were errors, don't continue
+  extract($res); // co, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
   
-  if ($expires and $expires < now()) return softErr('button expired');
-  $co = r\acct($account);
-  u\EXPECT($co, 'missing account in code!');
-  if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));
-
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
   if ($verb == t('Donate')) u\setDft($s_item, t('donation'));
 
-  $suffix = t(' to ') . ($co->fullName ?: t('co'));
+  $suffix = t(' to ') . $co->fullName;
   if ($amount) {
     $amtDpy = item(u\fmtAmt($amount, ''), "$verb:", '', suffix($suffix));
     $amount = hidFld($amount);
@@ -72,7 +58,6 @@ function formCGPay($form, &$sta) {
     u\setDft($verb, t('Donate'));
     u\setDft($item, t('donation'));
     $itemDpy = NULL;
-    if ($co->legalName == r\acct(CGID)->legalName) $option2 = '<small>' . t(' ... or donate with a <%a>credit card</a>', '_a', atag('/cc/qid=' . $co->mainQid)) . '</small>'; // &#9785; (frowny face)
 
   } elseif (!$for or $for == 'other') { // for is other or empty or nonsense
     $for = NULL;

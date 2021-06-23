@@ -85,9 +85,7 @@ function doit(what, vs) {
     break;
     
   case 'cc':
-    var note = $('.form-item-comment');
-    note.hide();
-    $('.form-item-submit a').click(function () {note.show().find('textarea').focus();});
+    hideComment();
     break;
     
   case 'deposits':
@@ -134,12 +132,12 @@ function doit(what, vs) {
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
     });
-    $('#btn-delay').click(function () {
+    $('.btn-delay').click(function () {
       $(this).hide();
       $('.form-item-start').show();
       $('#edit-start').focus();
     });
-    $('#btn-repeat').click(function () {
+    $('.btn-repeat').click(function () {
       $(this).hide();
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
@@ -303,7 +301,7 @@ function doit(what, vs) {
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/cgpay';
+      var url = baseUrl + '/' + vs['page'];
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
@@ -319,6 +317,28 @@ function doit(what, vs) {
       $('#button').html(html);
       $('.form-item-example .control-data').html(html);
     }
+    break;
+    
+  case 'fbo':
+    hideComment();
+    $('.form-item-period, .form-item-honor').hide();
+    var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
+    var ach = $('#ach'); ach.hide();
+    var submit = $('.form-item-submit');
+    $('#edit-payhow-1').click(function () {ach.hide(); coverCCFee.show();});
+    $('#edit-payhow-0').click(function () {ach.show(); coverCCFee.hide();});
+    
+    $('.btn-repeat').click(function () {
+      $(this).hide();
+      $('.form-item-period').show();
+      $('#edit-period').val('month').focus();
+    });
+    $('.btn-honor').click(function () {
+      $(this).hide();
+      $('.form-item-honor').show();
+      $('#edit-honored').focus();
+    });
+
     break;
     
   case 'addr':
@@ -792,6 +812,12 @@ function cardOther(focus) {
   $('#edit-desc').val('').attr('required', 'required');
   $('.form-item-desc').show();
   if (focus) $('#edit-desc').focus();
+}
+
+function hideComment() {
+  var note = $('.form-item-comment');
+  note.hide();
+  $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}

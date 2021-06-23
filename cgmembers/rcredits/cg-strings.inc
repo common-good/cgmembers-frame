@@ -224,7 +224,7 @@ EOF
   'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
   'join thanks' => t('Thank you for joining us!'),
-  'cc thanks' => t('<p>Thank you so much for your donation! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
+  'gift thanks' => t('<p>Thank you so much for your donation! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
   'check it out' => t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),
   'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
@@ -253,7 +253,7 @@ EOF
     
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',
-  'ach warning' => t('If there are insufficient funds in your bank account when you request a transfer from your bank account (either explicitly, or by automatic refills), your bank will charge you a $20-35 fee, just like for a bounced check. If this happens more than once, the %PROJECT system will <i>also</i> charge you $%R_DEPOSIT_RETURN_FEE, to cover <i>its</i> bank fee. So make sure you have enough in your bank account to cover your transfer requests.'),
+//  'ach warning' => t('If there are insufficient funds in your bank account when you request a transfer from your bank account (either explicitly, or by automatic refills), your bank will charge you a $20-35 fee, just like for a bounced check. If this happens more than once, the %PROJECT system will <i>also</i> charge you $%R_DEPOSIT_RETURN_FEE, to cover <i>its</i> bank fee. So make sure you have enough in your bank account to cover your transfer requests.'),
   // If you don\'t want any automation, type zero (then remember to refill your account explicitly when it gets low).'),
 //  'prompt max' => t('Keep AT MOST this much in my %PROJECT Account. (When your %RCREDITS balance goes above this amount by $%R_CHUNK or more, the system transfers the extra to your bank account. Blank means no automatic transfers &mdash; recommended in most cases).'),
   'legalname desc' => t(' full legal name, properly capitalized, for tax reporting and banking.'),

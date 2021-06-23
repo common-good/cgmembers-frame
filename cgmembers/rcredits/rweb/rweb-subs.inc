@@ -817,16 +817,6 @@ function pickPassword($reset = TRUE, $req = '') {
 }
   
 /**
- * Return a unique persistant identifier for the current machine (set randomly, if none yet).
- * @return the box ID string
- */
-function box() {
-  global $box;
-  if ($box = nni($_COOKIE, 'box')) return $box;
-  return r\setCook('box', $box = u\code());
-}
-
-/**
  * Return the box record id for the given machine code and account record ID.
  * @param int $code: machine identifier
  * @param int $uid: current account ID (can be a company)
@@ -1302,7 +1292,7 @@ function stateFld($dft) {return selectFld(REQ . t('State:'), t(''), dft($dft), [
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($zip = NULL) {return textFld(REQ . t('Postal Code:'), [t('Physical location postal code')], dft(nn($zip)));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
-function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
+function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
   $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
@@ -1466,6 +1456,23 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
   return $a;
+}
+
+/**
+ * Check and correct routing and bankAccount errors in validate functions.
+ * @param assoc $sta (MODIFIED): standard form status parameter
+ * @return TRUE if okay else FALSE (having shown an error message)
+ */
+function checkBankAccount(&$sta) {
+  $accts = 'routingNumber bankAccount';
+  extract(just($accts, $sta['input'], NULL));
+  foreach (ray($accts) as $k) if (!$$k) return; // HTML should enforce required or not
+  
+  foreach (ray($accts) as $one) $$one = preg_replace('/[\.\- ]/', '', nn($$one));
+  u\preray(compact(ray($accts)), $sta['input']);
+  if (!u\routingOk($routingNumber)) return say('bad routing number', 'routingNumber');
+  if (!u\bankAcctOk($bankAccount)) return say('bad account number', 'bankAccount');
+  return TRUE;
 }
 
 function hack($message, $info = []) {
@@ -2040,6 +2047,7 @@ function emailtag($email = NULL, $subject = '', $body = '') {
 function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
+function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
 function buttino($href, $text, $style = 'default', $size = '', $extras = []) {

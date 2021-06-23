@@ -1,3 +1,7 @@
+2021-06-22 feature/fbo
+. eliminated ACH overdraft warnings (banks don't charge and neither do we)
+. created a donate-fbo page to accept fiscally-sponsored donations by CC or ACH
+
 2021-06-21 feature/get-funds
 . refactored getting funds for invoices, investments, and refills
 . we no longer test a bank account before trying a transfer

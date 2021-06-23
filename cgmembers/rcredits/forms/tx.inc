@@ -26,9 +26,9 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $title = $opDesc;
   if ($mya->co) {
-    $buttons = $pay ? btn('/tx/pay/payments', t('Upload Payments'), 'default', '', clas('w-pay')) : '';
-    if ($pay) $buttons .= btn('/tx/pay/payroll', t('Upload Payroll'), 'default', '', clas('w-pay'));
-    if ($charge) $buttons .= btn('/tx/charge/invoices', t('Upload Invoices'), 'default', '', clas('w-charge'));
+    $buttons = $pay ? btnOpt('/tx/pay/payments', t('Upload Payments'), 'w-pay') : '';
+    if ($pay) $buttons .= btnOpt('/tx/pay/payroll', t('Upload Payroll'), 'w-pay');
+    if ($charge) $buttons .= btnOpt('/tx/charge/invoices', t('Upload Invoices'), 'w-charge');
   } else $buttons = NULL;
   $who = textFld(t('Who:'), [t('name, id, email, or phone')], required(nn($who)));
 
@@ -39,7 +39,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
   $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Automated Payments</a>.', '_a', atag('/history/recurring')));
   
-  $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
+  $advanced = item(btnOpt('', t('delay'), 'btn-delay') . btnOpt('', t('repeat'), 'btn-repeat'));
   $submit = t('Submit');
 
   list ($field, $question, $selfErr) = ['who', t(' %amount to %name?'), 'self-tx'];

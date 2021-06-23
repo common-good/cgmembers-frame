@@ -237,6 +237,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
  *     MAKE cc Setup
+ *     TEST cc SomeoneAsksToMakeACreditCardDonationFBO
+ *     MAKE cc SomeoneCompletesACreditCardDonationFBO
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -399,6 +401,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST cc SomeoneCompletesACreditCardDonation
+ *     TEST cc SomeoneCompletesACreditCardDonationFBO
  *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
@@ -476,7 +479,8 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST message AMemberSendsAMessageToAnotherMember
+ * in: TEST cc SomeoneCompletesACreditCardDonationFBO
+ *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -560,6 +564,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
+ *     TEST cc SomeoneAsksToMakeACreditCardDonationFBO
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -1312,6 +1317,7 @@ function membersHave($list) {return t\membersHave($list);}
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
+ *     TEST cc SomeoneAsksToMakeACreditCardDonationFBO
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -2182,6 +2188,7 @@ function cookieIs($nm, $v) {
  * someone visits (ARG) where code is: (ARG)
  *
  * in: MAKE cc SomeoneCompletesACreditCardDonation
+ *     MAKE cc SomeoneCompletesACreditCardDonationFBO
  *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
@@ -2354,6 +2361,7 @@ function weShowJSONOf($ray) {
  * a button code for: (ARG)
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonationFBO
  *     MAKE cgpay AMemberClicksACGPayButton
  *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
@@ -2415,6 +2423,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonationFBO
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
@@ -2447,6 +2456,7 @@ function weFirstThen($first, $then) {
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonationFBO
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2465,6 +2475,7 @@ function withQR($url) {
  * next captcha is (ARG)
  *
  * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonationFBO
  *     MAKE signup Setup
  */
 function nextCaptchaIs($ca) {

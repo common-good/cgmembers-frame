@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -1053,7 +1053,7 @@ function addAttribs(&$thing) {
  * @return: successful (always successful for anonymous)
  */
 function logIn($id) {
-  global $boxUser, $mya, $user;
+  global $box, $boxUser, $mya, $user;
   if ($id == '?') {
     w\signout(TRUE);
   } else {
@@ -1064,7 +1064,7 @@ function logIn($id) {
       w\signout(TRUE);
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
       r\setAcct($a);
-      $boxUser = r\Web\boxUser(r\Web\box(), $a->id);
+      $boxUser = w\boxUser($box, $a->id);
     }
   }
   return TRUE;
@@ -1717,6 +1717,7 @@ function fixState($state, $country) {
  * @param assoc $code: record id and creation date, either: [postid, created] or [id, created]
  */
 function postCode($code) {
+  fixData($code);
   extract($code);
 
   foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {

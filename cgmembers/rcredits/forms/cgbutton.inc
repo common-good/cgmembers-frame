@@ -14,6 +14,8 @@ function formCGButton($form, &$sta, $args = '') {
   global $mya, $base_url;
   extract(just('nothing', $args));
 
+  $fbo = ($mya->legalName == r\acct(CGID)->legalName); // fiscal sponsoring
+
   $title = t('Create a CGPay Link/Button');
   $subtext = t('<p>Create a link or button to paste into your website or emails for customers to pay you through %PROJECT. If you need more complex functionality, use instead %advanced.</p><p>When your customer (or donor) clicks the link or button, a payment form appears (try it!). The customer must enter their account ID (or email) and password to confirm the purchase. You are notified by email when payment is received.</p>', '_advanced', lnk('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ', t('our&nbsp;advanced&nbsp;interface')));
   $forVals = t('Credit,Gift of Credit,Other');
@@ -31,7 +33,9 @@ function formCGButton($form, &$sta, $args = '') {
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
-  jsx('cgbutton', ray('qid forVals selling style', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE));
+  $page = $fbo ? 'donate-fbo' : 'cgpay';
+
+  jsx('cgbutton', ray('qid forVals selling style page', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, $page));
   
   return cgform(compact(ray('title subtext button for item amount credit text expires example size html')));
 }

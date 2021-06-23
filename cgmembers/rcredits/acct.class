@@ -1193,7 +1193,7 @@ o;
     $amount -= $amtDone;
     if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
     
-    if ($amount) { // there was some to be gotten from bank
+    if ($amount and !($a->nonudge and !$a->ok)) { // there was some to be gotten from bank (no message for non-member donations)
       $msg = $amtDone >= $amount ? 'automatic when funded' : 'when funded|how to fund';
       w\say($msg);
       $a->tellOut($msg);
@@ -1773,7 +1773,7 @@ X;
     $a = $this;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');
-    if ($payee != CGID) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    if ($payeeA->legalName != CGF_LEGALNAME) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok) {
       $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
