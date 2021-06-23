@@ -24,8 +24,8 @@ function formDonateFBO($form, &$sta, $args = NULL) {
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
   
   $logo = item($co->logo ? tr('<img src="%logo">', 'logo', $co->logo) : '');
-  $title = t('Donate to ') . str_replace(PROJECT . t(' FBO '), '', $co->fullName);
-  $subtext = t('<p><small>%PROJECT members <%aMember>go here</a> instead</small></p><p>Make a tax-deductible contribution of any amount to support %coName (for donations of stock, <%aStock>contact us</a>).</p>', '_aMember _aStock coName', atag($memberUrl), atag(r\promoLink('about-us/contact-us')), $co->id == CGID ? PROJECT : ($co->fullName . t(' through ') . PROJECT));
+  $title = t('Donate to ') . $co->bestName;
+  $subtext = t('<p><small>%PROJECT members <%aMember>go here</a> instead</small></p><p>Make a tax-deductible contribution of any amount to support %coName (for donations of stock, <%aStock>contact us</a>).</p>', '_aMember _aStock coName', atag($memberUrl), atag(r\promoLink('about-us/contact-us')), $co->id == CGID ? PROJECT : ($co->bestName . t(' through ') . PROJECT));
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft(nn($s_amount)));
   $options = item(btnOpt('', t('Repeat'), 'btn-repeat') . btnOpt('', t('In honor or memory'), 'btn-honor'));
   $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft('once'), $oftens);
@@ -78,7 +78,7 @@ function formDonateFBO_submit($form, &$sta) {
 
   $co = r\acct($co);
   list ($city, $state) = r\zipCity($zip);
-  $source = t('Donation FBO %nm (by %how)', 'nm how', $co->fullName, $payHow ? t('cc') : t('ach'));
+  $source = t('Donation FBO %nm (by %how)', 'nm how', $co->bestName, $payHow ? t('cc') : t('ach'));
   $notes = $comment ? r\stampNote($comment) : '';
   $feeCovered = $amount * (($coverFSFee ? .03 : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
 
@@ -112,7 +112,7 @@ function formDonateFBO_submit($form, &$sta) {
     $no_shipping = 1;
     $rm = 0; // 0 for GET, 2 for POST
     $business = 'info@CommonGood.earth'; // CGF_EMAIL
-    $item_name = t('for %what', 'what', $co->id == CGID ? t('general support') : $co->fullName);
+    $item_name = t('for %what', 'what', $co->id == CGID ? t('general support') : $co->bestName);
     $data = compact(ray('cmd business amount first_name last_name email zip item_name return cancel_return no_shipping rm'));
   //  if ($permo) $data += ray('a3 t3 p3 src', $amount, 'M', 1, 1); // t3=DWMY, p3=periods, src=1 for recur
   //  if ($permo) unset($data['amount']);
@@ -180,8 +180,7 @@ function handleRecurs($a, $amount, $period, $coId, $action) {
   $gift = u\fmtAmt($amount) . ($recursId ? ' ' . r\recurDesc($period) : '');
   $subs = ray('fullName date noFrame gift code', $a->fullName, u\fmtDate(NULL, TRUE), 1, $gift, $a->oneTimePass());
   $co = r\acct($coId);
-  foreach (ray('fullName postalAddr') as $k) $subs['co' . ucfirst($k)] = $co->$k;
-  $subs['coPhone'] = u\fmtPhone($co->phone);
+  $subs += ray('coName coPostalAddr coPhone', $co->bestName, $co->postalAddr, u\fmtPhone($co->phone));
   r\rMail('fbo-thanks', $a, $subs);
   return sayEmpty('gift thanks');
 }

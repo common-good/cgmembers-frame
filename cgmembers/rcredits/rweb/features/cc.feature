@@ -5,10 +5,10 @@ SO it can get money from me without me having to sign up
 
 Setup:
   Given members:
-  | uid  | fullName | flags             | postalAddr            | phone        | legalName      | emailCode |*
-  | .ZZA | Abe One  | ok,confirmed      | 1 A, Aville, AL 10001 |              | Abe One        |           |
-  | .ZZB | Bea Two  | ok,confirmed      | 2 B, Bville, BC 10002 |              | Bea Two        |           |
-  | .ZZC | Cor Pub  | ok,confirmed,co   | 3 C, Cville, CA 10003 | 333-333-3333 | %CGF_LEGALNAME | Cc3       |
+  | uid  | fullName              | flags             | postalAddr            | phone        | legalName      | emailCode |*
+  | .ZZA | Abe One               | ok,confirmed      | 1 A, Aville, AL 10001 |              | Abe One        |           |
+  | .ZZB | Bea Two               | ok,confirmed      | 2 B, Bville, BC 10002 |              | Bea Two        |           |
+  | .ZZC | %PROJECT FBO Cor Pub  | ok,confirmed,co   | 3 C, Cville, CA 10003 | 333-333-3333 | %CGF_LEGALNAME | Cc3       |
 
 Scenario: Someone asks to make a credit card donation
   When member "?" visits "cc"
@@ -65,7 +65,7 @@ Scenario: Someone completes a credit card donation FBO
   And we email "fbo-thanks" to member "z@" with subs:
   | fullName     | Zee Zot |**
   | date         | %mdY    |
-  | coFullName   | Cor Pub |
+  | coName       | Cor Pub |
   | coPostalAddr | 3 C, Cville, CA 10003 |
   | coPhone      | +1 333 333 3333 |
   | gift         | $26   |
