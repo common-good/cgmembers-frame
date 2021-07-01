@@ -13,7 +13,7 @@ services:
     expose:
       - 3306
     working_dir: /code
-    command: bash ./recreate.sh
+    # command: bash ./recreate.sh
 
   web:
     image: nginx
