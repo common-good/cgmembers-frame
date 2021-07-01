@@ -6,7 +6,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MARIADB_ROOT_PASSWORD: test
+      MARIADB_ROOT_PASSWORD: "test"
     volumes:
       - ../..:/code
       - db-data:/var/lib/mysql
@@ -37,7 +37,9 @@ services:
     #   nginx -g 'daemon off;' "
 
   php:
-    image: php:7.3-fpm
+    # image: php:7.3-fpm
+    build: .
+    tty: true # keeps container running
     expose:
       - 9000
     volumes:
