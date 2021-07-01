@@ -1,3 +1,4 @@
 #! /bin/bash
-sh ./importdb.sh startup && echo "Imported startup database" && \
-sh ./migrate.sh $1 $2 $3 $4
+mysql "$@" <db/import-startup.sql && \
+echo "Imported startup database" && \
+vendor/robmorgan/phinx/bin/phinx migrate -e development -c config/phinx.json

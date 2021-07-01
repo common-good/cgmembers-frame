@@ -6,14 +6,11 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MARIADB_ROOT_PASSWORD: "test"
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
     volumes:
-      - ../..:/code
       - db-data:/var/lib/mysql
     expose:
       - 3306
-    working_dir: /code
-    # command: bash ./recreate.sh
 
   web:
     image: nginx
@@ -21,7 +18,6 @@ services:
     ports:
       - "5000:80"
     volumes:
-      - ../..:/code
       - ../../config/nginx/sites-available:/etc/nginx/sites-available
       - ../../config/nginx/conf.d:/etc/nginx/conf.d
     # links:
@@ -39,6 +35,8 @@ services:
   php:
     # image: php:7.3-fpm
     build: .
+      # context: ../..
+      # dockerfile: config/docker/Dockerfile
     tty: true # keeps container running
     expose:
       - 9000
