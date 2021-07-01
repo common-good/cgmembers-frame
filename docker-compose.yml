@@ -22,7 +22,8 @@ services:
       - "5000:80"
     volumes:
       - .:/code
-      - ./config/nginx:/etc/nginx
+      - ./config/nginx/sites-available:/etc/nginx/sites-available
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
     links:
       - php
     # environment:
