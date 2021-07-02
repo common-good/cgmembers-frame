@@ -2,7 +2,7 @@
   "comments": "See documentation config.json.howto.md",
 
   "stage": "development",
-  "baseUrl": "http://localhost/cgmembers-frame/cgmembers",
+  "baseUrl": "http://localhost:5000",
   "promoUrl": "http://CommonGood.earth",
   "coApiUrl": "http://%website/cgapi/%etc",
   "cgfEmail": "adeveloper@example.com",
@@ -14,7 +14,7 @@
   "db": {
     "name": "cg",
     "driver": "mysql",
-    "host": "localhost",
+    "host": "db",
     "port": "3306",
     "user": "root",
     "pass": "",

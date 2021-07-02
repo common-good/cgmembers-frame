@@ -7,8 +7,37 @@ This community-centered payment system is designed to provide greater local cont
 
 The companion software project, Common Good POS, works very much like credit card processing apps for swipe cards. Except instead of a swipe card reader you use your smartphone's camera to scan a QR code on the customer's Common Good Card or phone.
 
-Installation
+Docker Setup
 ------------
+
+Prerequisites: Install [Docker](https://www.docker.com/) and open the app or run the daemon. 
+
+3. In the `config/docker` directory, run 
+
+   ```shell
+   docker compose up
+   ```
+
+4. While that's running, copy `config.json` and `phinx.json` from `config/models/` to `config/`. These config files shouldn't need to be edited for a Docker default development environment. 
+
+   1. If setting up a **production** environment, these files **MUST** be edited. See the instructions in `config/models/config.json-howto.md`. 
+
+5. Once the containers are created and running, open a shell in the `php` container by going back to the `config/docker` directory and running 
+
+   ```shell
+   docker compose exec php bash
+   ```
+
+6. Inside the container, run 
+
+   ```shell
+   sh /code/recreate.sh -h db
+   ```
+
+   to create and the database and populate it with sample data. 
+
+Manual Installation
+-------------------
 
 ### Prerequisites
 
