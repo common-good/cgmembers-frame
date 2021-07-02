@@ -28,13 +28,15 @@ Prerequisites: Install [Docker](https://www.docker.com/) and open the app or run
    docker compose exec php bash
    ```
 
-6. Inside the container, run 
+4. Inside the container, run 
 
    ```shell
    sh /code/recreate.sh -h db
    ```
 
    to create and the database and populate it with sample data. 
+
+5. Visit `localhost:5000` in your browser. 
 
 Manual Installation
 -------------------
@@ -52,8 +54,7 @@ Manual Installation
 
 1. Create an empty database (default name "cg").
 2. Create a db user (default "root" with empty password). Grant the user all privileges to the database and SUPER privileges on the server. 
-3. Copy `config.json` and `phinx.json` from `cgmembers/rcredits/misc/config-models/` to `config/`.
-4. Edit `config.json` to match your environment. 
-5. Import the startup database by executing `recreate.bat` or `recreate.sh` in the app root (requires using default values), or manually:
+3. Copy `config.json` and `phinx.json` from `config/models/` to `config/` and edit them to match your environment.
+4. Import the startup database by executing `recreate.bat` or `recreate.sh` in the app root (requires using default values), or manually:
    1. Import `db/startup.sql`.
    2. Run `vendor/robmorgan/phinx/bin/phinx migrate -c config/phinx.json -e development`.
