@@ -756,8 +756,8 @@ function handleSurTx(&$entries, $buyer, $seller, $price, $forCredit) {
   $sql = <<<EOF
     SELECT ru.id AS ruleId, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
       ru.amtMax, ru.payerType,
-    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
-    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `timesUsed`
     FROM tx_rules ru
     WHERE $payerCheck AND $payeeCheck
     AND $forCreditCheck

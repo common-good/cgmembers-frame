@@ -245,7 +245,7 @@ const NO_DISTANCE = '((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0))';
 
 const TEXT_BUTTON_STYLE = 'display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;';
 const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded
-const R_EXCHANGE_LIMITS = '1:5000,7:20000,52:80000,365:500000'; // per day, week, 7-week, year
+const R_EXCHANGE_LIMITS = '1:10000,7:20000,52:80000,365:500000'; // per day, week, 7-week, year
 const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
 const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 //const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)

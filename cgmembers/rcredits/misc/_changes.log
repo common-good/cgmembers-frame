@@ -1,3 +1,8 @@
+2021-07-02 feature/after-covid-19
+. removed health practices from post.inc form (but did not remove data from table)
+. increased daily outgoing bank transfer limit to 10k
+. fixed bug that miscalculated remaining rebate and credit balances
+
 2021-06-23 feature/logo
 . added a logo field to u_company, especially for partners and fiscally sponsored organizations
 . added a logo folder, so we don't violate CSP, pending code that passes the logo through a script

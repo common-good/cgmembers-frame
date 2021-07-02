@@ -94,9 +94,6 @@ Scenario: Someone enters personal data after posting an offer
   | zip         | 01002        |
   | phone       | 413-253-0002 |
   | method      | text         |
-  | days        | 2            |
-  | washes      | 3            |
-  | health      | 2            |
   Then these "posts":
   | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
   | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 5   | %today  | %now+3d |
@@ -112,7 +109,6 @@ Scenario: Someone enters personal data after posting an offer
   | email       | b@c.d        |
   | method      | text         |
   | confirmed   | 0            |
-  | health      | 2 3 ok       |  
   And we email "confirm-post" to member "b@c.d" with subs:
   | fullName | item | date | thing | code | noFrame |*
   | Bea Two  | fish | %mdY | post  |    ? |       1 |
@@ -136,9 +132,6 @@ Scenario: A member enters data after posting an offer
   When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=e@example.com&type=offer&service=1&exchange=0" with:
   | displayName | Eve          |**
   | method      | text         |
-  | days        | 2            |
-  | washes      | 3            |
-  | health      | 2            |
   Then these "posts":
   | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
   | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 5   | %today  | %now+3d |
@@ -155,7 +148,6 @@ Scenario: A member enters data after posting an offer
   | email       | e@           |
   | method      | text         |
   | confirmed   | 0            |
-  | health      | 2 3 ok       |  
   And we email "confirm-post" to member "e@" with subs:
   | fullName | item | date | thing | code | noFrame |*
   | Eve Five | fish | %mdY | post  |    ? |       1 |
@@ -297,15 +289,12 @@ Scenario: Someone enters personal data after replying to an offer
   | zip         | 01301 |
   | phone       | 413-253-0002 |
   | method      | email |
-  | days        | 2 |
-  | washes      | 3 |
-  | health      | 2 |
   Then these "messages":
   | id | postid | sender | message      | created | confirmed |*
   | 1  | 1      | 5      | Hello there! | %now    | 0         |
   And these "people":
-  | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed | health |*
-  | 5   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      | 2 3 ok |
+  | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed |*
+  | 5   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      |
   And we email "confirm-message" to member "b@c.d" with subs:
   | fullName | item | date | thing   | code | noFrame | what     |*
   | Bea Two  | fish | %mdY | message |    ? |       1 | an offer |

@@ -435,8 +435,7 @@ function annualGift() {
  * Warn members about upcoming backing renewal date (a week ahead).
  */
 function renewBacking() {
-  $backMin = isPRODUCTION ? strtotime('7/17/2019') : 0; // because we didn't start renewing on time. Delete this minimum after 7/11/2020
-  $sql = annualSql('Backing', 'backing AS amount', "GREATEST(backingDate, $backMin)", '', 'backingNext IS NULL');
+  $sql = annualSql('Backing', 'backing AS amount', 'backingDate', '', 'backingNext IS NULL');
   queueEach('warnAnnual1', $sql);
   db\q('UPDATE users SET backing=IFNULL(backingNext, backing), backingDate=:today, backingNext=NULL WHERE backingDate+:YEAR_SECS<:NOW AND :IS_OK AND backing>0', ray('today', today())); // automatically renew (member decreased it or didn't update it in time)
   queueNext();
