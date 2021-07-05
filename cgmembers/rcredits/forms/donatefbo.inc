@@ -173,8 +173,8 @@ function getCGPayArgs($args) {
  * @return int: the template's record ID (0 if no recur)
  */
 function handleRecurs($a, $amount, $period, $coId, $action) {
-  $recursId = $period == '1' ? 0
-  : db\insert('tx_templates', ray('action from to amount period purpose duration', $action, $a->id, $coId, $amount, $period, t('donation'), 'once'));
+  $recursId = $period == '1' ? NULL
+  : db\insert('tx_timed', ray('action from to amount period purpose duration', $action, $a->id, $coId, $amount, $period, t('donation'), 'once'));
   $data = ray('gift recurs', 1, (bool) $recursId);
   $a->payApproved($coId, $amount, t('donation'), $coId == CGID ? FOR_NONGOODS : FOR_GOODS, $data, $recursId);
   $gift = u\fmtAmt($amount) . ($recursId ? ' ' . r\recurDesc($period) : '');

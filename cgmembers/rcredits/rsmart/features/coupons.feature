@@ -35,10 +35,10 @@ Scenario: A member redeems a discount coupon
   | coupid | fromId | amount | minimum | useMax | start  | end       | on                |*
   |      1 |   .ZZC |     10 |       0 |      1 | %today | %today+7d | discount (rebate) |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
-  Then transaction headers:
+  Then these "tx_hdrs":
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 1   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
-  And transaction entries: 
+  And these "tx_entries": 
   | xid | amount |  uid | agentUid | description       | rule |*
   | 1   |    100 | .ZZC | .ZZA     | food              |      |
   | 1   |   -100 | .ZZB | .ZZB     | food              |      |
@@ -54,10 +54,10 @@ Scenario: A member redeems a discount coupon
   When agent "C:A" asks device "devC" to undo transaction with subs:
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
-  Then transaction headers:
+  Then these "tx_hdrs":
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 2   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 | 1           | %today  |
-  And transaction entries: 
+  And these "tx_entries": 
   | xid | amount |  uid | agentUid | description       | rule |*
   | 2   |   -100 | .ZZC | .ZZA     | food              |      |
   | 2   |    100 | .ZZB | .ZZB     | food              |      |
@@ -70,10 +70,10 @@ Scenario: A member redeems a discount coupon
   | .ZZC |       0 |
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
-  Then transaction headers:
+  Then these "tx_hdrs":
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 3   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 |             | %today  |
-  And transaction entries: 
+  And these "tx_entries": 
   | xid | amount |  uid | agentUid | description       | rule |*
   | 3   |     50 | .ZZC | .ZZA     | sundries          |      |
   | 3   |    -50 | .ZZB | .ZZB     | sundries          |      |
@@ -86,10 +86,10 @@ Scenario: A member redeems a discount coupon
   | .ZZC |      40 |
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
-  Then transaction headers:
+  Then these "tx_hdrs":
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 4   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
-  And transaction entries: 
+  And these "tx_entries": 
   | xid | amount |  uid | agentUid | description | relType | relatedId |*
   | 4   |     60 | .ZZC | .ZZA     | stuff       |         |         |
   | 4   |    -60 | .ZZB | .ZZB     | stuff       |         |         |

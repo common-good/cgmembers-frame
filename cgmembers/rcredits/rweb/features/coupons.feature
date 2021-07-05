@@ -270,7 +270,7 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
   | .ZZC |       0 |
 
 Scenario: A member redeems a discount coupon sponsored by a third party
-  Given txRules:
+  Given these "tx_rules":
   | id | action | amount | minimum | from | to           | payeeType | payee | purpose | start     | amtMax |*
   |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
   When member ".ZZA" confirms form "tx/pay" with values:

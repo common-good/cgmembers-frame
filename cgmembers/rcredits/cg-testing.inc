@@ -17,7 +17,7 @@ use CG\Web as w;
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
-const RLESS_TNMS = 'posts people post_cats messages'; // test tables with no "r_" prefix
+const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
@@ -45,7 +45,7 @@ function fixData(&$info, $direct = FALSE) {
   
   if (nn($code) == 'TESTCODE') $code = $testCode;
   if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
-  if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
+  if (isset($cat) and nni($info, 'item')) $cat = db\get('id', 'post_cats', compact('cat')); // for post_cats, not for budget_cats
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
@@ -152,7 +152,7 @@ function doThing($info, $thing, $key = 'id') {
 
   $table = $thing = strtolower($thing);
   if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
-  if (!in($thing, 'usd company people') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!in($thing, 'usd company people txs2') and !strhas($thing, '_') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
   // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -178,10 +178,6 @@ function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
 function coupons($list) {return doRecords($list, 'Coupons');}
 function stats($list) {return doRecords($list, 'Stats');}
-function txHdrs($list) {return doRecords($list, 'Tx_Hdrs');}
-function txEntries($list) {return doRecords($list, 'Tx_Entries');}
-function txTemplates($list) {return doRecords($list, 'Tx_Templates');}
-function txRules($list) {return doRecords($list, 'Tx_Rules');}
 function recurs($list) {return doRecords($list, 'Recurs');}
 
 /**
@@ -281,7 +277,7 @@ function doTxs($info, $thing) {
   $filter = function ($ray) {return array_filter($ray, function ($v) {return ($v !== FALSE and !is_null($v));});}; // bypass array_filter's conversion of 0 to boolean
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
-  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
+  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created cat';
   $entryFlds = 'xid entryType amount uid agentUid description relType relatedId rule';
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
@@ -289,6 +285,7 @@ function doTxs($info, $thing) {
 
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
   extract(just('rel rule', $info, 0));
+
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
@@ -317,11 +314,11 @@ function doTxs($info, $thing) {
     $e1 = $filter(ray('for1 uid1 agt1', $payerFor, $payer, $payerAgent));
     $e2 = $filter(ray('for2 uid2 agt2', $payeeFor, $payee, $payeeAgent));
     u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, $relType, $rel)) + $e1 + $e2;
+    $ray = $hdr + $filter(ray('type amt relType rel cat', $type, $amount, $relType, $rel, $cat)) + $e1 + $e2;
     if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
     return verifyRecord('txs', $ray);
   } else {
-    foreach (ray('relType rel') as $k) if (!$$k) $$k = NULL;
+    foreach (ray('relType rel cat') as $k) if (!$$k) $$k = NULL;
     $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $relType, $rel, $rule));
     $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $relType, $rel, $rule));
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
@@ -534,7 +531,7 @@ function count($what, $count) {
     case 'tx_hdrs': // fall through
     case 'txs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'entries': return eq($desc, $count, db\count('tx_entries_all', 'xid > 0') / 2);
-    default: return eq($desc, $count, db\count(strhas($what, '_') ? $what : "r_$what"));
+    default: return eq($desc, $count, db\count((in($what, 'txs2 people') or strhas($what, '_')) ? $what : "r_$what"));
   }
 }
 
@@ -674,9 +671,9 @@ function usdTransferCount($where = '1') {
   global $testOnly;
 
   if($testOnly) {
-    return db\count('r_usd', $where);
+    return db\count('txs2', $where);
   } else {
-    db\q("DELETE FROM r_usd WHERE $where");
+    db\q("DELETE FROM txs2 WHERE $where");
     return 0; // 0 is the only thing we can make it!
   }
 }
@@ -686,33 +683,26 @@ function usdTransfers($txs) {
 
   foreach ($txs as $tx) {
     extract($tx);
+    $options = just('pid created completed txid explicit', $tx);
+    
     if (isset($tx['payee'])) $tx['payee'] = $payee = t\uid($payee);
     if (isset($tx['risks'])) $tx['risks'] = getRisks($risks, K_TX_RISKS);
 
     if ($testOnly) {
-      if (!verifyRecord('r_usd', $tx)) return FALSE;
+      if (!verifyRecord('txs2', $tx)) return FALSE;
       continue;
     }
 
     u\setDft($tx['channel'], $channel0);
     if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
+// No! allow this for bank verification    if (!$amount) return output('zero USD transfer');
     if (!$a = r\acct($payee)) return t\output('Bad payee: ' . nn($payee));
 
-    if (isset($xid) xor !$amount) { // specifying an xid means the test will list the txs explicitly. amount=0 needs no tx.
-      $txid = db\insert('r_usd', $tx, 'txid');
+    if (nni($tx, 'xid')) { // specifying an xid means the test will list the txs explicitly
+      $txid = db\insert('txs2', $tx, 'txid');
     } else {
-      list ($txid) = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
-      if (!$txid) return t\output('failure creating usd record: ' . $tx['txid']);
-
-      if (nn($deposit)) {
-        $res = db\update('r_usd', just('txid deposit', $tx), 'txid');
-        u\EXPECT($res, 'failure depositing usd');
-      }
-    }
-
-    if (nn($completed) and ($txid > 0 xor $amount < 0)) {
-      $res = be\completeUsdTx($txid, nn($tx['automatic']), $completed);
-      u\EXPECT($res, 'failure completing usd transfer');
+      if (!$xid = be\createUsdTransfer($a, $amount, $options)) return t\output('failure creating usd record: ' . pr($tx));
+      if ($info = just('txid deposit', $tx)) db\update('txs2', $info + compact('xid'), 'xid');
     }
   }
   return TRUE;
@@ -1472,8 +1462,6 @@ function clear($ch = 0) {
     'r_stakes',           // users, club?
     'r_stats',            // users
     'r_tous',             // users
-    'r_usd',              // tx_hdrs, users
-    'x_usd',              // tx_hdrs, users
     'r_usd2',             // tx_hdrs
     'r_user_industries',  // r_industries, users
     'semaphore',          // -
@@ -1482,8 +1470,10 @@ function clear($ch = 0) {
     'tx_entries_all',     // tx_hdrs, users, tx_rules
     'tx_hdrs_all',        // users, r_boxes, self 
     'tx_requests_all',    // users
-    'tx_rules',           // users, u_groups, r_industries, tx_templates
-    'tx_templates',       // users, u_groups, r_industries
+    'tx_rules',           // users, u_groups, r_industries, tx_timed
+    'tx_timed',       // users, u_groups, r_industries
+    'txs2',               // tx_hdrs, users
+    'x_txs2',             // tx_hdrs, users
     'r_boxes',            // users
     'u_groupies',         // u_groups, users
     'u_groups',           // -
@@ -1689,12 +1679,12 @@ function hasLinkResults($thing, $info) {
   return t\shownWith($info, 'text', TRUE);
 }
 
-function seq($table = 'r_usd') {
+function seq($table = 'txs2') {
   global $testSeq;
   $id = $testSeq[$table] = nn($testSeq[$table]) + 1;
-  $k = $table == 'r_usd' ? 'txid' : '';
+  $k = $table == 'txs2' ? 'txid' : '';
   //  t\log("seq table=$table id=$id");
-  u\EXPECT(!db\exists('r_usd', "$k=:id", compact('id')), "duplicate seq: $id in table $table");
+  u\EXPECT(!db\exists('txs2', "$k=:id", compact('id')), "duplicate seq: $id in table $table");
   ///  print_r(compact('table','testSeq','id','k'));
   return $id;
 }

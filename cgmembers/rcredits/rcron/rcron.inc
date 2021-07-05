@@ -214,18 +214,19 @@ X;
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-  $where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
-//  $res = db\get('uid,bankAccount', 'r_usd d', $where);
-  $uids = db\col('payee', 'r_usd d', $where);
-  $DBTX = \db_transaction();
-  foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
-  if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
-  unset($DBTX);
-  if ($uids) db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+  $where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM txs2_bank d2 WHERE d2.txid=-d.txid) IS NULL';
+
+  if ($uids = db\col('payee', 'txs2_bank d', $where)) {
+    $DBTX = \db_transaction();
+    foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
+    db\del('txs2_bank', 'amount=0 AND payee IN (:uids)', compact('uids'));
+    unset($DBTX);
+  }
+  db\q('DELETE FROM x_txs2 WHERE amount=0'); // no need to track these
 }
 
 /**
- * Generate rules, transactions, and invoices from template.
+ * Generate rules, transactions, and invoices from tx_timed.
  * Instantiate surtx rules first so they apply to subsequent transactions.
  * Action options are: 
  *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
@@ -233,20 +234,20 @@ X;
  */
 function recurs() {
   $sql = <<< EOF
-    SELECT tp.*, MAX(
-      IF(tp.action=:ACT_SURTX, ru.start, 
-      IF(tp.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+    SELECT tm.*, MAX(
+      IF(tm.action=:ACT_SURTX, ru.start, 
+      IF(tm.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
       i.created))
     ) AS maxStart
-    FROM tx_templates tp
-    LEFT JOIN tx_rules ru ON ru.template=tp.id
-    LEFT JOIN txs x ON x.recursId=tp.id
-    LEFT JOIN tx_requests i ON i.recursId=tp.id
-    WHERE tp.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
-    AND tp.start <= :NOW
-    AND IFNULL(tp.end, :NOW+1) > :NOW
-    GROUP BY tp.id
-    ORDER BY (tp.action=:ACT_SURTX) DESC, tp.id
+    FROM tx_timed tm
+    LEFT JOIN tx_rules ru ON ru.template=tm.id
+    LEFT JOIN txs x ON x.recursId=tm.id
+    LEFT JOIN tx_requests i ON i.recursId=tm.id
+    WHERE tm.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
+    AND tm.start <= :NOW
+    AND IFNULL(tm.end, :NOW+1) > :NOW
+    GROUP BY tm.id
+    ORDER BY (tm.action=:ACT_SURTX) DESC, tm.id
 EOF;
 
   queueEach('recur', $sql);
@@ -295,7 +296,7 @@ function recur($template) {
       $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
-    if ($period == 'once') r\endRule(TRUE, $id);
+    if ($period == 'once') r\endRule('tm', $id);
 
   } else { FAIL(t('bad action in template: ') . pr($template)); }
   
@@ -402,7 +403,7 @@ function activeMonthly($item) {
   $floorX = $a->o_floor; // current floor (of just this account, not summed with joint)
   
   $floor = -$monthly;
-  if ($a->isCtty) $floor = -db\sum('amount', 'r_usd t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
+  if ($a->isCtty) $floor = -db\sum('amount', 'txs2_bank t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
   $a->update('floor', $floor);
 
   $ratio = $floor ? $floorX / $floor : 1;
@@ -426,8 +427,8 @@ function activeWeekly($item) {
  * Warn members about upcoming annual donation (or lack thereof) -- a week before it's due.
  */
 function annualGift() {
-  $join = "LEFT JOIN tx_templates tp ON tp.action=:ACT_PAY AND tp.from=u.uid AND tp.to=:CGID AND tp.period='year' AND tp.end IS NULL";
-  queueEach('warnAnnual1', annualSql('Donate', 'tp.amount', 'IFNULL(tp.start, u.activated)', $join));
+  $join = "LEFT JOIN tx_timed tm ON tm.action=:ACT_PAY AND tm.from=u.uid AND tm.to=:CGID AND tm.period='year' AND tm.end IS NULL";
+  queueEach('warnAnnual1', annualSql('Donate', 'tm.amount', 'IFNULL(tm.start, u.activated)', $join));
   queueNext();
 }
 
@@ -726,7 +727,7 @@ X;
 
   $sql = <<< X
     SELECT SUM(-amount) AS bankedEver, SUM(IF(completed<:monthAgo, 0, -amount)) AS bankedPastMo
-    FROM r_usd WHERE payee=:uid AND completed AND completed<:asof AND amount<>0
+    FROM txs2_bank WHERE payee=:uid AND completed AND completed<:asof AND amount<>0
 X;
   $row3 = db\q($sql, $subs)->fetchAssoc() ?: []; // get bankedEver, bankedPastMo
 
@@ -906,16 +907,15 @@ function txRisk1($xid) {
 function getFunds() {
   queueEach('getFunds1', 'SELECT uid, request, stakeid FROM users LEFT JOIN r_stakes USING (uid) WHERE (request IS NULL OR request>0) AND :MASTER AND uid>:CANONIC_ACCTS AND :IS_OK');
 
-  $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
+  $sql = 'SELECT DISTINCT xid,channel FROM txs2_bank WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);
   
   queueNext();
 }
 
 function completeUsdTx($item) {
-//  r\tellAdmin('cron\\completeUsdTx: ', $item);
-  extract(just('txid channel', $item));
-  be\completeUsdTx($txid, $channel == TX_CRON);
+  extract(just('xid channel', $item));
+  be\completeUsdTx($xid, $channel != TX_CRON);
 }
 
 function getFunds1($item) {

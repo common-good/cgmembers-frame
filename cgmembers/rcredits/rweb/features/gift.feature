@@ -59,7 +59,7 @@ Scenario: A member makes a recurring donation
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
-  Then these "tx_templates":
+  Then these "tx_timed":
   | id | start  | from | to  | amount | period | purpose  |*
   |  1 | %today | .ZZA | cgf |     10 | month  | donation |
   And transactions:
@@ -74,7 +74,7 @@ Scenario: A member makes a recurring donation
   |    $10 |        $0.50 | 
   
 Scenario: A member makes a new recurring donation
-  Given these "tx_templates":
+  Given these "tx_timed":
   | start     | from | to  | amount | period |*
   | %today-1d | .ZZA | cgf |     25 | year   |
   When member ".ZZA" visits page "community/donate"
@@ -89,7 +89,7 @@ Scenario: A member makes a new recurring donation
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |
   And we say "status": "gift successful"
-  And these "tx_templates":
+  And these "tx_timed":
   | start  | from | to  | amount | period |*
   | %today | .ZZA | cgf |     10 | month  |
   

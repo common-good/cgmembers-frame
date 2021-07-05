@@ -26,7 +26,7 @@ Scenario: A member draws
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |     30 | %FOR_GOODS   | food    |
-  Then tx entries:
+  Then these "tx_entries":
   | xid | entryType | amount | uid  | description                    |*
   |   1 | %E_PRIME  |     20 | .ZZA | automatic transfer from NEWZZC |
   |   1 | %E_PRIME  |    -20 | .ZZC | automatic transfer to NEWZZA   |
@@ -37,7 +37,7 @@ Scenario: A joint account slave member draws
   When member ".ZZD" confirms form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |     30 | %FOR_GOODS   | food    |
-  Then tx entries:
+  Then these "tx_entries":
   | xid | entryType | amount | uid  | description                    |*
   |   1 | %E_PRIME  |     20 | .ZZD | automatic transfer from NEWZZC |
   |   1 | %E_PRIME  |    -20 | .ZZC | automatic transfer to NEWZZD   |
@@ -48,7 +48,7 @@ Scenario: A member draws again
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    130 | %FOR_GOODS | food    |
-  Then tx entries:
+  Then these "tx_entries":
   | xid | entryType | amount | uid  | description      |*
   |   1 | %E_PRIME  |    120 | .ZZA | automatic transfer from NEWZZC |
   |   1 | %E_PRIME  |   -120 | .ZZC | automatic transfer to NEWZZA   |

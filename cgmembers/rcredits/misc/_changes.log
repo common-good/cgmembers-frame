@@ -1,3 +1,20 @@
+2021-07-04 feature/txs2
+. renamed r_usd to txs2 and created view txs_outer for CG member transactions with nonmembers
+. INSERT INTO users FIELDS (uid, name, fullName, community, flags) VALUES (255, NULL, 'Outer Txs', 0, 71);
+. added pid to txs2 (for FBO transactions) and category (cat) to tx_hdrs (for CG-owned transactions)
+. renamed tx_templates to tx_timed
+. consolidated some rsmart steps to use t\these() instead.
+. refactored acct::bank, be\createUsdTransfer, and be\completeUsdTx to handle "outer" transactions
+. modified tx.inc (pay and charge) form to handle outer transactions
+. changed default of recursId to be consistently NULL
+. expanded db\del to handle views
+. crash sooner when an insert fails (right in db\insert())
+. added link to tx# on tx history, to a new page to view (and eventually edit) transaction details
+. fixed format of tx history so X stays on same line in mobile view
+. removed superfluous canonic accounts from startup.sql
+. fixed bug in query of where our members come from
+. expanded recreate_views to handle the latest fields and views
+
 2021-07-02 feature/after-covid-19
 . removed health practices from post.inc form (but did not remove data from table)
 . increased daily outgoing bank transfer limit to 10k

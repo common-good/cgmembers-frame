@@ -65,17 +65,11 @@ function setupBasicAccounts() {
   }  
 
   $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
-  
-  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo)));
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo)));
-  
+
   $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
   if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
-  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo);
+  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo); // server's community for tests (different in production)
   $info = array_combine($keys, $values);
   $info += ray('legalName phone address city state postalAddr zip helper',
     CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
@@ -84,6 +78,14 @@ function setupBasicAccounts() {
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
   $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
+
+  $canKeys = 'uid name fullName community flags';
+  new r\Acct(ray($canKeys, CG_ROUNDUPS_UID, t('roundups'), t('%PROJECT Region'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, CG_CRUMBS_UID, t('crumbs'), t('%PROJECT Region'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, CG_SERVICE_CHARGES_UID, NULL, t('Bank Fees'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, BANK_IN_ID, NULL, t('Bank In'), 0, $flagsCo));
+  new r\Acct(ray($canKeys, BANK_OUT_ID, NULL, t('Bank Out'), 0, $flagsCo));
+  new r\Acct(ray($canKeys, OUTER_UID, NULL, t('Txs Outer'), r\serverUid(), $flagsCo));
 }
 
 /**
@@ -205,7 +207,6 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_stats:ctty:D',
     'r_tous:uid:D',
     // r_transit
-    'r_usd:payee',
     // r_usd2
     'r_user_industries:uid:D',
     // r_votes
@@ -222,10 +223,11 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_rules:payer:D',
     'tx_rules:payee:D',
     'tx_rules:from:D',
-    'tx_templates:to:D',
-    'tx_templates:payer:D',
-    'tx_templates:payee:D',
-    'tx_templates:from:D',
+    'tx_timed:to:D',
+    'tx_timed:payer:D',
+    'tx_timed:payee:D',
+    'tx_timed:from:D',
+    'txs2:payee',
     // u_groups
     'u_groupies:uid:D',
     'u_shouters:uid:D',
@@ -607,7 +609,7 @@ function deposits($starting = 0, $showTxIds = FALSE) {
       SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
       SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
       deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
-    FROM r_usd WHERE amount<>0 AND created<=:NOW AND created>=:starting
+    FROM txs2_bank WHERE amount<>0 AND created<=:NOW AND created>=:starting
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
@@ -638,7 +640,7 @@ EOF;
 
       if ($showTxIds) {
         $where = $type == 'bad' ? 'txid<0' : ('txid>0 AND amount' . ($type == 'in' ? '>0' : '<0'));
-        $baids = db\col('bankTxId', 'r_usd', "deposit=:deposit AND $where", compact('deposit'));
+        $baids = db\col('bankTxId', 'txs2_bank', "deposit=:deposit AND $where", compact('deposit'));
         foreach ($baids as $i => $baid) $baids[$i] = btxid($baid);
         $bankTxIds = '<td>' . join(', ', $baids) . '</td>';
       } else {$bankTxIds = '';}
@@ -707,8 +709,8 @@ EOF;
  * Print a check
  * @param Pdf $ck: the Check object to place the check in.
  * @param int $pos: what position on the current page (1, 2, or 3)
- * @param assoc $tx: relevant fields from the r_usd record
- * @param bool $mark: whether to set the deposit date for each relevant transfer, in r_usd
+ * @param assoc $tx: relevant fields from the txs2_bank record
+ * @param bool $mark: whether to set the deposit date for each relevant transfer, in txs2_bank
  */
 function printCheck(&$ck, $pos, $tx, $mark) {
   extract(just('xid txid created payee amount deposit bankAccount', $tx));
@@ -720,7 +722,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
     r\tellAdmin(t('bank account misMatch in deposit (xid=%xid): %b1 (now), %b2 (deposit)', 'xid b1 b2', $xid, $a->bankAccount, $bankAccount));
     if ($a->bankAccount) {
       list ($b2, $bankAccount) = [$bankAccount, $a->bankAccount];
-      if (!$b2) db\update('r_usd', compact(ray('txid bankAccount')), 'txid'); // fix it (else save for analysis)
+      if (!$b2) db\update('txs2_bank', compact(ray('txid bankAccount')), 'txid'); // fix it (else save for analysis)
     }
   } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
   
@@ -790,7 +792,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $ck->say("C000{$xid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
   //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
-  if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
+  if (!$deposit and $mark) db\update('txs2_bank', ray('deposit txid', today(), $txid), 'txid');
 }
 
 /*
@@ -901,7 +903,7 @@ function donationTrend($co = FALSE, $since = NULL) {
   
   $sql =<<< X
     SELECT AVG(g.amount*perYear(period, periods)) AS regular
-    FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
+    FROM tx_timed g LEFT JOIN users u ON u.uid=g.from
     WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
 X;
   $subs = compact('since');
@@ -990,7 +992,7 @@ function anonymize() {
     foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer') as $k) $$k = u\randomString();
     $a->update(compact(ray($randStrings . ' fullName legalName name email address city postalAddr signedBy latitude longitude dob phone federalId bankAccount last4bank notes photo appData ssnData pin snap')));
   }
-  db\q('UPDATE r_usd SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
+  db\q('UPDATE txs2_bank SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
   db\q('DELETE FROM r_changes WHERE created>=:NOW');
 }
 
@@ -1074,7 +1076,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
 
 /**
  * Compensate for checks inadvertently deposited twice (but not recorded): once on 2/26, once on 3/3.
- * Strategy: create r_usd, tx_hdrs, and tx_entries records for the duplicate checks, but with xids 1000 more than 
+ * Strategy: create txs2, tx_hdrs, and tx_entries records for the duplicate checks, but with xids 1000 more than 
  * originally. Start with the highest xid so new transactions don't get interspersed. Date should be 2/27. Purpose is
  *  "from bank - duplicate of #xxx (combined human and bank error)".
  * We need to be careful not to combine these with other deposits.
@@ -1093,7 +1095,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
   
   foreach ($map as $newxid => $oldxid) {
     $xid = $oldxid + 1000;
-    foreach (ray('tx_hdrs tx_entries r_usd') as $tnm) {
+    foreach (ray('tx_hdrs tx_entries txs2') as $tnm) {
 /** /      debug("changing xid $newxid to $xid");
 //      db\q("UPDATE $tnm SET xid=$xid WHERE xid=$newxid");
     }

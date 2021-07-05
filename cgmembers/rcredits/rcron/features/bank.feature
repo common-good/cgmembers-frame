@@ -212,7 +212,7 @@ Scenario: a non-member has a target and refills
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |    100 | %TX_CRON |
   And count "txs" is 1
-  And count "usd" is 1
+  And count "txs2" is 1
   And count "tx_requests" is 0
 Skip no longer delaying first transfer, to verify account first
 Scenario: member's bank account has not been verified
@@ -236,7 +236,7 @@ Scenario: a member's bank account gets verified
   | txid | payee | amount | created   | completed | deposit   |*
   |    1 | .ZZA  |      0 | %today-4d |         0 | %today-3d |
   When cron runs "everyDay"
-  Then count "usd" is 0
+  Then count "txs2" is 0
   And members have:
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
@@ -250,12 +250,16 @@ Scenario: a member account needs more funding while not yet verified and somethi
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |      0 | %today  |         0 |       0 |
   |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
+  Then count "txs2" is 2
+  And count "txs" is 2
+  
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | created | completed | deposit | xid |*
-  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   1 |
+  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
   And transactions:
-  | xid | amount | payer   | payee | taking |*
-  |   1 |      0 | bank-in | .ZZA |      1 |
-  And count "usd" is 2
-  And count "txs" is 1
+  | xid | amount | payer   | payee | for       | taking |*
+  |   1 |      0 | bank-in | .ZZA  | ?         |     1 |
+  |   2 |      0 | bank-in | .ZZA  | from bank |     1 |
+  And count "txs2" is 2
+  And count "txs" is 2

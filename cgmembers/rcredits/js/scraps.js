@@ -142,6 +142,18 @@ function doit(what, vs) {
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
     });
+    
+    $('#edit-mem-0').click(function () { // member
+      reqQ($('.form-item-who'), true);
+      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-city, .form-item-state, .form-item-zip'), false);
+    });
+    $('#edit-mem-1').click(function () { // non-member
+      reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), false);
+      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-city, .form-item-state, .form-item-zip'), true);
+      $('#edit-title h3').text('Received');
+      fform(this).submit(null);
+    });
+    $('#edit-mem-0').click();
     break;
 
   case 'invest':

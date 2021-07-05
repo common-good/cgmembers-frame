@@ -21,7 +21,7 @@ function formGet($form, &$sta, $args = '') {
   extract(just('cancel expedite', $args, NULL));
   if ($cancel and $mya) return cancelTx($cancel);
   if ($expedite and $mya and $mya->admin) {
-    be\completeUsdTx($expedite, FALSE);
+    be\completeUsdTx($expedite, TRUE);
     return sayEmpty(t('Bank transfer successfully expedited.'));
   }
   
@@ -30,11 +30,11 @@ function formGet($form, &$sta, $args = '') {
   <p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund'));
 
   $subs = compact(ray('myid jid'));
-  $toBank24 = db\get('-amount', 'r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', $subs + ['dayAgo' => strtotime('-1 day')]);
+  $toBank24 = db\get('-amount', 'txs2_bank', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', $subs + ['dayAgo' => strtotime('-1 day')]);
   if (empty($toBank24)) { // limit to one withdrawal request per 24 hours
     $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
     foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
-      $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'r_usd', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $myid, strtotime("-$days days")));
+      $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $myid, strtotime("-$days days")));
       $avail = min($avail, $limit - $sofar);
     }
   } else { $avail = 0; }
@@ -43,9 +43,9 @@ function formGet($form, &$sta, $args = '') {
     $where = 'payee IN (:myid, :jid) AND txid>0 AND ';
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
-    if ($amt = db\sum('ABS(amount)', 'r_usd', $where, $subs)) {
-      $txid = ($mya->admin and in($k, 'in other')) ? db\get('txid', 'r_usd', 'completed=0 AND amount=' . $amt, $subs) : '';
-      $expedite = $txid ? ' ' . buttino('/get/expedite=' . $txid, t('Expedite')) : '';
+    if ($amt = db\sum('ABS(amount)', 'txs2_bank', $where, $subs)) {
+      $xid = ($mya->admin and in($k, 'in other')) ? db\get('xid', 'txs2_bank', 'completed=0 AND amount=' . $amt, $subs) : '';
+      $expedite = $xid ? ' ' . buttino('/get/expedite=' . $xid, t('Expedite')) : '';
       $link = $k == 'other' ? t('(not cancelable)') : buttino("/get/cancel=$k", t('Cancel'));
       $text = $k == 'out' ? t('%link %amt from %PROJECT to your bank account.')
       : (t('%link %amt from your bank account to %PROJECT.') . $expedite);
@@ -112,9 +112,9 @@ function cancelTx($way) {
   $where = 'payee IN (:myid, :jid) AND deposit=0 AND txid>0 AND ';
   $where .= $way == 'in' ? 'amount>0' : 'amount<0';
 
-  while ($xid = db\get('xid', 'r_usd', $where, $subs)) {
+  while ($xid = db\get('xid', 'txs2_bank', $where, $subs)) {
     $crit = compact('xid');
-    db\del('r_usd', $crit);
+    db\del('txs2_bank', $crit);
     say('bank tx canceled', $crit);
     r\tellAdmin("canceled bank transfer xid #$xid: $mya->fullName ($mya->mainQid)");
     $mya->tellInOut($way == 'in', t('bank tx canceled', $crit));

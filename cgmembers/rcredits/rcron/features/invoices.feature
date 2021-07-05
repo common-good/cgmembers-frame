@@ -40,7 +40,7 @@ Setup:
   |   1 | %today  |    100 | .ZZA    | .ZZC  | one       |        | prime |
   |   2 | %today  |      0 | bank-in | .ZZA  | from bank |      1 | bank  |
   And count "txs" is 2
-  And count "usd" is 1
+  And count "txs2" is 1
   And count "tx_requests" is 5
   And usd transfers:
   | txid | payee | amount | created | completed | deposit |*
@@ -98,7 +98,7 @@ Scenario: Non-member unpaid invoice does not generate a transfer request
   | .ZZE |       0 |
   When cron runs "getFunds"
   Then count "txs" is 0
-  And count "usd" is 0
+  And count "txs2" is 0
   And count "tx_requests" is 1
   
 Scenario: Second invoice gets funded too for a non-refilling account
@@ -108,7 +108,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   And these "txs":
   | xid | created   | amount | payer   | payee | purpose   | taking |*
   |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
-  And these "usd":
+  And these "txs2":
   | txid | payee | amount | created   | completed | deposit | xid |*
   |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
   And invoices:
@@ -117,7 +117,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
 
   When cron runs "getFunds"
-  Then these "usd":
+  Then these "txs2":
   | txid | payee | amount | created   | completed | deposit |*
   |    1 | .ZZA  |    400 | %today-1d |         0 |       0 |
   # still dated yesterday, so it doesn't lose its place in the queue
@@ -137,7 +137,7 @@ Scenario: A languishing invoice gets funded again
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1d | %TX_APPROVED |    900 | .ZZA  | .ZZC  | one   |
   When cron runs "getFunds"
-  Then these "usd":
+  Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |   1400 | %today  |         0 |       0 |
 
@@ -149,7 +149,7 @@ Scenario: An invoice is approved from an account with a negative balance
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA  | .ZZC  | one   |
   When cron runs "getFunds"
-  Then these "usd":
+  Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    900 | %today  |         0 |       0 |
   
@@ -161,7 +161,7 @@ Scenario: An invoice is approved from an account with a negative balance after c
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA  | .ZZC  | one   |
   When cron runs "getFunds"
-  Then these "usd":
+  Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    900 | %today  |         0 |       0 |
 

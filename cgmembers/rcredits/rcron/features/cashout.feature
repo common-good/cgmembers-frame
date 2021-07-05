@@ -18,7 +18,7 @@ Scenario: A member company cashes out monthly
   | uid  | activated   | flags                    |*
   | .ZZC | %today-30d | ok,co,confirmed,cashoutM |
   When cron runs "tickle"
-  Then these "usd":
+  Then these "txs2":
   | amount | payee | completed |*
   |   -220 | .ZZC  | %today    |
   
@@ -34,7 +34,7 @@ Scenario: A member company cashes out weekly
   | uid  | activated  |*
   | .ZZC | %today-14d |
   When cron runs "tickle"
-  Then these "usd":
+  Then these "txs2":
   | amount | payee | completed |*
   |   -220 | .ZZC  | %today    |
   And balances:

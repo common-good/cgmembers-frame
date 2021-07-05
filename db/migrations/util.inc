@@ -59,7 +59,7 @@ function just($these, $info, $ordered = FALSE) {
 }
 
 function cgpr($s) {
-  echo "$s\n";
+/**/ echo "$s\n";
   file_put_contents(__DIR__ . '/migrate.log', print_r($s, 1) . "\n", FILE_APPEND);
 }
 
@@ -69,7 +69,7 @@ function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
   cgpr("making $_view");
   $m = $z['m'];
   foreach ([1, 2] as $i) {
-    if (${"_where$i"}) $z["w$i"][] = ${"_where$i"}; else ${"_where$i"} = allSoFar($z["w$i"]);
+    if (${"_where$i"}) $z["w$i"][] = '(' . ${"_where$i"} . ')'; else ${"_where$i"} = allSoFar($z["w$i"]);
   }
   $subs = compact(ray('_view _where1 _where2'));
   $m->doSql(strtr($z['sql'], $subs));

@@ -21,7 +21,7 @@ Setup:
   | .ZZC | .ZZA  | sell       |
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
-  And these "tx_templates":
+  And these "tx_timed":
   | id | action | start     | end | amount | from | to   | period | purpose |*
   |  1 | pay    | %today-8m |     |     12 | .ZZC | .AAB | year   | gift    |
   And usd transfers:

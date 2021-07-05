@@ -28,7 +28,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $title = t('Community Balance Sheet');
     $subtext = t('for ') . $cttyA->fullName;
     $cgBalance = $cttyA->balance;
-    $pool = db\sum('amount', 'r_usd t JOIN users u ON u.uid=t.payee', 'completed AND u.community=:ctty', $subs);
+    $pool = db\sum('amount', 'txs2 t JOIN users u ON u.uid=t.payee', 'completed AND u.community=:ctty', $subs);
     $poolTable = 'txs_proper JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2';
     $pool += db\sum("IF(u1.$isCtty, -amt, amt)", $poolTable, "u1.$isCtty XOR u2.$isCtty", compact('ctty')); // inter-ctty
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid=:ctty', $subs);
@@ -48,7 +48,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $title = t('%PROJECT Balance Sheet');
     $subtext = t('for all participating communities (totals)');
     $cgBalance = NULL;
-    $pool = db\sum('amount', 'r_usd', 'completed');
+    $pool = db\sum('amount', 'txs2', 'completed');
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
     $invReserve = db\sum('shares*price*reserve', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
     $negatives = -db\sum('balance', 'users', 'balance<0 AND (uid>jid OR uid<0) AND community<0');

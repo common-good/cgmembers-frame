@@ -170,12 +170,12 @@ function formAdminPanel_submit($form, &$sta) {
     return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
   }
 
-  if ($op == 'recurs') return say(a\showQuery('tx_templates t', 1, 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
+  if ($op == 'recurs') return say(a\showQuery('tx_timed t', 1, 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
   if ($op == 'relations') return say(a\showQuery('r_relations', 1, 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
-  if ($op == 'usd') return say(a\showQuery('r_usd', 1, 'created DESC'));
+  if ($op == 'usd') return say(a\showQuery('txs2', 1, 'created DESC'));
   foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", '1 ORDER BY created DESC'));
 }
 
@@ -462,7 +462,7 @@ function formDeposits($form, &$sta, $deposit = 0) {
     SUM(IF(amount<0, 1, 0)) AS countOut,
     SUM(IF(amount>0, 1, 0)) AS countIn
 EOF;
-  $res = db\rows($fields, 'r_usd', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
+  $res = db\rows($fields, 'txs2_bank', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
   //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
@@ -491,7 +491,7 @@ function formShowReconciled($form, &$sta) {
     (SELECT '' as extra, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
      SUM(IF($neg, -amount, '')) AS outt,
      SUM(IF($neg, '', amount)) AS inn
-     FROM r_usd WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
+     FROM txs2 WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
      UNION ALL SELECT 1 AS extra, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
      IF(amount<0, -amount, '') AS outt,
      IF(amount<0, '', amount) AS inn
@@ -500,7 +500,7 @@ function formShowReconciled($form, &$sta) {
     ORDER BY dt DESC    
 X;
 
-  $bal = db\sum('amount', 'r_usd', 'bankTxId<>0') + db\sum('amount', 'r_usd2');
+  $bal = db\sum('amount', 'txs2', 'bankTxId<>0') + db\sum('amount', 'r_usd2');
   $q = db\q($sql);
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -525,8 +525,8 @@ X;
     </table>
 X;
   $title = t('Reconciled Dollar Pool Transactions');
-  $txid = db\min('txid', 'r_usd', 'bankTxId=0 AND amount<>0') ?: 999999999;
-  $asof = u\fmtDate(db\max('deposit', 'r_usd', 'txid<:txid', compact('txid')) ?: now(), TRUE);
+  $txid = db\min('txid', 'txs2', 'bankTxId=0 AND amount<>0') ?: 999999999;
+  $asof = u\fmtDate(db\max('deposit', 'txs2', 'txid<:txid', compact('txid')) ?: now(), TRUE);
   $subtext = t('These Dollar Pool transactions have been matched one-to-one with the bank\'s records, for all transfers dated on or before %asof.', compact('asof'));
   $list = item($list);
   return cgForm(compact(ray('title subtext list')));
@@ -582,10 +582,10 @@ EOF
             , compact(ray('activity today total count escrow')));
 
   $pdf->say($left, $m, 0);
-  //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
+  //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
-    SELECT amount, xid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
+    SELECT amount, xid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
     WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
 EOF;
   $q = db\q($sql);
@@ -655,7 +655,7 @@ function achBatch($args) {
  * @param int $date: deposit/check date
  * @param bool $reprint: UNUSED whether to include a reprint of the previous deposit's checks
  * @param int $previous: UNUSED date of previous deposit
- * @param bool $mark: whether to set the deposit date for each relevant transfer, in r_usd
+ * @param bool $mark: whether to set the deposit date for each relevant transfer, in txs2_bank
  * @param int $limit: maximum number of checks to print (defaults to 42, the most we can mail for a 3oz stamp)
  */
  define('CHECK_LIMIT', 42); // default maximum numbere of checks to print at a time
@@ -672,7 +672,7 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $sql = "SELECT xid,txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY xid";
+  $sql = "SELECT xid,txid,created,payee,amount,deposit,bankAccount FROM txs2_bank WHERE deposit=:date AND created<=:NOW AND $where ORDER BY xid";
   $subs = compact('date');
   u\setDft($limit, CHECK_LIMIT);
   if (is_numeric($limit)) $sql .= " LIMIT $limit"; // ' LIMIT :limit' fails
