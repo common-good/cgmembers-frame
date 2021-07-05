@@ -139,6 +139,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE flow AMemberDraws
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE flow AMemberDrawsAgain
@@ -326,6 +327,7 @@ function members($list) {return t\members($list);}
  *     MAKE dashboard AMemberClicksTheDashboardTabWithRoundups
  *     MAKE demographics Setup
  *     MAKE download Setup
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -369,6 +371,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
@@ -844,6 +847,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST fbo Setup
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ANonmemberPaysASponsoredMember
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
@@ -1297,6 +1301,7 @@ function statisticsGetSet($time) {
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1405,6 +1410,7 @@ function devices($list) {return t\devices($list);}
  * in: MAKE balancesheet Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invest TheClubSellsShares
  *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
@@ -1596,6 +1602,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
  * in: TEST accredit AMemberCompanyGivesACustomerCredit
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1756,6 +1763,7 @@ function coupons($list) {return t\coupons($list);}
  *
  * in: TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ANonmemberPaysASponsoredMember
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST tx AMemberAsksToChargeAnotherMemberForGoods
  *     TEST tx AMemberAsksToPayAnotherMemberForGoods
  *     TEST tx AMemberAsksToPayAnotherMemberForLoanreimbursement
@@ -2483,6 +2491,7 @@ function nextCaptchaIs($ca) {
  *
  * in: MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ANonmemberPaysASponsoredMember
+ *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship

@@ -357,7 +357,10 @@ function creditPeops($id) {
 function payInvoice($nvid, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
-  extract(just('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, NULL]));
+
+  extract(just('payer payee purpose recursId', $inv, NULL));
+  extract(just('amount goods data flags', $inv, [0.0, FOR_GOODS, '', 0]));
+
   u\setDft($payAmount, $amount);
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
@@ -365,7 +368,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   extract(just('api request shid for', $data, NULL));
 
   $DBTX = \db_transaction();
-  $extra = ray('inv', $nvid) + just('api for', $data, NULL);
+  $extra = ray('inv', $nvid) + just('api for cat', $data, NULL);
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
@@ -428,6 +431,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'ruleId': the id of the rule associated with this transaction
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
+ *   'cat': transaction category
  * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  *
@@ -455,7 +459,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL, NULL]));
+  extract(just('created force boxId ruleId cat', $data, [now(), 0, NULL, NULL, NULL, NULL]));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -521,7 +525,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $DBTX = \db_transaction();
 
   // Create the transaction
-  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
+  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId cat'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -825,12 +829,12 @@ EOF;
  */
 function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = NULL) {
   global $channel;
-  
+
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
-  extract(just('created status reversesXid', $extra, [now(), NULL, NULL]));
+  extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
   $flags = 0;
-  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+  foreach (justNOT("status shid coupon coupid force inv api request created for cat", $extra) as $k => $v) {
     if ($k != 'reversesXid') u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -844,7 +848,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount payer payee status purpose created flags data recursId'));
+  $info = compact(ray('amount payer payee status purpose created flags data recursId cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
 
   if ($status == TX_PENDING) {

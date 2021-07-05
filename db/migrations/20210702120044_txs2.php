@@ -18,13 +18,14 @@ class Txs2 extends AbstractMigration {
 
     $t = $this->table('tx_hdrs_all');
     $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed transaction'));
-    $t->addColumn('cat', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related budget_cats record ID'));
+    $t->addColumn('cat', 'integer', ray('length null comment after', phx::INT_BIG, TRUE, 'related budget_cats record ID', 'goods'));
     $t->addIndex(['cat']);
     $t->addIndex(['recursId']);
     $t->update();
 
     $t = $this->table('tx_requests_all');
     $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed charge (or reversed payment)'));
+    $t->addColumn('cat', 'integer', ray('length null comment after', phx::INT_BIG, TRUE, 'related budget_cats record ID', 'purpose'));
     $t->update();
     
     $t = $this->table('tx_templates');

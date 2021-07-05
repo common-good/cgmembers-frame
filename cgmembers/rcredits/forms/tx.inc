@@ -53,7 +53,7 @@ X;
 
   $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft(nn($amount)) + vmin(.01));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $cat = $fbo ? selectFld(t('Category:'), '', '', [0 => t('--- What budget category? ---')] + r\budgetCats('Income')) : NULL; // can't have different budgetCats, so start with Income (it's short)
+  $cat = $fbo ? selectFld(REQ . t('Category:'), '', '', ['' => t('--- What budget category? ---')] + r\budgetCats('Income')) : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -66,7 +66,8 @@ X;
   // duplicate scraps.js's question, restrict, and allowNonmember in whoFldSubmit() for testing
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo')));
+  $admin = $mya->admin;
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin')));
   
   $paying = hidFld($pay);
   $fbo = hidFld($fbo);
@@ -83,6 +84,7 @@ function formTx_validate($form, &$sta) {
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
   $uid = $a->id; */
   if (!$who) {
+    if (!$paying and !$mya->admin) return say(t('Only %PROJECT admins can charge non-members.'), 'err');
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
     if ($err = u\badZip($zip)) return say($err, 'zip');
   }
@@ -117,14 +119,16 @@ function formTx_submit($form, &$sta) {
   if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
     list($ok, $msg, $subs) = [TRUE, '', []];
   } else { // no delay
-    $data = $period ? ['recurs' => 1] : [];
-    if ($start) $data['created'] = $start; // superAdmin chose a date in the past
      
     if ($pid) {
        $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, ray('purpose pid completed explicit cat', $purpose, $pid, now(), TRUE, $cat));
        u\EXPECT($xid, 'outer transfer failed');
        list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
     } else {
+      $data = $period ? ['recurs' => 1] : [];
+      if ($start) $data['created'] = $start; // superAdmin chose a date in the past
+      if ($fbo) $data += compact('cat');
+
       $z = $paying
       ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
       : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);

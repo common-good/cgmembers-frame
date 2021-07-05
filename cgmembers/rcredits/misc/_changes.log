@@ -1,3 +1,8 @@
+2021-07-05 feature/txs2 touchups
+. added cat field to tx_requests so invoices can pass it to txSave
+. restricted who can take money from non-members to admins
+. added a test for a sponsored organization charging a member
+
 2021-07-04 feature/txs2
 . renamed r_usd to txs2 and created view txs_outer for CG member transactions with nonmembers
 . INSERT INTO users FIELDS (uid, name, fullName, community, flags) VALUES (255, NULL, 'Outer Txs', 0, 71);

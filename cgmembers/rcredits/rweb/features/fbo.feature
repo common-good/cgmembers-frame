@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | address | city  | state  | zip | country  | postalAddr | floor | flags              | coFlags   |*
   | .ZZA | Abe One  | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |
-  | .ZZB | Bea Two  | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |     0 | ok,confirmed       |           |
+  | .ZZB | Bea Two  | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |
   | .ZZC | Our Pub  | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored |
   And relations:
   | main | agent | permission |*
@@ -34,6 +34,9 @@ Scenario: A non-member donates to a sponsored member
   | For         | |
   | Category    | |
   
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | address | city | state | zip   | amount | purpose | cat |*
   | charge | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |
@@ -92,6 +95,35 @@ Scenario: A non-member pays a sponsored member
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |    -100 |
+
+Scenario: A sponsored member charges a member
+  When member "C:A" submits "tx/charge" with:
+  | op     | fbo | who  | amount | purpose | cat |*
+  | charge |   1 | .ZZB |    100 | grant   |   2 |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
+  Then we say "status": "report tx|balance unchanged" with subs:
+  | did     | otherName | amount |*
+  | charged | Bea Two   | $100   |
+  And we message "new invoice" to member ".ZZB" with subs:
+  | otherName | amount | purpose |*
+  | Our Pub   | $100   | grant   |
+  And invoices:
+  | nvid | created | status      | amount | payer | payee | for   | cat |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant |   2 |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |       100 | .ZZB  | .ZZC  | grant   | %today  |
+  Then transactions:
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat |*
+  |   1 | %today  |    100 | .ZZB | .ZZC   | grant   | 0      | I       | 1   |   2 |
 
 Scenario: A sponsored member views their transaction history
   Given these "txs":
