@@ -13,9 +13,11 @@ const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
  * @param object $m: phinx AbstractMigration object
- * @param int $stopAt: migration date to stop at (0 = none, used for rolling back a migration)
+ * @param int $stopAt: migration date
  */
-function createViews($m, $stopAt = 0) {
+function createViews($m, $stopAt) {
+  if (!$m->isMigratingUp()) $stopAt -= 1; // when rolling back, don't do the latest changes
+  
   cgpr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) {
@@ -48,8 +50,6 @@ function createViews($m, $stopAt = 0) {
   $m->doSql("CREATE VIEW tx_hdrs AS SELECT $txFlds FROM tx_hdrs_all WHERE deleted IS NULL");
   $m->doSql("CREATE VIEW tx_entries AS SELECT $txeFlds FROM tx_entries_all WHERE deleted IS NULL");
   $m->doSql('CREATE VIEW tx_disputes AS SELECT * FROM tx_disputes_all WHERE deleted IS NULL');
-
-  if ($stopAt == 20190622) return;
 
   // individual views for each type of transaction
 
@@ -97,6 +97,8 @@ X;
   $m->doSql('CREATE VIEW tx_entries_o AS SELECT * FROM tx_entries ORDER BY ABS(id), id'); // for debugging 
   
   $m->doSql('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL');
+  if ($stopAt < 20210702) return;
+
   $m->doSql('CREATE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
   $m->doSql('CREATE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');
 }

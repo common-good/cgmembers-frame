@@ -17,14 +17,18 @@ class Txs2 extends AbstractMigration {
     }
 
     $t = $this->table('tx_hdrs_all');
-    $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed transaction'));
+    if ($this->isMigratingUp()) {
+      $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed transaction')); 
+    } else {
+      $this->doSql("ALTER TABLE `tx_hdrs_all` CHANGE `recursId` `recursId` BIGINT(20) NOT NULL DEFAULT 0 COMMENT 'related record ID in tx_templates, for recurring or delayed transaction'");
+    }
     $t->addColumn('cat', 'integer', ray('length null comment after', phx::INT_BIG, TRUE, 'related budget_cats record ID', 'goods'));
     $t->addIndex(['cat']);
     $t->addIndex(['recursId']);
     $t->update();
 
     $t = $this->table('tx_requests_all');
-    $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed charge (or reversed payment)'));
+    if ($this->isMigratingUp()) $t->changeColumn('recursId', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related record ID in tx_timed, for recurring or delayed charge (or reversed payment)')); // changing just the comment
     $t->addColumn('cat', 'integer', ray('length null comment after', phx::INT_BIG, TRUE, 'related budget_cats record ID', 'purpose'));
     $t->update();
     
@@ -32,11 +36,8 @@ class Txs2 extends AbstractMigration {
     $t->rename('tx_timed');
     $t->update();
     
-    createViews($this);
+    createViews($this, 20210702);
   }
   
-  public function doSql($sql) {
-    cgpr("$sql\n");
-    $this->execute($sql);
-  }
+  public function doSql($sql) {cgpr("$sql\n"); $this->execute($sql);}
 }

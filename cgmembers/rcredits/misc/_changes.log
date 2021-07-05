@@ -2,6 +2,7 @@
 . added cat field to tx_requests so invoices can pass it to txSave
 . restricted who can take money from non-members to admins
 . added a test for a sponsored organization charging a member
+. fixed migration so it is reversible and made recreation of views more easily reversible
 
 2021-07-04 feature/txs2
 . renamed r_usd to txs2 and created view txs_outer for CG member transactions with nonmembers
