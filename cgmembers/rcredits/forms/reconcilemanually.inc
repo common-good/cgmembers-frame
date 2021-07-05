@@ -79,7 +79,7 @@ function formReconcileManually_submit($form, &$sta) {
     $batDt = substr($batch, 1) + 0; // unix date of batch
     $txidSign = $batch[0] == 'B' ? '<0' : '>0';
     $amtSign = $batAmt < 0 ? '<0' : '>0';
-    $sql = "UPDATE r_usd SET bankTxId=:bankTxId WHERE deposit=:batDt AND bankTxId=0 AND txid$txidSign AND amount$amtSign";
+    $sql = "UPDATE txs2 SET bankTxId=:bankTxId WHERE deposit=:batDt AND bankTxId=0 AND txid$txidSign AND amount$amtSign";
     db\q($sql, compact('bankTxId', 'batDt'));
 /**/    debug(tr(str_replace(':', '%', $sql), compact('bankTxId', 'batDt')));
   }

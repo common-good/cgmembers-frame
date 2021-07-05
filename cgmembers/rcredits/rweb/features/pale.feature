@@ -12,7 +12,7 @@ Setup:
   | .ZZD | Food Fund  |  -250 | ok,confirmed,debt |
 
 Scenario: A member makes a transaction that triggers paying a little extra
-  Given txRules:
+  Given these "tx_rules":
   | id | payer | payerType | payeeType | from         | to   | amount | portion | action | start  | purpose   |*
   |  1 | .ZZA  | account   | anybody   | %MATCH_PAYER | .ZZD |      0 | 0.05    | surtx  | %today | food fund |
 

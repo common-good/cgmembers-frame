@@ -39,7 +39,7 @@ function formStepUp($form, &$sta, $args = '') {
       UNION 
       SELECT IF($fromMe, 1, 0) AS xly, $fromMe AS mine, CONCAT_WS('-', IF($fromMe, 't', 'r'), t.to, $fromMe) AS recK,
         t.to, id, IF($fromMe, t.period, 'pct') AS `when`, $set
-      FROM tx_templates t
+      FROM tx_timed t
       WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>'once' AND IFNULL(t.end, :NOW+1) > :NOW
       
     ) x 
@@ -153,7 +153,7 @@ function formStepUp_submit($form, &$sta) {
     $purpose = t('donation'); // description gets elaborated in be\getTxs()
     
     if ($xly = in($period, PERIODS)) { // periodic donation
-      $tnm = 'tx_templates';
+      $tnm = 'tx_timed';
       $info = ray('action from to periods', ACT_PAY, $myid, $uid, 1);
       $matchFlds .= ',period';
       $match += compact('period');
@@ -165,7 +165,7 @@ function formStepUp_submit($form, &$sta) {
     $getFlds = str_replace('portion', '`portion`', $matchFlds);
     if ($res = db\get('id,' . $getFlds, $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($match == just($matchFlds, $res)) continue; // no change; done with this organization
-      r\endRule($xly, $res['id']); // cancel the old rule, to start a new one
+      r\endRule($xly ? 'tm' : 'ru', $res['id']); // cancel the old rule, to start a new one
     }
     $info += $match + ray('purpose start', $purpose, now());
     if ($amt) db\insert($tnm, $info); // setting amt to zero ends the old rule without creating a new one

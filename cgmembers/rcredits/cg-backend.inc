@@ -36,14 +36,14 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   // !(t.amt=0 AND t.type=:E_BANK) hides bank account verifications
   $sql = <<< EOF
-    SELECT t.*, u.uid, u.fullName AS name, tp.period, tp.periods, ru.portion, $toMe AS toMe,
+    SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe,
       IF($toMe, amt, -amt) AS amount, IF($toMe, for1, for2) AS description, IF($toMe, agt1, agt2) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM txs t LEFT JOIN users u ON u.uid=IF($toMe, t.uid1, t.uid2)
-    LEFT JOIN r_usd ON (r_usd.xid=t.xid)
-    LEFT JOIN tx_templates tp ON tp.id=t.recursId
+    LEFT JOIN txs2 t2 ON t2.xid=t.xid
+    LEFT JOIN tx_timed tm ON tm.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
     WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
@@ -68,18 +68,25 @@ EOF;
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
   foreach ($txs as $i => $entries) {
-    $byMe = in_array($entries[0]['actorId'], $uids);
-    $banking = ($entries[0]['type'] == E_BANK);
+    extract(just('actorId type xid pid', $entries[0]));
+    $byMe = in_array($actorId, $uids);
+    $banking = ($type == E_BANK);
     $newEntries = [];
     $myAmount = 0; foreach ($entries as $entry) $myAmount += $entry['amount'];
     $balance = round($balance + $myAmount, 2);
+    if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
     
-    foreach ($entries as $entry) {
+    foreach ($entries as $j => $entry) {
+      if ($j == 0) {
+        if ($banking) $entry['name'] = '--';
+        if ($pid) $entry['name'] = db\get('fullName', 'people', compact('pid')) . t(' (non-member)');
+      }
       $description = txDesc($entry);
-      $newEntries[] = compact(ray('myAmount balance byMe banking description')) + $entry;
+      $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
     }
     $txs[$i] = $newEntries;
   }
+
   return $txs;
 }
 
@@ -350,7 +357,10 @@ function creditPeops($id) {
 function payInvoice($nvid, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
-  extract(just('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
+
+  extract(just('payer payee purpose recursId', $inv, NULL));
+  extract(just('amount goods data flags', $inv, [0.0, FOR_GOODS, '', 0]));
+
   u\setDft($payAmount, $amount);
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
@@ -358,7 +368,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   extract(just('api request shid for', $data, NULL));
 
   $DBTX = \db_transaction();
-  $extra = ray('inv', $nvid) + just('api for', $data, NULL);
+  $extra = ray('inv', $nvid) + just('api for cat', $data, NULL);
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
@@ -421,7 +431,8 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'ruleId': the id of the rule associated with this transaction
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
- * @param int $recursId: record ID of related record in tx_templates (if any)
+ *   'cat': transaction category
+ * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  *
  * The following used to be possible keys for $data, but not any more:
@@ -440,7 +451,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   $oked UNUSED (user confirmed the transaction request),
  *   $shortfall (how inadequate the payer's balance is)
  */
-function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = [], $recursId = 0) {
+function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = [], $recursId = NULL) {
   u\EXPECT('string acct acct number string|array int assoc', $type, $actorA, $otherA, $amount, $purpose, $goods, $data);
   u\EXPECT($actorA and $otherA, 'missing a transfer account');
   global $scanned, $channel;
@@ -448,7 +459,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
+  extract(just('created force boxId ruleId cat', $data, [now(), 0, NULL, NULL, NULL, NULL]));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -514,7 +525,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $DBTX = \db_transaction();
 
   // Create the transaction
-  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
+  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId cat'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -812,18 +823,18 @@ EOF;
  *    created: UNIXtime
  *    request: unique request identifier for actor using API
  *    api: URL to which to report success or failure (for API requests)
- * @param int $recursId: record ID of related record in tx_templates (if any)
+ * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  * NOTE: goods is no longer allowed in $extra, it's its own parameter
  */
-function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
+function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = NULL) {
   global $channel;
-  
+
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
-  extract(just('created status reversesXid', $extra, [now(), NULL, NULL]));
+  extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
   $flags = 0;
-  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+  foreach (justNOT("status shid coupon coupid force inv api request created for cat", $extra) as $k => $v) {
     if ($k != 'reversesXid') u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -837,7 +848,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount payer payee status purpose created flags data recursId'));
+  $info = compact(ray('amount payer payee status purpose created flags data recursId cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
 
   if ($status == TX_PENDING) {
@@ -865,7 +876,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
  */
 function txErr($message, $info = []) {
   if (nni($info, 'snap')) $info['topic'] = nni($info, 'topic') . t(' SNAP');
-  r\tellCAdmin(t('failed transaction'), $info + compact('message'));
+//  r\tellAdmin(t('failed transaction'), $info + compact('message')); // usually at night, for lack of bank account
   return is_object($message) ? $message : txRet(FALSE, $message, $info);
 }
 
@@ -1067,7 +1078,7 @@ EOF;
   $sums = db\q($sql, $subs)->fetchAssoc();
 ///   die(pr(showq($sql, ray('uids asof', join(',', $uids), $asof))));
 
-  $sql = "SELECT SUM(amount) AS pendingBank FROM r_usd t WHERE (payee IN (:uids)) AND created<:asof AND completed <= 0";
+  $sql = "SELECT SUM(amount) AS pendingBank FROM txs2 t WHERE (payee IN (:uids)) AND created<:asof AND completed <= 0";
   $sums += db\q($sql, $subs)->fetchAssoc();
 
   foreach ($sums as $k => $v) if (is_null($v)) $sums[$k] = 0; // no nulls
@@ -1142,113 +1153,85 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
 }
 
 /**
- * Create a new bank transfer, including records in r_usd, txs_hdrs, and txs_entries (2).
+ * Create a new bank transfer, including records in txs2, txs_hdrs, and txs_entries (2).
  * @param acct $a: the account to or from which money is to be moved
  * @param numeric $amount: the amount to transfer
- * @param int $created: the UNIX time at which the transfer is deemed to be created.
- * @param string $txid: desired record ID for the transfer; always NULL (assign a new id) unless testing
- * @return [$txid, $xid]:
- *   $txid: the r_usd record ID or FALSE on failure
- *   $xid: the transaction ID associated with the transfer request
+ * @param assoc $options: any of these keyed values:
+ *   bool $explicit: request was created manually, not automatically
+ *   int $created: the UNIX time at which the transfer is deemed to be created (defaults to now)
+ *   int $completed: mark the transaction complete on this date
+ *   int $pid: record ID of associated people record (NULL if none)
+ *   int $cat: record ID in budget_cats of transaction category
+ *   string $purpose: transaction description
+ *   int $deposit: date deposited
+ * @return the transaction ID associated with the transfer request
  */
-function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL) {
-  u\EXPECT(compact(ray('a amount created txid')), 'acct int|float int|empty string|int|empty');
-  global $channel;
-  $automatic = ($channel == TX_CRON);
-  $payee = $a->id;
-  u\setDft($created, now());
-  $bankAccount = nni($a->vsecure, 'bankAccount', NULL); // was   isDEV ? 'xxxxy' :
-  $bankId = $amount >= 0 ? BANK_IN_ID : BANK_OUT_ID;
+function createUsdTransfer($a, $amount, $options = []) {
+  u\EXPECT(compact(ray('a amount options')), 'acct int|float assoc');
+  global $channel; 
+  
+  extract(just('explicit created completed pid cat purpose deposit', $options, NULL));
 
-  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));
-  txEntryPair($txes, 0, [$bankId, $payee], $amount > 0 ? t('from bank') : t('to bank'), E_BANK); // tentative amount is 0
+  u\setDft($explicit, $channel != TX_CRON);
+  u\setDft($created, now());
+  u\setDft($purpose, $amount > 0 ? t('from bank') : t('to bank'));
+
+  list ($eType, $deposit, $bankId, $bankAccount) = $pid
+  ? [E_OUTER, $deposit ?: 0, OUTER_UID, NULL] // transfer to or from a non-member (with no CG account)
+  : [E_BANK, 0, $amount >= 0 ? BANK_IN_ID : BANK_OUT_ID, nni($a->vsecure, 'bankAccount', NULL)];
+
+  $payee = $a->id;
+  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created cat', FOR_USD, 0, $payee, $payee, $channel, NULL, $cat));
+  txEntryPair($txes, 0, [$bankId, $payee], $purpose, $eType); // tentative amount is 0
   $tx->addEntries($txes);
   
   $DBTX = \db_transaction();
   $xid = $tx->insert();
     
-  $info = compact(ray('amount payee created bankAccount channel xid'));
-  if (test() and nn($txid)) $info += compact('txid');
-  if ($xid) $txid = db\insert('r_usd', $info, 'txid'); else $txid = FALSE;
+  $info = compact(ray('amount payee created deposit bankAccount channel xid'));
+  $info += just('pid txid', $options);
+  $txid = db\insert('txs2', $info, 'txid');
+    
+  if ($completed and !completeUsdTx($info + ['eid' => $tx->entries[0]->id], $explicit, $completed)) return FALSE;
   
-  if (!$xid or !$txid) {
-    $DBTX->rollback();
-    r\tellAdmin(t('bank transfer insert failed'), compact($amount, $completed));
-    return [FALSE];
-  }
   unset($DBTX);
   
-  if ($amount < 0) { // transfer TO the bank (always completed immediately)
-    if (!completeUsdTx($txid, $automatic, $created)) return [FALSE];
-  }
-  return [$txid, $xid];
+  return $xid;
 }
 
 /**
- * Return information about a same-direction request to combine with.
- * @param acct $a: the account
- * @param numeric $amount: amount requested
- * @param int $completed: desired completion date (NULL if none)
- * @return [$txid, $amount, $completed] where
- *    $txid is the transaction ID of transaction to modify (FALSE if none)
- *    $amount is the modified (i.e., new amount) -- unchanged if $txid is FALSE
- *    $completed is the completion date of the new or modified request (0 if not yet) -- unchanged if $txid is FALSE
- *//*
-function combineUsdTx($a, $amount, $completed) {
-  return [FALSE, $amount, $completed]; // disable this for now (needs rethinking)
-  
-  u\EXPECT([$a, $amount, $completed], 'acct int|float int');
-///     debug("combineUsdTx($a->id, $amount, $completed)");
-
-  if (!$a->bankOk) return [FALSE, $amount, $completed];
-
-  $DBTX = \db_transaction();
-  if ($amount > 0 and $amount + $a->advances() - $a->balance > -$a->floor) $completed = 0; // only 0 if bringing in beyond credit line
-  $where = 'payee=:id AND amount>0 AND NOT deposit AND NOT completed';
-  if ($res = db\get('txid, amount AS oldAmount', 'r_usd', $where, ray('id', $a->id))) {
-    extract($res);
-    $amount += $oldAmount;
-  } else {
-    $txid = FALSE;
-  }
-  $result = db\update('r_usd', compact(ray('txid amount completed')), 'txid');
-  if (!$result) $txid = FALSE;
-  unset($DBTX);
-  
-  return [$txid, $amount, $completed];
-}*/
-
-
-/**
  * Mark a USD transfer complete, update the amounts in the corresponding transaction entries, and report.
- * @param int $txid: the transfer record ID
- * @param bool $automatic: <transfer was created automatically>
+ * @param mixed $xid: record ID of the transfer transaction or an assoc of the relevant information
+ * @param bool $explicit: <transfer was not created automatically>
  * @param datetime $completed: when the transaction was completed, defaults to the current time
- * @param datetime $deposit: when the request was sent to the bank (for tests only)
  * @return bool <success>
  */
-function completeUsdTx($txid, $automatic, $completed = NULL, $deposit = 0) {
-  u\EXPECT([$txid, $automatic], 'int|string|empty bool');
+function completeUsdTx($xid, $explicit, $completed = NULL) {
+  u\EXPECT([$xid, $explicit, $completed], 'int|assoc bool int|empty');
   u\setDft($completed, now());
   
-  $info = db\get('d.xid,d.payee,d.amount,eid', 'r_usd d JOIN txs t USING(xid)', compact('txid'));
-  u\EXPECT((bool) $info, 'bad txid in completeUsdTx');
+  if (is_array($info = $xid)) {
+    $info = just('payee amount eid pid xid', $info, NULL);
+  } else {
+    $info = db\get('d.payee,d.amount,eid,pid', 'txs2 d JOIN txs t USING(xid)', compact('xid'));
+  }
+  u\EXPECT((bool) $info, 'bad xid in completeUsdTx');
   extract($info);
 
   $DBTX = \db_transaction();
-  $res = db\update('r_usd', compact(ray('txid completed')), 'txid');
+  $res = db\update('txs2', compact(ray('xid completed')), 'xid');
   $res0 = db\update('tx_hdrs', ray('xid created', $xid, $completed), 'xid');
   $res1 = db\update('tx_entries', ray('id amount', -$eid, -$amount), 'id');
   $res2 = db\update('tx_entries', ray('id amount', $eid, $amount), 'id');
   if (!($res and $res0 and $res1 and $res2)) {
-    r\tellAdmin(t('usd update failed'), compact($txid, $amount, $automatic));
+    r\tellAdmin(t('usd update failed'), $info);
     $DBTX->rollback();
     return FALSE;
   }
   unset($DBTX);
   
-  if ($amount > 0) {  
-    $transfer = $automatic ? t('automatic transfer') : t('transfer');
+  if ($amount > 0 and !$pid) {  
+    $transfer = $explicit ? t('transfer') : t('automatic transfer');
     $amount = u\fmtAmt($amount);
     r\acct($payee)->tellIn('transfer-in complete', compact('transfer', 'amount'));
   }
@@ -1304,19 +1287,19 @@ function checkSanity() {
   }
 // odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }
 
-  // Check r_usd
-  $txids = db\rows('txid', 'r_usd');
+  // Check txs2
+  $txids = db\rows('txid', 'txs2');
   foreach ($txids as $txidO) {
     $txid = $txidO->txid;
-    $info = db\get('*', 'r_usd', compact('txid'));
+    $info = db\get('*', 'txs2', compact('txid'));
     if ($info['xid']) {
       $amount = $info['completed'] ? $info['amount'] : 0;
       if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'uid'=>$info['payee'], 'amount'=>$amount]))
         or (!db\exists('tx_hdrs', ['xid'=>$info['xid']]))) { // tx date need not match usd dates
-        sanityErr("r_usd $txid has an xid, but has no corresponding transaction or the transaction doesn't match");
+        sanityErr("txs2 $txid has an xid, but has no corresponding transaction or the transaction doesn't match");
       }
-      if (!$info['amount']) sanityErr("r_usd $txid has an associated transaction, but a zero amount");
-    } elseif ($info['amount'] + 0) sanityErr("r_usd $txid has an amount but has no associated tx_hdr");
+      if (!$info['amount']) sanityErr("txs2 $txid has an associated transaction, but a zero amount");
+    } elseif ($info['amount'] + 0) sanityErr("txs2 $txid has an amount but has no associated tx_hdr");
   }
 
   // Check r_usd2

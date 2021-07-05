@@ -198,7 +198,7 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
   Then we say "status": "first at home|when resolved"
 
 Scenario: A member pays another member repeatedly
-  Given these "tx_templates":
+  Given these "tx_timed":
   | id | from | to   | amount | period | purpose | start | end | action | duration |*
   |  3 | 0    | 0    |      0 | week   | bump-id | %now  |     | pay    | once     |
   When member ".ZZA" confirms form "tx/pay" with values:
@@ -214,11 +214,11 @@ Scenario: A member pays another member repeatedly
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
   |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
-  And these "tx_templates":
+  And these "tx_timed":
   | id | from | to   | amount | period | purpose | start     | end | action | duration |*
   |  4 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
-  And date field "start" rounded "yes" in "tx_templates" record "4" (id field "id")
-  And field "tx_hdrs/xid/1/created" is ">=" field "tx_templates/id/1/start"
+  And date field "start" rounded "yes" in "tx_timed" record "4" (id field "id")
+  And field "tx_hdrs/xid/1/created" is ">=" field "tx_timed/id/1/start"
 
 Scenario: A member pays another member later
   When member ".ZZA" confirms form "tx/pay" with values:
@@ -228,6 +228,6 @@ Scenario: A member pays another member later
   | thing   |*
   | payment |
   And count "txs" is 0
-  And these "tx_templates":
+  And these "tx_timed":
   | id | from | to   | amount | period | purpose | start        | end | action | duration |*
   |  1 | .ZZA | .ZZB |    100 | once   | labor   | %daystart+3d |     | pay    | once     |

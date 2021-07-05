@@ -139,6 +139,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE flow AMemberDraws
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE flow AMemberDrawsAgain
@@ -254,6 +255,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE dashboard Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
+ *     MAKE fbo Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     MAKE investinterest Setup
@@ -325,6 +327,7 @@ function members($list) {return t\members($list);}
  *     MAKE dashboard AMemberClicksTheDashboardTabWithRoundups
  *     MAKE demographics Setup
  *     MAKE download Setup
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -368,6 +371,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
@@ -414,6 +418,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberPaysASponsoredMember
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -592,6 +598,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
+ *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberPaysASponsoredMember
+ *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST investinterest AMemberExpressesInterest
@@ -777,6 +786,7 @@ function withoutOptions($options) {
  *     MAKE dashboard Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
+ *     MAKE fbo Setup
  *     MAKE flow Setup
  *     MAKE invest Setup
  *     MAKE invoice Setup
@@ -834,6 +844,10 @@ function relations($relations) {return t\relations($relations);}
  *     TEST dashboard Setup
  *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
  *     TEST download Setup
+ *     TEST fbo Setup
+ *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberPaysASponsoredMember
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
@@ -1287,6 +1301,7 @@ function statisticsGetSet($time) {
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1395,6 +1410,7 @@ function devices($list) {return t\devices($list);}
  * in: MAKE balancesheet Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invest TheClubSellsShares
  *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
@@ -1586,6 +1602,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
  * in: TEST accredit AMemberCompanyGivesACustomerCredit
+ *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1744,7 +1761,10 @@ function coupons($list) {return t\coupons($list);}
 /**
  * we scrip (ARG) with subs: (ARG)
  *
- * in: TEST tx AMemberAsksToChargeAnotherMemberForGoods
+ * in: TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberPaysASponsoredMember
+ *     TEST fbo ASponsoredMemberChargesAMember
+ *     TEST tx AMemberAsksToChargeAnotherMemberForGoods
  *     TEST tx AMemberAsksToPayAnotherMemberForGoods
  *     TEST tx AMemberAsksToPayAnotherMemberForLoanreimbursement
  */
@@ -1774,9 +1794,16 @@ function weScripWithSubs($script, $args = []) {
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
+ *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberPaysASponsoredMember
+ *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
+ *     TEST flow AMemberDraws
+ *     TEST flow AJointAccountSlaveMemberDraws
+ *     TEST flow AMemberDrawsAgain
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
@@ -1796,7 +1823,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     TEST joint AMemberRequestsAJointAccount
- *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
+ *     BOTH pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
@@ -1862,26 +1889,6 @@ function withChoices($choices) {
  * in: 
  */
 function recurs($list) {return t\recurs($list);}
-
-/**
- * tx headers: (ARG)
- *
- * in: 
- */
-function txHeaders($list) {
-  return t\txHdrs($list);
-}
-
-/**
- * tx entries: (ARG)
- *
- * in: TEST flow AMemberDraws
- *     TEST flow AJointAccountSlaveMemberDraws
- *     TEST flow AMemberDrawsAgain
- */
-function txEntries($list) {
-  return t\txEntries($list);
-}
 
 /**
  * variable (ARG) is (ARG)
@@ -2209,14 +2216,6 @@ function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
 }
 
 /**
- * txRules: (ARG)
- *
- * in: MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
- *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
- */
-function txRules($list) {return t\txRules($list);}
-
-/**
  * member (ARG) has (ARG) stepup rules
  *
  * in: MAKE signup AMemberChoosesToStepUp
@@ -2424,6 +2423,9 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE cc SomeoneAsksToMakeACreditCardDonationFBO
+ *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberPaysASponsoredMember
+ *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
@@ -2487,7 +2489,10 @@ function nextCaptchaIs($ca) {
 /**
  * member (ARG) submits (ARG) with: (ARG)
  *
- * in: MAKE sponsor ANonmemberAppliesForFiscalSponsorship
+ * in: MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberPaysASponsoredMember
+ *     MAKE fbo ASponsoredMemberChargesAMember
+ *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings

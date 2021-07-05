@@ -35,7 +35,7 @@ Setup:
   | .ZZC | .ZZA  | scan       |        Y |     0 |    0 |
   | .ZZC | .ZZB  | manage     |          |       |      |
   | .ZZC | .ZZD  |            |          |       |      |
-  And these "tx_templates":
+  And these "tx_timed":
   | action | from  | to  | amount | period |*
   | pay    | .ZZA  | cgf |     10 | year   |
   | pay    | .ZZB  | cgf |      5 | year   |

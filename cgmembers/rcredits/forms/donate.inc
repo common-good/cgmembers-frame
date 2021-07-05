@@ -31,7 +31,7 @@ function formDonate($form, &$sta, $args = '') {
 //       5 => t('Cloth ........ $5'),
   );
 
-  if ($recurs = db\get('id,period,amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:payer AND t.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
+  if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
     extract($recurs);
     $recursId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
@@ -69,17 +69,17 @@ function formDonate_submit($form, &$sta) {
   extract(just('amount period honor honored roundup recursId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
   if ($period != 'once' and nn($recursId)) {
-    $was = (object) db\get('amount, period, periods', 'tx_templates', ray('id', $recursId));
+    $was = (object) db\get('amount, period, periods', 'tx_timed', ray('id', $recursId));
     $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
-    r\endRule(TRUE, $recursId);
+    r\endRule('tm', $recursId);
     say(t('Your previous recurring gift has been canceled.'));
   } else $was = t('no previous recurring donation');
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
     $purpose = t('donation');
-    $recursId = $period == 'once' ? 0
-    : db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
+    $recursId = $period == 'once' ? NULL
+    : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
     if ($mya->ok and $z = $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {

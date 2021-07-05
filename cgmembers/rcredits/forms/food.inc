@@ -57,7 +57,7 @@ X
     $img = item(tr('<img src="%BASE_URL/rcredits/images/pages/simple-gifts-purchase.jpg" />'));
   } elseif ($mya and $mya->canManage) {
     $foodId = r\foodFundId();
-    if ($recurs = db\get('id,period,amount', 'tx_templates', 't.from=:payer AND t.to=:foodId AND t.end IS NULL', ray('from foodId', $mya->id, $foodId))) {
+    if ($recurs = db\get('id,period,amount', 'tx_timed', 't.from=:payer AND t.to=:foodId AND t.end IS NULL', ray('from foodId', $mya->id, $foodId))) {
       extract($recurs);
       $recurs = hidFld(serialize($recurs));
       $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
@@ -124,7 +124,7 @@ function formFood_submit($form, &$sta) {
   if ($recurs) {
     extract(just('id period amount', unserialize($recurs)), EXTR_PREFIX_ALL, 'x');
     if ($x_period != $period or $x_amount != $amount) {
-      db\update('tx_templates', ray('id end', $x_id, now()), 'id');
+      db\update('tx_timed', ray('id end', $x_id, now()), 'id');
       say(t('Your previous recurring contribution has been canceled.'));
     } else {
       $amount = 0;
@@ -135,7 +135,7 @@ function formFood_submit($form, &$sta) {
   if ($amount > 0) {
     $payee = db\get('uid', 'users', "name='foodfund'");
     $purpose = t('food donation');
-    $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
+    $recursId = db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     if ($mya->payApproved($payee, $amount, $purpose, FOR_GOODS, ['recurs' => 1], $recursId)) {
       $mya->tellOut('recur pay', ray('amount when payee purpose', u\fmtAmt($amount), r\recurDesc($period, 1), t('the Food Fund'), $purpose));

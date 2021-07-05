@@ -16,7 +16,7 @@ require_once __DIR__ . '/txentry.class';
 
 class Tx {
   const REQUIRED_FIELDS = 'goods actorId flags';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' actorAgentId channel boxId goods risk risks recursId reversesXid created';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' actorAgentId channel boxId goods risk risks recursId reversesXid created cat';
   const ALLOWED_FIELDS = self::INSERT_FIELDS . ' entries xid';
   const TX_FIELDS = self::INSERT_FIELDS . ' xid';
 
@@ -33,6 +33,7 @@ class Tx {
   public $recursId;
   public $reversesXid;
   public $created;
+  public $cat;
   public $entries;
   
   /**
@@ -44,8 +45,7 @@ class Tx {
     $tx = $this;
     u\vetObjectInfo($info, self::ALLOWED_FIELDS, self::REQUIRED_FIELDS, 'Tx');
 
-    foreach (ray('goods actorId actorAgentId flags channel boxId risk reversesXid') as $k) $tx->$k = u\setDft($info[$k], NULL);
-    foreach (ray('xid risks recursId') as $k) $tx->$k = u\setDft($info[$k], 0);
+    foreach (ray(self::TX_FIELDS) as $k) $tx->$k = array_key_exists($k, $info) ? $info[$k] : (in($k, 'xid flags risks channel') ? 0 : NULL);
     $tx->created = u\setDft($info['created'], now());
     $tx->entries = u\setDft($info['entries'], []);
   }
@@ -165,7 +165,7 @@ class Tx {
     u\EXPECT($xid, "Failed to insert transaction header record");
 
     foreach ($tx->entries as $i => $entry) {
-      $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
+      $tx->entries[$i]->id = $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
       u\EXPECT($eid, "Failed to insert transaction entry");
     }
     $this->xid = $xid;

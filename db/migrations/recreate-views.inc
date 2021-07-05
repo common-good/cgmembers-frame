@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/util.inc';
 
-const E_TYPES = 'bank_only prime donation rebate usd_fee bank'; // these constants are also used in migration files
-const BANK_IDS = ['bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
+const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule outer'; // these constants are also used in migration files
+const BANK_IDS = ['outer' => 255, 'bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
 const TX_EXCLUDE_FLDS = 'deleted';
 const TXE_EXCLUDE_FLDS = 'deleted';
 const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid';
@@ -12,14 +12,16 @@ const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
   
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
- * @param object $o: phinx AbstractMigration object
- * @param int $stopAt: migration date to stop at (0 = none, used for rolling back a migration)
+ * @param object $m: phinx AbstractMigration object
+ * @param int $stopAt: migration date
  */
-function createViews($m, $stopAt = 0) {
+function createViews($m, $stopAt) {
+  if (!$m->isMigratingUp()) $stopAt -= 1; // when rolling back, don't do the latest changes
+  
   cgpr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) {
-    echo "view: $table\n";
+/**/ echo "view: $table\n";
 //    print_r(VIEWS_NOT_TO_DROP); echo "\n";
 //    echo in_array($table, VIEWS_NOT_TO_DROP); echo "\n";
     if (! in_array($table, VIEWS_NOT_TO_DROP)) { // don't drop
@@ -39,6 +41,7 @@ function createViews($m, $stopAt = 0) {
   
   extract(BANK_IDS);
   $isBank = "uid IN ($bankIn, $bankOut)";
+  $isOuter = "uid=$outer";
 
   foreach (ray(E_TYPES) as $i => $k) ${$k . 'y'} = "entryType=$i"; // eg "donationy" means entryType is E_DONATION
 
@@ -47,8 +50,6 @@ function createViews($m, $stopAt = 0) {
   $m->doSql("CREATE VIEW tx_hdrs AS SELECT $txFlds FROM tx_hdrs_all WHERE deleted IS NULL");
   $m->doSql("CREATE VIEW tx_entries AS SELECT $txeFlds FROM tx_entries_all WHERE deleted IS NULL");
   $m->doSql('CREATE VIEW tx_disputes AS SELECT * FROM tx_disputes_all WHERE deleted IS NULL');
-
-  if ($stopAt == 20190622) return;
 
   // individual views for each type of transaction
 
@@ -79,7 +80,8 @@ X;
   makeTxsView($z, 'txs_usd_fee', "e.$usd_feey AND e2.$primey AND e2.id<0", "e.$usd_feey AND e2.$primey AND e2.id>0");
   makeTxsView($z, 'txs_proper');  // all transactions between CG accounts
   makeTxsView($z, 'txs_bank', "e.$banky AND e.$isBank AND NOT e2.$isBank", "e.$banky AND NOT e.$isBank AND e2.$isBank");
-  makeTxsView($z, 'txs'); // add bank transfers to and from CG accounts, omit bank charges and transfers between CG's banks
+  makeTxsView($z, 'txs_outer', "e.$outery AND e.$isOuter AND NOT e2.$isOuter", "e.$outery AND NOT e.$isOuter AND e2.$isOuter");
+  makeTxsView($z, 'txs'); // add all transactions that make a difference to CG member accounts, omit bank charges and transfers between CG's banks
   makeTxsView($z, 'txs_bank_only', "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount<0, e.$isBank)",
                                    "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount>0, e2.$isBank)");
   makeTxsView($z, 'txs_all'); 
@@ -93,4 +95,10 @@ X;
   $m->doSql('CREATE VIEW txs_noreverse AS SELECT * FROM txs t WHERE reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid=t.xid)');
   
   $m->doSql('CREATE VIEW tx_entries_o AS SELECT * FROM tx_entries ORDER BY ABS(id), id'); // for debugging 
+  
+  $m->doSql('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL');
+  if ($stopAt < 20210702) return;
+
+  $m->doSql('CREATE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
+  $m->doSql('CREATE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');
 }

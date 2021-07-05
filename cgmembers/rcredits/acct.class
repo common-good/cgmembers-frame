@@ -1154,14 +1154,14 @@ EOF;
   /**
    * Return the total waiting to be credited as a transfer FROM (or if negative result, TO) the member's bank.
    * @param numeric $combinable: (RETURNED) how much is waiting and checks haven't been printed yet (incoming only)
-   * @param int $combineTxid: (RETURNED) record id of USD transfer request in r_usd that can be combined (if none, zero)
+   * @param int $combineTxid: (RETURNED) record id of USD transfer request in txs2_bank that can be combined (if none, zero)
    */
   public function waitingFromBank(&$combinable = 0, &$combineTxid = 0) {
     $a = $this;
     $sql = <<< o
       SELECT SUM(amount) AS amt, SUM(IF(deposit, 0, amount)) AS combinable,
         MIN(IF(deposit OR amount=0, NULL, txid)) AS combineTxid
-      FROM r_usd WHERE payee IN (:uids) AND NOT completed
+      FROM txs2_bank WHERE payee IN (:uids) AND NOT completed
 o;
     extract(db\q($sql, ray('uids', $a->uids))->fetchAssoc());
     if ($combinable <= 0) $combinable = $combineTxid = 0;
@@ -1172,7 +1172,7 @@ o;
    * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
    */
   public function advances() {
-    return db\sum('amount', 'r_usd', 'payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:USDTX_DAYS', ['uids' => $this->uids]);
+    return db\sum('amount', 'txs2_bank', 'payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:USDTX_DAYS', ['uids' => $this->uids]);
   }
 
   /**
@@ -1231,27 +1231,21 @@ o;
         $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN));
       }
 
-      if ($combinable and $done = db\update('r_usd', compact(ray('txid amount')), 'txid')) {
+      if ($combinable and $done = db\update('txs2_bank', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';
         list ($previous, $total) = [u\fmtAmt($combinable), u\fmtAmt($amount)];
-        $xid = db\get('xid', 'r_usd', compact('txid'));
+        $xid = db\get('xid', 'txs2_bank', compact('txid'));
       }
     } else $amount0 = $amount;
 
     if (!$done) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
-///    debug(compact(ray('done created okNow completed amount waiting')) + ['floor' => $a->floor]);
-
-      $DBTX = \db_transaction();
-      list ($txid, $xid) = be\createUsdTransfer($a, $amount, $created, NULL);
-      u\EXPECT((bool) $txid, 'saving usd record');
-      if (nn($completed)) $completed = be\completeUsdTx($txid, !$explicit, $completed); // completed is then boolean
-      unset($DBTX);
+      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created explicit')));
+      u\EXPECT($xid, 'saving usd record');
     }
 
-    u\EXPECT(!empty($xid), 'empty xid in acct::bank txid=' . $txid);
-    if ($amount < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ray('who amount', $a->fullName, -$amount));
+    if ($amount < 0) r\tellAdmin(t('outgoing bank transfer'), ray('who amount', $a->fullName, -$amount));
     
     if ($previous) $amount -= $combinable; // don't include previous amount in notice to member
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
@@ -1274,11 +1268,11 @@ o;
     $a = $this;
     $info = ray('amount payee bankAccount', 0, $a->id, nni($a->vsecure, 'bankAccount') ?: NULL);
     if (test() and empty($bankAccount)) unset($info['bankAccount']); // otherwise t\verifyRecord fails
-    if (db\exists('r_usd', $info)) return; // already being verified
-    $txid0 = db\max('txid', 'r_usd', 'txid<999999');
+    if (db\exists('txs2', $info)) return; // already being verified
+    $txid0 = db\max('txid', 'txs2', 'txid<999999');
     for ($txid = $txid0; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
-      if (db\exists('r_usd', 'txid=:txid', compact('txid'))) continue;
-      if ($txid = db\insert('r_usd', $info + compact(ray('txid channel')), 'txid')) break;
+      if (db\exists('txs2', 'txid=:txid', compact('txid'))) continue;
+      if ($txid = db\insert('txs2', $info + compact(ray('txid channel')), 'txid')) break;
     }
     u\EXPECT($txid, 'ran out of low txids');
   }      
@@ -1373,11 +1367,11 @@ o;
     $subs = ['id' => $a->id];
 
     $sql = <<< X
-      SELECT r.start AS recurStart, r.amount AS recurAmt, r.period, r.periods, h.honor, h.honored
-      FROM tx_templates r
-      LEFT JOIN r_honors h ON h.uid=r.from
-      WHERE r.action=:ACT_PAY AND r.from=:id AND r.to=:CGID
-      AND r.end IS NULL
+      SELECT tm.start AS recurStart, tm.amount AS recurAmt, tm.period, tm.periods, h.honor, h.honored
+      FROM tx_timed tm
+      LEFT JOIN r_honors h ON h.uid=tm.from
+      WHERE tm.action=:ACT_PAY AND tm.from=:id AND tm.to=:CGID
+      AND tm.end IS NULL
 X;
     $res = db\q($sql, $subs)->fetchAssoc();
     if ($res) extract($res);
@@ -1766,10 +1760,10 @@ X;
    * @param numeric $amount: payment amount
    * @param string $desc: description of payment
    * @param assoc $data: extra data for transaction or invoice
-   * @param int $recursId: record ID of related record in tx_templates (if any)
+   * @param int $recursId: record ID of related record in tx_timed (if any)
    * @return a txRet object
    */
-  public function payApproved($payee, $amount, $desc, $goods, $data = [], $recursId = 0) {
+  public function payApproved($payee, $amount, $desc, $goods, $data = [], $recursId = NULL) {
     $a = $this;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');

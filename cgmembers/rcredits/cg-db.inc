@@ -130,8 +130,10 @@ function insert($table, $info, $key = 'id') {
     $result = db\q($sql, $info, TRUE);
     if ($result) return $result; // if there is no serial field, result will be false, so check
 
-    u\EXPECT($key and isset($info[$key]), 'no primary key ' . $key);
-    return db\get($key, $table, "`$key`=:key", ray('key', $info[$key])); // return the supplied id if success
+    u\EXPECT($key and isset($info[$key]), 'no primary key');
+    $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
+    u\EXPECT(!is_null($res), 'insert failed');
+    return $res;
 
   } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
 }
@@ -240,7 +242,7 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  *   db\del(tnm, idnm, id)
  * @param string $tnm: delete a record from this table
  * @param assoc $ray: assoc of criteria; for example:
- *   foreach (ray('tx_entries tx_hdrs r_usd') as $tnm) db\del($tnm, ['xid' => 12345]);
+ *   foreach (ray('tx_entries tx_hdrs txs2') as $tnm) db\del($tnm, ['xid' => 12345]);
  * @param string $where: criteria string
  * @param assoc $subs: substitutions in $where
  * @param bool $override: allow deletions from tx_hdrs_all and tx_entries_all
@@ -251,7 +253,7 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 //function del($tnm, $idnm, $id = '', $subs = []) {
 function del($tnm, $where, $subs = [], $override = FALSE) {
   foreach (ray('tx_hdrs tx_entries txs_') as $t) if (u\starts($tnm, $t)) {
-    u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
+    u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or txs2, which delete all things with that xid'));
   }
   
   if (is_array($where)) {
@@ -263,7 +265,9 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   
   $DBTX = \db_transaction();
   
-  if (in($tnm, DELETED_BY_VIEW)) {
+  $tnmHead = strstr($tnm, '_', TRUE) ?: $tnm; // allow deletion from variant views of tables
+  
+  if (in($tnmHead, DELETED_BY_VIEW)) {
     $q = db\q("UPDATE $tnm SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
     $ok = ($q->rowCount() > 0);
     if ($tnm == 'tx_entries_all') { // deleting an entry changes the balance, so fix the wentNeg dates
@@ -272,15 +276,15 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
     }
     return;
     
-  } elseif (in($tnm, TRACK_DELETED)) {
-    $xtnm = $tnm == 'users' ? 'x_users' : str_replace('r_', 'x_', $tnm);
+  } elseif (in($tnmHead, TRACK_DELETED)) {
+    $xtnm = in($tnmHead, 'users txs2') ? "x_$tnmHead" : str_replace('r_', 'x_', $tnmHead);
     $q = db\q("INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);
-    if ($ok and $tnm == 'r_usd') { // need to delete related txs records as well as r_usd records
+    if ($ok and $tnmHead == 'txs2') { // need to delete related txs records as well as txs2 records
       if ($rows = db\col('xid', $tnm, $where, $subs)) db\del('txs', 'xid IN (:rows)', compact('rows'));
     }
     
-  } elseif ($tnm == 'txs') {
+  } elseif ($tnmHead == 'txs') {
     if ($rows = db\col('xid', $tnm, $where, $subs)) foreach (ray('tx_entries_all tx_hdrs_all') as $allTnm) {
       db\del($allTnm, 'xid IN (:rows)', compact('rows'), (bool) 'OVERRIDE');
     }

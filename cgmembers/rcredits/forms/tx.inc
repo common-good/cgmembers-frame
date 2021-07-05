@@ -14,6 +14,7 @@ function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args));
   global $mya;
 
+  $fbo = $mya->coCan(CO_SPONSORED);
   $pay = in($type, 'pay both');
   $charge = in($type, 'charge both');
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
@@ -24,16 +25,35 @@ function formTx($form, &$sta, $type, $args = '') {
   
   focusOn(nn($who) ? 'amount' : 'who');
 
-  $title = $opDesc;
+//  $mem = rent(radiosFld('', '', ray('inline', 1), ray(t('Member Non-member')))); // fails
+  $mem = <<< X
+<div class="form-group form-item-mem radio-inline mlab-above">
+  <label for="mem" class="option"><input type="radio" class="form-radio" id="edit-mem-0" name="mem" value="0" checked="checked" />Member</label>
+</div>
+<div class="form-group form-item-mem radio-inline mlab-above">
+  <label for="mem" class="option"><input type="radio" class="form-radio" id="edit-mem-1" name="mem" value="1" />Non-member</label>
+</div>
+X;
+  $title = $fbo ? item($opDesc, NBSP, '', suffix($mem)) : $opDesc;
+
   if ($mya->co) {
     $buttons = $pay ? btnOpt('/tx/pay/payments', t('Upload Payments'), 'w-pay') : '';
     if ($pay) $buttons .= btnOpt('/tx/pay/payroll', t('Upload Payroll'), 'w-pay');
     if ($charge) $buttons .= btnOpt('/tx/charge/invoices', t('Upload Invoices'), 'w-charge');
   } else $buttons = NULL;
-  $who = textFld(t('Who:'), [t('name, id, email, or phone')], required(nn($who)));
+  
+  $who = textFld(t('Who:'), [t('Name, id, email, or phone')], dft(nn($who)));
 
-  $amount = numFld(REQ . t('Amount:'), [t('transaction amount')], dft(nn($amount)) + vmin(.01));
-  $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(nn($purpose)));
+  $fullName = textFld(t('Full Name:'), [t('Full name properly capitalized')]);
+  $address = textFld(t('Postal Addr:'), [t('Number and street')]);
+  $city = textFld(t('City:'), [t('Postal city')]);
+  $state = stateFld(NULL, '');
+  $zip = textFld(t('Zip:'), [t('Postal code')]);
+  $addr = fieldSet('addr', compact(ray('fullName address city state zip')), BARE);
+
+  $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft(nn($amount)) + vmin(.01));
+  $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
+  $cat = $fbo ? selectFld(REQ . t('Category:'), '', '', ['' => t('--- What budget category? ---')] + r\budgetCats('Income')) : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -45,48 +65,76 @@ function formTx($form, &$sta, $type, $args = '') {
   list ($field, $question, $selfErr) = ['who', t(' %amount to %name?'), 'self-tx'];
   // duplicate scraps.js's question, restrict, and allowNonmember in whoFldSubmit() for testing
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
-  $paying = hidFld($pay);
   
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc')));
-  $form = cgform(compact(ray("title buttons who amount purpose start periods end advanced submit paying")));
+  $admin = $mya->admin;
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin')));
+  
+  $paying = hidFld($pay);
+  $fbo = hidFld($fbo);
+  $form = cgform(compact(ray("title buttons who addr amount purpose cat start periods end advanced submit paying fbo")));
 
   return $form;
 }
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('amount purpose start end paying', $sta['input'], NULL);
+  $info = just('amount purpose start end paying fbo who fullName address city state zip', $sta['input'], NULL);
   extract($info);
 /*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
   $uid = $a->id; */
+  if (!$who) {
+    if (!$paying and !$mya->admin) return say(t('Only %PROJECT admins can charge non-members.'), 'err');
+    if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
+    if ($err = u\badZip($zip)) return say($err, 'zip');
+  }
+  
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
   foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->superAdmin ? today() - 180 * DAY_SECS : today())) return say($err, $k);
-  u\preray(compact(ray('amount start end')), $sta['input']);
+  u\preray(compact(ray('fullName zip amount start end')), $sta['input']);
 }
 
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('amount purpose period periods start end goods paying', $sta['input'], NULL));
-//  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
+  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip cat', $sta['input'], NULL));
+//  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
 
-  $uid = whoId($sta);
-  u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
+
+  if ($who) { // normal account
+    $uid = whoId($sta);
+    $pid = NULL;
+  } else { // FBO (sponsored) account
+    $uid = OUTER_UID;
+    if (!$pid = db\get('pid', 'people', $info = compact(ray('fullName address city state zip')))) {
+      $pid = db\insert('people', $info, 'pid');
+    }
+  }
+  
+  u\setDft($goods, FOR_GOODS);
   $delay = ($start > today());
   $repeats = ($periods > 0);
   
   if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
     list($ok, $msg, $subs) = [TRUE, '', []];
   } else { // no delay
-    $data = $period ? ['recurs' => 1] : [];
-    if ($start) $data['created'] = $start; // superAdmin chose a date in the past
-      
-    $z = $paying
-    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
-    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
-    extract(just('ok msg subs', $z));
+     
+    if ($pid) {
+       $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, ray('purpose pid completed explicit cat', $purpose, $pid, now(), TRUE, $cat));
+       u\EXPECT($xid, 'outer transfer failed');
+       list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
+    } else {
+      $data = $period ? ['recurs' => 1] : [];
+      if ($start) $data['created'] = $start; // superAdmin chose a date in the past
+      if ($fbo) $data += compact('cat');
+
+      $z = $paying
+      ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
+      : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
+      extract(just('ok msg subs', $z));
+    }
+
     if (!$ok) $repeats = FALSE; // don't repeat a failure
     if (!$repeats) { // done if we're not repeating (and not delaying)
       unset($DBTX);
@@ -102,8 +150,8 @@ function formTx_submit($form, &$sta) {
  
   if ($repeats) {
     // warn user if they already have a repeating transaction like this with this other account
-    $where = "tp.from=:from AND tp.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
-    if (!$delay and db\exists('tx_templates tp', $where, $info)) {
+    $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
+    if (!$delay and db\exists('tx_timed tm', $where, $info)) {
       $otherName = db\get('fullName', 'users', compact('uid'));
       say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
     }
@@ -116,13 +164,13 @@ function formTx_submit($form, &$sta) {
   
   if (!$start) $start = today(); // handle ''
   $info += compact(ray('action amount purpose period periods start end'));
-  $id = db\insert('tx_templates', $info, 'id');
+  $id = db\insert('tx_timed', $info, 'id');
 
   if ($delay) {
     $msg = u\joins($msg, '|', 'thing scheduled');
     $subs += compact('thing');
     r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
-  } else { // no delay: either a transaction or invoice was created, so set its recursId (pointing to template)
+  } else { // no delay: a recurring transaction or invoice was created, so set its recursId (pointing to tx_template record)
     extract(just('xid nvid', $subs, NULL)); // no other way to know whether payApproved created a tx or an invoice
     list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['tx_requests', 'nvid'];
     db\update($tnm, ray("$idFnm recursId", $subs[$idFnm], $id), $idFnm);

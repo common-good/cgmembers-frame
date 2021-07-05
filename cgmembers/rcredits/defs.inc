@@ -83,7 +83,7 @@ const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must 
 const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
 const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
-const TRACK_DELETED = 'tx_requests r_photos r_relations r_usd users'; // remember rows in these tables if we delete them
+const TRACK_DELETED = 'tx_requests r_photos r_relations txs2 users'; // remember rows in these tables if we delete them
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 const DEV_ONLY_MSG = 'only on development machine';
@@ -209,6 +209,7 @@ const PLACEHOLDER_2_UID = 3;  // uid of second placeholder
 const CG_ROUNDUPS_UID = 129;  // Donations start at 128 (128 used for general donations)
 const CG_CRUMBS_UID = 130;  //
 const CG_SERVICE_CHARGES_UID = 192;
+const OUTER_UID = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
 const MINIMUM_BANK_UID = 256;
 const BANK_IN_ID = 256;  // Bank accounts start at 256
 const BANK_OUT_ID = 257;  //
@@ -633,7 +634,8 @@ const E_REBATE = 3; // discount rebate to customer
 const E_USD_FEE = 4; // fee from customer to merchant for buying (or selling?) Common Good credit
 const E_BANK = 5; // CG account transfers to or from the member's bank
 const E_XFEE = 6; // transfer fee to merchant (UNUSED)
-const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule';
+const E_OUTER = 7; // CG account transfers to or from a non-member
+const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule outer';
 
 const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
 const REF_ANYBODY = 'anybody';

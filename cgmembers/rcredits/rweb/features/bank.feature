@@ -144,7 +144,7 @@ Scenario: a member draws credit from the bank then cancels
   Then balances:
   | uid  | balance |*
   | .ZZC |      30 |
-  And count "usd" is 6
+  And count "txs2" is 6
   And count "txs" is 7
   And we notice "bank tx canceled" to member ".ZZC" with subs:
   | xid | 8 |**

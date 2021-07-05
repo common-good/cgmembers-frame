@@ -138,7 +138,7 @@ function stampNote($note) {
  * @return the error message (FALSE if no error)
  */
 function badUnpaidInv($nvid, &$inv = '') {
-  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,recursId,created,deleted';
+  $fields = 'nvid,status,amount,payer,payee,goods,purpose,cat,flags,data,recursId,created,deleted';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'tx_requests_all', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['deleted']) return 'inv is canceled';
@@ -958,7 +958,7 @@ X;
     WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit
 X;
 
-  // get bank transfer data
+  // get bank transfer data (including with non-members)
   $in = 'amount>0 AND xid<=0';
   
   $thisIn = "t.amount > 0";
@@ -968,7 +968,7 @@ X;
     SUM(IF(amount<0, amount, 0)) AS usdOut,
     SUM(IF(amount>0, 1, 0)) AS usdInCount,
     SUM(IF(amount<0, 1, 0)) AS usdOutCount
-    FROM r_usd t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN 256 AND 511)
+    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN :MINIMUM_BANK_UID AND :MAXIMUM_BANK_UID AND uid<>:OUTER_UID)
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
@@ -1055,9 +1055,9 @@ X;
 
   // get patronage (total recurring gifts expected per month)
   $sqls['patronage'] = <<< X
-    SELECT SUM(amount * perYear(r.period, r.periods) / 12) AS patronage
-    FROM tx_templates r JOIN users u ON u.uid=r.from
-    WHERE r.action=:ACT_PAY AND r.to=:CGID AND r.start<:created AND (r.end IS NULL OR r.end>:created-:YEAR_SECS) AND u.$cttyCrit
+    SELECT SUM(amount * perYear(tm.period, tm.periods) / 12) AS patronage
+    FROM tx_timed tm JOIN users u ON u.uid=tm.from
+    WHERE tm.action=:ACT_PAY AND tm.to=:CGID AND tm.start<:created AND (tm.end IS NULL OR tm.end>:created-:YEAR_SECS) AND u.$cttyCrit
 X;
    
   // get invites ever
@@ -1278,16 +1278,6 @@ function median($field, $table = 'users', $where = 1, $subs = []) {
 }
 
 /**
- * Return the next sequential bank transfer number for an account.
- * @param int $payee: the account uid
- * @return int: the next unused positive integer (1 if there are no bank transfers yet)
- * UNUSED
- *//*
-     function getUsdTid($payee) {
-     return db\get('MAX(tid)+1', 'r_usd', 'payee=:payee', compact('payee')) ?: 1;
-     }*/
-
-/**
  * Send the account a notice for the suggested action, with a direct link to do it.
  * The link does not require the user to sign in.
  * FOR NOW: just suggest it, with no direct link. (never a link if channel is SMS)
@@ -1412,7 +1402,7 @@ function cttyGifts($end) {
       SUM(IF(uid2=:CGID, amt, 0)) AS `in`, 
       SUM(IF(uid1=:CGID AND uid2=u.community, amt, 0)) AS `out`,
      (SELECT COUNT(1)
-       FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
+       FROM txs2 d LEFT JOIN users du ON du.uid=d.payee 
        WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=:end 
      ) AS bounces
     FROM txs_noreverse t LEFT JOIN users u ON u.uid=IF(uid1=:CGID,uid2,uid1)
@@ -1447,13 +1437,14 @@ function xfee($for, $amount) {
 
 /**
  * Mark a rule (or template) ended (now) and delete any related unpaid invoices.
- * @param bool $recurs: template not rule
+ * @param bool $tbl: table abbreviation (ru for tx_rules, tm for tx_timed)
  * @param int $id: rule or template id
  */
-function endRule($recurs, $id) {
-  $tnm = $recurs ? 'tx_templates' : 'tx_rules';
+function endRule($tbl, $id) {
+  u\EXPECT(in($tbl, 'tm ru'), 'bad tbl in endRule');
+  $tnm = $tbl == 'tm' ? 'tx_timed' : 'tx_rules';
   db\update($tnm, ray('id end', $id, now()), 'id');
-  if ($recurs) db\del('tx_requests', 'recursId=:id AND status<:TX_PAID', compact('id'));
+  if ($tbl == 'tm') db\del('tx_requests', 'recursId=:id AND status<:TX_PAID', compact('id'));
 }
 
 function recurDesc($period, $periods = 1) {
@@ -1490,3 +1481,4 @@ function countryList() {return db\keyed('id,name', 'r_countries', "name in ('Uni
 const CREDIT_RULE_ROW = [ACT_SURTX, MATCH_PAYEE, MATCH_PAYER, 0.00, 1.00, REF_ACCOUNT, REF_ACCOUNT, 0.00];
 function isCreditRule($row) {return (array_values(just('action from to amount portion payerType payeeType minimum', $row)) == CREDIT_RULE_ROW);}
 function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
+function budgetCats($type = 'Income') {return db\keyed("id, CONCAT(MID(type, 1, 1), ' ', category)", 'budget_cats', "id NOT IN (3,7,9,10,11,16,28,32) ORDER BY type<>:type, category", compact('type'));}
