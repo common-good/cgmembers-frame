@@ -14,7 +14,7 @@ use CG\Util as u;
  */
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
-$gifts = "tp.amount * IF(tp.period='week', 52 / tp.periods, IF(tp.period='month', 12 / tp.periods, IF(period='quarter', 4 / tp.periods, 1)))";
+$gifts = "tm.amount * IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1)))";
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
@@ -120,7 +120,7 @@ X
             SUM(IF(u.:IS_ROUNDUP, 1, 0)) AS roundupy,
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
-    FROM users u LEFT JOIN tx_templates tp ON (tp.from=u.uid AND tp.end IS NOT NULL AND tp.to=:CGID) LEFT JOIN users c ON c.uid=u.community
+    FROM users u LEFT JOIN tx_timed tm ON (tm.from=u.uid AND tm.end IS NOT NULL AND tm.to=:CGID) LEFT JOIN users c ON c.uid=u.community
     WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT :CANONIC
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
@@ -145,15 +145,16 @@ X
       ) AS origin,
       SUM(IF(:IS_OK, 1, 0)) AS member,
       SUM(IF(:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
-      SUM(IFNULL(r.amount, 0) * perYear(r.period, r.periods))
+      SUM(IFNULL(tm.amount, 0) * perYear(tm.period, tm.periods))
         / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
       SUM(IF(:IS_ROUNDUP, 1, 0))
         / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
       SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
         / SUM(IF(:IS_OK, 1, 0)) AS eachInvited
     FROM users u
-    LEFT JOIN tx_templates r ON r.from=u.uid AND r.to=:CGID AND r.end IS NULL
+    LEFT JOIN tx_timed tm ON tm.from=u.uid AND tm.to=:CGID AND tm.end IS NULL
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
+    WHERE u.uid>0 AND u.uid NOT :CANONIC
     GROUP BY origin
     ORDER BY member
 X

@@ -280,17 +280,6 @@ function memberChargesMemberFor($payee, $payer, $amount, $for) {
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
 /**
- * USD payment by member (ARG) is not recorded
- *
- * in: 
- */
-function uSDPaymentByMemberIsNotRecorded($id) {
-  global $testOnly; if ($testOnly) return FALSE;
-  $id = t\uid($id);
-  return db\q('DELETE FROM r_usd WHERE payer=:id LIMIT 1', compact('id'));
-}
-
-/**
  * usd transfer count is (ARG)
  *
  * in: TEST invoices UnpaidInvoicesGetHandled

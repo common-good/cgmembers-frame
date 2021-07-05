@@ -804,6 +804,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #tx .form-item-end,
 .form-item-periods {display:none;}
 .form-item-submit .btn-default {margin:0 0 0 30px;}
+#tx #edit-title h3 {display:inline-block; margin-right:30px;}
 
 /* Dashboard */
 #tx {display:none;}
@@ -1217,7 +1218,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   #txlist .amount-runBalance div {padding-right:15px;}
 }
  
-#txlist .row .buttons {padding:5px 0 4px 0; border:0; min-width:30px; max-width:50px;}
+#txlist .row .buttons {padding:5px 0 4px 0; border:0; max-width:50px;}
 #txlist .row .buttons div {max-width:50%;}
 #txlist .buttons a.btn-xs {font-size:9px; margin:0;}
 #txlist .buttons div {padding:0;}

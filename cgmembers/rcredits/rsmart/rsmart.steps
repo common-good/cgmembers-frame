@@ -739,22 +739,6 @@ function coupons($list) {return t\coupons($list);}
 function transactionCountIs($n) {return t\txCountIs($n);}
 
 /**
- * transaction headers: (ARG)
- *
- * in: TEST coupons AMemberRedeemsADiscountCoupon
- *     TEST undo ACashierReversesATransactionWithInsufficientFunds
- */
-function transactionHeaders($list) { return t\txHdrs($list); }
-
-/**
- * transaction entries: (ARG)
- *
- * in: TEST coupons AMemberRedeemsADiscountCoupon
- *     TEST undo ACashierReversesATransactionWithInsufficientFunds
- */
-function transactionEntries($list) { return t\txEntries($list); }
-
-/**
  * transaction header count is (ARG)
  *
  * in: TEST coupons AMemberRedeemsADiscountCoupon
@@ -814,3 +798,11 @@ function nextCodeIsEncryptedWith($phrase, $method) {return t\cryNextCode($method
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 
+
+/**
+ * these (ARG): (ARG)
+ *
+ * in: TEST coupons AMemberRedeemsADiscountCoupon
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
+ */
+function these($thing, $list) {return t\these($thing, $list);}

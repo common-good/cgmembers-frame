@@ -38,6 +38,7 @@ function menu($submenu = '') {
 
     'history' => ['norm', t('History'), 'History', 'read'],
     'history/transactions' => ['sub', t('Transactions'), 'Txs 2', 'read', '', t(), 'list'],
+    'history/transaction' => ['call', t('Transaction Detail'), 'TxDetail 2', 'read'],
     'history/recurring' => ['sub', t('Automated Payments'), 'Recurring', 'read', '', t(), 'list'],
     'history/pending-to' => ['sub', t('Pending TO You'), 'Invoices to', 'read', '', t(), 'log-in'],
     'history/pending-from' => ['sub', t('Pending FROM You'), 'Invoices from', 'read', '', t(), 'log-out'],

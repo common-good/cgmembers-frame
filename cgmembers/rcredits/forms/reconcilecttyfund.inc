@@ -55,17 +55,17 @@ function formReconcileCttyFund_validate($form, &$sta) {
 
 }
 
-// update r_usd set bankTxId=0
+// update txs2 set bankTxId=0
 function formReconcileCttyFund_submit($form, &$sta) {
   global $mya;
 
-  //select sum(amount) from r_usd where deposit<1420088400
+  //select sum(amount) from txs2 where deposit<1420088400
   extract(just('bankId acctId dtStart dtEnd balAmt dtAsOf txs', $sta['input']));
   $txKs = ray(OFX_TX_FLDS);
   $batchSql = "CONCAT(IF(txid<0,'B', IF(amount<0,'O','I')), deposit)";
-  $sql = "SELECT $batchSql,SUM(amount) FROM r_usd where amount<>0 and deposit<>0 AND bankTxId=0 GROUP BY $batchSql ORDER BY deposit,$batchSql";
-//  $sql = 'SELECT deposit AS dt,SUM(amount) AS amt FROM r_usd WHERE amount>0 AND deposit<>0 AND bankTxId=0 GROUP BY deposit,amount<0';
-  $batches = db\q($sql)->fetchAllKeyed(); // summarize batches recorded in r_usd
+  $sql = "SELECT $batchSql,SUM(amount) FROM txs2 where amount<>0 and deposit<>0 AND bankTxId=0 GROUP BY $batchSql ORDER BY deposit,$batchSql";
+//  $sql = 'SELECT deposit AS dt,SUM(amount) AS amt FROM txs2 WHERE amount>0 AND deposit<>0 AND bankTxId=0 GROUP BY deposit,amount<0';
+  $batches = db\q($sql)->fetchAllKeyed(); // summarize batches recorded in txs2
   $lastBatch = end((array_keys($batches))); // extra parens not needed in PHP 7
   
   $txs = unserialize($txs);
@@ -83,11 +83,11 @@ function formReconcileCttyFund_submit($form, &$sta) {
     if (reversing($name, $trnType)) continue; // handle reversals in a separate loop
     
     $where = 'bankTxId<>0';
-    $bal = db\sum('amount', 'r_usd', $where) + db\sum('amount', 'r_usd2', $where);
+    $bal = db\sum('amount', 'txs2', $where) + db\sum('amount', 'r_usd2', $where);
 
     $bankTxId = bankTxId($fitId);
-    $table = '(SELECT bankTxId FROM r_usd UNION SELECT bankTxId FROM r_usd2) s';
-//    $table = '(SELECT amount,bankTxId,deposit FROM r_usd UNION SELECT amount,bankTxId,completed AS deposit FROM r_usd2) t';
+    $table = '(SELECT bankTxId FROM txs2 UNION SELECT bankTxId FROM r_usd2) s';
+//    $table = '(SELECT amount,bankTxId,deposit FROM txs2 UNION SELECT amount,bankTxId,completed AS deposit FROM r_usd2) t';
     if (db\exists($table, compact('bankTxId'))) { // already reconciled
       unset($txs[$t]);
 //       $errs[] = "Tx $fitId already done.";
@@ -112,7 +112,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
       
       if ($batAmt == $trnAmt and $batch[0] != 'B') { // reversals are handled below
         $sign = $batAmt < 0 ? '<0' : '>0';
-        db\q("UPDATE r_usd SET bankTxId=:bankTxId WHERE deposit=:batDt AND amount$sign AND txid>0", compact('bankTxId', 'batDt'));
+        db\q("UPDATE txs2 SET bankTxId=:bankTxId WHERE deposit=:batDt AND amount$sign AND txid>0", compact('bankTxId', 'batDt'));
         unset($batches[$batch]); // leave only the unmatched batches in the array
         unset($txs[$t]);
         break;
@@ -125,9 +125,9 @@ function formReconcileCttyFund_submit($form, &$sta) {
     $dt = strtotime($dtPosted);
     $txidSign = reversing($name, $trnType) ? '<0' : '>0';
     $where = ":dt BETWEEN deposit AND deposit+1*:MONTH_SECS AND amount=:trnAmt AND txid$txidSign AND bankTxId=0 ORDER BY deposit";
-    if ($ray = db\get('txid,deposit', 'r_usd', $where, $subs = compact('dt', 'trnAmt'))) {
+    if ($ray = db\get('txid,deposit', 'txs2', $where, $subs = compact('dt', 'trnAmt'))) {
       extract($ray);
-      db\update('r_usd', compact('bankTxId', 'txid'), 'txid');
+      db\update('txs2', compact('bankTxId', 'txid'), 'txid');
       $bi = ($txidSign == '<0' ? 'B' : ($trnAmt < 0 ? 'O' : 'I')) . $deposit;
       $batAmt = nni($batches, $bi);
       u\EXPECT($batAmt, 'logic error in reconcile reversal');
@@ -156,7 +156,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
   if (nn($errs)) say(join('<br>', $errs));
   $where = 'bankTxId<>0 AND deposit<=:NOW+:DAY_SECS';
 //  $bal = db\sum('amount', $table, $where); // <=:NOW is a placeholder for when we want earlier balances
-  $bal = db\sum('amount', 'r_usd', $where);
+  $bal = db\sum('amount', 'txs2', $where);
   $bal += db\sum('amount', 'r_usd2', str_replace('deposit', 'completed', $where));
   w\say(t('<p>Reconciled Community Fund balance as of today is %bal.</p>', 'bal', u\fmtAmt($bal)));
   w\say(t('<p>Bank reports a balance of %ofxBal as of %asOf.</p>', 'ofxBal asOf', u\fmtAmt($balAmt), u\fmtDate($asOf, TRUE)));
@@ -196,7 +196,7 @@ function offerOffsetTransfer($asOf) {
   }
   $btidTomorrow = floor($asOf / DAY_SECS) + 1;
   $btidTomorrow = 0 + ($btidTomorrow . str_repeat('0', isDEV ? 5 : 12));
-  $dpBal = $offsets + db\sum('amount', 'r_usd', 'bankTxId<>0 AND bankTxId<:btidTomorrow', compact('btidTomorrow'));
+  $dpBal = $offsets + db\sum('amount', 'txs2', 'bankTxId<>0 AND bankTxId<:btidTomorrow', compact('btidTomorrow'));
   say(t('Total Dollar Pool balance as of %dt is %amt', 'dt amt', u\fmtDate($asOf, TRUE), u\fmtAmt($dpBal)));
   jsx('dollar-pool-offset', 'amount', nn($offsets));
  

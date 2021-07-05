@@ -13,7 +13,6 @@ const TOP_FLDS = 'locus radius latitude longitude zip'; // fields used for filte
 const POST_INPUT_FLDS = 'service cat item private exchange details emergency radius end type'; // post input fields
 define('METHOD_OPTS', t('email phone text')); // contact method options
 const VIPID = 'vipid'; // name of confirmed-email cookie (the VIP's people record ID)
-define('HEALTH_RATINGS', t('excellent good ok indisposed')); // health self-assessment
 const POSTPAGE = '/community/posts';
 const MODERATE_ZIPS = ''; // 3-digit zip code areas where moderation is mandatory (eg '010 013')
 const POST_FRMS = 'top post editpost who message'; // possible values for $frm
@@ -347,14 +346,11 @@ function getWho($args) {
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
   $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
-  $days = intFld(REQ . t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
-  $washes = intFld(REQ . t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
-  $health = radiosFld(t('Health:'), t('If you are not feeling completely well, please <%a>take this quiz from the CDC</a> right away, and follow its advice.', '_a', atag('https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html')), dft(2), ray(HEALTH_RATINGS));
 
   if (!isset($location)) $location = NULL;
   $submit = t('Submit');
 
-  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext days washes health submit location frm')) + $info);
+  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext submit location frm')) + $info);
 }
 
 /**
@@ -440,18 +436,17 @@ function formPosts_validate($form, &$sta) {
     $chgFlds = 'email';
     
   } elseif ($frmWho) {
-    extract(just('zip phone address city state zip type days washes', $input, NULL));
+    extract(just('zip phone address city state zip type', $input, NULL));
     if ($err = u\badZip($zip)) return say($err, 'zip');
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
     foreach (ray('address city') as $k) if (in($$k, '0 1', strtolower($$k), strtoupper($$k))) $$k = ucwords(strtolower($$k));
-    foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say("$err ($k)", $k);
     
     list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
     if ($latitude == 0 and $longitude == 0) {
       // [better not to confuse user] if ($type == 'post') say(zipOnlyMsg(t('your post will be shown to anyone'), $zip));
     }
-    $chgFlds = 'zip phone latitude longitude days washes address city';
+    $chgFlds = 'zip phone latitude longitude address city';
     
   } else return u\FAIL(t('bad form in validate: ' . $frm));
   
@@ -463,8 +458,8 @@ function formPosts_validate($form, &$sta) {
  *   post, message, or contact info (this last including post or message info)
  */
 function formPosts_submit($form, &$sta) {
-  $input = just(POST_FLDS . ' frm pid days washes health location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type message method pid days washes health zip location', $input), NULL);
+  $input = just(POST_FLDS . ' frm pid location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
+  extract(just('frm email type message method pid zip location', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
@@ -478,11 +473,10 @@ function formPosts_submit($form, &$sta) {
   } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
-    $health = ($days+0) . ' ' . ($washes+0) . ' ' . ray(HEALTH_RATINGS)[$health];
     $notices = NOTICE_DFTS;
 
     u\EXPECT(!db\get('pid', 'people', compact('email')), 'duplicate people email in post submit');
-    $pid = db\insert('people', compact(ray('method health notices')) + $contactInfo, 'pid');
+    $pid = db\insert('people', compact(ray('method notices')) + $contactInfo, 'pid');
     if ($message) $frmMessage = TRUE; else $frmPost = TRUE; // now fall through to process the earlier data passed through by who form
   }
 

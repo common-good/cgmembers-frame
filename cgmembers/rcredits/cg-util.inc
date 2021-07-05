@@ -610,6 +610,7 @@ function expect1($arg, $value, $type, $ret) {
       if ($msg2 = EXPECT(is_array($value), $msg, $ret)) return $msg2;
       foreach ($value as $key => $one) expect1("$arg key", $key, 'var', $ret);
       return;
+    case 'object': return EXPECT(is_object($value), $msg, $ret);
     case 'bool': return EXPECT(is_bool($value) or $value == 0 or $value == 1, $msg, $ret);
     case 'email': return EXPECT(\valid_email_address($value), $msg, $ret);
     case 'empty': return EXPECT(empty($value), $msg, $ret);

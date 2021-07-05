@@ -99,8 +99,8 @@ function showDiscounts() {
   $sql = <<< X
     SELECT `from` AS sponsor, `amount`, `portion`, IF(`purpose`='', '$anything', `purpose`) AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
 
-    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `amtUsed`,
-    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `used`
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id AND e.entryType=:E_REBATE) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id AND e.entryType=:E_REBATE) AS `used`
 
     FROM tx_rules ru JOIN users u ON IF(ru.from=:MATCH_PAYEE, ru.payee, ru.from) = u.uid
     WHERE $payerCheck

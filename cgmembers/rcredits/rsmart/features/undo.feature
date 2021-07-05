@@ -216,10 +216,10 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | xid | created   | amount | payer | payee | purpose |*
   | 4   | %today-1m |    100 | ctty | .ZZC | jnsaqwa |
   And agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1n" force 0
-  Then transaction headers: 
+  Then these "tx_hdrs": 
   | xid | created | actorId | actorAgentId |*
   | 5   | %now-1n |    .ZZC |         .ZZB |
-  And transaction entries:
+  And these "tx_entries":
   | xid | entryType | amount | uid  | agentUid | description |*
   |   5 | %E_PRIME  |    100 | .ZZA | .ZZA     | cash in     |
   |   5 | %E_PRIME  |   -100 | .ZZC | .ZZB     | cash in     |

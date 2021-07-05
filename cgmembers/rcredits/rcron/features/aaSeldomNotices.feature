@@ -27,7 +27,7 @@ Scenario: It's time to warn about an upcoming annual donation to CG
   | uid  | fullName | flags  | bankAccount        | activated   |*
   | .ZZD | Dee Four | ok     | USkk98765432100004 | %now-1y     |
   | .ZZE | Eve Five | ok     | USkk98765432100005 | %yearAgo+7d |
-  And these "tx_templates":
+  And these "tx_timed":
   | id | action | start       | from | to  | amount | period | purpose |*
   |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
   And transactions:

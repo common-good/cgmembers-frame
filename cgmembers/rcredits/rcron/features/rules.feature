@@ -19,7 +19,7 @@ Setup:
   | grpId | uid  |*
   | 1     | .ZZA |
   | 2     | .ZZB |
-  And these "tx_templates":
+  And these "tx_timed":
   | id        | 1            | 2            | 3            | 4             | 5            |**
   | action    | pay          | pay          | surtx        | charge        | surtx        |
   | from      | .ZZB         | .ZZB         | %MATCH_PAYEE | .ZZA          | .ZZF         |
@@ -73,7 +73,7 @@ Scenario: Rules get instantiated
   |    1 | %today  |    123 | .ZZA  | .ZZC  | invoice | 4        |
 
 Scenario: An ended template has no effect
-  Given these "tx_templates":
+  Given these "tx_timed":
   | id        | 6            |**
   | action    | pay          |
   | from      | .ZZB         |

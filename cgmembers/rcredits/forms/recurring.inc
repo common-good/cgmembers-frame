@@ -33,18 +33,18 @@ function formRecurring($form, &$sta, $args = '') {
   foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
 
   $sql = <<< X
-    SELECT id as recId, IF(:myid=tp.from,tp.to,tp.from) AS fWho, tp.from=:myid AS paying, 
-      tp.amount, tp.purpose AS fPurpose, tp.period, tp.periods, tp.start, tp.end,
+    SELECT id as recId, IF(:myid=tm.from,tm.to,tm.from) AS fWho, tm.from=:myid AS paying, 
+      tm.amount, tm.purpose AS fPurpose, tm.period, tm.periods, tm.start, tm.end,
       MAX(
-        IF(tp.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+        IF(tm.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
         i.created)
       ) AS maxStart
-    FROM tx_templates tp
-    LEFT JOIN txs x ON x.recursId=tp.id
-    LEFT JOIN tx_requests i ON i.recursId=tp.id
-    WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tp.from,tp.to) 
-    GROUP BY tp.id
-    ORDER BY tp.end IS NOT NULL, tp.to=:myid, tp.start DESC, tp.id DESC
+    FROM tx_timed tm
+    LEFT JOIN txs x ON x.recursId=tm.id
+    LEFT JOIN tx_requests i ON i.recursId=tm.id
+    WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tm.from,tm.to) 
+    GROUP BY tm.id
+    ORDER BY tm.end IS NOT NULL, tm.to=:myid, tm.start DESC, tm.id DESC
 X;
   $q = db\q($sql, compact('myid'));
   
@@ -106,14 +106,14 @@ function formRecurring_submit($form, &$sta) {}
 function stopRecur($id) {
   global $mya;
   
-  $row = db\get('t.from, t.to, end', 'tx_templates t', compact('id'));
+  $row = db\get('tm.from, tm.to, end', 'tx_timed tm', compact('id'));
   if (!$row) return w\err('invalid recur id');
 
   extract($row);
   if ($end and $end <= now()) return w\err('recur already ended');
   if (!in_array($mya->id, [$from, $to])) return w\err('recur not yours');
 
-  db\update('tx_templates', ray('id end', $id, now()), 'id');
+  db\update('tx_timed', ray('id end', $id, now()), 'id');
   return w\say('recur stopped');
 }
 

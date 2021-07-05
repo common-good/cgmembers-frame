@@ -13,7 +13,7 @@ Setup:
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
 
 Scenario: A donation to CG is visible to admin
-  Given these "tx_templates":
+  Given these "tx_timed":
   | start  | from | to  | amount | period | purpose |*
   | %today | .ZZA | cgf |     10 | week   | gift!   |
   When member "A:B" visits page ""
@@ -21,7 +21,7 @@ Scenario: A donation to CG is visible to admin
   | Donations: | $10 weekly |
 
 Scenario: A brand new recurring donation to CG can be completed
-  Given these "tx_templates":
+  Given these "tx_timed":
   | id | start      | from | to  | amount | period | purpose |*
   |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
@@ -41,15 +41,15 @@ Scenario: A brand new recurring donation to CG can be completed
   |    $10 | monthly | gift!   | %PROJECT |
   # and many other fields
   And count "txs" is 2
-  And count "usd" is 0
+  And count "txs2" is 0
   And count "tx_requests" is 0
   When cron runs "recurs"
   Then count "txs" is 2
-  And count "usd" is 0
+  And count "txs2" is 0
   And count "tx_requests" is 0
 
 Scenario: A second recurring donation to CG can be completed
-  Given these "tx_templates":
+  Given these "tx_timed":
   | start     | from | to  | amount | period | purpose |*
   | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
   And transactions:
@@ -62,7 +62,7 @@ Scenario: A second recurring donation to CG can be completed
 
 Scenario: A donation invoice (to CG) can be completed
 # even if the member has never yet made a cgCard purchase
-  Given these "tx_templates":
+  Given these "tx_timed":
   | id | start      | from | to  | amount | period | purpose |*
   |  8 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   And invoices:
@@ -78,7 +78,7 @@ Scenario: A donation invoice (to CG) can be completed
   |    2 | %today    | 2      | donation |
 
 Scenario: A recurring donation to CG cannot be completed
-  Given these "tx_templates":
+  Given these "tx_timed":
   | start     | from | to  | amount | period | purpose |*
   | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
   When cron runs "recurs"
@@ -86,19 +86,19 @@ Scenario: A recurring donation to CG cannot be completed
   | nvid | created   | status       | amount | payer | payee | for   | flags          |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,recurs |  
   And count "txs" is 2
-  And count "usd" is 1
+  And count "txs2" is 1
   # because invoice generated a bank transfer
   And count "tx_requests" is 1
 
   When cron runs "getFunds"
   Then count "txs" is 2
-  And count "usd" is 1
+  And count "txs2" is 1
   And count "tx_requests" is 1
   # (no change)
   
   When cron runs "recurs"
   Then count "txs" is 2
-  And count "usd" is 1
+  And count "txs2" is 1
   And count "tx_requests" is 1
   # (no change)
 
@@ -107,11 +107,11 @@ Scenario: A non-member chooses a donation to CG
   | uid  | fullName | flags  | bankAccount | activated | balance |*
   | .ZZD | Dee Four |        | USkk9000004 |         0 |       0 |
   | .ZZE | Eve Five | refill | USkk9000005 | %today-9m |     200 |
-  And these "tx_templates":
+  And these "tx_timed":
   | id | start     | from | to  | amount | period | purpose  |*
   | 2  | %today-3y | .ZZD | cgf |      1 | year   | donation |
   | 3  | %today-3m | .ZZE | cgf |    200 | month  | donation |
   When cron runs "recurs"
   Then count "txs" is 1
-  And count "usd" is 0
+  And count "txs2" is 0
   And count "tx_requests" is 0

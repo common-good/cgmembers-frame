@@ -46,7 +46,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
-  $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid");
+  $q = db\q("SELECT txid,payee,amount,deposit FROM txs2_bank WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid");
   $tot = 0;
 
   $DBTX = \db_transaction();
@@ -72,7 +72,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit and $mark and $mya->superAdmin) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
+    if (!$deposit and $mark and $mya->superAdmin) db\update('txs2_bank', ray('deposit txid', today(), $txid), 'txid');
   }
   unset($DBTX);
   

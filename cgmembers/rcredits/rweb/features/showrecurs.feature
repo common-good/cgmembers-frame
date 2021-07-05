@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One    | -100  | personal    | ok,roundup | %now-15m |
   | .ZZB | Bea Two    | -200  | personal    | ok,co      | %now-15m |
   | .ZZC | Corner Pub | -300  | corporation | ok,co      | %now-15m |
-  And these "tx_templates":
+  And these "tx_timed":
   | id    | action | from  | to    | amount | purpose    | period  | start    | end        |*
   | 99900 | pay    | .ZZA  | .ZZB  | 59.59  | something  | year    | %now-16m |            |
   | 99901 | pay    | .ZZA  | .ZZC  | 37.00  | this       | quarter | %now-13m |            |

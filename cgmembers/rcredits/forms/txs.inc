@@ -181,7 +181,7 @@ function handleTx($do, $xid, &$sta, $args) {
   global $mya;
   $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again
 
-  if ($mya->superAdmin and $tx = db\get('*', 'r_usd', compact('xid'))) { // superAdmin reversing bank transfer
+  if ($mya->superAdmin and $tx = db\get('*', 'txs2', compact('xid'))) { // superAdmin reversing bank transfer
     u\EXPECT($do == 'no', 'trying to edit bank transfer');
     foreach (just('txid amount tid', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
     extract(just('txid amount deposit completed', $tx));
@@ -192,8 +192,8 @@ function handleTx($do, $xid, &$sta, $args) {
     if (!$z->ok) return go($url, $msg, 'err');
     $tx['deposit'] = now();
     $tx['xid'] = $z->subs['xid'];
-    db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
-    if (!$deposit) db\update('r_usd', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
+    db\insert('txs2', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
+    if (!$deposit) db\update('txs2', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
     $mya->update('lastBounce floor', now(), max(0, $mya->floor));
     unset($DBTX);
     

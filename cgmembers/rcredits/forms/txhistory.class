@@ -96,7 +96,6 @@ EOF;
   public function txnHdr($info, $extraClass = '') {
     global $mya;
     
-//    $this->tidValue = $mya->superAdmin ? $info['xid'] : $info['tid'];
     $this->dateValue = strftime('%m/%d/%y', $info['created']);
     $this->runBalance = u\fmtAmt($info['balance'], '');
 
@@ -112,9 +111,8 @@ EOF;
 
     if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe)) {
       $this->buttons = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
-    } else {
-      $this->buttons = '';
-    }
+    } else $this->buttons = '';
+    
     $pageClasses = 'page-' . floor($this->count / MIN_TX_ROWS) . ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
     $disputedClass = ($info['isDisputed']) ? ' disputed' : '';
     $this->body .= <<<EOF
@@ -136,7 +134,6 @@ EOF;
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount xid banking', $info));
     $amount = u\fmtAmt($amount, '');
-    if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
     if (!$this->dateValue) $xid = '';
     $guts = $this->guts($xid, $this->dateValue, $name, $description, $amount, $this->runBalance, $this->buttons);
     $parity = $parity ? ' odd' : ' even';
@@ -152,7 +149,9 @@ EOF;
 
   private function guts($tid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
     foreach(ray('tid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
-    
+
+    if (is_numeric($tid)) $tid = w\lnk(BASE_URL . "/history/transaction/xid=$tid", $tid, ['title' => t('Details')]);
+
     return <<< X
   <div class="tid-date col-xs-2">
     <div class="tid col-sm-5">$tid</div>

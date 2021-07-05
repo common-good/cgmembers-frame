@@ -107,7 +107,7 @@ function btxid($bankTxId = '') {
   return $acct . $dt . $txid;
 ///  debug(date('m/d/Y H:i:s a', $dt));
 }
-function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in r_usd and r_usd2)
+function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in txs2 and r_usd2)
   list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
   list ($txidLen, $acctLen) = isDEV ? [1, 4] : [7, 5];
   $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);

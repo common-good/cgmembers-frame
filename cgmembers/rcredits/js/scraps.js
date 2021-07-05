@@ -123,6 +123,7 @@ function doit(what, vs) {
       $('.w-charge').toggle(!pay);
       $('#edit-title h3').html(desc);
       $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
+      $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
 
@@ -131,6 +132,7 @@ function doit(what, vs) {
       vs['allowNonmember'] = !pay;
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
+      mem0Click(true);
     });
     $('.btn-delay').click(function () {
       $(this).hide();
@@ -142,6 +144,17 @@ function doit(what, vs) {
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
     });
+
+    $('#edit-mem-0').click(function () {mem0Click(true);}); // member
+    $('#edit-mem-1').click(function () { // non-member
+      mem0Click(false);
+      $('#edit-title h3').text('Received');
+      fform(this).submit(null);
+    });
+    function mem0Click(member) {
+      reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member);
+      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member);
+    }
     break;
 
   case 'invest':

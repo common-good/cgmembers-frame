@@ -28,7 +28,7 @@ Scenario: A member makes a food donation
   Then members have:
   | uid  | food |*
   | .ZZB |  .03 |
-  And these "tx_templates":
+  And these "tx_timed":
   | id | from | to   | amount | period | purpose       | end |*
   |  1 | .ZZB | .ZZF |    100 | month  | food donation |     |
   And we say "status": "gift successful"
@@ -49,7 +49,7 @@ Scenario: A member makes a food donation without adequate funds
   Then members have:
   | uid  | food |*
   | .ZZA |  .03 |
-  And these "tx_templates":
+  And these "tx_timed":
   | id | from | to   | amount | period | purpose       | end |*
   |  1 | .ZZA | .ZZF |    100 | month  | food donation |     |
   And we say "status": "gift successful|gift transfer later"
