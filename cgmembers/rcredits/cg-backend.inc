@@ -49,6 +49,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
     WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
     ORDER BY t.created, t.xid, t.eid, name
 EOF;
+  /// showq($sql, ray('uids', $uids[0]));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
@@ -543,7 +544,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     // Apply any roundup
     if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
       if ($cents = fmod($needed, 1.0)) {
-        txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_DONATION);  
+        txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_AUX);  
         $needed = ceil($needed); // == 1-$cents
       }
     }
@@ -783,7 +784,7 @@ function handleSurTx(&$entries, $buyer, $seller, $price, $forCredit) {
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
-  ///showq($sql, $subs);
+  /// showq($sql, $subs);
   $q = db\q($sql, $subs);
 
   $rebate = 0;
@@ -795,7 +796,7 @@ EOF;
 
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
-    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, $purpose]; // any surtx not coming back to buyer is a donation of some sort
+    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_AUX, $purpose]; // any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
     if ($to == $buyer->id) $value = min($price - $rebate, $value); // don't refund more than is being spent (food fund especially)
 
     if ($value <= 0) continue;
@@ -1103,8 +1104,8 @@ EOF;
  * @return the total roundup donations
  */
 function roundupDonations($uids, $start, $end) {
-  $where = 'uid1 IN (:uids) AND uid2=:CGID AND created BETWEEN :start AND :end';
-  return db\sum('amt', 'txs_donation', $where, compact(ray('uids start end')));
+  $where = 'uid1 IN (:uids) AND uid2=:CG_ROUNDUPS_UID AND created BETWEEN :start AND :end';
+  return db\sum('amt', 'txs_aux', $where, compact(ray('uids start end')));
 }
 
 /**
@@ -1183,6 +1184,8 @@ function createUsdTransfer($a, $amount, $options = []) {
   $payee = $a->id;
   $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created cat', FOR_USD, 0, $payee, $payee, $channel, NULL, $cat));
   txEntryPair($txes, 0, [$bankId, $payee], $purpose, $eType); // tentative amount is 0
+  list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
+  if ($amount) handleSurTx($txes, $buyer, $seller, abs($amount), FALSE);
   $tx->addEntries($txes);
   
   $DBTX = \db_transaction();
@@ -1358,7 +1361,7 @@ function checkSanity() {
  */
 function balChange($info) {
   extract(just('uid amount', $info));
-  $a = r\acct($uid)->masterA;
+  $a = r\acct($uid);
   if ($a->isCanonic) return;
   
   $bal = $a->balance; // balance after insert

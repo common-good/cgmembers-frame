@@ -2,7 +2,17 @@
 
 require_once __DIR__ . '/util.inc';
 
-const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule outer'; // these constants are also used in migration files
+const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
+const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
+const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, or rule-based donation) triggered by another transaction
+                  // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
+const E_REBATE = 3; // discount rebate to customer
+const E_USD_FEE = 4; // fee from customer to merchant for buying (or selling?) Common Good credit
+const E_BANK = 5; // CG account transfers to or from the member's bank (replaces E_PRIME)
+const E_XFEE = 6; // transfer fee to merchant (UNUSED)
+const E_OUTER = 7; // CG account transfers to or from a non-member (replaces E_PRIME)
+
+const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer'; // these constants are also used in migration files
 const BANK_IDS = ['outer' => 255, 'bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
 const TX_EXCLUDE_FLDS = 'deleted';
 const TXE_EXCLUDE_FLDS = 'deleted';
@@ -30,12 +40,10 @@ function createViews($m, $stopAt) {
   }
   
   // get current list of columns
-  $txFldList = array_map(function($f) { return $f->getName(); },
-                         $m->table('tx_hdrs_all')->getColumns());
+  $txFldList = array_map(function($f) {return $f->getName();}, $m->table('tx_hdrs_all')->getColumns());
   $tx_flds = array_diff($txFldList, ray(TX_EXCLUDE_FLDS));
   $txFlds = join(',', $tx_flds);
-  $txeFldList = array_map(function($f) { return $f->getName(); },
-                         $m->table('tx_entries_all')->getColumns());
+  $txeFldList = array_map(function($f) {return $f->getName();}, $m->table('tx_entries_all')->getColumns());
   $txe_flds =array_diff($txeFldList, ray(TXE_EXCLUDE_FLDS));
   $txeFlds = join(',', $txe_flds);
   
@@ -43,7 +51,8 @@ function createViews($m, $stopAt) {
   $isBank = "uid IN ($bankIn, $bankOut)";
   $isOuter = "uid=$outer";
 
-  foreach (ray(E_TYPES) as $i => $k) ${$k . 'y'} = "entryType=$i"; // eg "donationy" means entryType is E_DONATION
+  foreach (ray(E_TYPES) as $i => $k) ${$k . 'y'} = "entryType=$i"; // eg "auxy" means entryType is E_AUX
+  $e2primish = '(e2.entryType=' . E_PRIME . ' OR e2.entryType=' . E_BANK . ' OR e2.entryType=' . E_OUTER . ')'; // MariaDB converts "CREATE VIEW ... IN ()" to "... = ()" (BUG!!)
 
   // views of not-deleted records
   cgpr('making non-deleted tx views');
@@ -75,7 +84,7 @@ X;
   $z = compact(ray('m sql w1 w2'));
 
   makeTxsView($z, 'txs_prime', "e.$primey AND e.id<0", "e.$primey AND e.id>0");
-  makeTxsView($z, 'txs_donation', "e.$donationy AND e2.$primey AND e2.id<0", "e.$donationy AND e2.$primey AND e2.id>0");
+  makeTxsView($z, 'txs_aux', "e.$auxy AND $e2primish AND e2.id<0", "e.$auxy AND $e2primish AND e2.id>0");
   makeTxsView($z, 'txs_rebate', "e.$rebatey AND e2.$primey AND e2.id<0", "e.$rebatey AND e2.$primey AND e2.id>0");
   makeTxsView($z, 'txs_usd_fee', "e.$usd_feey AND e2.$primey AND e2.id<0", "e.$usd_feey AND e2.$primey AND e2.id>0");
   makeTxsView($z, 'txs_proper');  // all transactions between CG accounts

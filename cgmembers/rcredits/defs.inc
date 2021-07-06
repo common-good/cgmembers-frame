@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57w'; // software version
+const R_VERSION = '3.57x'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -117,7 +117,7 @@ const EMAILX = 'example.com'; // domain for unknown, placeholder, test, or examp
 const GFLD_LAT = 42.3791167; // Greenfield, MA latitude (in tests)
 const GFLD_LON = -73.2819463; // Greenfield, MA latitude
 const GFLD_ZIP = '01301'; // Greenfield, MA zipcode
-define('NULL', NULL); // for tests (cannot be const)
+const NUL = '%%NUL%%'; // NULL value for tests
 
 // Common Good Finance email and other data
 const CGF_LEGALNAME = 'Society to Benefit Everyone, Inc.';
@@ -161,9 +161,9 @@ const R_DATE_FLDS = 'time start end start created completed deposit sent invited
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
-const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill draws'; // only in master, for joint accounts
+const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
-const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (except balance)
+const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (not balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
@@ -628,14 +628,14 @@ const DS_DENIED = 3;  // dispute denied
 
 const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
 const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
-const E_DONATION = 2;  // this is a transaction-related donation (e.g., roundup or rule-based donation)
-                          // the precise nature can be determined from uid2
+const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, or rule-based donation) triggered by another transaction
+                  // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
 const E_USD_FEE = 4; // fee from customer to merchant for buying (or selling?) Common Good credit
-const E_BANK = 5; // CG account transfers to or from the member's bank
+const E_BANK = 5; // CG account transfers to or from the member's bank (replaces E_PRIME)
 const E_XFEE = 6; // transfer fee to merchant (UNUSED)
-const E_OUTER = 7; // CG account transfers to or from a non-member
-const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule outer';
+const E_OUTER = 7; // CG account transfers to or from a non-member (replaces E_PRIME)
+const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer';
 
 const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
 const REF_ANYBODY = 'anybody';

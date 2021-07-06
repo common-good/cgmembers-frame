@@ -44,12 +44,12 @@ Scenario: It's time to warn about an upcoming annual donation to CG
 Scenario: It's time to renew backing
   Given members:
   | uid  | fullName | flags  | backing | backingDate | backingNext |*
-  | .ZZD | Dee Four | ok     |       4 | %yearAgo+7d | %NULL       |
+  | .ZZD | Dee Four | ok     |       4 | %yearAgo+7d | %NUL        |
   | .ZZE | Eve Five | ok     |       5 | %yearAgo+7d | 3           |
-  | .ZZF | Fox Co   | ok,co  |       6 | %yearAgo+8d | %NULL       |
-  | .ZZG | Glo Sevn | ok     |       7 | %yearAgo+6d | %NULL       |
-  | .ZZH | Hal Co   | ok,co  |       8 | %yearAgo+7d | %NULL       |
-  | .ZZI | Ivy Nine | ok     |       9 | %yearAgo-1d | %NULL       |
+  | .ZZF | Fox Co   | ok,co  |       6 | %yearAgo+8d | %NUL        |
+  | .ZZG | Glo Sevn | ok     |       7 | %yearAgo+6d | %NUL        |
+  | .ZZH | Hal Co   | ok,co  |       8 | %yearAgo+7d | %NUL        |
+  | .ZZI | Ivy Nine | ok     |       9 | %yearAgo-1d | %NUL        |
   | .ZZJ | Joe Ten  | ok     |      10 | %yearAgo-1d | 4           |
   When cron runs "renewBacking"
   Then we email "renew-backing" to member "d@example.com" with subs:
@@ -65,10 +65,10 @@ Scenario: It's time to renew backing
   And we do not email "renew-backing" to member "j@example.com"
   And members:
   | uid  | backing | backingDate | backingNext |*
-  | .ZZD |       4 | %yearAgo+7d | %NULL       |
+  | .ZZD |       4 | %yearAgo+7d | %NUL        |
   | .ZZE |       5 | %yearAgo+7d | 3           |
-  | .ZZF |       6 | %yearAgo+8d | %NULL       |
-  | .ZZG |       7 | %yearAgo+6d | %NULL       |
-  | .ZZH |       8 | %yearAgo+7d | %NULL       |
-  | .ZZI |       9 | %daystart   | %NULL       |
-  | .ZZJ |       4 | %daystart   | %NULL       |
+  | .ZZF |       6 | %yearAgo+8d | %NUL        |
+  | .ZZG |       7 | %yearAgo+6d | %NUL        |
+  | .ZZH |       8 | %yearAgo+7d | %NUL        |
+  | .ZZI |       9 | %daystart   | %NUL        |
+  | .ZZJ |       4 | %daystart   | %NUL        |

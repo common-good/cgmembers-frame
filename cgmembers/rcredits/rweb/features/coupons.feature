@@ -223,7 +223,7 @@ Scenario: A member redeems a percentage discount coupon
 Scenario: A member redeems a discount coupon in dribs and drabs
   Given coupons:
   | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | amtMax |*
-  |      1 |     20 |       0 | .ZZC   | %NULL  |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
+  |      1 |     20 |       0 | .ZZC   | %NUL   |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
@@ -271,8 +271,8 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
 
 Scenario: A member redeems a discount coupon sponsored by a third party
   Given these "tx_rules":
-  | id | action | amount | minimum | from | to           | payeeType | payee | purpose | start     | amtMax |*
-  |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
+  | id | action | amount | minimum | from | to           | payeeType    | payee | purpose | start     | amtMax |*
+  |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | %REF_ACCOUNT | .ZZC  | on zots | %daystart | 12       |
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |
@@ -287,7 +287,7 @@ Scenario: A member redeems a discount coupon sponsored by a third party
   Then we show "Discounts in Your Region" with:
   | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
   | Bea Two |      $12 | on zots | --     | anyone | no limit  | $2          |
-  
+
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |

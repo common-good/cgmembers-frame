@@ -1,3 +1,14 @@
+2021-07-05 feature/fbo2
+. expanded rules form to include tx_timed and tuned it up
+. fixed bug in recreate-views that omitted transactions auxiliary to outer transactions from the txs_donation and txs views
+. renamed txs_donation to txs_aux
+. fixed bug that classified too many things as rebates
+. fixed bug that counted nothing as roundups in statements
+. fixed bug that crashed on dev for transactions to or from canonic accounts
+. added all the fields to MASTER_FLDS that should be there
+. refactored rendered radiosFld as a function
+. made transactions editable by admin
+
 2021-07-05 feature/txs2 touchups
 . added cat field to tx_requests so invoices can pass it to txSave
 . restricted who can take money from non-members to admins

@@ -26,14 +26,8 @@ function formTx($form, &$sta, $type, $args = '') {
   focusOn(nn($who) ? 'amount' : 'who');
 
 //  $mem = rent(radiosFld('', '', ray('inline', 1), ray(t('Member Non-member')))); // fails
-  $mem = <<< X
-<div class="form-group form-item-mem radio-inline mlab-above">
-  <label for="mem" class="option"><input type="radio" class="form-radio" id="edit-mem-0" name="mem" value="0" checked="checked" />Member</label>
-</div>
-<div class="form-group form-item-mem radio-inline mlab-above">
-  <label for="mem" class="option"><input type="radio" class="form-radio" id="edit-mem-1" name="mem" value="1" />Non-member</label>
-</div>
-X;
+  $mem = rentRadios('mem', 0, ray(t('Member Non-member')));
+
   $title = $fbo ? item($opDesc, NBSP, '', suffix($mem)) : $opDesc;
 
   if ($mya->co) {
@@ -53,7 +47,7 @@ X;
 
   $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft(nn($amount)) + vmin(.01));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $cat = $fbo ? selectFld(REQ . t('Category:'), '', '', ['' => t('--- What budget category? ---')] + r\budgetCats('Income')) : NULL; // can't have different budgetCats, so start with Income (it's short)
+  $cat = $fbo ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));

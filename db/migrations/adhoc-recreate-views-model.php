@@ -11,8 +11,5 @@ class Views extends AbstractMigration {
 //    cgpr("changed $oldId to $newId\n");
   }
 
-  public function doSql($sql) {
-    cgpr("$sql\n");
-    $this->execute($sql);
-  }
+  public function doSql($sql) {cgpr("$sql\n");$this->execute($sql);}
 }

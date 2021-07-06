@@ -37,6 +37,25 @@ Scenario: A non-member donates to a sponsored member
   Given members have:
   | uid  | flags    |*
   | .ZZA | ok,admin |
+  And these "tx_rules":
+  | id        | 1            |**
+  | payer     |              |
+  | payerType | %REF_ANYBODY |
+  | payee     | .ZZC         |
+  | payeeType | %REF_ACCOUNT |
+  | from      | %MATCH_PAYEE |
+  | to        | cgf          |
+  | action    | %ACT_SURTX   |
+  | amount    | 0            |
+  | portion   | .05          |
+  | purpose   | sponsor      |
+  | minimum   | 0            |
+  | useMax    |              |
+  | amtMax    |              |
+  | template  |              |
+  | start     | %now         |
+  | end       |              |
+  | code      |              |
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | address | city | state | zip   | amount | purpose | cat |*
   | charge | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |
@@ -46,8 +65,9 @@ Scenario: A non-member donates to a sponsored member
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
   And these "txs":
-  | xid | payer      | payee | amount | purpose | cat | type     |*
-  | 1   | %OUTER_UID | .ZZC  | 100    | grant   | 2   | %E_OUTER |
+  | eid | xid | payer      | payee | amount | purpose | cat | type     |*
+  |   1 | 1   | %OUTER_UID | .ZZC  | 100    | grant   | 2   | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      |       0 | 1   |
@@ -58,7 +78,8 @@ Scenario: A non-member donates to a sponsored member
   | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
-  | .ZZC |     100 |
+  | .ZZC |      95 |
+  | cgf  |       5 |
 
 Scenario: A non-member pays a sponsored member
   When member "C:A" visits "tx/pay"

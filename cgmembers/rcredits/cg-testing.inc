@@ -34,6 +34,8 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  */
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
+  
+  foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
   $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code'; // first key is probably an ID field, so keep it at the front
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
@@ -813,10 +815,8 @@ function getErrors() {
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
-  if (!$subs) $subs = []; // handle '' for not subs
-  if (!nni($subs, 0)) $subs[0] = [];
   $email = $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL;
-  return t\findEmail('tell-staff', $email, $subs[0] + ray('topic noFrame message', $topic, TRUE, '?'));
+  return t\findEmail('tell-staff', $email, nni($subs ?: [], 0, []) + ray('topic noFrame message', $topic, TRUE, '?'));
 }
 
 /**

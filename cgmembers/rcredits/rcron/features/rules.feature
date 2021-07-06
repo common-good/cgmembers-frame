@@ -28,14 +28,14 @@ Setup:
   | portion   | 0            | 0            | .03          | 0             | 0            |
   | purpose   | payment      | donation     | discount     | invoice       | food help    |
   | payerType | anybody      | anybody      | anybody      | account       | group        |
-  | payer     | %NULL        | %NULL        | %NULL        | %NULL         | 1 %NULL      |
+  | payer     | %NUL         | %NUL         | %NUL         | %NUL          | 1            |
   | payeeType | anybody      | anybody      | account      | anybody       | industry     |
-  | payee     | %NULL        | %NULL        | .ZZC         | %NULL         | 2            |
+  | payee     | %NUL         | %NUL         | .ZZC         | %NUL          | 2            |
   | minimum   | 0            | 0            | 0            | 0             | 0            |
-  | useMax    | %NULL        | %NULL        | 2            | %NULL         | %NULL        |
-  | amtMax    | 30           | 2            | %NULL        | 123           | 20           |
+  | useMax    | %NUL         | %NUL         | 2            | %NUL          | %NUL         |
+  | amtMax    | 30           | 2            | %NUL         | 123           | 20           |
   | start     | %now-15d     | %now         | %now         | %now-3m       | %now         |
-  | end       | %NULL        | %NULL        | %NULL        | %NULL         | %NULL        |
+  | end       | %NUL         | %NUL         | %NUL         | %NUL          | %NUL         |
   | period    | week         | month        | quarter      | month         | month        |
   | periods   | 2            | 1            | 1            | 1             | 1            |
   | duration  | once         | once         | month        | once          | forever      |
@@ -56,17 +56,17 @@ Scenario: Rules get instantiated
   | payeeType | account      | industry    |
   | payee     | .ZZC         | 2           |
   | minimum   | 0            | 0           |
-  | useMax    | 2            | %NULL       |
-  | amtMax    | %NULL        | 20          |
+  | useMax    | 2            | %NUL        |
+  | amtMax    | %NUL         | 20          |
   | start     | %now         | %now        |
-  | end       | %now+1m      | %NULL       |
+  | end       | %now+1m      | %NUL        |
   | template  | 3            | 5           |
   And count "txs" is "2"
   And these "txs":
   | eid | xid | type   | created | amount | payer | payee | purpose      | rule  | recursId |*
-  |   1 |   1 | prime  | %today  |    100 | .ZZB  | .ZZC  | payment      | %NULL | 1        |
+  |   1 |   1 | prime  | %today  |    100 | .ZZB  | .ZZC  | payment      | %NUL  | 1        |
   |   3 |   1 | rebate | %today  |      3 | .ZZC  | .ZZB  | %REBATE_DESC | 1     | 1        |
-  |   4 |   2 | prime  | %today  |      2 | .ZZB  | .ZZG  | donation     | %NULL | 2        |
+  |   4 |   2 | prime  | %today  |      2 | .ZZB  | .ZZG  | donation     | %NUL  | 2        |
   # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
   And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose | recursId |*
@@ -82,11 +82,11 @@ Scenario: An ended template has no effect
   | portion   | 0            |
   | purpose   | payment      |
   | payerType | anybody      |
-  | payer     | %NULL        |
+  | payer     | %NUL         |
   | payeeType | anybody      |
-  | payee     | %NULL        |
+  | payee     | %NUL         |
   | minimum   | 0            |
-  | useMax    | %NULL        |
+  | useMax    | %NUL         |
   | amtMax    | 30           |
   | start     | %now-15d     |
   | end       | %now         |
