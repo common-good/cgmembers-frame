@@ -15,11 +15,10 @@ function formTxDetail($form, &$sta, $args = '') {
   
   extract(just('xid', $args, NULL));
 
-  $title = t('Transaction #%xid Detail', compact('xid'));
   $toMe = 't.uid2=:myid';
 
   $sql = <<< X
-    SELECT t.created, t.amt, t2.pid, t.for2 AS purpose, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid,
+    SELECT t.created, t.amt, t2.pid, t.for2 AS purpose, t.cat, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid,
     uYou.uid AS youId, uYou.fullName, uMe.uid AS meId, uMe.community, $toMe AS toMe
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=IF($toMe, t.uid2, t.uid1)
@@ -34,7 +33,7 @@ X;
   if (!$tx = db\q($sql, compact(ray('xid myid')))->fetchAssoc()) return softErr('no such tx'); // for now just show main transaction
   extract($tx);
 
-  if ($meId != $myid and !$mya->admin2 and !($mya->cAdmin2 and $community == $mya->community)) return softErr(t('That transaction is not one of yours.'));
+  if ($meId != $myid) return softErr(t('That transaction is not one of yours.'));
   
   if ($pid) {
     if (!$info = db\get('fullName,address,city,state,zip,phone,email', 'people', compact('pid'))) return FAIL(t('Missing non-member information in transaction!'));
@@ -46,15 +45,41 @@ X;
     $a = r\acct($youId);
     $addr = $a->postalAddr;
   }
-  
-  if ($agtUid == $myid) $agt = t('self');
 
-  $ks = ray(t('Date,Amount,From,Postal Addr,For,Category,To Agent,Channel'));
-  $vs = [u\fmtDate($created, TRUE), u\fmtAmt($toMe ? $amt : -$amt), $fullName, $addr, $purpose, $category, $agt, ray(TX_CHANNELS)[$channel]];
-  
-  $form = compact('title');
-  foreach ($ks as $i => $k) $form["k$i"] = item($vs[$i], "$k:");
-  if (!$toMe and !$mya->anyAdmin) unset($form['k3']); // no addr for people we pay
-  
-  return cgform($form);
+  $title = t('Transaction #%xid Detail', compact('xid'));
+  $created = editIf($mya->superAdmin, 'date', t('Date:'), $created, u\fmtDate($created, TRUE));
+  $amt = editIf($mya->superAdmin, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-99999));
+  $who = item($fullName, $toMe ? t('From:') : t('To:'));
+  $addr = ($toMe or $mya->anyAdmin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
+  $for = editIf($mya->admin, '', t('For:'), $purpose);
+  $cat = $mya->admin ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
+  $agt = item($agtUid == $myid ? t('self') : $agt, t('To Agent:'));
+  $chan = item(ray(TX_CHANNELS)[$channel], t('Channel:'));
+  $submit = $mya->admin ? t('Update') : NULL;
+  $back = item(w\backButton());
+
+  $toMe = hidFld($toMe);
+  $xid = hidFld($xid);
+
+  return cgform(compact(ray('title created amt who addr for cat agt chan submit back toMe xid')));
+}
+
+function formTxDetail_validate($form, &$sta) {
+  global $mya;
+  extract(just('created amt', $sta['input']), NULL);
+
+  if ($created and $err = u\badDate($created, now() - YEAR_SECS, tomorrow())) return say($err, 'created');
+  if ($amt and $err = u\badAmount($amt, '!=0')) return say($err, 'amt');
+  u\preRay(compact(ray('created amt')), $sta['input']);
+}
+
+function formTxDetail_submit($form, &$sta) {
+  global $mya;
+  extract(just('cat', $input = $sta['input'], NULL));
+
+  $xidSub = just('xid', $input);
+  if ($info = just($cat ? 'created cat' : 'created', $input)) db\update('tx_hdrs_all', $info + $xidSub, 'xid');
+  if ($info = just('amt for', $input)) db\q('UPDATE tx_entries_all SET amount=IF(id<0, -:amt, :amt), description=:for WHERE xid=:xid AND entryType IN (:E_PRIME, :E_BANK, :E_OUTER)', $info + $xidSub);
+
+  return w\go('history/transactions');
 }

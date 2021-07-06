@@ -541,7 +541,7 @@ X;
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
-  r\tellAdmin(t('Send paper statements'), compact('list'), 0); // 0 = suppress report of current account
+  r\tellAdmin(t('Send paper statements'), compact('list'), 0); // 0 = don't state current account
 
 }
 
@@ -929,7 +929,7 @@ function getFunds1($item) {
     WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer=:uid
     ORDER BY i.nvid
 o;
-  $q = db\q($sql, ['uid' => $a->id]);
+  $q = db\q($sql, compact('uid'));
   while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
   if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
 

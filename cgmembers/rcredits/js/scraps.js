@@ -157,6 +157,18 @@ function doit(what, vs) {
     }
     break;
 
+  case 'rules':
+    ttype0Click(true);
+    $('#edit-ttype-0').click(function () {ttype0Click(true);}); // timed
+    $('#edit-ttype-1').click(function () {ttype0Click(false);}); // rule
+    function ttype0Click(timed) {
+      reqQ($('.form-item-period, .form-item-periods, .form-item-duration, .form-item-durations'), timed);
+      $('.form-item-template, .form-item-code').toggle(!timed);
+    }
+    break;
+
+    break;
+    
   case 'invest':
     $('.form-item-expenseReserve a').click(function () {
       var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));

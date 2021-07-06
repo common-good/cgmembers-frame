@@ -23,12 +23,10 @@ function statement($period = '') {
   list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '6/30');
 
   $uids = $mya->uids;
-  /* list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data */
   $endBals = be\creditInfo($uids, $end);
   $startBals = be\creditInfo($uids, $start);
   $roundups = be\roundupDonations($uids, $start, $end);
   
-  /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
   $in0 = $startBals['in'];
@@ -40,9 +38,6 @@ function statement($period = '') {
   $frombank = $endBals['fromBank'] - $startBals['fromBank'];
   $tobank = $endBals['toBank'] - $startBals['toBank'];
   $bank = $frombank - $tobank;
-
-//  $fromyou -= $tobank;
-  /* $toyou -= $frombank; */
   
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);

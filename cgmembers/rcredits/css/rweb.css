@@ -804,7 +804,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #tx .form-item-end,
 .form-item-periods {display:none;}
 .form-item-submit .btn-default {margin:0 0 0 30px;}
-#tx #edit-title h3 {display:inline-block; margin-right:30px;}
+#tx #edit-title h3,
+#frm-rules #edit-title h3 {display:inline-block; margin-right:30px;}
 
 /* Dashboard */
 #tx {display:none;}
@@ -1312,6 +1313,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-donate .form-item-share input {max-width:100px;} */
 /*#frm-donate #edit-period {display:block; float:left;}*/
 #frm-donate .form-item-period,
+#frm-rules .form-item-period,
 #frm-donatefbo .form-item-period {display:block;}
 #frm-donatefbo #edit-logo img {max-height:140px; max-width:100%;}
 #frm-donatefbo .form-item-fullName {margin-top:50px;}

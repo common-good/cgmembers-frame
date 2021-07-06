@@ -104,7 +104,7 @@ Scenario: Paper statement warnings are sent
   When cron runs "everyMonth"
   # alerting admin about paper statements
   Then we tell admin "Send paper statements" with subs:
-  | list |*
+  | list              |*
   | Corner Pub (Cvil) |
 
 Scenario: Crumb and roundup donations are made

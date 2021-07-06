@@ -1798,7 +1798,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     BOTH fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ANonmemberPaysASponsoredMember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST flow AMemberDraws
