@@ -1,3 +1,14 @@
+2021-07-06 feature/make-outer
+. create the Outer Tx account (a bit late, but BLTN)
+
+2021-07-06 feature/move-cat
+. moved cat field from tx_hdrs to tx_entries
+. renamed UID constants to be consistent
+. added a function to discern whether an account belongs to CG
+. tx entry pairs that are a donation to any CG-owned account now set cat to a donation
+. finally removed tid from transactions
+. miscellaneous cleanup
+
 2021-07-05 feature/fbo2
 . expanded rules form to include tx_timed and tuned it up
 . fixed bug in recreate-views that omitted transactions auxiliary to outer transactions from the txs_donation and txs views

@@ -152,7 +152,7 @@ function formAdminPanel_submit($form, &$sta) {
           extract(just('company isOwner employee employeeOk contractor', $signupCo, ''));
           $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, $isOwner ? t('owner') : (($employee or $employeeOk) ? t('employee') : ($contractor ? t('contractor') : '')), $company);
         }
-      }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
+      }, '(uid<0 OR uid>:UID_CANON9) AND ' . $crit . ' ORDER BY community');
     ksort($signupCos);
     w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
   }
@@ -247,7 +247,7 @@ function formFollowup($form, &$sta, $args = []) {
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.steps, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
     FROM users u LEFT JOIN (SELECT created,uid1,uid2 FROM txs ORDER BY created DESC LIMIT 1) t ON u.uid IN (t.uid1,t.uid2)
-    WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
+    WHERE u.uid>:UID_CANON9 AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL OR :isDEV)
     ORDER BY $by
     LIMIT 50
@@ -319,7 +319,7 @@ function formMemberList($form, &$sta) {
   $ctty = r\acct($mya->community);
 
   $title = (($cAdmin and $ctty) ? $ctty->fullName : '') . t(' Member List');
-  $sql = 'SELECT uid, login, access, fullName, notes, :IS_CO AS co FROM users WHERE uid>:CANONIC_ACCTS AND community=:cttyId AND NOT :IS_NONUDGE ORDER BY :IS_OK, IF(:IS_OK, fullName, 0-login)'; // -login fails because it gets treated as a string
+  $sql = 'SELECT uid, login, access, fullName, notes, :IS_CO AS co FROM users WHERE uid>:UID_CANON9 AND community=:cttyId AND NOT :IS_NONUDGE ORDER BY :IS_OK, IF(:IS_OK, fullName, 0-login)'; // -login fails because it gets treated as a string
   $q = db\q($sql, ray('cttyId', $ctty->id));
   $list = "<table id='memberlist'>\n";
   $emails = '';

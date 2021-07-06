@@ -224,7 +224,7 @@ function eachR($tnm, $func, $where = '1', $subs = []) {
  * call: eachA($func);
  * or    eachA(function($a) {...});
  */
-function eachA($func = 'a.changeIt', $where = 'uid>:CANONIC_ACCTS') {
+function eachA($func = 'a.changeIt', $where = 'uid>:UID_CANON9') {
   if (mb_strpos($where, 'ORDER BY') === FALSE) $where .= ' ORDER BY uid';
   $result = q("SELECT uid FROM users u WHERE $where")->fetchCol();
   if (!is_callable($func)) $func = funcNickname($func);

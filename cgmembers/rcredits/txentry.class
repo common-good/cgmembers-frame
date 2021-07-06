@@ -14,7 +14,7 @@ use CG\Util as u;
 
 class TxEntry {
   const REQUIRED_FIELDS = 'amount uid agentUid';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description rule relType relatedId';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description cat rule relType relatedId';
   const E_FIELDS = self::INSERT_FIELDS . ' id xid';
 
   public $id;           // record ID (second entry in a pair should have a positive ID, first is the inverse)
@@ -24,11 +24,10 @@ class TxEntry {
   public $uid;          // record ID of account to credit (or debit, if $amount is negative)
   public $agentUid;     // should really be NULL if irrelevant or same as uid
   public $description;  // readable description of transaction from this account's point of view
+  public $cat;          // record ID of budget category (if any)
   public $rule;         // pointer to related record ID in tx_rules
-
-  public $acctTid; // unused
-  public $relType; // unused
-  public $relatedId; // unused
+  public $relType;      // type of related record, if any (just I=invoice, used for partial payments)
+  public $relatedId;    // record ID of that related record
   
   /**
    * Instantiate (construct) a transaction entry record.
@@ -62,10 +61,8 @@ class TxEntry {
    * @return the new TxEntry object.
    */
   static function read($id) {
-    $info = db\get('*', 'tx_entries', ['id' => $id]);
-    if (!$info) { return FALSE; }
-    unset($info['acctTid']); // no longer used
-    return new TxEntry($info);
+    $info = db\get('*', 'tx_entries', compact('id'));
+    return $info ? new TxEntry($info) : FALSE;
   }
 
   /**
@@ -75,9 +72,9 @@ class TxEntry {
    * @return an array containing the new instances of Entry (FALSE on failure)
    */
   static function readAll($xid) {
+    if (!$rows = db\rows('*', 'tx_entries', compact('xid'))) return FALSE;
+
     $entries = [];
-    $rows = db\rows('*', 'tx_entries', 'xid=:xid', ['xid' => $xid]);
-    if (!$rows) { return FALSE; }
     foreach ($rows as $rowO) {
       $row = (array)$rowO;
       if (array_key_exists('deleted', $row)) unset($row['deleted']);

@@ -521,12 +521,12 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($error = u\badAmount($amount)) return txErr($error, $erInfo);
   $flags = 0; foreach (ray(TX_FLAGS) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, $ruleId, $inv);
+  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], $cat, E_PRIME, $ruleId, $inv);
   
   $DBTX = \db_transaction();
 
   // Create the transaction
-  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId cat'));
+  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -544,7 +544,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     // Apply any roundup
     if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
       if ($cents = fmod($needed, 1.0)) {
-        txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_AUX);  
+        txEntryPair($entries, 1 - $cents, [$loserId, UID_ROUNDUPS], t('roundup donation'), BCAT_GIFT, E_AUX);
         $needed = ceil($needed); // == 1-$cents
       }
     }
@@ -616,17 +616,18 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
  * @param numeric $amount0: the amount paid/received (amount to add to the first party's balance)
  * @param mixed $a0: account object(s) and/or uid(s)
  * @param string $description0: transaction purpose(s)
+ * @param int $cat: budget category (record ID in budget_cats), if any
  * @param int $entryType0: entry type(s)
  * @param int $rule: relevant record ID in tx_rules table
  * @param int $inv: related invoice ID
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = NULL, $inv = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $cat, $entryType0, $rule = NULL, $inv = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
     list ($relType, $relatedId) = $inv ? ['I', $inv] : [NULL, NULL];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description rule relType relatedId')));
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description cat rule relType relatedId')));
   }
 }
 
@@ -797,12 +798,13 @@ EOF;
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
     list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_AUX, $purpose]; // any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
+    $cat = ($type == E_AUX and r\isCGs($to) and !r\isCGs($from)) ? BCAT_GIFT : NULL;
     if ($to == $buyer->id) $value = min($price - $rebate, $value); // don't refund more than is being spent (food fund especially)
 
     if ($value <= 0) continue;
     $rebate += $value;
     
-    txEntryPair($entries, $value, [$from, $to], $desc, $type, $ruleId);
+    txEntryPair($entries, $value, [$from, $to], $desc, $cat, $type, $ruleId);
     if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
       if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // rule is just for payer
     }
@@ -1104,7 +1106,7 @@ EOF;
  * @return the total roundup donations
  */
 function roundupDonations($uids, $start, $end) {
-  $where = 'uid1 IN (:uids) AND uid2=:CG_ROUNDUPS_UID AND created BETWEEN :start AND :end';
+  $where = 'uid1 IN (:uids) AND uid2=:UID_ROUNDUPS AND created BETWEEN :start AND :end';
   return db\sum('amt', 'txs_aux', $where, compact(ray('uids start end')));
 }
 
@@ -1178,12 +1180,12 @@ function createUsdTransfer($a, $amount, $options = []) {
   u\setDft($purpose, $amount > 0 ? t('from bank') : t('to bank'));
 
   list ($eType, $deposit, $bankId, $bankAccount) = $pid
-  ? [E_OUTER, $deposit ?: 0, OUTER_UID, NULL] // transfer to or from a non-member (with no CG account)
-  : [E_BANK, 0, $amount >= 0 ? BANK_IN_ID : BANK_OUT_ID, nni($a->vsecure, 'bankAccount', NULL)];
+  ? [E_OUTER, $deposit ?: 0, UID_OUTER, NULL] // transfer to or from a non-member (with no CG account)
+  : [E_BANK, 0, $amount >= 0 ? UID_BANK_IN : UID_BANK_OUT, nni($a->vsecure, 'bankAccount', NULL)];
 
   $payee = $a->id;
-  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created cat', FOR_USD, 0, $payee, $payee, $channel, NULL, $cat));
-  txEntryPair($txes, 0, [$bankId, $payee], $purpose, $eType); // tentative amount is 0
+  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));
+  txEntryPair($txes, 0, [$bankId, $payee], $purpose, $cat, $eType); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
   if ($amount) handleSurTx($txes, $buyer, $seller, abs($amount), FALSE);
   $tx->addEntries($txes);

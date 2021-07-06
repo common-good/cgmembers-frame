@@ -16,8 +16,8 @@ const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer'; // these c
 const BANK_IDS = ['outer' => 255, 'bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
 const TX_EXCLUDE_FLDS = 'deleted';
 const TXE_EXCLUDE_FLDS = 'deleted';
-const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid';
-const TXS_MAP = 'entryType:type, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
+const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt';
+const TXS_MAP = 'entryType:type, cat:cat, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
 const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
   
 /**
@@ -64,11 +64,14 @@ function createViews($m, $stopAt) {
 
   $txFlds0 = 't.' . join(', t.', $tx_flds);
   foreach (ray(TXS_MAP) as $fld => $as) {
+    if ($stopAt < 20210706 and $fld == 'cat') continue;
     if (in_array($fld, $txe_flds)) $txFlds0 .= ", e2.$fld AS $as";
   }
 
-  $txFlds1 = 'e1.' . join('1, e1.', explode(', ', TXES_FLDS)) . '1';
-  $txFlds2 = 'e2.' . join('2, e2.', explode(', ', TXES_FLDS)) . '2';
+  $txeFlds0 = explode(', ', TXES_FLDS);
+
+  $txFlds1 = 'e1.' . join('1, e1.', $txeFlds0) . '1';
+  $txFlds2 = 'e2.' . join('2, e2.', $txeFlds0) . '2';
   
   $select0 = 'SELECT e.* FROM tx_entries_all e JOIN tx_entries_all e2 USING(xid)'; // e2 mostly helps identify related prime records)
   $sql = <<< X

@@ -99,7 +99,7 @@ function export($params) {
   if ($types == 0) $where .= ' AND NOT :IS_CO';
   if ($types == 1) $where .= ' AND :IS_CO';
 
-  $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:CANONIC_ACCTS AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
+  $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:UID_CANON9 AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
   
   $q = db\q($sql, ray('cttyId', $cttyA->id));
   while ($row = $q->fetchAssoc()) {

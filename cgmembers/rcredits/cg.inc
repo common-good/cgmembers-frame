@@ -836,7 +836,7 @@ function companies($ctty, $email = FALSE) {
   
   $uids = is_array($ctty)
     ? $ctty
-    : db\q("SELECT DISTINCT uid FROM users WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY fullName", compact('ctty'))->fetchCol();
+    : db\q("SELECT DISTINCT uid FROM users WHERE :IS_CO AND :IS_OK AND uid>:UID_CANON9 AND $where ORDER BY fullName", compact('ctty'))->fetchCol();
   if (!$uids) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
   
   $res = '';
@@ -878,7 +878,7 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
   if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
     list ($start, $end) = r\regionRange();
     $cttyCrit = "uid BETWEEN $start AND $end";
-    $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS");
+    $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:UID_CANON9");
   } else { // for one community or all
     $cttyCrit = $ctty ? "community=$ctty" : 'community<>0';
     $cttyStart = db\min('created', 'users', "$cttyCrit AND uid<0");
@@ -933,7 +933,7 @@ function getStats($ctty, $created, $cttyCrit, $do = NULL) {
   $creCrit = 'created<=:created';
   $subs = compact('created');
   $cttysCrit = $ctty ? "(u.$cttyCrit OR u2.$cttyCrit)" : '1';
-  $nonCtty = $ctty < 0 ? 'uid>:CANONIC_ACCTS' : 'uid=0'; // nonCtty does not apply to overall, nor to the region
+  $nonCtty = $ctty < 0 ? 'uid>:UID_CANON9' : 'uid=0'; // nonCtty does not apply to overall, nor to the region
   $accounts = "(SELECT uid,jid,community,flags FROM users)";
   $isMaster = '(jid=0 OR uid<jid)';
   
@@ -968,7 +968,7 @@ X;
     SUM(IF(amount<0, amount, 0)) AS usdOut,
     SUM(IF(amount>0, 1, 0)) AS usdInCount,
     SUM(IF(amount<0, 1, 0)) AS usdOutCount
-    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN :MINIMUM_BANK_UID AND :MAXIMUM_BANK_UID AND uid<>:OUTER_UID)
+    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN :UID_BANK1 AND :UID_BANK9 AND uid<>:UID_OUTER)
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
@@ -1038,8 +1038,8 @@ X;
       SUM(crumbs0) * $monthFactor AS crumbs
     FROM (
       SELECT uid, COUNT(DISTINCT uid2) AS payees0,
-        SUM(IF(uid2=:CG_ROUNDUPS_UID, amt, 0)) AS roundups0,
-        SUM(IF(uid2=:CG_CRUMBS_UID, amt, 0)) AS crumbs0
+        SUM(IF(uid2=:UID_ROUNDUPS, amt, 0)) AS roundups0,
+        SUM(IF(uid2=:UID_CRUMBS, amt, 0)) AS crumbs0
       FROM txs_prime t JOIN users u ON uid2 IN (u.uid, u.jid)
       WHERE t.$recent AND $cttyCrit AND $isMaster
       GROUP BY uid
@@ -1426,6 +1426,16 @@ function recurRay($keepOne = FALSE, $text = PERIODLY) {
 }
 
 /**
+ * Say whether the given account is owned by Common Good.
+ */
+function isCGs($uid) {
+  if (in($uid, [CGID, UID_ROUNDUPS, UID_CRUMBS])) return TRUE;
+  if ($uid <= UID_CANON9) return FALSE;
+  if ($a = r\acct($uid) and $a->coCan(CO_SPONSORED)) return TRUE;
+  return FALSE;
+}
+
+/**
  * Return the appropriate exchange fee for the given transaction description and amount.
  */
 function xfee($for, $amount) {
@@ -1473,7 +1483,7 @@ function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORD
 function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->vKeyPw);}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
-function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
+function isBank($uid) {return ($uid == UID_BANK_IN or $uid == UID_BANK_OUT);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
 function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}
 function countryList() {return db\keyed('id,name', 'r_countries', "name in ('United States', 'Canada')");}

@@ -279,14 +279,14 @@ function doTxs($info, $thing) {
   $filter = function ($ray) {return array_filter($ray, function ($v) {return ($v !== FALSE and !is_null($v));});}; // bypass array_filter's conversion of 0 to boolean
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
-  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created cat';
-  $entryFlds = 'xid entryType amount uid agentUid description relType relatedId rule';
+  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
+  $entryFlds = 'xid entryType amount uid agentUid description cat relType relatedId rule';
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
   //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
 
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
-  extract(just('rel rule', $info, 0));
+  extract(just('cat rel rule', $info, 0));
 
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
@@ -316,13 +316,13 @@ function doTxs($info, $thing) {
     $e1 = $filter(ray('for1 uid1 agt1', $payerFor, $payer, $payerAgent));
     $e2 = $filter(ray('for2 uid2 agt2', $payeeFor, $payee, $payeeAgent));
     u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt relType rel cat', $type, $amount, $relType, $rel, $cat)) + $e1 + $e2;
+    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, $relType, $rel)) + $e1 + $e2;
     if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
     return verifyRecord('txs', $ray);
   } else {
-    foreach (ray('relType rel cat') as $k) if (!$$k) $$k = NULL;
-    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $relType, $rel, $rule));
-    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $relType, $rel, $rule));
+    foreach (ray('relType rel cat') as $k) if (!nn($$k)) $$k = NULL;
+    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $cat, $relType, $rel, $rule));
+    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $cat, $relType, $rel, $rule));
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
@@ -780,7 +780,7 @@ function uid($id, $field = '') {
   u\EXPECT(!$field, 'nonempty field');
   if (is_numeric($id) or empty($id)) { return $id; }
   $map = ray('ctty cgf bank-in bank-out crumb round',
-             r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID, CG_CRUMBS_UID, CG_ROUNDUPS_UID);
+             r\serverUid(), CGID, UID_BANK_IN, UID_BANK_OUT, UID_CRUMBS, UID_ROUNDUPS);
   if ($res = nni($map, $id)) return $res;
 
   $qo = r\qo(t\fullQid2($id));

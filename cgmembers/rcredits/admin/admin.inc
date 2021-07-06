@@ -80,12 +80,12 @@ function setupBasicAccounts() {
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
 
   $canKeys = 'uid name fullName community flags';
-  new r\Acct(ray($canKeys, CG_ROUNDUPS_UID, t('roundups'), t('%PROJECT Region'), $cgf->community, $flagsCo));
-  new r\Acct(ray($canKeys, CG_CRUMBS_UID, t('crumbs'), t('%PROJECT Region'), $cgf->community, $flagsCo));
-  new r\Acct(ray($canKeys, CG_SERVICE_CHARGES_UID, NULL, t('Bank Fees'), $cgf->community, $flagsCo));
-  new r\Acct(ray($canKeys, BANK_IN_ID, NULL, t('Bank In'), 0, $flagsCo));
-  new r\Acct(ray($canKeys, BANK_OUT_ID, NULL, t('Bank Out'), 0, $flagsCo));
-  new r\Acct(ray($canKeys, OUTER_UID, NULL, t('Txs Outer'), r\serverUid(), $flagsCo));
+  new r\Acct(ray($canKeys, UID_ROUNDUPS, t('roundups'), t('%PROJECT Region'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, UID_CRUMBS, t('crumbs'), t('%PROJECT Region'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, UID_BANK_FEES, NULL, t('Bank Fees'), $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, UID_BANK_IN, NULL, t('Bank In'), 0, $flagsCo));
+  new r\Acct(ray($canKeys, UID_BANK_OUT, NULL, t('Bank Out'), 0, $flagsCo));
+  new r\Acct(ray($canKeys, UID_OUTER, NULL, t('Txs Outer'), r\serverUid(), $flagsCo));
 }
 
 /**
@@ -538,7 +538,7 @@ function photoFromFile($a, $filename = '', &$err = '') {
  f('a.moveFieldFrom', 'helper', 'data');
 */
 function moveFieldFrom($field, $from = 'data') {
-  $uids = db\q('SELECT uid FROM users WHERE uid<0 OR uid>:CANONIC_ACCTS')->fetchCol();
+  $uids = db\q('SELECT uid FROM users WHERE uid<0 OR uid>:UID_CANON9')->fetchCol();
   foreach ($uids as $uid) {
     $a = r\acct($uid);
     $ray = $a->$from;
@@ -558,7 +558,7 @@ function moveFieldFrom($field, $from = 'data') {
  f('a.moveFieldTo', 'question', 'secure');
 */
 function moveFieldTo($field, $to = 'data') {
-  $q = db\q("SELECT uid,$field FROM users WHERE uid<0 OR uid>:CANONIC_ACCTS");
+  $q = db\q("SELECT uid,$field FROM users WHERE uid<0 OR uid>:UID_CANON9");
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = r\acct($uid);
@@ -965,7 +965,7 @@ function wordName($len = 1) {return ucwords(u\randPass($len));}
 function anonymize() {
   if (isPRODUCTION) return;
   
-  $uids = db\col('uid', 'users', 'uid>:CANONIC_ACCTS AND uid<>:CGID ORDER BY fullName');
+  $uids = db\col('uid', 'users', 'uid>:UID_CANON9 AND uid<>:CGID ORDER BY fullName');
   foreach ($uids as $uid) {
     $a = r\acct($uid);
     $fullName = wordName(3) . ' ' . randomName()[0] . '. ' . wordName();
@@ -1000,7 +1000,7 @@ function anonymize() {
  * Export solar1 data to SMT
  */
 function toSMT() {
-  $q = db\q('SELECT * FROM users WHERE uid>:CANONIC_ACCTS');
+  $q = db\q('SELECT * FROM users WHERE uid>:UID_CANON9');
   $hdrDone = FALSE;
 
   while ($row = $q->fetchAssoc()) {

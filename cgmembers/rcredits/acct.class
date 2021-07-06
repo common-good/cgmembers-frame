@@ -216,7 +216,7 @@ class Acct {
       case 'hasBank': return $a->hasVSecure('bankAccount');
       case 'lowSecurity': return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
       case 'inviteCode': return $a->mainQid . $a->lowSecurity;
-      case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
+      case 'isCanonic': return ($a->id >= 0 and $a->id <= UID_CANON9);
       case 'slave': return ($jid = $a->jid and $jid < $a->id); // slave in a joint account
       case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
       case 'masterA': return $a->slave ? $a->jA : $a;

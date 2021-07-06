@@ -65,7 +65,7 @@ function coList($which = SIMPLE_CO_LIST, $region = '', $nearby = TRUE, &$place =
     LEFT JOIN ancestors a on a.base=ui.iid
     LEFT JOIN r_states s ON s.id=u.state
     LEFT JOIN r_countries c ON c.id=u.country
-    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($crit) AND (u.fullName LIKE :which OR a.baseIndustry LIKE :which)
+    WHERE :IS_CO AND u.uid>:UID_CANON9 AND :IS_OK AND ($crit) AND (u.fullName LIKE :which OR a.baseIndustry LIKE :which)
     ORDER BY $order
 EOF;
 

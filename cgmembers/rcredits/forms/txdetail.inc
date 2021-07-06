@@ -75,11 +75,10 @@ function formTxDetail_validate($form, &$sta) {
 
 function formTxDetail_submit($form, &$sta) {
   global $mya;
-  extract(just('cat', $input = $sta['input'], NULL));
 
-  $xidSub = just('xid', $input);
-  if ($info = just($cat ? 'created cat' : 'created', $input)) db\update('tx_hdrs_all', $info + $xidSub, 'xid');
-  if ($info = just('amt for', $input)) db\q('UPDATE tx_entries_all SET amount=IF(id<0, -:amt, :amt), description=:for WHERE xid=:xid AND entryType IN (:E_PRIME, :E_BANK, :E_OUTER)', $info + $xidSub);
+  $xidSub = just('xid', $input = $sta['input']);
+  if ($info = just('created', $input)) db\update('tx_hdrs_all', $info + $xidSub, 'xid');
+  if ($info = just('amt for cat', $input)) db\q('UPDATE tx_entries_all SET amount=IF(id<0, -:amt, :amt), description=:for, cat=:cat WHERE xid=:xid AND entryType IN (:E_PRIME, :E_BANK, :E_OUTER)', $info + $xidSub);
 
   return w\go('history/transactions');
 }

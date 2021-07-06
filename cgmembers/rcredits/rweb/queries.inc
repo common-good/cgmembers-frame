@@ -86,7 +86,7 @@ X
      SUM(IF(u.balance>=0, 1, 0)) AS posCount,
      SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
      FROM users u LEFT JOIN users c ON c.uid=u.community 
-     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
+     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT :CANONIC
      GROUP BY c.fullName",
   
   t('Company and Member Balances and Credit Lines') =>
@@ -104,12 +104,12 @@ X
   t('Actual Donations to Common Good and Community') =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
     SUM(IF(t.:IS_RECURS,amt,0)) AS recurring,
-    SUM(IF(uid2=:CG_ROUNDUPS_UID,amt,0)) AS roundups,
-    SUM(IF(uid2=:CG_CRUMBS_UID,amt,0)) AS crumbs,
-    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) AND NOT t.:IS_RECURS,amt,0)) AS other
+    SUM(IF(uid2=:UID_ROUNDUPS,amt,0)) AS roundups,
+    SUM(IF(uid2=:UID_CRUMBS,amt,0)) AS crumbs,
+    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:UID_ROUNDUPS, :UID_CRUMBS) AND NOT t.:IS_RECURS,amt,0)) AS other
     FROM txs t JOIN users u ON u.uid=t.uid1
     WHERE u.community=:ctty 
-    AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID))
+    AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS))
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
   t('Expected Member Donations to CG and Community') =>

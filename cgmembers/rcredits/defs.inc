@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57x'; // software version
+const R_VERSION = '3.57y'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -199,21 +199,21 @@ define('R_ON_FILE', t('(on file)'));
 // (NO) const DEPOSIT_SQL = '(amount>0 XOR txid<0)'; // SQL fragment for "transfer is from bank to CG"
 
 const DOLLAR_POOL = 1; // uid of dollar pool account
-const CANONIC_ACCTS = 512; // number of canonic accounts (admin/dollar pool, placeholders,...)
-const CANONIC = 'BETWEEN 0 AND ' . (CANONIC_ACCTS - 1);
 const AGGREGATE_MIN = 1; // minimum number of members to show aggregate data
 
-const CG_ADMIN_UID = 1;  // uid of administrator account
-const PLACEHOLDER_1_UID = 2;  // uid of first placeholder
-const PLACEHOLDER_2_UID = 3;  // uid of second placeholder
-const CG_ROUNDUPS_UID = 129;  // Donations start at 128 (128 used for general donations)
-const CG_CRUMBS_UID = 130;  //
-const CG_SERVICE_CHARGES_UID = 192;
-const OUTER_UID = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
-const MINIMUM_BANK_UID = 256;
-const BANK_IN_ID = 256;  // Bank accounts start at 256
-const BANK_OUT_ID = 257;  //
-const MAXIMUM_BANK_UID = 511;
+const UID_SUPER = 1;  // uid of superAdmin account
+const UID_PLACEHOLDER1 = 2;  // uid of first placeholder
+const UID_PLACEHOLDER2 = 3;  // uid of second placeholder
+const UID_ROUNDUPS = 129;  // Donations start at 128 (128 used for general donations)
+const UID_CRUMBS = 130;  //
+const UID_BANK_FEES = 192;
+const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
+const UID_BANK1 = 256;
+const UID_BANK_IN = 256;  // Bank accounts start at 256
+const UID_BANK_OUT = 257;  //
+const UID_BANK9 = 511;
+const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
+const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
@@ -649,6 +649,8 @@ const ACT_PAY = 'pay';
 const ACT_CHARGE = 'charge';
 const ACT_SURTX = 'surtx';
 const ACT_REDEEM = 'redeem';
+
+const BCAT_GIFT = 1; // record ID of donations in budget_cats
 
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));

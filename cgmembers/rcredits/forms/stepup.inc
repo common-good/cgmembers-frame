@@ -112,7 +112,7 @@ function formStepUp_validate($form, &$sta) {
     $xly = $xlys[$i];
     foreach (ray('org amt when max') as $k) $$k = trim(nni($input, "$k-$xly-$uid"));
     
-    if ($uid >= 0 and $uid < CANONIC_ACCTS) { // lookup organization
+    if ($uid >= 0 and $uid <= UID_CANON9) { // lookup organization (if uid is an index, not an account ID)
       if (empty($org) and !empty($amt)) return er($sta, t('You must choose an organization if there is an amount.'), "org-xly-$uid");
       if (!$fullName = $org) {unset($uids[$i]); continue;}
 
