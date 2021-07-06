@@ -16,7 +16,7 @@ require_once __DIR__ . '/txentry.class';
 
 class Tx {
   const REQUIRED_FIELDS = 'goods actorId flags';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' actorAgentId channel boxId goods risk risks recursId reversesXid created cat';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' actorAgentId channel boxId goods risk risks recursId reversesXid created';
   const ALLOWED_FIELDS = self::INSERT_FIELDS . ' entries xid';
   const TX_FIELDS = self::INSERT_FIELDS . ' xid';
 
@@ -33,7 +33,6 @@ class Tx {
   public $recursId;
   public $reversesXid;
   public $created;
-  public $cat;
   public $entries;
   
   /**
@@ -128,16 +127,6 @@ class Tx {
       if ($entry->uid == $this->actorId) $total += $entry->amount;
     }
     return $total;
-  }
-
-  public function getMyTid($me) {
-    $myTid = 0;
-    foreach ($this->entries as $entry) {
-      if ($entry->uid == $me->uid or $entry->uid == $me->jid) {
-        $myTid = max($myTid, $entry->acctTid);
-      }
-    }
-    return $myTid;
   }
 
   /**
@@ -245,7 +234,7 @@ EOF;
    * Not all returned args are used for any particular type of transaction.
    * Note that templates and tests depend on the names of some of these fields
    * @param acct $a: the account to report for (usually the current account)
-   * @param int $getBalance: 0=don't get any balances, 1=get my balance and tid, 2=get other party's balance and tid also
+   * @param int $getBalance: <report my balance>
    * @param float $shortfall: how much short my balance is, for a transaction (if any)
    * @return assoc array of args
    */
@@ -267,19 +256,14 @@ EOF;
     $reverses = !empty($tx->reverses);
     $role = $toMe ? 'payee' : 'payer';
     $purpose = $toMe ? $payeeE->description : $payerE->description;
-    $tid = $toMe ? $payeeE->acctTid : $payerE->acctTid;
     $tofrom = $toMe ? t('from') : t('to'); 
     $why = ray(R_WHYS)[$tx->goods];
     if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
     else { $balance = NULL; }
 
     if ($amount < 0) {
-      $amount = 0-$amount;
+      $amount = -$amount;
       $tofrom = t('to');
-      /* $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged'); */
-    } else {
-      /* $did = $toMe ? ($reverses ? t('re-charged') : t('charged')) */
-      /*   : (($this->channel == TX_APP and $me->co) ? t('credited') : t('paid')); */
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;

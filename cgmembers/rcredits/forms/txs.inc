@@ -100,7 +100,7 @@ function handleTx($do, $xid, &$sta, $args) {
 
   if ($mya->superAdmin and $tx = db\get('*', 'txs2', compact('xid'))) { // superAdmin reversing bank transfer
     u\EXPECT($do == 'no', 'trying to edit bank transfer');
-    foreach (just('txid amount tid', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
+    foreach (just('txid amount', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
     extract(just('txid amount deposit completed', $tx));
     u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
 

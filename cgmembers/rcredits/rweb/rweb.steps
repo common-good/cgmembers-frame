@@ -2225,8 +2225,8 @@ function memberHasStepupRules($id, $count) {
   global $testOnly; if ($testOnly) return FALSE; // but this would be easy to handle
   
   $uid = t\uid($id);
-  for ($i = 0; $i < $count; $i++) {
-    $from = CANONIC_ACCTS + $i; // arbitrary account number (doesn't have to exist at this time)
+  for ($i = 1; $i <= $count; $i++) {
+    $from = UID_CANON9 + $i; // arbitrary account number (doesn't have to exist at this time)
     $info = ray('amount portion amtMax purpose start', 1, 0, NULL, 'stepup', now());
     $info += ray('payer payerType payeeType from to action', $from, REF_ACCOUNT, REF_ANYCO, $from, $uid, ACT_SURTX);
     db\insert('tx_rules', $info);

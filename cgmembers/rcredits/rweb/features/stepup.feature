@@ -18,6 +18,7 @@ Scenario: A member chooses a per-transaction Step Up
   Given member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
   And member ".ZZI" has "%(%STEPUP_MIN+2)" stepup rules
+
   When member ".ZZB" visits page "community/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | Whe | Max |

@@ -66,7 +66,7 @@ Scenario: A non-member donates to a sponsored member
   And we say "status": "info saved"
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose | cat | type     |*
-  |   1 | 1   | %OUTER_UID | .ZZC  | 100    | grant   | 2   | %E_OUTER |
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant   | 2   | %E_OUTER |
   |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
@@ -104,7 +104,7 @@ Scenario: A non-member pays a sponsored member
   And we say "status": "info saved"
   And these "txs":
   | xid | payer      | payee | amount | purpose  | cat | type     |*
-  | 1   | %OUTER_UID | .ZZC  | -100   | printing | 3   | %E_OUTER |
+  | 1   | %UID_OUTER | .ZZC  | -100   | printing | 3   | %E_OUTER |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | -100   | %now      |       0 | 1   |
@@ -149,8 +149,8 @@ Scenario: A sponsored member charges a member
 Scenario: A sponsored member views their transaction history
   Given these "txs":
   | xid | payer      | payee | amount | purpose  | cat | type     | payeeAgent |*
-  | 1   | %OUTER_UID | .ZZC  | 100    | grant    | 2   | %E_OUTER | .ZZB       |
-  | 2   | %OUTER_UID | .ZZC  | -200   | printing | 21  | %E_OUTER | .ZZB       |
+  | 1   | %UID_OUTER | .ZZC  | 100    | grant    | 2   | %E_OUTER | .ZZB       |
+  | 2   | %UID_OUTER | .ZZC  | -200   | printing | 21  | %E_OUTER | .ZZB       |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      |       0 | 4   |

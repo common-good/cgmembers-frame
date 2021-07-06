@@ -31,7 +31,7 @@ function formFlags($form, &$sta, $args = '') {
     : ["community=$mya->community", "$mya->community IN (u1.community, u2.community)"];
   $sql = <<<EOF
     SELECT risk AS score,uid,IF(:IS_CO,'Co','Indiv') as type,created,risks FROM users 
-    WHERE uid>:CANONIC_ACCTS AND :IS_OK AND $cttyCrit
+    WHERE uid>:UID_CANON9 AND :IS_OK AND $cttyCrit
     ORDER BY risk DESC LIMIT :K_LINES
 EOF;
   $q = db\q($sql);
@@ -115,7 +115,7 @@ function riskLine($q, $descs, &$red = '') {
     $qo = r\qo($v);
     $qid = $qo->qid;
     $a = r\acct($v);
-    if ($v <= CANONIC_ACCTS) $v = $v < 0 ? t('ctty') : strtr($a->name, ray('bank-in bank-out', 'bank', 'bank'));
+    if ($v <= UID_CANON9) $v = $v < 0 ? t('ctty') : strtr($a->name, ray('bank-in bank-out', 'bank', 'bank'));
     if ($extra) {
       list ($region, $local) = $qo->parse();
       $v = w\popHelp(is_numeric($v) ? $local : $v, $a->fullName, "$base_url/dashboard/$qid");

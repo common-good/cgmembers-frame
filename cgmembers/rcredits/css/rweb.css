@@ -1179,7 +1179,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 #frm-txs .tx-selector {width:1em;}
 /* for IE; text-align in <col> should have no effect according to CSS 2.1 */ 
-#frm-txs .tx-tid {width:5%; text-align:right;} /* 1 # */
+#frm-txs .tx-xid {width:5%; text-align:right;} /* 1 # */
 #frm-txs .tx-date {width:7.5%; text-align:right;} /* 2 date */
 #frm-txs .tx-fromyou {width:9.5%; text-align:right;} /* 4 from you */
 #frm-txs .tx-toyou {width:9.5%; text-align:right;} /* 5 to you */
@@ -1202,12 +1202,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #txlist .txentry div.buttons {background-color:white;}
 #txlist .txentry >div {border-bottom:1px solid white;}
 
-#txlist .tid-date, 
+#txlist .xid-date, 
 #txlist .name-purpose, 
 #txlist .amount-runBalance {padding: 0;}
-#txlist .tid, #txlist .date {text-align:center;}
-#txlist .tid {font-weight:bold;}
-#txlist .disputed .tid {background-color:red; color:white;}
+#txlist .xid, #txlist .date {text-align:center;}
+#txlist .xid {font-weight:bold;}
+#txlist .disputed .xid {background-color:red; color:white;}
 #txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
 #txlist .runBalance {font-weight:bold; color:darkblue;}
 

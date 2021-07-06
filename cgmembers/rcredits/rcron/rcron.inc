@@ -325,7 +325,7 @@ X;
   $sql = <<< X
     SELECT DISTINCT uid, $elapsed AS elapsed FROM users 
     WHERE ($elapsed IN ($delays) OR ($elapsed>8 AND $elapsed%7=0))
-    AND uid>:CANONIC_ACCTS AND NOT activated AND NOT :IS_NONUDGE
+    AND uid>:UID_CANON9 AND NOT activated AND NOT :IS_NONUDGE
 X;
   queueEach('tickleStep', $sql);
 
@@ -341,14 +341,14 @@ X;
       FROM users u LEFT JOIN (
         SELECT e.amount,e.uid FROM tx_entries e JOIN txs_noreverse tnr USING(xid) WHERE tnr.created>=$start
       ) t USING(uid)
-      WHERE u.:IS_OK AND u.uid>:CANONIC_ACCTS
+      WHERE u.:IS_OK AND u.uid>:UID_CANON9
       AND $sinceActivated>0 AND $sinceActivated % 30 = 0 
       GROUP BY uid
     ) x 
 X;
 
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
-  queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
+  queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:UID_CANON9 AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
   queueNext();
 }  
 
@@ -524,7 +524,7 @@ function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
   
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
@@ -601,7 +601,7 @@ function crumbs($item) {
   extract(just('uid donate date', $item));
   $a = r\acct($uid);
   if ($donate > 0 and $a->ok) {
-    $z = $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
+    $z = $a->payApproved(UID_CRUMBS, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
     if (!$z->ok) r\tellAdmin($z->msg, $z->subs);
   }
 }
@@ -613,7 +613,7 @@ function sweep($item) {
   extract(just('end', $item));
   
   $cgA = r\acct(CGID);
-  foreach (ray('roundup crumb', CG_ROUNDUPS_UID, CG_CRUMBS_UID) as $type => $uid) {
+  foreach (ray('roundup crumb', UID_ROUNDUPS, UID_CRUMBS) as $type => $uid) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {
@@ -673,7 +673,7 @@ function setNear() {
   $queries = join(' UNION ', [
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
-    'SELECT DISTINCT uid1 AS id1, uid2 AS id2, 1 AS w FROM txs WHERE uid1>:CANONIC_ACCTS AND uid2>:CANONIC_ACCTS AND uid1<uid2',
+    'SELECT DISTINCT uid1 AS id1, uid2 AS id2, 1 AS w FROM txs WHERE uid1>:UID_CANON9 AND uid2>:UID_CANON9 AND uid1<uid2',
     'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
@@ -697,7 +697,7 @@ X;
 function acctStats() {
   /*
   db\q('UPDATE users SET picture=0'); // clear temp field
-  queueEach('acctStats1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS AND :IS_OK');
+  queueEach('acctStats1', 'SELECT uid FROM users WHERE uid>:UID_CANON9 AND :IS_OK');
   */
   queueNext();
 }
@@ -751,7 +751,7 @@ function cttyStats($dt1 = 0, $redo = '') {
   } else { // recreate stats data from the beginning of time (called only manually)
 /*      SELECT community AS ctty, MIN(t.created) AS start
       FROM users u LEFT JOIN r_txs t ON t.payee=u.uid 
-      WHERE uid>:CANONIC_ACCTS AND (t.created>=:R_LAUNCH OR t.created IS NULL) GROUP BY community ORDER BY -community
+      WHERE uid>:UID_CANON9 AND (t.created>=:R_LAUNCH OR t.created IS NULL) GROUP BY community ORDER BY -community
       */
     $sql = 'SELECT uid AS ctty, created FROM users WHERE uid<0 ORDER BY -community';
     $cttys = db\q($sql)->fetchAllKeyed();
@@ -849,7 +849,7 @@ function acctRisk() {
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
   foreach ([1, 2] as $zot) { // do this twice, to take into account connections with scoundrels
-    queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
+    queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:UID_CANON9 and :IS_OK ORDER BY :IS_CO DESC');
   }
   queueNext();
 }
@@ -905,7 +905,7 @@ function txRisk1($xid) {
  *    handling approved invoices and investment requests as we go
  */
 function getFunds() {
-  queueEach('getFunds1', 'SELECT uid, request, stakeid FROM users LEFT JOIN r_stakes USING (uid) WHERE (request IS NULL OR request>0) AND :MASTER AND uid>:CANONIC_ACCTS AND :IS_OK');
+  queueEach('getFunds1', 'SELECT uid, request, stakeid FROM users LEFT JOIN r_stakes USING (uid) WHERE (request IS NULL OR request>0) AND :MASTER AND uid>:UID_CANON9 AND :IS_OK');
 
   $sql = 'SELECT DISTINCT xid,channel FROM txs2_bank WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);
@@ -1023,7 +1023,7 @@ function notices() {
       UNION
       SELECT $fields
       FROM users u LEFT JOIN (SELECT pid, uid FROM people) p USING (uid)
-      WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_CO AND IF(activated, :IS_OK, NOT :IS_NONUDGE)
+      WHERE uid>:UID_CANON9 AND NOT u.:IS_CO AND IF(activated, :IS_OK, NOT :IS_NONUDGE)
     ) x
 X;
   queueEach('postNotices1', $sql);

@@ -32,25 +32,7 @@ class TxHistory implements TxProcessor {
    * Called before the first transaction.
    */
   public function hdr() {
-    /* global $mya, $agtViaBoxHelp; */
-
-
-    /* $helpFields = 'tid date state purpose name amount fromyou toyou buttons net' . (@$agtViaBoxHelp ? ' agent channel box' : ''); */
-
-    /* $headHelp = array_combine(ray($helpFields), ray($headHelp)); */
-    /* $classes = 'tid date name purpose amount fromyou toyou net buttons'; */
-    /* $headers = t('Tx#,Date,Name,Purpose,Amount,From You, To You,Net,Action'); */
-    
-    /* $header = array_combine(ray($classes), ray($headers)); // make splices and additions easy and clear */
-    /* if (@$agents) $header['agent'] = t('Agent'); */
-    /* if (@$channels) $header['channel'] = t('Via'); */
-    /* if (@$boxes) $header['box'] = t('Box'); */
-    
-    /* foreach ($header as $cls => $hdr) $header[$cls] = w\popHelp($hdr, $headHelp[$class]); */
-    
-    /* return array(array_keys($header), array_values($header), @array_values($downloadHeader)); */
-    
-    $tid = w\popHelp(t('Tx#'), t('Transaction number'));
+    $xid = w\popHelp(t('Tx#'), t('Transaction number'));
     $date = w\popHelp(t('Date'), t('Date transaction was completed'));
     $name = w\popHelp(t('Name'), t('Who did you pay or receive from'));
     $purpose = w\popHelp(t('Purpose'), t('What is the purpose of the transaction (usually the item or service purchased)'));
@@ -60,7 +42,7 @@ class TxHistory implements TxProcessor {
     /* $net = w\popHelp(t('Net'), t('The net change in account balance')); */
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
-    $guts = $this->guts($tid, $date, $name, $purpose, $amount, $runBalance, $buttons);
+    $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons);
     
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
@@ -147,14 +129,14 @@ EOF;
     $this->dateValue = $this->runBalance = $this->buttons = ''; // don't repeat these for auxiliary entries
   }
 
-  private function guts($tid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
-    foreach(ray('tid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
+  private function guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
+    foreach(ray('xid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
 
-    if (is_numeric($tid)) $tid = w\lnk(BASE_URL . "/history/transaction/xid=$tid", $tid, ['title' => t('Details')]);
+    if (is_numeric($xid)) $xid = w\lnk(BASE_URL . "/history/transaction/xid=$xid", $xid, ['title' => t('Details')]);
 
     return <<< X
-  <div class="tid-date col-xs-2">
-    <div class="tid col-sm-5">$tid</div>
+  <div class="xid-date col-xs-2">
+    <div class="xid col-sm-5">$xid</div>
     <div class="date col-sm-7">$date</div>
   </div>
   <div class="name-purpose col-xs-6">

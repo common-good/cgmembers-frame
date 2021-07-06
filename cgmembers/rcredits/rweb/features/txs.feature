@@ -98,7 +98,7 @@ Scenario: A member looks at transactions with roundups
   Given transactions:
   | xid | amount | payer | payee            | purpose          | taking | goods      | channel | type     |*
   |  41 |  49.95 | .ZZA  | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_APP | prime    |
-  |  41 |   0.05 | .ZZA  | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_APP | aux      |
+  |  41 |   0.05 | .ZZA  | %UID_ROUNDUPS | roundup donation | 0      | %FOR_GOODS | %TX_APP | aux      |
   Then balances:
   | uid  | balance |*
   | .ZZA | 1535.00 |

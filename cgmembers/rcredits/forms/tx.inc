@@ -100,7 +100,7 @@ function formTx_submit($form, &$sta) {
     $uid = whoId($sta);
     $pid = NULL;
   } else { // FBO (sponsored) account
-    $uid = OUTER_UID;
+    $uid = UID_OUTER;
     if (!$pid = db\get('pid', 'people', $info = compact(ray('fullName address city state zip')))) {
       $pid = db\insert('people', $info, 'pid');
     }
