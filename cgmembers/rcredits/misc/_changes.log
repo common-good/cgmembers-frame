@@ -1,3 +1,6 @@
+2021-07-06 feature/make-outer
+. create the Outer Tx account (a bit late, but BLTN)
+
 2021-07-06 feature/move-cat
 . moved cat field from tx_hdrs to tx_entries
 . renamed UID constants to be consistent
