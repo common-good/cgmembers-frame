@@ -120,8 +120,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | op      | roundup |*
   | I Agree |       1 |
   Then members have:
-  | uid  | flags                    | signed | signedBy |*
-  | .AAA | member,roundup,confirmed | %now   | Abe One  |
+  | uid  | flags                       | signed | signedBy |*
+  | .AAA | ok,member,roundup,confirmed | %now   | Abe One  |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
   And relations:
@@ -252,8 +252,8 @@ Scenario: A company visits the registration page sent by a partner
   | op      | roundup |*
   | I Agree |       1 |
   Then members have:
-  | uid  | flags                       | signed | signedBy |*
-  | .AAA | co,member,roundup,confirmed | %now   | Al Aargh |
+  | uid  | flags                          | signed | signedBy |*
+  | .AAA | ok,co,member,roundup,confirmed | %now   | Al Aargh |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
   And relations:

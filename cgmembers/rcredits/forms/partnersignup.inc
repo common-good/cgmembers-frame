@@ -154,6 +154,7 @@ function formPartnerSignup_submit($form, &$sta) {
  * Partner signup is complete. Send final emails and congratulate the customer.
  */
 function partnerEnd() {
+  include_once R_ROOT . '/cg-activate.inc';
   global $mya, $pagePartner;
 
   if (!$mya) return softErr(t('no account in partner end'));
@@ -174,6 +175,7 @@ function partnerEnd() {
     $mya->stepDone('partnerend');
     $mya->update('legalName', $mya->fullName); // no longer just an asterisk
     $mya->setBit('nonudge', FALSE);
+    r\activate($mya, $pA->id); // not $pid, because $pid could be a qid
   } else { // old CG member or nonmember (AZ B&T)
 // NOT YET (need to store for later upload to CRM)  if (!$mya->stepIsDone('fund')) db\del('users', 'uid', $mya->id); // nonmember
   }

@@ -41,7 +41,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   if ($toMe) { // cancel or reverse a payment request TO me (reversing currently has no effect, because already-paid invoices just get an error message)
     list ($verb, $explain) = $status < TX_PAID ? [t('Cancel'), ''] : [t('Reverse'), t(' (by creating an offsetting negative invoice and paying it back)')];
     $title = $verb . '?';
-    $subs += ray('who', r\acct($payer)->fullName);
+    $subs += ray('who explain', r\acct($payer)->fullName, $explain);
     $subtext = $verb . t(' %date invoice charging %who %amount for %what%explain?', $subs);
     $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     jsx('back-button');

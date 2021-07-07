@@ -115,8 +115,9 @@ function doit(what, vs) {
     break;
     
   case 'tx':
+    var pay;
     $('.btn-pay, .btn-charge').click(function () {
-      var pay = has($(this).attr('class'), 'btn-pay');
+      pay = has($(this).attr('class'), 'btn-pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
       $('#dashboard').hide();
       $('.w-pay').toggle(pay);
@@ -148,12 +149,12 @@ function doit(what, vs) {
     $('#edit-mem-0').click(function () {mem0Click(true);}); // member
     $('#edit-mem-1').click(function () { // non-member
       mem0Click(false);
-      $('#edit-title h3').text('Received');
+      $('#edit-title h3').text(pay ? 'Paid' : 'Received');
       fform(this).submit(null);
     });
     function mem0Click(member) {
-      reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member);
-      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member);
+      reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member, vs['admin'] == 1);
+      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
     }
     break;
 
@@ -847,4 +848,10 @@ function hideComment() {
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
 function reqNot(fld) {fld.find('input').removeAttr('required'); fld.hide();}
-function reqQ(fld, show) {if(show) req(fld); else reqNot(fld);}
+function reqQ(fld, show, optional) {
+  if (optional) {
+    fld.toggle(show);
+  } else {
+    if(show) req(fld); else reqNot(fld);
+  }
+}

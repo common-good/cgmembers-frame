@@ -173,6 +173,5 @@ Scenario: A sponsored member views their transaction history
   | Postal Addr | 4 D St, Dton, MA 01004 |
   | For         | grant |
   | Category    | Government grants |
-  | To Agent    | Bea Two |
+  | Our Agent   | Bea Two |
   | Channel     | Web |
-  

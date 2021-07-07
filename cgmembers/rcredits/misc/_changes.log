@@ -1,3 +1,9 @@
+2021-07-07 feature/edit-tx
+. fixed bugs in txDetail editing, including adding capability to handle any entry pair
+. expanded tx.inc to allow entry of just phone and email (for CC donations)
+. donate-fbo form now displays the right sponsorship percentage (based on the active rule)
+. partner signups are now automatically activated
+
 2021-07-06 feature/make-outer
 . create the Outer Tx account (a bit late, but BLTN)
 

@@ -636,6 +636,7 @@ const E_BANK = 5; // CG account transfers to or from the member's bank (replaces
 const E_XFEE = 6; // transfer fee to merchant (UNUSED)
 const E_OUTER = 7; // CG account transfers to or from a non-member (replaces E_PRIME)
 const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer';
+const E_PRIMES = [E_PRIME, E_BANK, E_OUTER]; // these types can be the main transaction, potentially having auxiliary transactions
 
 const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
 const REF_ANYBODY = 'anybody';

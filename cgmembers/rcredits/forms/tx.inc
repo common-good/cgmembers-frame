@@ -43,7 +43,9 @@ function formTx($form, &$sta, $type, $args = '') {
   $city = textFld(t('City:'), [t('Postal city')]);
   $state = stateFld(NULL, '');
   $zip = textFld(t('Zip:'), [t('Postal code')]);
-  $addr = fieldSet('addr', compact(ray('fullName address city state zip')), BARE);
+  $phone = phoneFld(t('Phone:'), [t('Phone number')]);
+  $email = emailFld(t('Email:'), [t('Email address')]);
+  $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
   $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft(nn($amount)) + vmin(.01));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
@@ -72,7 +74,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('amount purpose start end paying fbo who fullName address city state zip', $sta['input'], NULL);
+  $info = just('amount purpose start end paying fbo who fullName address city state zip phone email', $sta['input'], NULL);
   extract($info);
 /*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
@@ -80,7 +82,9 @@ function formTx_validate($form, &$sta) {
   if (!$who) {
     if (!$paying and !$mya->admin) return say(t('Only %PROJECT admins can charge non-members.'), 'err');
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
-    if ($err = u\badZip($zip)) return say($err, 'zip');
+    if ($zip and $err = u\badZip($zip)) return say($err, 'zip');
+    if ($phone and $err = u\badPhone($phone)) return say($err, 'phone');
+    if ($email and !u\validEmail($email)) return say('bad email', 'email');
   }
   
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
@@ -91,7 +95,7 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip cat', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
 
   $DBTX = \db_transaction();
@@ -101,8 +105,8 @@ function formTx_submit($form, &$sta) {
     $pid = NULL;
   } else { // FBO (sponsored) account
     $uid = UID_OUTER;
-    if (!$pid = db\get('pid', 'people', $info = compact(ray('fullName address city state zip')))) {
-      $pid = db\insert('people', $info, 'pid');
+    if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
+      $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
     }
   }
   
