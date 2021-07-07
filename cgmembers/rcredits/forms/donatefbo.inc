@@ -31,7 +31,9 @@ function formDonateFBO($form, &$sta, $args = NULL) {
   $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft('once'), $oftens);
   $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
   $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
-  $coverFSFee = boxFld('coverFSFee', NBSP, t('Check here to cover the 3% fiscal sponsorship fee also.'), 0);
+
+  $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $co->id, ACT_SURTX, 0, CGID)) ?: .05;
+  $coverFSFee = boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0);
   
   $fullName = textFld(REQ . t('Name:'), [t('Your full name'), t('Your full name, properly capitalized')]);
   $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
@@ -50,10 +52,11 @@ function formDonateFBO($form, &$sta, $args = NULL) {
   $comment = areaFld(t('Comment:'));
   list ($cq, $ca) = w\captcha();
   $co = hidFld($co->mainQid);
+  $fsFee = hidFld($fsFee);
 
   $submit = submit(t('Donate'), NBSP, '', suffix(lnk('', t('Add comment'))));;
 
-  return cgform(compact(ray('logo title subtext amount options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca submit co')));
+  return cgform(compact(ray('logo title subtext amount options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca submit co fsFee')));
 }
 
 function formDonateFBO_validate($form, &$sta) {
@@ -74,13 +77,13 @@ function formDonateFBO_validate($form, &$sta) {
 
 function formDonateFBO_submit($form, &$sta) {
   $dbFields = 'fullName email flags phone zip country source city state notes';
-  extract(just($input = $dbFields . ' amount period honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee co', $sta['input'], NULL));
+  extract(just($input = $dbFields . ' amount period honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee co fsFee', $sta['input'], NULL));
 
   $co = r\acct($co);
   list ($city, $state) = r\zipCity($zip);
   $source = t('Donation FBO %nm (by %how)', 'nm how', $co->bestName, $payHow ? t('cc') : t('ach'));
   $notes = $comment ? r\stampNote($comment) : '';
-  $feeCovered = $amount * (($coverFSFee ? .03 : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
+  $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
 
   r\tellAdmin($source, compact(ray($input . ' feeCovered')));
   $amount = round($amount + $feeCovered, 2);

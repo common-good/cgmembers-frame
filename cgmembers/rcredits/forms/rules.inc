@@ -23,6 +23,7 @@ function formRules($form, &$sta, $args = '') {
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
   extract(just('id ttype', $args, NULL));
   if ($id and $res = db\get('*', $ttype ? 'tx_rules' : 'tx_timed', compact('id'))) extract($res);
+  if (isset($action)) $action = array_search($action, ray(ACT_LIST));
   foreach (ray('payerType payeeType') as $k) if (isset($$k)) $$k = array_search($$k, ray(REF_LIST));
   foreach (ray('payer payee from to') as $k) if (isset($$k) and !is_numeric($$k)) $$k = db\get('fullName', 'users', ['uid' => $$k]);
   
