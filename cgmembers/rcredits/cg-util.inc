@@ -1110,6 +1110,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
 //  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
   $none = [0, 0, ''];
   if ("$city$state$zip") {
+    if (!$q) $city = ''; // otherwise lookup fails
     $q .= tr(", $city, " . r\realState($state) . " $zip");
   } elseif (empty($q)) return $none;
   

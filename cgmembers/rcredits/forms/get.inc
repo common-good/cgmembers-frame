@@ -44,7 +44,7 @@ function formGet($form, &$sta, $args = '') {
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
     if ($amt = db\sum('ABS(amount)', 'txs2_bank', $where, $subs)) {
-      $xid = ($mya->admin and in($k, 'in other')) ? db\get('xid', 'txs2_bank', 'completed=0 AND amount=' . $amt, $subs) : '';
+      $xid = ($mya->admin and in($k, 'in other')) ? db\get('xid', 'txs2_bank', $where . ' AND completed=0 AND amount=' . $amt, $subs) : '';
       $expedite = $xid ? ' ' . buttino('/get/expedite=' . $xid, t('Expedite')) : '';
       $link = $k == 'other' ? t('(not cancelable)') : buttino("/get/cancel=$k", t('Cancel'));
       $text = $k == 'out' ? t('%link %amt from %PROJECT to your bank account.')

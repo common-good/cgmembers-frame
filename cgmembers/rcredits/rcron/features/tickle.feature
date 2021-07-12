@@ -118,7 +118,7 @@ Resume
 
 # only works if not the first of the month
 #Scenario: A member gets no new credit line because it's the wrong day
-#  Given usd transfers:
+#  Given these "txs2":
 #  | payee | amount | created   |*
 #  | .ZZE  | 500   | %today-6w |
 #  And transactions:

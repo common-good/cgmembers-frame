@@ -42,7 +42,7 @@ Setup:
   And count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 5
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    700 | %today  |         0 |       0 |
   And invoices:
@@ -176,6 +176,6 @@ Scenario: An invoice gets handled for an account that rounds up
   Then transactions: 
   | xid | created | amount | payer   | payee | purpose              | taking | type  |*
   |   1 | %today  |    100 | bank-in | .ZZA | from bank            |      1 | bank  |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    100 | %today  |    %today |       0 |  

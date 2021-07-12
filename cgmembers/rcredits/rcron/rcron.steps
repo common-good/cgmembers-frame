@@ -101,30 +101,6 @@ function members($list) {return t\members($list);}
 function balances($list) {return t\balances($list);}
 
 /**
- * usd transfers: (ARG)
- *
- * in: TEST bank AMemberIsBarelyBelowTarget
- *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
- *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
- *     TEST bank AMemberHasANegativeBalance
- *     TEST bank AMemberIsWellBelowTarget
- *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
- *     TEST bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
- *     TEST bank AMemberWithZeroTargetHasBalanceBelowTarget
- *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
- *     TEST bank ANonmemberHasATargetAndRefills
- *     MAKE bank AMembersBankAccountGetsVerified
- *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     TEST invoices UnpaidInvoicesGetHandled
- *     TEST invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
- *     TEST joint AJointAccountNeedsRefilling
- *     MAKE monthly Setup
- *     MAKE risk Setup
- *     TEST weekly AMemberCashesOutAutomatically
- */
-function usdTransfers($tx) {return t\usdTransfers($tx);}
-
-/**
  * bank transfer count is (ARG)
  *
  * in: TEST bank AMemberIsBarelyBelowTarget
@@ -417,13 +393,6 @@ function memberFieldValues($list) {return t\memberFieldValues($list);}
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
 /**
- * variable (ARG) is (ARG) with subs: (ARG)
- *
- * in: 
- */
-function variableIsWithSubs($var, $index, $subs) {return t\tvarIs($var, $index, $subs);}
-
-/**
  * community email for member (ARG) is (ARG)
  *
  * in: MAKE aaSeldomNotices Setup
@@ -517,7 +486,18 @@ function stats($list) {return t\stats($list);}
  * these (ARG): (ARG)
  *
  * in: MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     TEST bank AMemberIsBarelyBelowTarget
+ *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
+ *     TEST bank AMemberHasANegativeBalance
  *     TEST bank AMemberIsWellBelowTarget
+ *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     TEST bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     TEST bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     TEST bank ANonmemberHasATargetAndRefills
+ *     MAKE bank AMembersBankAccountGetsVerified
+ *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE daily Setup
@@ -528,10 +508,15 @@ function stats($list) {return t\stats($list);}
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
+ *     TEST invoices UnpaidInvoicesGetHandled
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST invoices ALanguishingInvoiceGetsFundedAgain
  *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
+ *     TEST invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     TEST joint AJointAccountNeedsRefilling
+ *     MAKE monthly Setup
+ *     TEST monthly CrumbsAreInvoiced
  *     MAKE notices Setup
  *     MAKE notices AMemberGetsPostNotices
  *     MAKE notices AMemberGetsOnlyTodaysPostNotices
@@ -545,6 +530,7 @@ function stats($list) {return t\stats($list);}
  *     MAKE rules Setup
  *     TEST rules RulesGetInstantiated
  *     MAKE rules AnEndedTemplateHasNoEffect
+ *     TEST weekly AMemberCashesOutAutomatically
  */
 function these($thing, $list) {return t\these($thing, $list);}
 

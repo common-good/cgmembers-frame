@@ -119,9 +119,10 @@ function formTx_submit($form, &$sta) {
   } else { // no delay
      
     if ($pid) {
-       $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, ray('purpose pid completed explicit cat', $purpose, $pid, now(), TRUE, $cat));
-       u\EXPECT($xid, 'outer transfer failed');
-       list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
+      $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
+      $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
+      u\EXPECT($xid, 'outer transfer failed');
+      list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
     } else {
       $data = $period ? ['recurs' => 1] : [];
       if ($start) $data['created'] = $start; // superAdmin chose a date in the past

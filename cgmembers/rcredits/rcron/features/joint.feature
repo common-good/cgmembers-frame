@@ -28,7 +28,7 @@ Scenario: a joint account needs refilling
   | .ZZA |   99.99 |
   | .ZZB |   99.99 |
   When cron runs "getFunds"
-  Then usd transfers:
+  Then these "txs2":
   | txid | payee | amount | xid |*
   |    1 | .ZZA  |  30    |   3 |
   And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:

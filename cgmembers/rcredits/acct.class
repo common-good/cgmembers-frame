@@ -835,7 +835,7 @@ EOF;
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
     $message = tr($index, $subs);
     $created = now();
-    f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
+    if (test()) f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
     if ($type) {
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
     } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }
@@ -1226,10 +1226,7 @@ o;
       $waiting = $a->waitingFromBank($combinable, $txid);
       $amount += $combinable;
       $amount0 = $amount;
-      if ($a->refill) { // round up, if member has agreed to that deal
-        $amount = max($amount, $a->achMin);
-        $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN));
-      }
+      if ($a->refill) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
 
       if ($combinable and $done = db\update('txs2_bank', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';

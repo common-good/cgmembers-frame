@@ -58,7 +58,7 @@ function formSignin($form, &$sta, $arg = '') {
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('qid pass pw2 vKeyE trust', $sta['input'], NULL));
-  if (isDEV and $qid == 'admin' and !a(1)) {
+  if (isDEV and $qid == 'admin' and !r\acct(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
     db\del('sessions', 'uid', '1');
     \CG\admin\setupBasicAccounts(); // happens sometimes during testing
@@ -75,7 +75,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
 
   if ($a->superAdmin) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
-    if ($pw2 and !$a->pw2) a(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
+    if ($pw2 and !$a->pw2) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
     r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
     if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in

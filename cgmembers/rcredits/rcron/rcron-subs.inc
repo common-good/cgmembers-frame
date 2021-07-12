@@ -78,7 +78,7 @@ function queue($op, $item = [], $always = FALSE) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);
-    $dup = $op == 'acctRisk1' ? FALSE : db\exists('queue', compact('item')); // allow dups just in this case
+    $dup = in($op, 'acctRisk1 geocode') ? FALSE : db\exists('queue', compact('item')); // allow dups just in this case
     if ($dup and in($op, 'payRequests getFunds1')) return; // not an error, but don't duplicate (payRequests was 5-minute getFunds followup on balChange)
     u\EXPECT(!$dup, 'item already in queue: ' . u\jsonize($item0));
     db\insert('queue', ray('item created', $item, now()));

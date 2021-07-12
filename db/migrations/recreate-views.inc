@@ -89,7 +89,7 @@ X;
   makeTxsView($z, 'txs_prime', "e.$primey AND e.id<0", "e.$primey AND e.id>0");
   makeTxsView($z, 'txs_aux', "e.$auxy AND $e2primish AND e2.id<0", "e.$auxy AND $e2primish AND e2.id>0");
   makeTxsView($z, 'txs_rebate', "e.$rebatey AND e2.$primey AND e2.id<0", "e.$rebatey AND e2.$primey AND e2.id>0");
-  makeTxsView($z, 'txs_usd_fee', "e.$usd_feey AND e2.$primey AND e2.id<0", "e.$usd_feey AND e2.$primey AND e2.id>0");
+  makeTxsView($z, 'txs_usd_fee', "e.$usd_feey AND $e2primish AND e2.id<0", "e.$usd_feey AND $e2primish AND e2.id>0");
   makeTxsView($z, 'txs_proper');  // all transactions between CG accounts
   makeTxsView($z, 'txs_bank', "e.$banky AND e.$isBank AND NOT e2.$isBank", "e.$banky AND NOT e.$isBank AND e2.$isBank");
   makeTxsView($z, 'txs_outer', "e.$outery AND e.$isOuter AND NOT e2.$isOuter", "e.$outery AND NOT e.$isOuter AND e2.$isOuter");

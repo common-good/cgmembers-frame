@@ -111,7 +111,7 @@ Scenario: A member cancels their purchase of store credit
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
   When member "C:B" visits page "history/transactions/period=5"
-  And member "C:B" clicks "X" on transaction 1
+  And member "C:B" clicks X on transaction 1
   Then transactions:
   | xid | created | amount | payer | payee | for               | rule |*
   |   2 | %today  |    -23 | .ZZA  | .ZZC  | $30 store credit  |    1 |

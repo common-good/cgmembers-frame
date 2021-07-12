@@ -268,9 +268,8 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
     return invoice($tx->actorA, $tx->otherA, $otherE->amount, $otherE->description, $tx->goods, ray('reversesXid', $xid), $tx->recursId);
   } else { // !$toMe and !$byMe: someone charged me (either unilaterally or I approved it)
     if (db\exists('tx_disputes', compact('xid'))) return txErr(t('already reverse requested', $xidSub), $subs);
-    $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
+    $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, nn($reason) ?: t('reason not specified'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
   
-    r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
     $tx->otherA->tellOut('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
     $amount = u\fmtAmt($otherE->amount);
@@ -436,20 +435,8 @@ function payInvoice($nvid, $payAmount = NULL) {
  * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  *
- * The following used to be possible keys for $data, but not any more:
- *   'inv': record number of the invoice for which this is payment
- *   'roundups'
- *   'roundups': the payment is change being donated to the community
- *   'rebate': the rebate amount for this request (should be negative the original bonus amount)
- *   'bonus': the bonus amount (should be negative the original rebate amount)
- *   'undoes': transaction id of the related transaction (transaction being undone)
- *
- *   'short': ?
- *   'funding': ?
- *
  * Do something different, based on these boolean values: 
  *   $taking (charge vs. payment), 
- *   $oked UNUSED (user confirmed the transaction request),
  *   $shortfall (how inadequate the payer's balance is)
  */
 function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = [], $recursId = NULL) {
@@ -632,6 +619,20 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $cat, $entryType0, $r
 }
 
 /**
+ * Insert entries for an existing transaction.
+ * @param array of entry objects $txes: the entries
+ * @param int $xid: the transaction header record ID
+ */
+function insertTxes($txes, $xid) {
+  $DBTX = \db_transaction();
+  foreach ($txes as $i => $entry) {
+    $txes[$i]->id = $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
+    u\EXPECT($eid, "Failed to insert transaction entry");
+  }
+  unset($DBTX);
+}
+
+/**
  * Create a personal credit for buyer or someone else, at the seller.
  * @param string $for: SELF_CREDIT, SELF_CREDIT50, or qid of gift recipient
  * @param acct $buyer: payer acct
@@ -665,12 +666,15 @@ function sendNotifications($type, $tx, $shortfall) {
 
   $otherA = $tx->otherA;
   $toMe = $tx->actorAmount > 0;
+  $goods = ($tx->goods == FOR_GOODS);
 
   switch ($type) {
   case 'charge':
   case 'draw':
+    $notices = $goods ? ['new payment', 'new refund'] : 'new charge';
+    $dids = $goods ? ['credited', 'refunded'] : 'charged';
     if (!$toMe) {   // I made a payment to other
-      if ($tx->goods == FOR_GOODS) {
+      if ($goods) {
         $notice = 'new refund';
         $did = 'refunded';
       } else {  // I made a payment to other
@@ -683,6 +687,8 @@ function sendNotifications($type, $tx, $shortfall) {
     }
     break;
   case 'payment':
+    $notices = ['new charge', 'new payment'];
+    $dids = ['charged', 'paid'];
     if (!$toMe) { // I made a payment to other
       $notice = 'new payment';
       $did = 'paid';
@@ -692,6 +698,8 @@ function sendNotifications($type, $tx, $shortfall) {
     }
     break;
   case 'invoice payment':
+    $notices = ['new charge', 'new payment'];
+    $dids = ['charged', 'paid'];
     if (!$toMe) { // I made a payment to other
       $notice = 'new payment';
       $did = 'paid';
@@ -707,8 +715,8 @@ function sendNotifications($type, $tx, $shortfall) {
       $notice = 'bank tx canceled';
       $did = 'reversed';
     } elseif ($byMe and !$toMe) {
-      $notice = ($tx->goods == FOR_GOODS) ? 'new refund' : 'new payment';
-      $did = ($tx->goods == FOR_GOODS) ? 'refunded' : 'credited';
+      $notice = ($goods) ? 'new refund' : 'new payment';
+      $did = ($goods) ? 'refunded' : 'credited';
     } elseif ($byMe and $toMe) {
       $notice = 'new charge';  // I charged other, reversing is refunding
       $did = 'charged';
@@ -837,8 +845,9 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
   $flags = 0;
-  foreach (justNOT("status shid coupon coupid force inv api request created for cat", $extra) as $k => $v) {
-    if ($k != 'reversesXid') u\setBit($flags, $k, $v);
+
+  foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
+    u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
@@ -851,7 +860,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount payer payee status purpose created flags data recursId cat'));
+  $info = compact(ray('amount payer payee status purpose created flags data recursId reversesXid cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
 
   if ($status == TX_PENDING) {
@@ -1165,6 +1174,7 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  *   int $completed: mark the transaction complete on this date
  *   int $pid: record ID of associated people record (NULL if none)
  *   int $cat: record ID in budget_cats of transaction category
+ *   string $bankAccount: the non-member bank account, if any (for ACH donations (or payments, NYI))
  *   string $purpose: transaction description
  *   int $deposit: date deposited
  * @return the transaction ID associated with the transfer request
@@ -1173,17 +1183,18 @@ function createUsdTransfer($a, $amount, $options = []) {
   u\EXPECT(compact(ray('a amount options')), 'acct int|float assoc');
   global $channel; 
   
-  extract(just('explicit created completed pid cat purpose deposit', $options, NULL));
+  extract(just('explicit created completed pid cat purpose deposit bankAccount', $options, NULL));
 
   u\setDft($explicit, $channel != TX_CRON);
   u\setDft($created, now());
   u\setDft($purpose, $amount > 0 ? t('from bank') : t('to bank'));
+  $payee = $a->id;
 
   list ($eType, $deposit, $bankId, $bankAccount) = $pid
-  ? [E_OUTER, $deposit ?: 0, UID_OUTER, NULL] // transfer to or from a non-member (with no CG account)
+  ? [E_OUTER, $deposit ?: 0, UID_OUTER, $bankAccount] // transfer to or from a non-member (with no CG account)
   : [E_BANK, 0, $amount >= 0 ? UID_BANK_IN : UID_BANK_OUT, nni($a->vsecure, 'bankAccount', NULL)];
+  u\EXPECT($bankAccount or $deposit or ($pid and $amount < 0), 'bad bank account in bank transfer request: ' . pr($options + compact('payee')));
 
-  $payee = $a->id;
   $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));
   txEntryPair($txes, 0, [$bankId, $payee], $purpose, $cat, $eType); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);

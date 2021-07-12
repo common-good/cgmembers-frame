@@ -154,7 +154,7 @@ function doit(what, vs) {
     });
     function mem0Click(member) {
       reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member, vs['admin'] == 1);
-      reqQ($('.form-item-fullName, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
+      reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
     }
     break;
 

@@ -15,7 +15,7 @@ Setup:
   | .ZZB | .ZZA  | read       |
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created    | completed  | deposit    |*
   |   11 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
   |   12 |  .ZZB |   2000 | %today-13m | %today-13m | %today-13m |

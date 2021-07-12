@@ -16,7 +16,7 @@ Setup:
   And relations:
   | main | other | permission |*
   | .ZZC | .ZZB  |     manage |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created   | completed | deposit   |*
   | 5001 |  .ZZA |     99 | %today-7d | %today-5d | %today-1d |
   | 5002 |  .ZZA |    100 | %today-5d |         0 | %today-1d |
@@ -40,7 +40,7 @@ Scenario: a member moves credit to the bank
   When member ".ZZA" completes form "get" with values:
   | op  | amount |*
   | put |     86 |
-  Then usd transfers:
+  Then these "txs2":
   | payee | amount | created   | completed | channel | xid |*
   |  .ZZA |    -86 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:
@@ -54,7 +54,7 @@ Scenario: a member draws credit from the bank with zero floor
   When member ".ZZB" completes form "get" with values:
   | op  | amount    |*
   | get | %R_ACHMIN |
-  Then usd transfers:
+  Then these "txs2":
   | txid | payee | amount    | created | completed | channel | xid | deposit |*
   | 5007 |  .ZZB | %R_ACHMIN | %now    |         0 | %TX_WEB |   8 |       0 |
   And transactions:
@@ -71,7 +71,7 @@ Scenario: a member draws credit from the bank with adequate floor
   When member "C:B" completes form "get" with values:
   | op  | amount |*
   | get |     10 |
-  Then usd transfers:
+  Then these "txs2":
   | txid | payee | amount | created | completed | channel | xid |*
   | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |   8 |
   And balances:
@@ -113,7 +113,7 @@ Scenario: a member tries to go below their minimum
   Then we say "error": "change min first"
 
 Scenario: a member asks to do two transfers out in one day
-  Given usd transfers:
+  Given these "txs2":
   | payee | amount | created   |*
   |  .ZZD |     -6 | %today    |
   When member ".ZZD" completes form "get" with values:
@@ -130,7 +130,7 @@ Scenario: a member draws credit from the bank then cancels
   When member "C:B" completes form "get" with values:
   | op  | amount |*
   | get |     10 |
-  Then usd transfers:
+  Then these "txs2":
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZC |     10 | %today  |    %today |       0 | %TX_WEB |   8 |
   And transactions:
@@ -157,7 +157,7 @@ Scenario: a member with a negative balance requests a transfer from the bank
   When member ".ZZA" completes form "get" with values:
   | op  | amount |*
   | get |     30 |
-  Then usd transfers:
+  Then these "txs2":
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZA |     30 | %today  |         0 |       0 | %TX_WEB |   8 |
   And transactions:
@@ -178,7 +178,7 @@ Scenario: a slave member requests a transfer
   When member ".ZZE" completes form "get" with values:
   | op  | amount |*
   | put |     16 |
-  Then usd transfers:
+  Then these "txs2":
   | payee | amount | created   | completed | channel | xid |*
   |  .ZZE |    -16 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:

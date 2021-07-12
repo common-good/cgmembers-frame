@@ -5,8 +5,8 @@ SO I can transfer funds easily to and/or fro
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | floor | flags      | risks   |*
-  | .ZZA | Abe One  |       0 |   -20 | ok,debt    |         |
+  | uid  | fullName | minimum | floor | flags      | risks   | bankAccount |*
+  | .ZZA | Abe One  |       0 |   -20 | ok,debt    |         |             |
 
 Scenario: A member connects a bank account during signup
   When member ".ZZA" visits page "settings/fund"

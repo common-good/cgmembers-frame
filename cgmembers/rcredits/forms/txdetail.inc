@@ -103,11 +103,14 @@ function formTxDetail_validate($form, &$sta) {
 
 function formTxDetail_submit($form, &$sta) {
   $input = $sta['input'];
+  
+  $DBTX = \db_transaction();
   if ($info = just('xid created', $input)) db\update('tx_hdrs_all', $info, 'xid');
   if ($info = just('xid eid type amt for cat', $input)) {
     if (!$info['cat']) $info['cat'] = NULL;
     db\q('UPDATE tx_entries_all SET entryType=:type, amount=IF(id<0, -:amt, :amt), description=:for, cat=:cat WHERE xid=:xid AND ABS(id)=:eid', $info);
   }
+  unset($DBTX);
 
   return w\go('history/transactions');
 }

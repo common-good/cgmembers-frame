@@ -19,13 +19,13 @@ function formCGPay($form, &$sta) {
   global $mya;
   $args = u\_GET() ?: $_POST;
   if (!$res = getCGPayArgs($args)) return; // if there were errors, don't continue
-  extract($res); // co, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
+  extract($res); // coA, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
   
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
   if ($verb == t('Donate')) u\setDft($s_item, t('donation'));
 
-  $suffix = t(' to ') . $co->fullName;
+  $suffix = t(' to ') . $coA->fullName;
   if ($amount) {
     $amtDpy = item(u\fmtAmt($amount, ''), "$verb:", '', suffix($suffix));
     $amount = hidFld($amount);

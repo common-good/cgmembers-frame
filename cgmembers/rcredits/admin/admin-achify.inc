@@ -46,7 +46,11 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
-  $q = db\q("SELECT txid,payee,amount,deposit FROM txs2_bank WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid");
+  $sql = <<< X
+    SELECT txid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
+    WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid
+X;
+  $q = db\q($sql);
   $tot = 0;
 
   $DBTX = \db_transaction();
@@ -56,17 +60,25 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     $tot += abs($amount);
     $count++;
     
-    $a = r\acct($payee);
-    $bankAccountType = 'checking'; // we handle only checking accounts at this time
-    if ($a->mainQid == 'NEWAFX') $bankAccountType = 'savings';
-    list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
-    list ($routing, $account) = u\parseBankAccount($a->bankAccount);
+    if ($payee == UID_OUTER) {
+      $name = db\get('fullName', 'people', compact('pid'));
+      $id = $pid;
+    } else { // member account transfer
+      $a = r\acct($payee);
+      $name = u\asciiOnly($a->legalName);
+      $id = $a->mainQid;
+    }
+
+    $name = u\asciiOnly($name);
+    list ($recType, $addendaFlag) = [6, 0];
+    if (!$bankAccount = u\decry('V', $bankAccount)) u\FAIL('bad bank account in txs2: ' . pr($row));
+    list ($routing, $account) = u\parseBankAccount($bankAccount);
     if (isDEV and !$routing) $routing = $account = '211672476';
     
     $amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $txCode = $amount == 0 ? 23 
-    : ($bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37));
+    : ($isSavings ? ($amount < 0 ? 32 : 37) : ($amount < 0 ? 22 : 27));
     $amount = abs($amount);
 
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);

@@ -21,10 +21,10 @@ function formTxs($form, &$sta, $args = '') {
   
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
 
-  extract(just('options period starting ending do xid download downloaded', $args)); 
+  extract(just('options period starting ending undo download downloaded', $args)); 
   
   global $testPeriod; $testPeriod = nn($period) ?: TX_DEFAULT_PERIOD; // remember for tests
-  if (nn($do)) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
+  if (nn($undo)) if ($result = reverseTx($undo, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
   $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
@@ -92,17 +92,24 @@ function formTxs_submit($form, &$sta) {
 }
 
 /**
- * Handle deletion of the given transaction, when the user clicks the delete button by it.
+ * Reverse the given transaction, when the user clicks the X button by it.
  */
-function handleTx($do, $xid, &$sta, $args) {
+function reverseTx($xid, &$sta, $args) {
   global $mya;
-  $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again
 
-  if ($mya->superAdmin and $tx = db\get('*', 'txs2', compact('xid'))) { // superAdmin reversing bank transfer
-    u\EXPECT($do == 'no', 'trying to edit bank transfer');
+  if (!$xid = (int) nn($xid)) return FALSE;
+  if (!$mya->lastTx(compact('xid'))) return err($mya->admin ? t('That is not a transaction for this account.') : t('That transaction does not exist.'));
+
+  $url = strstr("history/transactions/$args", '&undo=', TRUE); // don't loop when we redirect
+
+  if ($tx = db\get('*', 'txs2', compact('xid'))) { // reversing bank transfer or outer tx
     foreach (just('txid amount', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
-    extract(just('txid amount deposit completed', $tx));
-    u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
+    extract(just('txid amount deposit completed pid', $tx));
+    if (!$mya->superAdmin) {
+      if ($pid) {
+//        if ($deposit) return err(
+      } else return err(t('To reverse a bank transfer, go to your <%a>Dashboard</a>, click "Bank", and either cancel a pending transfer or request a transfer back the other way.', '_a', atag('/dashboard')));
+    }
 
     $DBTX = \db_transaction();
     $z = be\reverse($xid); // create an offsetting tx
@@ -115,15 +122,10 @@ function handleTx($do, $xid, &$sta, $args) {
     unset($DBTX);
     
     return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
+  } else { // reversing normal transaction
+    $z = be\undoTx($xid); // X (reverse it)
+    return w\go($url, $z->msg, $z->ok ? '' : 'err'); // back to the normal form
   }
-  
-  if (!$xid = (int) nn($xid)) return FALSE;
-  if ($do == 'edit') return txEdit($xid);
-  if ($do == 'ok' or $do == 'no') {
-    txOKorNO($do, $xid);
-    return w\go($url); // back to the normal form
-  }
-  return FALSE;
 }
 
 /**
@@ -222,8 +224,4 @@ function txSummary($starting, $ending, &$endBalance = '') {
  */
 function txOKorNO($task, $xid) {
   global $mya;
-  if (!$mya->lastTx(compact('xid'))) return err(t('That transaction does not exist.'));
-  
-  $z = be\undoTx($xid); // X (reverse it)
-  say($z->msg);
 }

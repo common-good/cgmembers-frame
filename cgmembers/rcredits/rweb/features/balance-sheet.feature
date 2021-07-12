@@ -30,7 +30,7 @@ Setup:
   | payer | payee | amount | status   |*
   | .ZZB  | ctty  |     20 | approved |
   | ctty  | .ZZA  |     10 | pending  |
-  And usd transfers:
+  And these "txs2":
   | payee | amount | created    | completed  |*
   |  .ZZA |   1000 | %today-13m | %today-13m |
   |  .ZZB |   2000 | %today-13m | %today-13m |

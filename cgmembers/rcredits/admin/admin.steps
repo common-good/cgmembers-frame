@@ -57,14 +57,6 @@ function members($list) {return t\members($list);}
 function transactions($list) {return t\transactions($list);}
 
 /**
- * usd transfers: (ARG)
- *
- * in: MAKE 1099s Setup
- *     BOTH checks AdminPrintsChecks
- */
-function usdTransfers($tx) {return t\usdTransfers($tx);}
-
-/**
  * member (ARG) visits page (ARG)
  *
  * in: MAKE aaOther AdminDeletesAnAccount
@@ -154,7 +146,9 @@ function with($content) {return t\weShow($content);}
 /**
  * these (ARG): (ARG)
  *
- * in: TEST aaOther AdminDeletesAnAccount
+ * in: MAKE 1099s Setup
+ *     TEST aaOther AdminDeletesAnAccount
+ *     BOTH checks AdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
