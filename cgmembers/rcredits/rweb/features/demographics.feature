@@ -63,7 +63,7 @@ Setup:
   |  12 | %today-1d |     40 | .ZZJ | .ZZC | labor   | %TX_WEB |
   |  13 | %today-1d |     10 | .ZZA | cgf  | gift    | %TX_WEB |
   |  14 | %today-1d |     11 | .ZZB | cgf  | gift    | %TX_WEB |  
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | completed |*
   |    1 | .ZZA  |    400 | %today-2m |  
   |    2 | .ZZB  |    100 | %today-2m |  

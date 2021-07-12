@@ -49,17 +49,17 @@ function formRules($form, &$sta, $args = '') {
   $to = textFld(REQ . t('To:'), $fromToDesc, dft($to));
   $action = radiosFld(REQ . t('Action:'), '', dft($action), ray(ACT_LIST));
   $amount = numFld(t('Amount:'), '', dft($amount > 0 ? $amount : '') + vmin(.01));
-  $portion = numFld(t('Portion:'), '', dft($portion) + vmin(.001) + step('.001'));
+  $portion = numFld(t('Portion:'), '', dft($portion > 0 ? $portion : '') + vmin(.001) + step('.001'));
   $purpose = textFld(REQ . t('Purpose:'), '', dft($purpose));
   $minimum = numFld(t('Minimum:'), '', dft($minimum));
   $useMax = intFld(t('Use Max:'), $maxDesc, dft($useMax));
   $amtMax = numFld(t('Extra Max:'), $maxDesc, dft($amtMax));
   $start = dateFld(t('Start:'), $dtDesc, dft($start));
   $end = dateFld(t('End:'), $dtDesc, dft($end));
-  $period = selectFld(t('Period:'), '', dft($period), ray(PERIODS));
   $periods = intFld(t('Periods:'), '', dft($periods ?: 1));
-  $duration = selectFld(t('Duration:'), '', dft($duration), ray(PERIODS));
+  $period = selectFld(t('Period:'), '', dft($period), r\recurRay(TRUE, PERIODS));
   $durations = intFld(t('Durations:'), '', dft($durations ?: 1));
+  $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
   $template = textFld(t('Template:'), '', dft($template));
   $code = textFld(t('Code:'), '', dft($code));
   
@@ -85,7 +85,7 @@ function formRules_validate($form, &$sta) {
   foreach (ray('payerType payeeType') as $k) $$k = ray(REF_LIST)[$$k];
   $action = ray(ACT_LIST)[$action];
   
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, today())) return say($err, $k);
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k)) return say($err, $k);
   if (!$start) $start = now();
 
   foreach (ray('amount portion minimum useMax amtMax') as $k) if ($$k and $err = u\badAmount($$k, '>=0', $k == 'useMax' ? 0 : 2)) return say("$err ($k)", $k);
@@ -97,9 +97,9 @@ function formRules_validate($form, &$sta) {
 
 function formRules_submit($form, &$sta) {
   list ($tnm, $flds, $input) = getTtype($sta);
+
   extract($input);
-  
-  foreach (ray(NULL_FLDS) as $k) if (empty($$k)) $input[$k] = NULL;
+  foreach (just(NULL_FLDS, $input) as $k => $v) if (empty($v)) $input[$k] = NULL;
   
   if ($id) {
     db\update($tnm, $input, 'id');

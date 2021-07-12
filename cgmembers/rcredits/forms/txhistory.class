@@ -85,14 +85,13 @@ EOF;
     $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
     $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
     $this->body .= "<tbody class=\"$class\">\n";
-    $url = "BASE_URL?xid=&do=no";
     $xid = $info['xid'];
 
     // I am payee and amount > 0 or I am payer and amount < 0
     $reallyToMe = $info['myAmount'] > 0;
 
     if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe)) {
-      $this->buttons = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
+      $this->buttons = w\btn("$this->baseUrl&undo=$xid", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
     } else $this->buttons = '';
     
     $pageClasses = 'page-' . floor($this->count / MIN_TX_ROWS) . ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);

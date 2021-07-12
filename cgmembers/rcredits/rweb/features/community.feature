@@ -24,7 +24,7 @@ Setup:
   And these "tx_timed":
   | id | action | start     | end | amount | from | to   | period | purpose |*
   |  1 | pay    | %today-8m |     |     12 | .ZZC | .AAB | year   | gift    |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created    | completed  |*
   |  100 | .ZZA  |   1000 | %today-20d | %today-13d |
   |  101 | .ZZB  |   2000 | %today-21d | %today-14d |

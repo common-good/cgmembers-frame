@@ -17,7 +17,7 @@ Setup:
   | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
   
 Scenario: admin prints checks
-  Given usd transfers:
+  Given these "txs2":
   | txid | payee | amount | created   | deposit      | completed |*
   | 5001 | .ZZA  |    100 | %today-3w | %daystart-2w | %today-3w |
   | 5002 | .ZZA  |    400 | %today-2w |            0 | %today    |
@@ -33,7 +33,7 @@ Scenario: admin prints checks
   | Abe One | 1 A, Aton, MA 01001 | 413 772 0001 | 53-7028/2118 |   01 |   2 | %dmy | $ 400 | Four Hundred and NO/100 | Greenfield Co-op Bank |
   | Bea Two | 2 B, Bton, MA 01002 | 413 772 0002 | 53-7028/2118 |   02 |   3 | %dmy | $ 100 | One Hundred and NO/100 | Greenfield Co-op Bank |
   | Cor Pub | 3 C, Cton, MA 01003 | 413 772 0003 | 53-7028/2118 |   03 |   4 | %dmy | $ 300 | Three Hundred and NO/100 | Greenfield Co-op Bank |  
-  And usd transfers:
+  And these "txs2":
   | txid | deposit   | xid |*
   | 5002 | %daystart |   2 |
   | 5003 | %daystart |   3 |

@@ -153,10 +153,7 @@ class Tx {
     }
     u\EXPECT($xid, "Failed to insert transaction header record");
 
-    foreach ($tx->entries as $i => $entry) {
-      $tx->entries[$i]->id = $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
-      u\EXPECT($eid, "Failed to insert transaction entry");
-    }
+    be\insertTxes($tx->entries, $xid);
     $this->xid = $xid;
     unset($DBTX);
     return $xid;
@@ -212,7 +209,7 @@ EOF;
 
   /**
    * Return the last transaction meeting the given criteria, for the given user.
-   * Rebates, bonuses, and deleted transactions are ignored
+   * Subsidiary transactions are ignored
    * @param array $uids: an array of uids to consider
    * @param string $where: additional criteria (defaults to 1 = any)
    * @param array $subs: optional substitutions (will be prefixed with colons)
@@ -221,8 +218,8 @@ EOF;
   static function lastTx($uids, $where = 1, $subs = []) {
 ///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
     if (is_array($where) and !$subs) list ($where, $subs) = [u\where($where), $where];
-    $where = "e.uid IN (:uids) AND entryType=:E_PRIME AND $where ORDER BY t.created DESC LIMIT 1";
-    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, compact('uids') + $subs);
+    $where = "e.uid IN (:uids) AND entryType IN (:primes) AND $where ORDER BY t.created DESC LIMIT 1";
+    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, ray('uids primes', $uids, E_PRIMES) + $subs);
     if (empty($xid)) return FALSE;
     $tx = self::read($xid);
     if (empty($tx)) return FALSE;

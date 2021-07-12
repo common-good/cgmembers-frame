@@ -50,8 +50,8 @@ $GLOBALS['tStrings'] = array(
   'inflation details' => t('Inflation adjustment is set at 5% APR pending a reliable measure of the true inflation rate.'),
   'gift sent' => t('Your chosen gift of %amount to %PROJECT has gone through.'),
   'recur pay' => t('Your %when payment of %amount to %payee for "%purpose" has gone through.'),
-  'tx desc passive' => t('%otherName %otherDid you %amount'),
-  'tx desc active' => t('You %did %otherName %amount'),
+  'tx desc passive' => t('%otherName %otherDid you %amount.'),
+  'tx desc active' => t('You %did %otherName %amount.'),
   'when' => t('on %created'),
   'purpose' => t('for %purpose'),
   'confirm tx action' => t('Okay to %txAction?'),
@@ -229,6 +229,7 @@ EOF
   'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),
   'sent message' => t('Your message has been sent to %fullName.'),
   'pass saved' => t('Your new password has been saved.'),
+  'fbo cc fee' => t('credit card donation fee (%FBO_CC_FEE%)'),
     
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',

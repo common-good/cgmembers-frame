@@ -9,11 +9,11 @@ Setup:
   | .ZZA | Abe One    | -500  | personal    | ok,roundup  |      0 | Avil |
   | .ZZB | Bea Two    | -500  | personal    | ok,co       |      0 | Bvil |
   | .ZZC | Corner Pub | -500  | corporation | ok,co,paper |   0.02 | Cvil |
-  And usd transfers:
-  | payee | amount | completed |*
-  | .ZZA  |    400 | %today-2m |  
-  | .ZZB  |    100 | %today-2m |  
-  | .ZZC  |    300 | %today-2m |  
+  And these "txs2":
+  | payee | amount | completed | deposit   |*
+  | .ZZA  |    400 | %today-2m | %today-2m |
+  | .ZZB  |    100 | %today-2m | %today-2m |  
+  | .ZZC  |    300 | %today-2m | %today-2m |
   Then balances:
   | uid  | balance |*
   | .ZZA |     400 |
@@ -132,33 +132,37 @@ Scenario: Crumbs are invoiced
   Then invoices:
   | nvid | created        | payer | payee | amount | flags       | purpose                                      | status       |*
   |    1 | %(%daystart-1) | .ZZC  | crumb |   2.40 | gift,crumbs | crumbs donation: 2.0% of past month receipts | %TX_APPROVED |
+  And these "txs2":
+  | xid | payee | amount | completed | deposit |*
+  | 13  | .ZZC  | 502.40 |         0 |       0 |
   And transactions:
-  | xid | created        | amount | payer | payee | purpose           | flags |*
-  | 13  | %(%daystart-1) |   1.00 | round | cgf | roundup donations | gift  |
-  And count "txs" is 13
+  | xid | created        | amount | payer   | payee | purpose           | flags |*
+  | 13  | %now           |      0 | bank-in | .ZZC  | from bank         |       |
+  | 14  | %(%daystart-1) |   1.00 | round   | cgf   | roundup donations | gift  |
+  And count "txs" is 14
   And count "tx_requests" is 1
 
   When cron runs "everyMonth"
-  Then count "txs" is 13
+  Then count "txs" is 14
   And count "tx_requests" is 1
   
   Given transactions:
   | xid | created   | amount | payer | payee | purpose |*
-  |  14 | %today-4d |    770 | .ZZB | .ZZC | repay   |
-  Then count "txs" is 14
+  |  15 | %today-4d |    770 | .ZZB | .ZZC | repay   |
+  Then count "txs" is 15
 
   When cron runs "everyMonth"
-  Then count "txs" is 14
+  Then count "txs" is 15
   And count "tx_requests" is 1  
 
   When cron runs "getFunds"
+  Then count "txs" is 16
   Then transactions:
-  | xid | created | amount | payer | payee | purpose                                     | flags       |*
-  | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
-  And count "txs" is 15
+  | xid | created        | amount | payer   | payee | purpose           | flags |*
+  | 16  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
 
   When cron runs "getFunds"
-  Then count "txs" is 15
+  Then count "txs" is 16
   
 # NO (Seedpack gets no distribution) distribution of shares to CGCs
 #  And transactions:

@@ -25,6 +25,7 @@ const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewher
 const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
+const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 
 $base_url = config('baseUrl');
 define('GEOCODE_KEY', config('geocodeKey'));
@@ -226,6 +227,7 @@ define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:T
 define('POST_NOTICE_TYPE_KEYS', 'offer need tip');
 const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:w,out:d,misc:d';
 const NOTICE_DFTS_CTTY = 'offer:n,need:n,tip:n,in:d,out:d,misc:d';
+const NOTICE_NONE = 'offer:n,need:n,tip:n,in:n,out:n,misc:n'; // for one-time non-member donations
 const SEND_NOW = 'i';
 const SEND_IN = 'in';
 const SEND_OUT = 'out';
@@ -357,6 +359,7 @@ const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid
 const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
+const FBO_CC_FEE = 3; // percentage of donation amount to charge for credit card donations to sponsored organizations
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
@@ -631,19 +634,20 @@ const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
 const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, or rule-based donation) triggered by another transaction
                   // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
-const E_USD_FEE = 4; // fee from customer to merchant for buying (or selling?) Common Good credit
+const E_USD_FEE = 4; // fee from customer to merchant for credit card or check transaction
 const E_BANK = 5; // CG account transfers to or from the member's bank (replaces E_PRIME)
 const E_XFEE = 6; // transfer fee to merchant (UNUSED)
 const E_OUTER = 7; // CG account transfers to or from a non-member (replaces E_PRIME)
 const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer';
 const E_PRIMES = [E_PRIME, E_BANK, E_OUTER]; // these types can be the main transaction, potentially having auxiliary transactions
 
-const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
+const REF_LIST = 'anybody account anyCo industry group person'; // values for payerType and payeeType in tx_rules
 const REF_ANYBODY = 'anybody';
 const REF_ACCOUNT = 'account';
 const REF_ANYCO = 'anyCo';
 const REF_INDUSTRY = 'industry';
 const REF_GROUP = 'group';
+const REF_PERSON = 'person';
 
 const ACT_LIST = 'pay charge surtx redeem'; // values for action field in tx_rules
 const ACT_PAY = 'pay';
@@ -665,6 +669,7 @@ define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
   'fbo-thanks' => t('Thank you for your donation!'),
+  'fbo-report' => t('You have a donation'),
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('new solar subscription'),
   'partner-contract' => t('Continue your Community Solar sign-up'),

@@ -5,16 +5,35 @@ SO I can accept donations and make payments for a fiscally-sponsored organizatio
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state  | zip | country  | postalAddr | floor | flags              | coFlags   |*
-  | .ZZA | Abe One  | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |
-  | .ZZB | Bea Two  | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |
-  | .ZZC | Our Pub  | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored |
+  | uid  | fullName | phone        | address | city  | state  | zip | country  | postalAddr | floor | flags              | coFlags   | emailCode |*
+  | .ZZA | Abe One  |              | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
+  | .ZZB | Bea Two  |              | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |           |
+  | .ZZC | Our Pub  | 333 333 3333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored | Cc3       |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | manage     |
+  And these "tx_rules":
+  | id        | 1            |**
+  | payer     |              |
+  | payerType | %REF_ANYBODY |
+  | payee     | .ZZC         |
+  | payeeType | %REF_ACCOUNT |
+  | from      | %MATCH_PAYEE |
+  | to        | cgf          |
+  | action    | %ACT_SURTX   |
+  | amount    | 0            |
+  | portion   | .05          |
+  | purpose   | sponsor      |
+  | minimum   | 0            |
+  | useMax    |              |
+  | amtMax    |              |
+  | template  |              |
+  | start     | %now         |
+  | end       |              |
+  | code      |              |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -37,25 +56,6 @@ Scenario: A non-member donates to a sponsored member
   Given members have:
   | uid  | flags    |*
   | .ZZA | ok,admin |
-  And these "tx_rules":
-  | id        | 1            |**
-  | payer     |              |
-  | payerType | %REF_ANYBODY |
-  | payee     | .ZZC         |
-  | payeeType | %REF_ACCOUNT |
-  | from      | %MATCH_PAYEE |
-  | to        | cgf          |
-  | action    | %ACT_SURTX   |
-  | amount    | 0            |
-  | portion   | .05          |
-  | purpose   | sponsor      |
-  | minimum   | 0            |
-  | useMax    |              |
-  | amtMax    |              |
-  | template  |              |
-  | start     | %now         |
-  | end       |              |
-  | code      |              |
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | address | city | state | zip   | amount | purpose | cat |*
   | charge | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |
@@ -70,7 +70,7 @@ Scenario: A non-member donates to a sponsored member
   |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 100    | %now      |       0 | 1   |
+  | 1   | .ZZC  | 100    | %now      | %now    | 1   |
   And these "people":
   | pid | fullName | address | city | state | zip   |*
   | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 |
@@ -81,7 +81,7 @@ Scenario: A non-member donates to a sponsored member
   | .ZZC |      95 |
   | cgf  |       5 |
 
-Scenario: A non-member pays a sponsored member
+Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
   Then we show "Pay" with:
   | Member      | Non-member |
@@ -175,3 +175,97 @@ Scenario: A sponsored member views their transaction history
   | Category    | Government grants |
   | Our Agent   | Bea Two |
   | Channel     | Web |
+
+Scenario: A non-member donates to a sponsored organization by credit card
+  Given a button code for:
+  | account | secret |*
+  | .ZZC    | Cc3    |
+  When member "?" visits "donate-fbo/code=TESTCODE"
+  Then we show "Donate to Our Pub" with:
+  | Donation    |
+  | Name        |
+  | Phone       |
+  | Email       |
+  | Country     |
+  | Postal Code |
+  | Pay By      |
+  | Donate      |
+
+  Given next captcha is "37"
+  And var "CODE" encrypts:
+  | pid | amount | period | coId   |*
+  | 1   | 123.00 | once   | NEWZZC |
+  When member "?" completes "donate-fbo/code=TESTCODE" with:
+  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
+  Then these "people":
+  | pid | fullName | phone        | email | zip   | state |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+  And we redirect to "https://www.paypal.com/donate"
+  And return URL "/donate-fbo/op=done&code=CODE"
+  
+  When member "?" visits "donate-fbo/op=done&code=CODE"
+  Then these "txs2":
+  | xid | payee | amount | completed | deposit | pid |*
+  | 1   | .ZZC  | 123    | %now      |    %now | 1   |
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose    | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
+  | 4   | 1   | .ZZC       | cgf   | 3.69   | fbo cc fee | %E_USD_FEE |
+  And we email "fbo-thanks" to member "z@" with subs:
+  | fullName     | Zee Zot         |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | gift         | $123            |
+  And we email "fbo-report" to member "c@" with subs:
+  | gift         | $123                 |**
+  | date         | %mdY                 |
+  | donor        | Zee Zot              |
+  | donorAddress | Springfield, MA 01301 |
+# should be Greenfield - update with "zips" feature
+  | donorPhone   | +1 262 626 2626      |
+  | donorEmail   | z@example.com        |
+  | fullName     | Our Pub              |
+  | qid          | .ZZC                 |
+  And we say "status": "gift thanks"
+
+Scenario: A non-member donates to a sponsored organization by ACH
+  Given a button code for:
+  | account | secret |*
+  | .ZZC    | Cc3    |
+  And next captcha is "37"
+  When member "?" completes "donate-fbo/code=TESTCODE" with:
+  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
+  Then these "people":
+  | pid | fullName | phone        | email | zip   | state |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+  And these "txs2":
+  | xid | payee | amount | completed | deposit | pid |*
+  | 1   | .ZZC  | 123    | %now      |       0 | 1   |
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose    | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
+  And count "tx_entries" is 4
+  And we email "fbo-thanks" to member "z@" with subs:
+  | fullName     | Zee Zot         |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | gift         | $123            |
+  And we email "fbo-report" to member "c@" with subs:
+  | gift         | $123                 |**
+  | date         | %mdY                 |
+  | donor        | Zee Zot              |
+  | donorAddress | Springfield, MA 01301 |
+# should be Greenfield - update with "zips" feature
+  | donorPhone   | +1 262 626 2626      |
+  | donorEmail   | z@example.com        |
+  | fullName     | Our Pub              |
+  | qid          | .ZZC                 |
+  And we say "status": "gift thanks"

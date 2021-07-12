@@ -5,11 +5,11 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | uid  | fullName | floor | flags             | risks   |*
-  | .ZZA | Abe One  |     0 | ok,confirmed      |         |
-  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |
-  | .ZZC | Our Pub  |     0 | ok,confirmed,co   | hasBank |
-  | .ZZD | Dee Four |     0 |                   |         |
+  | uid  | fullName | floor | flags             | risks   | bankAccount  |*
+  | .ZZA | Abe One  |     0 | ok,confirmed      |         |              |
+  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              |
+  | .ZZC | Our Pub  |     0 | ok,confirmed,co   | hasBank | %T_BANK_ACCT |
+  | .ZZD | Dee Four |     0 |                   |         |              |
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |

@@ -20,8 +20,8 @@
  */
 
 require_once 'cg.inc';
-require_once 'cg-testing.inc';
 require_once 'cg-util.inc';
+require_once 'cg-testing.inc';
 
 use CG as r;
 use CG\Util as u;
@@ -181,7 +181,7 @@ function f($func) {
   global $cronOp; 
   list ($prefix, $funcName) = explode('.', $func);
   $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
-  if ($flnm = nni($incs, $prefix)) require_once __DIR__ . "/$flnm";
+  if ($flnm = nni($incs, $prefix)) require_once R_ROOT . "/$flnm";
 
   if ($prefix == 'v') {
     include_once R_ROOT . '/rvote/rvote.inc';

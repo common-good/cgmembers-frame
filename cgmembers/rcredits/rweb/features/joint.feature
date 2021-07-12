@@ -67,7 +67,7 @@ Scenario: A joined account member looks at transaction history and summary
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created   | completed |*
   |  600 | .ZZA  |   1000 | %today-6m | %today-6m |
   |  601 | .ZZB  |    600 | %today-2w | %today-2w |

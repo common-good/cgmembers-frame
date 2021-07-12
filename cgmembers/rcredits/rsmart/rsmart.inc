@@ -90,7 +90,8 @@ function pos($args = FALSE) {
   if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing object args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
-  if ($args) f('t.POST', $args); else $args = $_POST;
+  if ($args) $_POST = $args; else $args = $_POST;
+  if (test()) f('t.POST', $args);
   $args0 = $args;
 //  $args = u\sanitizeInput($args0 = $args);
   extract(just('op signin device agent member version', $args, NULL));

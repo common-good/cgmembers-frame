@@ -116,7 +116,7 @@ function periodic() {
   often('day', R_DAILY_HOUR); // longer periods get queued in lessOften(), so notices are last
   
   $sql = <<< X
-    SELECT * FROM (
+    SELECT DISTINCT * FROM (
       SELECT 'users' AS tnm, uid AS id, '' AS address, city, state, zip, latitude, longitude
         FROM users WHERE risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC
       UNION SELECT 'people' AS tnm, pid AS id, address, city, state, zip, latitude, longitude

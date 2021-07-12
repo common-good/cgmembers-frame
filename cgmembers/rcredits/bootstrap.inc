@@ -1829,7 +1829,6 @@ function drupal_bootstrap() {
 
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
-
   // Register autoload functions so that we can access classes and interfaces.
   // The database autoload routine comes first so that we can load the database
   // system without hitting the database. That is especially important during
@@ -1839,7 +1838,7 @@ function drupal_bootstrap() {
 
   require_once DRUPAL_ROOT . '/includes/cache.inc';
   drupal_block_denied(ip_address());
-  
+
   _drupal_bootstrap_variables();
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
@@ -1850,7 +1849,7 @@ function drupal_bootstrap() {
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';
-  
+
   _drupal_bootstrap_full();
   if (!db\exists('menu_links')) \menu_rebuild();
 

@@ -375,7 +375,7 @@ function rcredits_radio($variables) {
   $type = 'radio';
   $class[] = 'form-radio';
   $tribs = u\tribs(compact(ray('type class')) + $attributes);
-  if (nni($attributes, 'checked')) f('t.setRadio', $parents[0], $title);
+  if (test() and nni($attributes, 'checked')) f('t.setRadio', $parents[0], $title);
 
   return "<input $tribs />";
 }
@@ -405,7 +405,7 @@ function rcredits_checkbox($variables) {
   $type = 'checkbox';
   if (nn($checked) or nn($default_value)) $attributes['checked'] = 'checked';
   if (nn($class)) $attributes['class'] = $class;
-  if (nni($attributes, 'checked')) f('t.setChecked', $title);
+  if (test() and nni($attributes, 'checked')) f('t.setChecked', $title);
   $tribs = u\tribs(compact('type') + $attributes);
   return "<input $tribs />";
 }

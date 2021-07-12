@@ -166,7 +166,7 @@ function formAdminPanel_submit($form, &$sta) {
   $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
 
   if ($op == 'txs') {
-    $fields = 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init, tid1, tid2';
+    $fields = 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init';
     return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
   }
 

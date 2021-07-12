@@ -36,7 +36,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose'; // first key is probably an ID field, so keep it at the front
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
@@ -62,6 +62,7 @@ function fixData(&$info, $direct = FALSE) {
     }
     $coFlags = $res;
   }
+  if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
 
   if (nn($who)) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -240,9 +241,12 @@ function doAccounts($info = []) {
   //    u\setDft($photoId, "$state-{$zip}999");
   u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
   /**/  if ($helper === '') die(trace()); // set helper to zero if none, never blank
-  u\setDft($last4bank, substr(nn($bankAccount), -4, 4));
 
-  if (u\getBit(nn($flags), B_OK)) u\setBit($flags, B_MEMBER);
+  if (u\getBit(nn($flags), B_OK)) {
+    u\setBit($flags, B_MEMBER);
+    u\setDft($bankAccount, T_BANK_ACCT);
+  }
+  u\setDft($last4bank, substr(nn($bankAccount), -4, 4));
 
   $moneyFields = 'committed floor rewards'; // not minimum because NULL means not set, in Membership page
   foreach (ray($moneyFields) as $one) u\setDft($$one, 0);
@@ -252,7 +256,7 @@ function doAccounts($info = []) {
   
   foreach (ray('backingNext') as $k) if (nn($$k, NULL) === '') $info[$k] = NULL; // empty for these means NULL
 
-  $fixFields = $moneyFields . ' fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 uid jid helper flags risks last4bank';
+  $fixFields = $moneyFields . ' fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 uid jid helper flags risks bankAccount last4bank';
 
   foreach (ray($fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
   foreach (ray('acctType cc cc2') as $one) unset($info[$one]); // these are not real fields
@@ -283,7 +287,13 @@ function doTxs($info, $thing) {
   $entryFlds = 'xid entryType amount uid agentUid description cat relType relatedId rule';
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
+  $map = 'amt:amount, uid1:payer, uid2:payee';
   //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
+  
+  foreach (ray($map) as $k => $k2) if (isset($info[$k])) {
+    $info[$k2] = $info[$k];
+    unset($info[$k]);
+  }
 
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
   extract(just('cat rel rule', $info, 0));
@@ -565,7 +575,7 @@ function doMembersHave($info) {
 //  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;
 
   if (isset($info['coFlags']) and !doCompanyFlags($info)) return FALSE;
-  $a = r\acct($id = t\uid($info['uid']));
+  if (!$a = r\acct($id = t\uid($info['uid']))) return t\output('account does not exist: ' . $id);
 
 //  $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
   if (isset($info['risks'])) $info['risks'] = getRisks($info['risks'], K_ACCT_RISKS);
@@ -680,32 +690,30 @@ function usdTransferCount($where = '1') {
   }
 }
 
-function usdTransfers($txs) {
+function doTxs2($tx) {
   global $testOnly, $channel; $channel0 = $channel;
 
-  foreach ($txs as $tx) {
-    extract($tx);
-    $options = just('pid created completed txid explicit', $tx);
-    
-    if (isset($tx['payee'])) $tx['payee'] = $payee = t\uid($payee);
-    if (isset($tx['risks'])) $tx['risks'] = getRisks($risks, K_TX_RISKS);
-
-    if ($testOnly) {
-      if (!verifyRecord('txs2', $tx)) return FALSE;
-      continue;
-    }
-
-    u\setDft($tx['channel'], $channel0);
-    if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
-// No! allow this for bank verification    if (!$amount) return output('zero USD transfer');
+  extract($tx);
+  $options = just('pid created completed txid explicit', $tx);
+  
+  if (isset($payee)) {
+    $tx['payee'] = t\uid($payee);
     if (!$a = r\acct($payee)) return t\output('Bad payee: ' . nn($payee));
+  } else if (!$testOnly) return t\output('Missing payee: ' . pr($tx));
+  if (isset($risks)) $tx['risks'] = getRisks($risks, K_TX_RISKS);
 
-    if (nni($tx, 'xid')) { // specifying an xid means the test will list the txs explicitly
-      $txid = db\insert('txs2', $tx, 'txid');
-    } else {
-      if (!$xid = be\createUsdTransfer($a, $amount, $options)) return t\output('failure creating usd record: ' . pr($tx));
-      if ($info = just('txid deposit', $tx)) db\update('txs2', $info + compact('xid'), 'xid');
-    }
+  if ($testOnly) return verifyRecord('txs2', $tx);
+
+  u\setDft($tx['bankAccount'], $a->bankAccount);
+  u\setDft($tx['channel'], $channel0);
+  if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
+// No! allow this for bank verification    if (!$amount) return output('zero USD transfer');
+
+  if (nni($tx, 'xid')) { // specifying an xid means the test will list the txs explicitly
+    $txid = db\insert('txs2', $tx, 'txid');
+  } else {
+    if (!$xid = be\createUsdTransfer($a, $amount, $options)) return t\output('failure creating usd record: ' . pr($tx));
+    if ($info = just('txid deposit', $tx)) db\update('txs2', $info + compact('xid'), 'xid');
   }
   return TRUE;
 }
@@ -946,6 +954,7 @@ function postToPage($page, $args) {
 function memberVisitsPage($id, $page) { // pass options in URL
   global $testOnly; if ($testOnly) return FALSE;
   if (!t\login($id)) return FALSE;
+  fixTestVars($page);
   t\pageForm($page);
   return TRUE;
 }
@@ -1239,21 +1248,6 @@ function postLogout($function) {
   return FALSE;
 }
 
-/**
- * Assign a name to a test variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
- * @param string $varName: variable name
- * @param string $index: a string or a message index
- * @param assoc $subs: substitutions (if any)
- * @return TRUE
- */
-function tvarIs($varName, $index, $subs = []) {
-  global $testOnly; if ($testOnly) return FALSE;
-  global $testVars;
-  $testVars[$varName] = t($index, $subs[0]);
-  //  $sceneTest->subs += ["%$varName" => $$varName];
-  return TRUE;
-}
-
 function dropdownOptions($form) {
   if (preg_match_all('~<option value="([^"]*)"[^>]*>(.*?)</option>~sm', $form, $m)) {
     foreach ($m[1] as $i => $k) $res[] = "$k=>" . $m[2][$i];
@@ -1333,6 +1327,8 @@ function strip($form) {
  * @return <the values are equal>
  */
 function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
+  global $testVars;
+  foreach (ray('want got') as $k) fixTestVars($$k);
   $want = str_replace('\\n', "\n", $want);
   if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
   if ($want == '?') return TRUE;
@@ -1365,7 +1361,6 @@ function POST($values = NULL) {
   global $T_POST, $T;
   
   if (!isset($T)) test(FALSE); // reset this
-  if (!test()) return $_POST;
   if (isset($values)) {
     t\fixData($values);
     $_POST = $T_POST = $values;
@@ -1401,7 +1396,7 @@ function clear($ch = 0) {
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
-  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr;
+  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr, $testVars;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
@@ -1414,7 +1409,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr') as $k) $$k = NULL;
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
@@ -1909,3 +1904,5 @@ function getExitMsg() {
   db\del('test', 'id', $id);
   return $res;
 }
+
+function fixTestVars(&$parm) {global $testVars; foreach (nn($testVars, []) as $k => $v) $parm = str_replace($k, $v, $parm);}

@@ -12,7 +12,7 @@ Setup:
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created   | completed |*
   | 1001 |  .ZZA |   1000 | %today-3m | %today-3m |
   | 1003 |  .ZZC |   3000 | %today-3m | %today-3m |

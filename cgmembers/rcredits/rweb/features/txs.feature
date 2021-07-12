@@ -15,7 +15,7 @@ Setup:
   | .ZZB | .ZZA  | read       |
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
-  And usd transfers:
+  And these "txs2":
   | txid | payee | amount | created    | completed  | deposit    |*
   |   11 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
   |   12 |  .ZZB |   2000 | %today-13m | %today-13m | %today-13m |
@@ -122,8 +122,8 @@ Scenario: A member looks at transactions with roundups
 
 Scenario: Admin reverses a bank transfer
   When member "A:1" visits page "history/transactions/period=5"
-  And member "A:1" clicks "X" on transaction 1
-  Then usd transfers:
+  And member "A:1" clicks X on transaction 1
+  Then these "txs2":
   | txid | payee | amount | created  | completed  | deposit | xid |*
   |  -11 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  51 |
   And these "txs":

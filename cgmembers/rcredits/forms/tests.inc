@@ -7,6 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 include_once R_ROOT . '/admin/admin.inc';
+include_once R_ROOT . '/cg-testing.inc';
 
 /**
  * Run acceptance tests.

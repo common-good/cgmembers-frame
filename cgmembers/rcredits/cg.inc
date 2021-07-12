@@ -285,7 +285,7 @@ function ipok($uid) {
  * @return TRUE if the message got sent (or on dev machine pretending it got sent) else FALSE
  * NOTE: from is always SYS_EMAIL
  */
-function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
+function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   global $testEmails, $mya, $channel;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
@@ -330,7 +330,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
   u\loga('email', $erInfo + ['toUid' => nn($toA) ? $toA->id : 'none']);
-  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
+  if (test()) f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
 /**/  if (!test()) debug(compact(ray('subject to reply body'))); // show stuff to tester
@@ -567,7 +567,7 @@ function vKey() {
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
-  if (test() and $mya->id != 1) return FALSE;
+  if (test() and (!$mya or $mya->id != 1)) return FALSE;
   if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
   if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
@@ -1424,6 +1424,8 @@ function recurRay($keepOne = FALSE, $text = PERIODLY) {
   if ($text != PERIODLY) unset($oftens['quarter']);
   return $oftens;
 }
+
+function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 
 /**
  * Say whether the given account is owned by Common Good.

@@ -212,7 +212,7 @@ function getresults($question) {
 //. goform($community_id, $voter_id, 'overview.php', 'Back to Overview');
 }
 
-function setdbfield($k, $v) {$_POST[$k] = $v; f('t.POST', [$k => $v]);}
+function setdbfield($k, $v) {$_POST[$k] = $v; if (test()) f('t.POST', [$k => $v]);}
 
 function formatdate($dt='') {
   $fmt = 'Y-m-d H:i:s';

@@ -17,7 +17,7 @@ Setup:
   | .ZZA | %today-7w |
   | .ZZB | %today-6w |
   | .ZZC | %today-6w |
-  And usd transfers:
+  And these "txs2":
   | payee | amount | completed |*
   | .ZZA  |  100   | %today-7w |
   | .ZZB  |  200   | %today-6w |

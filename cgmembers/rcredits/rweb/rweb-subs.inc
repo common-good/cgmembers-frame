@@ -21,6 +21,7 @@ define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around t
 
 require_once R_ROOT . '/cg-util.inc';
 require_once R_ROOT . '/cg-strings.inc';
+if (test()) require_once R_ROOT . '/cg-testing.inc';
 
 global $txDays; $txDays = array(1 => 'Day', 7 => '7 days', 30 => '30 days', 90 => '90 days', 180 => '6 months', 365 => '12 months', -1 => 'Year to date', -2 => 'Ever');
 
@@ -53,11 +54,11 @@ function go($page, $msg = '', $field = '') {
   $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
 
-  if (!strhas($page, 'test-results')) t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
+  if (test() and !strhas($page, 'test-results')) t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
   if ($msg) say($msg, $field);
  
   if (test()) {
-    $page = t\parseQ($page);
+    $page = f('t.parseQ', $page);
     $_POST = []; // make sure it doesn't act like we submitted the target page
     return u\starts($page, 'http') ? '' : f('t.pageForm', $page);
   }
@@ -233,7 +234,7 @@ function cgform($form, $fmt = '', $mlabFmt = '') {
     }
     
     $type = nni($v, '#type');
-    if ($type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
+    if (test() and $type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
     if ($type == 'fieldset') $form[$k] = $v = cgform($v, $fmt, $mlabFmt);
     if (nni($v, '#field_suffix')) $form[$k]['#class'][] = 'short';
 
@@ -743,6 +744,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     setPageTitle($form);
   }
   $formArray = $form2 = $form; 
+
   return \render($form2);
 }
 
