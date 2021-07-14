@@ -609,7 +609,7 @@ function deposits($starting = 0, $showTxIds = FALSE) {
       SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
       SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
       deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
-    FROM txs2_bank WHERE amount<>0 AND created<=:NOW AND created>=:starting
+    FROM txs2 WHERE amount<>0 AND created<=:NOW AND created>=:starting
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
@@ -627,15 +627,11 @@ EOF;
         $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
-        if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
-          $details .= 
-//          ' ' . w\btn('', t('flnm'), 'default', 'xs', w\clas('filename') + ray('data-flnm', "CGach-$date.csv")) . 
-          ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
-        }
-        if ($count) $details .= ' ' . ($deposit
-          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))
-          : w\btn('', t('...........'), 'default') // don't show undeposited checks (a recipe for disaster)
-        );
+        if (!$deposit or $deposit >= $today - 90 * DAY_SECS) $details .= ' ' . 
+          ($deposit ? w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH')) : '');
+        if ($count) $details .= ' ' .  // don't show undeposited checks (a recipe for disaster)
+          ($deposit ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks')) : '');
+
       } else $dateDpy = $details = '';
 
       if ($showTxIds) {

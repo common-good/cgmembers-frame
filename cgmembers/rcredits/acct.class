@@ -1610,7 +1610,9 @@ X;
    * @return int: the device record ID
    */
   public function makeBox($code, $channel, $version = NULL) {
-    $uid = $this->id;
+    $a = $this;
+    $uid = $a->id;
+    if ($a->anyAdmin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
 
     $created = $access = now();
     $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
