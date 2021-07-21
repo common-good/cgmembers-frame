@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'abd4390867bb76de41d24d7e3b63a2b823b1baff',
+    'reference' => 'c340d43bf873e9e8f73beb7e4d0224f0077efe60',
     'name' => 'common-good/cg',
   ),
   'versions' => 
@@ -27,7 +27,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'abd4390867bb76de41d24d7e3b63a2b823b1baff',
+      'reference' => 'c340d43bf873e9e8f73beb7e4d0224f0077efe60',
     ),
     'dasprid/enum' => 
     array (
@@ -46,6 +46,15 @@
       array (
       ),
       'reference' => '06b0ac1c2a0633628c1ae904e6ae13fd6808d3ee',
+    ),
+    'quickbooks/v3-php-sdk' => 
+    array (
+      'pretty_version' => '6.0.1',
+      'version' => '6.0.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'a4139a9cc439a5c03edec070d56344b1dc82056f',
     ),
   ),
 );

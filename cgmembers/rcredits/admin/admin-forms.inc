@@ -594,7 +594,7 @@ EOF;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    if ($pid) $name = db\get('fullName', 'people', compact('pid')) . str_replace(PROJECT, '', $name);
+    if ($pid) $name = db\get('fullName', 'people', compact('pid')) . ($uid == CGID ? t(' FBO ') . PROJECT : str_replace(PROJECT, '', $name));
     $pdf->setX($x);
     if ($only and ($amount > 0 xor $in)) continue;
     if ($amount < 0) $pdf->SetTextColor(255, 0, 0);

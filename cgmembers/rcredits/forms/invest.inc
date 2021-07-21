@@ -139,7 +139,7 @@ function formInvest_submit($form, &$sta) {
   if ($buy and $request > 0) {
     if ($short) {
       $msg = t('You do not currently have enough funds in your %PROJECT account for that investment, so %short will be drawn automatically from your bank account. Once that transfer is complete, your requested investment will be made automatically.', 'short', u\fmtAmt($short));
-      $mya->getFunds($short, t('for investment'));
+      $mya->getFunds($short, t('for investment'), TRUE);
     } else r\handleInvestmentRequest($stakeid, $msg);
   } elseif (!$buy and $request < 0) { // sell
     $msg = t('redemption request', 'request', u\fmtAmt(-$request));

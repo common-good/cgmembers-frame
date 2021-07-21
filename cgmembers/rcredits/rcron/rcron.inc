@@ -76,7 +76,7 @@ function run() {
       db\q('DELETE FROM queue WHERE id=:id', compact('id'));
     } catch (\Exception $e) {
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
-      r\tellAdmin('cron task failed id=' . $id, $item);
+      r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
     }
   }
   // Restore the user.
@@ -195,7 +195,7 @@ X;
     r\tellAdmin(t('Not-yet-member %person was in Seedpack; should be (now is) in %cttyName', $row));
   }
   
-  if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
+  if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) r\tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
 
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
@@ -315,7 +315,7 @@ function tickle() {
   $sql = <<< X
     SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
     LEFT JOIN users u ON u.uid=i.inviter
-    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK AND i.nonudge IS NULL
+    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK AND i.nonudge IS NULL AND i.email<>''
 X;
 
   queueEach('tickleSignup', $sql);
@@ -937,7 +937,7 @@ o;
   
   list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
   ? [$a->minimum + $pending, t('to target')]
-  : [min($pending, $a->balance + $pending, 0), t('to pending')]; // this could be negative (just enough to pay pending)
+  : [min($pending, $a->balance + $pending), t('to pending')]; // this could be negative (just enough to pay pending)
   
   if ($target < $pending and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
     if (!$a->debt or ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS)) { // time to get out of the negative
@@ -945,9 +945,9 @@ o;
     }
   }
   
-  $amount = $target - $a->balance - $a->waitingFromBank(); // scootch up to target, if below
+  $amount = $target - $a->balance; // scootch up to target, if below
     
-  $a->getFunds($amount, $why);
+  if ($amount > 0) $a->getFunds($amount, $why); // getFunds will subtract any amount already waiting
 }
 
 /**

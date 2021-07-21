@@ -75,15 +75,24 @@ Setup:
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |     100 |
+  And these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
 
   When cron runs "getFunds"
   Then usd transfer count is 1
   And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
   | $50   | Our Pub   |    3 |
+  And these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
 
   When cron runs "getFunds"
   Then usd transfer count is 1
+  And these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
 
 Scenario: Non-member unpaid invoice does not generate a transfer request
   Given members have:
@@ -103,8 +112,8 @@ Scenario: Non-member unpaid invoice does not generate a transfer request
   
 Scenario: Second invoice gets funded too for a non-refilling account
   Given members have:
-  | uid  | flags               | floor |*
-  | .ZZA | ok,confirmed,bankOk | 0     |
+  | uid  | flags               | floor | risks |*
+  | .ZZA | ok,confirmed,bankOk | 0     | hasBank |
   And these "txs":
   | xid | created   | amount | payer   | payee | purpose   | taking |*
   |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
@@ -119,7 +128,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created   | completed | deposit |*
-  |    1 | .ZZA  |    400 | %today-1d |         0 |       0 |
+  |    1 | .ZZA  |    300 | %today-1d |         0 |       0 |
   # still dated yesterday, so it doesn't lose its place in the queue
   And invoices:
   | nvid | created   | status       | amount | payer | payee | for   |*
@@ -127,10 +136,10 @@ Scenario: Second invoice gets funded too for a non-refilling account
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
   And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why     |*
-  | draw   | from   | $100   |     $100 |  $200 |        2 | to pay pending payment request #1 |
+  | draw   | from   | $100   |     $100 |  $200 |        2 | to pay pending payment request #2 |
   And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why     |*
-  | draw   | from   | $200   |     $200 |  $400 |        2 | to pay pending payment request #2 |
+  | draw   | from   | $100   |     $200 |  $300 |        2 | to cover your pending payment requests |
 
 Scenario: A languishing invoice gets funded again
   Given invoices:
