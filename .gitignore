@@ -6,3 +6,4 @@ cgPhotoTemp
 config/config.json
 config/phinx.json
 /log/capistrano.log.0
+quickbooks/

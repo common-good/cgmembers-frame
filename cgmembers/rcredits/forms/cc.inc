@@ -19,22 +19,6 @@ function formCC($form, &$sta, $args = '') {
   extract(just('fullName email zip', $ray, '')); // for cancel, repopulate
 //  global $mya; if ($mya) return go('community/donate', t('You are a %PROJECT member! Please use this page to donate.'));
 
-  $giftLevels = array(
-  // 10000 => t('Marble .. $10,000'),
-  // 5000 => t('Granite ... 5,000'),
-    2500 => t('Slate .... $2,500'),
-    1000 => t('Glass .... $1,000'),
-     500 => t('Iron ....... $500'),
-     250 => t('Oak ........ $250'),
-     100 => t('Two Bricks . $100'),
-      50 => t('One Brick ... $50'),
-      25 => t('Half Brick .. $25'),
-//       0 => t('None for now . $0'),
-      -1 => t('Water ... (other)'),
-//      10 => t('Tile ........ $10'),
-//       5 => t('Cloth ........ $5'),
-  );
-
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
 
   $img = item(tr('<img src="%BASE_URL/rcredits/images/icons/%url" />', 'url', 'h+$=cg-180.png'));
@@ -44,7 +28,7 @@ function formCC($form, &$sta, $args = '') {
 //  $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
   $email = emailFld(t('Email:'), [t('Email')], dft($email));
   $zip = zipFld($zip);
-  $amtChoice = selectFld(REQ . t('Donation:'), '', INDIVIDUAL_GIFT, $giftLevels);
+  $amtChoice = selectFld(REQ . t('Donation:'), '', INDIVIDUAL_GIFT, GIFT_LEVELS);
   $amount = numFld(t('Donation:'), [t('Amount')]);
 //  $permo = boxFld('permo', NBSP, t('Make this a monthly donation.'));
 //  $honored = rendA('honored', textFld(BARE, [t('(optional)')]));

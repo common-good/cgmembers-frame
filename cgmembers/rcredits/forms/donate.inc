@@ -15,21 +15,6 @@ function formDonate($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
   $oftens = [0 => t('How often?')] + array_reverse(r\recurRay(TRUE));
-  $giftLevels = array(
-  // 10000 => t('Marble .. $10,000'),
-  // 5000 => t('Granite ... 5,000'),
-    2500 => t('Slate .... $2,500'),
-    1000 => t('Glass .... $1,000'),
-     500 => t('Iron ....... $500'),
-     250 => t('Oak ........ $250'),
-     100 => t('Two Bricks . $100'),
-      50 => t('One Brick ... $50'),
-      25 => t('Half Brick .. $25'),
-//       0 => t('None for now . $0'),
-      -1 => t('Water ... (other)'),
-//      10 => t('Tile ........ $10'),
-//       5 => t('Cloth ........ $5'),
-  );
 
   if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
     extract($recurs);
@@ -49,7 +34,7 @@ function formDonate($form, &$sta, $args = '') {
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
   $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', nn($recurOnly), nn($replaces), $amountTip) . $noOneTime;
-  $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), $giftLevels);
+  $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
   $amount = numFld(t('Donation:'), [t('Amount')]);
   $period = selectFld(REQ . t('When:'), '', dft('year'), $oftens);
   $honored = rendA('honored', textFld(BARE, [t('(optional)')]));

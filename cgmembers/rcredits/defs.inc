@@ -320,6 +320,22 @@ const R_PHOTO_WIDTH = 300; // rCard photo width, in pixels
 const R_PHOTO_HEIGHT = 400;
 const R_PIXEL_FACTOR = 200; // what to multiply the aspect ratio components by, to get pixel dimensions
 const THUMB_FACTOR = 12; // what to multiply the aspect ratio by, for thumbnail photo
+
+define('GIFT_LEVELS', [
+  // 10000 => t('Marble .. $10,000'),
+  // 5000 => t('Granite ... 5,000'),
+    2500 => t('Slate .... $2,500'),
+    1000 => t('Glass .... $1,000'),
+     500 => t('Iron ....... $500'),
+     250 => t('Oak ........ $250'),
+     100 => t('Two Bricks . $100'),
+      50 => t('One Brick ... $50'),
+      25 => t('Half Brick .. $25'),
+//       0 => t('None for now . $0'),
+      -1 => t('Water ... (other)'),
+//      10 => t('Tile ........ $10'),
+//       5 => t('Cloth ........ $5'),
+]);
 const INDIVIDUAL_GIFT = 50; // suggested donation for individuals
 const COMPANY_GIFT = 250; // suggested donation for companies
 const R_BUYS_BEFORE_BONUS = 1; // number of purchases required before signup bonus (should probably be 3)

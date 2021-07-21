@@ -585,7 +585,7 @@ EOF
   //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
-    SELECT amount, xid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
+    SELECT amount, xid, uid, u.fullName AS name FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
     WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
 EOF;
   $q = db\q($sql);
@@ -594,8 +594,7 @@ EOF;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    // (needs htmlcell instead of cell)   if (!$in) $name = r\acct($uid)->bankInfoLink();
-    //    if (!$in) $name = r\acct($uid)->legalNameDpy;
+    if ($pid) $name = db\get('fullName', 'people', compact('pid')) . str_replace(PROJECT, '', $name);
     $pdf->setX($x);
     if ($only and ($amount > 0 xor $in)) continue;
     if ($amount < 0) $pdf->SetTextColor(255, 0, 0);

@@ -1302,7 +1302,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #deposits {width:auto; display:inline-block;}
 #deposits td {text-align:right;}
 #deposits td:first-child {text-align:left;}
-#deposits td:first-child +td +td +td +td {min-width:120px;}
+#deposits td:first-child +td +td +td +td {min-width:120px; text-align:left;}
 #deposits td:first-child +td +td +td +td +td {text-align:left;}
 #frm-deposits #edit-count {margin-bottom:3px;}
 
