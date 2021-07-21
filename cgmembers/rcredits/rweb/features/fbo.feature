@@ -224,8 +224,7 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | gift         | $123                 |**
   | date         | %mdY                 |
   | donor        | Zee Zot              |
-  | donorAddress | Springfield, MA 01301 |
-# should be Greenfield - update with "zips" feature
+  | donorAddress | Greenfield, MA 01301 |
   | donorPhone   | +1 262 626 2626      |
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |
@@ -262,8 +261,7 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | gift         | $123                 |**
   | date         | %mdY                 |
   | donor        | Zee Zot              |
-  | donorAddress | Springfield, MA 01301 |
-# should be Greenfield - update with "zips" feature
+  | donorAddress | Greenfield, MA 01301 |
   | donorPhone   | +1 262 626 2626      |
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |

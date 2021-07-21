@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInitb3fdb7647ac9c12554f6f95c751d4a26
 {
     public static $prefixLengthsPsr4 = array (
+        'Q' => 
+        array (
+            'QuickBooksOnline\\API\\' => 21,
+        ),
         'E' => 
         array (
             'Endroid\\QrCode\\' => 15,
@@ -22,6 +26,10 @@ class ComposerStaticInitb3fdb7647ac9c12554f6f95c751d4a26
     );
 
     public static $prefixDirsPsr4 = array (
+        'QuickBooksOnline\\API\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/quickbooks/v3-php-sdk/src',
+        ),
         'Endroid\\QrCode\\' => 
         array (
             0 => __DIR__ . '/..' . '/endroid/qr-code/src',

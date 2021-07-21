@@ -1194,7 +1194,7 @@ o;
     if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
     
     if ($amount and !($a->nonudge and !$a->ok)) { // there was some to be gotten from bank (no message for non-member donations)
-      $msg = $amtDone >= $amount ? 'automatic when funded' : 'when funded|how to fund';
+      $msg = $amtDone >= $amount ? 'automatic when funded' : ($a->hasBank ? 'when funded' : 'when funded|how to fund');
       w\say($msg);
       $a->tellOut($msg);
     }    
@@ -1213,29 +1213,35 @@ o;
     $a = $this;
     
     u\EXPECT($a->hasBank, 'banking with no bank');
+    if ($amount + 0 == 0) return;
 
     $payee = $a->id;
 //    $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
     $okNow = TRUE; // trust everyone unless and until this becomes a problem
     if (!$okNow) $a->verifyBank();
     $msg = 'banked';
-    $done = FALSE;
+    $combined = FALSE;
     $previous = $total = NULL;
   
     if ($amount > 0) { // bringing money in
       $waiting = $a->waitingFromBank($combinable, $txid);
+      if (!$explicit) {
+        $amount -= $waiting;
+        if ($amount <= 0) return; // do nothing if we already have plenty waiting
+      }
       $amount += $combinable;
-      $amount0 = $amount;
-      if ($a->refill) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
+      if ($a->refill and !$explicit) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
 
-      if ($combinable and $done = db\update('txs2_bank', compact(ray('txid amount')), 'txid')) {
+      if ($combinable and $combined = db\update('txs2_bank', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';
         list ($previous, $total) = [u\fmtAmt($combinable), u\fmtAmt($amount)];
         $xid = db\get('xid', 'txs2_bank', compact('txid'));
       }
-    } else $amount0 = $amount;
+    }
 
-    if (!$done) {
+    $amount = round($amount, 2);
+
+    if (!$combined) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
       $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created explicit')));
@@ -1244,16 +1250,12 @@ o;
 
     if ($amount < 0) r\tellAdmin(t('outgoing bank transfer'), ray('who amount', $a->fullName, -$amount));
     
-    if ($previous) $amount -= $combinable; // don't include previous amount in notice to member
+    if ($combined) $amount -= $combinable; // don't include previous amount in notice to member
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
     list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
     $subs = ray('action tofrom amount checkNum previous total why', $action, $tofrom, u\fmtAmt(abs(nn($amount))), $xid, $previous, $total, nn($why));
     $a->tellInOut($amount > 0, $msg, $subs);
     $newwhy = tr($msg, $subs); // for return
-    if ($amount > $amount0 and $explicit) {
-      $whyIncrease = $a->refill ? t('to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.') : t('to bring your balance up to zero.');
-      w\say(t('Your request has been increased ') . $whyIncrease);
-    }
 
     return $amount;
   }
@@ -1610,7 +1612,9 @@ X;
    * @return int: the device record ID
    */
   public function makeBox($code, $channel, $version = NULL) {
-    $uid = $this->id;
+    $a = $this;
+    $uid = $a->id;
+    if ($a->anyAdmin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
 
     $created = $access = now();
     $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;

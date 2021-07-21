@@ -391,7 +391,7 @@ function payInvoice($nvid, $payAmount = NULL) {
       $index = 'short invoice' . ($payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund');
       $subs = ray('short payeeName nvid', u\fmtAmt($shortfall), $payeeA->fullName, $nvid);
       $payerA->tellOut($index, $subs);
-      if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid'))); // almost always because no bank account is connected
+      if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid')));
 
       $z->index = $index; // replace short payment message with something more explicit about the invoice
       $z->msg = tr($index, $subs);

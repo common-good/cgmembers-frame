@@ -128,7 +128,7 @@ X;
       $amount = u\fmtAmt($portion, '%');
     }
     $amtLeft = is_null($amtMax) ? 'no limit' : u\fmtAmt($amtMax - $amtUsed, '$');
-    if (r\isCreditRule($row)) $purpose = t('store credit');
+    if (r\isCreditRule($row)) $on = t('store credit');
 
     $rows[] = u\tableRow(compact($fields));
   }

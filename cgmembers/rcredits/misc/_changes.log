@@ -1,3 +1,18 @@
+2021-07-21 feature/stutter
+. fixed bug that duplicated bank transfers for APPROVED invoices
+. installed QuickBooks SDK
+. sponsored account donations are now marked FBO on deposit summary
+. store credit is now labeled as such on couponslist
+. fixed bug in cron that died when dead-twin tx entries were found
+. failed cron jobs now deliver more information about why
+
+2021-07-13 feature/zips
+. updated r\zipCity() to work right (reliably calculates city, state, lat, lon from zip)
+. accounts visited by an admin are no longer recorded in r_boxes
+. fixed deposits page to show "ACH" instead of "download"
+. fixed deposit sheet to show FBO organization for donations from their contributors (and they show up at all)
+. fixed encrypted message receipt to enable receipt by companies
+
 2021-07-12 feature/fbo3
 . cc and ach donations to sponsored accounts now create only people records and pay CG automatically, including all subsidiary transactions
 . donations to sponsored accounts now generate an automatic report to the recipient
