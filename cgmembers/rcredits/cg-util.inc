@@ -1369,8 +1369,7 @@ function bits($n, $descs = B_LIST) {
  * @param string $filename: what to name the downloaded file
  */
 function beginDownload($filename) {
-  global $testDownloadFlnm; $testDownloadFlnm = $filename;
-  if (test()) return;
+  global $testDownloadFlnm; if (test()) return $testDownloadFlnm = $filename;
   header("Cache-Control: public");
   header("Content-Description: File Transfer");
   header("Content-Disposition: attachment; filename=$filename");

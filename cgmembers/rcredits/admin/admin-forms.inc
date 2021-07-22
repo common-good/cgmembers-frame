@@ -462,7 +462,7 @@ function formDeposits($form, &$sta, $deposit = 0) {
     SUM(IF(amount<0, 1, 0)) AS countOut,
     SUM(IF(amount>0, 1, 0)) AS countIn
 EOF;
-  $res = db\rows($fields, 'txs2_bank', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
+  $res = db\rows($fields, 'txs2', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
   //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);

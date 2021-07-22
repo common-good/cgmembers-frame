@@ -11,17 +11,11 @@ const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L1
 const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originPrefix:L1, originNum:R9, auth:L19, reserve:L6, destNum:R8, batchNum:R7';
 const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 40000',
-  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999',
-];
-const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
-
 /**
- * Create an ACH request file (debits only, for now).
+ * Create an ACH request file.
  */
 function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
-  global $mya;
+  global $mya, $testRecs;
   
   if (!$bank) $bank = BANK; // links give us '' instead of omitted
   list ($destName, $destNum, $originPrefix, $cutoff, $maxAch) = explode(', ', BANK_DATA[$bank]); // not ray() because of colons in the data
@@ -60,7 +54,7 @@ X;
     $tot += abs($amount);
     $count++;
     
-    if ($payee == UID_OUTER) {
+    if ($pid) {
       $name = db\get('fullName', 'people', compact('pid'));
       $id = $pid;
     } else { // member account transfer
@@ -84,7 +78,7 @@ X;
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit and $mark and $mya->superAdmin) db\update('txs2_bank', ray('deposit txid', today(), $txid), 'txid');
+    if (!$deposit and $mark and $mya->admin) db\update('txs2', ray('deposit txid', today(), $txid), 'txid');
   }
   unset($DBTX);
   
@@ -99,9 +93,10 @@ X;
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
 
-///    if (isDEV) debug($recs);
-  header('Content-type: text/plain');
-  header(tr('Content-Disposition: attachment; filename=%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
+  u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
+//  header('Content-type: text/plain');
+//  header(tr('Content-Disposition: attachment; filename=%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
+  if (test()) return $testRecs = $recs;
 /**/  echo join("\n", $recs);
   exit();
 }

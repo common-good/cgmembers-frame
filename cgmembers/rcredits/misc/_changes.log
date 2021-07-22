@@ -1,3 +1,9 @@
+2021-07-22 feature/ach
+. created a test for ACHs, including FBO records in txs2
+. fixed bugs in achify so it shows the right name and account code for outer transfers
+. fixed bug in achify so it properly marks outer transfers done
+. deposits form now counts transfers properly
+
 2021-07-21 feature/stutter
 . fixed bug that duplicated bank transfers for APPROVED invoices
 . installed QuickBooks SDK

@@ -26,6 +26,11 @@ const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum ACH total
+  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 40000',
+  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999', // debits only
+];
+const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 
 $base_url = config('baseUrl');
 define('GEOCODE_KEY', config('geocodeKey'));

@@ -36,7 +36,8 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose pid'; // first key is probably an ID field, so keep it at the front
+  if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
@@ -63,6 +64,7 @@ function fixData(&$info, $direct = FALSE) {
     $coFlags = $res;
   }
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
+  if (isset($pid) and !$pid) $pid = NULL;
 
   if (nn($who)) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -99,8 +101,8 @@ function fixData(&$info, $direct = FALSE) {
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
     }
   }
-  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
-  foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
+//  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
+  foreach (ray($fields) as $k) if (array_key_exists($k, $info)) $info[$k] = nn($$k, NULL);
   return $info;
 }
 
@@ -386,6 +388,65 @@ function doInvoices($info) {
  */
 function txUid($id, &$main, &$other) {
   list ($main, $other) = [t\uid($id), t\agent($id)];
+}
+
+/**
+ * Analyze downloaded fix-length 1099 records.
+ */
+function got1099($flnm, $rows) {
+  global $testRecs;
+  
+  foreach ($rows as $rowNum => $row) {
+    $gotRow = $testRecs[$rowNum];
+    $gotSeq = substr($gotRow, 499, 8) + 0;
+    if ($gotSeq != $rowNum + 1) return t\output(t('Wrong sequence number in record #') . $gotSeq);
+
+    extract(just('type who cnt amounts seq', $row));
+    if ($gotRow[0] != $type) return t\output(t('Wrong type in record #') . $gotSeq);
+    if ($type == 'B' or $type == 'K') {
+    if ($type == 'B') {
+      $qid = a(t\uid($who))->mainQid;
+      if (rtrim(substr($gotRow, 20, 20)) != $qid) return t\output(t('Wrong qid in record #') . $gotSeq);
+      $got = substr($gotRow, 548, 13);
+      if ($got + 0 != $cnt) return t\output(t('Wrong cnt in record #%gotSeq: got %got, want %cnt', 'gotSeq got cnt', $gotSeq, $got, $cnt));
+    }
+    list ($amtStart, $amtLen) = $type == 'B' ? [54, 12] : [15, 18];
+    if (strpos('BCK', $type) !== FALSE) {
+      $amounts = explode('/', $amounts);
+      foreach ($amounts as $i => $amt) {
+        $gotAmt = substr($gotRow, $amtStart + $i * $amtLen, $amtLen) / 100;
+        if ($gotAmt != $amt) return t\output(t('Wrong amount in record #%gotSeq: amount #%i is %gotAmt, want %amt', 'gotSeq i gotAmt amt', $gotSeq, $i + 1, $gotAmt, $amt));
+      }
+    }
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * Analyze downloaded ACH records.
+ */
+function gotACH($flnm, $rows) {
+  global $testRecs;
+  $bankInfo = explode(', ', BANK_DATA[BANK]);
+  $map = [
+    'DATETIME' => strftime('%y%m%d%H%M'),
+    'BANK' => $bankInfo[0],
+    'BANKROUTE' => $bankInfo[1], // our bank's routing #
+    'BANKROUT' => substr($bankInfo[1], 0, 8),
+    'WHEN' => strftime('%b%d'),
+    'EFFECTIVE' => strftime('%y%m%d', tomorrow()), // entryDate
+  ];
+  foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);
+    
+  foreach ($rows as $i => $row) {
+    $line = strtr($row[0], $map);
+
+    foreach (explode(',', $line) as $v) if ($v !== '') {
+      if (!strhas($testRecs[$i], $v)) return t\output(t('Missing record value %v, line %i: %line %testRecs', compact(ray('v i line testRecs'))));
+    }
+  }
+  return TRUE;
 }
 
 /**
@@ -694,7 +755,6 @@ function doTxs2($tx) {
   global $testOnly, $channel; $channel0 = $channel;
 
   extract($tx);
-  $options = just('pid created completed txid explicit', $tx);
   
   if (isset($payee)) {
     $tx['payee'] = t\uid($payee);
@@ -706,6 +766,8 @@ function doTxs2($tx) {
 
   u\setDft($tx['bankAccount'], $a->bankAccount);
   u\setDft($tx['channel'], $channel0);
+  $options = just('pid created completed txid explicit bankAccount isSavings', $tx);
+
   if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
 // No! allow this for bank verification    if (!$amount) return output('zero USD transfer');
 
@@ -1343,7 +1405,7 @@ function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
   if ($id !== '') $id = "uid=$id ";
   return t\output($id . t('%desc: wanted "%want" got "%got"', compact(ray('id desc want got'))));
 }
-function badEq($type, $want, $got, $id = '', $list = '') {return !eq($type, $want, $got, $id, $list);}
+function badEq($desc, $want, $got, $id = '', $list = '') {return !eq($desc, $want, $got, $id, $list);}
 
 /**
  * Fake $_SERVER params for testing
@@ -1396,7 +1458,7 @@ function clear($ch = 0) {
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
-  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr, $testVars;
+  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr, $testVars, $testRecs;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
@@ -1409,7 +1471,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars') as $k) $$k = NULL;
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
