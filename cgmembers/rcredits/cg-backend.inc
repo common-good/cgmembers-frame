@@ -623,7 +623,7 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $cat, $entryType0, $r
  * @param array of entry objects $txes: the entries
  * @param int $xid: the transaction header record ID
  */
-function insertTxes($txes, $xid) {
+function insertTxes(&$txes, $xid) {
   $DBTX = \db_transaction();
   foreach ($txes as $i => $entry) {
     $txes[$i]->id = $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
@@ -1207,7 +1207,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   $info = compact(ray('amount payee created deposit bankAccount channel xid'));
   $info += just('pid txid', $options);
   $txid = db\insert('txs2', $info, 'txid');
-    
+
   if ($completed and !completeUsdTx($info + ['eid' => $tx->entries[0]->id], $explicit, $completed)) return FALSE;
   
   unset($DBTX);

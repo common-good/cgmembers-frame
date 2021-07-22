@@ -94,14 +94,14 @@ class Tx {
 
   private function getPayerEntry() {
     foreach ($this->entries as $i => $entry) {
-      if (in($entry->entryType, [E_PRIME, E_BANK]) and $i % 2 != 0) return $entry;
+      if (in($entry->entryType, E_PRIMES) and $i % 2 != 0) return $entry;
     }
     return NULL;
   }
 
   private function getPayeeEntry() {
     foreach ($this->entries as $i => $entry) {
-      if (in($entry->entryType, [E_PRIME, E_BANK]) and $i % 2 == 0) return $entry;
+      if (in($entry->entryType, E_PRIMES) and $i % 2 == 0) return $entry;
     }
     return NULL;
   }

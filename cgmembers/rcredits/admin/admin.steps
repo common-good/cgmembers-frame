@@ -40,6 +40,7 @@ function extraSetup() {
  *
  * in: MAKE 1099s Setup
  *     MAKE aaOther Setup
+ *     MAKE ach Setup
  *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminActivatesAnAccountUnconfirmed
@@ -60,6 +61,7 @@ function transactions($list) {return t\transactions($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE aaOther AdminDeletesAnAccount
+ *     MAKE ach AdminDownloadsACHRequests
  *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
  */
@@ -68,7 +70,8 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST changes AMemberChangesSomeSettings
+ * in: TEST ach AdminDownloadsACHRequests
+ *     TEST changes AMemberChangesSomeSettings
  *     TEST checks AdminPrintsChecks
  */
 function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
@@ -139,7 +142,8 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 /**
  * with: (ARG)
  *
- * in: TEST changes AMemberChangesSomeSettings
+ * in: TEST ach AdminDownloadsACHRequests
+ *     TEST changes AMemberChangesSomeSettings
  */
 function with($content) {return t\weShow($content);}
 
@@ -148,6 +152,8 @@ function with($content) {return t\weShow($content);}
  *
  * in: MAKE 1099s Setup
  *     TEST aaOther AdminDeletesAnAccount
+ *     MAKE ach Setup
+ *     BOTH ach AdminDownloadsACHRequests
  *     BOTH checks AdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -190,42 +196,19 @@ function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
 }
 
 /**
- * we download (ARG) with records: (ARG)
+ * we download (ARG) with (ARG) records: (ARG)
  *
  * in: TEST 1099s AdminGeneratesAReportForThePastMonths
+ *     TEST ach AdminDownloadsACHRequests
  */
-function weDownloadWithRecords($flnm, $rows) {
+function weDownloadWithRecords($flnm, $fileType, $rows) {
   global $testOnly; if (!$testOnly) return FALSE;
-  global $testDownloadFlnm;
-  global $testRecs1099;
-  
-  if ($testDownloadFlnm != $flnm) return t\output(t('Bad download filename. Wanted %flnm got %got', 'flnm got', $flnm, $testDownloadFlnm));
-  
-  if (count($testRecs1099) != count($rows)) return t\output(t('Wrong number of records in 1099: got %got, expected %want.', 'got want', count($testRecs1099), count($rows)));
-  foreach ($rows as $rowNum => $row) {
-    $gotRow = $testRecs1099[$rowNum];
-    $gotSeq = substr($gotRow, 499, 8) + 0;
-    if ($gotSeq != $rowNum + 1) return t\output(t('Wrong sequence number in record #') . $gotSeq);
+  global $testDownloadFlnm, $testRecs;
+  $flnm = str_replace('NOW', strftime('%Y%m%d%H%M'), $flnm);
+  if (!t\eq(t('download filename'), $flnm, $testDownloadFlnm)) return FALSE;
+  if (!t\eq(t('number of records'), count($rows), count($testRecs ?: []))) return FALSE;
 
-    extract(just('type who cnt amounts seq', $row));
-    if ($gotRow[0] != $type) return t\output(t('Wrong type in record #') . $gotSeq);
-    if ($type == 'B' or $type == 'K') {
-    if ($type == 'B') {
-      $qid = a(t\uid($who))->mainQid;
-      if (rtrim(substr($gotRow, 20, 20)) != $qid) return t\output(t('Wrong qid in record #') . $gotSeq);
-      $got = substr($gotRow, 548, 13);
-      if ($got + 0 != $cnt) return t\output(t('Wrong cnt in record #%gotSeq: got %got, want %cnt', 'gotSeq got cnt', $gotSeq, $got, $cnt));
-    }
-    list ($amtStart, $amtLen) = $type == 'B' ? [54, 12] : [15, 18];
-    if (strpos('BCK', $type) !== FALSE) {
-      $amounts = explode('/', $amounts);
-      foreach ($amounts as $i => $amt) {
-        $gotAmt = substr($gotRow, $amtStart + $i * $amtLen, $amtLen) / 100;
-        if ($gotAmt != $amt) return t\output(t('Wrong amount in record #%gotSeq: amount #%i is %gotAmt, want %amt', 'gotSeq i gotAmt amt', $gotSeq, $i + 1, $gotAmt, $amt));
-      }
-    }
-    }
-  }
-  return TRUE;
+  if ($fileType == '1099') return t\got1099($flnm, $rows);
+  if ($fileType == 'ACH') return t\gotACH($flnm, $rows);
+  return t\output(t('Bad record file type: ' . $fileType));
 }
-
