@@ -30,7 +30,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   if (!$res or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
   
   if (!$scanner = r\cook('scanner')) {
-    if (!$mya) return first('signin'); // sign in if no scanner
+    if (!$mya) return goFirst('signin'); // sign in if no scanner
     $accts = $mya ? db\keyed('uid,fullName', 'r_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN))) : NULL;
     if ($accts) return chooseScanner($accts, "$dom/$code");
     $scanner = $mya->mainQid;

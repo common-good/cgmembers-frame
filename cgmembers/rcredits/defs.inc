@@ -681,6 +681,8 @@ const BCAT_GIFT = 1; // record ID of donations in budget_cats
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));
 define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
+const PER_1 = 'once';
+const DUR_1 = 'once';
 
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;

@@ -201,6 +201,7 @@ Scenario: A non-member donates to a sponsored organization by credit card
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+
   And we redirect to "https://www.paypal.com/donate"
   And return URL "/donate-fbo/op=done&code=CODE"
   

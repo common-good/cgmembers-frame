@@ -1463,6 +1463,7 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  * @return the account (defaults to current account), FALSE if error
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
+  global $formSta;
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
   extract(just('qid ecode', $eLink, ''));
   extract(just('allow', $eLink)); // don't overwrite, if none
@@ -1473,7 +1474,7 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
     if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
-  $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
+  if ($a) $eLink = $formSta['eLink'] = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
   return $a;
 }
 
@@ -1964,7 +1965,7 @@ function css($sheet, $weight = -99) {
  * @return <success>
  */
 function checkAmtChoice(&$sta, $min = 0) { 
-  extract(just('amtChoice amount period', $sta['input']));
+  extract(just('amtChoice amount period', $sta['input'], NULL));
   if ($amtChoice != -1) $amount = $amtChoice;
   if (isset($period) and !$period and $amount) return say('missing field', array('field' => 'when'), 'period');
   if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
@@ -2209,7 +2210,7 @@ function missingArgs($args, $require) {
  * Sign in or sign up, before doing the given task.
  * @param string $first: signin or signup
  * @param string $then: what to do after completing the signin or signup (defaults to current URI)
- * @return (does not return -- redirects to signin or signup)
+ * @return: first() returns a URL to redirect to (first); goFirst() does not return -- redirects to signin or signup
  */
 function first($first, $then = NULL) {
   global $testFirst, $testThen;
@@ -2218,9 +2219,13 @@ function first($first, $then = NULL) {
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
-  return w\go("$first/then=$then");
+  return "$first/then=$then";
 }
+function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
 
+/**
+ * Do what was intended after a redirect.
+ */
 function then($then) {
   global $testThen;
   if ($then == 'TESTCODE' and test()) $then = u\cryRay($testThen);

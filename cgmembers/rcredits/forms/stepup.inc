@@ -40,7 +40,7 @@ function formStepUp($form, &$sta, $args = '') {
       SELECT IF($fromMe, 1, 0) AS xly, $fromMe AS mine, CONCAT_WS('-', IF($fromMe, 't', 'r'), t.to, $fromMe) AS recK,
         t.to, id, IF($fromMe, t.period, 'pct') AS `when`, $set
       FROM tx_timed t
-      WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>'once' AND IFNULL(t.end, :NOW+1) > :NOW
+      WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>:PER_1 AND IFNULL(t.end, :NOW+1) > :NOW
       
     ) x 
     LEFT JOIN users u ON u.uid=x.to

@@ -23,7 +23,7 @@ function formDonate($form, &$sta, $args = '') {
   } else $recursId = NULL;
   
   if (!$mya->activated or !$recurs) {
-    unset($oftens['once']); // no one-time donation unless the account is activated and has a recurring donation
+    unset($oftens[PER_1]); // no one-time donation unless the account is activated and has a recurring donation
     unset($oftens[0]);
     $recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));
@@ -53,7 +53,7 @@ function formDonate_submit($form, &$sta) {
 
   extract(just('amount period honor honored roundup recursId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
-  if ($period != 'once' and nn($recursId)) {
+  if ($period != PER_1 and nn($recursId)) {
     $was = (object) db\get('amount, period, periods', 'tx_timed', ray('id', $recursId));
     $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
     r\endRule('tm', $recursId);
@@ -63,8 +63,8 @@ function formDonate_submit($form, &$sta) {
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
     $purpose = t('donation');
-    $recursId = $period == 'once' ? NULL
-    : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
+    $recursId = $period == PER_1 ? NULL
+    : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, DUR_1));
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
     if ($mya->ok and $z = $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {

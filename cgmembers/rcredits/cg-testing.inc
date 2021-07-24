@@ -561,6 +561,7 @@ function notice($notice, $id, $subs = []) {
   global $base_url, $thatThing;
 
   if (is_array($subs0 = nn($subs[0]))) $subs = $subs0;
+  fixData($subs);
   if (mb_strpos($nm = nn($subs['otherName']), 'href="do/')) {
     $subs['otherName'] = str_replace('href="do/', "href=\"$base_url/do/", $nm);
   }

@@ -76,6 +76,7 @@ function members($list) {return t\members($list);}
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
+ *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     MAKE bank AMemberIsAtTarget
  *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
@@ -165,6 +166,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberHasANegativeBalance
  *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     TEST bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
+ *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     TEST bank AMemberIsWellBelowTarget
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
@@ -304,6 +306,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     BOTH bank AMembersBankAccountGetsVerified
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
@@ -498,6 +501,7 @@ function stats($list) {return t\stats($list);}
  *     TEST bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
  *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE daily Setup
@@ -601,6 +605,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
+ *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     MAKE bank AMemberIsAtTarget
  *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
@@ -612,6 +617,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero

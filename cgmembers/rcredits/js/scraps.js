@@ -347,11 +347,15 @@ function doit(what, vs) {
     
   case 'fbo':
     hideComment();
-    $('.form-item-period, .form-item-honor').hide();
+    $('.form-item-period, .form-item-honor, .form-item-payHow span').hide();
     var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
     var ach = $('#ach'); ach.hide();
     var submit = $('.form-item-submit');
-    $('#edit-payhow-1').click(function () {ach.hide(); coverCCFee.show();});
+    $('#edit-payhow-1').click(function () {
+      ach.hide(); coverCCFee.show(); 
+      if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
+      $('.btn-repeat, .form-item-period').hide();
+    });
     $('#edit-payhow-0').click(function () {ach.show(); coverCCFee.hide();});
     
     $('.btn-repeat').click(function () {

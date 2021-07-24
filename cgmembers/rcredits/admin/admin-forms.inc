@@ -585,7 +585,7 @@ EOF
   //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
-    SELECT amount, xid, uid, u.fullName AS name FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
+    SELECT amount, xid, uid, u.fullName AS name, pid FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
     WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
 EOF;
   $q = db\q($sql);
