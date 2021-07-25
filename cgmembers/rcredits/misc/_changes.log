@@ -1,3 +1,9 @@
+2021-07-24 feature/donate2
+. finished combining cc, donate, and donate-fbo forms
+. renamed donate-fbo to donate and deleted donate.inc and cc.inc
+. added acct::hasAltId, to avoid trying to decrypt(V) when not the super
+. changed w\eLinkAcct so it doesn't change its second arg
+
 2021-07-24 feature/donate
 . revised donate-fbo to handle regular donations, recurring non-member donations by ACH, and reporting comments to sponsored organization
 . tests now crash if a non-admin tries to deCry(V), including a helpful change to gherkin that exposes the $testState (Given, When, or Then)

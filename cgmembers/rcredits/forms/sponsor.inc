@@ -31,7 +31,7 @@ function formSponsor($form, &$sta, $args = '') {
   if ($isCo and ($mya->ok or $mya->admin)) {
     if (!$mya->can(B_MANAGE)) return say('no sponsor perm', 'err');
     $contact = $fullName = $phone = $email = $zip = $country = $source = NULL;
-    if ($mya->coCan(CO_SPONSORED) or (strhas($mya->fullName, t(' FBO ')) and $mya->federalId == CGF_EIN)) $gross = $employees = $comments = NULL;
+    if ($mya->coCan(CO_SPONSORED) or u\starts($mya->fullName, t('%PROJECT FBO '))) $gross = $employees = $comments = NULL;
   } else {
     $contact = textFld(REQ . t('Your Name:'), [t('Your full name')]);
     $fullName = textFld(REQ . t('Organization:'), [t('Organization or project name')]);

@@ -17,8 +17,7 @@ function formProxies($form, &$sta, $args = '') {
     if ($p[$i] = $mya->proxy($i)) {
       $pi = r\acct($p[$i])->fullName;
     } else $pi = t('(none chosen)');
-//    $proxy[$i] = $pi . t(' [<@a>show choices</a>]', ['@a'=>"a href=$base_url/prox/page=Proxy&priority=$i&$args"]);
-    $proxy[$i] = $pi . ' ' . spinLink("/prox/page=Proxy&priority=$i&$args", t('Show Choices'), '', 'primary', 'xs');
+    $proxy[$i] = $pi . ' ' . spinLink("/prox/page=Proxy&priority=$i&" . eLink($sta), t('Show Choices'), '', 'primary', 'xs');
   }
   $gotBoth = ($p[1] and $p[2]);
   

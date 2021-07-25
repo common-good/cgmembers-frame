@@ -82,6 +82,7 @@ $GLOBALS['tStrings'] = array(
   'short invoice' => t('Your balance is %short short to pay the requested amount to %payeeName (payment request #%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),
   'finish signup' => t('<b class="loud">IMPORTANT</b>: You must sign in at %CG_DOMAIN and finish setting up your %PROJECT account before this payment can be made.'),
+  'debt timeout' => t('Your balance has been negative for more than %R_DEBT_DAYS. The system will try to bring it up to zero, in keeping with the <%a>%PROJECT Agreement</a> you signed on %signed.'),
   'when funded' => t('You cannot make payments until you have enough money in your account.'),
   'how to fund' => t('To put money in your account, trade cash for %RCREDITS at a participating business or with another member OR sign in at %CG_DOMAIN and click "Bank", to connect a bank account and transfer funds.'),
   'auto pay on' => t('From now on your invoices from %payeeName will be approved and paid automatically, drawing funds from your connected bank account as needed. (We do not expect there to be overdraft problems, of course, but if there are, you will be responsible for them.)'),

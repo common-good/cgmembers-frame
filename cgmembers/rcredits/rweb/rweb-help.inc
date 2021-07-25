@@ -21,7 +21,7 @@ use CG\Web as w;
 function rawHelp($i, $tag = '', &$args = '') {
   global $rUrl;
   
-  extract(just('gifts years', $args)); // must precede eLinkAcct
+  extract(just('gifts years', $args));
 
   if ($mya = w\eLinkAcct($zot, $args, 'any')) {
     $ctty = $mya->community ?: 0;
@@ -171,7 +171,7 @@ X
 X
   ) . $back;
 
-  if ($i == 'why-no-single-donation-option') return t(<<< X
+  if ($i == 'why-no-one-time-option') return t(<<< X
     <p>We are very grateful for any donation you choose to make.</p>
     <p><b>99% member-supported.</b> So why don't we offer a one-time donation option during the sign-up process? We're in a bit of a Catch-22. We are funded entirely by individual donations. Foundations typically do not understand the importance of community-level <i>participatory</i> economic democracy. So our viability as an organization depends on a reliable stream of donations from individuals and local businesses. Almost all such donations come from our members.</p>
     <p><b>Success threshold.</b> We were fortunate to receive some substantial initial donations to carry us through several years. But we need to scale up to about 4,500 members in the next dozen months or so, to reach financial sustainability.</p>

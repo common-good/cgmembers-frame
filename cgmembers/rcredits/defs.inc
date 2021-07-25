@@ -164,8 +164,8 @@ const SUBMENUS = 'community invest history co settings sadmin';
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
-const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce founded'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
@@ -681,6 +681,7 @@ const BCAT_GIFT = 1; // record ID of donations in budget_cats
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));
 define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
+const PER_YEAR = 'year';
 const PER_1 = 'once';
 const DUR_1 = 'once';
 

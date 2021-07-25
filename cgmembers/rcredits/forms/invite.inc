@@ -28,7 +28,7 @@ function formInvite($form, &$sta, $args = '') {
 
   if ($example) return exampleInvite($info, $code);
 
-  return inviteOne($mya, $code, $info, $buttons, $args); // nonperson or already signed
+  return inviteOne($mya, $code, $info, $buttons); // nonperson or already signed
 }
 
 function formInvite_validate($form, &$sta) {
@@ -85,7 +85,7 @@ function exampleInvite($subs, $code, $emailCoded = '') {
 /**
  * Form to invite one person
  */
-function inviteOne($mya, $code, $info, $buttons, $args) {
+function inviteOne($mya, $code, $info, $buttons) {
   $title = t('Invite Someone');
 
   if ($mya->shouter) $buttons .= btn('/community/invite/edit=1', t('Edit Yours'));

@@ -36,7 +36,7 @@ Scenario: admin downloads ACH requests
   |            | Transfers |  Count | Total     |
   | TODAY      | IN        |      3 | 760.00    |
   |            | OUT       |      1 | -100.00   |
-  | 07/08/2021 | IN        |      1 | 100.00    |
+  | %mdY-2w    | IN        |      1 | 100.00    |
 
   When member ".ZZA" visits page "sadmin/achs/date=0&mark=1"
   Then we download "BSL-NOW.ach" with "ACH" records:

@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 include_once __DIR__ . '/signin.inc';
-include_once __DIR__ . '/donatefbo.inc'; // for getCGPayArgs() function
+include_once __DIR__ . '/donate.inc'; // for getCGPayArgs() function
 
 /**
  * Pay with Common Good, arriving from some other site. The payment form, if any, 

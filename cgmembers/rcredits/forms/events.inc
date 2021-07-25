@@ -140,13 +140,12 @@ EOF;
 //  } else $middle = t('There are no questions pending in your community.');
   
   $middle = item(nn($middle));
-  $args = hidFld($args);
 
   w\js('ballot');
   w\css('rvote.css');
   
   u\setDft($extraFields, NULL);
-  return cgform(compact(ray('args title status voting middle extraFields')));
+  return cgform(compact(ray('title status voting middle extraFields')));
 }
 
 function formEvents_validate($form, &$sta) {
@@ -159,15 +158,15 @@ function formEvents_validate($form, &$sta) {
 
 function formEvents_submit($form, &$sta) {
   extract(just('question agree op', $sta['input'], NULL));
-  $mya = w\eLinkAcct($sta, $args);
+  $mya = w\eLinkAcct($sta); $eLink = eLink($sta);
   $ctty = $mya->community;
 
   $op = (w\op($sta) == 'prev' and strpos($op, t('Previous')) === FALSE) ? 'doneWithQ' : w\op($sta);
   if ($op == 'showVotes') return w\say(v\showVotes($ctty));
   if (in($op, 'noDirect noVote')) return w\say(v\showNonVoters($ctty, $op == 'noDirect'));
 
-  if ($op == 'gradeIt') return w\go("prox/page=Events&do=grade&$args");
-  if ($agree) return w\go("prox/page=Events&do=ballot&$args");
+  if ($op == 'gradeIt') return w\go("prox/page=Events&do=grade&$eLink");
+  if ($agree) return w\go("prox/page=Events&do=ballot&$eLink");
   
   // process ballot submission
   if ($question < 0) {
@@ -183,8 +182,8 @@ function formEvents_submit($form, &$sta) {
   v\processvote($sta['input'], $type); // any errors are handled by javaScript (only the user suffers if no JS)
 
 // redundant  if ($question == 'done') w\say(t('That was the last item. Thank you for participating!'));
-  if ($question != 'before') $args .= $question == 'done' ? '&do=done' : "&do=$do&question=$question";
-  return w\go("prox/page=Events&$args"); 
+  if ($question != 'before') $eLink .= $question == 'done' ? '&do=done' : "&do=$do&question=$question";
+  return w\go("prox/page=Events&$eLink"); 
 }
 
 /**

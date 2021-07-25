@@ -41,7 +41,7 @@ function activate($a, $helper) {
     if ($a->ssnErr and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
     if ($creditLine = !$a->hasBank ? 0
     : (($a->hasFid and !$a->risk('ssnOff')) ? CREDIT_WITH_SSN
-    : ($a->altId ? CREDIT_WITH_LICENSE : 0))) {
+    : ($a->hasAltId ? CREDIT_WITH_LICENSE : 0))) {
       $a->update('floor', -$creditLine);
       if ($a->refill and $a->minimum) {
         $a->getFunds(min($creditLine, $a->minimum), tr($creditLine >= $a->minimum ? 'to target' : 'part way to target'));

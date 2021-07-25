@@ -1278,6 +1278,7 @@ function statisticsGetSet($time) {
  *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE invest Setup
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1756,6 +1757,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST cc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit

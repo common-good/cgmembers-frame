@@ -279,7 +279,7 @@ function recur($template) {
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
     if (!$res = db\get('bankAccount,isSavings,payee', '(txs2 JOIN txs_noreverse USING(xid)) x', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
-    include_once R_ROOT . '/forms/donatefbo.inc'; // for thanks() function
+    include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
@@ -947,15 +947,20 @@ o;
   while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
   if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
 
-  if ($a->balance < 0 and !$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
-  
   list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
-  ? [$a->minimum + $pending, t('to target')]
+  ? [$a->minimum + $pending, tr('to target')]
   : [min($pending, $a->balance + $pending), t('to pending')]; // this could be negative (just enough to pay pending)
-  
+
+  $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
+
+  if ($a->balance < 0) {
+    if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
+    if ($debtTimeout) $why = tr('debt timeout', 'signed', u\fmtDate($a->signed, TRUE)) . "|$why";
+  }
+
   if ($target < $pending and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
-    if (!$a->debt or ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS)) { // time to get out of the negative
-      list ($target, $why) = [$pending, t('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
+    if (!$a->debt or $debtTimeout) { // time to get out of the negative
+      list ($target, $why) = [$pending, tr('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
     }
   }
   

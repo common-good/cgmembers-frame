@@ -61,7 +61,7 @@ function menu($submenu = '') {
     'community/stepup' => ['sub', t('Step Up'), 'StepUp 2', 'manage', '', t(), 'export'],
     'community/crumbs' => ['sub', t('Share When You Receive'), 'Crumbs 2', 'manage', '', t(), 'import'],
     'community/buy-credit' => ['sub', t('Buy Credit for Later'), 'BuyCredit 2', 'manage', '', t(), 'time'],
-    'community/donate' => ['sub', t('Donate to %PROJECT'), 'Donate', 'manage', '', t(), 'thumbs-up'],
+    'community/donate' => ['sub', t('Donate to %PROJECT'), 'Donate 2', ANY, '', t(), 'thumbs-up'],
     'community/coupons' => ['sub', t('Discount / Gift Certificates'), 'Coupons 2', 'manage', '', t(), 'usd'],
     'community/coupons/print' => ['call', t('Print Coupons'), '3', 'ok manage', 'couponsPrint'],
     'community/coupons/list' => ['call', t('List Discounts and Gift Cards'), 'CouponsList 3', 'manage'],
@@ -225,8 +225,8 @@ function menu($submenu = '') {
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'api' => ['call', 'API', '1', ANY, 'api'],
-    'cc' => ['call', 'Credit Card Donation', 'CC 1', ANY],
-    'donate-fbo' => ['call', t('Donate'), 'DonateFBO', ANY],
+    'cc' => ['call', 'Credit Card Donation', 'Donate 1', ANY],
+    'donate-fbo' => ['call', t('Donate'), 'Donate 1', ANY],
   );
 
   foreach ($items as $k => $v) {

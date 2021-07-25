@@ -889,7 +889,7 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-  if (isDEV and test() and $type == 'V') {global $mya; u\EXPECT($mya->admin, 'deCry(V) by non-super');} // admin stands in for super in tests
+  if ($type == 'V' and !t\deCryVok()) u\FAIL('deCry(V) by non-super');
   return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
 }
 

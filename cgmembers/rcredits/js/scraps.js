@@ -345,9 +345,10 @@ function doit(what, vs) {
     }
     break;
     
-  case 'fbo':
+  case 'donate':
     hideComment();
-    $('.form-item-period, .form-item-honor, .form-item-payHow span').hide();
+    $('.form-item-honor, .form-item-payHow span').hide();
+    if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
     var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
     var ach = $('#ach'); ach.hide();
     var submit = $('.form-item-submit');

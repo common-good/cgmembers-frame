@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Admin as a;
+use CG\Testing as t;
 
 /**
  * @file
@@ -210,7 +211,8 @@ class Acct {
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
       case 'hasFid': return $a->hasVSecure('federalId');
-      case 'hasId': return ($a->hasFid or $a->hasVSecure('altId'));
+      case 'hasAltId': return $a->hasVSecure('altId');
+      case 'hasId': return ($a->hasFid or $a->hasAltId);
       case 'hasDob': return $a->hasVSecure('dob');
       case 'closed': return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
       case 'hasBank': return $a->hasVSecure('bankAccount');
@@ -280,7 +282,7 @@ class Acct {
         $result = nni($set, $field);
         if ($k == 'vsecure') {
           if (u\crypted('V', $result)) $result = u\decry('V', $result);
-          elseif (test() and $sceneTest->state != 'Given' and !($mya and $mya->admin)) u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
+          elseif (!t\deCryVok()) u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
         }
         return $result; // must be separate line from $a->set (PHP bug)
       }
@@ -520,10 +522,10 @@ class Acct {
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $k => $v) {
-      $ak = $a->$k;
+      $ak = ((!$mya or !$mya->superAdmin or (test() and !$mya->admin)) and in($k, VSECURE_FLDS)) ? t('(encrypted)') : $a->$k;
       if ($v == $ak or (is_numeric($v) and is_numeric($ak) and $v + 0 == $ak + 0)) continue; // don't record if no change
 
-      $oldValue = $a->cryIf($k, is_array($a->$k) ? serialize($a->$k) : ('' . $a->$k), TRUE);
+      $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
       $newValue = $a->cryIf($k, is_array($v) ? serialize($v) : '' . $v);
       $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field

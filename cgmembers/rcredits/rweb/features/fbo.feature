@@ -180,7 +180,7 @@ Scenario: A non-member donates to a sponsored organization by credit card
   Given a button code for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member "?" visits "donate-fbo/code=TESTCODE"
+  When member "?" visits "community/donate/code=TESTCODE"
   Then we show "Donate to Our Pub" with:
   | Donation    |
   | Name        |
@@ -195,7 +195,7 @@ Scenario: A non-member donates to a sponsored organization by credit card
   And var "CODE" encrypts:
   | pid | amount | period | coId   |*
   | 1   | 123.00 | once   | NEWZZC |
-  When member "?" completes "donate-fbo/code=TESTCODE" with:
+  When member "?" completes "community/donate/code=TESTCODE" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
@@ -203,9 +203,9 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
 
   And we redirect to "https://www.paypal.com/donate"
-  And return URL "/donate-fbo/op=done&code=CODE"
+  And return URL "/community/donate/op=done&code=CODE"
   
-  When member "?" visits "donate-fbo/op=done&code=CODE"
+  When member "?" visits "community/donate/op=done&code=CODE"
   Then these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
@@ -230,14 +230,14 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
-  And we say "status": "gift thanks"
+  And we say "status": "gift thanks|check it out"
 
 Scenario: A non-member donates to a sponsored organization by ACH
   Given a button code for:
   | account | secret |*
   | .ZZC    | Cc3    |
   And next captcha is "37"
-  When member "?" completes "donate-fbo/code=TESTCODE" with:
+  When member "?" completes "community/donate/code=TESTCODE" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
   Then these "people":
@@ -267,4 +267,4 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
-  And we say "status": "gift thanks"
+  And we say "status": "gift thanks|check it out"

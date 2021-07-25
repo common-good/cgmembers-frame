@@ -1458,11 +1458,10 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  * @param assoc $sta: the form's status parameter, possibly with an eLink parameter (for verify and submit)
  *   (RETURNED) with $sta['eLink'] equal to just the qid and ecode part of eLink, plus the allow param
  * @param string $eLink: parameters from URL
- *   (RETURNED) same as $sta['eLink']
  * @param string $allow: what not-signed-in accounts to allow: individual (the default), 'acct', or 'any'
  * @return the account (defaults to current account), FALSE if error
  */
-function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
+function eLinkAcct(&$sta, $eLink = '', $allow = 'individual') {
   global $formSta;
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
   extract(just('qid ecode', $eLink, ''));
@@ -1474,9 +1473,10 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
     if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
-  if ($a) $eLink = $formSta['eLink'] = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
+  $formSta['eLink'] = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=$ecode"; // remember it (cttys don't use ecode)
   return $a;
 }
+function eLink($sta) {return nni($sta, 'eLink');}
 
 /**
  * Check and correct routing and bankAccount errors in validate functions.
@@ -1984,11 +1984,12 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
     if ($remains > 1) { // more than just this step
       $remains--; // don't count current step
       $skip = $noSkip ? '' : skipButton();
-      $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
+      $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip) + $extra);
       $steps = $remains == 1 ? t('step') : t('steps');
       if ($remains < 3) $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
-    } else $res['nextStep'] = submit(t('Finish'));
+    } else $res['nextStep'] = submit(t('Finish'), '', '', $extra);
   } else $res['submit'] = submit($label, '', '', $extra);
+
   return $res;
 }
 

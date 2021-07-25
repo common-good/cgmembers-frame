@@ -593,6 +593,14 @@ function notice($notice, $id, $subs = []) {
 }
 
 /**
+ * Make sure non-super doesn't try to deCry(V) something.
+ */
+function deCryVok() {
+  global $mya, $sceneTest;
+  return (!isDEV or !test() or ($mya and $mya->admin) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these')); // admin stands in for super in tests
+}
+
+/**
  * Say whether the record count in a table is correct.
  */
 function count($what, $count) {
@@ -631,7 +639,7 @@ function doneStep($id, $step) {
  * "?" in a field means ignore its value when testing
  */
 function doMembersHave($info) {
-  global $testOnly;
+  global $testOnly, $sceneTest;
 
 //  $balFields = just(T_BALANCE_FLDS, $info);
 //  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;

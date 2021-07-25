@@ -33,7 +33,7 @@ function formCGButton($form, &$sta, $args = '') {
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
-  $page = $fbo ? 'donate-fbo' : 'cgpay';
+  $page = $fbo ? 'donate' : 'cgpay';
 
   jsx('cgbutton', ray('qid forVals selling style page', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, $page));
   
