@@ -89,7 +89,7 @@ function formCoupons_validate($form, &$sta) {
   extract(just(COUPON_FLDS, $sta['input'], NULL));
   $portion = 0;
 
-  if (empty($amount) and in($mya->task, 'co co2')) return;
+  if (empty($amount) and in($mya->task, 'co')) return;
 
   switch ($type) {
   case 'gift':
@@ -163,7 +163,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
   extract($input = just(COUPON_FLDS . ' from to ruleId', $sta['input'], NULL));
 
-  if (empty($amount) and in($mya->task, 'co co2')) {
+  if (empty($amount) and in($mya->task, 'co')) {
     return $mya->task == 'co' ? w\go($mya->nextStepUrl() ?: 'dashboard') : w\goNextStep('discount'); // new member pressed skip on discount form
   }
 

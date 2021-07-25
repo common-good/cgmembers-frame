@@ -231,7 +231,7 @@ function formFollowup($form, &$sta, $args = []) {
   $now = now();
   $signupBit = r\allSteps()['signup'];
   $wantsCardP = 0; foreach(ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
-  $wantsCardCo = 0; foreach(ray(S_CO2) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
+  $wantsCardCo = 0; foreach(ray(S_CO) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();

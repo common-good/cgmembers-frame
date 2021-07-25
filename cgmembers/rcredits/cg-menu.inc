@@ -130,7 +130,6 @@ function menu($submenu = '') {
     'settings/verifyid' => ['call', 'Correct SSN', 'VerifyId 2', 'manage'],
     'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', ANY],
     'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],
-    'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
     'settings/partnersteptwo' => ['call', 'Partner Signup Agreement Etc.', 'PartnerStepTwo', 'manage'],

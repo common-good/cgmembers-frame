@@ -1605,7 +1605,6 @@ X;
     // Lastly, place restrictions on buying and selling
 
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
-//    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     

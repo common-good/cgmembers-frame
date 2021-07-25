@@ -43,7 +43,7 @@ Scenario: A company signs up
   | fullName  | New Co       |**
   | legalName |              |
   | federalId | 04-3849283   |
-  | dob       | %mdY-3y      |
+  | founded   | %mdY-3y      |
   | zip       | 01004        |
   | phone     | 413-253-0004 |
   | email     | d@           |
@@ -57,7 +57,7 @@ Scenario: A company signs up
   | fullName  | New Co       |
   | legalName | New Co       |
   | federalId | 043849283    |
-  | dob       | %daystart-3y |
+  | founded   | %daystart-3y |
   | zip       | 01004        |
   | phone     | +14132530004 |
   | email     | d@           |
@@ -138,7 +138,7 @@ Scenario: A company supplies company information
   | shortDesc   | bar |
   | employees   | 3 |
   | gross       | $250,000 |
-  | dob         | %mdY-9y |
+  | founded     | %mdY-9y |
   | website     | Rpub.com |
   | description | really good ale |
   | can         | 0=>0, 0=>2 |
@@ -151,7 +151,7 @@ Scenario: A company supplies company information
   | shortDesc   | bar |
   | employees   | 3 |
   | gross       | 250000 |
-  | dob         | %daystart-9y |
+  | founded     | %daystart-9y |
   | website     | Rpub.com |
   | description | really good ale |
   | staleNudge  | 8 |

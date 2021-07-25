@@ -1,3 +1,9 @@
+2021-07-25 feature/founded
+. changed dob to "founded" for companies
+. removed remnants of 2-step company signup
+. cleaned up badSsn function and renamed it badEin
+. replaced ssnFields function with individual functions
+
 2021-07-24 feature/donate2
 . finished combining cc, donate, and donate-fbo forms
 . renamed donate-fbo to donate and deleted donate.inc and cc.inc

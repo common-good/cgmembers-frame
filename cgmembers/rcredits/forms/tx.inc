@@ -119,10 +119,12 @@ function formTx_submit($form, &$sta) {
   } else { // no delay
      
     if ($pid) {
+      // include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
       $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
       $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
       u\EXPECT($xid, 'outer transfer failed');
       list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
+      // return thanks($pid, $amount, $period, $coId);
     } else {
       $data = $period ? ['recurs' => 1] : [];
       if ($start) $data['created'] = $start; // superAdmin chose a date in the past

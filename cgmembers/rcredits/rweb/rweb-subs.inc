@@ -1318,6 +1318,7 @@ function ssnFld($req = REQ, $extra = []) {
   return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
+function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
 
 /**
  * Standardize the "selling" field input.
@@ -1347,23 +1348,6 @@ EOF;
   return db\q($sql)->fetchAllKeyed();
 }
   
-/**
- * Return the fields used to verify an individual's SSN or company's EIN (also asked for in signup).
- * @param bool $personal: is the account personal (not a company)
- * @param char $req: REQ if required, else ''
- */
-function ssnFields($personal = TRUE, $req = '') {
-  if ($personal) {
-    $federalId = ssnFld($req);
-    $dob = dobFld($req);
-  } else {
-    $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()]);
-  }
-  
-  return compact(ray('federalId dob'));
-}
-
 function no_selection($list) {
   foreach ($list as $one) if ($one) return FALSE;
   return TRUE;

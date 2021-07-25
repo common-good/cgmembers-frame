@@ -86,9 +86,9 @@ function badDob(&$dob, $co) {
 /**
  * Say whether the given SSN is the wrong length (since they are random, that's all we can tell).
  */
-function badSsn(&$ssn, $dob = '') {
+function badEin(&$ssn, $co) {
   if (strlen(u\digits($ssn)) == 9) return FALSE;
-  return nn($dob) ? 'bad ssn' : 'bad federal id';
+  return $co ? 'bad federal id' : 'bad ssn';
 }
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
@@ -1713,7 +1713,7 @@ function isName($value) {return preg_match('/^[ \\x{00c0}-\\x{01ff}a-zA-Z0-9\,\.
 function isAcct($acct) {return (is_object($acct) and get_class($acct) == 'CG\\Acct');}
 function hug($s, $arms = '()') {return mb_substr($arms, 0, 1) . $s . mb_substr($arms, -1, 1);} // deprecated
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
-function fmtDate($time = NULL, $numeric = FALSE) {return strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
+function fmtDate($time = NULL, $numeric = FALSE) {return $time === '' ? '' : strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
 function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, now())));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', nn($n));}

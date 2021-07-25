@@ -59,7 +59,8 @@ X
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 
   $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')]);
-  extract(ssnFields(FALSE, REQ));
+  $federalId = passFld(REQ . tr('einTitle'), [tr('einDesc')], autofill('off'));
+  $founded = foundedFld($mya->founded, REQ);
 
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
   $phone = textFld(t('Company Phone:'), [t('Company phone number')], required(nn($phone) ? u\fmtPhone($phone, '-') : ''));
@@ -75,33 +76,35 @@ X
   $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId dob source needPhone midtext agreement submit args agentQid')));
+  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId founded source needPhone midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
   global $mya;
   
   extract(u\normalizeCase(just('fullName legalName', $sta['input'], NULL)));
-  extract(just('zip phone email selling federalId dob', $sta['input']));
+  extract(just('zip phone email selling federalId founded', $sta['input']));
 
   foreach (ray('fullName legalName') as $field) if ($field != 'legalName' or $$field) {
     $$field = trim(str_replace('  ', ' ', u\normalizeCase(nn($$field))));
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
 
-  if (!formBasic_validate($form, $sta, TRUE, 'federalId dob')) return;
+  if ($err = u\badEin($federalId, TRUE)) return say($err, 'federalId');
+  if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');
+
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (!emailOkay($email, TRUE, NULL)) return;
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   
-  u\preray(compact(ray('fullName zip phone email selling')), $sta['input']); // fix formatting and add name
+  u\preray(compact(ray('fullName zip phone email selling federalId founded')), $sta['input']); // fix formatting and add name
 }
   
 function formSignupCo_submit($form, &$sta) {
   global $mya;
   
-  $dbFields = 'coType source selling fullName legalName email flags phone federalId dob zip state helper';
+  $dbFields = 'coType source selling fullName legalName email flags phone federalId founded zip state helper';
   extract(just($dbFields . ' sellCg source2 needPhone agentQid args', $sta['input'], NULL));
   extract(just('code', nn($args, []), NULL));
 
@@ -115,7 +118,7 @@ function formSignupCo_submit($form, &$sta) {
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
-  
+
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
   r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)
   

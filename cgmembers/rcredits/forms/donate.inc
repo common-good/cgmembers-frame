@@ -229,7 +229,7 @@ function getCGPayArgs($args) {
 function thanks($pid, $amount, $period, $coId) {
   global $mya;
   $coA = r\acct($coId);
-  $gift = $subs0 = u\fmtAmt($amount) . ($period == PER_1 ? '' : ' ' . r\recurDesc($period));
+  $gift = $subs0 = u\fmtAmt($amount) . ($period == PER_1 ? '' : (' ' . r\recurDesc($period)));
   $res = db\get('*', 'people', compact('pid'));
   u\EXPECT((bool) $res, 'missing pid in thanks');
   extract(just('fullName email phone city state zip notes', $res));
@@ -239,8 +239,8 @@ function thanks($pid, $amount, $period, $coId) {
   $subs0 = $res + ray('date gift', u\fmtDate(NULL, TRUE), $gift);
   $subs = $subs0 + ray('donor donorPhone donorAddress donorEmail note', $fullName, u\fmtPhone($phone), "$city, $st $zip", $email, $note);
   unset($subs['fullName']);
-  $coA->tellIn('fbo-report', $subs);
 
+  $coA->tellIn('fbo-report', $subs);
   $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone));
   r\rMail('fbo-thanks', [$email => $fullName], $subs);
 

@@ -14,7 +14,8 @@ function formSsn($form, &$sta, $args = '') {
   
   if ($mya->stepIsDone('ssn') and !$mya->admin) w\go('dashboard'); // don't allow DIY redo after SSN is verified
 
-  extract(ssnFields(!$mya->co, REQ));
+  $federalId = ssnFld(REQ);
+  $dob = dobFld(REQ);
   
   $ssnData = $mya->ssnData;
   $retry = (!empty($ssnData) or (isDEV and !$mya->member) or $mya->task == 'person');
@@ -24,7 +25,7 @@ function formSsn($form, &$sta, $args = '') {
       $thing = t('Birth Date');
       $federalId = NULL;
     } else {
-      $thing = $mya->co ? t('EIN') : t('Social Security Number');
+      $thing = t('Social Security Number');
       $dob = NULL;
     }
     $title = t('Confirm Your ') . $thing;
@@ -43,7 +44,7 @@ function formSsn($form, &$sta, $args = '') {
 }
 
 function formSsn_validate($form, &$sta) {
-  return formBasic_validate($form, $sta, FALSE, 'federalId dob');
+  return formBasic_validate($form, $sta, 'federalId dob');
 }
 
 function formSsn_submit($form, &$sta) {

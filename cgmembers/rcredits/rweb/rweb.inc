@@ -383,20 +383,13 @@ define('R_BASIC_FLDS', 'fullName federalId dob');
 /**
  * Validate the data that affects social security number verification.
  * called from signup validation and ssn validation, as well as from formBasic()
- * @param string/bool $co: is this a company account ('mya' means use the current account's type)
- *   'mya' also means we are retrying basic information (the AccountInfo step) during signup
  */
-function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
+function formBasic_validate($form, &$sta, $fields = R_BASIC_FLDS) {
   extract(just($fields, $sta['input']));
-  if ((string) $co == 'mya') {
-    $mya = w\eLinkAcct($sta);
-    $co = $mya->co;
-  }
-  if (isset($fullName) and $err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
 
-  $what = $co ? t('federal ID') : t('social security number');
-  if (isset($federalId) and $err = u\badSsn($federalId, nn($dob))) return say($err, compact('what'), 'federalId');
-  if (isset($dob) and $err = u\badDob($dob, $co)) return say($err, 'dob');
+  if (isset($fullName) and $err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
+  if (isset($federalId) and $err = u\badEin($federalId, FALSE)) return say($err, 'federalId');
+  if (isset($dob) and $err = u\badDob($dob, FALSE)) return say($err, 'dob');
 
   foreach (ray($fields) as $k) if (isset($$k)) $sta['input'][$k] = $$k;
   return TRUE;
