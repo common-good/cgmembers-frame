@@ -20,11 +20,11 @@ Scenario: A member visits the company info page
 
 Scenario: A member updates company info
   When member "C:A" confirms form "settings/company" with values:
-  | private | selling | website     | description   | employees | gross | tips | staleNudge |*
-  |         | stuff   | www.pub.com | we do vittles |         2 |   100 |    1 |          3 |
+  | private | selling | website     | description   | employees | gross | tips | staleNudge | founded |*
+  |         | stuff   | www.pub.com | we do vittles |         2 |   100 |    1 |          3 | %mdY-1y |
   Then members:
-  | uid  | selling | website     | description   | employees | gross | staleNudge |*
-  | .ZZC | stuff   | www.pub.com | we do vittles |         2 |   100 |          3 |
+  | uid  | selling | website     | description   | employees | gross | staleNudge | founded      |*
+  | .ZZC | stuff   | www.pub.com | we do vittles |         2 |   100 |          3 | %daystart-1y |
   And we say "status": "info saved"
   
 Scenario: A member gives a bad employee count

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58c'; // software version
+const R_VERSION = '3.58d'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -163,8 +163,8 @@ const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
-const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
-const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut'; // account fields stored in u_company
+const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
+const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut founded'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
@@ -431,18 +431,17 @@ const FUNDBY_PAY = 1; // paid by employer
 const FUNDBY_CASH = 2; // buy with cash at a participating business
 
 // Membership steps
-const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
+const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup agree verifyid fund preferences verifyemail';
 const S_CARD = 'photo contact donate crumbs proxies work backing stepup invite';
 const S_CO = 'signup verifyemail fund contact backing photo donate company crumbs discount';
-const S_CO2 = 'agent contact backing photo donate company crumbs discount';
 const S_SELL = 'ssn contact crumbs'; // keep this for when an individual member goes over the limit for no 1099
 const S_VOICE = 'contact donate proxies work backing invite'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
 
 const S_MEM_TASKS = 'card co'; // followup tasks for members
 const S_PTASKS = 'person card sell voice partner';
-const S_COTASKS = 'co co2 partner';
+const S_COTASKS = 'co partner';
 
 const S_OPTIONAL = 'discount stepup'; // optional steps
 
@@ -681,6 +680,9 @@ const BCAT_GIFT = 1; // record ID of donations in budget_cats
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));
 define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
+const PER_YEAR = 'year';
+const PER_1 = 'once';
+const DUR_1 = 'once';
 
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;

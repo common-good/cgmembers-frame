@@ -561,6 +561,7 @@ function notice($notice, $id, $subs = []) {
   global $base_url, $thatThing;
 
   if (is_array($subs0 = nn($subs[0]))) $subs = $subs0;
+  fixData($subs);
   if (mb_strpos($nm = nn($subs['otherName']), 'href="do/')) {
     $subs['otherName'] = str_replace('href="do/', "href=\"$base_url/do/", $nm);
   }
@@ -589,6 +590,14 @@ function notice($notice, $id, $subs = []) {
 
   t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
   return FALSE;
+}
+
+/**
+ * Make sure non-super doesn't try to deCry(V) something.
+ */
+function deCryVok() {
+  global $mya, $sceneTest;
+  return (!isDEV or !test() or ($mya and $mya->admin) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these')); // admin stands in for super in tests
 }
 
 /**
@@ -630,7 +639,7 @@ function doneStep($id, $step) {
  * "?" in a field means ignore its value when testing
  */
 function doMembersHave($info) {
-  global $testOnly;
+  global $testOnly, $sceneTest;
 
 //  $balFields = just(T_BALANCE_FLDS, $info);
 //  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;

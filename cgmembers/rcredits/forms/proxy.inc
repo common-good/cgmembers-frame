@@ -18,7 +18,7 @@ function formProxy($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args);
   $dft = $mya->proxy($priority);
   $dftOther = $mya->proxy(3 - $priority);
-  if (!$choices = proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&$args", 'no local proxy');
+  if (!$choices = proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&" . eLink($sta), 'no local proxy');
   if (!$mya->ok and count($choiceList ?: []) <= 2) { // no real choices, so don't make the member choose
     if (!$dft) $mya->proxy($priority, nni($choiceList, 0, UID_PLACEHOLDER1));
     if (!$dftOther) $mya->proxy(3 - $priority, nn($choiceList, $dft ? 0 : 1, UID_PLACEHOLDER2));
@@ -41,12 +41,12 @@ function formProxy($form, &$sta, $args = '') {
 
 function formProxy_validate($form, &$sta) {
   extract(just('priority', $sta['input']));
-  $mya = w\eLinkAcct($sta, $args); 
+  $mya = w\eLinkAcct($sta); 
   $choice = key($sta['input']);
   u\EXPECT(substr($choice, 0, 2) == 'i-', 'missing proxy choice');
   $proxyChoice = substr($choice, 2);
   if ($proxyChoice == $mya->proxy(1+2 - $priority)) {
-    return w\go("prox/page=Proxies&$args", 'doubled proxy', 'err');
+    return w\go("prox/page=Proxies&" . eLink($sta), 'doubled proxy', 'err');
   }
   $sta['input'] += compact('proxyChoice');
   return formProxy_submit($form, $sta); // oddly, _submit never gets called otherwise
@@ -54,13 +54,13 @@ function formProxy_validate($form, &$sta) {
 
 function formProxy_submit($form, &$sta) {
   extract(just('priority proxyChoice', $sta['input']));
-  $mya = w\eLinkAcct($sta, $args); 
+  $mya = w\eLinkAcct($sta); 
 
   $mya->proxy($priority, $proxyChoice);
 //  say('info saved');
 
   if (!r\acct()) { // called from email link
-    return $priority == 1 ? w\go("/prox/page=Proxy&priority=2&$args") : w\doSay(t('Success!'));
+    return $priority == 1 ? w\go("/prox/page=Proxy&priority=2&" . $sta['eLink']) : w\doSay(t('Success!'));
   } elseif ($mya->proxy(1+2 - $priority)) { // do we already have the other proxy?
     if (!$mya->stepIsDone('proxies')) return goNextStep('proxies');
   } else say('proxy to go');

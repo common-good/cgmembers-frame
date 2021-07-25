@@ -31,16 +31,3 @@ Scenario: A member has a big day
   When cron runs "biggies"
   Then we tell admin "Big Transfers on %dmy" with ray:
   | Bea Two | 1100 |
-
-#Scenario: A trial company runs out of time
-#  Given members:
-#  | uid       | .AAA           |**
-#  | fullName  | Coco Co        |
-#  | email     | a@             |
-#  | flags     | confirmed co depends ok |
-#  | activate  | %now-15d       |
-#  When cron runs "everyDay"
-#  Then we message "trial co end" to member ".AAA"
-#  And members have:
-#  | uid  | flags        | task |*
-#  | .AAA | confirmed co | co2  |

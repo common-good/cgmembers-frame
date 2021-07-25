@@ -119,10 +119,12 @@ function formTx_submit($form, &$sta) {
   } else { // no delay
      
     if ($pid) {
+      // include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
       $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
       $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
       u\EXPECT($xid, 'outer transfer failed');
       list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
+      // return thanks($pid, $amount, $period, $coId);
     } else {
       $data = $period ? ['recurs' => 1] : [];
       if ($start) $data['created'] = $start; // superAdmin chose a date in the past
@@ -149,7 +151,7 @@ function formTx_submit($form, &$sta) {
  
   if ($repeats) {
     // warn user if they already have a repeating transaction like this with this other account
-    $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
+    $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>:PER_1 AND IFNULL(end, :NOW + 1) > :NOW";
     if (!$delay and db\exists('tx_timed tm', $where, $info)) {
       $otherName = db\get('fullName', 'users', compact('uid'));
       say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
@@ -158,7 +160,7 @@ function formTx_submit($form, &$sta) {
     $subs += ray('often', r\recurDesc($period, $periods));
     $msg = u\joins($msg, '|', 'repeats');
   } else {
-    list ($periods, $period) = [1, 'once'];
+    list ($periods, $period) = [1, PER_1];
   }
   
   if (!$start) $start = today(); // handle ''

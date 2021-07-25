@@ -8,11 +8,14 @@ Setup:
   | uid  | fullName        | floor | flags                      | city | zip   | dob     | federalId |*
   | .ZZA | Abe One         |  -250 | ok,confirmed,debt          | Aton | 01000 | %now    | 123456789 |
   | .ZZB | Bea Two         |  -250 | ok,confirmed,debt,reinvest | Bton | 01000 | %now    | 123456789 |
-  | .ZZC | Our Pub         |  -250 | ok,confirmed,debt,co       | Cton | 01000 | %now-1d | 123456789 |
+  | .ZZC | Our Pub         |  -250 | ok,confirmed,debt,co       | Cton | 01000 | 0       | 123456789 |
   | .ZZD | Dee Four        |  -250 | ok,confirmed,debt          | Dton | 01000 | %now    | 123456789 |
   | .ZZE | Eve Five        |  -250 | ok,confirmed,debt          | Eton | 01000 | %now    | 123456789 |
   | .ZZF | Fred Six        |  -250 | ok,confirmed,debt          | Fton | 01000 | %now    | 123456789 |
   | .ZZI | Investment Club |     0 | ok,confirmed,co            | Iton | 01*   | %now    | 123456789 |
+  And members have:
+  | uid  | founded |*
+  | .ZZC | %now-1d |
 
   And relations:
   | main | other | permission |*

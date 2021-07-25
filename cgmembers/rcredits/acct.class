@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Admin as a;
+use CG\Testing as t;
 
 /**
  * @file
@@ -210,7 +211,8 @@ class Acct {
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
       case 'hasFid': return $a->hasVSecure('federalId');
-      case 'hasId': return ($a->hasFid or $a->hasVSecure('altId'));
+      case 'hasAltId': return $a->hasVSecure('altId');
+      case 'hasId': return ($a->hasFid or $a->hasAltId);
       case 'hasDob': return $a->hasVSecure('dob');
       case 'closed': return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
       case 'hasBank': return $a->hasVSecure('bankAccount');
@@ -272,12 +274,16 @@ class Acct {
    * @throw warning if the field does not exist
    */
   private function getSpecial($field) {
+    global $mya, $sceneTest;
     $a = $this;
     foreach (ray('data secure vsecure') as $k) {
       if ($a->special($field, strtoupper($k))) {
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = nni($set, $field);
-        if ($k == 'vsecure' and u\crypted('V', $result)) $result = u\decry('V', $result);
+        if ($k == 'vsecure') {
+          if (u\crypted('V', $result)) $result = u\decry('V', $result);
+          elseif (!t\deCryVok()) u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
+        }
         return $result; // must be separate line from $a->set (PHP bug)
       }
     }
@@ -424,7 +430,7 @@ class Acct {
     if ($a->jid and $jInfo = just(MASTER_FLDS, $info)) {
       list ($a2, $a1) = u\order($a->slave, $a, $a->jA); // set $a1 master, $a2 slave
 
-      $jInfo2 = array_fill_keys(ray(MASTER_FLDS), 0);
+      $jInfo2 = array_fill_keys(array_keys($jInfo), 0);
       unset($jInfo2['achMin']); // no change to slave achMin
       $a2->update1($jInfo2);
       $a1->update1($jInfo);
@@ -515,13 +521,13 @@ class Acct {
     $a = $this;
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
-    foreach ($newChanges as $field => $v) {
-      $ak = $a->$field;
+    foreach ($newChanges as $k => $v) {
+      $ak = ((!$mya or !$mya->superAdmin or (test() and !$mya->admin)) and in($k, VSECURE_FLDS)) ? t('(encrypted)') : $a->$k;
       if ($v == $ak or (is_numeric($v) and is_numeric($ak) and $v + 0 == $ak + 0)) continue; // don't record if no change
 
-      $oldValue = $a->cryIf($field, is_array($a->$field) ? serialize($a->$field) : ('' . $a->$field), TRUE);
-      $newValue = $a->cryIf($field, is_array($v) ? serialize($v) : '' . $v);
-      $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
+      $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
+      $newValue = $a->cryIf($k, is_array($v) ? serialize($v) : '' . $v);
+      $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
@@ -1192,9 +1198,11 @@ o;
     $amtDone = $a->draw($amount, $why);
     $amount -= $amtDone;
     if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
+    $amount -= $amtDone;
     
     if ($amount and !($a->nonudge and !$a->ok)) { // there was some to be gotten from bank (no message for non-member donations)
-      $msg = $amtDone >= $amount ? 'automatic when funded' : ($a->hasBank ? 'when funded' : 'when funded|how to fund');
+      $msg = tr('cannot bank', 'tofrom why', t('from'), $why) . '|';
+      $msg .= $a->hasBank ? 'automatic when funded' : 'when funded|how to fund';
       w\say($msg);
       $a->tellOut($msg);
     }    
@@ -1597,7 +1605,6 @@ X;
     // Lastly, place restrictions on buying and selling
 
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
-//    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     

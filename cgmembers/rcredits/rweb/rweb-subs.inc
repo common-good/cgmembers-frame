@@ -1318,6 +1318,7 @@ function ssnFld($req = REQ, $extra = []) {
   return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
+function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
 
 /**
  * Standardize the "selling" field input.
@@ -1347,23 +1348,6 @@ EOF;
   return db\q($sql)->fetchAllKeyed();
 }
   
-/**
- * Return the fields used to verify an individual's SSN or company's EIN (also asked for in signup).
- * @param bool $personal: is the account personal (not a company)
- * @param char $req: REQ if required, else ''
- */
-function ssnFields($personal = TRUE, $req = '') {
-  if ($personal) {
-    $federalId = ssnFld($req);
-    $dob = dobFld($req);
-  } else {
-    $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()]);
-  }
-  
-  return compact(ray('federalId dob'));
-}
-
 function no_selection($list) {
   foreach ($list as $one) if ($one) return FALSE;
   return TRUE;
@@ -1458,11 +1442,11 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  * @param assoc $sta: the form's status parameter, possibly with an eLink parameter (for verify and submit)
  *   (RETURNED) with $sta['eLink'] equal to just the qid and ecode part of eLink, plus the allow param
  * @param string $eLink: parameters from URL
- *   (RETURNED) same as $sta['eLink']
  * @param string $allow: what not-signed-in accounts to allow: individual (the default), 'acct', or 'any'
  * @return the account (defaults to current account), FALSE if error
  */
-function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
+function eLinkAcct(&$sta, $eLink = '', $allow = 'individual') {
+  global $formSta;
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
   extract(just('qid ecode', $eLink, ''));
   extract(just('allow', $eLink)); // don't overwrite, if none
@@ -1473,9 +1457,10 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
     if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
-  $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
+  $formSta['eLink'] = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=$ecode"; // remember it (cttys don't use ecode)
   return $a;
 }
+function eLink($sta) {return nni($sta, 'eLink');}
 
 /**
  * Check and correct routing and bankAccount errors in validate functions.
@@ -1964,7 +1949,7 @@ function css($sheet, $weight = -99) {
  * @return <success>
  */
 function checkAmtChoice(&$sta, $min = 0) { 
-  extract(just('amtChoice amount period', $sta['input']));
+  extract(just('amtChoice amount period', $sta['input'], NULL));
   if ($amtChoice != -1) $amount = $amtChoice;
   if (isset($period) and !$period and $amount) return say('missing field', array('field' => 'when'), 'period');
   if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
@@ -1983,11 +1968,12 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
     if ($remains > 1) { // more than just this step
       $remains--; // don't count current step
       $skip = $noSkip ? '' : skipButton();
-      $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
+      $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip) + $extra);
       $steps = $remains == 1 ? t('step') : t('steps');
       if ($remains < 3) $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
-    } else $res['nextStep'] = submit(t('Finish'));
+    } else $res['nextStep'] = submit(t('Finish'), '', '', $extra);
   } else $res['submit'] = submit($label, '', '', $extra);
+
   return $res;
 }
 
@@ -2209,7 +2195,7 @@ function missingArgs($args, $require) {
  * Sign in or sign up, before doing the given task.
  * @param string $first: signin or signup
  * @param string $then: what to do after completing the signin or signup (defaults to current URI)
- * @return (does not return -- redirects to signin or signup)
+ * @return: first() returns a URL to redirect to (first); goFirst() does not return -- redirects to signin or signup
  */
 function first($first, $then = NULL) {
   global $testFirst, $testThen;
@@ -2218,9 +2204,13 @@ function first($first, $then = NULL) {
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
-  return w\go("$first/then=$then");
+  return "$first/then=$then";
 }
+function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
 
+/**
+ * Do what was intended after a redirect.
+ */
 function then($then) {
   global $testThen;
   if ($then == 'TESTCODE' and test()) $then = u\cryRay($testThen);

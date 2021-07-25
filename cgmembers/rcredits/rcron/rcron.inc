@@ -255,10 +255,15 @@ EOF;
 }
   
 function recur($template) {
-  extract(just('id maxStart period periods end duration durations action from to purpose amount', $template));
+  extract(just('id maxStart period periods end duration durations action from to purpose amount payerType payer', $template));
   $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template shouldStart'));
+
+  if ($period and $period != PER_1) {
+    $when = r\recurDesc($period, $periods);
+    $erSubs += compact(ray('when purpose'));
+  } else { $when = t('one-time'); }
 
   if ($action == 'surtx') {
     if ($shouldStart > now() + WEEK_SECS) return; // don't create rules more than a week in advance
@@ -269,6 +274,20 @@ function recur($template) {
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
 
+  } elseif ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
+    if ($shouldStart > strtotime('tomorrow')) return; // don't remind until the right day
+    if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
+    extract($emailAndName);
+    if (!$res = db\get('bankAccount,isSavings,payee', '(txs2 JOIN txs_noreverse USING(xid)) x', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
+    include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
+    extract($res);
+    u\EXPECT($payee == $to, 'previous ACH mismatch');
+    $coA = r\acct($to);
+    $data = ray('gift recurs', 1, TRUE);
+    $info = ray('purpose explicit cat completed recursId deposit', t('donation'), FALSE, BCAT_GIFT, now(), $id, 0);
+    $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
+    r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
+    return w\thanks($pid, $amount, $period, $coA->id);
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);
@@ -277,18 +296,13 @@ function recur($template) {
       if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
     }
 
-    if ($period and $period != 'once') {
-      $when = r\recurDesc($period, $periods);
-      $erSubs += compact(ray('when purpose'));
-    } else { $when = t('one-time'); }
-
     $data = ray('created recurs', $shouldStart, TRUE); // keep this synced with template even if cron fails for a few days
     if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
-    
+  
     if ($action == 'pay') {
       if (is_null($amount)) { // sweep
         if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
-      }        
+      }
       $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
       if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
       $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
@@ -296,7 +310,7 @@ function recur($template) {
       $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
-    if ($period == 'once') r\endRule('tm', $id);
+    if ($period == PER_1) r\endRule('tm', $id);
 
   } else { FAIL(t('bad action in template: ') . pr($template)); }
   
@@ -933,15 +947,20 @@ o;
   while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
   if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
 
-  if ($a->balance < 0 and !$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
-  
   list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
-  ? [$a->minimum + $pending, t('to target')]
+  ? [$a->minimum + $pending, tr('to target')]
   : [min($pending, $a->balance + $pending), t('to pending')]; // this could be negative (just enough to pay pending)
-  
+
+  $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
+
+  if ($a->balance < 0) {
+    if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
+    if ($debtTimeout) $why = tr('debt timeout', 'signed', u\fmtDate($a->signed, TRUE)) . "|$why";
+  }
+
   if ($target < $pending and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
-    if (!$a->debt or ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS)) { // time to get out of the negative
-      list ($target, $why) = [$pending, t('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
+    if (!$a->debt or $debtTimeout) { // time to get out of the negative
+      list ($target, $why) = [$pending, tr('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
     }
   }
   

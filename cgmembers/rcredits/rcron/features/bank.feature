@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk,confirmed | 30     | USkk9000001 |
   | .ZZB | Bea Two  |   -50 |     100 | ok,refill,confirmed           | 30     |                    |
   | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | USkk9000003 |
-  
+
 Scenario: a member is barely below target
   And transactions:
   | xid | created    | amount | payer | payee | purpose |*
@@ -76,7 +76,7 @@ Scenario: an unbanked member barely below target draws on another account
   When cron runs "getFunds"
   Then transactions:
   | xid | amount | payer | payee | goods         | taking | purpose                                                     |*
-  |   1 |   0.01 | .ZZA  | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
+  |   1 |   0.01 | .ZZA  | .ZZB  | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
   And we notice "drew" to member ".ZZB" with subs:
   | amount | why       |*
   | $0.01  | to bring your balance up to the target you set |
@@ -93,8 +93,19 @@ Scenario: an unbanked member barely below target cannot draw on another account
   When cron runs "getFunds"
   Then we notice "cannot draw" to member ".ZZB" with subs:
   | why       |*
-  | to bring your balance up to the target you set |
+  | to target |
 
+Scenario: an unbanked non-drawing member barely below target cannot get funded
+  Given balances:
+  | uid  | balance |*
+  | .ZZA | 0      |
+  | .ZZB | 99.99  |
+
+  When cron runs "getFunds"
+  Then we notice "cannot bank|when funded|how to fund" to member ".ZZB" with subs:
+  | tofrom | why       |*
+  | from   | to target |
+  
 Scenario: a member is at target
   Given balances:
   | uid  | savingsAdd | balance |*
@@ -214,20 +225,7 @@ Scenario: a non-member has a target and refills
   And count "txs" is 1
   And count "txs2" is 1
   And count "tx_requests" is 0
-Skip no longer delaying first transfer, to verify account first
-Scenario: member's bank account has not been verified
-  Given members have:
-  | uid  | balance | flags     |*
-  | .ZZA |      10 | ok,refill |
-  When cron runs "getFunds"
-  Then these "txs2":
-  | txid | payee | amount | created | completed | deposit | xid |*
-  |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
-  |    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
-  And transactions:
-  | xid | amount | payer   | payee | taking |*
-  |   1 |      0 | bank-in | .ZZA |      1 |
-Resume
+
 Scenario: a member's bank account gets verified
   Given members have:
   | uid  | balance | flags     |*
@@ -263,3 +261,33 @@ Scenario: a member account needs more funding while not yet verified and somethi
   |   2 |      0 | bank-in | .ZZA  | from bank |     1 |
   And count "txs2" is 2
   And count "txs" is 2
+
+# bug fix test
+Scenario: a dormant joint member with a negative balance hasn't had wentNeg set yet
+  Given these "relations":
+  | main  | other | permission |*
+  | .ZZA  | .ZZB  | joint      |
+  | .ZZB  | .ZZA  | joint      |
+  And members have:
+  | uid  | jid  | balance | bankAccount |*
+  | .ZZA | .ZZB | -100    | USkk9000001 |
+  | .ZZB | .ZZA | -100    | USkk9000001 |
+  
+  When cron runs "getFunds"
+  Then members have:
+  | uid  | wentNeg |*
+  | .ZZA | %now    |
+
+Skip no longer delaying first transfer, to verify account first
+Scenario: member's bank account has not been verified
+  Given members have:
+  | uid  | balance | flags     |*
+  | .ZZA |      10 | ok,refill |
+  When cron runs "getFunds"
+  Then these "txs2":
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
+  |    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
+  And transactions:
+  | xid | amount | payer   | payee | taking |*
+  |   1 |      0 | bank-in | .ZZA |      1 |

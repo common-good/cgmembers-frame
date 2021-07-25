@@ -231,7 +231,7 @@ function formFollowup($form, &$sta, $args = []) {
   $now = now();
   $signupBit = r\allSteps()['signup'];
   $wantsCardP = 0; foreach(ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
-  $wantsCardCo = 0; foreach(ray(S_CO2) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
+  $wantsCardCo = 0; foreach(ray(S_CO) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
@@ -585,7 +585,7 @@ EOF
   //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM txs2_bank t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
-    SELECT amount, xid, uid, u.fullName AS name FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
+    SELECT amount, xid, uid, u.fullName AS name, pid FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
     WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
 EOF;
   $q = db\q($sql);

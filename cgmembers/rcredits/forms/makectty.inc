@@ -18,11 +18,12 @@ function formMakeCtty($form, &$sta) {
   // from w\contactFields
   $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')]);
   $postalAddr = textFld(REQ . t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], dft(nn($postalAddr)));
+  $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off') + $ein);
+  $founded = foundedFld($mya->founded, REQ);
 
   $submit = submit();
   
-  $form = compact('title', 'subtext') + nameAndEmailFlds(-1) + ssnFields(FALSE)
-    + compact(ray('phone postalAddr region zips submit'));
+  $form = compact('title', 'subtext') + nameAndEmailFlds(-1) + compact(ray('federalId founded phone postalAddr region zips submit'));
   return cgform($form);
 }
 
@@ -30,7 +31,7 @@ function formMakeCtty_validate($form, &$sta) {
   global $mya;
   $myid = $mya->id;
   extract(u\normalizeCase(just($normals = 'fullName legalName postalAddr', $sta['input'], NULL)));
-  extract(just('zips region email phone federalId', $sta['input'], NULL));
+  extract(just('zips region email phone federalId founded', $sta['input'], NULL));
 
   if (preg_match("~$zips~", null) === FALSE) return say(t('bad Zips REGEX'), 'zips');
   if (!$region or !preg_match('/[A-Z]{3}/i', $region)) return say(t('bad region code'), 'region');
@@ -44,8 +45,9 @@ function formMakeCtty_validate($form, &$sta) {
   $name = u\shortName($fullName);
   if ($otherName = db\get('fullName', 'users', 'name=:name', compact('name'))) return say('shortname taken', compact('otherName'), 'fullName');
 
-  if ($err = u\badSsn($federalId)) return say($err, ['what' => 'federalId'], 'federalId');
-  
+  if ($err = u\badEin($federalId, TRUE)) return say($err, 'federalId');
+  if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');
+
   list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
   if (!$address) return say('Bad postal address', 'postalAddr');
   if (!$state = r\stateNum($state)) return say('bad state', 'postalAddr');
@@ -54,11 +56,11 @@ function formMakeCtty_validate($form, &$sta) {
   $region = strtoupper($region);
   if (!db\exists('r_regions', 'region=:region', compact('region'))) return say(t('That region does not exist.'), 'region');
 
-  u\preray(compact(ray($normals . ' name email phone address city state zip region federalId')), $sta['input']); // fix formatting
+  u\preray(compact(ray($normals . ' name email phone address city state zip region federalId founded')), $sta['input']); // fix formatting
 }
 
 function formMakeCtty_submit($form, &$sta) {
-  $fields = 'name fullName legalName email phone federalId postalAddr address city state zip';
+  $fields = 'name fullName legalName email phone federalId founded postalAddr address city state zip';
   extract(just('zips region ' . $fields, $sta['input']));
 
   $flags = u\bit(B_CO) | u\bit(B_OK) | u\bit(B_UP);

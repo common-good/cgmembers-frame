@@ -1309,16 +1309,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Donate */
 #frm-donate .form-item-wait {margin-top:30px;}
 .form-item-amtChoice select {max-width:200px; font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
-/*#frm-donate .form-item-share .control-data {max-width:650px;}
-#frm-donate .form-item-share input {max-width:100px;} */
-/*#frm-donate #edit-period {display:block; float:left;}*/
-#frm-donate .form-item-period,
 #frm-rules .form-item-period,
-#frm-donatefbo .form-item-period {display:block;}
-#frm-donatefbo #edit-logo img {max-height:140px; max-width:100%;}
-#frm-donatefbo .form-item-fullName {margin-top:50px;}
-#frm-donatefbo #edit-title,
-#frm-donatefbo .radio {margin-bottom:0;}
+#frm-donate .form-item-period {display:block;}
+#frm-donate #edit-logo img {max-height:140px; max-width:100%;}
+#frm-donate .form-item-fullName {margin-top:50px;}
+#frm-donate #edit-title,
+#frm-donate .radio {margin-bottom:0;}
 
 #edit-honor {display:inline-block; width:150px; margin-right:10px;}
 #edit-honored {display:inline-block; max-width:150px;}

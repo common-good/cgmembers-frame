@@ -1420,7 +1420,7 @@ o;
 function recurRay($keepOne = FALSE, $text = PERIODLY) {
   $oftens = array_combine(ray(PERIODS), ray($text));
   unset($oftens['forever']);
-  if (!$keepOne) unset($oftens['once']);
+  if (!$keepOne) unset($oftens[PER_1]);
   if ($text != PERIODLY) unset($oftens['quarter']);
   return $oftens;
 }

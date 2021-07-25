@@ -41,7 +41,7 @@ function formVerifyId_validate($form, &$sta) {
 
   $ssnMethod = ($method == 0); // user chose SSN verification
   $checkFlds = $ssnMethod ? 'federalId dob' : 'dob';
-  if (!formBasic_validate($form, $sta, FALSE, $checkFlds)) return w\go('/settings/verifyid/setMethod=' . $method);
+  if (!formBasic_validate($form, $sta, $checkFlds)) return w\go('/settings/verifyid/setMethod=' . $method);
   if ($ssnMethod) return;
   
   // not SSN verification

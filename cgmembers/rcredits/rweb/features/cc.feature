@@ -11,21 +11,28 @@ Setup:
   | .ZZC | %PROJECT FBO Cor Pub  | ok,confirmed,co   | 3 C, Cville, CA 10003 | 333-333-3333 | %CGF_LEGALNAME | Cc3       |
 
 Scenario: Someone asks to make a credit card donation
-  When member "?" visits "cc"
+  When member "?" visits "community/donate"
   Then we show "Donate to Common Good" with:
+  | Donation    |
   | Name        |
+  | Phone       |
   | Email       |
   | Postal Code |
-  | Donation    |
 
   Given next captcha is "37"
-  When member "?" completes "cc" with:
+  When member "?" completes "community/donate" with:
   | fullName | email | zip   | amtChoice | amount | comment  | cq | ca |*
   | Zee Zot  | z@    | 01026 | 0         | 26     | awesome! | 37 | 74 |
-  Then we redirect to "https://www.paypal.com/donate"
+  Then these "people":
+  | pid | fullname | email | zip   | city       |*
+  | 1   | Zee Zot  | z@    | 01026 | Cummington |
+  And we redirect to "https://www.paypal.com/donate"
 
 Scenario: Someone completes a credit card donation
-  When someone visits "cc/op=done&code=%code" where code is:
-  | fullName | email | zip   | amount | comment  |*
-  | Zee Zot  | z@    | 01026 | 26     | awesome! |
+  Given these "people":
+  | pid | fullname | email | zip   | city       |*
+  | 1   | Zee Zot  | z@    | 01026 | Cummington |
+  When someone visits "community/donate/op=done&code=%code" where code is:
+  | pid | amount | period | coId |*
+  | 1   | 26     | once   | .ZZA |
   Then we say "status": "gift thanks|check it out"
