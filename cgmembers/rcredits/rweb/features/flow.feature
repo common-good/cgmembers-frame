@@ -43,6 +43,9 @@ Scenario: A joint account slave member draws
   |   1 | %E_PRIME  |    -20 | .ZZC | automatic transfer to NEWZZD   |
   |   2 | %E_PRIME  |     30 | .ZZB | food                           |
   |   2 | %E_PRIME  |    -30 | .ZZD | food                           |
+  When member ".ZZD" visits "history/transactions"
+  Then we show "Transaction History" with:
+  | 07/26/21 | Corner Pub | automatic transfer from NEWZZC | 20.00 | 30.00 | X |
   
 Scenario: A member draws again
   When member ".ZZA" confirms form "tx/pay" with values:

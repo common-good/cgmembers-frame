@@ -1221,18 +1221,18 @@ o;
     $a = $this;
     
     u\EXPECT($a->hasBank, 'banking with no bank');
-    if ($amount + 0 == 0) return;
+    if (!$amount = round($amount, 2)) return; // no zero requests at this time (to pre-verify bank account)
 
     $payee = $a->id;
-//    $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
-    $okNow = TRUE; // trust everyone unless and until this becomes a problem
+//    $okNow = ($amount < 0 or $a->bankOk); // 
+    $okNow = TRUE; // "okay to create the request NOW" - trust everyone unless and until this becomes a problem
     if (!$okNow) $a->verifyBank();
     $msg = 'banked';
     $combined = FALSE;
     $previous = $total = NULL;
+    $waiting = $a->waitingFromBank($combinable, $txid);
   
     if ($amount > 0) { // bringing money in
-      $waiting = $a->waitingFromBank($combinable, $txid);
       if (!$explicit) {
         $amount -= $waiting;
         if ($amount <= 0) return; // do nothing if we already have plenty waiting

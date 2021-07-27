@@ -37,7 +37,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // !(t.amt=0 AND t.type=:E_BANK) hides bank account verifications
   $sql = <<< EOF
     SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe,
-      IF($toMe, amt, -amt) AS amount, IF($toMe, for1, for2) AS description, IF($toMe, agt1, agt2) AS agt, $special,
+      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed

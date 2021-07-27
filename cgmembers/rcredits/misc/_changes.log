@@ -1,3 +1,8 @@
+2021-07-27 feature/for1-2
+. fixed bug: for1 and for2 were switched on tx history page
+. txdetail now handles changing one description if the two (for buyer and seller) are already different
+. stopped an undefined warning (for "waiting") in acct::bank()
+
 2021-07-25 feature/founded
 . changed dob to "founded" for companies
 . removed remnants of 2-step company signup

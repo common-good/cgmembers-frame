@@ -34,10 +34,10 @@ function formTxDetail($form, &$sta, $args = '') {
   }
   $a = r\acct($uid); // not "in" either account, so choose me and you however is easy
   $toMe = $uid == $uid1 ? 1 : 0;
-  
+  $forFld = $toMe ? 'for2' : 'for1';
 
   $sql = <<< X
-    SELECT t.created, t.amt, t2.pid, t.type, t.for2 AS purpose, t.cat, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid
+    SELECT t.created, t.amt, t2.pid, t.type, t.$forFld AS purpose, t.cat, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=IF($toMe, t.uid2, t.uid1)
     LEFT JOIN users uYou ON uYou.uid=IF($toMe, t.uid1, t.uid2)
@@ -103,12 +103,18 @@ function formTxDetail_validate($form, &$sta) {
 
 function formTxDetail_submit($form, &$sta) {
   $input = $sta['input'];
+  extract(just('toMe for xid eid', $input));
+  $myEid = $toMe ? $eid : -$eid;
   
   $DBTX = \db_transaction();
   if ($info = just('xid created', $input)) db\update('tx_hdrs_all', $info, 'xid');
-  if ($info = just('xid eid type amt for cat', $input)) {
+  if ($info = just('xid eid type amt cat', $input)) {
     if (!$info['cat']) $info['cat'] = NULL;
-    db\q('UPDATE tx_entries_all SET entryType=:type, amount=IF(id<0, -:amt, :amt), description=:for, cat=:cat WHERE xid=:xid AND ABS(id)=:eid', $info);
+    db\q('UPDATE tx_entries_all SET entryType=:type, amount=IF(id<0, -:amt, :amt), cat=:cat WHERE xid=:xid AND ABS(id)=:eid', $info);
+    if (db\exists('txs', 'for1=for2 AND xid=:xid', compact('xid'))) {
+      db\update('tx_entries_all', ray('id description', -$myEid, $for), 'id'); // keep description the same if it is
+    }
+    db\update('tx_entries_all', ray('id description', $myEid, $for), 'id');
   }
   unset($DBTX);
 

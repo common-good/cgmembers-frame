@@ -603,6 +603,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST investinterest AMemberExpressesInterest
@@ -2414,6 +2415,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
