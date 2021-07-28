@@ -246,7 +246,8 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
-  And we say "status": "gift thanks|check it out"
+  And we say "status": "gift thanks|check it out" with subs:
+  | coName | Our Pub |**
 
 Scenario: A non-member donates to a sponsored organization by ACH
   Given a button code for:
@@ -283,16 +284,16 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | donorEmail   | z@example.com        |
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
-  And we say "status": "gift thanks|check it out"
+  And we say "status": "gift thanks|check it out" with subs:
+  | coName | Our Pub |**
 
 Scenario: A member donates to a sponsored organization
   Given a button code for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  And next captcha is "37"
   When member ".ZZA" completes "community/donate/code=TESTCODE" with:
-  | amount | comment  | cq | ca | period | honor  | honored |*
-  |    123 | awesome! | 37 | 74 | month  | memory | Mike    |
+  | amount | comment  | period | honor  | honored |*
+  |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
   | eid | xid | payer | payee | amount | purpose    | type       |*
   | 1   | 1   | .ZZA  | .ZZC  | 123    | donation   | %E_PRIME   |
@@ -317,4 +318,36 @@ Scenario: A member donates to a sponsored organization
   | donorEmail   | a@example.com        |
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
-  And we say "status": "gift thanks"
+  And we say "status": "gift thanks" with subs:
+  | coName | Our Pub |**
+
+Scenario: A member pays a sponsored organization
+  When member ".ZZA" submits "tx/pay" with:
+  | op  | who     | amount | purpose | period | periods |*
+  | pay | Our Pub | 123    | gift    | month  | 1       |
+  Then these "txs":
+  | eid | xid | payer | payee | amount | purpose | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift    | %E_PRIME   |
+  | 3   | 1   | .ZZC  | cgf   | 6.15   | sponsor | %E_AUX     |
+  And these "tx_timed":
+  | id | action   | from | to   | amount | portion | purpose | payerType    | payeeType    | period | periods |*
+  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | gift    | %REF_ANYBODY | %REF_ANYBODY | month  | 1       |
+  And count "tx_entries" is 4
+  And we email "fbo-thanks-member" to member "a@" with subs:
+  | fullName     | Abe One         |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | gift         | $123 monthly    |
+  And we email "fbo-report" to member "c@" with subs:
+  | gift         | $123 monthly         |**
+  | date         | %mdY                 |
+  | donor        | Abe One              |
+  | donorAddress | 1 A, A, AK           |
+  | donorPhone   | +1 301 301 3001      |
+  | donorEmail   | a@example.com        |
+  | fullName     | Our Pub              |
+  | qid          | .ZZC                 |
+  And we say "status": "gift thanks" with subs:
+  | coName | Our Pub |**

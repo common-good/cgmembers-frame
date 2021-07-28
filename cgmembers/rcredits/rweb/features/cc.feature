@@ -34,5 +34,6 @@ Scenario: Someone completes a credit card donation
   | 1   | Zee Zot  | z@    | 01026 | Cummington |
   When someone visits "community/donate/op=done&code=%code" where code is:
   | pid | amount | period | coId |*
-  | 1   | 26     | once   | .ZZA |
-  Then we say "status": "gift thanks|check it out"
+  | 1   | 26     | once   | .ZZC |
+  Then we say "status": "gift thanks|check it out" with subs:
+  | coName | Cor Pub |**

@@ -430,7 +430,10 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
  *   'cat': transaction category
- * @param int $recursId: record ID of related record in tx_timed (if any)
+ * @param mixed $recursId: one of the following:
+ *   - record ID of related record in tx_timed (if any)
+ *   - [period, periods] (for fbo thanks)
+ *   - NULL (or omitted)
  * @return a txRet object
  *
  * Do something different, based on these boolean values: 
@@ -512,6 +515,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   // Create the transaction
   $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
+  if (is_array($recursId)) unset($info['recursId']);
+  
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -591,7 +596,13 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   // notify other party by email about any completed transaction
   foreach ([$actorA, $otherA] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
 
-  return sendNotifications($type, $tx, $shortfall);
+  $res = sendNotifications($type, $tx, $shortfall);
+  if ($type == 'payment' and $gainerA->sponsored) {
+    list ($period, $periods) = is_array($recursId) ? $recursId : [PER_1, 0];
+    be\thanks(TRUE, $loserId, $amount, $period, $periods, $gainerId, FALSE);
+  }
+  
+  return $res;
 }
 
 /**
@@ -779,7 +790,49 @@ EOF;
 
   return -$rebate;
 }
+
+/**
+ * Thank a donor to a fiscally sponsored account and report to that organization.
+ * @param bool $member: <donor is a member>
+ * @param int $id: account record ID or people record ID for the donor
+ * @param numeric $amount: donation amount
+ * @param string $period: how often to recur
+ * @param int $periods: how many periods between recurrences
+ * @param int $coId: sponsored organization's account record ID
+ * @param bool $redirect: <redirect to empty page when done>
+ */
+function thanks($member, $id, $amount, $period, $periods, $coId, $redirect) {
+  $coA = r\acct($coId);
+
+  $gift = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
+
+  if ($member) {
+    $a = r\acct($id);
+    foreach (ray('fullName email phone postalAddr notes') as $k) $subs0[$k] = $$k = $a->$k;
+  } else { // non-member
+    if (!$subs0 = db\get('fullName,email,phone,address,city,state,zip,notes', 'people', ray('pid', $id))) u\FAIL('missing pid in thanks');
+    extract($subs0);
+    $st = r\realState($state);
+    $postalAddr = u\unite($address, "$city, $st $zip", ', ');
+  }
   
+  $note = u\starts($notes, u\fmtDate()) ? strstr(strstr($notes, ': ') . "\n", "\n", TRUE) : '';
+  
+  $subs0 += ray('date gift', u\fmtDate(NULL, TRUE), $gift);
+
+  $subs = $subs0 + ray('donor donorPhone donorAddress donorEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
+  unset($subs['fullName']); // salutation to co name, not donor name
+  $coA->tellIn('fbo-report', $subs);
+
+  $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone));
+  if ($member) {
+    $a->tellOut('fbo-thanks-member', $subs);
+  } else r\rMail('fbo-thanks', [$email => $fullName], $subs);
+
+  $msg = tr('gift thanks' . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
+  return $redirect ? w\sayEmpty($msg) : w\say($msg);
+}
+ 
 /**
  * Create an invoice
  * call by: $z = be\invoice(...);

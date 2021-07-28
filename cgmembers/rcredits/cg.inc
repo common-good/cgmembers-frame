@@ -1433,7 +1433,7 @@ function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 function isCGs($uid) {
   if (in($uid, [CGID, UID_ROUNDUPS, UID_CRUMBS])) return TRUE;
   if ($uid <= UID_CANON9) return FALSE;
-  if ($a = r\acct($uid) and $a->coCan(CO_SPONSORED)) return TRUE;
+  if ($a = r\acct($uid) and $a->sponsored) return TRUE;
   return FALSE;
 }
 
