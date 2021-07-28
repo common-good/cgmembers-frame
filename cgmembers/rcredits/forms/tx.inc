@@ -14,9 +14,9 @@ function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args));
   global $mya;
 
-  $fbo = $mya->coCan(CO_SPONSORED);
+  $fbo = $mya->sponsored;
   $pay = in($type, 'pay both');
-  $charge = in($type, 'charge both');
+  $charge = (in($type, 'charge both') and (!$fbo or $mya->admin)); // don't show charge button for sponsored org, except to admin
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
   $opDesc = $pay ? $payDesc : $chargeDesc;
   
@@ -104,17 +104,16 @@ function formTx_submit($form, &$sta) {
     $uid = whoId($sta);
     $pid = NULL;
   } else { // FBO (sponsored) account
-    u\EXPECT($paying or $mya->admin, 'fbo income by non-admin');
+    u\EXPECT($fbo and ($paying or $mya->admin), 'fbo income by non-admin');
     $uid = UID_OUTER;
     if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
       $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
     }
-    include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
     $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
     $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
     u\EXPECT($xid, 'outer transfer failed');
     say('info saved');
-    $res = thanks($pid, $amount, PER_1, $mya->id);
+    $res = be\thanks(FALSE, $pid, $amount, PER_1, 0, $mya->id, TRUE);
     unset($DBTX);
     return $res; // no need to continue (outer transactions never delay or repeat)
   }
@@ -132,7 +131,7 @@ function formTx_submit($form, &$sta) {
     if ($fbo) $data += compact('cat');
 
     $z = $paying
-    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
+    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $period ? [$period, $periods] : NULL)
     : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
     extract(just('ok msg subs', $z));
 

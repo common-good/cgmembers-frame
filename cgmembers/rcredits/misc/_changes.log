@@ -1,3 +1,6 @@
+2021-07-28 feature/fbo4
+. now any payment to a sponsored organization registers as a gift and is reported as such
+
 2021-07-28 feature/fbo-member-tell
 . company flags can now be implicit members of an account object
 . made several string names more intuitive

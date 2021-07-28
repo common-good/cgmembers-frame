@@ -279,7 +279,6 @@ function recur($template) {
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
     if (!$res = db\get('bankAccount,isSavings,payee', '(txs2 JOIN txs_noreverse USING(xid)) x', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
-    include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
@@ -287,7 +286,7 @@ function recur($template) {
     $info = ray('purpose explicit cat completed recursId deposit', t('donation'), FALSE, BCAT_GIFT, now(), $id, 0);
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
-    return w\thanks($pid, $amount, $period, $coA->id);
+    be\thanks(FALSE, $pid, $amount, $period, $periods, $coA->id, FALSE);
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);

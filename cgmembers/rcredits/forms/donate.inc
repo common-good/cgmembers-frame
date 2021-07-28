@@ -151,7 +151,7 @@ function formDonate_submit($form, &$sta) {
     addToTxs2($amount, $coA, $period, $pid, $honorId, $bankAccount, $isSavings);
     r\tellAdmin($source, $reportInfo);
     unset($DBTX);
-    return thanks($pid, $amount, $period, $coA->id);
+    return be\thanks(FALSE, $pid, $amount, $period, 1, $coA->id, TRUE);
  
   } else { // credit card donation
     $code = u\cryRay(ray('pid amount period coId', $pid, number_format($amount, 2), $period, $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests)
@@ -197,7 +197,7 @@ function completeCCGift($args) {
   
   r\tellAdmin(t('CC donation complete (FBO %coName)'), compact(ray('fullName amount period')) + ['coName' => $coA->bestName]);
   
-  return thanks($pid, $amount, $period, $coId);
+  return be\thanks(FALSE, $pid, $amount, $period, 1, $coId, TRUE);
 }
 
 
@@ -226,35 +226,6 @@ function getCGPayArgs($args) {
   u\EXPECT($coA, 'missing account in code!');
   if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));
   return $ray;
-}
-
-function thanks($pid, $amount, $period, $coId, $redirect = TRUE) {
-  global $mya;
-  $coA = r\acct($coId);
-
-  $gift = u\fmtAmt($amount) . ($period == PER_1 ? '' : (' ' . r\recurDesc($period)));
-
-  if ($pid) {
-    if (!$subs0 = db\get('fullName,email,phone,address,city,state,zip,notes', 'people', compact('pid'))) u\FAIL('missing pid in thanks');
-    extract($subs0);
-    $st = r\realState($state);
-    $postalAddr = u\unite($address, "$city, $st $zip", ', ');
-  } else foreach (ray('fullName email phone postalAddr notes') as $k) $subs0[$k] = $$k = $mya->$k;
-  
-  $note = u\starts($notes, u\fmtDate()) ? strstr(strstr($notes, ': ') . "\n", "\n", TRUE) : '';
-  
-  $subs0 += ray('date gift', u\fmtDate(NULL, TRUE), $gift);
-
-  $subs = $subs0 + ray('donor donorPhone donorAddress donorEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
-  unset($subs['fullName']); // salutation to co name, not donor name
-  $coA->tellIn('fbo-report', $subs);
-
-  $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone));
-  if ($pid) {
-    r\rMail('fbo-thanks', [$email => $fullName], $subs);
-  } else $mya->tellOut('fbo-thanks-member', $subs);
-
-  if ($redirect) return sayEmpty('gift thanks' . ($mya ? '' : '|check it out'));
 }
 
 /**
@@ -303,17 +274,15 @@ function submitCG($sta) {
     $purpose = t('donation');
     $recursId = $period == PER_1 ? NULL
     : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $coId, $amount, $period, $purpose, DUR_1));
-    $msg = 'gift thanks';
     $data = ray('gift recurs', 1, (bool) $recursId);
     if ($mya->ok and $z = $mya->payApproved($coId, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
-    } else $msg .= '|gift transfer later';
-    say($msg);
+    } else say('gift transfer later');
   } else $was = $honored = '';
   
   $nm = $mya->fullName;
   if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-  thanks(FALSE, $amount, $period, $coId, FALSE);
+  be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, $mya->ok);
 
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();
 }

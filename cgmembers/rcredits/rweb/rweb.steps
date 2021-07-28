@@ -364,6 +364,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -371,7 +372,16 @@ function transactions($list) {return t\transactions($list);}
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST fbo ASponsoredMemberChargesAMember
+ *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     TEST fbo AMemberDonatesToASponsoredOrganization
+ *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
+ *     TEST gift AMemberDonates
+ *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST gift ACompanyMakesARecurringDonation
+ *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
@@ -389,6 +399,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
+ *     TEST signup AMemberDonates
  *     TEST signup AMemberRegistersAgain
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -404,7 +415,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
- *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
@@ -419,13 +429,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
- *     TEST fbo AMemberDonatesToASponsoredOrganization
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
@@ -491,6 +494,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
+ *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -1788,6 +1792,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
+ *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
@@ -1949,6 +1954,7 @@ function memberIsUnconfirmed($id) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
+ *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
  */
@@ -2479,7 +2485,6 @@ function withQR($url) {
  * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
- *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE signup Setup
  */
 function nextCaptchaIs($ca) {
@@ -2494,6 +2499,7 @@ function nextCaptchaIs($ca) {
  * in: MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberChargesAMember
+ *     MAKE fbo AMemberPaysASponsoredOrganization
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
