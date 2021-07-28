@@ -1602,15 +1602,16 @@ function vague($n, $prec = 1) {
   
 /**
  * Return the value of the given bit.
- * @param mixed $bit:
+ * @param mixed $b:
  *   string - a defined bit name (lowercase without the initial B_)
  *   int - return the numeric value of that bit number (power of 2)
  *   ray - return the array of bit numbers as an integer bit array (recursively)
+ * @param string $prefix: a constant prefix to use instead of "b"
  */
-function bit($b) {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << (is_numeric($b) ? $b : u\consta('b', $b)));}
+function bit($b, $prefix = 'b') {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << (is_numeric($b) ? $b : u\consta($prefix, $b)));}
 
-function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) (($n ?: 0) & u\bit($b));}
-function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (nn($n, 0) | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
+function getBit($n, $b = NULL, $prefix = 'b') {return is_null($b) ? $n : (bool) (($n ?: 0) & u\bit($b, $prefix));}
+function setBit(&$n, $b, $on = TRUE, $prefix = 'b') {return $n = $on ? (nn($n, 0) | u\bit($b, $prefix)) : (nn($n, 0) & ~u\bit($b, $prefix));}
 
 /**
  * Return a date the given number of units after start.

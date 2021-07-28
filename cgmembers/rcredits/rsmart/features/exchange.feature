@@ -60,7 +60,7 @@ Scenario: A cashier asks to charge someone for cash
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | from   | Bea Two   |
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "you got cash" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
@@ -83,7 +83,7 @@ Scenario: A cashier asks to refund someone
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | to     | Bea Two   |
-  And we notice "new payment" to member ".ZZB" with subs:
+  And we notice "you gave cash" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payeePurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | cash in      |
   And balances:

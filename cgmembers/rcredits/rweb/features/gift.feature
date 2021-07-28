@@ -36,14 +36,14 @@ Scenario: A member donates
   Then transactions:
   | xid | created | amount | payer | payee | purpose      |*
   |   1 | %today  |     10 | .ZZA  | cgf  | donation |
-  And we say "status": "gift successful"
+  And we say "status": "gift thanks"
   And these "honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
   And we notice "gift sent" to member ".ZZA" with subs:
   | amount | rewardAmount |*
   |    $10 |        $0.50 | 
-  And we notice "new payment linked" to member "cgf" with subs:
+  And we notice "paid you linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | donation     | ?        |
   And that "notice" has link results:
@@ -65,7 +65,7 @@ Scenario: A member makes a recurring donation
   And transactions:
   | xid | created | amount | payer | payee | purpose  | recursId |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
-  And we say "status": "gift successful"
+  And we say "status": "gift thanks"
   And these "honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
@@ -88,7 +88,7 @@ Scenario: A member makes a new recurring donation
   Then transactions:
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |
-  And we say "status": "gift successful"
+  And we say "status": "gift thanks"
   And these "tx_timed":
   | start  | from | to  | amount | period |*
   | %today | .ZZA | cgf |     10 | month  |
@@ -100,13 +100,13 @@ Scenario: A company makes a recurring donation
   Then transactions:
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZC  | cgf   | donation |
-  And we say "status": "gift successful"
+  And we say "status": "gift thanks"
   
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |    200 | once   | memory | Jane Do |
-  Then we say "status": "gift successful|gift transfer later"
+  Then we say "status": "gift thanks|gift transfer later"
   And invoices:
   | nvid | created | amount | payer | payee | purpose  | flags | status   |*
   |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  | approved |

@@ -424,7 +424,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
   $subs['qid'] = $a->qid;
   /* $subs['otherName'] = @$subs['myName']; // notifying someone else about US, if anyone
   $fullName = $a->fullName;
-//   $warnIndexes = ray('new invoice,new offer,charge disputed'); 
+//   $warnIndexes = ray('invoiced you,new offer,charge disputed'); 
   
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');

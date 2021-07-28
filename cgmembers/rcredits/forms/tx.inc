@@ -94,7 +94,7 @@ function formTx_validate($form, &$sta) {
 
 function formTx_submit($form, &$sta) {
   global $mya;
-  $myid = $mya->id;
+
   extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
 
@@ -104,10 +104,19 @@ function formTx_submit($form, &$sta) {
     $uid = whoId($sta);
     $pid = NULL;
   } else { // FBO (sponsored) account
+    u\EXPECT($paying or $mya->admin, 'fbo income by non-admin');
     $uid = UID_OUTER;
     if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
       $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
     }
+    include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
+    $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
+    $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
+    u\EXPECT($xid, 'outer transfer failed');
+    say('info saved');
+    $res = thanks($pid, $amount, PER_1, $mya->id);
+    unset($DBTX);
+    return $res; // no need to continue (outer transactions never delay or repeat)
   }
   
   u\setDft($goods, FOR_GOODS);
@@ -118,23 +127,14 @@ function formTx_submit($form, &$sta) {
     list($ok, $msg, $subs) = [TRUE, '', []];
   } else { // no delay
      
-    if ($pid) {
-      // include_once R_ROOT . '/forms/donate.inc'; // for thanks() function
-      $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
-      $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
-      u\EXPECT($xid, 'outer transfer failed');
-      list ($ok, $msg, $subs) = [TRUE, 'info saved', []];
-      // return thanks($pid, $amount, $period, $coId);
-    } else {
-      $data = $period ? ['recurs' => 1] : [];
-      if ($start) $data['created'] = $start; // superAdmin chose a date in the past
-      if ($fbo) $data += compact('cat');
+    $data = $period ? ['recurs' => 1] : [];
+    if ($start) $data['created'] = $start; // superAdmin chose a date in the past
+    if ($fbo) $data += compact('cat');
 
-      $z = $paying
-      ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
-      : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
-      extract(just('ok msg subs', $z));
-    }
+    $z = $paying
+    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
+    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
+    extract(just('ok msg subs', $z));
 
     if (!$ok) $repeats = FALSE; // don't repeat a failure
     if (!$repeats) { // done if we're not repeating (and not delaying)

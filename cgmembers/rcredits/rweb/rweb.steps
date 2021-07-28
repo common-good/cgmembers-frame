@@ -421,6 +421,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -486,8 +487,10 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ * in: TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -603,6 +606,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST investinterest AMemberExpressesInterest
@@ -1145,6 +1149,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST undo AMemberReversesAPaymentFromSomeone
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1782,6 +1787,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
@@ -1942,6 +1948,7 @@ function memberIsUnconfirmed($id) {
  *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
  */
@@ -2359,6 +2366,7 @@ function weShowJSONOf($ray) {
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
@@ -2414,6 +2422,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
@@ -2449,6 +2458,7 @@ function weFirstThen($first, $then) {
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     MAKE fbo AMemberDonatesToASponsoredOrganization
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2469,6 +2479,7 @@ function withQR($url) {
  * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE signup Setup
  */
 function nextCaptchaIs($ca) {

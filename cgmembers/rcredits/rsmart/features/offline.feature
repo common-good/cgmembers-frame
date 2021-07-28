@@ -47,7 +47,7 @@ Scenario: A cashier charged someone offline
   | did     | otherName | amount | why   |*
   | charged | Bea Two   | $100   | goods |
 # NOPE  And with proof of agent "C:A" amount 100.00 created "%now-1h" member ".ZZB" code "ccB"
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "charged you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
@@ -67,7 +67,7 @@ Scenario: A cashier charged someone offline and they have insufficient balance
   | .ZZC |     200 |
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now-1h" force 1
   Then we respond ok txid 6 created "%now-1h" balance -300
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "charged you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
@@ -105,10 +105,10 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now-1h" force -1
   Then we respond ok txid 6 created %now balance 0
   And with undo "5"
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "charged you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
-  And we notice "new refund" to member ".ZZB" with subs:
+  And we notice "refunded you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
@@ -136,10 +136,10 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1n" force -1
   Then we respond ok txid 8 created %now balance -300
   And with undo "6"
-  And we notice "new refund" to member ".ZZB" with subs:
+  And we notice "refunded you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | refund       |
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "re-charged you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | refund       |
   And balances:

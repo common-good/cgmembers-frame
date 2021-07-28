@@ -1,3 +1,16 @@
+2021-07-28 feature/fbo-member-tell
+. company flags can now be implicit members of an account object
+. made several string names more intuitive
+. radically revised be\sendNotifications to send sound notices to both parties to a transaction
+. expanded u\bit, getBit, and setBit to accept an extra argument that permits arbitrary sets of bit names
+. members donating to an fbo organization now get thanked and the organization gets notified
+. added a bunch of virtual fields to tx class
+
+2021-07-27 feature/for1-2
+. fixed bug: for1 and for2 were switched on tx history page
+. txdetail now handles changing one description if the two (for buyer and seller) are already different
+. stopped an undefined warning (for "waiting") in acct::bank()
+
 2021-07-25 feature/founded
 . changed dob to "founded" for companies
 . removed remnants of 2-step company signup
@@ -4075,7 +4088,7 @@ function special2() {
 . can now open another %PROJECT Account before confirming bank deposits
 . for admin, we no longer try to register an account with Dwolla when visiting the summary page (you must go to the status page instead)
 . now we are notified by email whenever there are deposits or withdrawals
-. new payment notices now show both physical and postalAddr and sometimes phone number, so member can ship or thank.
+. paid you notices now show both physical and postalAddr and sometimes phone number, so member can ship or thank.
 . administrator can now sign agreement for people and companies
 . made averageBalance() more efficient and accurate by looping after a single query
 . selecting "none of the above" on Open Another Account form now gives error message.

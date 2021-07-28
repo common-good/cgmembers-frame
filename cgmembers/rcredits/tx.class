@@ -70,12 +70,25 @@ class Tx {
     case 'primeEntry2': return $tx->getE(1); // primary payee
     case 'payerId': return $tx->payerEntry->uid;
     case 'payeeId': return $tx->payeeEntry->uid;
-    case 'otherUid':
+
+    case 'e1': return $tx->getPayerEntry();
+    case 'e2': return $tx->getPayeeEntry();
+    case 'uid1': return $tx->e1->uid;
+    case 'uid2': return $tx->e2->uid;
+    case 'a1': return r\acct($tx->payerId);
+    case 'a2': return r\acct($tx->payeeId);
+    case 'amt1': return $tx->e1->amount;
+    case 'amt2': return $tx->e2->amount;
+
     case 'otherId': return $tx->otherEntry->uid;
     case 'actorA': return r\acct($tx->actorId, $tx->actorAgentId);
     case 'actorAmount': return $tx->getActorAmount();
     case 'payerAmount': return $tx->payerEntry->amount;
     case 'otherA': return r\acct($tx->otherId);
+    
+    case 'banking': return $tx->a1->isBank();
+    case 'outer': return ($tx->uid1 == UID_OUTER);
+    case 'toActor': return ($tx->uid2 == $tx->actorId);
     case 'toMe': return ($tx->payeeId == $myid);
     case 'byMe': return ($tx->actorId == $myid);
     case 'reversedByXid': return db\get('xid', 'tx_hdrs_all', 'reversesXid=:xid', ['xid' => $this->xid]);
@@ -235,40 +248,36 @@ EOF;
    * @param float $shortfall: how much short my balance is, for a transaction (if any)
    * @return assoc array of args
    */
-  public function reportArgs($me, $getMyBalance = FALSE, $shortfall = 0) {
+  public function reportArgs($me, $getMyBal = FALSE, $shortfall = 0) {
     global $channel;
     $tx = $this;
 
-    $payerE = $this->payerEntry;
-    $payeeE = $this->payeeEntry;
+    $e1 = $this->payerEntry;
+    $e2 = $this->payeeEntry;
 
-    u\EXPECT(is_object($payerE) and is_object($payeeE), 'party not an object in tx entry:' . pr($tx));
+    u\EXPECT(is_object($e1) and is_object($e2), 'party not an object in tx entry:' . pr($tx));
     
-    $amount = ($tx->actorId == $payerE->uid) ? $payerE->amount : $payeeE->amount;
+    $amount = ($tx->actorId == $e1->uid) ? $e1->amount : $e2->amount;
       
-    $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
+    $otherA = r\acct(($me->isMe($e1->uid)) ? $e2->uid : $e1->uid);
     
-    $toMe = $other->isBank() ? ($amount < 0 xor $tx->xid < 0) : $me->isMe($payeeE->uid);
+    $toMe = $otherA->isBank() ? ($amount < 0 xor $tx->xid < 0) : $me->isMe($e2->uid);
     
     $reverses = !empty($tx->reverses);
     $role = $toMe ? 'payee' : 'payer';
-    $purpose = $toMe ? $payeeE->description : $payerE->description;
+    $purpose = $toMe ? $e2->description : $e1->description;
     $tofrom = $toMe ? t('from') : t('to'); 
     $why = ray(R_WHYS)[$tx->goods];
-    if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
-    else { $balance = NULL; }
+    $balance = ($getMyBal and ($me->can(B_BUY))) ? u\fmtAmt($me->avail(FOR_GOODS)) : NULL;
 
-    if ($amount < 0) {
-      $amount = -$amount;
-      $tofrom = t('to');
-    }
+    if ($amount < 0) list ($amount, $tofrom) = [-$amount, t('to')];
 
-    $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
+    $balance = ($getMyBal and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
     
-    return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
-               u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,
-               $payeeE->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $other->id, $me->fullName,
-               $other->fullName, u\fmtAmt($shortfall), TRUE);
+    return ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
+               $tx->created, u\fmtDate($tx->created), $tx->xid, $role, $why, $e1->description,
+               $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $otherA->id, $me->fullName,
+               $otherA->fullName, u\fmtAmt($shortfall), TRUE);
   }
 
   /**
