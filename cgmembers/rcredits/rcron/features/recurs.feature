@@ -21,7 +21,7 @@ Scenario: A brand new recurring payment can be completed
   Then transactions:
   | xid | created | amount | payer | payee | purpose | flags  |*
   |   2 | %today  |     10 | .ZZA  | .ZZB  | pmt     | recurs |
-  And we notice "new payment" to member ".ZZB" with subs:
+  And we notice "paid you" to member ".ZZB" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | pmt          | ?        |
   And we notice "recur pay" to member ".ZZA" with subs:

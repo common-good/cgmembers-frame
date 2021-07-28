@@ -18,6 +18,7 @@ $GLOBALS['tStrings'] = array(
   'when resolved' => t('Your payment will go through automatically when the issue has been resolved.'),
   'automatic when funded' => t('Your payment will go through automatically once your bank transfer is complete.'),
   'report tx' => t('You %did %otherName %amount.'), // for %why.'),
+  'report undo' => t('Transaction has been %solution.'),
   'success title' => t('<h3>Success!</h3>'),
   'left on invoice' => t('You have %remaining remaining to pay on this invoice.'),
   'selfhelp tx' => t('You paid %myName %amount.'), // for %why.'),
@@ -28,7 +29,6 @@ $GLOBALS['tStrings'] = array(
   'invoice cancel done' => t('The payment request has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
-  'report undo' => t('Transaction has been %solution.'),
   'your demand' => t('Your total request for %RCREDITS is now %request.'),
   'deleted relation' => t('Deleted relation with %otherName'),
   'customer balance' => t('The current balance for %otherName is %balance.'),
@@ -71,11 +71,23 @@ $GLOBALS['tStrings'] = array(
   'the reward' => t('Your reward is %rewardAmount.'),
   'reward other' => t('Your reward is %otherRewardAmount.'),
   'reward customer' => t('The customer\'s reward is %otherRewardAmount.'),
-  'new charge' => t('<b>Charge:</b> %otherName charged you %amount for "%payerPurpose".'),
-  'new refund' => t('<b>Refund:</b> %otherName refunded you %amount for "%payerPurpose".'),
-  'new payment' => t('<b>Payment:</b> %otherName paid you %amount for "%payeePurpose".'),
-  'new payment linked' => t('<b>Payment:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'new payment'
-  'new invoice' => t('<p><b>Invoice:</b> %myName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %myName</i> at %email or %phone.</p>'), // can't separate out 'invoice concerns'
+
+  're-charged you' => t('<b>Charge:</b> %otherName re-charged you %amount for "%payerPurpose".'),
+  'charged you' => t('<b>Charge:</b> %otherName charged you %amount for "%payerPurpose".'),
+  'refunded you' => t('<b>Refund:</b> %otherName refunded you %amount for "%payerPurpose".'),
+  'paid you' => t('<b>Payment:</b> %otherName paid you %amount for "%payeePurpose".'),
+  'paid you linked' => t('<b>Payment:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'paid you'
+  'invoiced you' => t('<p><b>Invoice:</b> %myName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %myName</i> at %email or %phone.</p>'), // can't separate out 'invoice concerns'
+  'you gave cash' => t('<b>Credit:</b> You traded %amount USD for %amount of %PROJECT credit from %otherName.'),
+  'drew from you' => t('<b>Debit:</b> %otherName drew %amount from your account automatically.'),
+  
+  'you re-charged' => t('<b>Charge:</b> You re-charged %otherName %amount for "%payeePurpose".'),
+  'you charged' => t('<b>Charge:</b> You charged %otherName %amount for "%payeePurpose".'),
+  'you refunded' => t('<b>Refund:</b> You refunded %otherName %amount for "%payeePurpose".'),
+  'you paid' => t('<b>Payment:</b> You paid %otherName %amount for "%payerPurpose".'),
+  'you got cash' => t('<b>Exchange:</b> %otherName paid you %amount USD for %amount of %PROJECT credit.'),
+  'you drew' => t('<b>Credit:</b> You drew %amount from %otherName\'s account automatically.'),
+  
   'stale invoice' => t('<b>Invoice Reminder:</b> %daysAgo days ago we emailed you an invoice from %payeeName for %amount. <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You". If you have any questions or concerns about this invoice, please contact %payeeName at %email or %phone.'),
   'stale invoice report' => t('<b>Invoice Update:</b> %daysAgo days ago you invoiced %payerName %amount for %purpose (invoice #%nvid, %created). That invoice is still marked "pending", so we sent %payerName a reminder. If this invoice is no longer valid, sign in at %CG_DOMAIN and choose "Invoices FROM You" on the History menu to cancel it.'),
 

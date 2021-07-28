@@ -155,7 +155,7 @@ Scenario: A member donates
   | amtChoice | period | honor | honored |*
   |        50 | month  |     - |         |
   Then we show "Share When You Receive"
-  And we say "status": "gift successful|gift transfer later"
+  And we say "status": "gift thanks|gift transfer later"
   And we say "status": "step completed"
   And member ".ZZB" steps left "crumbs proxies work backing stepup invite"
 

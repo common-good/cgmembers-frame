@@ -271,7 +271,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
     $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, nn($reason) ?: t('reason not specified'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
   
     $solution = t('marked "disputed"');
-    $tx->otherA->tellOut('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
+    $tx->otherA->tellOut('charge disputed', $subs = $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
     $amount = u\fmtAmt($otherE->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
@@ -286,6 +286,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
  * @returns object $txRet: result, message, and subs
  */
 function reverse($xid) {
+  global $channel;
   $subs = compact('xid');
 
   if (!$tx = r\Tx::read($xid)) return txErr(t('no transaction'), $subs);
@@ -317,20 +318,17 @@ function reverse($xid) {
   
   unset($DBTX);
 
-  sendNotifications('undo', $newTx, 0);
+  $z = sendNotifications('undo', $newTx, 0);
 
   $message = 'report undo' . ($tx->otherA->isCanonic ? '' : '|report tx');
 
   $ok = TRUE;
-  $did = ($e->amount < 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
-  $txid = $xid; // txid is xid in transaction reports
-  $created = $newTx->created;
-  $balance = $tx->otherA->can(B_SECRET) ? '*0' : $tx->otherA->balance;
+//  $txid = $xid; // txid is xid in transaction reports
+//  $created = $newTx->created;
+  if ($channel == TX_APP) $z->subs['balance'] = $tx->otherA->can(B_SECRET) ? '*0' : $tx->otherA->balance; // report customer balance for POS transactions, not actor's
   $solution = 'reversed';
-  $otherName = $tx->otherA->fullName;
-  $amount = u\fmtAmt(abs($e->amount));
-  $why = $e->description;
-  $subs = compact(ray('ok did xid txid created balance solution otherName amount why'));
+//  $otherName = $tx->otherA->fullName;
+  $subs = compact(ray('ok solution')) + $z->subs;
   
   return txRet(TRUE, $message, $subs);
 }
@@ -662,94 +660,55 @@ function advanceCredit($for, $buyer, $seller, $credit) {
  * @return a txRet object
  */
 function sendNotifications($type, $tx, $shortfall) {
+  global $mya;
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
+  if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
-  $otherA = $tx->otherA;
-  $toMe = $tx->actorAmount > 0;
   $goods = ($tx->goods == FOR_GOODS);
+  $positive = ($tx->amt2 > 0); // transaction amount is positive (normal)
 
-  switch ($type) {
-  case 'charge':
-  case 'draw':
-    $notices = $goods ? ['new payment', 'new refund'] : 'new charge';
-    $dids = $goods ? ['credited', 'refunded'] : 'charged';
-    if (!$toMe) {   // I made a payment to other
-      if ($goods) {
-        $notice = 'new refund';
-        $did = 'refunded';
-      } else {  // I made a payment to other
-        $notice = 'new payment';
-        $did = 'credited';
-      }
-    } else { // I charged other
-      $notice = 'new charge';
-      $did = 'charged';
-    }
-    break;
-  case 'payment':
-    $notices = ['new charge', 'new payment'];
-    $dids = ['charged', 'paid'];
-    if (!$toMe) { // I made a payment to other
-      $notice = 'new payment';
-      $did = 'paid';
-    } else {
-      $notice = 'new charge';  // I charged other
-      $did = 'charged';
-    }
-    break;
-  case 'invoice payment':
-    $notices = ['new charge', 'new payment'];
-    $dids = ['charged', 'paid'];
-    if (!$toMe) { // I made a payment to other
-      $notice = 'new payment';
-      $did = 'paid';
-    } else { // I charged other -- I don't think this should happen.  JVER
-      $notice = 'new charge';
-      $did = 'charged';
-    }
-    break;
-  case 'undo':
-    $mya = r\acct();
-    $byMe = $mya->isMe($tx->actorId);
+  if ($type == 'charge') {
+    $notices = $goods ? ($positive ? ['charged you', 'you charged'] : ['refunded you', 'you refunded'])
+    : u\order($positive, 'you got cash', 'you gave cash');
+    $did = $positive ? t('charged') : ($goods ? t('refunded') : t('credited'));
+  } elseif ($type == 'draw') {
+    $notices = ['drew from you', 'you drew'];
+    $did = ''; // no real-time report from here
+  } elseif (in($type, 'payment, invoice payment')) {
+    $notices = ['you paid', 'paid you'];
+    $did = t('paid');
+  } elseif ($type == 'undo') {
     if ($tx->otherA->isBank()) {
-      $notice = 'bank tx canceled';
-      $did = 'reversed';
-    } elseif ($byMe and !$toMe) {
-      $notice = ($goods) ? 'new refund' : 'new payment';
-      $did = ($goods) ? 'refunded' : 'credited';
-    } elseif ($byMe and $toMe) {
-      $notice = 'new charge';  // I charged other, reversing is refunding
-      $did = 'charged';
-    } elseif (!$byMe and $toMe) {
-      $notice = 'payment';  // Other made payment to me, reverse is refunding
-      $did = 'paid';
-    } else { // !byMe and !$toMe
-      $notice = 'dispute';  // Other charged me, reversing requires dispute
-      $did = 'disputed';
+      $notices = ['', 'bank tx canceled'];
+      $did = t('reversed');
+    } else {
+      $notices = $positive ? ['re-charged you', 'you re-charged'] : ['refunded you', 'you refunded'];
+      $did = $positive ? 're-charged' : ($goods ? 'refunded' : 'credited'); // positive is double reverse
     }
-    break;
-  default:
-    u\EXPECT(false, "type must not be '$type'.");
-  }
-  if ($notice == 'charge' and $tx->goods == FOR_USD) $notice = 'cash out';
-  list ($tell1, $tell2) = u\order($toMe, 'tellIn', 'tellOut');
+  } else u\FAIL("unknown type: '$type'.");
 
-  $args = $tx->reportArgs($tx->actorA, TRUE, $shortfall);
-  if ($notice == 'new payment' and $otherA->co) { // not "new charge" (the most common); payment at payer's initiative
-    $notice = 'new payment linked';
-    $args['_aPayLink'] = $otherA->doLink('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
+  list ($tell1, $tell2) = u\order($positive, 'tellOut', 'tellIn');
+  foreach ([1,2] as $i) { // notify both parties
+    $notice = $notices[$i - 1];
+    list ($a, $otherA, $tell) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i ? 'tellIn' : 'tellOut'];
+    $args = $tx->reportArgs($otherA, TRUE, $shortfall);
+    if ($notice == 'paid you' and $a->co) {
+      $notice = 'paid you linked';
+      $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
+    }
+    if ($notice and !$a->isCanonic) $a->$tell($notice, $args);
+    if ($i == (($mya ? $tx->toMe : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }
 
-  if (!$otherA->isCanonic) $otherA->$tell2($notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
   
   if ($tx->flags & u\bit(B_PARTIAL) and $nvid = $tx->entries[0]->relatedId) { // invoice payment or retraction
     if ($left = be\invRemains($nvid)) {
       $msg .= '|left on invoice';
-      $args += ray('remaining', u\fmtAmt($left));
+      $myArgs += ray('remaining', u\fmtAmt($left));
     }
   }
-  return txRet(TRUE, $msg, $args + compact(ray('msg did')));
+  return txRet(TRUE, $msg, $myArgs + compact(ray('msg did')));
 }
 
 /**
@@ -853,7 +812,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created);
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, u\fmtDate($created));
   if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
   if (r\dupTx($payee, $payer, -$amount)) return txErr(t('duplicate transaction'), $subs);
@@ -866,7 +825,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
-    $payerA->tell('new invoice', $subs); // tell other party by email about this invoice
+    $payerA->tell('invoiced you', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);

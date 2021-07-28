@@ -28,7 +28,7 @@ Scenario: A brand new recurring donation to CG can be completed
   Then transactions:
   | xid | created | amount | payer | payee | purpose| flags       | recursId |*
   |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift,recurs |        7 |
-  And we notice "new payment linked" to member "cgf" with subs:
+  And we notice "paid you linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | gift!        | ?        |
   And that "notice" has link results:

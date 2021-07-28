@@ -173,6 +173,7 @@ class Acct {
     if ($nick == 'can') return $a->can(u\consta('b', $field));
     if ($nick == 'rel') return $a->proSe ? NULL : $a->relFld($field);
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
+    if ($nick == 'cof') return $a->co ? $a->coCan($field) : NULL;
     if ($nick == 'ctt' and $field != 'cttyA') return $a->cttyA->can(u\consta('b', substr($field, 4))); // ctty bit
 
     if ($obj = nni(self::$rs, $a->id) and property_exists($obj, $field)) { // actual database field?
@@ -257,13 +258,14 @@ class Acct {
    */
   private function getNick(&$field) {
     $nick = substr($field, 0, 3); // possibly meaningful prefix (ctt if the prefix is ctty)
-    if (in($nick, 'can raw rel coy') and $field != 'rawChanges') {
+    if (in($nick, 'can raw rel coy cof') and $field != 'rawChanges') {
       $field = lcfirst(substr($field, 3));
       return $nick;
     }
     if (in($field, REL_FLDS . ' ' . REL_FLAGS)) return 'rel';
     if (in($field, CO_FLDS)) return 'coy';
     if (in($field, B_LIST . ' ' . B_CTTY_BITS)) return 'can';
+    if (in($field, CO_FLAGS)) return 'cof';
     return $nick;
   }
 
@@ -1462,7 +1464,7 @@ X;
   }
   
   //  private static function flagBit($bit) {return is_numeric($bit) ? $bit : u\consta('b', $bit);}
-  public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit);}
+  public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit, 'co');}
   public function setCoBit($bit, $on = TRUE) {$this->setBit($bit, $on, 'coFlags');}
   
   public function setCoCans($cans) {

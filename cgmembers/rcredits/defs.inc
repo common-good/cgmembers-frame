@@ -399,6 +399,7 @@ const CO_SPONSORED = 2; // fiscally sponsored by CG (name should always start wi
 
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
+const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,,private,atm';
 
 const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21
 const CO_CHARGE = 0;
@@ -692,6 +693,7 @@ define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
   'fbo-thanks' => t('Thank you for your donation!'),
+  'fbo-thanks-member' => t('Thank you for your donation!'),
   'fbo-report' => t('You have a donation'),
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('new solar subscription'),
@@ -718,7 +720,7 @@ $GLOBALS['emailSubjects'] = array(
 $GLOBALS['topics'] = array( // topics for 'message' email
   'confirm invite' => t('Confirm invitation to %otherName'),
   'not confirmed' => t('Your %PROJECT membership requires confirmation.'),
-  'new invoice' => t('INVOICE from %otherName'),
+  'invoiced you' => t('INVOICE from %otherName'),
   'account suspended' => t('Account SUSPENDED'),
   'account funded' => t('Account FUNDED'),
   'approved' => t('Account APPROVED!'),

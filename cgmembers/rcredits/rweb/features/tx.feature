@@ -43,7 +43,7 @@ Scenario: A member confirms request to charge another member
   Then we say "status": "report tx|balance unchanged" with subs:
   | did     | otherName | amount |*
   | charged | Bea Two   | $100   |
-  And we message "new invoice" to member ".ZZB" with subs:
+  And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
   And invoices:
@@ -78,7 +78,7 @@ Scenario: A member confirms request to pay another member
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Bea Two   | $100   |
-  And we notice "new payment" to member ".ZZB" with subs:
+  And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
@@ -109,7 +109,7 @@ Scenario: A member confirms request to pay a member company
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Our Pub   | $100   |
-  And we notice "new payment linked" to member ".ZZC" with subs:
+  And we notice "paid you linked" to member ".ZZC" with subs:
   | created | fullName | otherName | amount | payeePurpose | aPayLink |*
   | %today  | Our Pub  | Abe One   | $100 | stuff | ? |
   And that "notice" has link results:
@@ -207,7 +207,7 @@ Scenario: A member pays another member repeatedly
   Then we say "status": "report tx|repeats" with subs:
   | did  | otherName | amount | often  |*
   | paid | Bea Two   | $100   | weekly |
-  And we notice "new payment" to member ".ZZB" with subs:
+  And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:

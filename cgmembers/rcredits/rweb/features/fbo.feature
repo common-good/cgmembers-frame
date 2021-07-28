@@ -6,9 +6,9 @@ SO I can accept donations and make payments for a fiscally-sponsored organizatio
 Setup:
   Given members:
   | uid  | fullName | phone        | address | city  | state  | zip | country  | postalAddr | floor | flags              | coFlags   | emailCode |*
-  | .ZZA | Abe One  |              | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
+  | .ZZA | Abe One  | +13013013001 | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
   | .ZZB | Bea Two  |              | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |           |
-  | .ZZC | Our Pub  | 333 333 3333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored | Cc3       |
+  | .ZZC | Our Pub  | +13333333333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored | Cc3       |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -57,8 +57,8 @@ Scenario: A non-member donates to a sponsored member
   | uid  | flags    |*
   | .ZZA | ok,admin |
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | fullName | address | city | state | zip   | amount | purpose | cat |*
-  | charge | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | cat | comment |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |         |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -80,6 +80,22 @@ Scenario: A non-member donates to a sponsored member
   | .ZZB |       0 |
   | .ZZC |      95 |
   | cgf  |       5 |
+  And we email "fbo-thanks" to member "d@" with subs:
+  | fullName     | Dee Forn        |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | gift         | $100            |
+  And we email "fbo-report" to member "c@" with subs:
+  | gift         | $100                 |**
+  | date         | %mdY                 |
+  | donor        | Dee Forn             |
+  | donorAddress | 4 Fr St, Fton, MA 01004 |
+  | donorPhone   |                      |
+  | donorEmail   | d@example.com        |
+  | fullName     | Our Pub              |
+  | note         |                      |
 
 Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
@@ -127,7 +143,7 @@ Scenario: A sponsored member charges a member
   Then we say "status": "report tx|balance unchanged" with subs:
   | did     | otherName | amount |*
   | charged | Bea Two   | $100   |
-  And we message "new invoice" to member ".ZZB" with subs:
+  And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Our Pub   | $100   | grant   |
   And invoices:
@@ -268,3 +284,37 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | fullName     | Our Pub              |
   | qid          | .ZZC                 |
   And we say "status": "gift thanks|check it out"
+
+Scenario: A member donates to a sponsored organization
+  Given a button code for:
+  | account | secret |*
+  | .ZZC    | Cc3    |
+  And next captcha is "37"
+  When member ".ZZA" completes "community/donate/code=TESTCODE" with:
+  | amount | comment  | cq | ca | period | honor  | honored |*
+  |    123 | awesome! | 37 | 74 | month  | memory | Mike    |
+  Then these "txs":
+  | eid | xid | payer | payee | amount | purpose    | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation   | %E_PRIME   |
+  | 3   | 1   | .ZZC  | cgf   | 6.15   | sponsor    | %E_AUX     |
+  And these "tx_timed":
+  | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
+  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
+  And count "tx_entries" is 4
+  And we email "fbo-thanks-member" to member "a@" with subs:
+  | fullName     | Abe One         |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | gift         | $123 monthly    |
+  And we email "fbo-report" to member "c@" with subs:
+  | gift         | $123 monthly         |**
+  | date         | %mdY                 |
+  | donor        | Abe One              |
+  | donorAddress | 1 A, A, AK           |
+  | donorPhone   | +1 301 301 3001      |
+  | donorEmail   | a@example.com        |
+  | fullName     | Our Pub              |
+  | qid          | .ZZC                 |
+  And we say "status": "gift thanks"

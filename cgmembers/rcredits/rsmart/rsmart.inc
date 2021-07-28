@@ -65,7 +65,7 @@ $GLOBALS['tStrings'] += array(
   'report exchange' => t("You %did %otherName %amount in exchange for cash."),
   'just did' => t("\n\n%we just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
   'unknown device' => t('This device is not recognized. Clear your data for the app (or uninstall and reinstall), then try again.'),
-  'confirm undo' => t('Undo transfer of %amount %tofrom %otherName? (Press OK for Yes, Cancel for No.)'), // no creation date, unlike web and SMS
+  'confirm undo app' => t('Undo transfer of %amount %tofrom %otherName? (Press OK for Yes, Cancel for No.)'), // no creation date, unlike web and SMS
   'member inactive' => t('That account is not yet activated.'),
   'bad icard' => t('The customer has not yet activated his or her %PROJECT Account.'),
   'expired icard' => t('That invitation card has expired. The customer can use their %PROJECT card instead.'),
@@ -396,7 +396,7 @@ function charge($args, $type = 'charge') {
           $txid = nni($z->subs, 'xid');
         }
         $created = $z->subs['created'];
-        r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
+        r\tellAdmin('reversizng tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
       }
     } else u\FAIL(t('force param must be 0, 1, or -1'));
     
@@ -420,7 +420,7 @@ function charge($args, $type = 'charge') {
         $we = $mya->co ? t('We') : t('You');
         $did = tr('just did', $z->subs + compact('forCash', 'we'));
       }
-      $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? tr('confirm undo', $z->subs) : '';
+      $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? tr('confirm undo app', $z->subs) : '';
     }
   }
 

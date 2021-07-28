@@ -59,7 +59,7 @@ Scenario: A cashier asks to charge someone, paying with credit line
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | from   | Bea Two   |
-  And we notice "new charge" to member ".ZZB" with subs:
+  And we notice "charged you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | food         |
   And balances:
@@ -80,7 +80,7 @@ Scenario: A cashier asks to refund someone
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | to     | Bea Two   |
-  And we notice "new refund" to member ".ZZB" with subs:
+  And we notice "refunded you" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
   | %now    | Bea Two  | Corner Pub | $100   | food         |
   And balances:

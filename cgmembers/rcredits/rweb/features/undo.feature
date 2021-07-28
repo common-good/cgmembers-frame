@@ -21,5 +21,11 @@ Scenario: A member reverses a payment from someone
   |   2 |  123 | .ZZB | .ZZA | bread   |             |
   |   3 | -123 | .ZZB | .ZZA | bread   |           2 |
   And we say "status": "report undo|tx desc active" with subs:
-  | solution | did    | otherName | amount |*
-  | reversed | repaid | Bea Two   | $123   |  
+  | solution | did      | otherName | amount |*
+  | reversed | refunded | Bea Two   | $123   |  
+  And we notice "refunded you" to member ".ZZB" with subs:
+  | created | fullName | otherName | amount | payerPurpose |*
+  | %today  | Bea Two  | Abe One   | $123   | bread        |
+  And we notice "you refunded" to member ".ZZA" with subs:
+  | created | fullName | otherName | amount | payeePurpose |*
+  | %today  | Abe One  | Bea Two   | $123   | bread        |

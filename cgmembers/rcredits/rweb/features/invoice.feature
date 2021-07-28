@@ -26,7 +26,7 @@ Scenario: A member confirms request to charge another member
   Then invoices:
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
-  And we message "new invoice" to member ".ZZB" with subs:
+  And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
 
@@ -104,7 +104,7 @@ Scenario: A member confirms request to charge another member who has a bank acco
   Then invoices:
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZC | .ZZA | stuff |
-  And we message "new invoice" to member ".ZZC" with subs:
+  And we message "invoiced you" to member ".ZZC" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | stuff   |
 
@@ -115,7 +115,7 @@ Scenario: A member confirms request to charge a not-yet member
   Then invoices:
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZD | .ZZA | labor |
-  And we message "new invoice" to member ".ZZD" with subs:
+  And we message "invoiced you" to member ".ZZD" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
 
