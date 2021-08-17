@@ -430,10 +430,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
  *   'cat': transaction category
- * @param mixed $recursId: one of the following:
- *   - record ID of related record in tx_timed (if any)
- *   - [period, periods] (for fbo thanks)
- *   - NULL (or omitted)
+ * @param int $recursId: record ID of related record in tx_timed (or NULL)
  * @return a txRet object
  *
  * Do something different, based on these boolean values: 
@@ -515,7 +512,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   // Create the transaction
   $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
-  if (is_array($recursId)) unset($info['recursId']);
   
   $tx = new r\Tx($info);
   if (!$tx) {
@@ -598,7 +594,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   $res = sendNotifications($type, $tx, $shortfall);
   if ($type == 'payment' and $gainerA->sponsored) {
-    list ($period, $periods) = is_array($recursId) ? $recursId : [PER_1, 0];
+    list ($period, $periods) = [PER_1, 0];
+    if ($per = db\get('period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(TRUE, $loserId, $amount, $period, $periods, $gainerId, FALSE);
   }
   
@@ -792,7 +789,7 @@ EOF;
 }
 
 /**
- * Thank a donor to a fiscally sponsored account and report to that organization.
+ * Thank a donor to CG or a fiscally sponsored account and report to that organization.
  * @param bool $member: <donor is a member>
  * @param int $id: account record ID or people record ID for the donor
  * @param numeric $amount: donation amount

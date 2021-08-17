@@ -172,6 +172,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  *     MAKE tx AMemberPaysAnotherMemberRepeatedly
+ *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     MAKE tx AMemberPaysAnotherMemberLater
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
@@ -405,6 +406,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST undo AMemberReversesAPaymentFromSomeone
  */
@@ -1153,6 +1155,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST undo AMemberReversesAPaymentFromSomeone
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
@@ -1840,6 +1843,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH stepup AMembersRulesComeIntoPlay
  *     BOTH stepup ASurtxAmountRoundsToZero
  *     BOTH tx AMemberPaysAnotherMemberRepeatedly
+ *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     MAKE txs Setup
  *     TEST txs AdminReversesABankTransfer
@@ -2526,4 +2530,14 @@ function varEncrypts($var, $ray) {
   global $testOnly, $testVars;
   $want = u\cryRay($ray[0]);
   return $testOnly ? t\eq(t('test Var'), nni($testVars, $var)) : ($testVars[$var] = $want);
+}
+
+/**
+ * we say (ARG)banked" with subs: (ARG)
+ *
+ * in: 
+ */
+function weSaybankedWithSubs($arg1) {
+  global $testOnly;
+  todo;
 }

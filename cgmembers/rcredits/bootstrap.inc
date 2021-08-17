@@ -1064,29 +1064,28 @@ function sceneId() {global $sceneTest; return $sceneTest ? "$sceneTest->module/$
  *   Multiple message indices are separated by '|'.
  *   But if the string starts with '|', discard it and treat all vertical bars as simple characters.
  */
-function t($string = '', $subs0 = []) {
-  global $language, $channel;
+function t($s = '', $subs0 = []) {
+  global $language, $channel, $tStrings;
   static $custom_strings;
   
-  if (empty($string)) return '';
+  if (empty($s)) return '';
   $subs0 = rayy(func_get_args(), 1);
-  if (is_array($string)) list ($string, $subs) = $string;
+  if (is_array($s)) list ($s, $subs) = $s;
+  $s0 = $s;
   $lang = isset($language->language) ? $language->language : 'en';
 
-  $messages = $string[0] == '|' ? [substr($string, 1)] : explode('|', $string);
+  $messages = $s[0] == '|' ? [substr($s, 1)] : explode('|', $s);
 
   foreach ($messages as $i => $message) {
-    if (!$model = nn($GLOBALS['tStrings'][$message], $message)) continue;
-//    if ($p = mb_strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
+    if (!$model = nni($tStrings, $message, $message)) continue;
     
     if ($i > 0 and $model[0] != '.') $model = ' ' . $model; // separate the messages, unless adding a period
     $messages[$i] = $model;
   }
-  $string = str_replace('\\', "\n", join('', $messages));
+  $s = str_replace('\\', "\n", join('', $messages));
 
-//  if (strhas($string, '%')) {
-  if (preg_match('/[%@!]/', $string)) {
-    $subs = constantSubs($string);
+  if (preg_match('/[%@!]/', $s)) {
+    $subs = constantSubs($s);
     foreach ($subs0 as $k => $v) {
       if (is_array($v)) $v = pr($v);
       if ($k[0] == '!' or $k[0] == '@') { // old Drupal-style arg
@@ -1097,7 +1096,8 @@ function t($string = '', $subs0 = []) {
       }
     }
   }
-  return !empty($subs) ? strtr($string, $subs) : $string;
+//  return ((is_array($tStrings) and test() and array_key_exists($s0, $tStrings)) ? "[$s0] " : '') . (empty($subs) ? $s : strtr($s, $subs)); // makes tests fail, but gives info
+  return empty($subs) ? $s : strtr($s, $subs);
 }
 function tr($s) {return t($s, rayy(func_get_args(), 1));}
 

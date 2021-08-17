@@ -41,8 +41,8 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
   $sql = <<< X
-    SELECT txid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
-    WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid
+    SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
+    WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, xid
 X;
   $q = db\q($sql);
   $tot = 0;
@@ -65,7 +65,11 @@ X;
 
     $name = u\asciiOnly($name);
     list ($recType, $addendaFlag) = [6, 0];
-    if (!$bankAccount = u\decry('V', $bankAccount)) u\FAIL('bad bank account in txs2: ' . pr($row));
+    if (!$bankAccount = u\decry('V', $bankAccount)) {
+      if (!$pid and $bankAccount = $a->bankAccount) {
+        db\update('txs2', ray('xid bankAccount', $xid, u\cry('V', $bankAccount)), 'xid'); 
+      } else u\FAIL('bad bank account in txs2: ' . pr($row));
+    }
     list ($routing, $account) = u\parseBankAccount($bankAccount);
     if (isDEV and !$routing) $routing = $account = '211672476';
     
@@ -78,7 +82,7 @@ X;
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit and $mark and $mya->admin) db\update('txs2', ray('deposit txid', today(), $txid), 'txid');
+    if (!$deposit and $mark and $mya->admin) db\update('txs2', ray('deposit xid', today(), $xid), 'xid');
   }
   unset($DBTX);
   

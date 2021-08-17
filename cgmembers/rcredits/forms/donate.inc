@@ -28,6 +28,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
   $recursId = $amtChoice = NULL;
   $isCG = ($coA->id == CGID);
+  $fbo = strhas($coA->fullName, t('%PROJECT FBO '));
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
   
   if ($isCG and $mya) {
@@ -57,7 +58,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $options = item($options);
   if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin', '/donate?' . $_SERVER['QUERY_STRING'])));
     
-  $logo = item($coA->logo ? tr('<img src="%logo">', 'logo', $coA->logo) : '');
+  $logo = item($coA->logo ? tr('<img src="%logo">', 'logo', "https://$coA->logo?" . time()) : '');
   $title = t('Donate to ') . $coA->bestName;
 
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft(nn($s_amount)));
@@ -66,7 +67,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
 
   $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
-  $coverFSFee = $isCG ? hidFld(0) : boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0);
+  $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
   
   if (!$mya) {
     $fullName = textFld(REQ . t('Name:'), [t('Your full name'), t('Your full name, properly capitalized')]);
@@ -278,11 +279,11 @@ function submitCG($sta) {
     if ($mya->ok and $z = $mya->payApproved($coId, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
     } else say('gift transfer later');
-  } else $was = $honored = '';
-  
-  $nm = $mya->fullName;
-  if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-  be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, $mya->ok);
 
+    $nm = $mya->fullName;
+    if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
+    be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, $mya->ok);
+  }
+  
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();
 }

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58g'; // software version
+const R_VERSION = '3.58h'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -381,6 +381,7 @@ const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 const FBO_CC_FEE = 3; // percentage of donation amount to charge for credit card donations to sponsored organizations
+define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));

@@ -11,7 +11,6 @@ const CONTACT_FLDS = 'fullName displayName address city state zip phone email me
 const MESSAGE_FLDS = 'message postid sender'; // db message fields
 const TOP_FLDS = 'locus radius latitude longitude zip'; // fields used for filtering list
 const POST_INPUT_FLDS = 'service cat item private exchange details emergency radius end type'; // post input fields
-define('METHOD_OPTS', t('email phone text')); // contact method options
 const VIPID = 'vipid'; // name of confirmed-email cookie (the VIP's people record ID)
 const POSTPAGE = '/community/posts';
 const MODERATE_ZIPS = ''; // 3-digit zip code areas where moderation is mandatory (eg '010 013')
@@ -345,12 +344,10 @@ function getWho($args) {
   $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown with your posts, so your neighbors will recognize you.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
-  $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
-
   if (!isset($location)) $location = NULL;
   $submit = t('Submit');
 
-  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext submit location frm')) + $info);
+  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' submit location frm')) + $info);
 }
 
 /**

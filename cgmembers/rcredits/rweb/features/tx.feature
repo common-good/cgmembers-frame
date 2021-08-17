@@ -211,14 +211,31 @@ Scenario: A member pays another member repeatedly
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | amount | payer | payee | purpose      | taking | recursId |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
-  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
+  | xid | created   | amount | payer | payee | purpose      | taking | recursId |*
+  |   1 | %daystart |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
+#  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "tx_timed":
   | id | from | to   | amount | period | purpose | start     | end | action | duration |*
   |  4 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
   And date field "start" rounded "yes" in "tx_timed" record "4" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "tx_timed/id/1/start"
+
+Scenario: A member ask to pay another member too much, repeatedly
+  Given these "tx_timed":
+  | id | from | to   | amount | period | purpose | start | end | action | duration |*
+  |  3 | 0    | 0    |      0 | week   | bump-id | %now  |     | pay    | once     |
+  When member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | purpose | period | periods |*
+  | pay | Bea Two | 900    |  labor  | week   |       1 |
+  Then we say "status": "short to|when resolved|repeats" with subs:
+  | short | avail | often  |*
+  | $650  | $250  | weekly |
+  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  | action | amount | tofrom | why                              | checkNum |*
+  | draw   | $650   | from   | to cover your payment request #1 | 1        |
+  And we say "status": "banked|bank tx number" with subs:
+  | action | amount | tofrom | why                              | checkNum |*
+  | draw   | $650   | from   | to cover your payment request #1 | 1        |
 
 Scenario: A member pays another member later
   When member ".ZZA" confirms form "tx/pay" with values:

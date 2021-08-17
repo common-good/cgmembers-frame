@@ -44,7 +44,6 @@ function extraSetup($feature) {
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH aaSeldomNotices ItsTimeToRenewBacking
  *     MAKE bank Setup
- *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
@@ -74,11 +73,8 @@ function members($list) {return t\members($list);}
  * in: MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
  *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     MAKE bank AMemberIsAtTarget
- *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
@@ -118,10 +114,7 @@ function bankTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 /**
  * relations: (ARG)
  *
- * in: MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
- *     MAKE bank AMemberIsWellBelowTarget
- *     MAKE invoices Setup
+ * in: MAKE invoices Setup
  *     MAKE joint Setup
  *     MAKE risk Setup
  */
@@ -133,7 +126,6 @@ function relations($relations) {return t\relations($relations);}
  *
  * in: MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE bank AMemberIsBarelyBelowTarget
- *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE cashout Setup
  *     MAKE daily AMemberHasABigDay
@@ -164,10 +156,7 @@ function transactions($list) {return t\transactions($list);}
  * in: TEST bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberHasANegativeBalance
- *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     TEST bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
  *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
- *     TEST bank AMemberIsWellBelowTarget
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
@@ -493,7 +482,6 @@ function stats($list) {return t\stats($list);}
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     TEST bank AMemberHasANegativeBalance
- *     TEST bank AMemberIsWellBelowTarget
  *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
  *     TEST bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     TEST bank AMemberWithZeroTargetHasBalanceBelowTarget
@@ -603,11 +591,8 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
  *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     MAKE bank AMemberIsAtTarget
- *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
