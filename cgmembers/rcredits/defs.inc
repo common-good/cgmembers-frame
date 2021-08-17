@@ -381,6 +381,7 @@ const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 const FBO_CC_FEE = 3; // percentage of donation amount to charge for credit card donations to sponsored organizations
+define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));

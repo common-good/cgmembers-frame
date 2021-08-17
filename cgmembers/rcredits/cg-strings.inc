@@ -324,7 +324,7 @@ EOF
   'ambiguous other2' => t('You can identify a member by phone, email, fullname (no punctuation or spaces), or account ID.'),
   'what relationship' => t('You forgot to say whether you are an employee, owner, or both.'),
   'short put' => t('The most you can transfer to your bank at this time is %max.'),
-  'short to' => t('You are %short short for that transaction. Available balance is %avail. Maybe increase your target balance?'),
+  'short to' => t('You are %short short for that transaction. Your available credit is %avail. Maybe increase your target balance?'),
   'short from' => t('%otherName is %short short for this request (do NOT try again). Available balance is %avail.'),
   'short from vague' => t('%otherName does not have enough funds for this request (do NOT try again).'),
   'min too low' => t('Your target balance is set too low, causing conflicting deposits and withdrawals from your bank account. To increase your target balance to %suggestion, visit the %page page (under Settings).'),

@@ -1,3 +1,13 @@
+2021-08-17 feature/recur-anyway
+. remove sketchy characters from error messages so they can be displayed and/or emailed
+. don't get funds by drawing from another account unless needed for an immediate transaction
+. little improvements to bank transfer report messages (on screen and email notices)
+. automatically fix bad bank account in txs2 record
+. improved debugging of notices and on-screen messages by including index
+. refactored tx.inc to save recurring transaction even if the first is denied, doing away with passing an array for recursId (which caused bugs).
+. website and logo now get checked and (bug fix) stored on Company Info page (company.inc)
+. we no longer send thanks for a zero donation
+
 2021-07-28 feature/fbo4
 . now any payment to a sponsored organization registers as a gift and is reported as such
 

@@ -66,6 +66,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   $nasty = ($severity < WATCHDOG_WARNING);
   $title = $nasty ? t('CRASH!') : t('WARNING');
   $file = basename($file);
+  $msg = preg_replace('/[^\x0A\x20-\x7E]/','', $msg);
   $msg = t('<b>%title: </b>%msg<br> - line %line in %file' . "<br>\n", compact(ray('title msg line file')));
   u\loga($title, $msg);
   $devPhpPage = (!isPRODUCTION and $channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php');

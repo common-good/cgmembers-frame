@@ -63,38 +63,7 @@ Scenario: a member has a negative balance
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $150   |        1 | to bring your balance up to the target you set |
-
-Scenario: an unbanked member barely below target draws on another account
-  Given balances:
-  | uid  | balance |*
-  | .ZZA | 200   |
-  | .ZZB | 99.99 |
-  And relations:
-  | main | agent | draw |*
-  |.ZZA  | .ZZB  | 1    |
-
-  When cron runs "getFunds"
-  Then transactions:
-  | xid | amount | payer | payee | goods         | taking | purpose                                                     |*
-  |   1 |   0.01 | .ZZA  | .ZZB  | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
-  And we notice "drew" to member ".ZZB" with subs:
-  | amount | why       |*
-  | $0.01  | to bring your balance up to the target you set |
   
-Scenario: an unbanked member barely below target cannot draw on another account
-  Given balances:
-  | uid  | balance |*
-  | .ZZA | 0      |
-  | .ZZB | 99.99  |
-  And relations:
-  | main | agent | draw |*
-  |.ZZA  | .ZZB  | 1    |
-
-  When cron runs "getFunds"
-  Then we notice "cannot draw" to member ".ZZB" with subs:
-  | why       |*
-  | to target |
-
 Scenario: an unbanked non-drawing member barely below target cannot get funded
   Given balances:
   | uid  | balance |*
@@ -113,28 +82,6 @@ Scenario: a member is at target
   When cron runs "getFunds"
   Then bank transfer count is 0
   
-Scenario: a member is well below target
-  Given members:
-  | uid  | fullName | floor | minimum | flags                         | achMin | bankAccount |*
-  | .ZZF | Fox 6    |     0 |     151 | co,ok,refill,bankOk,confirmed | 30     | USkk9000006 |
-  And relations:
-  | main | agent | draw |*
-  |.ZZA  | .ZZB  | 1    |
-  And balances:
-  | uid  | balance | minimum |*
-  | .ZZA |     150 |     100 |
-  | .ZZF |      50 |     151 |
-  When cron runs "getFunds"
-  Then these "txs2":
-  | txid | payee | amount | channel  |*
-  |    1 | .ZZF  | 101    | %TX_CRON |
-  And these "txs":
-  | xid | created | amount | payer | payee | for1                           | for2                           | taking |*
-  | 1   | %today  |    100 | .ZZA  | .ZZB | automatic transfer to NEWZZB   | automatic transfer from NEWZZA |      1 |
-  And we notice "banked|bank tx number" to member ".ZZF" with subs:
-  | action | tofrom | amount | checkNum | why       |*
-  | draw   | from   | $101   |        2 | to bring your balance up to the target you set |
-
 Scenario: a member is under target but already requested barely enough funds from the bank
   Given balances:
   | uid  | savingsAdd | balance |*

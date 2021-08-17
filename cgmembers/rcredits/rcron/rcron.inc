@@ -951,6 +951,7 @@ o;
   : [min($pending, $a->balance + $pending), t('to pending')]; // this could be negative (just enough to pay pending)
 
   $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
+  $debtTimeout = FALSE; // disable this 
 
   if ($a->balance < 0) {
     if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)

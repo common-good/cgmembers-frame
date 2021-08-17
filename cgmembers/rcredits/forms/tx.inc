@@ -98,86 +98,81 @@ function formTx_submit($form, &$sta) {
   extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
 
-  $DBTX = \db_transaction();
+  if (!$who) return fboTx($input);
 
-  if ($who) { // normal account
-    $uid = whoId($sta);
-    $pid = NULL;
-  } else { // FBO (sponsored) account
-    u\EXPECT($fbo and ($paying or $mya->admin), 'fbo income by non-admin');
-    $uid = UID_OUTER;
-    if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
-      $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
-    }
-    $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
-    $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
-    u\EXPECT($xid, 'outer transfer failed');
-    say('info saved');
-    $res = be\thanks(FALSE, $pid, $amount, PER_1, 0, $mya->id, TRUE);
-    unset($DBTX);
-    return $res; // no need to continue (outer transactions never delay or repeat)
-  }
-  
+  $uid = whoId($sta);
   u\setDft($goods, FOR_GOODS);
   $delay = ($start > today());
   $repeats = ($periods > 0);
+
+  $DBTX = \db_transaction();
+  
+  if ($delay or $repeats) { // delaying or repeating, so create a rule template
+    if (!$end) $end = NULL;
+    list ($action, $thing, $way) = $paying ? [ACT_PAY, t('payment'), 'from to'] : [ACT_CHARGE, t('invoice'), 'to from'];
+    $info = ray($way, $mya->id, $uid);
+ 
+    if ($repeats) {
+      // warn user if they already have a repeating transaction like this with this other account
+      $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>:PER_1 AND IFNULL(end, :NOW + 1) > :NOW";
+      if (!$delay and db\exists('tx_timed tm', $where, $info)) {
+        $otherName = db\get('fullName', 'users', compact('uid'));
+        say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
+      }
+      
+      $repeatSubs = ray('often', r\recurDesc($period, $periods));
+      $repeatMsg = 'repeats';
+    } else list ($periods, $period) = [1, PER_1];
+    
+    if (!$start) $start = today(); // handle ''
+    $info += compact(ray('action amount purpose period periods start end'));
+    $recursId = db\insert('tx_timed', $info, 'id');
+  }
   
   if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
-    list($ok, $msg, $subs) = [TRUE, '', []];
-  } else { // no delay
-     
-    $data = $period ? ['recurs' => 1] : [];
+    $msg = 'thing scheduled';
+    $subs = compact('thing');
+    r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
+    $ok = TRUE;
+  } else { // no delay, transact now
+    $data = $repeats ? ['recurs' => 1] : [];
     if ($start) $data['created'] = $start; // superAdmin chose a date in the past
     if ($fbo) $data += compact('cat');
 
     $z = $paying
-    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $period ? [$period, $periods] : NULL)
-    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
+    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL)
+    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL);
     extract(just('ok msg subs', $z));
-
-    if (!$ok) $repeats = FALSE; // don't repeat a failure
-    if (!$repeats) { // done if we're not repeating (and not delaying)
-      unset($DBTX);
-      say($msg, $ok ? '' : 'err');
-      return go('dashboard');
-    }
-  }
-
-  // delaying or repeating, so create a rule template
-  if (!$end) $end = NULL;
-  list ($action, $thing, $way) = $paying ? [ACT_PAY, t('payment'), 'from to'] : [ACT_CHARGE, t('invoice'), 'to from'];
-  $info = ray($way, $mya->id, $uid);
- 
-  if ($repeats) {
-    // warn user if they already have a repeating transaction like this with this other account
-    $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>:PER_1 AND IFNULL(end, :NOW + 1) > :NOW";
-    if (!$delay and db\exists('tx_timed tm', $where, $info)) {
-      $otherName = db\get('fullName', 'users', compact('uid'));
-      say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
-    }
-    
-    $subs += ray('often', r\recurDesc($period, $periods));
-    $msg = u\joins($msg, '|', 'repeats');
-  } else {
-    list ($periods, $period) = [1, PER_1];
-  }
-  
-  if (!$start) $start = today(); // handle ''
-  $info += compact(ray('action amount purpose period periods start end'));
-  $id = db\insert('tx_timed', $info, 'id');
-
-  if ($delay) {
-    $msg = u\joins($msg, '|', 'thing scheduled');
-    $subs += compact('thing');
-    r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
-  } else { // no delay: a recurring transaction or invoice was created, so set its recursId (pointing to tx_template record)
-    extract(just('xid nvid', $subs, NULL)); // no other way to know whether payApproved created a tx or an invoice
-    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['tx_requests', 'nvid'];
-    db\update($tnm, ray("$idFnm recursId", $subs[$idFnm], $id), $idFnm);
   }
 
   unset($DBTX);
 
+  if ($repeats) {$msg .= "|$repeatMsg"; $subs += $repeatSubs;}
   say(tr($msg, $subs), $ok ? '' : 'err');
   return go('dashboard');
+}
+
+/**
+ * Handle transfer for fiscally sponsored account
+ * @param assoc $input: all relevant parameters
+ */
+function fboTx($input) {
+  global $mya;
+
+  extract($input);
+  u\EXPECT($fbo and ($paying or $mya->admin), 'fbo income by non-admin');
+  $uid = UID_OUTER;
+  
+  $DBTX = \db_transaction();
+  if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
+    $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
+  }
+  $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
+  $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
+  u\EXPECT($xid, 'outer transfer failed');
+  say('info saved');
+  $res = be\thanks(FALSE, $pid, $amount, PER_1, 0, $mya->id, TRUE);
+  unset($DBTX);
+  
+  return $res; // no need to continue (outer transactions never delay or repeat)
 }

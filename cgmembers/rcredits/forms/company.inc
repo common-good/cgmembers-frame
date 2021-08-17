@@ -73,14 +73,17 @@ EOF;
 }
 
 function formCompany_validate($form, &$sta) {
-  extract(just($fields = 'selling employees gross staleNudge logo founded', $sta['input']));
+  extract(just($fields = 'selling employees gross staleNudge website logo founded', $sta['input']));
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
   if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');
   if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');
-  if ($logo and !file_get_contents($logo)) return sayFieldErr(t('That Logo URL does not exist.'), 'logo');
 
+  foreach (ray('website logo') as $k) if ($$k = preg_replace('~https?://~i', '', nn($$k))) {
+    if (!test() and !file_get_contents('https://' . $$k)) return sayFieldErr(t('That %k URL does not exist.', compact('k')), $k);
+  }
+  
   u\preray(compact(ray($fields)), $sta['input']);
 }
 
@@ -96,8 +99,8 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, nn($atm));
-  $info = []; foreach (ray('description shortDesc website selling employees gross staleNudge founded') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('description shortDesc website logo selling employees gross staleNudge founded') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
-    if (nn($categories)) $mya->setCategories($categories);
+  if (nn($categories)) $mya->setCategories($categories);
   return w\goNextStep('company', NULL, $rawInfo);
 }

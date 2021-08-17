@@ -843,7 +843,7 @@ EOF;
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
     $message = tr($index, $subs);
     $created = now();
-    if (test()) f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
+    if (test()) f('t.output', t('Actual Notice [%index] to %fullName: %message', 'index fullName message', $index, $a->fullName, $message));
     if ($type) {
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
     } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }
@@ -1196,18 +1196,23 @@ o;
   public function getFunds($amount = NULL, $why = NULL) {
     $a = $this;
 
-    if ($amount <= 0) return 0;
-    $amtDone = $a->draw($amount, $why);
-    $amount -= $amtDone;
-    if ($amount and $a->hasBank) $amtDone += $a->bank($amount, $why);
-    $amount -= $amtDone;
-    
-    if ($amount and !($a->nonudge and !$a->ok)) { // there was some to be gotten from bank (no message for non-member donations)
-      $msg = tr('cannot bank', 'tofrom why', t('from'), $why) . '|';
-      $msg .= $a->hasBank ? 'automatic when funded' : 'when funded|how to fund';
-      w\say($msg);
-      $a->tellOut($msg);
-    }    
+    if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
+
+    if ($a->hasBank) {
+      $waiting = $a->waitingFromBank($combinable, $txid);
+      if (round($amount - $waiting, 2) <= 0) return 0;
+      $amtDone = $a->bank($amount, $why, FALSE, $report);
+      $amount -= $waiting + $amtDone;
+      $msg = $amount > 0 ? 'automatic when funded' : $report;
+      $subs = [];
+    } else {
+      list ($amtDone, $msg) = [0, 'cannot bank|when funded|how to fund'];
+      $subs = ray('tofrom why', 'from', t('to target'));
+    }
+
+    w\say($msg, $subs);
+    $a->tellOut($msg, $subs);
+
     return $amtDone;
   }
   
@@ -1216,14 +1221,15 @@ o;
    * @param numeric $amount: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
    * @param bool $explicit: user requested this transfer explicitly
-   * @param string $newwhy: (RETURNED) actual message to tell account-owner about the transfer
+   * @param string $report: (RETURNED) actual message to tell account-owner about the transfer
    * @return numeric: the amount transferred
    */
-  public function bank($amount, $why = '', $explicit = FALSE, &$newwhy = '') {
+  public function bank($amount, $why = '', $explicit = FALSE, &$report = '') {
     $a = $this;
-    
     u\EXPECT($a->hasBank, 'banking with no bank');
-    if (!$amount = round($amount, 2)) return; // no zero requests at this time (to pre-verify bank account)
+    
+    $report = '';
+    if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
 
     $payee = $a->id;
 //    $okNow = ($amount < 0 or $a->bankOk); // 
@@ -1237,7 +1243,7 @@ o;
     if ($amount > 0) { // bringing money in
       if (!$explicit) {
         $amount -= $waiting;
-        if ($amount <= 0) return; // do nothing if we already have plenty waiting
+        if ($amount <= 0) return 0; // do nothing if we already have plenty waiting
       }
       $amount += $combinable;
       if ($a->refill and !$explicit) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
@@ -1265,7 +1271,7 @@ o;
     list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
     $subs = ray('action tofrom amount checkNum previous total why', $action, $tofrom, u\fmtAmt(abs(nn($amount))), $xid, $previous, $total, nn($why));
     $a->tellInOut($amount > 0, $msg, $subs);
-    $newwhy = tr($msg, $subs); // for return
+    $report = tr($msg, $subs); // for return
 
     return $amount;
   }
@@ -1783,7 +1789,7 @@ X;
       $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
       if ($z->ok) return $z;
     } else $z = be\txRet(FALSE, 'you wait');
-    
+
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
     $a->getFunds(nni($z->subs, 'shortfall') ?: $amount, t('to cover your payment request #%nvid', $z2->subs));

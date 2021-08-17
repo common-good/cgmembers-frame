@@ -1710,6 +1710,7 @@ function say($index = NULL, $args = [], $errField = '') {
   $hasTable = strhas($index, '<table');
   $message = $hasTable ? $index : tr($index, $args); 
   $fieldErr = ($errField and $errField != 'ERR');
+  
   if ($fieldErr) {
     \form_set_error($errField, $message);
 //    jsx('focus-on', 'field', $errField);
