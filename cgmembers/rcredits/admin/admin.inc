@@ -396,11 +396,15 @@ function formatField($k, $v, $flagsField = B_LIST) {
  * @param string $where: criteria
  * @param string $order: row order
  * @param string $fields: list of fields to display
- * @param array $joinFields: list of fields joining to users table (limit by community if called by Ctty Admin)
+ * @param string $joinFields: list of fields joining to users table (limit by community if called by Ctty Admin)
+ * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @return: the formatted output
  */
-function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields = '') {
-  $limit = 500; // max records to show
+function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = '') {
   global $mya;
+  
+  $limit = 500; // max records to show
+  $where = 1;
   
   $flagsField = ($table == 'tx_hdrs') ? TX_FLAGS : B_LIST;
   if (!$mya->admin and $joinFields) {
@@ -418,7 +422,7 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
   } else $fields = str_replace('t.', '', $fields);
 
   if ($order) $where .= " ORDER BY $order";
-  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), 'CG\\Admin\\formatField', $flagsField);
+  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), 'CG\\Admin\\formatField', $flagsField, $url);
 }
 
 /**

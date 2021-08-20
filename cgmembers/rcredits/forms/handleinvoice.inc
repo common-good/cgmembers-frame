@@ -87,8 +87,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('whyNot toMe payAmount hid', $sta['input'], NULL));
-  extract(just('amount', hidFlds($hid), NULL));
+  extract(just('whyNot toMe payAmount', $sta['input'], NULL));
+  extract(just('amount', hidFlds($sta, 'hid'), NULL));
   $deny = (op($sta) == 'deny');
   if (!$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
   if ($toMe and isset($payAmount) and $err = u\badAmount($payAmount, '>', 2, $amount)) return say($err, 'payAmount');
@@ -96,8 +96,8 @@ function formHandleInvoice_validate($form, &$sta) {
 
 function formHandleInvoice_submit($form, &$sta) {
   $hidFlds = 'ret nvid payer payee purpose created data amount';
-  extract(just('hid whyNot always amount payAmount toMe ', $sta['input'], NULL));
-  extract(just($hidFlds, hidFlds($hid)));
+  extract(just('whyNot always amount payAmount toMe ', $sta['input'], NULL));
+  extract(just($hidFlds, hidFlds($sta, 'hid')));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $payeeName = $toA->fullName;

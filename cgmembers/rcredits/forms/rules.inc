@@ -7,7 +7,8 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Handle rules.
+ * Handle rules and timed events.
+ * Called from both sadmin/rules and sadmin/timed
  */
  
 const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
@@ -16,13 +17,18 @@ const RULE_FLDS = BOTH_FLDS . ' template code';
 const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code';
 const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code';
 const ZERO_FLDS = 'amount portion minimum start';
- 
-function formRules($form, &$sta, $args = '') {
+const RULES_URL = 'sadmin/rules/id';
+const TIMED_URL = 'sadmin/timed/id';
+
+function formRules($form, &$sta, $type = '', $args = '') {
   global $mya;
   
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
-  extract(just('id ttype', $args, NULL));
-  if ($id and $res = db\get('*', $ttype ? 'tx_rules' : 'tx_timed', compact('id'))) extract($res);
+  list ($tnm, $url, $flds) = $type == 'rules' ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
+  
+  extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
+  if (nn($ret)) return $ret;
+
   if (isset($action)) $action = array_search($action, ray(ACT_LIST));
   foreach (ray('payerType payeeType') as $k) if (isset($$k)) $$k = array_search($$k, ray(REF_LIST));
   foreach (ray('payer payee from to') as $k) if (isset($$k) and !is_numeric($$k)) $$k = db\get('fullName', 'users', ['uid' => $$k]);
@@ -33,13 +39,6 @@ function formRules($form, &$sta, $args = '') {
   $maxDesc = t('Leave empty for no max.');
   
   jsx('rules');
-  
-  $ttype = rentRadios('ttype', (int) $ttype, ray(t('Timed Rule')));
-
-  $title = item(t('Rules'), NBSP, '', suffix($ttype));
-  
-  $btn = $id ? [] : suffix(btn('', t('Edit'), 'default', 'xs', 'edit'));
-  $id = intFld(t('Record ID:'), [t('Record ID'), t('Leave this blank to add a new record')], dft($id) + vmin(1) + $btn);
   
   $payer = textFld(t('When Payer:'), $payeDesc, dft($payer));
   $payerType = radiosFld(REQ . t('Payer Type:'), '', dft($payerType), ray(REF_LIST));
@@ -63,6 +62,7 @@ function formRules($form, &$sta, $args = '') {
   $template = textFld(t('Template:'), '', dft($template));
   $code = textFld(t('Code:'), '', dft($code));
   
+  foreach (ray('tnm flds url id') as $k) $$k = hidFld($$k);
   $submit = t('Submit');
   jsx('rules');
 
@@ -70,7 +70,7 @@ function formRules($form, &$sta, $args = '') {
 }
 
 function formRules_validate($form, &$sta) {
-  list ($tnm, $flds, $input) = getTtype($sta);
+  list ($tnm, $flds, $url, $input) = getStuff($sta);
   extract($input);
 
   foreach (ray(ZERO_FLDS) as $k) if (isset($$k) and !$$k) $$k = 0;
@@ -96,7 +96,7 @@ function formRules_validate($form, &$sta) {
 }
 
 function formRules_submit($form, &$sta) {
-  list ($tnm, $flds, $input) = getTtype($sta);
+  list ($tnm, $flds, $url, $input) = getStuff($sta);
 
   extract($input);
   foreach (just(NULL_FLDS, $input) as $k => $v) if (empty($v)) $input[$k] = NULL;
@@ -108,12 +108,11 @@ function formRules_submit($form, &$sta) {
     db\insert($tnm, $input, 'id');
   }
 
-  return go('/sadmin/rules', 'info saved');
+  return go("/$url", 'info saved');
 }
 
-function getTtype($sta) {
-  extract(just('ttype', $input = $sta['input'], NULL));
-  list ($tnm, $flds) = $ttype ? ['tx_rules', RULE_FLDS] : ['tx_timed', TIMED_FLDS];
+function getStuff($sta) {
+  extract(just('tnm flds url', $input = $sta['input'], NULL));
   $input = just($flds, $input, NULL);
-  return [$tnm, $flds, $input];
+  return [$tnm, $flds, $url, $input];
 }

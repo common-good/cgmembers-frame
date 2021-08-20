@@ -19,6 +19,9 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {-webkit-appearance:none; -moz-appearance:none; margin:0;}
 input[type=number] {-webkit-appearance:textfield; -moz-appearance:textfield;}
 input.short {width:100px; display:inline-block;}
+#edit-title .btn.add,
+#edit-title .btn.list,
+#edit-title .btn.delete {margin-left:5px; border-radius:15px; padding:0px 6px; font-weight:bold;}
 
 @keyframes puff {
     from {opacity:0; font-size:0;}
