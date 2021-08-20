@@ -29,6 +29,16 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'crud':
+    var url = baseUrl + '/' + vs['url'];
+    var id = vs['id'];
+    if (id) $('#edit-title .btn.list').click(function () {location.href = url + '';});
+    $('#edit-title .btn.add').click(function () {location.href = url + '=add';});
+    if (id) $('#edit-title .btn.delete').click(function () {
+      yesno(vs['msg'], function () {location.href = url + '=' + vs['id'] + '&del=1';}); 
+    });
+    break;
+  
   case 'message':
     var secrets = $('#secrets');
     secrets.hide();

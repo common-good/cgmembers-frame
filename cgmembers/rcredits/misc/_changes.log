@@ -1,3 +1,7 @@
+2021-08-19 feature/people
+. added a people form
+. generalize CRUD operations for admin forms (currently just for people, rules, and timed)
+
 2021-08-17 feature/recur-anyway
 . remove sketchy characters from error messages so they can be displayed and/or emailed
 . don't get funds by drawing from another account unless needed for an immediate transaction

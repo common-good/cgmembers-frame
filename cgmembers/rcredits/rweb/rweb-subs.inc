@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Testing as t;
+use CG\Admin as a;
 
 /**
  * @file
@@ -372,9 +373,20 @@ define('ALIGN_CENTER', '');
 define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
-function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
-///    debug("showRecords(" . pr($ray) . ", $formatFunc, $flagsField)");
+/**
+ * Show a formatted list of the given records.
+ * @param assoc $ray: the key/value pairs
+ * @param string $formatFunc: the function used to format the field data
+ * @param string $flagsField: a list of bit names, defined as B_ constants
+ * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @return: the formatted output
+ */
+function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST, $url = '') {
+  global $base_url;
+
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
+
+  $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
   $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
   foreach ($ray as $row) {
@@ -390,6 +402,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
         
 //      if (in_array($k, ray(FMT_INT))) $v = round($v);
 //      if (in_array($k, ray(FMT_2D)) or strhas($k, '$')) if ($v != '') $v = number_format($v, 2);
+      if ($k == $idFld) $v = "<a href=\"$base_url/$url=$v\">$v</a>";
       $line .= "  <td class=\"align$align\">$v</td>\n";
     }
     $lines[] = $line;
@@ -533,6 +546,49 @@ function btnSubmit($value, $submit = NULL) {
 }
 function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
   return "<a href=\"#$divId\" class=\"btn btn-$size btn-$style\" data-toggle=\"collapse\">$title</a>";
+}
+
+/**
+ * Handle CRUD for a standard form.
+ * @param string $tnm: table name -- also the title for the form
+ * @param string $args: URL parameters
+ * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @param string $flds: list of fields to extract for display and edit
+ * @return parameters to extract in the form:
+ *   ret: what to return from the form OR
+ *
+ *   id: the record id
+ *   title: form title
+ *   orig: original values of the requested record
+ */
+function crud($tnm, $args, $url, $flds) {
+  include_once R_ROOT . '/admin/admin.inc';
+  $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
+  extract(just("del $idFld", $args, NULL));
+
+  $id = $$idFld;
+  $msg = t('Delete this %tnm record (#%id)?', compact(ray('tnm id')));
+  jsx('crud', compact(ray('msg url id')));
+  $title = ucfirst($tnm);
+  if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
+  if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
+  if (is_numeric($id)) $title .= btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
+
+  $ret = FALSE;
+  if ($id == 'add') {
+    $orig = array_fill_keys(ray($flds), NULL);
+  } elseif ($id and $del) {
+    db\del($tnm, $idFld, $id);
+    say(t('Record #%id deleted', compact('id')));
+    $ret = go($url);
+  } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
+    // nothing to do here
+  } else {
+    $list = a\showQuery($tnm, "$idFld DESC", '*', 'uid', $url);
+    $ret = cgForm(compact(ray('title list')), 'wide nolabs');
+  }
+  
+  return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig")));
 }
 
 function NEWitem($value, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('value') + $other);}
@@ -1927,8 +1983,11 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
 
 /**
  * Consolidate or extract hidden fields.
+ * call with:
+ *   $hid = hidFlds($ray) or
+ *   $ray = hidFlds($sta, 'hid')
  */
-function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) : unserialize(unplain($ray));}
+function hidFlds($ray, $k = '') {return $k ? unserialize(unplain($ray['input'][$k])) : hidFld(plain(serialize($ray)));}
 
 function focusOn($focusFieldName) {
   u\EXPECT(!empty($focusFieldName), 'focus on null');

@@ -158,25 +158,16 @@ function formAdminPanel_submit($form, &$sta) {
   }
   
   // handle all other buttons with showQuery()
-  if ($op == 'users') {
-    $fields = 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip';
-    return say(a\showQuery('users', 1, 'name', $fields));
-  }
-  
-  $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
+  if ($op == 'users') return say(a\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
+  if ($op == 'txs') return say(a\showQuery('txs', 'xid DESC, type', 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init', 'uid1 uid2'));
 
-  if ($op == 'txs') {
-    $fields = 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init';
-    return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
-  }
-
-  if ($op == 'recurs') return say(a\showQuery('tx_timed t', 1, 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
-  if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
-  if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
-  if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
-  if ($op == 'relations') return say(a\showQuery('r_relations', 1, 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
-  if ($op == 'usd') return say(a\showQuery('txs2', 1, 'created DESC'));
-  foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", '1 ORDER BY created DESC'));
+  if ($op == 'recurs') return say(a\showQuery('tx_timed t', 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
+  if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
+  if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
+  if ($op == 'proxies') return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
+  if ($op == 'relations') return say(a\showQuery('r_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
+  if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));
+  foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", 'created DESC'));
 }
 
 /**

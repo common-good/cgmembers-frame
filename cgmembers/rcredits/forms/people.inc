@@ -6,16 +6,18 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+const PEOPLE_FLDS = 'displayName fullName email phone address city state zip method source notes'; // just the fields we handle here (and omitting pid)
+const PEOPLE_URL = 'sadmin/people/pid';
+
 /**
  * Display contact info for a non-member, for editing by admin.
  */
 function formPeople($form, &$sta, $args = '') {
   global $mya;
 
-  extract(just('pid', $args, NULL));
-  if ($pid and $orig = db\get('*', 'people', compact('pid'))) extract($orig); else $orig = [];
-  
-  $title = t('Contact Information');
+  extract(crud('people', $args, PEOPLE_URL, PEOPLE_FLDS)); // get ret or [title, orig, id, and PEOPLE_FLDS]
+  if (nn($ret)) return $ret;
+
   $displayName = textFld(t('Display Name:'), '', dft($displayName));
   $fullName = textFld(REQ . t('Full Name:'), '', dft($fullName));
   $email = emailFld(t('Email:'), '', dft($email));
@@ -33,7 +35,7 @@ function formPeople($form, &$sta, $args = '') {
   $orig = hidFlds($orig);
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
-  $form = compact(ray('title displayName fullName email phone address city state zip method source notes submit orig'));
+  $form = compact(ray('title ' . PEOPLE_FLDS . ' submit orig'));
         
   jsx('contact');
 
@@ -59,13 +61,13 @@ function formPeople_validate($form, &$sta) {
 
 function formPeople_submit($form, &$sta) {
   global $mya;
-  global $partnerInfo; // information used within eachPartner function argument (so must be global)
-  extract($info = just('displayName fullName email phone address city state zip method source notes orig', $sta['input'], NULL));
-  extract(just('pid address city state zip', hidFlds($orig), ''), EXTR_PREFIX_ALL, 'o');
-  if ($pid) $info += compact('pid');
+  extract($info = just(PEOPLE_FLDS, $sta['input'], NULL));
+  extract(just('pid address city state zip', hidFlds($sta, 'orig'), ''), EXTR_PREFIX_ALL, 'o');
+  if ($o_pid) $info['pid'] = $o_pid;
   
   if ("$address $city $state $zip" != "$o_address $o_city $o_state $o_zip") $info += ray('latitude longitude', 0, 0); // regeolocate
   
   db\updateOrInsert('people', $info, 'pid');
   say('info saved');
+  return go(PEOPLE_URL);
 }
