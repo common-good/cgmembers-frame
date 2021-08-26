@@ -35,10 +35,11 @@ ini_set('session.cache_limiter', ''); // Don't send HTTP headers using PHP's ses
 ini_set('session.cookie_httponly', '1'); // Use httponly session cookies.
 
 ini_set('error_reporting', E_ALL);
-ini_set('max_execution_time', isDEV ? 0 : 240); // don't ever timeout when developing
+ini_set('max_execution_time', isDEV ? 0 : (4 * 60)); // don't ever timeout processing when developing
 ini_set('session.gc_probability', 1); // garbage collection this fraction of the time on startup (numerator)
-ini_set('session.gc_divisor', 100); // (denominator)
-define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? 12 * HOUR_SECS : 24 * MIN_SECS); // standard 24 mins (more for admin)
+ini_set('session.gc_divisor', 0); // (denominator) - disable random garbage collection (do it in cron instead)
+define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? (12 * HOUR_SECS) : (24 * MIN_SECS)); // standard 24 mins (more for admin)
+//define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? (5) : (2 * MIN_SECS)); // for testing
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
 ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refresh the cookie)
 

@@ -835,11 +835,13 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-dashboard .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center;}
 .btn-options {margin:0 20px 0 0;}
 
+#frm-dashboard #edit-choiceList {display:table;}
 #frm-dashboard #edit-choiceList a {display:table-row;}
 #frm-dashboard #edit-choiceList a div {display:table-cell; padding:2px 4px;}
 #frm-dashboard #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
 #frm-dashboard #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
 #frm-dashboard #edit-choiceList a small {color:silver;}
+@media (min-width:768px) {#frm-dashboard #edit-choiceList {margin-left:106px;}
 
 /* Summary / Member Info / Account Info */
 #frm-summary .form-item-left {float:left; width:50%;}

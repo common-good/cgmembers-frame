@@ -45,25 +45,20 @@ include_once __DIR__ . '/rcron-subs.inc';
  */
 function run() {
   global $channel; $channel = TX_CRON; // set this even if called from PHP window by admin
-// NO (happens too often)  u\log('running cron');
-  // Allow execution to continue even if the request gets canceled.
-  ignore_user_abort(TRUE);
 
-  // Prevent session information from being saved while cron is running.
-  $original_session_saving = \drupal_save_session();
+  ignore_user_abort(TRUE); // Allow execution to continue even if the request gets canceled.
+
+  $original_session_saving = \drupal_save_session(); // Prevent session information from being saved while cron is running.
   \drupal_save_session(FALSE);
 
-  // Force the current user to anonymous to ensure consistent permissions on cron runs.
-  $original_user = $GLOBALS['user'];
+  $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
   $GLOBALS['user'] = \drupal_anonymous_user();
-
-  \drupal_set_time_limit(4 * 60);
-
-  if (\lock_acquire('cron', 240.0)) {
-    cr\periodic();
-    \lock_release('cron');
-  } else u\log(t('Attempted to run cron while it was already running.'));
-
+  \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts
+  if (!\lock_acquire('cron', 240.0)) return u\log(t('Attempted to run cron while it was already running.'));
+  
+  db\del('sessions', 'timestamp < :NOW-:SESSION_LIFE'); // remove stagnant sessions
+  cr\periodic();
+    
   $end = now() + R_CRON_PERIOD - R_MAX_TASK_TIME;
   $sql = 'SELECT id,item FROM queue ORDER BY id';
   $q = db\q($sql);
@@ -82,6 +77,7 @@ function run() {
   // Restore the user.
   $GLOBALS['user'] = $original_user;
   \drupal_save_session($original_session_saving);
+  \lock_release('cron');
 }
 
 /**

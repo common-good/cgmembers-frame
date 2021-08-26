@@ -64,10 +64,14 @@ function codeResult($code) {
   global $box;
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
   extract(just('qid secret exp', $ray, NULL));
-  $intendedA = r\acct($qid);
-  $by = $intendedA->co ? 'NOT :IS_CO' : ':IS_CO'; // show relevant account(s) first
+  if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
+  
+  
+/*  $by = $intendedA->co ? 'NOT :IS_CO' : ':IS_CO'; // show relevant account(s) first
   $agent = db\get('uid', 'r_boxes JOIN users USING(uid)', 'code=:box ORDER BY ' . $by, compact('box'));
-  if (!$a = r\acct($intendedA->id, $agent) or !$a->can(B_READ)) return softErr(t('You are not the intended recipient.'));
+  if (!$a = r\acct($intendedA->id, $agent) or !$a->can(B_READ)) return softErr(t('You are not the intended recipient.')); */
+
+  if (!db\exists('r_boxes b LEFT JOIN r_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That secret information is not longer available.'));
-  return sayEmpty(t('<h2>Encrypted Message</h2>') . $secret);
+  return sayEmpty(t('<h3>Encrypted Message</h3>') . $secret);
 }
