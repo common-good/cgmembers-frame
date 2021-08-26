@@ -278,7 +278,7 @@ function signout($continue = FALSE) {
   if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
-  if (isDEV and !test() and !$continue) return w\go('signin');
+  if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }
 

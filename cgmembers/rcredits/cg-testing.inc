@@ -1482,7 +1482,7 @@ function clear($ch = 0) {
 
   foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs') as $k) $$k = NULL;
 
-  r\deleteAllCooks();
+  r\deleteAllCooksBut('box');
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {

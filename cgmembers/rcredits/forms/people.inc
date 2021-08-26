@@ -52,8 +52,8 @@ function formPeople_validate($form, &$sta) {
   if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
-  if (!emailOkay($email, $mya->co, $mya)) return;
-  if ($err = u\badPhone($phone)) return say($err, 'phone');
+  if ($email and !emailOkay($email, $mya->co, $mya)) return;
+  if ($phone and $err = u\badPhone($phone)) return say($err, 'phone');
 //  if (u\poAddress($address)) return say('po in location', 'address'); // address can be either physical or postal
 
   u\preray(compact(ray($normals . ' email phone')), $sta['input']);
@@ -62,10 +62,12 @@ function formPeople_validate($form, &$sta) {
 function formPeople_submit($form, &$sta) {
   global $mya;
   extract($info = just(PEOPLE_FLDS, $sta['input'], NULL));
-  extract(just('pid address city state zip', hidFlds($sta, 'orig'), ''), EXTR_PREFIX_ALL, 'o');
+  extract(just('pid address city state zip notices', hidFlds($sta, 'orig'), ''), EXTR_PREFIX_ALL, 'o');
   if ($o_pid) $info['pid'] = $o_pid;
   
   if ("$address $city $state $zip" != "$o_address $o_city $o_state $o_zip") $info += ray('latitude longitude', 0, 0); // regeolocate
+  $info['method'] = ray(METHOD_OPTS)[$method];
+  if (!$o_notices) $info['notices'] = NOTICE_DFTS;
   
   db\updateOrInsert('people', $info, 'pid');
   say('info saved');

@@ -1,3 +1,12 @@
+2021-08-25 feature/cookies
+. changed "never"-expiring cookies to expire in January 2038 (the max on a 32-bit machine)
+. session garbage collection now never in foreground
+. tests no longer delete box cookie
+. improved dashboard margins on mobile
+. fixed bug in encrypted message receipt (it was failing to recognize legitimate recipients)
+. minor fixes to people form
+. bug fix: we no longer thank non-members for payments made to them from sponsored accounts (yikes)
+
 2021-08-19 feature/people
 . added a people form
 . generalize CRUD operations for admin forms (currently just for people, rules, and timed)

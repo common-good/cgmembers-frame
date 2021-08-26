@@ -122,7 +122,7 @@ function choiceListFld() {
     community:invite:Invite:Invite a friend or company to join.
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:card:Get a Card:$cardText
+    scraps:card:Get Card:$cardText
     scraps:co:Finish:Finish opening your complete company account.
     scraps:reopen:Reopen:Ask for your account to be reopened.
 X
@@ -150,7 +150,8 @@ X
     $choices += $inviteCh + $donateCh + $commentCh;
   }
   
-  $choiceList = t('<h3>Next Steps</h3>') . "\n";
+  $choiceList = '';
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
-  return item($choiceList . "\n");
+  $choiceList = "<div id=\"edit-choiceList\">\n%hdr\n<div class=\"table\">$choiceList\n</div>\n</div>\n";
+  return item(tr($choiceList, '_hdr', t('<h3>Next Steps</h3>')), BARE);
 }  

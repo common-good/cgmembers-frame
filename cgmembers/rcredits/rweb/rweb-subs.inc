@@ -32,12 +32,13 @@ $GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, becau
   'no such company' => t('There is no such company.'),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
+  'flooded' => t('You tried too many bad passwords. Wait 6 hours and try again.'),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
   'must opt' => t('You must not create a limited account for this person without giving them the opportunity to open a real %PROJECT Account. <%a>Invite them</a>!', '_a', atag('/community/invite')),
   'no local proxy' => t('There are no other members nearby. <%a>Invite someone</a>!', '_a', atag('/community/invite')),
   'short cash help' => t('<%a>Click here</a> for more information about cashing out incentive rewards.', '_a', atag('/help/cashing-out')),
+  'signed out' => t('You are signed out. Click <%a>here</a> to sign back in.', '_a', w\atag('/signin')),
 ];
-$GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
 
 /**
  * Go to the specified page

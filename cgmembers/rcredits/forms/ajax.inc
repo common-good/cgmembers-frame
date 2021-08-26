@@ -24,7 +24,7 @@ function ajax($args = NULL) {
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
   if (!in($op, 'setNotice')) { // no sid if not signed in
-    if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(t('You are signed out. Click <%a>here</a> to sign back in.', '_a', atag('/signin')));
+    if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 

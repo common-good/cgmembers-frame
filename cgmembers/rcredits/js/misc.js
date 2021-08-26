@@ -11,7 +11,7 @@ var signoutUrl = baseUrl + '/signout/timedout';
 var ajaxUrl = baseUrl + '/ajax';
 var ajaxSid = vs['sid'];
 var sessionLife = 1000 * vs['life']; // convert to seconds (sessionLife is 0 if not signed in -- no expiration)
-var signoutWarningAdvance = Math.min(sessionLife / 2, 5 * 60 * 1000); // give the user a few minutes to refresh
+var signoutWarningAdvance = Math.min(sessionLife / 2, 3 * 60 * 1000); // give the user a few minutes to refresh
 if (ajaxSid) var sTimeout = sessionLife == 0 ? 0 : sessionTimeout(); // Warn the user before automatically signing out.
 
 jQuery("#which, #help").addClass("popup");

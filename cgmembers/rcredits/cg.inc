@@ -545,7 +545,7 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
   $_COOKIE[$key] = $value; // make it available also before going to a new page
   if (test()) return $value;
 
-  u\setDft($expires, now() + 365250 * DAY_SECS);
+  u\setDft($expires, COOK_NO_EXPIRE);
   $func = $raw ? 'setrawcookie' : 'setcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
   u\EXPECT($res, 'cookie failed');
@@ -556,7 +556,8 @@ function cook($k) {return nni($_COOKIE, $k);}
 function setCryptCook($k, $v, $expires = NULL) {return setCook($k, u\ry('C', $v), $expires, TRUE);}
 function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
 function deleteCook($k) {return setCook($k, NULL, time() - 99999);}
-function deleteAllCooks() {foreach ($_COOKIE as $k => $v) deleteCook($k); $_COOKIE = [];}
+function deleteAllCooks($except = '') {foreach ($_COOKIE as $k => $v) if (!in($k, $except)) deleteCook($k); $_COOKIE = [];}
+function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if specifying $except (clearer)
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
@@ -816,7 +817,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   $balance = u\fmtAmt($a->balance);
   $creditLine = $a->underage ? t('disabled')
   : (u\fmtAmt(-$a->floor)
-    . ($a->debt ? t('(based on your monthly activity)') : t('disabled (sign in and see Settings / Advanced)')));
+    . ($a->debt ? t(' (based on your monthly activity)') : t(' disabled (sign in and see Settings / Advanced)')));
   // (<%a>click here</a> to enable it)', '_a', 
   list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
   return compact(ray('messages unit range balance creditLine return ourEmail'));

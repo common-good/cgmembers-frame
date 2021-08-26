@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58i'; // software version
+const R_VERSION = '3.58j'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -117,6 +117,7 @@ define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
 const FLOOR_DAYS = 183; // how many days to consider for credit line calculation
 const RECENT_DAYS = 60; // back how long is "recent" (don't change this without recreating r_stats data)
 const RECENT_SECS = RECENT_DAYS * DAY_SECS;
+const COOK_NO_EXPIRE = 2147483647; // maximum cookie expiration date (Unixtime - January 2038) 
 
 const REGION_DOMAIN = R_SERVER_ID . '.' . CG_DOMAIN;
 const EMAILX = 'example.com'; // domain for unknown, placeholder, test, or example emails
