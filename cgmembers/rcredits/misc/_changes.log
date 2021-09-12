@@ -1,3 +1,19 @@
+2021-09-12 feature/pos-after
+. added Undo, Receipt, and Tip buttons (and functionality) after a POS sale in web app
+. we now delete any shouter record and null out the uid of any related people record when deleting a users record
+. fixed bug in calculating effective time of ACHs
+. refactored and modularized undo at POS, to use in web app also
+. refactored admin alerts for snap member transaction and forced without photoID (now reporting snap tx only when it's successful)
+. created u\zWhereSubs subroutine to allow where and subs as a single argument in query functions
+. added stubs (QBO and Offline) for testing connection to QBO and running web app offline
+. encrypted messages now always notify the sender when viewed
+. modularized logFld()
+. fixed bug that send incomplete company to wrong page when they click "Show My QR"
+. fixed bug in formDetail verification when submitted with no amount
+. fixed bug: account deletion is no longer attempted when user has invited someone
+. fixed JS fmtAmt() function to work like u\fmtAmt()
+. created CSS to improve how our web pages print
+
 2021-08-25 feature/cookies
 . changed "never"-expiring cookies to expire in January 2038 (the max on a 32-bit machine)
 . session garbage collection now never in foreground

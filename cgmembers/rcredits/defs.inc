@@ -50,6 +50,7 @@ define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == '
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
+define('QBO_CREDS', config('qboCreds'));
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
@@ -581,6 +582,9 @@ const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feat
 
 define('SHOUT_TEXT', t('"%PROJECT could have a huge positive impact on our region, if a lot of people and businesses sign up and participate."'));
 define('ORG_DISCLAIMER', t(' Organizational affiliations are for identification purposes only and do not necessarily reflect the views of the organization.'));
+
+const FORCE_WINDOW = 1 * 60; // seconds after transaction during which unilateral undo of payment (or reimbursement or purchase of cash) can be forced
+const TIP_DFTS = [15, 20, 25]; // 3 tip choices to offer unless company chooses different ones
   
 const FLOW_NONE = 0; // which way can credit flow, with another account
 const FLOW_TO = 1;
@@ -654,7 +658,7 @@ const DS_DENIED = 3;  // dispute denied
 
 const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
 const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
-const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, or rule-based donation) triggered by another transaction
+const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, tip, or rule-based donation) triggered by another transaction
                   // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
 const E_USD_FEE = 4; // fee from customer to merchant for credit card or check transaction

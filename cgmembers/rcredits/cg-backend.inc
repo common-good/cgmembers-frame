@@ -231,6 +231,29 @@ X;
 }
 
 /**
+ * Reverse a recent transaction at point of sale.
+ * @param int $xid: record ID of transaction to reverse
+ * @param int $force: reverse the transaction even if there are insufficient funds or lack of permission
+ * @param string $where: additional criteria, to identify transaction to reverse
+ * @return a txRet object, with ->subs including:
+ *   xid: record ID of transaction that reverses the given tx OR
+ *   nvid: record ID of invoice that reverses the given tx
+ *   created: date of that reversing transaction or invoice
+ */
+function posUndo($xid, $force = FALSE, $where = 1) {
+  global $mya;
+
+  if ($subs = db\get('xid,created', 'tx_hdrs', 'reversesXid=:xid', compact('xid'))) { // already reversed
+    $msg = t('Transaction has been reversed.');
+    return obj('ok index subs msg', TRUE, $msg, $subs, $msg);
+  }
+  
+  $z = be\undoTx($xid, $where, [], $force);
+  if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", u\fmtDate($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
+  return $z;
+}
+
+/**
  * Undo the given transaction.
  * Situations:
  *     I paid someone (byMe):            REVERSE (invoice)
@@ -455,9 +478,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op snap', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'), $actorA->snap or $otherA->snap);
   if ($amount <= 0) r\tellAdmin(t('non-positive amount in be\\transfer'), $erInfo); // should never happen
 
-
-  foreach ([$actorA, $otherA] as $a) if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
-
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
     r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -492,15 +512,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       foreach ([$actorA, $otherA] as $a) if (!$a->proSe) $a->tell($msg, $erInfo);
       r\tellAdmin($msg . ' ' . tr($zErr->msg, $zErr->subs), $erInfo + $zErr->subs);
     } else return txErr($zErr->msg, $erInfo + $zErr->subs);
-  }
-
-  foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
-    if ($force) {
-      r\tellAdmin('forced without photoId', $erInfo); 
-    } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)
-//      r\tellAdmin('tx without photoId', $erInfo); 
-//      return txErr($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
-    }
   }
 
   if ($error = u\badAmount($amount)) return txErr($error, $erInfo);
@@ -588,15 +599,25 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   unset($DBTX);
   
-  // Report results
-  // notify other party by email about any completed transaction
-  foreach ([$actorA, $otherA] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
-
+  // Notify both parties by email about any completed transaction
   $res = sendNotifications($type, $tx, $shortfall);
   if ($type == 'payment' and $gainerA->sponsored) {
     list ($period, $periods) = [PER_1, 0];
     if ($per = db\get('period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(TRUE, $loserId, $amount, $period, $periods, $gainerId, FALSE);
+  }
+  
+  foreach ([$actorA, $otherA] as $a) {
+    if (!$a->confirmed) $a->setBit(B_CONFIRMED); 
+    if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
+    if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
+      if ($force) {
+        r\tellAdmin('forced without photoId', $erInfo); 
+      } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)
+//      r\tellAdmin('tx without photoId', $erInfo); 
+//      return txErr($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
+      }
+    }
   }
   
   return $res;

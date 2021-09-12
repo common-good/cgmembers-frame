@@ -689,7 +689,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
  *     TEST undo AnAgentAsksToUndoAChargeWithoutPermission
  *     TEST undo AnAgentAsksToUndoARefundWithoutPermission
  */
-function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = NULL) {
+function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msgRay = NULL) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
@@ -698,16 +698,16 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   foreach (ray('ok txid balance') as $k) if (nni($rposResult, $k) != $$k) $error = 1;
   if (!t\sameTime('created', nn($a_created), $created)) $error = 2;
   
-  if ($msg) {
-    $msg = $msg[0];
-    $index = (nni($msg, 'solution') ? 'report undo|' : '') . 'report tx'; // |for why
-    $wantMsg = t($index, $msg);
-    if ($a_message != $wantMsg) $error = 3;
+  if ($msgRay) {
+    $msgRay = $msgRay[0];
+    $index = (nni($msgRay, 'solution') ? 'report undo|' : '') . 'report tx'; // |for why
+    $message = t($index, $msgRay); // message that is wanted (called "message")
+    if ($a_message != $message) $error = 3;
   }
 
   if (nn($error)) {
-    if (nn($msg)) u\preray(compact('wantMsg'), $msg);
-    t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msg'))), 'expect');
+    if (nn($msgRay)) u\preray(compact('message'), $msgRay);
+    t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msgRay'))), 'expect');
     t\output('Got: ' . pr($rposResult + compact('error')));
     return FALSE;
   } else return TRUE;

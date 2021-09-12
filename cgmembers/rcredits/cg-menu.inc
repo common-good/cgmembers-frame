@@ -25,6 +25,10 @@ function menu($submenu = '') {
     'tx/charge' => ['call', t('Charge'), 'Tx 1 2', 'sell ok'],
     'tx/charge/invoices' => ['sub', t('Upload Invoices'), 'InvoiceUpload', 'co sell ok'],
     'tx/charge/nonmember' => ['call', t('Charge Nonmember'), 'TxNonmember', 'sell ok'],
+    
+    'tx/receipt' => ['call', t('Receipt'), 'Tx 1 2', 'sell ok'],
+    'tx/undo' => ['call', t('Receipt'), 'Tx 1 2', 'sell ok'],
+    'tx/tip' => ['call', t('Receipt'), 'Tx 1 2', 'sell ok'],
    
     'invest' => ['norm', t('Invest'), 'Invest', 'manage ok'],
     'invest/overview' => ['sub', t('Investment Club Overview'), 'Invest 1', 'manage ok', '', t(), 'eye-open'],
@@ -184,6 +188,8 @@ function menu($submenu = '') {
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
+    'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'superadmin'],
+    'sadmin/offline' => ['call', t('Offline Test'), 'Offline 2', 'superadmin'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],

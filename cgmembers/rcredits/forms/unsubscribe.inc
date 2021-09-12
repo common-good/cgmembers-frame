@@ -42,6 +42,8 @@ function formUnsubscribe_validate($form, &$sta) {
 }
 
 function formUnsubscribe_submit($form, &$sta) {
+  global $mya;
+  
   extract($info = just('why comments email qid', $sta['input'], NULL));
 
   $info['why'] = $why = join(', ', nn($why, []));
@@ -52,9 +54,9 @@ function formUnsubscribe_submit($form, &$sta) {
   r\tellCAdmin(t('%nm unsubscribed (%qid)', 'nm qid', $a->fullName, $qid), $info, $a->id);
 
   $msgs[] = 'thank tell';
-  if ($a and !$a->activated) {
-    f('a.deleteUid', $a->id);
-    $msgs[] = 'acct deleted|return welcome';
+  if ($a and !$a->activated and !db\exists('r_invites', ray('inviter', $a->id))) {
+    if ($mya and in($a->id, [$mya->id, $mya->agentId])) signout(TRUE); // don't leave user with a deleted account open
+    if (f('a.deleteUid', $a->id)) $msgs[] = 'acct deleted|return welcome';
   } elseif ($a and $a->balance == 0) {
     if ($a->jid) $a->unjoinAllBut();
     $a->setBit(B_OK, FALSE);

@@ -58,7 +58,7 @@ function adminQ($sql) {
 function get($fieldName, $table, $where = '1', $subs = []) {
   u\EXPECT(compact(ray('fieldName table where subs')), 'notempty notempty notempty assoc');
   
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   if (!mb_strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
 ///   debug(compact('sql','subs'));
@@ -158,7 +158,7 @@ function updateOrInsert($table, $info, $key = 'id') {
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
 function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
@@ -170,14 +170,14 @@ function row($table, $where = '1', $subs = []) {return rows('*', $table, $where,
  * Return an array of matching data.
  */
 function col($field, $table, $where = '1', $subs = []) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
 function lst($field, $table, $where = '1', $subs = [], $joint = ', ') { // lst because "list" is a reserved word
   return join($joint, db\col($field, $table, $where, $subs));
 }
 function keyed($fields, $table, $where = '1', $subs = []) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   return db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 
@@ -258,7 +258,7 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
-    list ($where, $subs) = [u\where($where), $where];
+    u\zWhereSubs($where, $subs);
   } elseif (!is_array($subs)) { list ($where, $subs) = ["`$where`=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
   
   if (is_numeric($where)) u\FAIL(t('Wrong syntax for call to db\del')); // don't accidentally delete all records in a table

@@ -230,7 +230,7 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
 ///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
-    if (is_array($where) and !$subs) list ($where, $subs) = [u\where($where), $where];
+    u\zWhereSubs($where, $subs);
     $where = "e.uid IN (:uids) AND entryType IN (:primes) AND $where ORDER BY t.created DESC LIMIT 1";
     $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, ray('uids primes', $uids, E_PRIMES) + $subs);
     if (empty($xid)) return FALSE;
@@ -286,7 +286,7 @@ EOF;
    * @return a txRet object on "no Undo", or FALSE if the current agent CAN undo it on behalf of the current account
    */
   function noUndo(&$subs = []) {
-    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return be\txRet(FALSE, 'already undone');
+    if ($this->reversedByXid) return be\txRet(FALSE, 'already undone');
 
     list ($a1, $a2) = u\order($this->toMe, $this->actorA, $this->otherA); // second agent's permissions are irrelevant?
     if ($zErr = r\txPermErr($a1, $a2, $this->toMe, $this->actorEntry->amount < 0)) return $zErr;

@@ -71,8 +71,9 @@ function setupBasicAccounts() {
 
   $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo); // server's community for tests (different in production)
   $info = array_combine($keys, $values);
-  $info += ray('legalName phone address city state postalAddr zip helper',
-    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
+  $logoUrl = preg_replace('~https?://~', '', BASE_URL . '/rcredits/images/logo80.png');
+  $info += ray('legalName phone address city state postalAddr zip helper logo',
+    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1, $logoUrl);
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
@@ -150,8 +151,14 @@ function makeTestAccounts() {
  * @param int $newUid: the new record ID to give the account (defaults to next available)
  * @param bool $unusable: whether to mark the old account record ID as unusuable
  * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount)
+ * @return TRUE if successful else NULL
  */
-function deleteUid($oldUid) {a\changeUid($oldUid, 0, FALSE, TRUE);}
+function deleteUid($oldUid) {
+  db\q('UPDATE people SET uid=NULL where uid=:oldUid', compact('oldUid'));
+  db\del('u_shouters', 'uid', $oldUid);
+  return a\changeUid($oldUid, 0, FALSE, TRUE);
+}
+
 function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   global $mya;
   if (is_object($oldUid)) $oldUid = $oldUid->id;
@@ -256,13 +263,11 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
     
     if ($delete) {
-      if (!$deletable) {
-        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
-          $DBTX->rollback(); 
-          return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
-        }
-      } else {
+      if ($deletable) {
         db\del($table, $field, $oldUid);
+      } elseif (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+        $DBTX->rollback(); 
+        return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
       }
     } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
   }
@@ -282,6 +287,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
 
   if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
+  return TRUE;
 }
 
 /**
