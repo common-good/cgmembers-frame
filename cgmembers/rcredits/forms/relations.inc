@@ -38,7 +38,7 @@ function formRelations($form, &$sta, $args = '') {
   $sql = <<<EOF
     SELECT DISTINCT s.reid, s.main, s.other, IF(:myid=s.main, v.fullName, u.fullName) AS fullName,
       s.permission, s.:IS_EMPLOYEE AS employee, s.:IS_OWNER AS owner, s.:IS_CUSTOMER AS customer, s.:IS_DRAW AS draw
-    FROM ((r_relations s LEFT JOIN users u ON u.uid=s.main)
+    FROM ((u_relations s LEFT JOIN users u ON u.uid=s.main)
       LEFT JOIN users v ON v.uid=s.other)
     WHERE s.main=:myid AND $where
     ORDER BY fullName, IF(:myid=s.main, s.other, s.main), (:myid=s.other)

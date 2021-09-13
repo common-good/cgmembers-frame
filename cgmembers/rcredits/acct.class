@@ -233,16 +233,16 @@ class Acct {
       case 'trialco': return ($a->co and $a->depends);
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
-      case 'hasCustomers': return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
+      case 'hasCustomers': return db\exists('u_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
       case 'superAdmin': return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
       case 'bankInfo': return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
                                 : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-      case 'shouter': return db\exists('u_shouters', $uidSub);
+      case 'shouter': return db\exists('u_shout', $uidSub);
       case 'tempPhotoFilename': return r\pic("$a->mainQid.jpg");
       case 'ssnErr': return is_array($a->ssnData) ? nni($a->ssnData, SSN_ERR_INDEX) : FALSE;
-      case 'hasPhoto': return db\exists('r_photos', $uidSub);
-      case 'photo': return ($res = db\get('photo', 'r_photos', $uidSub)) ? u\decry('H', $res) : '';
-      case 'thumb': return db\get('thumb', 'r_photos', $uidSub) ?: '';
+      case 'hasPhoto': return db\exists('u_photo', $uidSub);
+      case 'photo': return ($res = db\get('photo', 'u_photo', $uidSub)) ? u\decry('H', $res) : '';
+      case 'thumb': return db\get('thumb', 'u_photo', $uidSub) ?: '';
       case 'changes':
         $chFlds = 'oldValue,newValue';
         foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {
@@ -357,7 +357,7 @@ class Acct {
       $info += compact('flags');
     }
     if ($reid = $a->relFld('reid')) {
-      return db\updateOrInsert('r_relations', $info + compact('reid'), 'reid');
+      return db\updateOrInsert('u_relations', $info + compact('reid'), 'reid');
     } else $a->newRelation($info + ray('other', $a->agentId));
   }      
   
@@ -502,7 +502,7 @@ class Acct {
     $data = $info[$k];
     $isThumb = ($k == 'thumb');
     if ($data or $isThumb) { // setting
-      db\updateOrInsert('r_photos', ['uid' => $a->id, $k => $isThumb ? $data : u\cry('H', $data)], 'uid');
+      db\updateOrInsert('u_photo', ['uid' => $a->id, $k => $isThumb ? $data : u\cry('H', $data)], 'uid');
       if (!$isThumb and !test()) { // always create a new thumb when we create or change the photo
         $factor = ($a->co ? 2 : 1) * THUMB_FACTOR;
         list ($w, $h) = $a->co ? CO_ASPECT : FACE_ASPECT;
@@ -510,7 +510,7 @@ class Acct {
         $thumbInfo['thumb'] = u\img2string($img, $a->co ? 100 : 50);
         $a->updatePhoto($thumbInfo, 'thumb');
       }
-    } else {db\del('r_photos', 'uid', $a->id);} // delete record if deleting photo
+    } else {db\del('u_photo', 'uid', $a->id);} // delete record if deleting photo
     unset($info[$k]);
   }
 
@@ -562,7 +562,7 @@ class Acct {
       unset($info[$k]);
     }
     $info['created'] = now();
-    return r\regionalInsert('r_relations', 'reid', $info + ['main' => $this->id], -$this->region);
+    return r\regionalInsert('u_relations', 'reid', $info + ['main' => $this->id], -$this->region);
   }
 
   /**
@@ -571,7 +571,7 @@ class Acct {
   public function setAgentNum() {
     $a = $this;
     if ($a->proSe or r\qo($a->qid)->agentCode) return;
-    $otherNum = db\max('otherNum', 'r_relations', 'main=:main', ['main' => $a->id]) + 1;
+    $otherNum = db\max('otherNum', 'u_relations', 'main=:main', ['main' => $a->id]) + 1;
     $a->setRel(compact('otherNum'));
     return $otherNum;
   }
@@ -708,7 +708,7 @@ class Acct {
   private function drawSourcesSummary() {
     $a = $this;
     return db\get("SUM(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail, COUNT(*) as count",
-                  "users u INNER JOIN r_relations r ON r.main=u.uid",
+                  "users u INNER JOIN u_relations r ON r.main=u.uid",
                   "r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id",
                   ray('id jid', $a->id, $a->jid ?: -1));
   }
@@ -721,7 +721,7 @@ class Acct {
     $a = $this;
     $sql = <<< X
       SELECT u.uid, (balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail
-      FROM users u INNER JOIN r_relations r ON r.main=u.uid
+      FROM users u INNER JOIN u_relations r ON r.main=u.uid
       WHERE r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id
 X;
     return db\q($sql, ray('id jid', $a->id, $a->jid ?: -1));
@@ -871,7 +871,7 @@ EOF;
   function unjoinAllBut($except = FALSE) {
     $a = $this;
     
-    $sql = 'UPDATE r_relations SET permission=:manage WHERE permission=:joint AND main=:id';
+    $sql = 'UPDATE u_relations SET permission=:manage WHERE permission=:joint AND main=:id';
     $subs = ray('manage joint id', r\perm(B_MANAGE), r\perm(B_JOINT), $a->id);
 
     $DBTX = \db_transaction();
@@ -1661,7 +1661,7 @@ X;
    *   custCode: the company's identifier for the customer
    */
   public function eachPartner($func) {
-    $sql = 'SELECT r.main, r.code FROM r_relations r JOIN users u ON u.uid=r.main WHERE r.other=:id AND r.:IS_CUSTOMER AND u.:IS_PARTNER ORDER BY r.code';
+    $sql = 'SELECT r.main, r.code FROM u_relations r JOIN users u ON u.uid=r.main WHERE r.other=:id AND r.:IS_CUSTOMER AND u.:IS_PARTNER ORDER BY r.code';
     $res = q($sql, ['id' => $this->id])->fetchAllKeyed();
     foreach ($res as $main => $code) $func(r\acct($main), $this, $code);
   }
@@ -1865,7 +1865,7 @@ X;
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->email => $this->fullName];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
-  public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
+  public function firstCo() {return db\get('fullName', 'u_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
     $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));

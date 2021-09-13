@@ -8,11 +8,11 @@ Setup:
   | uid   | fullName | flags  |*
   | .ZZA | Abe One  | ok     |
   | .ZZB | Bea Two  | ok     |
-  And these "events":
+  And these "r_events":
   | id | ctty | type | event         | start        | end          |*
   |  1 | ctty |    P | RFP ($10,000) | %daystart-1w | %daystart-2d |
   |  2 | ctty |    G | Grade         | %daystart    | %daystart+1d |
-  And these "proposals":
+  And these "r_proposals":
   | id | event | project | overview | categories | purpose | systemic | where | when      | until        | amount | recovery | ctty |*
   | 1  |     1 | Dance   | Fun!     | arts,food  | move    | mystery  | here  | %daystart | %daystart+1d |   1000 |       15 | ctty |
   | 2  |     1 | Play    | Funner   | energy     |  health | very     | there | %daystart | %daystart+2d |   2000 |       48 | ctty |
@@ -40,10 +40,10 @@ Scenario: A member grades a proposal
   || Economic Circles |
   || Invitations |
   || Roundups |
-  And these "ballots":
+  And these "r_ballots":
   | id | question | voter | proxy |*
   |  1 |       -1 |  .ZZA |     0 |
-  And these "votes":
+  And these "r_votes":
   | id | ballot | option | grade | gradeMax | displayOrder | text | isVeto |*
   |  1 |      1 |     -1 |    -1 |       -1 |            0 |      |      0 |
   |  2 |      1 |     -2 |    -1 |       -1 |            1 |      |      0 |
@@ -68,7 +68,7 @@ Scenario: A member grades a proposal
   | Recovery    ||
   || Percentage |
   || Dividends  |
-  And these "votes":
+  And these "r_votes":
   | id | ballot | option |  grade | gradeMax | displayOrder | text     | isVeto |*
   |  1 |      1 |     -1 |      0 |       -1 |            0 |          |      0 |
   |  2 |      1 |     -2 |      2 |       -1 |            1 |          |      0 |

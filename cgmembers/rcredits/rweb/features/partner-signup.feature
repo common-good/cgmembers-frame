@@ -124,7 +124,7 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | .AAA | ok,member,roundup,confirmed | %now   | Abe One  |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
-  And relations:
+  And these "u_relations":
   | reid | main | agent | flags            | code    |*
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And member ".AAA" steps left ""
@@ -187,7 +187,7 @@ Scenario: A member visits the registration page sent by a partner
   Then we show "Congratulations!"
   And without:
   | Continue to %PROJECT |
-  And relations:
+  And these "u_relations":
   | reid | main | agent | flags            | code    |*
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And we email "partner-report" to member "c@" with subs:
@@ -256,7 +256,7 @@ Scenario: A company visits the registration page sent by a partner
   | .AAA | ok,co,member,roundup,confirmed | %now   | Al Aargh |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
-  And relations:
+  And these "u_relations":
   | reid | main | agent | flags            | code    |*
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And member ".AAA" steps left ""

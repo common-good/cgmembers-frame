@@ -174,7 +174,7 @@ Scenario: A member chooses crumbs
 
 Scenario: A member chooses proxies
   Given member ".ZZB" has "card" steps done: "photo contact donate crumbs"
-  And proxies:
+  And these "r_proxies":
   | person | proxy | priority |*
   | .ZZB   | .ZZA  |        1 |
   | .ZZB   |    2  |        2 |
@@ -233,7 +233,7 @@ Scenario: A member invites
   When member ".ZZB" completes form "community/invite" with values:
   | sign | quote | org  | position | website |*
   | 1    | cuz   | MeCo | Boss     | me.co   |
-  Then these "u_shouters":
+  Then these "u_shout":
   | uid  | quote | org  | title | website |*
   | .ZZB | cuz   | MeCo | Boss  | me.co   |
   And we show "You: Bea Two" with:

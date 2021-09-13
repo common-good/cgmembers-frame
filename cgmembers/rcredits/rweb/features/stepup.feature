@@ -156,4 +156,4 @@ Scenario: A surtx amount rounds to zero
   |   1 |   1 | %today  | .10    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
   |   3 |   1 | %today  | .05    | .ZZB  | .ZZF  | donation     | 1    | %E_AUX |
   |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_AUX |
-  And count "entries" is 3
+  And count "txs" is 3

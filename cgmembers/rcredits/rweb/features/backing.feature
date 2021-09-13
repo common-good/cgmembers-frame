@@ -15,7 +15,7 @@ Scenario: A member visits the backing page
   | Amount | $1 |
 
 Scenario: A member increases backing amount
-  Given transactions: 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded

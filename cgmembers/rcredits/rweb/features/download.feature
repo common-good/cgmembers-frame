@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | -100  | personal    | ok         |
   | .ZZB | Bea Two  | -200  | personal    | ok,co      |
   | .ZZC | Our Pub  | -300  | corporation | ok,co      |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -21,14 +21,14 @@ Setup:
   |  502 | .ZZB  |   2000 | %today-5m | %today-5m |
   |  503 | .ZZC  |   3000 | %today-6m | %today-6m |
   |  504 | .ZZA  |    200 | %today-3d |         0 |
-  And invoices:
+  And these "tx_requests":
   | nvid | created   | amount | payer | payee | purpose  | status |*
   |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |     11 |
   |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |     12 |
   |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |     13 |
   |    4 | %today-5d |     99 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
   |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose  | taking | relType | rel |*
   |  11 | %today-3m |    240 | .ZZA  | .ZZB  | what G   | 0      | I       | 1   |
   |  12 | %today-1w |    120 | .ZZA  | .ZZC  | this Q   | 0      | I       | 2   |

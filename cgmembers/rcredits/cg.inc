@@ -50,7 +50,7 @@ function access($perms = NULL) {
 
 /**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
- * @param string $table: table to save in (users or r_relations)
+ * @param string $table: table to save in (users or u_relations)
  * @param string $idField: name of record ID field (uid or reid)
  * @param assoc $record: the record to save (possibly with record ID already chosen)
  * @param int $region: uid of the region in which to create a new record (defaults to server region, negated)
@@ -181,7 +181,7 @@ function worksForUs($name, $us = NULL, $loose = TRUE) {
   $where = 'r.main=:us' . ($loose ? '' : ' AND r.:IS_EMPLOYEE');
   
   $sql = <<< X
-    SELECT u.uid, u.fullName FROM r_relations r
+    SELECT u.uid, u.fullName FROM u_relations r
     INNER JOIN users u ON u.uid=r.other
     WHERE $where
     ORDER BY (u.fullName LIKE :pattern) DESC
@@ -677,7 +677,7 @@ function loginString($qid) {
  */
 function employees() {
   $myid = r\acct()->id;
-  return db\q('SELECT other FROM r_relations WHERE main=:myid AND :IS_EMPLOYEE', compact('myid'))->fetchCol();
+  return db\q('SELECT other FROM u_relations WHERE main=:myid AND :IS_EMPLOYEE', compact('myid'))->fetchCol();
 }
 
 /**
@@ -718,7 +718,7 @@ function relation($field, $main, $other = [], $where = 'TRUE', $subs = []) {
     $a = r\acct($qid = $main);
     list ($where, $subs) = [ray('main other', $a->id, $a->agentId), []];
   }
-  return db\get($field, 'r_relations', $where, $subs);
+  return db\get($field, 'u_relations', $where, $subs);
 }
 
 /**

@@ -15,7 +15,7 @@ Setup:
   | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed         | %today-2y |
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  | %today-2y |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      | %today-2y |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And selling:
@@ -24,13 +24,13 @@ Setup:
   And company flags:
   | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | buy        |
   | .ZZC | .ZZB  |   2 | scan       |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   | 4   | %today-6m |    250 | ctty | .ZZF | stuff   |
   Then balances:
@@ -58,7 +58,7 @@ Scenario: A cashier charged someone offline
   | .ZZC |     100 |
 
 Scenario: A cashier charged someone offline and they have insufficient balance
-  Given transactions: 
+  Given these "txs": 
   | xid | created | amount | payer | payee | purpose |*
   | 5   | %today  |    200 | .ZZB | .ZZC | cash    |
   Then balances:
@@ -119,18 +119,18 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | .ZZC |       0 |
 
 Scenario: A cashier canceled offline a supposedly offline charge that actually went through, but customer is broke
-  Given transactions: 
+  Given these "txs": 
   | xid | created | amount | payer | payee | purpose |*
   | 5   | %today  |    500 | ctty | .ZZC | growth  |
   Then count "txs" is 2
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1n"
-  Then transactions: 
+  Then these "txs": 
   | xid | created | amount | payer | payee | purpose | taking |*
   | 6   | %now-1n |   -100 | .ZZB | .ZZC | refund  |      1 |
   And count "txs" is 3
 
-  Given transactions: 
+  Given these "txs": 
   | xid | created | amount | payer | payee | purpose |*
   | 7   | %today  |    300 | .ZZB | .ZZA | cash    |
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1n" force -1

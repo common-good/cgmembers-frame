@@ -90,7 +90,7 @@ const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must 
 const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
 const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
-const TRACK_DELETED = 'tx_requests r_photos r_relations txs2 users'; // remember rows in these tables if we delete them
+const TRACK_DELETED = 'users u_shout u_company u_photo u_relations txs2'; // remember rows in these tables if we delete them
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 const DEV_ONLY_MSG = 'only on development machine';
@@ -514,7 +514,7 @@ const REL_FLAGS = 'employee owner customer autopay r4 r5 r6 draw';
 const REL_FLDS = 'main other otherNum permission code';
 const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city2 state2 zip2 partner partnerCode customer source qid country postalAddr'; // pseudo-fields typically stored in data field
 
-// Relationship permissions used in calls to r\Acct::can() -- stored (less B_RELATED) in r_relations
+// Relationship permissions used in calls to r\Acct::can() -- stored (less B_RELATED) in u_relations
 const B_RELATED = 100; // has a relationship record
 const B_NONE = 100; // no access
 const B_READ = 101; // can view Transaction History

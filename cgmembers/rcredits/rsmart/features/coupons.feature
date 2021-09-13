@@ -12,7 +12,7 @@ Setup:
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt |
   | .ZZC | Corner Pub | c@    | ccC |      |     0 | ok,co,confirmed   |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And selling:
@@ -21,7 +21,7 @@ Setup:
   And company flags:
   | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
-  And relations:
+  And these "u_relations":
   | reid | main | agent | num | permission |*
   | .ZZA | .ZZC | .ZZA  |   1 | scan       |
   Then balances:

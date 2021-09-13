@@ -126,7 +126,7 @@ function formHandleInvoice_submit($form, &$sta) {
   } elseif ($op == 'deny' or $whyNot) {
     $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
-    $toA->tellIn('invoice denied', $subs);
+    $toA->tell('invoice denied', $subs);
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 

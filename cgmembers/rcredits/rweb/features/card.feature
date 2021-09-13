@@ -52,7 +52,7 @@ Scenario: A member scans an individual card, with no scanner set, signed in, no 
   | Other |
 
 Scenario: A member scans an individual card, with no scanner set, signed in, with relations choices
-  Given relations:
+  Given these "u_relations":
   | main | other | permission | otherNum |*
   | .ZZC | .ZZB  | manage     | 1        |
   And members have:
@@ -157,7 +157,7 @@ Scenario: a member card is charged, with scanner set, not signed in
   Then we say "status": "report tx" with subs:
   | did     | otherName | amount |*
   | charged | Abe One   | $10    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   1 | %today  |     10 | .ZZA  | .ZZC  | groceries | 1      |
   And we show "You: Our Pub" with:
@@ -179,6 +179,6 @@ Scenario: a member card is paid, with scanner set, not signed in
   Then we say "status": "report tx" with subs:
   | did     | otherName | amount |*
   | paid    | Abe One   | $10    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   1 | %today  |     10 | .ZZC  | .ZZA  | groceries | 0      |

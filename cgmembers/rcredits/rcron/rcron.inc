@@ -21,7 +21,7 @@ use CG\Cron as cr;
   where <star> means * (not the same key as for the production site) 
  
  * @todo:
-- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM r_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM r_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
+- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM u_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM u_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
 DAILY (every 5 mins for 5 mins, starting at 2am)
 - checkAccts() check accounts (and their activity) more thoroughly for consistency, security, scams
 - notify and maybe fine late borrowers
@@ -654,7 +654,7 @@ function cgc($item) {
 function checkAccts() {
   $sql = <<< X
 SELECT DISTINCT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedUid FROM users u
-LEFT JOIN r_relations r ON r.main=u.uid
+LEFT JOIN u_relations r ON r.main=u.uid
 LEFT JOIN users u2 ON u2.uid=u.jid
 WHERE u.uid<>0 AND u.jid AND r.permission=:B_JOINT-:B_RELATED
 X;
@@ -683,7 +683,7 @@ function setNear() {
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
     'SELECT DISTINCT uid1 AS id1, uid2 AS id2, 1 AS w FROM txs WHERE uid1>:UID_CANON9 AND uid2>:UID_CANON9 AND uid1<uid2',
-    'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
+    'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM u_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
   $sql = <<< X

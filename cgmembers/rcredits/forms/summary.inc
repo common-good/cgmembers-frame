@@ -426,7 +426,7 @@ function callDetails($type = '', $when = '') {
   $msg2 = "$intro $callback" . t(' &mdash; I\'ll also send you an email.');
   $email = t('<p>Dear %name,</p><p>Following up on my phone message, I\'m writing to %reason. %callback &mdash; or reply to this email.</p>', 'name email reason callback', $mya->fullName, $mya->email, $reason, $callback);
   if ($setup) {
-    if ($info = db\get('reid,code', 'r_relations', 'other=:myid AND :IS_CUSTOMER', ['myid' => $mya->id])) {
+    if ($info = db\get('reid,code', 'u_relations', 'other=:myid AND :IS_CUSTOMER', ['myid' => $mya->id])) {
       $_how = t('using <%a>this link</a>', '_a', w\atag(tr('%BASE_URL/signup/reid=%reid&customer=%code', $info)));
     } else $_how = t('by signing in at %CG_DOMAIN with account ID "%acct" (then click "Forgot password?" if you don\'t remember your password)', 'acct', $mya->mainQid);
     $email .= t('<p>Or you can complete the account on your own, %how. But please feel free to ask for help if you run into any problems at all.</p>', compact('_how'));

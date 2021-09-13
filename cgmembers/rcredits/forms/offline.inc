@@ -8,6 +8,7 @@ use CG\Db as db;
 
 /**
  * Show a form that can function offline.
+ navigator.mediaDevices.getUserMedia 
  */
 function formOffline($form, &$sta, $args = '') {
   global $mya;

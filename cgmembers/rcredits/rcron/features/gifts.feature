@@ -8,7 +8,7 @@ Setup:
   | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
   | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
   | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
-  And transactions:
+  And these "txs":
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
 
@@ -25,7 +25,7 @@ Scenario: A brand new recurring donation to CG can be completed
   | id | start      | from | to  | amount | period | purpose |*
   |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose| flags       | recursId |*
   |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift,recurs |        7 |
   And we notice "paid you linked" to member "cgf" with subs:
@@ -52,11 +52,11 @@ Scenario: A second recurring donation to CG can be completed
   Given these "tx_timed":
   | start     | from | to  | amount | period | purpose |*
   | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
-  And transactions:
+  And these "txs":
   | xid | created    | amount | payer | payee | purpose | flags       |*
   |   1 | %today-32d |     10 | .ZZA  | cgf   | gift!   | gift,recurs |
   When cron runs "recurs"
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose | flags          |*
   |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift,recurs |
 
@@ -65,15 +65,15 @@ Scenario: A donation invoice (to CG) can be completed
   Given these "tx_timed":
   | id | start      | from | to  | amount | period | purpose |*
   |  8 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for      | flags       | recursId |*
   |    2 | %today    | %TX_APPROVED |     50 | .ZZA | cgf | donation | gift,recurs |        8 |
   And member ".ZZA" has no photo ID recorded
   When cron runs "getFunds"
-  Then transactions: 
+  Then these "txs": 
   | xid | created | amount | payer | payee | purpose  | flags       | recursId |*
   |   2 | %today  |     50 | .ZZA  | cgf   | donation | gift,recurs |        8 |
-  And invoices:
+  And these "tx_requests":
   | nvid | created   | status | purpose  |*
   |    2 | %today    | 2      | donation |
 
@@ -82,7 +82,7 @@ Scenario: A recurring donation to CG cannot be completed
   | start     | from | to  | amount | period | purpose |*
   | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
   When cron runs "recurs"
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   | flags          |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,recurs |  
   And count "txs" is 2

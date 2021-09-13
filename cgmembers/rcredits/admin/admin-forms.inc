@@ -165,7 +165,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
-  if ($op == 'relations') return say(a\showQuery('r_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
+  if ($op == 'relations') return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
   if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));
   foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", 'created DESC'));
 }
@@ -288,7 +288,7 @@ EOF;
     if ($co) $name = "<span class=\"co\">$name</span>";
     $phone = u\fmtPhone(u\decry('P', $phone), '-');
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
-    if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
+    if ($type == t('pre')) $notes = db\get('code', 'u_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
     $notes = substr($notes, 0, 200) . (mb_strlen($notes) > 200 ? '...' : '');
     $ctty = nni($cttys, $community, '?'); // ? is for dev machine after running a test with ZZA in ctty -2
     $list .= strtr("<tr>$guts</tr>\n", compact($fields));

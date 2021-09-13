@@ -16,7 +16,7 @@ Setup:
   | .ZZG | Guy Seven  | g@    | ok      |
   | .ZZH | Hal Eight  | h@    | ok      |
   | .ZZI | Ida Nine   | i@    | ok      |
-  And proxies:
+  And these "r_proxies":
   | person | proxy | priority |*
   | .ZZA   | .ZZB  |        1 |
   | .ZZA   | .ZZD  |        2 |

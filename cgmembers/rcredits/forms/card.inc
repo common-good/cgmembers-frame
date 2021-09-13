@@ -40,7 +40,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   
   if (!$scanner = r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
-    $accts = $mya ? db\keyed('uid,fullName', 'r_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN))) : NULL;
+    $accts = $mya ? db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN))) : NULL;
     if ($accts) return chooseScanner($accts, "$dom/$code");
     $scanner = $mya->mainQid;
   }

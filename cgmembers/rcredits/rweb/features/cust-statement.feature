@@ -9,21 +9,21 @@ Setup:
   | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m | 1 A St. | %now-3m   |
   | .ZZB | Bea Two    | -200  | personal    | ok    | %today-15m | 2 B St. | %now-3m   |
   | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m | 3 C St. | %now-3m   |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
   And these "txs2":
   | txid | payee | amount | created   | completed |*
   | 1001 |  .ZZA |   1000 | %today-3m | %today-3m |
   | 1003 |  .ZZC |   3000 | %today-3m | %today-3m |
-  And invoices:
+  And these "tx_requests":
   | nvid | created   | amount | payer | payee | purpose  | status       |*
   |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |  5           |
   |    2 | %today-2m |    120 | .ZZA | .ZZC | this Q   | 17           |
   |    3 | %today-1m |     80 | .ZZA | .ZZC | this CF  | 19           |
   |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED   |
   |    5 | %today-2d |   2000 | .ZZA | .ZZC | realist  | %TX_APPROVED |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose  |*
   |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |
   |  15 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |

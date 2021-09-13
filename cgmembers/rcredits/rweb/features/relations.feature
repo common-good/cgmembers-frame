@@ -12,7 +12,7 @@ Setup:
   | .ZZD | Dee Four   | personal    | ok         |
 
 Scenario: Member has an employee, confirmed
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission   | employee | owner | draw |*
   | .ZZA | .ZZD  | scan         | 1          | 1       | 0    |
   When member ".ZZA" visits page "settings/relations"
@@ -21,7 +21,7 @@ Scenario: Member has an employee, confirmed
   | Dee Four   | No   | Yes          | Yes     | %can_scan  |
 
 Scenario: Member has an employee, unconfirmed
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner |*
   | .ZZA | .ZZD  | refund     | 1          | 0       |
   When member ".ZZA" visits page "settings/relations"
@@ -30,7 +30,7 @@ Scenario: Member has an employee, unconfirmed
   | Dee Four   | Yes          | No      | %can_refund |
 
 Scenario: Member has a relation with a contractor
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner |*
   | .ZZA | .ZZB  | buy        | 0          | 0        |
   When member ".ZZA" visits page "settings/relations"
@@ -39,7 +39,7 @@ Scenario: Member has a relation with a contractor
   | Bea Two    | No           | No      | %can_buy   |
   
 Scenario: Member has an employee, claimed
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission   | employee | owner |*
   | .ZZA | .ZZD  | sell         | 0          | 0       |
   When member ".ZZA" visits page "settings/relations"
@@ -48,7 +48,7 @@ Scenario: Member has an employee, claimed
   | Dee Four   | No           | No      | %can_sell  |
   
 Scenario: Employee can only read
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner |*
   | .ZZA | .ZZD  | read       | 1          | 1       |
   When member ".ZZA" visits page "settings/relations"
@@ -57,7 +57,7 @@ Scenario: Employee can only read
   | Dee Four   | Yes          | Yes     | %can_read  |
   
 Scenario: Member has an employer
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission   | employee | owner |*
   | .ZZB | .ZZA  | sell         | 1          | 1        |
   When member ".ZZA" visits page "settings/relations"
@@ -67,7 +67,7 @@ Scenario: Member has an employer
   | Bea Two |
   
 Scenario: Member has access to employee account
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner |*
   | .ZZA | .ZZD  |            | 1          | 1        |
   | .ZZD | .ZZA  | sell       | 0          | 0        |
@@ -81,7 +81,7 @@ Scenario: Member has access to employee account
   | Abe One    | No           | No      | %can_sell  |
 
 Scenario: Member company has relations
-  Given relations:
+  Given these "u_relations":
   | main | agent | num | permission | employee | owner |*
   | .ZZC | .ZZA  |   1 | manage     | 1          | 1        |
   When member "C:A" visits page "settings/relations"
@@ -96,7 +96,7 @@ Scenario: Member company has relations
   | Corner Pub |
 
 Scenario: It's complicated
-  Given relations:
+  Given these "u_relations":
   | main | agent | num | permission | employee | owner |*
   | .ZZA | .ZZD  |   0 | manage     | 1        | 1       |
   | .ZZD | .ZZA  |   0 |            | 0        | 0       |
@@ -146,7 +146,7 @@ Scenario: A member tries to add a relation with self
   Then we say "error": "self-relation"
 
 Scenario: A member tries to add a relation again
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner |*
   | .ZZA | .ZZB  | scan       | 1        | 1       |
   When member ".ZZA" completes relations form with values:

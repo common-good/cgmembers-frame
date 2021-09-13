@@ -16,13 +16,13 @@ Setup:
   | .ZZH | Hal Eight  | 8 A St. | 01008 | ok         | ssnOff   | 100    | 10    | Hton | %now-28y |
   | .ZZI | Ida Nine   | 9 A St. | 01009 | ok         | fishy    | 3      | 20    | Iton | %now-29y |
   | .ZZJ | Jay Ten    | A J St. | 01010 | ok,co      |          | 5      | 0     | Jton | %now-30y |
-  And these "invites":
+  And these "r_invites":
   | inviter | invitee | email |*
   | .ZZA    | .ZZD    | d2@   |
   | .ZZA    |    0    | e@    |
   | .ZZG    | .ZZH    | h2@   |
   | .ZZG    | .ZZI    | i@    |
-  And proxies:
+  And these "r_proxies":
   | person | proxy | priority |*
   | .ZZA   | .ZZB  |        1 |
   | .ZZA   | .ZZD  |        2 |
@@ -30,7 +30,7 @@ Setup:
   | .ZZB   | .ZZA  |        2 |
   | .ZZD   | .ZZA  |        1 |
   | .ZZD   | .ZZB  |        2 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZC | .ZZA  | scan       |        Y |     0 |    0 |
   | .ZZC | .ZZB  | manage     |          |       |      |
@@ -47,7 +47,7 @@ Setup:
   | pay    | .ZZH  | cgf |      5 | year   |
   | pay    | .ZZI  | cgf |      5 | year   |
 # share is irrelevant here as long as it is non-negative
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose | channel |*
   |   1 | %today-7m |    250 | .ZZG | .ZZC | car     | %TX_SYS |
   |   2 | %today-6m |    250 | .ZZH | .ZZC | boat    | %TX_SYS |

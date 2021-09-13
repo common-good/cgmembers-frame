@@ -130,7 +130,7 @@ function export($params) {
       $id = $a->mainQid;
       $code = $a->doCode(); 
       $asof = $modified = u\fmtDate(now());
-      $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
+      $manages = db\get('fullName', 'u_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;
       $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);
       $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';

@@ -13,7 +13,7 @@ Setup:
   | .ZZF | Flo Six  | f@    | ok      | %today-3m |     0 | +14132530006 | %now-6d |
 
 Scenario: A newbie has taken only the first step
-  Given invites:
+  Given these "r_invites":
   | email | inviter | code   | invited    | invitee |*
   | d@    | .ZZE    | codeD1 | %today-11d | .ZZD    |
   And member ".ZZD" has done step "signup agree"
@@ -44,7 +44,7 @@ Scenario: A newbie has taken some steps but not all
 #  |    $10 |        $0.50 |
 
 Scenario: A nonmember has not accepted the invitation
-  Given invites:
+  Given these "r_invites":
   | email           | inviter | code   | invited    |*
   | zot@example.com | .ZZF    | codeF1 | %today-21d |
   When cron runs "tickle"
@@ -56,7 +56,7 @@ Scenario: A nonmember has not accepted the invitation
   | zot@example.com |      21 |
 
 Scenario: A nonmember has not accepted the invitation from a not-yet-active member
-  Given invites:
+  Given these "r_invites":
   | email           | inviter | code   | invited   |*
   | zot@example.com | .ZZA    | codeA1 | %today-8d |
   When cron runs "tickle"
@@ -67,14 +67,14 @@ Scenario: A nonmember has not accepted the invitation from a not-yet-active memb
   And we do not notice to member ".ZZA"
 
 Scenario: A nonmember has accepted the invitation
-  Given invites:
+  Given these "r_invites":
   | email           | inviter | code   | invited   | invitee |*
   | zot@example.com | .ZZA    | codeA1 | %today-8d | .ZZB    |
   When cron runs "tickle"
   Then we do not email "nonmember" to member "b@example.com"
   
 Scenario: A nonmember has accepted an invitation from someone else instead
-  Given invites:
+  Given these "r_invites":
   | email         | inviter | code   | invited   | invitee |*
   | b@example.com | .ZZA    | codeA1 | %today-8d | 0       |
   | b@example.com | .ZZD    | codeA1 | %today-5d | .ZZB    |
@@ -84,7 +84,7 @@ Scenario: A nonmember has accepted an invitation from someone else instead
 Skip this test doesn't work but the functionality gets tested elsewhere
 Scenario: A member gets a credit line
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
-  Given transactions:
+  Given these "txs":
   | created   | amount | payer | payee | purpose |*
   | %today-1m |    300 | .ZZE | .ZZF | gift    |
   When cron runs "tickle"
@@ -100,7 +100,7 @@ Resume
 # We use rewards rather than floor, to measure credit-worthiness
 #Scenario: A member gets a bigger credit line after several months
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
-#  Given transactions:
+#  Given these "txs":
 #  | created   | amount | payer | payee | rebate | bonus | purpose |*
 #  | %today-6m |    300 | .ZZE | .ZZF |   5000 |     0 | gift    |
 #  | %today-5m |   1500 | .ZZE | .ZZF |      0 |     0 | gift    |
@@ -121,7 +121,7 @@ Resume
 #  Given these "txs2":
 #  | payee | amount | created   |*
 #  | .ZZE  | 500   | %today-6w |
-#  And transactions:
+#  And these "txs":
 #  | created   | amount | payer | payee | purpose |*
 #  | %today-5w |    300 | .ZZE | .ZZF | gift    |
 #  When cron runs "tickle"
@@ -137,7 +137,7 @@ Scenario: A member gets no new credit line because the change would be minimal
   And members have:
   | uid  | floor |*
   | .ZZE |    49 |  
-  And transactions:
+  And these "txs":
   | created   | amount | payer | payee | purpose |*
   | %today-5w |    300 | .ZZE | .ZZF | gift    |
   When cron runs "tickle"

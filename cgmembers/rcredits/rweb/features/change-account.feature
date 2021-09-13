@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | ok        |
   | .ZZB | Bea Two  | ok,cAdmin |
   | .ZZC | Our Pub  | co,ok     |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | manage     |
   

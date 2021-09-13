@@ -16,7 +16,7 @@ Scenario: Community bans spending below zero
   Given members have:
   | uid  | flags    |*
   | ctty | ok,up,co |
-  And stats:
+  And these "r_stats":
   | created       | ctty | usdIn | usdOut |*
   | %daystart-90d | ctty |   200 |    -80 |
   | %daystart-60d | ctty |   201 |    -90 |

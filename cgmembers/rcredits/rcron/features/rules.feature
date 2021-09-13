@@ -61,7 +61,7 @@ Scenario: Rules get instantiated
   | start     | %now         | %now        |
   | end       | %now+1m      | %NUL        |
   | template  | 3            | 5           |
-  And count "txs" is "2"
+  And count "tx_hdrs" is "2"
   And these "txs":
   | eid | xid | type   | created | amount | payer | payee | purpose      | rule  | recursId |*
   |   1 |   1 | prime  | %today  |    100 | .ZZB  | .ZZC  | payment      | %NUL  | 1        |
@@ -95,7 +95,7 @@ Scenario: An ended template has no effect
   | duration  | once         |
   | durations | 1            |
   When cron runs "recurs"
-  Then count "txs" is "2"
+  Then count "tx_hdrs" is "2"
   And balances:
   | uid  | balance |*
   | .ZZH | 0       |

@@ -7,7 +7,7 @@ Setup:
   | .ZZB | Bea Two    | b@    |  -250 | 22222     |            | ok,ided,confirmed    |
   | .ZZC | Corner Pub | c@    |     0 | 33333     |            | ok,co,ided,confirmed |
 
-  And relations:
+  And these "u_relations":
   | main | other | flags   |*
   | .ZZC | .ZZA  | autopay |
   

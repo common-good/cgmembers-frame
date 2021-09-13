@@ -11,7 +11,7 @@ Setup:
   | .ZZA | Abe One  |     1 | a@    | Atown | AK    | 01000 |     0 | member  | %whatever | cgf    |
   | .ZZC | Our Pub  |     3 | c@    | Ctown | CA    | 03000 |     0 | co      |           | .ZZA   |
   | .ZZZ | Zeta Zot |    26 | z@    | Ztown | MS    | 09000 |     0 | co      | zpass     | cgf    |
-  And relations:
+  And these "u_relations":
   | main | other | permission | otherNum |*
   | .ZZC | .ZZA  | manage     | 1        |
   And member is logged out
@@ -65,10 +65,10 @@ Scenario: A company signs up
   | source    | thither      |
   | coType    | LLC          |
 #  | coFlags   | sellcg       |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |
-  And invoices:
+  And these "tx_requests":
   | payer | payee | amount         | purpose           |*
   | .AAA  | cgf   | %EQUIP_DEPOSIT | equipment deposit |
   And we email "verify" to member "d@" with subs:

@@ -8,7 +8,7 @@ Setup:
   | uid  | fullName | floor | minimum | flags            | achMin | bankAccount | jid  |*
   | .ZZA | Abe One  |     0 |     100 | ok,refill,bankOk | 30     | USkk9000001 | .ZZB |
   | .ZZB | Bea Two  |   -40 |       0 | ok               | 10     |             | .ZZA |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | joint      |
   | .ZZB | .ZZA  | joint      |
@@ -19,7 +19,7 @@ Setup:
   | .ZZB |       0 |
 
 Scenario: a joint account needs refilling
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | purpose | taking |*
   |   1 | %today  |     50 | ctty | .ZZA | setup   | 0      |
   |   2 | %today  |  49.99 | ctty | .ZZB | setup   | 0      |

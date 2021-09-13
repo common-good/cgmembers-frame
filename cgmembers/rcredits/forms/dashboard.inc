@@ -51,7 +51,7 @@ function formDashboard($form, &$sta, $args = '') {
 
   if ($mya->canManage and $mya->member) {
     $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
-    $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
+    $hasMultipleAccounts = ($mya->co or db\exists('u_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
     $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');

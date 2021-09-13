@@ -72,14 +72,14 @@ function ajax($args = NULL) {
     if ($fld == 'delete' or $fld == 'permission') {
       list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
       $v0 = r\relation('permission', $reid);
-      if ($mya->co and $v < $managePerm and !db\exists('r_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
+      if ($mya->co and $v < $managePerm and !db\exists('u_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
       if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
-        if ($v == $joinPerm and db\exists('r_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
+        if ($v == $joinPerm and db\exists('u_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
         $msg = r\setJoin($reid, $v == $joinPerm);
       } else { $msg = ''; }
       
       if ($fld == 'delete') {
-        db\del('r_relations', compact('reid'));
+        db\del('u_relations', compact('reid'));
         $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
         $msg = u\joins($msg, '|', ajaxMsg(tr('deleted relation', $subs)));
       } else { $a->setRel($fld, $v); }
@@ -139,7 +139,7 @@ function ajax($args = NULL) {
     return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
     
   } elseif ($op == 'bumpShout') {
-    db\q('UPDATE u_shouters SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
+    db\q('UPDATE u_shout SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
     
   } else return ajaxErr(t('Invalid op'));
   

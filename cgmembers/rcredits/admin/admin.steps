@@ -47,15 +47,9 @@ function extraSetup() {
  *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
+ *     MAKE deletion Setup
  */
 function members($list) {return t\members($list);}
-
-/**
- * transactions: (ARG)
- *
- * in: MAKE 1099s Setup
- */
-function transactions($list) {return t\transactions($list);}
 
 /**
  * member (ARG) visits page (ARG)
@@ -116,14 +110,6 @@ function weShowPdfWith($list) {
 function balances($list) {return t\balances($list);}
 
 /**
- * relations: (ARG)
- *
- * in: MAKE 1099s Setup
- *     MAKE activate Setup
- */
-function relations($relations) {return t\relations($relations);}
-
-/**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
  * in: 
@@ -154,7 +140,13 @@ function with($content) {return t\weShow($content);}
  *     TEST aaOther AdminDeletesAnAccount
  *     MAKE ach Setup
  *     BOTH ach AdminDownloadsACHRequests
+ *     MAKE activate Setup
  *     BOTH checks AdminPrintsChecks
+ *     MAKE deletion Setup
+ *     TEST deletion ADeletedbyviewRecordIsDeleted
+ *     TEST deletion ATrackdeletedRecordIsDeleted
+ *     TEST deletion AMemberRecordIsDeleted
+ *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -211,4 +203,31 @@ function weDownloadWithRecords($flnm, $fileType, $rows) {
   if ($fileType == '1099') return t\got1099($flnm, $rows);
   if ($fileType == 'ACH') return t\gotACH($flnm, $rows);
   return t\output(t('Bad record file type: ' . $fileType));
+}
+
+/**
+ * count (ARG) is (ARG)
+ *
+ * in: TEST deletion Setup
+ *     TEST deletion ADeletedbyviewRecordIsDeleted
+ *     TEST deletion ATrackdeletedRecordIsDeleted
+ *     TEST deletion AMemberRecordIsDeleted
+ *     TEST deletion ARecordIsDeletedFromAnUntrackedTable
+ */
+function countIs($what, $count) {return t\count($what, $count);}
+
+/**
+ * we delete table (ARG) record (ARG)
+ *
+ * in: MAKE deletion ADeletedbyviewRecordIsDeleted
+ *     MAKE deletion ATrackdeletedRecordIsDeleted
+ *     MAKE deletion AMemberRecordIsDeleted
+ *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
+ */
+function weDeleteTableRecord($tnm, $record) {
+  global $testOnly; if ($testOnly) return FALSE;
+
+  list ($fnm, $v) = explode(':', $record); // for example "id:4"
+  if (u\starts($v, '.') or strhas($v, ':')) $v = t\uid($v);
+  return ($tnm == 'users' and $idFnm = 'uid') ? f('a.deleteUid', $v) : db\del($tnm, $fnm, $v);
 }

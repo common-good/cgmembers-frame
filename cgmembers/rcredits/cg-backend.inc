@@ -1157,7 +1157,7 @@ function accountChoices() {
   if (!$mya = r\acct()) return FALSE;
   $result[$aid = $mya->agentId] = $mya->agentA->fullName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM r_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
+  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
 
   if ($mya->admin or $mya->isAdmin2) {
     $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';

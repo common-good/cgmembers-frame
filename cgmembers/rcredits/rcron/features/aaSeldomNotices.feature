@@ -12,12 +12,12 @@ Setup:
   And community email for member ".ZZA" is "%whatever@commongood.earth"
 
 Scenario: a weekly notice member doesn't get notices on other days
-  Given notices:
+  Given these "r_notices":
   | uid  | created | sent | message    | type |*
   | .ZZB | %today  |    0 | You stone. | misc |
   And it's time for ""
   When cron runs "notices"
-  Then not these "notices":
+  Then not these "r_notices":
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You stone. |
   
@@ -30,7 +30,7 @@ Scenario: It's time to warn about an upcoming annual donation to CG
   And these "tx_timed":
   | id | action | start       | from | to  | amount | period | purpose |*
   |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
-  And transactions:
+  And these "txs":
   | xid | created     | amount | payer | payee | purpose | flags       | recursId |*
   |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift,recurs | 1        |
   When cron runs "annualGift"

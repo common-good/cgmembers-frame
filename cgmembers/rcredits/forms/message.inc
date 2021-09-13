@@ -74,7 +74,7 @@ function codeResult($code) {
   $agent = db\get('uid', 'r_boxes JOIN users USING(uid)', 'code=:box ORDER BY ' . $by, compact('box'));
   if (!$a = r\acct($intendedA->id, $agent) or !$a->can(B_READ)) return softErr(t('You are not the intended recipient.')); */
 
-  if (!db\exists('r_boxes b LEFT JOIN r_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
+  if (!db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That secret information is not longer available.'));
   r\acct($from)->tell('crypt msg received', ray('who time', $intendedA->fullName, ucwords(strtolower(strftime('%I:%M:%S%p %A %m/%d/%Y')))), t('encrypted message received'));
   return sayEmpty(t('<h3>Encrypted Message</h3>') . $secret);

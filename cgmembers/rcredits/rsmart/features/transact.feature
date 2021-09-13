@@ -15,7 +15,7 @@ Setup:
   | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed      | 0      |
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |  -250 | ok,secret,roundup,debt | .ZZD   |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,co,confirmed   | 0      |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And selling:
@@ -24,13 +24,13 @@ Setup:
   And company flags:
   | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | buy        |
   | .ZZC | .ZZB  |   2 | scan       |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   | 3   | %today-6m |    250 | ctty | .ZZC | growth  |
   | 5   | %today-6m |    250 | ctty | .ZZF | stuff   |

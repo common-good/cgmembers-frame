@@ -123,7 +123,7 @@ function fixFlags($flags) {
   $res = 0;
 
   foreach (ray($flags) as $one) if ($one) $res |= u\bit(u\consta('b', $one));
-  // NO! fails for r_txs and r_relations flags  if ($res & u\bit(B_OK)) $res |= u\bit(B_MEMBER);
+  // NO! fails for r_txs and u_relations flags  if ($res & u\bit(B_OK)) $res |= u\bit(B_MEMBER);
   return $res;
 }
 
@@ -140,8 +140,9 @@ function doRecords($list, $thing) {
 
   if (is_object($list)) $list = (array) $list;
   u\EXPECT(is_array(nn($list)) and !is_numeric(key(nn($list[0]))), 'doThing object should be an assoc: ' . pr($list));
-  $func = 'CG\\Testing\\do';
-  $func .= function_exists($func . $thing) ? $thing : 'Thing';
+  $func0 = 'CG\\Testing\\do';
+  $func = $func0 . ucfirst(substr($thing, (strpos($thing, '_') ?: -1) + 1));
+  if (!function_exists($func) or u\starts($thing, 'x_')) $func = $func0 . 'Thing';
   foreach ($list as $one) {
     fixData($one, TRUE);
     if (!$func($one, $thing)) return FALSE;
@@ -156,9 +157,9 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
-  if (!in($thing, 'usd company people txs2') and !strhas($thing, '_') and substr($thing, -1, 1) != 's') $table .= 's';
-  if ($table == 'tx_hdrs') $key = 'xid';
+//  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
+//  if (!in($thing, 'people txs2') and !strhas($thing, '_') and substr($thing, -1, 1) != 's') $table .= 's';
+  foreach (ray('u_photo:uid, u_company:uid, u_shout:uid, tx_hdrs:xid') as $tnm => $k) if ($table == $tnm) $key = $k;
 
   // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
@@ -167,23 +168,13 @@ function doThing($info, $thing, $key = 'id') {
 
 }
 
-function these($thing, $list) {return doRecords($list, ucwords($thing));}
-function invites($list) {return doRecords($list, 'Invites');}
-function gifts($list) {return doRecords($list, 'Gifts');}
-function notices($list) {return doRecords($list, 'Notices');}
-function proxies($list) {return doRecords($list, 'Proxies');}
-function members($list) {return doRecords($list, 'Accounts');}
-function invoices($list) {return doRecords($list, 'Invoices');}
-function devices($list) {return doRecords($list, 'Boxes');}
-function relations($list) {return doRecords($list, 'Relations');}
-function transactions($list) {return doRecords($list, 'Txs');}
-function balances($list) {return doRecords($list, 'Balances');}
-function membersHave($list) {return doRecords($list, 'MembersHave');}
+function these($thing, $list) {return doRecords($list, $thing);}
+function members($list) {return doRecords($list, 'accounts');}
+function balances($list) {return doRecords($list, 'balances');}
+function membersHave($list) {return doRecords($list, 'membersHave');}
 function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
 function coupons($list) {return doRecords($list, 'Coupons');}
-function stats($list) {return doRecords($list, 'Stats');}
-function recurs($list) {return doRecords($list, 'Recurs');}
 
 /**
  * Create device (box) records.
@@ -193,7 +184,7 @@ function doBoxes($info = []) {
   //$boxName = $info['boxName'];
   $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_APP, TX_WEB)) ?: $channel;
   //if ($testOnly) $boxName = htmlspecialchars(@$boxName);
-  return doThing($info, 'boxe');
+  return doThing($info, 'r_boxes');
 }
 
 /**
@@ -281,7 +272,7 @@ function doAccounts($info = []) {
  */
 function doTxs($info, $thing) {
   global $testOnly;
-  u\EXPECT($thing != 'Invoices', 'use doInvoices for invoices, not doTx');
+
   $filter = function ($ray) {return array_filter($ray, function ($v) {return ($v !== FALSE and !is_null($v));});}; // bypass array_filter's conversion of 0 to boolean
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
@@ -342,13 +333,13 @@ function doTxs($info, $thing) {
 }
 
 /**
- * Fabricate a bogus invoice.
+ * Fabricate a bogus invoice or pre-approved payment.
  * Minimum parameters: amount, payer, payee
  * @return:
  *   if $testOnly return TRUE if the data is as expected
  *   otherwise return the record ID of the created invoices (treated as TRUE in test steps)
  */
-function doInvoices($info) {
+function doRequests($info) {
   global $testOnly, $channel;
   ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
   u\setDft($info['purpose'], nn($info['for'], 'this or that'));
@@ -479,7 +470,7 @@ function doRelations($info) {
   foreach (ray('reid main other otherNum flags') as $k) if (isset($$k)) $info[$k] = $$k;
 
   if ($testOnly) {
-    return verifyRecord('r_relations', $info);
+    return verifyRecord('u_relations', $info);
   } else {
     $mainA->newRelation($info);
     if (nn($rCard) == 'yes') {
@@ -609,10 +600,11 @@ function count($what, $count) {
   $desc = $what . t(' count');
 
   switch ($what) {
-    case 'accounts': return eq($desc, $count, db\count('users'));
-    case 'tx_hdrs': // fall through
-    case 'txs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
-    case 'entries': return eq($desc, $count, db\count('tx_entries_all', 'xid > 0') / 2);
+    case 'members':
+    case 'users': return eq($desc, $count, db\count('users', 'uid NOT :CANONIC'));
+    case 'tx_hdrs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
+    case 'txs': return eq($desc, $count, db\count('tx_entries', 'xid > 0') / 2);
+    case 'tx_entries': return eq($desc, $count, db\count('tx_entries', 'xid > 0'));
     default: return eq($desc, $count, db\count((in($what, 'txs2 people') or strhas($what, '_')) ? $what : "r_$what"));
   }
 }
@@ -847,7 +839,7 @@ function fullQid($q) {
   if (is_numeric($q) or !$q) return $q;
   if (strlen($q) == 1 and !is_numeric($q)) $q = '.ZZ' . $q;
   if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
-  u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in r_relations: $q");
+  u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in u_relations: $q");
   return $q;
   //  return ($channel == TX_APP and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
 }
@@ -1146,7 +1138,7 @@ function logIn($id) {
  * Ignore fields with value "?".
  * Example call:
  *   $info = doRelation($info, TRUE);
- *   return verifyRecord('r_relations', $info);
+ *   return verifyRecord('u_relations', $info);
  * @param string $riskRay: how to describe risk bits, if necessary (K_TX_RISKS or K_TX_ACCTS)
  */
 function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
@@ -1507,7 +1499,6 @@ function clear($ch = 0) {
     'r_ratings',          // r_investments, users
     'r_shares',           // r_investments
     'r_investments',      // users, or is that u_company?, club?
-    'u_company',          // users
     'r_do',               // users
     'r_pairs',            // r_options
     'r_options',          // r_questions
@@ -1515,16 +1506,11 @@ function clear($ch = 0) {
     'r_events',           // -
     'r_honors',           // users
     'r_invites',          // users
-    'x_invoices',         // users
     'r_ips',              // users
     'r_near',             // users
     'r_notices',          // users
-    'r_photos',           // users
-    'x_photos',           // users
     'r_proposals',        // -
     'r_proxies',          // users
-    'r_relations',        // users
-    'x_relations',        // users
     'r_stakes',           // users, club?
     'r_stats',            // users
     'r_tous',             // users
@@ -1537,13 +1523,21 @@ function clear($ch = 0) {
     'tx_hdrs_all',        // users, r_boxes, self 
     'tx_requests_all',    // users
     'tx_rules',           // users, u_groups, r_industries, tx_timed
-    'tx_timed',       // users, u_groups, r_industries
+    'tx_timed',           // users, u_groups, r_industries
     'txs2',               // tx_hdrs, users
-    'x_txs2',             // tx_hdrs, users
     'r_boxes',            // users
+    'u_company',          // users
     'u_groupies',         // u_groups, users
     'u_groups',           // -
-    'u_shouters',         // users
+    'u_photo',            // users
+    'u_relations',        // users
+    'u_shout',            // users
+
+    'x_company',          // users
+    'x_photo',            // users
+    'x_relations',        // users
+    'x_shout',            // users
+    'x_txs2',             // tx_hdrs, users
     'x_users',            // standaloneish
   ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
 

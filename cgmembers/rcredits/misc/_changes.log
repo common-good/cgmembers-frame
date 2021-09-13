@@ -1,3 +1,13 @@
+2021-09-13 feature/deletions
+. fixed functionality of tracked deletions and deletions by view
+. consolidated many test steps into t\these()
+. now tracking u_company and u_shout
+. renamed some tables
+. fixed t\count() for txs and tx_entries
+. fixed bug in a\deleteUid()
+. made tests for deletions
+. invoice denial now messages invoicer immediately
+
 2021-09-12 feature/pos-after
 . added Undo, Receipt, and Tip buttons (and functionality) after a POS sale in web app
 . we now delete any shouter record and null out the uid of any related people record when deleting a users record

@@ -19,7 +19,7 @@ Setup:
   | .ZZF | Far Co     | f@    | Ftown | FL    | ccF |      | ok,co         |     0 |
   | .ZZG | Gil Seven  | g@    | Gtown | GA    | ccG |      |               |     0 |
   | .ZZH | Hill Co    | h@    | Htown | HI    | ccH |      | ok,co,depends |     0 |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And selling:
@@ -30,7 +30,7 @@ Setup:
   | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   | .ZZH | refund       |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission | rCard |*
   | .ZZC | .ZZA  |   1 | buy        | yes   |
   | .ZZC | .ZZB  |   2 | scan       | yes   |

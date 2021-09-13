@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | 1 A St. | Aton | MA    | 01000      | a@    | ok,admin         |     100 | 111111111 | %now-30y |
   | .ZZB | Bea Two  | 2 B St. | Bton | MA    | 02000      | b@    | ok               |     200 | 222222222 | %now-30y |
   | .ZZD | Dee Four | 4 D St. | Dton | MA    | 04000      | d@    | member,confirmed |     400 | 444444444 | %now-19y |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZD | .ZZA  |   1 | manage     |
 # relationship is here only so we can identify which account admin is managing
