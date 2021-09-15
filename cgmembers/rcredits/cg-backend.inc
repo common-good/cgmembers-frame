@@ -232,6 +232,7 @@ X;
 
 /**
  * Reverse a recent transaction at point of sale.
+ * @param acct $mya: current account (possibly from scanner cookie, not signed in)
  * @param int $xid: record ID of transaction to reverse
  * @param int $force: reverse the transaction even if there are insufficient funds or lack of permission
  * @param string $where: additional criteria, to identify transaction to reverse
@@ -240,15 +241,13 @@ X;
  *   nvid: record ID of invoice that reverses the given tx
  *   created: date of that reversing transaction or invoice
  */
-function posUndo($xid, $force = FALSE, $where = 1) {
-  global $mya;
-
+function posUndo($mya, $xid, $force = FALSE, $where = 1) {
   if ($subs = db\get('xid,created', 'tx_hdrs', 'reversesXid=:xid', compact('xid'))) { // already reversed
     $msg = t('Transaction has been reversed.');
     return obj('ok index subs msg', TRUE, $msg, $subs, $msg);
   }
   
-  $z = be\undoTx($xid, $where, [], $force);
+  $z = be\undoTx($mya, $xid, $where, [], $force);
   if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", u\fmtDate($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
   return $z;
 }
@@ -261,14 +260,15 @@ function posUndo($xid, $force = FALSE, $where = 1) {
  *     Someone paid me (toMe):           REVERSE (pay back)
  *     Someone invoiced me and I approved it: DISPUTED
  *     Someone charged me unilaterally: DISPUTED
+ * @param acct $mya: current account (possibly from scanner cookie, not signed in)
  * @param int $xid: the transaction number
  * @param string $where: additional (security check) criteria, if any
  * @param assoc $subs: additional substitutions for $where
  * @param bool $force: <reverse despite any shortfall or lack of permission>
  * @return a txRet object
  */
-function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
-  global $mya, $channel;
+function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
+  global $channel;
 
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 

@@ -316,6 +316,7 @@ function members($list) {return t\members($list);}
  *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     TEST card AMemberUndoesACharge
  *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
@@ -531,6 +532,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
+ *     TEST card AMemberUndoesACharge
+ *     TEST card AMemberAddsATip
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
@@ -650,7 +653,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
-function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
+function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\weShowWith($title, $content, $mustBePresent);}
 
 /**
  * with: (ARG)
@@ -674,6 +677,8 @@ function with($content) {return weShow($content);}
  *
  * in: TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
+ *     TEST card AMemberUndoesACharge
+ *     TEST card AMemberAddsATip
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
@@ -1040,6 +1045,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST card AMemberUndoesACharge
  *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
@@ -1168,6 +1174,8 @@ function statisticsGetSet($time) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     MAKE card AMemberUndoesACharge
+ *     MAKE card AMemberAddsATip
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -1621,6 +1629,8 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     BOTH card AMemberUndoesACharge
+ *     BOTH card AMemberAddsATip
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE cc SomeoneCompletesACreditCardDonation
  *     MAKE cgpay Setup
@@ -2076,15 +2086,18 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     MAKE card AMemberUndoesACharge
+ *     MAKE card AMemberAddsATip
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  */
 function cookieIs($nm, $v) {
-  global $testOnly;
+  global $testOnly, $box;
 
   if (!$testOnly) r\setCook($nm, $v);
+  if (in($nm, 'box')) $$nm = $v;
   return t\eq("cookie $nm", $v, $_COOKIE[$nm]);
 }
 
@@ -2238,6 +2251,8 @@ function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     MAKE card AMemberUndoesACharge
+ *     MAKE card AMemberAddsATip
  */
 function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 
@@ -2319,6 +2334,8 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
+ *     MAKE card AMemberUndoesACharge
+ *     MAKE card AMemberAddsATip
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember

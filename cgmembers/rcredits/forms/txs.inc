@@ -123,7 +123,7 @@ function reverseTx($xid, &$sta, $args) {
     
     return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
   } else { // reversing normal transaction
-    $z = be\undoTx($xid); // X (reverse it)
+    $z = be\undoTx($mya, $xid); // X (reverse it)
     return w\go($url, $z->msg, $z->ok ? '' : 'err'); // back to the normal form
   }
 }

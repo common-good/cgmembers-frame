@@ -88,7 +88,7 @@ function fixData(&$info, $direct = FALSE) {
     if (nn($federalId)) u\digits($federalId);
     if (nn($dob) and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
   }
-  if (!empty($boxId)) {
+  if (!empty($boxId) and !is_numeric($boxId)) {
     $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
   }
 
@@ -1024,7 +1024,7 @@ function memberVisitsPage($id, $page) { // pass options in URL
 
 function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
-  $title = tr($title0, nn($content[0])); // just in case
+  $title = tr($title0, nn($content[0])); // use multivalued field either as subs or as literal values to show
   if ($title and !weShow($title, $mustBePresent)) return FALSE;
   return $title == $title0 ? weShow($content, $mustBePresent) : TRUE;
 }

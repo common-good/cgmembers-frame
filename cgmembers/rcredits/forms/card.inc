@@ -18,6 +18,14 @@ use CG\Db as db;
 function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya, $box;
 
+  if (!$scanner = r\cook('scanner')) {
+    if (!$mya) return goFirst('signin'); // sign in if no scanner
+    $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN)));
+    if ($accts) return chooseScanner($accts, "$dom/$code");
+    $scanner = $mya->mainQid;
+  }
+  $scannerA = $mya ?: r\acct($scanner); // allow even friends to use the device, without changing standard scanner
+
   if ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
     return cardDone($z);
@@ -27,7 +35,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
     $boxes = db\lst('id', 'r_boxes', ray('code', $box));
-    if (!$mya or !$xid or !$tx = r\Tx::lastTx($mya->id, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $mya->id) return softErr(t('That is not a payment to you.'));
+    if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->id, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
     $func = "\\CG\\Web\\$func";
     return $func($tx, $tip); // only tip uses $tip
   }
@@ -37,15 +45,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
   if (!$res or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
-  
-  if (!$scanner = r\cook('scanner')) {
-    if (!$mya) return goFirst('signin'); // sign in if no scanner
-    $accts = $mya ? db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN))) : NULL;
-    if ($accts) return chooseScanner($accts, "$dom/$code");
-    $scanner = $mya->mainQid;
-  }
-  
-  $scannerA = $mya ?: r\acct($scanner); // allow even friends to use the device, without changing standard scanner
+    
   if ($scannerA->id == $a->id) return softErr(t('You cannot transact with yourself, so there is no point in scanning your own card.'));
   
   r\setCook('scanner', $scanner);
@@ -157,20 +157,20 @@ function chooseScanner($choices, $tail) {
 function cardDone($z) {
   global $mya;
 
-  extract(just('ok msg xid', $z, NULL));
+  $scanner = r\cook('scanner');
+  if (!$actorA = $mya ?: r\acct($scanner)) return softErr(t('Sign in or scan a customer card to continue.'));
+  extract(just('ok msg xid subs', $z, NULL));
+  if (!$xid and $subs) extract(just('xid', $subs, NULL));
   if ($msg) say($msg, $ok ? '' : 'err');
 
-  $nm = ($scanner = r\cook('scanner') and $scannerA = r\acct($scanner)) ? $scannerA->fullName : ($mya ? $mya->fullName : '');
-  $title = $nm ? t('You: ' . $nm) : t('Scanner');
+  $title = t('You: ' . ($actorA ? $actorA->bestName : t('Scanner')));
   $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
   $lnkScanQr = btn('/scan-qr', t('Scan Another QR'), '', 'md', clas('btn-done'));
-  foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
   
   $buttons = "$lnkShowQr$lnkScanQr";
-  if ($xid) {
-    $tx = r\Tx::read($xid);
+  if ($xid and $tx = r\Tx::read($xid) and !$tx->reversesXid and !$tx->reversedByXid) {
+    foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
     if (hasTip($tx)) $tip = '';
-    if ($tx->reversedByXid) $undo = '';
     $buttons = "$undo<br>$buttons<br>$tip$receipt";
     $buttons = item($buttons);
     $tx = r\Tx::read($xid);
@@ -185,14 +185,13 @@ function cardDone($z) {
  * Print a receipt for a transaction.
  */
 function receipt($tx) {
-  global $mya;
-
-  $logo = logoFld($mya->logo ? $mya : r\acct(CGID)); // use CG logo if company has none
+  $bizA = $tx->actorA;
+  $logo = logoFld($bizA->logo ? $bizA : r\acct(CGID)); // use CG logo if company has none
   $title = t('Purchase Receipt');
   $dt = item(u\fmtDate($tx->created, TRUE), t('Date:'));
   $nm = item($tx->a1->fullName, t('From:'));
   $acct = item($tx->a1->mainQid, t('Account:'));
-  $to = item($mya->fullName, t('Paid To:'));
+  $to = item($bizA->fullName, t('Paid To:'));
   $amt = item(u\fmtAmt($tx->amt2), t('Amount:'));
   $for = item($tx->e2->description, t('For:'));
   $xid = item($tx->xid, t('Tx#:'));
@@ -207,7 +206,7 @@ function receipt($tx) {
  * Undo a transaction.
  */
 function undo($tx) {
-  $z = be\posUndo($tx->xid, $tx->amt2 < 0 ? (now() - $tx->created < FORCE_WINDOW) : TRUE); // forced reversal of payments is time-sensitive
+  $z = be\posUndo($tx->actorA, $tx->xid, $tx->amt2 < 0 ? (now() - $tx->created < FORCE_WINDOW) : TRUE); // forced reversal of payments is time-sensitive
   return cardDone($z);
 }
 

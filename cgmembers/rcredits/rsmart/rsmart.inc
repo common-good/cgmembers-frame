@@ -380,7 +380,7 @@ function charge($args, $type = 'charge') {
     if ($force == 1) { // does exist and should (always background)
       $txid = $xid;
     } elseif ($force == -1) { // does exist and should be reversed
-      $z = be\posUndo($xid, $force, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'");
+      $z = be\posUndo($mya, $xid, $force, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'");
       if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
       $created = $z->subs['created'];
 
