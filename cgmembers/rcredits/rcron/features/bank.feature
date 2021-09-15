@@ -11,7 +11,7 @@ Setup:
   | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | USkk9000003 |
 
 Scenario: a member is barely below target
-  And transactions:
+  And these "txs":
   | xid | created    | amount | payer | payee | purpose |*
   | 7   | %today-10d |  99.99 | ctty  | .ZZA  | grant   |
   Then members have:
@@ -202,7 +202,7 @@ Scenario: a member account needs more funding while not yet verified and somethi
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit | xid |*
   |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
-  And transactions:
+  And these "txs":
   | xid | amount | payer   | payee | for       | taking |*
   |   1 |      0 | bank-in | .ZZA  | ?         |     1 |
   |   2 |      0 | bank-in | .ZZA  | from bank |     1 |
@@ -235,6 +235,6 @@ Scenario: member's bank account has not been verified
   | txid | payee | amount | created | completed | deposit | xid |*
   |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
   |    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
-  And transactions:
+  And these "txs":
   | xid | amount | payer   | payee | taking |*
   |   1 |      0 | bank-in | .ZZA |      1 |

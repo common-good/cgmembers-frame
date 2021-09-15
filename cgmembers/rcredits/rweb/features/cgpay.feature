@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 | Aa1       |
   | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 | Bb2       |
   | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3       |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZB  | manage     |
   And member is logged out
@@ -42,7 +42,7 @@ Scenario: A member submits a CGPay button payment with account ID
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
 
@@ -96,7 +96,7 @@ Scenario: A member clicks a button to buy store credit for a different amount
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | for              | rule |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |    1 |
   And these "tx_rules":
@@ -104,7 +104,7 @@ Scenario: A member clicks a button to buy store credit for a different amount
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
 
 Scenario: A member cancels their purchase of store credit
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | for              | rule |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |    1 |
   And these "tx_rules":
@@ -112,7 +112,7 @@ Scenario: A member cancels their purchase of store credit
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
   When member "C:B" visits page "history/transactions/period=5"
   And member "C:B" clicks X on transaction 1
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | for               | rule |*
   |   2 | %today  |    -23 | .ZZA  | .ZZC  | $30 store credit  |    1 |
   And these "tx_rules":
@@ -135,7 +135,7 @@ Scenario: A member types account ID to buy 50% store credit
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | for          |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | store credit |
   And these "tx_rules":
@@ -149,7 +149,7 @@ Scenario: a member redeems store credit
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Our Pub | 20     | %FOR_GOODS | stuff   |
-  Then transactions:
+  Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
   |   1 |   1 | %today  |     20 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
   |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
@@ -158,7 +158,7 @@ Scenario: a member redeems store credit
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Our Pub | 40     | %FOR_GOODS | stuff   |
-  Then transactions:
+  Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
   |   4 |   2 | %today  |     40 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
   |   5 |   2 | %today  |     13 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
@@ -188,7 +188,7 @@ Scenario: A member types account ID to buy a gift of store credit
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | for                               |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
   And these "tx_rules":

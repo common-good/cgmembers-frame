@@ -8,7 +8,7 @@ Setup:
   | .ZZC | Corner Pub | c@    | 33333     | ok,co,ided,confirmed |
   | .ZZD | Dee Four   | d@    | 44444     | ok,co,ided,confirmed |
 
-  And relations:
+  And these "u_relations":
   | main | agent | flags   |*
   | .ZZC | .ZZA  | autopay |
   

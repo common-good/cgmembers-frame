@@ -94,8 +94,47 @@ function doit(what, vs) {
     });
     break;
     
+  case 'cardDone':
+    $('.btn-undo').click(function () {
+      var href = $(this).attr('href');
+      yesno(vs['msg'], function () {location.href = href;}); // function () {}
+      return false; // prevent click result (leave it to yesno)
+    });
+    break;
+    
+  case 'cardTip': // handle custom tips
+    $('.form-item-tipP, .form-item-tipD').hide();
+    $('.btnNP, .btnND').click(function () {
+      $('.btn-tip').hide(); // hide all tip buttons
+      var type = $(this).hasClass('btnNP') ? 'P' : 'D';
+      $('.form-item-tip' + type).show().find('input').focus();
+      return false;
+    });
+    $('#frm-card .form-type-textfield a.btn').click(function () {
+      var input = $(this).parents('.form-type-textfield').find('input');
+      var val = input.attr('id') == 'edit-tipp' ? (input.val() + '%') : input.val();
+      return confirmTip(vs, val);
+    });
+    $('.btn1, .btn2, .btn3').click(function () {return confirmTip(vs, $(this).find('big').text());});   
+    
+    // fall through to cardTipDone
+    
+  case 'cardTipDone':
+    $('#messages .status').parents('#messages') // show just the tip success message when it comes
+      .css('background-color', 'white')
+      .css('position', 'absolute')
+      .css('top', ' 50px;')
+      .css('padding-top', '50px')
+      .click(function () {$(this).hide();}); // tap to return to cardDone screen
+    break;
+
   case 'cc':
     hideComment();
+    break;
+    
+  case 'receipt':
+    window.onafterprint = function(){location.href = baseUrl + '/card/done/' + vs['code'];}  
+    window.print();
     break;
     
   case 'deposits':
@@ -869,4 +908,14 @@ function reqQ(fld, show, optional) {
   } else {
     if(show) req(fld); else reqNot(fld);
   }
+}
+
+function confirmTip(vs, val) {
+  var tipDol = has(val, '%') ? '' : '$';
+  var total = '$' + fmtAmt(parseFloat(vs['amt']) + parseFloat(val) * (tipDol ? 1 : (parseFloat(vs['amt']) / 100)));
+  var title = vs['title'].replace('%tip', tipDol ? tipDol + fmtAmt(val) : val);
+  $.confirm({title: title, text: vs['msg'].replace('%total', total),
+    confirm: function () {location.href = baseUrl + '/card/tip/xid=' + vs['xid'] + '&tip=' + val.replace('%', '!');}, // exclamation point means percent in URL
+    cancel: function() {}, confirmButton: 'Yes', cancelButton: 'Cancel'});
+  return false;
 }

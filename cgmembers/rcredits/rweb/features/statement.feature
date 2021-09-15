@@ -12,7 +12,7 @@ Setup:
   And members have:
   | uid  | fullName |*
   | ctty | ZZrCred  |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -32,7 +32,7 @@ Setup:
   | .ZZA |     956 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
-  Given transactions: 
+  Given these "txs": 
   | xid  | created   | amount | payer | payee | purpose | taking |*
   | 104  | %lastm+3d |     10 | .ZZB  | .ZZA  | cash E  | 0      |
   | 105  | %lastm+4d |   1100 | .ZZC  | .ZZA  | usd F   | 1      |

@@ -17,7 +17,7 @@ Setup:
   | uid  | founded |*
   | .ZZC | %now-1d |
 
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZA  | manage     |
   | .ZZI | .ZZB  | manage     |
@@ -46,7 +46,7 @@ Scenario: A member joins the investment club
   | Invest: |  |
   | Invest MORE ||
   And we say "status": "now a member"
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | joined |*
   |       1 | .ZZA | .ZZI   |     0 | %now   |
 
@@ -65,26 +65,26 @@ Scenario: A member company joins the investment club
   And we say "status": "now a member"
   
 Scenario: A member buys a stake in the club
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |     0 | %now-2d |
   When member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |     10 |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now    |     10 | .ZZA  | .ZZI | investment | stake |
   And we say "status": "report tx|investment increase" with subs:
   | did  | otherName       | amount |*
   | paid | Investment Club | $10    |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    10 | %now-2d |
   
   When member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |     23 |
-  Then these "stakes":
+  Then these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    33 | %now-2d |
 
@@ -112,7 +112,7 @@ Scenario: The club adds a proposed investment
   | company       | investment |equity |offering |price |return | terms | assets   | character |strength |web |history |soundness |*
   | c@example.com | improve it |     1 | $10,000 |   10 |   4.6 | Terms | $951,000 | trusty    |      75 | 60 |     80 |       90 |
   Then we say "status": "investment proposal saved"
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
 
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
@@ -131,10 +131,10 @@ Scenario: The club adds a proposed investment
   | soundness | 90 |
 
 Scenario: Members rate a proposed investment
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    33 | %now-2d |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
@@ -162,7 +162,7 @@ Scenario: Members rate a proposed investment
   | Comments | |
   | | Rate it |
 
-  Given these "ratings":
+  Given these "r_ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        1 |      1 | .ZZD |   40 | yay!    |        80 |
   When member ".ZZA" completes form "invest/rate/vestid=1&clubqid=NEWZZI" with values:
@@ -171,7 +171,7 @@ Scenario: Members rate a proposed investment
   Then we say "status": "rating successful" with subs:
   | num |*
   |   1 |
-  And these "ratings":
+  And these "r_ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
   And we show "Club Investments" with:
@@ -188,13 +188,13 @@ Scenario: Members rate a proposed investment
   | | Rate it |
   
 Scenario: The club buys shares
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
 
@@ -241,7 +241,7 @@ Scenario: The club buys shares
   Then we say "status": "report tx|purchased shares" with subs:
   | did  | otherName | amount | amt | co      | price |*
   | paid | Our Pub   |   $100 |  10 | Our Pub | $10   |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
   And we show "Club Investments" with:
@@ -258,16 +258,16 @@ Scenario: The club buys shares
   | | Sell Shares |
 
 Scenario: The club sells shares
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when |*
   |    1 |      1 |     10 |       0 | %now |
   
@@ -278,10 +278,10 @@ Scenario: The club sells shares
   Then we say "status": "report tx|balance unchanged|investment sale pending" with subs:
   | did     | otherName | amount | co      |*
   | charged | Our Pub   |    $40 | Our Pub |
-  And invoices:
+  And these "tx_requests":
   | nvid | payer | payee | amount | purpose                               | flags      |*
   |    1 | .ZZC  | .ZZI  |     40 | redeeming investment: 4 shares at $10 | investment |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
   |    2 |      1 |      0 |      -4 | %now |      |
@@ -298,7 +298,7 @@ Scenario: The club sells shares
   When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
-  Then these "shares":
+  Then these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
   |    2 |      1 |     -4 |       0 | %now |      |
@@ -317,16 +317,16 @@ Scenario: The club sells shares
   | | Sell Shares |  
   
 Scenario: The club sells its remaining shares in an investment
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when |*
   |    1 |      1 |     10 |       0 | %now |
   |    2 |      1 |     -4 |       0 | %now |
@@ -338,31 +338,31 @@ Scenario: The club sells its remaining shares in an investment
   Then we say "status": "report tx|balance unchanged|investment sale pending" with subs:
   | did     | otherName | amount | co      |*
   | charged | Our Pub   |    $60 | Our Pub |
-  And invoices:
+  And these "tx_requests":
   | nvid | payer | payee | amount | purpose                               | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | redeeming investment: 6 shares at $10 | investment |  
   When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
-  Then these "shares":
+  Then these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now | %now |
   |    2 |      1 |     -4 |       0 | %now | %now |
   |    3 |      1 |     -6 |       0 | %now | %now | 
   
 Scenario: Members increase and decrease their stakes
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    10 | %now-2d |
   |       2 | .ZZB | .ZZI   |    70 | %now-2d |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |      10 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when    |*
   |    1 |      1 |    100 |       0 | %now-2m |
   |    2 |      1 |    -40 |       0 | %now-1m |
@@ -383,7 +383,7 @@ Scenario: Members increase and decrease their stakes
   Then we say "status": "report tx|investment increase" with subs:
   | did  | otherName       | amount |*
   | paid | Investment Club | $20    |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    30 | %now-2d |
 
@@ -393,7 +393,7 @@ Scenario: Members increase and decrease their stakes
   Then we say "status": "redemption request" with subs:
   | request |*
   | $20     |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    30 |     -20 | %now-2d |
   
@@ -417,30 +417,30 @@ Scenario: Members increase and decrease their stakes
   | Available for Dividends:  | $5,510 | Issue Dividends ||
 
 Scenario: A member tries to decrease stake below zero
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    10 |       0 | %now-2d |
   When member ".ZZA" completes form "invest" with values:
   | op   | amount |*
   | sell |     20 |
   Then we say "error": "investment oversell"
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    10 |       0 | %now-2d |
 
 Scenario: A club administrator handles requests to cash out
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    30 |     -20 | %now-2d |
   |       2 | .ZZB | .ZZI   |    70 |     -40 | %now-2d |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when    |*
   |    1 |      1 |    100 |       0 | %now-2m |
   |    2 |      1 |    -40 |       0 | %now-1m |
@@ -459,17 +459,17 @@ Scenario: A club administrator handles requests to cash out
   | op     |*
   | submit |
   Then we say "status": "The club paid 2 members a total of $60."
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose           | flags |*
   |   3 | %now    |     20 | .ZZI  | .ZZA | redeem investment | stake |
   |   4 | %now    |     40 | .ZZI  | .ZZB | redeem investment | stake |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    10 |       0 | %now-2d |
   |       2 | .ZZB | .ZZI   |    30 |       0 | %now-2d |
 
 Scenario: The investment club issues dividends
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
@@ -477,14 +477,14 @@ Scenario: The investment club issues dividends
   | uid  | balance |*
   | .ZZI |    5000 |
   |  cgf |   -5320 |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    30 |     -20 | %now-2d |
   |       2 | .ZZB | .ZZI   |    70 |     -40 | %now-2d |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when    |*
   |    1 |      1 |    100 |       0 | %now-2m |
   |    2 |      1 |    -40 |       0 | %now-1m |
@@ -509,13 +509,13 @@ Scenario: The investment club issues dividends
   Then we say "status": "dividends paid" with subs:
   | got | count | sum    | reCount | reSum  |*
   |   2 |     2 | $4,500 |       1 | $3,150 |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose                    | flags |*
   |   3 | %now    |    500 | .ZZI  |  cgf | community dividend         |       |
   |   4 | %now    |   1350 | .ZZI  | .ZZA | dividend                   |       |
   |   5 | %now    |   3150 | .ZZI  | .ZZB | dividend                   |       |
   |   6 | %now    |   3150 | .ZZB  | .ZZI | re-investment of dividends | stake |
-  And these "stakes":
+  And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    30 |     -20 | %now-2d |
   |       2 | .ZZB | .ZZI   |  3180 |       0 | %now-2d |
@@ -531,10 +531,10 @@ Scenario: The investment club issues dividends
 # Variations for loans (as opposed to equity investments)
 
 Scenario: Members rate a proposed loan
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |    33 | %now-2d |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | I     | Terms | 951000 |    10000 |     1 | trusty    |       75 |  60 |      80 |        90 |       0 |
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
@@ -561,7 +561,7 @@ Scenario: Members rate a proposed loan
   | Comments | |
   | | Rate it |
 
-  Given these "ratings":
+  Given these "r_ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        1 |      1 | .ZZD |   40 | yay!    |        80 |
   When member ".ZZA" completes form "invest/rate/vestid=1&clubqid=NEWZZI" with values:
@@ -570,7 +570,7 @@ Scenario: Members rate a proposed loan
   Then we say "status": "rating successful" with subs:
   | num |*
   |   1 |
-  And these "ratings":
+  And these "r_ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
   And we show "Club Investments" with:
@@ -587,13 +587,13 @@ Scenario: Members rate a proposed loan
   | | Rate it |
 
 Scenario: The club makes a loan
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | I     | Terms | 951000 |    10000 |     1 | trusty    |       75 |  60 |      80 |        90 |       0 |
 
@@ -639,7 +639,7 @@ Scenario: The club makes a loan
   Then we say "status": "report tx|loaned" with subs:
   | did  | otherName | amount | co      |*
   | paid | Our Pub   |   $100 | Our Pub |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
   And we show "Club Investments" with:
@@ -656,16 +656,16 @@ Scenario: The club makes a loan
   | | Request Repayment |
 
 Scenario: The club sells shares
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | I     | Terms | 951000 |    10000 |     1 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when |*
   |    1 |      1 |    100 |       0 | %now |
   
@@ -676,10 +676,10 @@ Scenario: The club sells shares
   Then we say "status": "report tx|balance unchanged|repayment request pending" with subs:
   | did     | otherName | amount | co      |*
   | charged | Our Pub   |    $40 | Our Pub |
-  And invoices:
+  And these "tx_requests":
   | nvid | payer | payee | amount | purpose        | flags      |*
   |    1 | .ZZC  | .ZZI  |     40 | loan repayment | investment |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
   |    2 |      1 |      0 |     -40 | %now |      |
@@ -696,7 +696,7 @@ Scenario: The club sells shares
   When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
-  Then these "shares":
+  Then these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
   |    2 |      1 |    -40 |       0 | %now |      |
@@ -714,16 +714,16 @@ Scenario: The club sells shares
   | | Request Repayment | 
   
 Scenario: The club sells its remaining shares in an investment
-  Given these "stakes":
+  Given these "r_stakes":
   | stakeid | uid  | clubid | stake | joined  |*
   |       1 | .ZZA | .ZZI   |   200 | %now-2d |
   And member ".ZZA" completes form "invest" with values:
   | op  | amount |*
   | buy |    200 |
-  And these "investments":
+  And these "r_investments":
   | vestid | coid | clubid | proposedBy | investment | return | types | terms | assets | offering | price | character | strength | web | history | soundness | reserve |*
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | I     | Terms | 951000 |    10000 |     1 | trusty    |       75 |  60 |      80 |        90 |       0 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares | pending | when |*
   |    1 |      1 |    100 |       0 | %now |
   |    2 |      1 |    -40 |       0 | %now |
@@ -735,13 +735,13 @@ Scenario: The club sells its remaining shares in an investment
   Then we say "status": "report tx|balance unchanged|repayment request pending" with subs:
   | did     | otherName | amount | co      |*
   | charged | Our Pub   |    $60 | Our Pub |
-  And invoices:
+  And these "tx_requests":
   | nvid | payer | payee | amount | purpose        | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | loan repayment | investment |  
   When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
-  Then these "shares":
+  Then these "r_shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now | %now |
   |    2 |      1 |    -40 |       0 | %now | %now |

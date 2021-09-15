@@ -13,7 +13,7 @@ Setup:
   | .ZZA | Abe One    | ok         | ccA | ccA2 | 1 A St. | Aton | +12000000001 |
   | .ZZB | Bea Two    | ok         | ccB | ccB2 | 2 B St. | Bton | +12000000002 |
   | .ZZC | Corner Pub | ok,co      |     |      | 3 C St. | Cton | +12000000003 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZC | .ZZB  | read       |
 

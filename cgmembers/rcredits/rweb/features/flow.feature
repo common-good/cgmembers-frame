@@ -10,7 +10,7 @@ Setup:
   | .ZZB | Bea Two    | ok,confirmed         |    0 |
   | .ZZC | Corner Pub | ok,confirmed,co,debt |    0 |
   | .ZZD | Dee Four   | ok,confirmed         | .ZZA |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | draw |*
   | .ZZC | .ZZA  | manage     |    1 |
   | .ZZC | .ZZB  | sell       |    0 |

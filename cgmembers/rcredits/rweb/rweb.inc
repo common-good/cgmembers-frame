@@ -456,12 +456,11 @@ function formFooter() {
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
-copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-details">, a nonprofit organization<br/>
+<span class="copyright">copyright &copy; %year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, a nonprofit organization</span><br/>
 %CGF_POSTALADDR<br/>
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
-<br>
-IP: %ip</span>
-$helpModal
+<span class="no-print"><br>IP: %ip
+$helpModal</span>
 EOF
   , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |

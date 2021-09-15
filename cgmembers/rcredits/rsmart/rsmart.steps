@@ -54,46 +54,6 @@ function extraSetup() {
 function members($list) {return t\members($list);}
 
 /**
- * relations: (ARG)
- *
- * in: MAKE aaPayTwice Setup
- *     MAKE coupons Setup
- *     MAKE exchange Setup
- *     MAKE identify Setup
- *     MAKE joint Setup
- *     MAKE offline Setup
- *     MAKE startup Setup
- *     MAKE time Setup
- *     MAKE transact Setup
- *     MAKE undo Setup
- */
-function relations($relations) {return t\relations($relations);}
-
-/**
- * transactions: (ARG)
- *
- * in: MAKE aaPayTwice Setup
- *     MAKE exchange Setup
- *     MAKE joint Setup
- *     MAKE offline Setup
- *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
- *     BOTH offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     MAKE transact Setup
- *     MAKE undo AnAgentAsksToUndoACharge
- *     MAKE undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
- *     MAKE undo AnAgentAsksToUndoARefundSoonEnough
- *     MAKE undo AnAgentAsksToUndoARefundTooLate
- *     MAKE undo AnAgentAsksToUndoACashoutCharge
- *     MAKE undo AnAgentAsksToUndoACashinPayment
- *     MAKE undo AnAgentAsksToUndoAChargeWithInsufficientBalance
- *     MAKE undo AnAgentAsksToUndoARefundWithInsufficientBalance
- *     MAKE undo AnAgentAsksToUndoAChargeWithoutPermission
- *     MAKE undo AnAgentAsksToUndoARefundWithoutPermission
- *     MAKE undo ACashierReversesATransactionWithInsufficientFunds
- */
-function transactions($list) {return t\transactions($list);}
-
-/**
  * agent (ARG) asks device (ARG) to identify (ARG)
  *
  * in: MAKE identify DeviceShouldHaveAnIdentifier
@@ -201,22 +161,6 @@ function memberHasNoPicture($id) {
   u\deleteFile($a->photoFilename(TRUE));
   return !$a->hasPhoto;
 }
-
-/**
- * devices: (ARG)
- *
- * in: MAKE aaPayTwice Setup
- *     MAKE coupons Setup
- *     MAKE exchange Setup
- *     MAKE identify Setup
- *     MAKE joint Setup
- *     MAKE offline Setup
- *     MAKE startup Setup
- *     MAKE time Setup
- *     MAKE transact Setup
- *     MAKE undo Setup
- */
-function devices($list) {return t\devices($list);}
 
 /**
  * balances: (ARG)
@@ -689,7 +633,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
  *     TEST undo AnAgentAsksToUndoAChargeWithoutPermission
  *     TEST undo AnAgentAsksToUndoARefundWithoutPermission
  */
-function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = NULL) {
+function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msgRay = NULL) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
@@ -698,16 +642,16 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   foreach (ray('ok txid balance') as $k) if (nni($rposResult, $k) != $$k) $error = 1;
   if (!t\sameTime('created', nn($a_created), $created)) $error = 2;
   
-  if ($msg) {
-    $msg = $msg[0];
-    $index = (nni($msg, 'solution') ? 'report undo|' : '') . 'report tx'; // |for why
-    $wantMsg = t($index, $msg);
-    if ($a_message != $wantMsg) $error = 3;
+  if ($msgRay) {
+    $msgRay = $msgRay[0];
+    $index = (nni($msgRay, 'solution') ? 'report undo|' : '') . 'report tx'; // |for why
+    $message = t($index, $msgRay); // message that is wanted (called "message")
+    if ($a_message != $message) $error = 3;
   }
 
   if (nn($error)) {
-    if (nn($msg)) u\preray(compact('wantMsg'), $msg);
-    t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msg'))), 'expect');
+    if (nn($msgRay)) u\preray(compact('message'), $msgRay);
+    t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msgRay'))), 'expect');
     t\output('Got: ' . pr($rposResult + compact('error')));
     return FALSE;
   } else return TRUE;
@@ -753,14 +697,6 @@ function transactionHeaderCountIs($n) { return t\count('tx_hdrs', $n); }
 function transactionEntryCountIs($n) { return t\count('entries', $n); }
 
 /**
- * coupated: (ARG)
- *
- * in: 
- */
-function coupated($list) { return t\coupatedRecords($list); }
-
-
-/**
  * count (ARG) is (ARG)
  *
  * in: TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
@@ -802,7 +738,29 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
 /**
  * these (ARG): (ARG)
  *
- * in: TEST coupons AMemberRedeemsADiscountCoupon
- *     TEST undo ACashierReversesATransactionWithInsufficientFunds
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
+ *     TEST coupons AMemberRedeemsADiscountCoupon
+ *     MAKE exchange Setup
+ *     MAKE identify Setup
+ *     MAKE joint Setup
+ *     MAKE offline Setup
+ *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
+ *     BOTH offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
+ *     MAKE startup Setup
+ *     MAKE time Setup
+ *     MAKE transact Setup
+ *     MAKE undo Setup
+ *     MAKE undo AnAgentAsksToUndoACharge
+ *     MAKE undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
+ *     MAKE undo AnAgentAsksToUndoARefundSoonEnough
+ *     MAKE undo AnAgentAsksToUndoARefundTooLate
+ *     MAKE undo AnAgentAsksToUndoACashoutCharge
+ *     MAKE undo AnAgentAsksToUndoACashinPayment
+ *     MAKE undo AnAgentAsksToUndoAChargeWithInsufficientBalance
+ *     MAKE undo AnAgentAsksToUndoARefundWithInsufficientBalance
+ *     MAKE undo AnAgentAsksToUndoAChargeWithoutPermission
+ *     MAKE undo AnAgentAsksToUndoARefundWithoutPermission
+ *     BOTH undo ACashierReversesATransactionWithInsufficientFunds
  */
 function these($thing, $list) {return t\these($thing, $list);}

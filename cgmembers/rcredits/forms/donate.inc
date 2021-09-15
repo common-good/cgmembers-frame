@@ -58,7 +58,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $options = item($options);
   if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin', '/donate?' . $_SERVER['QUERY_STRING'])));
     
-  $logo = item($coA->logo ? tr('<img src="%logo">', 'logo', "https://$coA->logo?" . time()) : '');
+  $logo = logoFld($coA);
   $title = t('Donate to ') . $coA->bestName;
 
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft(nn($s_amount)));

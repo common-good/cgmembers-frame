@@ -1,6 +1,14 @@
 /* CSS specific to Common Good members site */
 @import url("find-co.css"); /* Find Company and Buy Credit CSS, also used by our promo site */
 
+@media print {
+  .no-print, #header, #footer-menu {display:none;}
+  a[href]:after {content:none;}
+  #edit-title {position:static; padding:0; padding-bottom:8px;}
+  #edit-title .control-data {border-bottom:1px solid #666666;}
+  #footer {border-top:1px solid #666666; padding-top:8px;}
+}
+
 .clear {clear:both;}
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
@@ -198,6 +206,7 @@ form {max-width:834px; margin:0 auto;}
 .frm-submenu {max-width:300px;}
 .frm-submenu .form-item-title .control-data {width:100%; text-align:center;}
 .frm-submenu .form-item-title .control-label {display:none;}
+.frm-tight .form-group {margin-bottom:5px;}
 
 .form-item-periods input {max-width:50px; display:inline-block; margin-right:5px;}
 
@@ -417,7 +426,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 
-/* Card */
+/* Card / Receipt / Undo / Tip */
 .page-card #footer {display:none;}
 #frm-card .form-item-title .control-data {margin:0;}
 #frm-card .form-item-title h3 {font-size:15px; margin:10px 0;}
@@ -425,7 +434,20 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-card #edit-photo img {border:1px solid silver; max-width:50%;}
 
 #frm-card .form-item-buttons {text-align:center;}
-#frm-card .form-item-buttons .btn {margin:0 30px;}
+#frm-card .form-item-buttons .btn {margin:0 30px; display:inline-block; text-align:center;}
+#frm-card .form-item-buttons .btn-done.btn-md {margin-top:80px; margin-bottom:80px;}
+#frm-card .form-item-buttons label {display:none;}
+#frm-card .form-item-buttons .control-data {width:100%;}
+#frm-card .form-item-buttons .btn-tip {margin:20px 0;}
+#frm-card .form-item-buttons .btn-tip.btn2 {margin:40px 25px;}
+#frm-card .form-item-buttons .btn-tip.btnND {margin-left:32px;}
+#frm-card .form-type-textfield a.btn {margin-left:20px;}
+#frm-card .btn big {font-weight:bold;}
+#frm-card .btn small {color:silver;}
+
+.page-card-tip #header,
+.page-card-tip .form-item-title {display:none;}
+.page-card-tip #messages {width:100%; height:100%;}
 
 #frm-card .form-item-title,
 #frm-card #edit-photo,
@@ -434,8 +456,6 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-card .form-item-desc,
 #frm-card #edit-go {display:none;}
 
-#frm-card .form-item-buttons .btn {display:inline-block; text-align:center;}
-
 #frm-card .form-item-account.radio {border:1px solid silver; padding:10px 0; margin-bottom:-1px;}
 #frm-card .form-item-account.radio:hover {background-color:lightyellow;}
 #frm-card .form-radio, #frm-card #edit-submit {display:none;}
@@ -443,6 +463,24 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 @media (max-width:768px) {
   #frm-card .control-label {width:75px; min-width:75px;}
 }
+
+.page-card-receipt {width:48mm; padding:0; margin:0 4.5mm;}
+.page-card-receipt div {font-size:12px;}
+.page-card-receipt .form-group {margin:0;}
+.page-card-receipt .control-data,
+.page-card-receipt .control-label {width:auto; min-width:15mm; max-width:33mm; text-align:left; padding:0;}
+.page-card-receipt #edit-logo .control-data,
+.page-card-receipt #edit-title .control-data {width:100%; max-width:48mm; text-align:center;}
+.page-card-receipt #edit-logo img {max-height:30px; max-width:50%; text-align:center; margin-bottom:10px;}
+.page-card-receipt #edit-title h3 {font-size:16px; margin-top:0;}
+.page-card-receipt #edit-logo label,
+.page-card-receipt #edit-title label {display:none;}
+
+.page-card-receipt #main {margin-bottom:5px;}
+.page-card-receipt #footer {width:48mm; margin:0 4.5mm; font-size:10px;}
+.page-card-receipt #messages,
+.page-card-receipt .copyright,
+.page-card-receipt #edit-footerText hr {display:none;}
 
 /* Grant */
 #frm-grant li {margin-bottom:10px;}

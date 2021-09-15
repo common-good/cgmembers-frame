@@ -1687,6 +1687,9 @@ function nextBizDay($dt = NOW) {
   return $dt;
 }
 
+function nextBizTm() {$bizDay = u\nextBizDay(yesterday()); return $bizDay == today() ? now() : $bizDay;} // next second that's a business day
+
+
 function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return strftime('%Y%m%d', date('l', $h) == 'Saturday' ? yesterday($h) : (date('l', $h) == 'Sunday' ? tomorrow($h) : today($h)));}
 
 // Single line functions that need little or no explanation
@@ -1777,3 +1780,4 @@ function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists
+function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}

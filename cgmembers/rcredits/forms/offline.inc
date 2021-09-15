@@ -7,9 +7,10 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Do whatever.
+ * Show a form that can function offline.
+ navigator.mediaDevices.getUserMedia 
  */
-function formModel($form, &$sta, $args = '') {
+function formOffline($form, &$sta, $args = '') {
   global $mya;
   extract(just('nothing', $args, NULL));
 
@@ -20,14 +21,14 @@ function formModel($form, &$sta, $args = '') {
   $radio = radiosFld(REQ . t('Radios:'), t('Details here'), dft(-1), $choices); // no default
   $select = selectFld(REQ . t('Selection:'), t('Details here'), dft(2), $choices);
   $text = textFld(t('Text:'), [t('Hint'), t('Details here')], dft('value'));
-  jsx('model', compact('choices'));
+  js('offline');
 
   $submit = t('Save');
   
   return cgform(compact(ray('title subtext radio text submit')));
 }
 
-function formModel_validate($form, &$sta) {
+function formOffline_validate($form, &$sta) {
   global $mya;
   extract(just('text', $sta['input'], NULL));
 
@@ -35,7 +36,7 @@ function formModel_validate($form, &$sta) {
   u\preRay(compact('text'), $sta['input']);
 }
 
-function formModel_submit($form, &$sta) {
+function formOffline_submit($form, &$sta) {
   global $mya;
   extract(just('text', $sta['input'], NULL));
 

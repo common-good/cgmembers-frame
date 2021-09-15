@@ -22,13 +22,13 @@ Setup:
   | .ZZA  |  100   | %today-7w |
   | .ZZB  |  200   | %today-6w |
   | .ZZC  |  300   | %today-6w |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZA | .ZZB  |   1 | buy        |
   | .ZZB | .ZZA  |   1 | read       |
   | .ZZC | .ZZB  |   1 | buy        |
   | .ZZC | .ZZA  |   2 | sell       |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose      |*
   |   1 | %today-7w |      0 | ctty | .ZZA | signup       |
   |   2 | %today-6w |      0 | ctty | .ZZB | signup       |
@@ -52,7 +52,7 @@ Scenario: A member clicks the dashboard tab
   | Balance   | $10    |         |         |
   
 Scenario: A member clicks the dashboard tab with roundups
-  Given transactions:
+  Given these "txs":
   | xid | created | amount | payer | payee | purpose |*
   |   9 | %today  |  80.02 | .ZZB | .ZZC | goodies |
   When member ".ZZB" visits page "dashboard"

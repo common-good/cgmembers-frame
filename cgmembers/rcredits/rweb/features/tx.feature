@@ -11,7 +11,7 @@ Setup:
   | .ZZA | Abe One  | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt         |
   | .ZZB | Bea Two  | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |     0 | ok,confirmed         |
   | .ZZC | Our Pub  | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co      |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -46,7 +46,7 @@ Scenario: A member confirms request to charge another member
   And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
   And balances:
@@ -81,7 +81,7 @@ Scenario: A member confirms request to pay another member
   And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking |*
   |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
   And balances:
@@ -97,7 +97,7 @@ Scenario: A member confirms request to pay another member a lot
   When member ".ZZB" confirms form "tx/pay" with values:
   | op  | who     | amount        | goods | purpose |*
   | pay | Our Pub | %MAX_AMOUNT | %FOR_GOODS     | food    |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount        | payer | payee | purpose      | taking |*
   |   1 | %today  | %MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
@@ -116,7 +116,7 @@ Scenario: A member confirms request to pay a member company
   | ~name | Abe One |
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking |*
   |   1 | %today  |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
@@ -210,7 +210,7 @@ Scenario: A member pays another member repeatedly
   And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
-  And transactions:
+  And these "txs":
   | xid | created   | amount | payer | payee | purpose      | taking | recursId |*
   |   1 | %daystart |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
 #  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")

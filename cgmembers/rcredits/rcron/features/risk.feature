@@ -16,13 +16,13 @@ Setup:
   | .ZZH | Hal Eight  | 8 H St. | 01008 | ok         | ssnOff   | 100    | 10    | 8 H St., Hville, MA 01008 |
   | .ZZI | Ida Nine   | 9 I St. | 01009 | ok         | fishy    | 3      | 20    | 9 I St., Iville, MA 01009 |
   | -2   | Ctty-2     |         |       | co         | geography |       |       |                           |
-  And invites:
+  And these "r_invites":
   | inviter | invitee | email |*
   | .ZZA    | .ZZD    | d2@   |
   | .ZZA    |    0    | e@    |
   | .ZZG    | .ZZH    | h2@   |
   | .ZZG    | .ZZI    | i@    |
-  And proxies:
+  And these "r_proxies":
   | person | proxy | priority |*
   | .ZZA   | .ZZB  |        1 |
   | .ZZA   | .ZZD  |        2 |
@@ -30,7 +30,7 @@ Setup:
   | .ZZB   | .ZZA  |        2 |
   | .ZZD   | .ZZA  |        1 |
   | .ZZD   | .ZZB  |        2 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZC | .ZZA  | scan       |        Y |     0 |    0 |
   | .ZZC | .ZZB  |            |          |       |      |
@@ -46,7 +46,7 @@ Setup:
   | pay    | .ZZG | cgf |      5 | year    |
   | pay    | .ZZH | cgf |      5 | year    |
   | pay    | .ZZI | cgf |      5 | year    |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose | channel | flags   |*
   |   1 | %today-7m |    250 | ctty  | .ZZA  | signup  | %TX_SYS |         |
   |   2 | %today-6m |    250 | ctty  | .ZZB  | signup  | %TX_SYS |         |
@@ -114,7 +114,7 @@ Scenario: We calculate risks
 #  | 330 |  340 |   635 |  785 |
 
   When cron runs "txRisk"
-  Then transactions:
+  Then these "txs":
   | xid | risks |*
   |   1 | |
   |   2 | |

@@ -235,4 +235,4 @@ function roundTo(num, n) {
 }
 
 function byid(s) {return document.getElementById(s);}
-function fmtAmt(n) {return n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');}
+//function fmtAmt(n) {return n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');}

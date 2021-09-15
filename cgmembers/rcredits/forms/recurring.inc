@@ -62,7 +62,7 @@ X;
   }
   $html .= '<tr><td class="gap" colspan="7"></td></tr>' . "\n";
   
-  $sql = 'SELECT reid, IF(other=:myid, main, other) AS fWho, other=:myid AS paying FROM r_relations WHERE :myid IN (main, other) AND :IS_AUTOPAY ORDER BY main=:myid';
+  $sql = 'SELECT reid, IF(other=:myid, main, other) AS fWho, other=:myid AS paying FROM u_relations WHERE :myid IN (main, other) AND :IS_AUTOPAY ORDER BY main=:myid';
   $q = db\q($sql, compact('myid'));
   
   foreach ($q as $row) {
@@ -120,13 +120,13 @@ function stopRecur($id) {
 function stopAutoPay($reid) {
   global $mya;
   
-  $row = db\get('main, other, flags', 'r_relations', 'reid=:reid AND :IS_AUTOPAY', compact('reid'));
+  $row = db\get('main, other, flags', 'u_relations', 'reid=:reid AND :IS_AUTOPAY', compact('reid'));
   if (!$row) return w\err('invalid recur id');
   extract($row);
   
   if ($other != $mya->id and $main != $mya->id) return w\err('recur not yours');
   u\setBit($flags, B_AUTOPAY, FALSE);
 
-  db\update('r_relations', compact(ray('flags reid')), 'reid');
+  db\update('u_relations', compact(ray('flags reid')), 'reid');
   return w\say('recur stopped');  
 }

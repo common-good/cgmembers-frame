@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58j'; // software version
+const R_VERSION = '3.58k'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -50,6 +50,7 @@ define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == '
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
+define('QBO_CREDS', config('qboCreds'));
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
@@ -89,7 +90,7 @@ const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must 
 const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
 const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
-const TRACK_DELETED = 'tx_requests r_photos r_relations txs2 users'; // remember rows in these tables if we delete them
+const TRACK_DELETED = 'users u_shout u_company u_photo u_relations txs2'; // remember rows in these tables if we delete them
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 const DEV_ONLY_MSG = 'only on development machine';
@@ -513,7 +514,7 @@ const REL_FLAGS = 'employee owner customer autopay r4 r5 r6 draw';
 const REL_FLDS = 'main other otherNum permission code';
 const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city2 state2 zip2 partner partnerCode customer source qid country postalAddr'; // pseudo-fields typically stored in data field
 
-// Relationship permissions used in calls to r\Acct::can() -- stored (less B_RELATED) in r_relations
+// Relationship permissions used in calls to r\Acct::can() -- stored (less B_RELATED) in u_relations
 const B_RELATED = 100; // has a relationship record
 const B_NONE = 100; // no access
 const B_READ = 101; // can view Transaction History
@@ -581,6 +582,9 @@ const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feat
 
 define('SHOUT_TEXT', t('"%PROJECT could have a huge positive impact on our region, if a lot of people and businesses sign up and participate."'));
 define('ORG_DISCLAIMER', t(' Organizational affiliations are for identification purposes only and do not necessarily reflect the views of the organization.'));
+
+const FORCE_WINDOW = 1 * 60; // seconds after transaction during which unilateral undo of payment (or reimbursement or purchase of cash) can be forced
+const TIP_DFTS = [15, 20, 25]; // 3 tip choices to offer unless company chooses different ones
   
 const FLOW_NONE = 0; // which way can credit flow, with another account
 const FLOW_TO = 1;
@@ -654,7 +658,7 @@ const DS_DENIED = 3;  // dispute denied
 
 const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
 const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
-const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, or rule-based donation) triggered by another transaction
+const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, tip, or rule-based donation) triggered by another transaction
                   // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
 const E_USD_FEE = 4; // fee from customer to merchant for credit card or check transaction

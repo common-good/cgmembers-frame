@@ -33,12 +33,12 @@ Scenario: A member donates
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | once   | memory | Jane Do |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose      |*
   |   1 | %today  |     10 | .ZZA  | cgf  | donation |
   And we say "status": "gift thanks" with subs:
   | coName | %PROJECT |**
-  And these "honors":
+  And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
   And we notice "gift sent" to member ".ZZA" with subs:
@@ -63,12 +63,12 @@ Scenario: A member makes a recurring donation
   Then these "tx_timed":
   | id | start  | from | to  | amount | period | purpose  |*
   |  1 | %today | .ZZA | cgf |     10 | month  | donation |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose  | recursId |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
   And we say "status": "gift thanks" with subs:
   | coName | %PROJECT |**
-  And these "honors":
+  And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
   And we notice "gift sent" to member ".ZZA" with subs:
@@ -87,7 +87,7 @@ Scenario: A member makes a new recurring donation
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored | share |*
   |        -1 |     10 | month  | memory | Jane Do |    10 |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |
   And we say "status": "gift thanks" with subs:
@@ -100,7 +100,7 @@ Scenario: A company makes a recurring donation
   When member ".ZZC" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZC  | cgf   | donation |
   And we say "status": "gift thanks" with subs:
@@ -113,10 +113,10 @@ Scenario: A member donates with insufficient funds
   Then we say "status": "gift thanks" with subs:
   | coName | %PROJECT |**
   And we say "status": "gift transfer later"
-  And invoices:
+  And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose  | flags | status   |*
   |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  | approved |
-  And these "honors":
+  And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
   And we tell "ctty" CO "gift" with subs:

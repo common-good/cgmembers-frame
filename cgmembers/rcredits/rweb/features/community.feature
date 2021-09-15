@@ -13,7 +13,7 @@ Setup:
   | .ZZB | Bea Two    | ok    | .ZZD  |    1000 |   -20 | %today-5w | %today-4w |
   | .ZZC | Corner Pub | ok,co | 0     |    2000 |    10 | %today-4w | %today-3w |
   | .ZZD | Dee Four   | ok    | .ZZB  |    1000 |   -20 | %today-5w | %today-4w |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -38,13 +38,13 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   | .ZZD |    2000 |
-  Given transactions: 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose | goods      |*
   |   6 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD   |
   |   7 | %today-3m |    100 | .ZZC | .ZZA | usd F   | %FOR_USD   |
   |   8 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
 #  And statistics get set "%tomorrow-1m"
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose | goods      | channel  | flags  |*
   |  15 | %today-2w |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |        |
   |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |        |
@@ -68,7 +68,7 @@ Scenario: cron calculates the statistics
 #  When cron runs "acctStats"
   Given statistics get set "%daystart-30d"
   When cron runs "cttyStats"
-  Then these "stats":
+  Then these "r_stats":
   | id           |         7 |**
   | ctty         |      ctty |
   | created      | %daystart |

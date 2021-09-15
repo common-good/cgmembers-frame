@@ -23,7 +23,7 @@ Scenario: Geoposition gets calculated
   | 1    | %GFLD_LAT | %GFLD_LON |
 
 Scenario: A member has a big day
-  Given transactions:
+  Given these "txs":
   | xid | created    | amount | payer | payee | purpose |*
   |   1 | %yesterday |    500 | .ZZB  | .ZZC  | food    |
   |   2 | %yesterday |    600 | .ZZA  | .ZZB  | stuff   |

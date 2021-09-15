@@ -10,7 +10,7 @@ Setup:
   | .ZZB | Bea Two  |  -250 | b2   | ok,confirmed,debt | Bb2       |
   | .ZZC | Cor Pub  |  -250 | c3   | ok,confirmed,co   | Cc3       |
   
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZB  | manage     |
 

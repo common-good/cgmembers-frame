@@ -10,10 +10,10 @@ Setup:
   | .ZZB | Bea Two  | +20002 | b@    | ccB |      | ok            |
   | .ZZC | Coco Co  | +20003 | c@    | ccC |      | ok,co         |
   | .ZZF | For Co   | +20006 | f@    | ccF |      | co            |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | buy        |
   | .ZZC | .ZZB  |   2 | scan       |

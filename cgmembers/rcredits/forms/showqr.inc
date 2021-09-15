@@ -32,7 +32,7 @@ function formShowQr($form, &$sta, $args = '') {
     $qr = item(tr('<img src="%data" />', '_data', genQr($testQr = qrUrl($mya))));
     u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
-    $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', $mya->co ? '' : atag('/scraps/card'));
+    $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag($mya->co ? '/dashboard' : '/scraps/card'));
     $qr = NULL;
   }
     

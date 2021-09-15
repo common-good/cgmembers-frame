@@ -8,7 +8,7 @@ Setup:
   | uid  | fullName | flags |*
   | .ZZA | Abe One  |       |
   | .ZZC | Our Pub  | co,ok |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | manage     |
   

@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | ok,confirmed      |
   | .ZZB | Bea Two  | ok,confirmed      |
   | .ZZC | Cor Pub  | ok,confirmed,co   |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZA  | read       |
   | .ZZC | .ZZB  | manage     |
@@ -219,7 +219,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | employees  | 9 |
   | checksIn   | 30 |
   | checksOut  | 40 |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZF | .ZZB  | manage     |
   When member "F:B" visits "co/sponsor"

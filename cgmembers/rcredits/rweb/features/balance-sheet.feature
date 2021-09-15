@@ -11,22 +11,22 @@ Setup:
   | .ZZC | Corner Pub | -300  | corporation | ok,co      | %today-15m |      30 |      ctty |
   | .ZZD | Dee Four   | -400  | personal    | ok         | %today-15m |      40 |      ctty |
   | .ZZE | Eve Five   | -500  | personal    | ok         | %today-15m |      50 |        -2 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
-  And these "investments":
+  And these "r_investments":
   | vestid | clubid | price | reserve |*
   |      1 |   ctty |   100 |     .15 |
   |      2 |   ctty |   200 |     .20 |
-  And these "shares":
+  And these "r_shares":
   | shid | vestid | shares |*
   |    1 |      1 |     10 |
   |    2 |      1 |     -5 |
   |    3 |      2 |     20 |
-  And invoices:
+  And these "tx_requests":
   | payer | payee | amount | status   |*
   | .ZZB  | ctty  |     20 | approved |
   | ctty  | .ZZA  |     10 | pending  |
@@ -42,7 +42,7 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   | .ZZD |       0 |
-  Given transactions: 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E  |
   |   5 | %today-4m |   1100 | .ZZC | .ZZA | usd F   |

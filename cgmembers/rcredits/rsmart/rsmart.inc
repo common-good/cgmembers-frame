@@ -380,23 +380,18 @@ function charge($args, $type = 'charge') {
     if ($force == 1) { // does exist and should (always background)
       $txid = $xid;
     } elseif ($force == -1) { // does exist and should be reversed
-      if ($reversal = db\get('xid AS `undo`,created', 'tx_hdrs', 'reversesXid=:xid', compact('xid'))) { // already reversed
-        extract($reversal); // undo = xid of reversed tx
-        $message = t('Transaction has been reversed.');
+      $z = be\posUndo($mya, $xid, $force, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'");
+      if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
+      $created = $z->subs['created'];
+
+      if (nni($z->subs, 'nvid')) { // invoiced!
+        $message = tr($z->msg, $z->subs);
+        $undo = $txid = '';
+        $did = t('charged');
       } else {
-        $z = be\undoTx($xid, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
-        if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
-        if (nni($z->subs, 'nvid')) { // invoiced!
-          $message = tr($z->msg, $z->subs);
-          $undo = $txid = '';
-          $did = t('charged');
-        } else {
-          $message = $z->msg;
-          $undo = $xid; // undo = xid of reversed tx
-          $txid = nni($z->subs, 'xid');
-        }
-        $created = $z->subs['created'];
-        r\tellAdmin('reversizng tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
+        $message = $z->msg;
+        $undo = $xid; // undo = xid of reversed tx
+        $txid = nni($z->subs, 'xid');
       }
     } else u\FAIL(t('force param must be 0, 1, or -1'));
     

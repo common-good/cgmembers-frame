@@ -165,7 +165,7 @@ function formConnect_submit($form, &$sta) {
 function autopays(&$orig = '') {
   global $mya;
 
-  $rows = db\q('SELECT uid,fullName,r.:IS_AUTOPAY AS auto FROM r_relations r LEFT JOIN users u ON u.uid=r.main WHERE other=:myid AND r.:IS_CUSTOMER', ray('myid', $mya->id))->fetchAll();
+  $rows = db\q('SELECT uid,fullName,r.:IS_AUTOPAY AS auto FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE other=:myid AND r.:IS_CUSTOMER', ray('myid', $mya->id))->fetchAll();
   if (!$rows) return NULL;
   
   foreach ($rows as $i => $one) {

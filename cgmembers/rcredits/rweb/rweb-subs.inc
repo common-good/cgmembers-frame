@@ -211,7 +211,7 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 /**
  * Modify a page in standard ways before passing it through to Drupal core for processing.
  * @param assoc $form: the form array
- * @param string $fmt: format adjustments: (space-string array) narrow, wider, wide, nolabs, submenu
+ * @param string $fmt: format adjustments: (space-string array) narrow, wider, wide, nolabs, submenu, tight
  * @param string $mlabFmt: (space-string array) label format adjustments for mobile: narrow, left
  */
 function cgform($form, $fmt = '', $mlabFmt = '') {
@@ -1376,6 +1376,7 @@ function ssnFld($req = REQ, $extra = []) {
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
+function logoFld($coA) {return item($coA->logo ? tr('<img src="%logo">', 'logo', "http://$coA->logo?" . time()) : '');}
 
 /**
  * Standardize the "selling" field input.

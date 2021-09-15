@@ -36,7 +36,7 @@ Scenario: A company agent visits the preferences page
   And radio "secretBal" is "Yes"
 
 Scenario: A member changes preferences
-  Given transactions: 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded

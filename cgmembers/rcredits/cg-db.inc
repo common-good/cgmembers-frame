@@ -8,6 +8,7 @@ namespace CG\DB; // typically abbreviated as "db"
 use CG as r;
 use CG\DB as db;
 use CG\Util as u;
+use CG\Backend as be;
 
 require_once __DIR__ . '/cg-util.inc';
 
@@ -58,7 +59,7 @@ function adminQ($sql) {
 function get($fieldName, $table, $where = '1', $subs = []) {
   u\EXPECT(compact(ray('fieldName table where subs')), 'notempty notempty notempty assoc');
   
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   if (!mb_strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
 ///   debug(compact('sql','subs'));
@@ -158,7 +159,7 @@ function updateOrInsert($table, $info, $key = 'id') {
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
 function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
@@ -170,14 +171,14 @@ function row($table, $where = '1', $subs = []) {return rows('*', $table, $where,
  * Return an array of matching data.
  */
 function col($field, $table, $where = '1', $subs = []) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
 function lst($field, $table, $where = '1', $subs = [], $joint = ', ') { // lst because "list" is a reserved word
   return join($joint, db\col($field, $table, $where, $subs));
 }
 function keyed($fields, $table, $where = '1', $subs = []) {
-  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
+  u\zWhereSubs($where, $subs);
   return db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 
@@ -249,51 +250,49 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  * @param string $idnm: name of key field of table
  * @param mixed $id: id of record to delete (not empty)
  * @param assoc $subs: parameters for selection criteria
+ * @return <rows did not exist or were successfully deleted>
  */
 //function del($tnm, $idnm, $id = '', $subs = []) {
 function del($tnm, $where, $subs = [], $override = FALSE) {
-  foreach (ray('tx_hdrs tx_entries txs_') as $t) if (u\starts($tnm, $t)) {
-    u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or txs2, which delete all things with that xid'));
+  if (strhas($tnm, '_all')) return u\FAIL('Retry the deletion, omitting "_all".');
+  foreach (ray('tx_hdrs tx_entries') as $t) if ($tnm == $t) {
+    u\EXPECT($override, t('you must delete transactions only from txs or txs2, which delete all things with that xid'));
   }
   
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
-    list ($where, $subs) = [u\where($where), $where];
+    u\zWhereSubs($where, $subs);
   } elseif (!is_array($subs)) { list ($where, $subs) = ["`$where`=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
   
   if (is_numeric($where)) u\FAIL(t('Wrong syntax for call to db\del')); // don't accidentally delete all records in a table
   
   $DBTX = \db_transaction();
+  $ok = TRUE;
   
-  $tnmHead = strstr($tnm, '_', TRUE) ?: $tnm; // allow deletion from variant views of tables
-  
-  if (in($tnmHead, DELETED_BY_VIEW)) {
-    $q = db\q("UPDATE $tnm SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
-    $ok = ($q->rowCount() > 0);
-    if ($tnm == 'tx_entries_all') { // deleting an entry changes the balance, so fix the wentNeg dates
-      $q = db\q("SELECT uid amount FROM $tnm WHERE deleted AND $where", $subs);
+  if (in($tnm, DELETED_BY_VIEW)) {
+    $q = db\q("UPDATE {$tnm}_all SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
+    if ($tnm == 'tx_entries') { // deleting an entry changes the balance, so fix the wentNeg dates
+      $q = db\q("SELECT uid, amount FROM {$tnm}_all WHERE deleted AND $where", $subs);
       while ($row = $q->fetchAssoc()) be\balChange($row);
     }
-    return;
     
-  } elseif (in($tnmHead, TRACK_DELETED)) {
-    $xtnm = in($tnmHead, 'users txs2') ? "x_$tnmHead" : str_replace('r_', 'x_', $tnmHead);
+  } elseif ($isTxs2 = u\starts($tnm, 'txs2') or in($tnm, TRACK_DELETED)) {
+    $xtnm = in($tnm, 'users') ? "x_$tnm" : ($isTxs2 ? 'x_txs2' : preg_replace('/^._/', 'x_', $tnm));
     $q = db\q("INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where", $subs);
-    $ok = ($q->rowCount() > 0);
-    if ($ok and $tnmHead == 'txs2') { // need to delete related txs records as well as txs2 records
-      if ($rows = db\col('xid', $tnm, $where, $subs)) db\del('txs', 'xid IN (:rows)', compact('rows'));
+    if ($q->rowCount() > 0 and $isTxs2) { // need to delete related txs records as well as txs2 records
+      if ($xids = db\col('xid', $tnm, $where, $subs)) $ok = db\del('txs', 'xid IN (:xids)', compact('xids'));
+    }
+    if ($ok) db\q("DELETE FROM $tnm WHERE $where", $subs);
+    
+  } elseif ($tnm == 'txs' or u\starts($tnm, 'txs_')) {
+    if ($xids = db\col('xid', $tnm, $where, $subs)) foreach (ray('tx_entries tx_hdrs') as $allTnm) {
+      $ok = $ok and db\del($allTnm, 'xid IN (:xids)', compact('xids'), (bool) 'OVERRIDE');
     }
     
-  } elseif ($tnmHead == 'txs') {
-    if ($rows = db\col('xid', $tnm, $where, $subs)) foreach (ray('tx_entries_all tx_hdrs_all') as $allTnm) {
-      db\del($allTnm, 'xid IN (:rows)', compact('rows'), (bool) 'OVERRIDE');
-    }
-    return; // txs IS tx_hdrs_all and tx_entries_all, so no further action needed
-    
-  } else { $ok = TRUE; }
-  
-  if ($ok) db\q("DELETE FROM $tnm WHERE $where", $subs);
+  } else db\q("DELETE FROM $tnm WHERE $where", $subs);
+ 
   unset($DBTX);
+  return $ok;
 }
 
 function hasField($table, $field) {return hasCol($table, $field);}

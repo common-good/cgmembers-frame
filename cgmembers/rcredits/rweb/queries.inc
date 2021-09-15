@@ -34,7 +34,7 @@ $queries = [
     "SELECT DISTINCT main.fullName AS company, other.fullName AS pays, 
             IF(r.:IS_EMPLOYEE, 'employee', IF(r.:IS_OWNER, 'owner', 
                                               IF(r.:IS_CUSTOMER, 'customer', ''))) AS relation
-     FROM r_relations r
+     FROM u_relations r
        JOIN txs_noreverse t ON t.uid1=r.main
        JOIN users main ON main.uid=r.main 
        JOIN users other ON other.uid=r.other
@@ -53,7 +53,7 @@ $queries = [
     SELECT DISTINCT c.fullName AS company, p.fullName AS contact, c.phone, c.email, c.city, c.zip, MID(FROM_UNIXTIME(lastTx), 1, 10) AS lastTx, IF(c.:IS_OK, 'open', 'NO') AS open
     FROM (SELECT uid, MAX(created) AS lastTx FROM tx_entries JOIN tx_hdrs USING(xid) GROUP BY uid) t
     JOIN users c ON c.uid=t.uid
-    JOIN r_relations r ON r.main=c.uid
+    JOIN u_relations r ON r.main=c.uid
     JOIN users p ON p.uid=r.other
     WHERE c.:IS_CO GROUP BY c.uid
     ORDER BY lastTx DESC
@@ -182,7 +182,7 @@ $sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1
 // Who still owes CG a phone deposit
 SELECT fullName, nvid AS invoice, i.purpose FROM users u 
 LEFT JOIN (SELECT uid1 AS uid FROM txs_prime t0 WHERE t0.uid2=:CGID AND amt>=20) t USING(uid)
-LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM tx_invoices i0 
+LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM tx_requests i0 
   WHERE i0.payee=:CGID AND amount>=20 AND status<:TX_PAID) i USING(uid)
 WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 

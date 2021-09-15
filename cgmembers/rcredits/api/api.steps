@@ -48,22 +48,6 @@ function extraSetup() {
 function members($list) {return t\members($list);}
 
 /**
- * relations: (ARG)
- *
- * in: MAKE generateInvoices Setup
- *     MAKE getInvoiceStatus Setup
- *     MAKE makePayments Setup
- */
-function relations($relations) {return t\relations($relations);}
-
-/**
- * transactions: (ARG)
- *
- * in: 
- */
-function transactions($list) {return t\transactions($list);}
-
-/**
  * agent (ARG) asks device (ARG) to identify (ARG)
  *
  * in: 
@@ -204,3 +188,12 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
  *     BOTH makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
  */
 function balances($list) {return t\balances($list);}
+
+/**
+ * these (ARG): (ARG)
+ *
+ * in: MAKE generateInvoices Setup
+ *     MAKE getInvoiceStatus Setup
+ *     MAKE makePayments Setup
+ */
+function these($thing, $list) {return t\these($thing, $list);}

@@ -94,7 +94,7 @@ X;
 }
 
 function formTxDetail_validate($form, &$sta) {
-  extract(just('created amt', $sta['input']), NULL);
+  extract(just('created amt', $sta['input'], NULL));
 
   if ($created and $err = u\badDate($created, now() - YEAR_SECS, tomorrow())) return say($err, 'created');
   if ($amt and $err = u\badAmount($amt, '!=0')) return say($err, 'amt');

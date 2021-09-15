@@ -71,8 +71,9 @@ function setupBasicAccounts() {
 
   $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo); // server's community for tests (different in production)
   $info = array_combine($keys, $values);
-  $info += ray('legalName phone address city state postalAddr zip helper',
-    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
+  $logoUrl = preg_replace('~https?://~', '', BASE_URL . '/rcredits/images/logo80.png');
+  $info += ray('legalName phone address city state postalAddr zip helper logo',
+    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1, $logoUrl);
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
@@ -150,8 +151,10 @@ function makeTestAccounts() {
  * @param int $newUid: the new record ID to give the account (defaults to next available)
  * @param bool $unusable: whether to mark the old account record ID as unusuable
  * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount)
+ * @return TRUE if successful else NULL
  */
-function deleteUid($oldUid) {a\changeUid($oldUid, 0, FALSE, TRUE);}
+function deleteUid($oldUid) {return a\changeUid($oldUid, 0, FALSE, TRUE);}
+
 function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   global $mya;
   if (is_object($oldUid)) $oldUid = $oldUid->id;
@@ -173,7 +176,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_boxes:uid:D',
     'r_changes:uid:D',
     'r_changes:changedBy',
-    'u_company:uid:D',
+    'u_company:uid:D', // this gets tracked
     // r_countries
     'r_criteria:ctty:D',
     'r_do:uid:D',
@@ -191,15 +194,15 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_notices:uid:D',
     // r_options
     // r_pairs
-    'r_photos:uid:D',
+    'u_photo:uid:D', // this gets tracked
     'r_proposals:ctty',
     'r_proxies:person:D',
     'r_proxies:proxy:D',
     // r_questions
     'r_ratings:uid',
     // r_regions
-    'r_relations:main:D',
-    'r_relations:other:D',
+    'u_relations:main:D', // this gets tracked
+    'u_relations:other:D', // this gets tracked
     // r_states
     // r_shares',
     'r_stakes:uid',
@@ -217,8 +220,8 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_entries:agentUid',
     'tx_hdrs:actorId',
     'tx_hdrs:actorAgentId',
-    'tx_requests:payer:D',
-    'tx_requests:payee:D',
+    'tx_requests:payer:D', // this gets tracked
+    'tx_requests:payee:D', // this gets tracked
     'tx_rules:to:D',
     'tx_rules:payer:D',
     'tx_rules:payee:D',
@@ -230,7 +233,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'txs2:payee',
     // u_groups
     'u_groupies:uid:D',
-    'u_shouters:uid:D',
+    'u_shout:uid:D', // this gets tracked
     'users:jid', // users should be last, because it's the main table for what we're deleting/changing
     'users:uid:D',
     'users:helper',
@@ -240,6 +243,11 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   
   $DBTX = \db_transaction();
 
+  if ($delete) {
+    foreach (ray('jid helper') as $fnm) db\q("UPDATE users SET $fnm=0 WHERE $fnm=:oldUid", compact('oldUid')); // don't leave a hanging partner or helper
+    db\q('UPDATE people SET uid=NULL WHERE uid=:oldUid', compact('oldUid'));
+  }
+  
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
     db\del('users', 'uid', $oldUid);
     $unusable = $delete = FALSE; // don't actually delete anything except the account record
@@ -256,13 +264,11 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
     
     if ($delete) {
-      if (!$deletable) {
-        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
-          $DBTX->rollback(); 
-          return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
-        }
-      } else {
+      if ($deletable) {
         db\del($table, $field, $oldUid);
+      } elseif (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+        $DBTX->rollback(); 
+        return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
       }
     } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
   }
@@ -282,6 +288,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
 
   if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
+  return TRUE;
 }
 
 /**
@@ -340,7 +347,7 @@ function showRelations($a) {
     SELECT IF(r.main=:uid, other, main) AS them, main, IF(r.main=:uid, u2.fullName, u1.fullName) as who, 
     permission, r.:IS_EMPLOYEE AS employee, r.:IS_OWNER AS owner, r.:IS_DRAW AS draw,
     r.:IS_CUSTOMER AS customer, r.:IS_AUTOPAY AS autopay, u1.:IS_CO AS iCo, u2.:IS_CO AS uCo
-    FROM r_relations r LEFT JOIN users u1 ON u1.uid=r.main LEFT JOIN users u2 ON u2.uid=r.other
+    FROM u_relations r LEFT JOIN users u1 ON u1.uid=r.main LEFT JOIN users u2 ON u2.uid=r.other
     WHERE :uid IN (r.main, r.other) AND :uid<>:jid AND (permission OR r.:IS_EMPLOYEE OR r.:IS_OWNER OR r.:IS_DRAW OR NOT r.:IS_CUSTOMER)
 EOF;
   $q = db\q($sql, compact('uid', 'jid'));
@@ -1062,7 +1069,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
 
   $subs = compact(ray('coid co2id uids'));
   db\q('UPDATE tx_requests SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
-  db\q('UPDATE r_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
+  db\q('UPDATE u_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
 }
   
 /*
@@ -1070,7 +1077,7 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
 
   eachA(function ($a) {
   $name = str_replace("'", "\\'", $a->fullName);
-///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
+///  if ($reid = f('db.lookup', 'reid', 'u_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
   });
 */
 

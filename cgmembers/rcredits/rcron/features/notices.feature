@@ -27,7 +27,7 @@ Setup:
   And community email for member ".ZZA" is "%whatever@cg.org"
 
 Scenario: a member gets some notices
-  Given notices:
+  Given these "r_notices":
   | uid  | created | sent | message    | type |*
   | .ZZA | %today  |    0 | You rock.  | out  |
   | .ZZA | %today  |    0 | You stone. | out  |
@@ -40,13 +40,13 @@ Scenario: a member gets some notices
   | balance    | $0 |
   | ourEmail   | %whatever@cg.org |
   | code       | ? |
-  And notices:
+  And these "r_notices":
   | uid  | created | sent   | message    |*
   | .ZZA | %today  | %today | You rock.  |
   | .ZZA | %today  | %today | You stone. |
 
 Scenario: a member gets some weekly notices
-  Given notices:
+  Given these "r_notices":
   | uid  | created | sent | message    | type |*
   | .ZZB | %today  |    0 | You rock.  | in   |
   | .ZZB | %today  |    0 | You stone. | out  |
@@ -60,7 +60,7 @@ Scenario: a member gets some weekly notices
   | balance    | $0 |
   | ourEmail   | %whatever@cg.org |
   | code       | ? |
-  And notices:
+  And these "r_notices":
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You rock.  |
   | .ZZB | %today  | %today | You stone. |

@@ -16,7 +16,7 @@ function formInvite($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
   if ($mya->co) say(t('To endorse %PROJECT, use your personal account.'));
 
-  $quote = db\get('quote', 'u_shouters', ray('uid', $mya->id)) ?: SHOUT_TEXT;
+  $quote = db\get('quote', 'u_shout', ray('uid', $mya->id)) ?: SHOUT_TEXT;
   if (!$mya->co and (!$mya->shouter or $edit)) return endorse($mya, $quote, $edit);
 
   $fullName = $mya->fullName;
@@ -52,7 +52,7 @@ function formInvite_submit($form, &$sta) {
       foreach (ray('usePhoto postPhoto sawVideo') as $k) $$k = $$k ? 1 : 0;
       $website = preg_replace('~http(s?)://~', '', $website);
       list ($uid, $title) = [$mya->id, $position];
-      db\updateOrInsert('u_shouters', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
+      db\updateOrInsert('u_shout', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
       say(t('Thank you for endorsing %PROJECT!')); // might be new or edited
     } else {
       r\tellAdmin(t('non-endorsement'), $input + ray('fullName', $mya->fullName));
@@ -112,7 +112,7 @@ function inviteOne($mya, $code, $info, $buttons) {
  */
 function endorse($mya, $quote, $edit) {
   $fields = 'quote, org, title, website, usePhoto, postPhoto, sawVideo';
-  $info = db\get($fields, 'u_shouters', ray('uid', $mya->id));
+  $info = db\get($fields, 'u_shout', ray('uid', $mya->id));
   if ($info) extract($info); else foreach (ray($fields) as $k) $$k = NULL;
   $position = $title;
   

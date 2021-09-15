@@ -16,7 +16,7 @@ Setup:
   |activated  | %now-20m                    | %now-20m   | %now-20m    |
   |state      | MA                          | MA         | MA          |
   | federalId | 001010001                   | 001010002  | 001010003   |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -36,7 +36,7 @@ Setup:
   | .ZZA |     9450 |
   | .ZZB |    20000 |
   | .ZZC |    30000 |
-  Given transactions: 
+  Given these "txs": 
   | xid | created     | amount  | payer | payee | purpose | taking | reversesXid |*
   |  44 | %today-361d |     100 | .ZZB | .ZZA | food E  | 0        |             |
   |  45 | %today-331d |   11000 | .ZZC | .ZZA | box F   | 1        |             |

@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One  | +13013013001 | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
   | .ZZB | Bea Two  |              | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |           |
   | .ZZC | Our Pub  | +13333333333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | sponsored | Cc3       |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
   | .ZZB | .ZZA  | read       |
@@ -146,7 +146,7 @@ Scenario: A sponsored member charges a member
   And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Our Pub   | $100   | grant   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   | cat |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant |   2 |
   And balances:
@@ -158,7 +158,7 @@ Scenario: A sponsored member charges a member
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |       100 | .ZZB  | .ZZC  | grant   | %today  |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat |*
   |   1 | %today  |    100 | .ZZB | .ZZC   | grant   | 0      | I       | 1   |   2 |
 

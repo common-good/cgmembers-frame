@@ -24,7 +24,7 @@ function formShouters($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT uid,rating,fullName,city,abbreviation AS st,quote,title AS orgTitle,org,website,community=:community AS mine
-    FROM u_shouters h 
+    FROM u_shout h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
     WHERE IFNULL(quote, '')='' OR rating>0 OR uid=:id OR :admin
@@ -58,7 +58,7 @@ X;
 function raw() {
   $sql = <<< X
     SELECT uid,fullName,city,abbreviation AS st,org,title AS orgTitle,website,quote
-    FROM u_shouters h 
+    FROM u_shout h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
     WHERE u.:IS_OK AND IFNULL(quote, '')<>'' AND rating>0

@@ -231,6 +231,28 @@ X;
 }
 
 /**
+ * Reverse a recent transaction at point of sale.
+ * @param acct $mya: current account (possibly from scanner cookie, not signed in)
+ * @param int $xid: record ID of transaction to reverse
+ * @param int $force: reverse the transaction even if there are insufficient funds or lack of permission
+ * @param string $where: additional criteria, to identify transaction to reverse
+ * @return a txRet object, with ->subs including:
+ *   xid: record ID of transaction that reverses the given tx OR
+ *   nvid: record ID of invoice that reverses the given tx
+ *   created: date of that reversing transaction or invoice
+ */
+function posUndo($mya, $xid, $force = FALSE, $where = 1) {
+  if ($subs = db\get('xid,created', 'tx_hdrs', 'reversesXid=:xid', compact('xid'))) { // already reversed
+    $msg = t('Transaction has been reversed.');
+    return obj('ok index subs msg', TRUE, $msg, $subs, $msg);
+  }
+  
+  $z = be\undoTx($mya, $xid, $where, [], $force);
+  if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", u\fmtDate($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
+  return $z;
+}
+
+/**
  * Undo the given transaction.
  * Situations:
  *     I paid someone (byMe):            REVERSE (invoice)
@@ -238,14 +260,15 @@ X;
  *     Someone paid me (toMe):           REVERSE (pay back)
  *     Someone invoiced me and I approved it: DISPUTED
  *     Someone charged me unilaterally: DISPUTED
+ * @param acct $mya: current account (possibly from scanner cookie, not signed in)
  * @param int $xid: the transaction number
  * @param string $where: additional (security check) criteria, if any
  * @param assoc $subs: additional substitutions for $where
  * @param bool $force: <reverse despite any shortfall or lack of permission>
  * @return a txRet object
  */
-function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
-  global $mya, $channel;
+function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
+  global $channel;
 
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
@@ -455,9 +478,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op snap', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'), $actorA->snap or $otherA->snap);
   if ($amount <= 0) r\tellAdmin(t('non-positive amount in be\\transfer'), $erInfo); // should never happen
 
-
-  foreach ([$actorA, $otherA] as $a) if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
-
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
     r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -492,15 +512,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       foreach ([$actorA, $otherA] as $a) if (!$a->proSe) $a->tell($msg, $erInfo);
       r\tellAdmin($msg . ' ' . tr($zErr->msg, $zErr->subs), $erInfo + $zErr->subs);
     } else return txErr($zErr->msg, $erInfo + $zErr->subs);
-  }
-
-  foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
-    if ($force) {
-      r\tellAdmin('forced without photoId', $erInfo); 
-    } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)
-//      r\tellAdmin('tx without photoId', $erInfo); 
-//      return txErr($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
-    }
   }
 
   if ($error = u\badAmount($amount)) return txErr($error, $erInfo);
@@ -588,15 +599,25 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   unset($DBTX);
   
-  // Report results
-  // notify other party by email about any completed transaction
-  foreach ([$actorA, $otherA] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
-
+  // Notify both parties by email about any completed transaction
   $res = sendNotifications($type, $tx, $shortfall);
   if ($type == 'payment' and $gainerA->sponsored) {
     list ($period, $periods) = [PER_1, 0];
     if ($per = db\get('period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(TRUE, $loserId, $amount, $period, $periods, $gainerId, FALSE);
+  }
+  
+  foreach ([$actorA, $otherA] as $a) {
+    if (!$a->confirmed) $a->setBit(B_CONFIRMED); 
+    if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
+    if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
+      if ($force) {
+        r\tellAdmin('forced without photoId', $erInfo); 
+      } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)
+//      r\tellAdmin('tx without photoId', $erInfo); 
+//      return txErr($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
+      }
+    }
   }
   
   return $res;
@@ -1136,7 +1157,7 @@ function accountChoices() {
   if (!$mya = r\acct()) return FALSE;
   $result[$aid = $mya->agentId] = $mya->agentA->fullName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM r_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
+  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
 
   if ($mya->admin or $mya->isAdmin2) {
     $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';

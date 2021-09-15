@@ -17,7 +17,7 @@ Setup:
   | .ZZC |       0 |
 
 Scenario: A member requests a joint account
-  Given relations:
+  Given these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | none       |        0 |     0 |    0 |
   | .ZZB | .ZZA  | none       |        0 |     0 |    0 |
@@ -63,7 +63,7 @@ Scenario: A joined account member looks at transaction history and summary
   | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
@@ -74,7 +74,7 @@ Scenario: A joined account member looks at transaction history and summary
   |  602 | .ZZA  |    400 | %today-2w | %today-2w |
   |  603 | .ZZA  |   -100 | %today    | %today    |
   # txid 603 used to have completed 0, but that's wrong -- we always immediately complete transfers out
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |  15 | %today-1m |    200 | .ZZA | .ZZD | favors  |
   |  16 | %today-1w |    500 | .ZZA | .ZZB | usd     |
@@ -113,11 +113,11 @@ Scenario: A joined account member looks at transaction history and summary
   | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
-  And transactions: 
+  And these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   4 | %today-1d |    100 | .ZZC | .ZZA | labor   |
   Then balances:
@@ -136,12 +136,12 @@ Scenario: A member requests two joins at once
   | uid  | jid  |*
   | .ZZA | 0    |
   | .ZZB | 0    |
-  And relations:
+  And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
   When member ".ZZA" visits "settings/relations" and selects "permission": "joint" for ".ZZD"
-  Then relations:
+  Then these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
@@ -150,7 +150,7 @@ Scenario: A member creates a joint account by clicking a link on the Dashboard p
   When member ".ZZA" completes form "prejoin" with values:
   | old | account |*
   |   1 | .ZZB    |
-  Then relations:
+  Then these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   And we say "status": "join request success"

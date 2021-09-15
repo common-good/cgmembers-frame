@@ -2,10 +2,8 @@ import QrScanner from './x/qr-scanner.min.js';
   
 QrScanner.WORKER_PATH = 'rcredits/js/x/qr-scanner-worker.min.js';
 
-navigator.getUserMedia (
-  {video: true}, // constraints
-
-  function(localMediaStream) { // successCallback
+navigator.mediaDevices.getUserMedia({video: true}) // constraints
+  .then(function(localMediaStream) { // successCallback
     $('#edit-result').hide();
 
     const scanner = new QrScanner(document.getElementById('scanqr'), 
@@ -27,11 +25,10 @@ navigator.getUserMedia (
     try {
       scanner.start();
     } catch (e) {alert(e);}
-  },
-  function(err) { // errorCallback
+  })
+  .catch(function(err) { // errorCallback
     if (has(err, 'denied')) err += '. You cannot scan a Common Good card without allowing this page to use the device\'s camera. To find out how to allow it, search the Internet for "allow camera access" and the name of your browser or device.';
     alert(err);
-  }
-);
+  });
 
 

@@ -13,7 +13,7 @@ Setup:
   | .ZZB | Bea Two  |       0 |     0 | ok                | USkk9000002 |
   | .ZZC | Our Pub  |      40 |   -10 | co,ok,debt,bankOk | USkk9000003 |
   | .ZZD | Dee Four |      80 |   -20 | ok,refill,debt    | USkk9000004 |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZB  |     manage |
   And these "txs2":
@@ -25,7 +25,7 @@ Setup:
   | 5005 |  .ZZC |     30 | %today-2d | %today-2d | %today-1d |
   | 5006 |  .ZZD |    140 | %today-2d | %today-2d | %today-1d |
   # usd transfer creation also creates corresponding transactions, if the transfer is complete
-  And transactions:
+  And these "txs":
   | xid | created    | amount | payer | payee | purpose |*
   | 7   | %today-10d |    100 | ctty | .ZZB | grant   |
   Then count "txs" is 7
@@ -57,7 +57,7 @@ Scenario: a member draws credit from the bank with zero floor
   Then these "txs2":
   | txid | payee | amount    | created | completed | channel | xid | deposit |*
   | 5007 |  .ZZB | %R_ACHMIN | %now    |         0 | %TX_WEB |   8 |       0 |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   8 | %todayd |      0 | 256  | .ZZB | from bank |      1 |
   And balances:
@@ -133,7 +133,7 @@ Scenario: a member draws credit from the bank then cancels
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZC |     10 | %today  |    %today |       0 | %TX_WEB |   8 |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking |*
   | 8   | %today  |     10 |  256 | .ZZC | from bank |      1 |
   And balances:
@@ -160,7 +160,7 @@ Scenario: a member with a negative balance requests a transfer from the bank
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZA |     30 | %today  |         0 |       0 | %TX_WEB |   8 |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking |*
   | 8   | %today  |      0 |  256 | .ZZA | from bank |      1 |
   
@@ -171,7 +171,7 @@ Scenario: a slave member requests a transfer
   And members have:
   | uid  | jid  | flags |*
   | .ZZD | .ZZE | ok    |
-  And relations:
+  And these "u_relations":
   | main | other | permission |*
   | .ZZD | .ZZE  |      joint |
   | .ZZE | .ZZD  |      joint |

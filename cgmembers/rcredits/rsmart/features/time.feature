@@ -12,7 +12,7 @@ Setup:
   | .ZZA | Abe One    | a@    | Atown | AK    | ccA | ccA2 | ok         |
   | .ZZB | Bea Two    | b@    | Btown | UT    | ccB | ccB2 | ok         |
   | .ZZC | Corner Pub | c@    | Ctown | CA    | ccC |      | ok,co      |
-  And devices:
+  And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And selling:
@@ -21,7 +21,7 @@ Setup:
   And company flags:
   | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
-  And relations:
+  And these "u_relations":
   | main | agent | num | permission | rCard |*
   | .ZZC | .ZZA  |   1 | scan       |       |
   | .ZZC | .ZZB  |   2 | scan       | yes   |

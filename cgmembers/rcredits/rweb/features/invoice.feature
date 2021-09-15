@@ -10,7 +10,7 @@ Setup:
   | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              |
   | .ZZC | Our Pub  |     0 | ok,confirmed,co   | hasBank | %T_BANK_ACCT |
   | .ZZD | Dee Four |     0 |                   |         |              |
-  And relations:
+  And these "u_relations":
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
   Then balances:
@@ -23,7 +23,7 @@ Scenario: A member confirms request to charge another member
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
   And we message "invoiced you" to member ".ZZB" with subs:
@@ -41,10 +41,10 @@ Scenario: A member confirms request to charge another member
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
   |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      | I       | 1   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
@@ -54,7 +54,7 @@ Scenario: A member confirms request to charge another member
   | .ZZC |       0 |
   
 Scenario: A member makes partial payments
-  Given invoices:
+  Given these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
@@ -63,10 +63,10 @@ Scenario: A member makes partial payments
   Then we say "status": "report tx|left on invoice" with subs:
   | did    | otherName | amount | remaining |*
   | paid   | Abe One   | $10    | $90       |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
   |   1 | %today  |     10 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA  | labor |
   
@@ -84,10 +84,10 @@ Scenario: A member makes partial payments
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Abe One   | $90    |
-  And transactions:
+  And these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
   |   2 | %today  |     90 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 2      |    100 | .ZZB  | .ZZA  | labor |
   
@@ -101,7 +101,7 @@ Scenario: A member confirms request to charge another member who has a bank acco
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Our Pub | 100    | %FOR_GOODS | stuff   |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZC | .ZZA | stuff |
   And we message "invoiced you" to member ".ZZC" with subs:
@@ -112,7 +112,7 @@ Scenario: A member confirms request to charge a not-yet member
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who      | amount | goods          | purpose |*
   | charge | Dee Four | 100    | %FOR_GOODS     | labor   |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZD | .ZZA | labor |
   And we message "invoiced you" to member ".ZZD" with subs:
@@ -129,7 +129,7 @@ Scenario: A member confirms request to charge a not-yet member
   When member ".ZZD" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |       100 | .ZZD  | .ZZA  | labor   | %today  |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    100 | .ZZD | .ZZA | labor |
   And we say "status": "finish signup|when funded"
@@ -141,10 +141,10 @@ Scenario: A member denies an invoice
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
   | deny |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status     | amount | payer | payee | for   |*
   |    1 | %today  | %TX_DENIED |    100 | .ZZB | .ZZA | labor |
-  And we notice "invoice denied" to member ".ZZA" with subs:
+  And we message "invoice denied" to member ".ZZA" with subs:
   | payerName | created | amount | purpose | reason |*
   | Bea Two   | %dmy    |   $100 | labor   | broke  |
   And balances:
@@ -160,7 +160,7 @@ Scenario: A member approves an invoice with insufficient funds
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
   | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
   And we say "error": "short invoice|when funded|how to fund" with subs:
@@ -182,24 +182,24 @@ Scenario: A member approves invoices forevermore
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot | always |*
   | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
-  Then invoices:
+  Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
-  And relations:
+  And these "u_relations":
   | main | agent | flags            |*
   | .ZZA | .ZZB  | customer,autopay |
 
 Scenario: A member approves an invoice to a trusting customer
-  Given relations:
+  Given these "u_relations":
   | main | agent | flags            |*
   | .ZZA | .ZZB  | customer,autopay |
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
-  Then transactions:
+  Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
   |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      | I       | 1   |
-  And invoices:
+  And these "tx_requests":
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:

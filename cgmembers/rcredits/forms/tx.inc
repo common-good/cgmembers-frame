@@ -11,19 +11,20 @@ use CG\Db as db;
  * @param string $args: all or some parameters for the form (when called from directory or draft form)
  */
 function formTx($form, &$sta, $type, $args = '') {
-  extract(just('who amount goods purpose', $args));
+  extract(just('who amount goods purpose', $args, ''));
   global $mya;
 
   $fbo = $mya->sponsored;
+  
   $pay = in($type, 'pay both');
   $charge = (in($type, 'charge both') and (!$fbo or $mya->admin)); // don't show charge button for sponsored org, except to admin
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
   $opDesc = $pay ? $payDesc : $chargeDesc;
   
   $selling = explode("\n", $mya->selling);
-  $purpose = nn($purpose) ?: ($charge ? nni($selling, 0) : '');
+  $purpose = $purpose ?: ($charge ? nni($selling, 0) : '');
   
-  focusOn(nn($who) ? 'amount' : 'who');
+  focusOn($who ? 'amount' : 'who');
 
 //  $mem = rent(radiosFld('', '', ray('inline', 1), ray(t('Member Non-member')))); // fails
   $mem = rentRadios('mem', 0, ray(t('Member Non-member')));
@@ -47,7 +48,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $email = emailFld(t('Email:'), [t('Email address')]);
   $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
-  $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft(nn($amount)) + vmin(.01));
+  $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft($amount) + vmin(.01));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
   $cat = $fbo ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));

@@ -18,7 +18,7 @@ function formMessage($form, &$sta, $args = '') {
   
   jsx('message');
   $title = t('Send a Message');
-  $subtext = t('Complete this form and click Send. The other member will receive an email from your email address. When they reply, you will also have their email address, so you can communicate by email after that (you won\'t need to use this form again).');
+  $subtext = t('<p>Complete this form and click Send. The other member receives an email from your email address. When they reply, you also have their email address, so you can communicate by email after that (you won\'t need to use this form again).</p><p>If you include an encrypted message, you receive notification when it has been seen.</p>');
   $to = textFld(REQ . t('To:'), [t('Recipient'),t('The account, name, or partial name of the member you want to send a message to.')]);
   $subject = textFld(REQ . t('Subject:'), [t('Subject')], dft(t('a message from %PROJECT member ') . $mya->fullName));
   $message = areaFld(t('Message:'), [t('Your message goes here.')]);
@@ -48,11 +48,14 @@ function formMessage_submit($form, &$sta) {
   $uid = whoId($sta);
   $a = r\acct($uid);
   if (strlen($secret)) { // encrypt secret message
-    $code = u\cryRay(ray('qid secret exp', $a->mainQid, $secret, $at = now() + HOUR_SECS * $expires));
+    $code = u\cryRay(ray('qid from secret exp', $a->mainQid, $mya->mainQid, $secret, $at = now() + HOUR_SECS * $expires));
     $url = "$base_url/community/message/x/code=$code";
     $message .= "<br><br>Secret: " . lnk($url, t('click here')) . t('. Link expires at %tm on %dt.', 'tm dt', u\tm($at), u\fmtDate($at));
   }
-  r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$mya->email => $mya->fullName]);
+  
+  if ($mya->anyAdmin) $mya = $mya->agentA;
+  $fromNm = $mya->proSe ? $mya->fullName : ($mya->agentA->fullName . " ($mya->fullName)");
+  r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$mya->email => $fromNm]);
   say('sent message', ray('fullName', $a->fullName));
 }
 
@@ -63,7 +66,7 @@ function formMessage_submit($form, &$sta) {
 function codeResult($code) {
   global $box;
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
-  extract(just('qid secret exp', $ray, NULL));
+  extract(just('qid from secret exp', $ray, NULL));
   if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
   
   
@@ -71,7 +74,8 @@ function codeResult($code) {
   $agent = db\get('uid', 'r_boxes JOIN users USING(uid)', 'code=:box ORDER BY ' . $by, compact('box'));
   if (!$a = r\acct($intendedA->id, $agent) or !$a->can(B_READ)) return softErr(t('You are not the intended recipient.')); */
 
-  if (!db\exists('r_boxes b LEFT JOIN r_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
+  if (!db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That secret information is not longer available.'));
+  r\acct($from)->tell('crypt msg received', ray('who time', $intendedA->fullName, ucwords(strtolower(strftime('%I:%M:%S%p %A %m/%d/%Y')))), t('encrypted message received'));
   return sayEmpty(t('<h3>Encrypted Message</h3>') . $secret);
 }

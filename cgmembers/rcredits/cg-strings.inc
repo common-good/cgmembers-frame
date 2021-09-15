@@ -37,6 +37,7 @@ global $tStrings; $tStrings = array(
   'not saved' => t('No change has been made to your information.'),
   'confirm by email' => t('We sent you an email with a link to click to confirm this %thing. If you do not see it right away, look in your Spam folder.'),
   'message sent' => t('Your message has been sent.'),
+  'crypt msg received' => t('Your encrypted message to %who was received at %time.'),
   'donation replaces' => t('If you choose a new recurring donation, it will replace your existing %period donation of %amt.'),
   'charge accepted' => t('Your charge to %who\'s account has been approved (it is no longer in dispute). No action is necessary.'),
   'gift successful' => t('Thank you for your donation!'),
