@@ -1,3 +1,6 @@
+2021-09-15 feature/getmedia
+. changed from navigator.getUserMedia to navigator.mediaDevices.getUserMedia with promises
+
 2021-09-14 feature/card-test
 . expanded be\posUndo() and be\undoTx() to handle reversals when scanning, not signed in
 . expanded tests to accept a numeric boxId in txs (or the corresponding code)
