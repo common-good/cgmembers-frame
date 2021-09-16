@@ -1,3 +1,7 @@
+2021-09-15 feature/zap-email
+. we can now null out email if it's bad
+. refactored yesno and confirmation
+
 2021-09-15 feature/getmedia
 . changed from navigator.getUserMedia to navigator.mediaDevices.getUserMedia with promises
 

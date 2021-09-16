@@ -148,6 +148,12 @@ function doit(what, vs) {
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
     $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
+    $('.zapEmail').click(function () {
+      confirm('Really mark this email bad?', function () {
+        $('#acctEmail, .copyEmail, .zapEmail').hide();
+        post('set', {k:'email', v:''}, report);
+      });
+    });
     $('#edit-note').focus();
 
     var fid = '#edit-helper';
@@ -914,8 +920,8 @@ function confirmTip(vs, val) {
   var tipDol = has(val, '%') ? '' : '$';
   var total = '$' + fmtAmt(parseFloat(vs['amt']) + parseFloat(val) * (tipDol ? 1 : (parseFloat(vs['amt']) / 100)));
   var title = vs['title'].replace('%tip', tipDol ? tipDol + fmtAmt(val) : val);
-  $.confirm({title: title, text: vs['msg'].replace('%total', total),
-    confirm: function () {location.href = baseUrl + '/card/tip/xid=' + vs['xid'] + '&tip=' + val.replace('%', '!');}, // exclamation point means percent in URL
-    cancel: function() {}, confirmButton: 'Yes', cancelButton: 'Cancel'});
+  confirm(title, vs['msg'].replace('%total', total), function () {
+    location.href = baseUrl + '/card/tip/xid=' + vs['xid'] + '&tip=' + val.replace('%', '!'); // exclamation point means percent in URL
+  });
   return false;
 }

@@ -45,9 +45,11 @@ function formSummary($form, &$sta) {
   $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
   $address = $mya->cAdmin 
   ? item(($mya->trialco ? $mya->contact : $mya->postalAddr)
-    . '<br>' . u\fmtPhone($mya->phone) . "<br><span id=\"acctEmail\">$mya->email</span> "
-    . btn('', 'c', 'default', '', clas('copyEmail'))
-    , t('Contact:'))
+    . '<br>' . u\fmtPhone($mya->phone) . ($mya->email ?
+        "<br><span id=\"acctEmail\">$mya->email</span> "
+      . btn('', 'c', 'default', '', clas('copyEmail'))
+      . btn('', 'x', 'danger', '', clas('zapEmail'))
+    : t('BAD EMAIL')), t('Contact:'))
   : NULL;
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);

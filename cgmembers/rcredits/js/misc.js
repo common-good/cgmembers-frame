@@ -137,9 +137,12 @@ function post(op, data, success) {
   jQuery.post(ajaxUrl, data, success); // jQuery not $, because drupal.js screws it up on formVerify
 }
 
-function yesno(question, yes, no) {
+function yesno(question, yes, no) {return confirm0('Yes or No', question, 'Yes', 'No', yes, no);}
+function confirm(question, yes, no) {return confirm0('Confirm', question, 'Ok', 'Cancel', yes, no);}
+
+function confirm0(title, question, labYes, labNo, yes, no) {
   if (typeof no === 'undefined') no = (function() {});
-  $.confirm({title: 'Yes or No', text: question, confirm: yes, cancel: no, confirmButton: 'Yes', cancelButton: 'No'});
+  $.confirm({title: title, text: question, confirm: yes, cancel: no, confirmButton: labYes, cancelButton: labNo});
 }
 
 var yesSubmit = false; // set true when user confirms submission (or makes a choice)
