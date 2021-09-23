@@ -16,7 +16,7 @@ use CG\Db as db;
  *   URL parameters for undo, tip, or receipt (xid, pct)
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
-  global $mya, $box;
+  global $mya, $box, $boxId;
 
   if (!$scanner = r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
@@ -25,6 +25,9 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     $scanner = $mya->mainQid;
   }
   $scannerA = $mya ?: r\acct($scanner); // allow even friends to use the device, without changing standard scanner
+
+  if (!$mya) $boxId = w\boxId($box, $scannerA->id);
+flog(compact(ray('dom code scanner box boxId')));
 
   if ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
