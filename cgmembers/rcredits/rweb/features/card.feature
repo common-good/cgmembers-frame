@@ -237,7 +237,7 @@ Scenario: a member adds a tip
   And these "txs":
   | xid | created | amount | payer | payee | purpose   | taking | boxId |*
   |   3 | %today  |     10 | .ZZA  | .ZZC  | groceries | 1      | 2     |
-  
+
   When member "?" visits "card/tip/xid=3"
   Then we show "" with:
   | No Tip  | |
@@ -246,7 +246,7 @@ Scenario: a member adds a tip
   | 25% Tip | $2.50 |
   | Custom % | |
   | Custom $ | |
-  
+
   When member "?" visits "card/tip/xid=3&tip=20!"
   Then these "txs":
   | eid | xid | amount | payer | payee | purpose   | type     |*

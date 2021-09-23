@@ -1747,7 +1747,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH stepup ASurtxAmountRoundsToZero
  *     MAKE tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
- *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     BOTH tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     BOTH tx AMemberPaysAnotherMemberRepeatedly
@@ -2092,12 +2092,14 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
+ *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
  */
 function cookieIs($nm, $v) {
   global $testOnly, $box;
 
   if (!$testOnly) r\setCook($nm, $v);
-  if (in($nm, 'box')) $$nm = $v;
+  if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
+    
   return t\eq("cookie $nm", $v, $_COOKIE[$nm]);
 }
 

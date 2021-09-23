@@ -243,6 +243,7 @@ function tip($tx, $tip) {
     $tipP = numFld(t('Tip:'), '', suffix('% ' . btn('', 'Go', 'primary', 'sm')) + vmin(0));
     $tipD = numFld(t('Tip: $'), '', suffix(btn('', 'Go', 'primary', 'sm')) + vmin(0));
     jsx('cardTip', 'xid msg title amt', $tx->xid, t('Total charge including tip is %total. Okay?'), t('Confirm %tip tip'), $tx->amt2);
+
     return cgForm(compact(ray('buttons tipP tipD')), '', 'narrow left');
   }  
 }

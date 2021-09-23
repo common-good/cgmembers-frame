@@ -70,8 +70,12 @@ Scenario: A member asks to pay another member for loan/reimbursement
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
-  
+
 Scenario: A member confirms request to pay another member
+  Given cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZA |
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
@@ -82,14 +86,14 @@ Scenario: A member confirms request to pay another member
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And these "txs":
-  | xid | created | amount | payer | payee | purpose      | taking |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
+  | xid | created | amount | payer | payee | purpose      | boxId | taking |*
+  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
   | .ZZB |     100 |
   | .ZZC |       0 |
-  
+
 Scenario: A member confirms request to pay another member a lot
   Given balances:
   | uid  | balance       |*

@@ -15,9 +15,11 @@ include_once __DIR__ . '/donate.inc'; // for getCGPayArgs() function
  * linked to this page with a variety of mostly-optional parameters (see http://cg4.us/paycg for details)
  */
  
-function formCGPay($form, &$sta) {
+function formCGPay($form, &$sta, $args = '') {
   global $mya;
-  $args = u\_GET() ?: $_POST;
+
+  if (!$args) $args = u\_GET(); // can't use u\setDft here
+  $args = $args ? urlq2ray($args) : $_POST;
   if (!$res = getCGPayArgs($args)) return; // if there were errors, don't continue
   extract($res); // coA, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
   

@@ -155,7 +155,11 @@ class Tx {
    * @return the xid of the transaction
    */
   function insert($allowModification = FALSE) {
+    global $boxId;
+    
     $tx = $this;
+    u\setDft($tx->boxId, nn($boxId, 0));
+    
     $DBTX = \db_transaction();
     if ($allowModification and $tx->xid != 0) {
       $xid = $tx->xid;
