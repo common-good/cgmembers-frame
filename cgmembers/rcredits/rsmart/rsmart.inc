@@ -4,6 +4,7 @@ use CG as r;
 use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
+use CG\Web as w;
 
 const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
 
@@ -329,19 +330,11 @@ function photoReturn($pic) {
  */
 function charge($args, $type = 'charge') {
   global $mya;
-  global $boxUser;
   
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args, NULL));
   $force = (int) $force;
-  $boxId = $boxUser;
-  
-  /* extract(just('description device', $args, ['', null])); */
-  /* $boxId = $device; */
-
-  /* $goods = $args['goods']; */
-  /* unset($args['goods']); */
    
   if (!$member) return posErr('missing member'); // handle empty string (versus missing param)
   if (!$proof) return posErr(missingArg('proof', []));
@@ -401,7 +394,7 @@ function charge($args, $type = 'charge') {
       $message = t('Transaction has been canceled.');
     } else { // doesn't exist and should (forcing or not)
       if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-      $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created force boxId')));
+      $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created force')));
       if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
 
       if (!$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
@@ -615,7 +608,7 @@ function decodeDevice($device) {
  * @return the error (FALSE if none)
  */
 function badDevice(&$device, $signin, $version) {
-  global $mya, $boxUser;
+  global $mya, $boxId;
   global $nextCode; // tests usurp generated device code, using this instead
   if ($version >= 230 and $device and !$device = decodeDevice($device)) return posErr('unknown device'); // bad crypt
 
@@ -626,11 +619,7 @@ function badDevice(&$device, $signin, $version) {
   }
 
   // find device in the db or put it there
-  $id = $boxUser = db\get('id', 'r_boxes', ray('code uid', $device, $mya->id));
-  if ($id) { // device is in db, record this access
-    $info = ray('id access version', $id, now(), $version);
-    db\update('r_boxes', $info, 'id'); // remember time last accessed so we can drop the deadwood
-  } else { // device is not in our database, but may have been set up on another server
-    $mya->makeBox(substr($device, 0, DEVICE_MAXLEN), TX_APP, $version); // record this device (abbreviated) in our db
-  }
+  if (!nn($boxId)) $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya->id, $version);
+
+  return FALSE;
 }

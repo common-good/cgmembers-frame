@@ -51,7 +51,7 @@ code {color:#637c36;}
 .breadcrumb {position:absolute; z-index:2; margin:51px 0 0 75px; padding:5px 15px; font-size:85%; background-color:white;}
 
 /* ui dialogs */
-.modal-dialog {margin-top:60px;}
+.modal-dialog {margin-top:60px; max-width:98%;}
 .modal-dialog .modal-header {background-color:darkgreen;}
 .modal-dialog .modal-title {color:white;}
 .ui-dialog-titlebar-close {display:none;}
@@ -60,7 +60,7 @@ code {color:#637c36;}
 [data-trigger="hover"] +div.popover, /* tooltip */
 [data-trigger="click"] +div.popover,
 .ui-dialog {
-  min-width:250px;
+  min-width:250px; max-width:98%;
   box-shadow: 0px 4px 4px rgba(0,0,0,0.7);
   -webkit-box-shadow: 0 4px 4px rgba(0,0,0,0.7);
   -moz-box-shadow: 0 4px 4px rgba(0,0,0,0.7);

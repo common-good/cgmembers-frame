@@ -25,7 +25,7 @@ function formSsn($form, &$sta, $args = '') {
       $thing = t('Birth Date');
       $federalId = NULL;
     } else {
-      $thing = t('Social Security Number');
+      $thing = t('SSN');
       $dob = NULL;
     }
     $title = t('Confirm Your ') . $thing;

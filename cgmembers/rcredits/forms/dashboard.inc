@@ -66,7 +66,7 @@ function formDashboard($form, &$sta, $args = '') {
     $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
   } else $shortcuts = NULL;
 
-  $title = t('You: ' . $mya->fullName);
+  $title = t('You: ' . $mya->bestName);
   $acct = $mya->mainQid;
   $desc = $mya->jid ? t(' (joined with %nm)', 'nm', $mya->jA->fullName) : '';
   $lnkShowQr = lnk('/show-qr', t('Show QR'));

@@ -88,9 +88,7 @@ function fixData(&$info, $direct = FALSE) {
     if (nn($federalId)) u\digits($federalId);
     if (nn($dob) and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
   }
-  if (!empty($boxId) and !is_numeric($boxId)) {
-    $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
-  }
+  if (!empty($boxId) and !is_numeric($code = $boxId)) $boxId = db\get('id', 'r_boxes', compact('code'));
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
     if (strhas($v, '@')) {
@@ -1115,7 +1113,7 @@ function addAttribs(&$thing) {
  * @return: successful (always successful for anonymous)
  */
 function logIn($id) {
-  global $box, $boxUser, $mya, $user;
+  global $box, $boxId, $mya, $user;
   if ($id == '?') {
     w\signout(TRUE);
   } else {
@@ -1126,8 +1124,8 @@ function logIn($id) {
       w\signout(TRUE);
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
       r\setAcct($a);
-      $boxUser = w\boxUser($box, $a->id);
     }
+    $boxId = w\boxId($box, $a->id);
   }
   return TRUE;
 }
