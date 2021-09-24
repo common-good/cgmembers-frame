@@ -149,7 +149,7 @@ function doit(what, vs) {
     $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
     $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
     $('.zapEmail').click(function () {
-      confirm('Really mark this email bad?', function () {
+      confirm(null, 'Really mark this email bad?', function () {
         $('#acctEmail, .copyEmail, .zapEmail').hide();
         post('set', {k:'email', v:''}, report);
       });

@@ -443,7 +443,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-card .form-item-buttons .btn-tip.btnND {margin-left:32px;}
 #frm-card .form-type-textfield a.btn {margin-left:20px;}
 #frm-card .btn big {font-weight:bold;}
-#frm-card .btn small {color:silver;}
+#frm-card .btn small {color:lightyellow;}
 
 .page-card-tip #header,
 .page-card-tip .form-item-title {display:none;}

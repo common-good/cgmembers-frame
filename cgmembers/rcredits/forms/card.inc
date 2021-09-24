@@ -26,9 +26,6 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   }
   $scannerA = $mya ?: r\acct($scanner); // allow even friends to use the device, without changing standard scanner
 
-  if (!$mya) $boxId = w\boxId($box, $scannerA->id);
-flog(compact(ray('dom code scanner box boxId')));
-
   if ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
     return cardDone($z);
@@ -37,7 +34,7 @@ flog(compact(ray('dom code scanner box boxId')));
     return cardDone(ray('ok msg', TRUE, t('This device is no longer associated with any account.')));
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
-    $boxes = db\lst('id', 'r_boxes', ray('code', $box));
+    $boxes = db\col('id', 'r_boxes', ray('code', $box));
     if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->id, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
     $func = "\\CG\\Web\\$func";
     return $func($tx, $tip); // only tip uses $tip
@@ -109,7 +106,7 @@ function formCard_submit($form, &$sta) {
   }
 
   // mode = 'normal'    
-  $scannerA = $mya ?: r\acct(r\cook('scanner'));
+  $scannerA = getScannerA();
   $a = r\acct($uid);
   $op = op($sta);
   
@@ -160,8 +157,7 @@ function chooseScanner($choices, $tail) {
 function cardDone($z) {
   global $mya;
 
-  $scanner = r\cook('scanner');
-  if (!$actorA = $mya ?: r\acct($scanner)) return softErr(t('Sign in or scan a customer card to continue.'));
+  if (!$actorA = getScannerA()) return softErr(t('Sign in or scan a customer card to continue.'));
   extract(just('ok msg xid subs', $z, NULL));
   if (!$xid and $subs) extract(just('xid', $subs, NULL));
   if ($msg) say($msg, $ok ? '' : 'err');
@@ -174,6 +170,7 @@ function cardDone($z) {
   if ($xid and $tx = r\Tx::read($xid) and !$tx->reversesXid and !$tx->reversedByXid) {
     foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
     if (hasTip($tx)) $tip = '';
+    $receipt = ''; // disable until this prints properly on mobile
     $buttons = "$undo<br>$buttons<br>$tip$receipt";
     $buttons = item($buttons);
     $tx = r\Tx::read($xid);
@@ -251,4 +248,16 @@ function tip($tx, $tip) {
   }  
 }
 
-function hasTip($tx) {return db\exists('txs', ray('uid1 uid2 type', $tx->uid1, $tx->uid2, E_AUX));}
+function hasTip($tx) {return db\exists('txs', ray('xid uid1 uid2 type', $tx->xid, $tx->uid1, $tx->uid2, E_AUX));}
+
+/**
+ * Return the account to scan from. Also set $boxId.
+ */
+function getScannerA() {
+  global $mya, $box, $boxId;
+  
+  if ($mya) return $mya;
+  $scannerA = r\acct(r\cook('scanner'));
+  $boxId = w\boxId($box, $scannerA->id);
+  return $scannerA;
+}
