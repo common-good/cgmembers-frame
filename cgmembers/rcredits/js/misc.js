@@ -317,7 +317,7 @@ function htmlEntities(str) {
 
 function fmtAmt(n) {
   var res = (Math.round((parseFloat(n) + Number.EPSILON) * 100) / 100).toLocaleString(undefined, {maximumFractionDigits:2});
-  return res.indexOf('.') == res.length - 2 ? res + '0' : res;
+  return (has(res, '.') && res.indexOf('.') == res.length - 2) ? res + '0' : res;
 }
 
 /* function fmtAmt(n, minDigs, maxDigs) {
