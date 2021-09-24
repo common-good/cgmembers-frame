@@ -609,7 +609,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   foreach ([$actorA, $otherA] as $a) {
     if (!$a->confirmed) $a->setBit(B_CONFIRMED); 
-    if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
+//    if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
     if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
       if ($force) {
         r\tellAdmin('forced without photoId', $erInfo); 

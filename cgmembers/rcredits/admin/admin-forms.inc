@@ -322,7 +322,7 @@ function formMemberList($form, &$sta) {
     $a = r\acct($uid);
     $phone = str_replace('+1 ', '', u\fmtPhone($phone0 = $a->phone));
     $postalAddr = $a->postalAddr;
-    $email = $a->email;
+    $email = $a->email ?: t('BAD EMAIL');
     $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid\">$fullName</a>";
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);

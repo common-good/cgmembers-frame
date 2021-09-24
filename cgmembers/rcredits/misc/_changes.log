@@ -1,3 +1,19 @@
+2021-09-21 feature/boxid
+. disabled notification of tx by a SNAP member
+. fixed bug that failed to record boxId in web transactions
+. fixed errors in rweb.css and cg.css (especially for mobile)
+. fixed bug in cgbutton creator that used the wrong URL for FBO accounts
+. fixed bugs in donate form that made FBO donations fail
+. shortened some titles to fit on mobile and restricted title height so as not to obscure the content on mobile (for long titles)
+. fixed bug in js confirm()
+. fixed bugs in tip feature
+. disabled receipts temporarily
+. fixed bug in js fmtAmt()
+
+2021-09-15 feature/zap-email
+. we can now null out email if it's bad
+. refactored yesno and confirmation
+
 2021-09-15 feature/getmedia
 . changed from navigator.getUserMedia to navigator.mediaDevices.getUserMedia with promises
 

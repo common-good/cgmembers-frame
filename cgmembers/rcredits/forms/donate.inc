@@ -10,6 +10,7 @@ use CG\Db as db;
   Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account.
 */
 function formDonate($form, &$sta, $args = NULL) {
+  if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
   $mya = w\eLinkAcct($sta, $args, 'any');
   
@@ -196,7 +197,7 @@ function completeCCGift($args) {
   be\insertTxes($txes, $xid);
   unset($DBTX);
   
-  r\tellAdmin(t('CC donation complete (FBO %coName)'), compact(ray('fullName amount period')) + ['coName' => $coA->bestName]);
+  r\tellAdmin(t('CC donation complete (FBO %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
   
   return be\thanks(FALSE, $pid, $amount, $period, 1, $coId, TRUE);
 }

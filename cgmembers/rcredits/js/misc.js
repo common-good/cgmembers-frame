@@ -137,9 +137,13 @@ function post(op, data, success) {
   jQuery.post(ajaxUrl, data, success); // jQuery not $, because drupal.js screws it up on formVerify
 }
 
-function yesno(question, yes, no) {
-  if (typeof no === 'undefined') no = (function() {});
-  $.confirm({title: 'Yes or No', text: question, confirm: yes, cancel: no, confirmButton: 'Yes', cancelButton: 'No'});
+function yesno(question, yes, no) {return confirm0('Yes or No', question, 'Yes', 'No', yes, no);}
+function confirm(title, question, yes, no) {return confirm0(title, question, 'Ok', 'Cancel', yes, no);}
+
+function confirm0(title, question, labYes, labNo, yes, no) {
+  if (title === null) title = 'Confirm';
+  if (typeof no === 'undefined') no = function() {};
+  return $.confirm({title: title, text: question, confirm: yes, cancel: no, confirmButton: labYes, cancelButton: labNo});
 }
 
 var yesSubmit = false; // set true when user confirms submission (or makes a choice)
@@ -313,7 +317,7 @@ function htmlEntities(str) {
 
 function fmtAmt(n) {
   var res = (Math.round((parseFloat(n) + Number.EPSILON) * 100) / 100).toLocaleString(undefined, {maximumFractionDigits:2});
-  return res.indexOf('.') == res.length - 2 ? res + '0' : res;
+  return (has(res, '.') && res.indexOf('.') == res.length - 2) ? res + '0' : res;
 }
 
 /* function fmtAmt(n, minDigs, maxDigs) {

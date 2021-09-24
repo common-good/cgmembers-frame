@@ -1632,7 +1632,7 @@ X;
     if ($a->anyAdmin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
 
     $created = $access = now();
-    $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
+    $boxnum = db\get('MAX(boxnum)', 'r_boxes', compact('uid')) + 1;
     $info = compact(ray('uid code boxnum access created channel version'));
     return db\insert('r_boxes', $info);
   }

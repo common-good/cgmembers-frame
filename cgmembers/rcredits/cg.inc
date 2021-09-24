@@ -306,7 +306,8 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
 
-  $subs['emailCoded'] = urlencode(u\cry('P', is_array($toEmail) ? key($toEmail) : $toEmail));
+  if (!$toEmailSimple = is_array($toEmail) ? key($toEmail) : $toEmail) return FALSE; // no email address, no way to send
+  $subs['emailCoded'] = urlencode(u\cry('P', $toEmailSimple));
   
   $testEmails[] = compact(ray('index toEmail subs'));
 
@@ -334,7 +335,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
 
   if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
 /**/  if (!test()) debug(compact(ray('subject to reply body'))); // show stuff to tester
-    if (isDEV or $toEmail != R_ADMIN_EMAIL) return TRUE;
+    if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE;
   }
   
   try { // catch SwiftMailer errors
@@ -375,7 +376,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     if (nn($sms)) $m->setSubject('')->setTo($toEmail); // send as text message
 
     $mailer->send($m);
-    if (nn($jA) and $index != 'tell-staff') { // also send to partner in joint account unless it's an admin notice
+    if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
       $m->setTo([$jA->email => $jA->fullName]);
       $m->setSubject($subject . t(' (for %acct)', 'acct', $jA->fullName));
       $mailer->send($m);
@@ -386,7 +387,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
       if (!isDEV) u\loga('FATAL', $exErr);
 /**/  if ($channel == TX_WEB) die($exErr);
     }
-    u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
+    u\EXPECT($toEmailSimple != R_ADMIN_EMAIL, 'cannot send admin email');
     return r\tellAdmin(t('cannot send email'), $erInfo + compact('exErr'));
   }
   return TRUE;

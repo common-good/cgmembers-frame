@@ -1861,10 +1861,10 @@ function drupal_bootstrap() {
     if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
   }
 
-  global $channel, $boxUser, $box;
+  global $channel, $boxId, $box;
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
   $box = nni($_COOKIE, 'box') ?: r\setCook('box', u\code()); // a unique persistant identifier for the current machine (set randomly, if none yet)
-  if ($mya) $boxUser = w\boxUser($box, $mya->id); // so far used only when recording transactions
+  if ($mya) $boxId = w\boxId($box, $mya->id); // so far used only when recording transactions
 
   return DRUPAL_BOOTSTRAP_FULL;
 }

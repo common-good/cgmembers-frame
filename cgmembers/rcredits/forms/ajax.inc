@@ -107,10 +107,10 @@ function ajax($args = NULL) {
     return ajaxRet(u\decryRay($jsCode));
     
   } elseif ($op == 'set') {
-    extract(just('uid k v', $data));
-    if ($a = r\acct($uid)) {
+    extract(just('k v', $data));
+    if ($mya) {
       if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
-      $a->update($k, $v);
+      $mya->update($k, $v);
     } else return ajaxErr(t('nope'));
     
   } elseif ($op == 'dpOffset') {

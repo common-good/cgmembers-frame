@@ -15,7 +15,7 @@ function formScanQr($form, &$sta, $args = '') {
 
   js('scanqr');
   
-  $title = t('Scan a %PROJECT Card');
+  $title = t('Scan a CG Card');
   
   $result = item(t('No camera is available (yet) on this device.'), NBSP);
   $qr = item(w\tags('video', '', ray('id', 'scanqr')), BARE);
