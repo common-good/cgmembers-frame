@@ -5,7 +5,9 @@
   .no-print, #header, #footer-menu {display:none;}
   a[href]:after {content:none;}
   #edit-title {position:static; padding:0; padding-bottom:8px;}
+  .page-card-receipt #edit-title h3 {margin-top:0;}
   #edit-title .control-data {border-bottom:1px solid #666666;}
+  #edit-goBack {display:none;}
   #footer {border-top:1px solid #666666; padding-top:8px;}
 }
 
@@ -218,7 +220,8 @@ form {max-width:834px; margin:0 auto;}
   .submenu .popover .arrow:after {border-left-color:#044687; border-bottom-color:transparent;}
   body:not(.page-partner):not(.page-settings-partnerend) .form-item-title .control-label {display:none;}
   body:not(.page-partner):not(.page-settings-partnerend) .form-item-title {width:100%; max-height:46px; overflow:hidden; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
-  body:not(.page-partner) .form-item-title .control-data {width:100%; max-width:100% !important; padding:0 12px; float:none;}
+  body:not(.page-partner) .form-item-title .control-data,
+  body:not(.page-partner) .form-item-logo .control-data {width:100%; max-width:100% !important; padding:0 6px; float:none;}
   body:not(.page-partner) .form-item-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   .page-card #main {margin:0 0 0 10px !important;}
@@ -438,7 +441,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-card .form-item-buttons .btn-done.btn-md {margin-top:80px; margin-bottom:80px;}
 #frm-card .form-item-buttons label {display:none;}
 #frm-card .form-item-buttons .control-data {width:100%;}
-#frm-card .form-item-buttons .btn-tip {margin:20px 0;}
+#frm-card .form-item-buttons .btn-tip:not(.btn-done) {margin:20px 0;}
 #frm-card .form-item-buttons .btn-tip.btn2 {margin:40px 25px;}
 #frm-card .form-item-buttons .btn-tip.btnND {margin-left:32px;}
 #frm-card .form-type-textfield a.btn {margin-left:20px;}
@@ -465,16 +468,23 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 }
 
 .page-card-receipt {width:48mm; padding:0; margin:0 4.5mm;}
-.page-card-receipt div {font-size:12px;}
+.page-card-receipt div {font-size:11px;}
 .page-card-receipt .form-group {margin:0;}
-.page-card-receipt .control-data,
-.page-card-receipt .control-label {width:auto; min-width:15mm; max-width:33mm; text-align:left; padding:0;}
+.page-card-receipt #frm-card .control-data,
+.page-card-receipt #frm-card .control-label {width:15mm; min-width:15mm; text-align:left; padding:0; margin-bottom:2px;}
+.page-card-receipt #frm-card #edit-tip .control-data {border-bottom:1px dotted black;}
+.page-card-receipt #frm-card #edit-goBack .control-data {text-align:right;}
+.page-card-receipt #frm-card .control-data {width:22mm; max-width:22mm;}
 .page-card-receipt #edit-logo .control-data,
 .page-card-receipt #edit-title .control-data {width:100%; max-width:48mm; text-align:center;}
 .page-card-receipt #edit-logo img {max-height:30px; max-width:50%; text-align:center; margin-bottom:10px;}
-.page-card-receipt #edit-title h3 {font-size:16px; margin-top:0;}
 .page-card-receipt #edit-logo label,
 .page-card-receipt #edit-title label {display:none;}
+
+.page-card-receipt #edit-amt {margin-top:5px; padding-top:5px; border-top:dotted 1px black;}
+.page-card-receipt #edit-amt .control-data,
+.page-card-receipt #edit-tip .control-data,
+.page-card-receipt #edit-total .control-data {text-align:right;}
 
 .page-card-receipt #main {margin-bottom:5px;}
 .page-card-receipt #footer {width:48mm; margin:0 4.5mm; font-size:10px;}

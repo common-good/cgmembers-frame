@@ -102,20 +102,22 @@ function doit(what, vs) {
     });
     break;
     
-  case 'cardTip': // handle custom tips
-    $('.form-item-tipP, .form-item-tipD').hide();
-    $('.btnNP, .btnND').click(function () {
+  case 'cardTip': // handle tips
+    $('.form-item-tipP, .form-item-tipD').hide(); // hide the custom inputs
+    $('.btnNP, .btnND').click(function () { // custom tip!
       $('.btn-tip').hide(); // hide all tip buttons
       var type = $(this).hasClass('btnNP') ? 'P' : 'D';
-      $('.form-item-tip' + type).show().find('input').focus();
+      $('.form-item-tip' + type).show().find('input').focus(); // show just the input chosen
       return false;
     });
-    $('#frm-card .form-type-textfield a.btn').click(function () {
+    $('#frm-card input').change(function () {$(this).parent().find('a').click();}); // submit on change
+      
+    $('#frm-card .form-type-textfield a.btn').click(function () { // confirm custom tip
       var input = $(this).parents('.form-type-textfield').find('input');
       var val = input.attr('id') == 'edit-tipp' ? (input.val() + '%') : input.val();
       return confirmTip(vs, val);
     });
-    $('.btn1, .btn2, .btn3').click(function () {return confirmTip(vs, $(this).find('big').text());});   
+    $('.btn1, .btn2, .btn3').click(function () {return confirmTip(vs, $(this).find('big').text());}); // confirm standard tip
     
     // fall through to cardTipDone
     
@@ -133,8 +135,9 @@ function doit(what, vs) {
     break;
     
   case 'receipt':
-    window.onafterprint = function(){location.href = baseUrl + '/card/done/' + vs['code'];}  
-    window.print();
+// fails on mobile    window.onafterprint = function () {history.go(-1);}
+    $('.btn-print').click(function () {window.print(); return false;});
+    $('.btn-goback').click(function () {history.go(-1); return false;});
     break;
     
   case 'deposits':

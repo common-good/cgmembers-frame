@@ -1,3 +1,11 @@
+2021-09-25 feature/receipt
+. we now allow logging of data parameter in AJAX
+. fixed formatting problems on receipts
+. added tip and total to receipts
+. reworked receipts so they print properly on mobile
+. fixed formatting of tips buttons
+. automated submission of custom tips
+
 2021-09-21 feature/boxid
 . disabled notification of tx by a SNAP member
 . fixed bug that failed to record boxId in web transactions

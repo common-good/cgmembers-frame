@@ -845,6 +845,8 @@ function sanitizePage($page) {
      'href="(mailto:|http|#|/|"|sadmin)',
      '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
     ]);
+    
+  if (isDEV) foreach (ray('http https') as $http) $except .= '|<img src="' . $http . preg_quote(preg_replace('/https?/', '', BASE_URL), '~');
 
   $uri = $_SERVER['REQUEST_URI'];
   if ($uri == 'scan-qr') $except .= '|<video';
@@ -2241,9 +2243,10 @@ function goNextStep($step, $msg = NULL, $info = []) {
   return w\go($url, $msg);
 }
 
-function backButton() {
+function backButton($size = 'xs') {
   jsx('back-button'); 
-  return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
+  return btn('', '<span>&laquo;</span>&nbsp;' . t('Back'), '', $size, clas('btn-back'));
+//  return tr('<button class="btn btn-back btn-%size btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Back</button>', compact('size'));
 }
 
 /**

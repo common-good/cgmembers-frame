@@ -1545,7 +1545,8 @@ function strUnscramble($s, $key) {return strScramble($s, $key, TRUE);}
  * Return the array with secret values hidden.
  */
 function noSecrets($ray) {
-  foreach ($ray as $k => $v) if (in($k, R_NOLOG)) $ray[$k] = '(?)';
+  global $channel;
+  foreach ($ray as $k => $v) if (in($k, R_NOLOG) and !($k == 'data' and $channel == TX_AJAX)) $ray[$k] = '(?)';
   return $ray;
 }
 
