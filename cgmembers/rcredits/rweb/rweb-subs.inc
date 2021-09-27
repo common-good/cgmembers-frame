@@ -845,7 +845,7 @@ function sanitizePage($page) {
      'href="(mailto:|http|#|/|"|sadmin)',
      '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
     ]);
-
+    
   $uri = $_SERVER['REQUEST_URI'];
   if ($uri == 'scan-qr') $except .= '|<video';
 
@@ -1369,7 +1369,7 @@ function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you h
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + r\budgetCats('Income'));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
-function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
+function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
   $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
@@ -1377,7 +1377,7 @@ function ssnFld($req = REQ, $extra = []) {
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
-function logoFld($coA) {return item($coA->logo ? tr('<img src="%logo">', 'logo', "https://$coA->logo?" . time()) : '');}
+function logoFld($coA) {return item($coA->logo ? tr('<img src="%logo">', 'logo', PROTOCOL . "://$coA->logo?" . time()) : '');}
 
 /**
  * Standardize the "selling" field input.
@@ -2241,9 +2241,10 @@ function goNextStep($step, $msg = NULL, $info = []) {
   return w\go($url, $msg);
 }
 
-function backButton() {
+function backButton($size = 'xs') {
   jsx('back-button'); 
-  return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
+  return btn('', '<span>&laquo;</span>&nbsp;' . t('Back'), '', $size, clas('btn-back'));
+//  return tr('<button class="btn btn-back btn-%size btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Back</button>', compact('size'));
 }
 
 /**

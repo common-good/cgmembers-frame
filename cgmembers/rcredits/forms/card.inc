@@ -34,7 +34,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     return cardDone(ray('ok msg', TRUE, t('This device is no longer associated with any account.')));
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
-    $boxes = db\col('id', 'r_boxes', ray('code', $box));
+    $boxes = db\col('id', 'r_boxes', ray('code', $box)) ?: -1;
     if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->id, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
     $func = "\\CG\\Web\\$func";
     return $func($tx, $tip); // only tip uses $tip
@@ -169,8 +169,7 @@ function cardDone($z) {
   $buttons = "$lnkShowQr$lnkScanQr";
   if ($xid and $tx = r\Tx::read($xid) and !$tx->reversesXid and !$tx->reversedByXid) {
     foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
-    if (hasTip($tx)) $tip = '';
-    $receipt = ''; // disable until this prints properly on mobile
+    if (tipAmt($tx)) $tip = '';
     $buttons = "$undo<br>$buttons<br>$tip$receipt";
     $buttons = item($buttons);
     $tx = r\Tx::read($xid);
@@ -192,14 +191,19 @@ function receipt($tx) {
   $nm = item($tx->a1->fullName, t('From:'));
   $acct = item($tx->a1->mainQid, t('Account:'));
   $to = item($bizA->fullName, t('Paid To:'));
-  $amt = item(u\fmtAmt($tx->amt2), t('Amount:'));
+  $amt = item(u\fmtAmt($tx->amt2, '$'), t('Amount:'));
+  if ($tipAmt = tipAmt($tx)) {
+    $tip = item(u\fmtAmt($tipAmt, '$'), t('Tip:'));
+    $total = item(u\fmtAmt($tx->amt2 + $tipAmt, '$'), t('Total:'));
+  } else $tip = $total = NULL;
   $for = item($tx->e2->description, t('For:'));
   $xid = item($tx->xid, t('Tx#:'));
   $agt = $tx->e2->agentUid == $tx->e2->uid ? NULL : item(r\acct($tx->e2->agentUid)->mainQid, t('Agent:'));
+  $goBack = item('<br>' . btn('', t('Print'), '', 'xs', clas('btn-print')), '<br>' . btn('', '<span>&laquo;</span>&nbsp;' . t('Back'), '', 'xs', clas('btn-goback')));
   
-  jsx('receipt', 'code', u\cryRay(ray('ok msg xid', TRUE, '', $tx->xid)));
+  jsx('receipt');
   
-  return cgForm(compact(ray('logo title dt nm acct to amt for xid agt')), 'tight', 'left');
+  return cgForm(compact(ray('logo title dt nm acct to for xid agt amt tip total goBack')), 'tight', 'left');
 }
 
 /**
@@ -224,7 +228,7 @@ function tip($tx, $tip) {
       $tip *= $tx->amt2 / 100;
     } else $desc = t('tip');
     if ($tip = round($tip, 2)) {
-      if (hasTip($tx)) return cardDone(ray('ok msg xid', FALSE, t('You already have a tip connected with this purchase.'), $tx->xid));
+      if (tipAmt($tx)) return cardDone(ray('ok msg xid', FALSE, t('You already have a tip connected with this purchase.'), $tx->xid));
       be\txEntryPair($entries, $tip, [$tx->uid1, $tx->uid2], $desc, NULL, E_AUX);
       be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
     }
@@ -248,7 +252,7 @@ function tip($tx, $tip) {
   }  
 }
 
-function hasTip($tx) {return db\exists('txs', ray('xid uid1 uid2 type', $tx->xid, $tx->uid1, $tx->uid2, E_AUX));}
+function tipAmt($tx) {return db\get('amt', 'txs', ray('xid uid1 uid2 type', $tx->xid, $tx->uid1, $tx->uid2, E_AUX));}
 
 /**
  * Return the account to scan from. Also set $boxId.

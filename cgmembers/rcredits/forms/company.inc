@@ -56,7 +56,7 @@ EOF;
   $founded = foundedFld($mya->founded, REQ);
   $website = textFld(t('Website:'), [t('Website address'), t('Especially if you want to accept payments on your website, be sure to list it here.')], dft($mya->website));
   $logo = textFld(t('Logo URL:'), [t('Logo web address')], dft($mya->logo));
-  $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page.')); //, '', ['class'=>'help-block']);
+  $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page (optional).')); //, '', ['class'=>'help-block']);
 //  $description = fld('text_format', t('Description:'), [t('Arbitrarily complex description')], ['format' => 'filtered_html'] + dft(strtr($mya->description, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])));
   $description = areaFld(t('Describe:'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->description));
   $shortDesc = textFld(REQ . t('Short Desc:'), [t('Short description'), t('Short description of your company\'s products and services, all lowercase. Maximum 35 characters.')], maxlen(35) + dft($mya->shortDesc));

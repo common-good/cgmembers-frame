@@ -127,7 +127,7 @@ input[type="checkbox"], input[type="radio"] {transform: scale(1);}
 .wellhole {padding:5px 10px 0 0;} /* for columns containing a well */
 .well {margin:5px 0; padding-right:13px;}
 .well > img, .well iframe {width:100%;}
-.help-block b {color:darkred;}
+.help-block b, .suffix b {color:darkred;}
 .tight {padding:0;}
 .full.center img {display:inline-block;}
 hr .narrow {width:50%;}

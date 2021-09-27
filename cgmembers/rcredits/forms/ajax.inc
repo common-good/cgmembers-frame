@@ -28,7 +28,7 @@ function ajax($args = NULL) {
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 
-/**/  lug(compact(ray('op data myid aid')));
+/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op data myid aid')));
   $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
@@ -72,7 +72,7 @@ function ajax($args = NULL) {
     if ($fld == 'delete' or $fld == 'permission') {
       list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
       $v0 = r\relation('permission', $reid);
-      if ($mya->co and $v < $managePerm and !db\exists('u_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
+      if ($mya->co and $v < $managePerm and $fld == 'permission' and !db\exists('u_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
       if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
         if ($v == $joinPerm and db\exists('u_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
         $msg = r\setJoin($reid, $v == $joinPerm);

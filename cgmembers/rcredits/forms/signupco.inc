@@ -69,14 +69,13 @@ X
   $selling = textFld(t('Selling:'), [t('Products'),t('Enter a <b>VERY SHORT</b> transaction description (for example "food") for when you make a sale. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($mya->selling) + maxlen(SELLING_MAXLEN));
   $sellCg = boolFld(t('Sell Credit:'), t('Do you want to accept customer cash in exchange for your %PROJECT credit (recommended)?'), 1);
   $source = $source ? hidFld($source) : sourceFld('');
-  $needPhone = boolFld(t('Need Phone:'), t('Do you need %PROJECT to supply an Android phone, to run the CGPay app? (you will be charged a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
 
   $midtext = t('<h3>%PROJECT Agreement</h3><p>I commit this company to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', '_a', 'a id="show-agreement"');
   extract(just('agreement details', formAgreement($form, $sta)));
   $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId founded source needPhone midtext agreement submit args agentQid')));
+  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId founded source midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
@@ -105,7 +104,7 @@ function formSignupCo_submit($form, &$sta) {
   global $mya;
   
   $dbFields = 'coType source selling fullName legalName email flags phone federalId founded zip state helper';
-  extract(just($dbFields . ' sellCg source2 needPhone agentQid args', $sta['input'], NULL));
+  extract(just($dbFields . ' sellCg source2 agentQid args', $sta['input'], NULL));
   extract(just('code', nn($args, []), NULL));
 
   signout(TRUE);
@@ -137,12 +136,6 @@ function formSignupCo_submit($form, &$sta) {
   if ($code) w\invitation($code, $myid); // mark invitation used
   
   say('info saved');
-
-  if ($needPhone) {
-    $mya->payApproved(CGID, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
-    r\tellCAdmin(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'), $info);
-    say('refundable deposit');
-  }
 
   $mya->update('signed, signedBy', now(), $agentA->fullName);
   $mya->stepDone('agree');

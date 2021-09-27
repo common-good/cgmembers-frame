@@ -283,7 +283,7 @@ function submitCG($sta) {
 
     $nm = $mya->fullName;
     if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, $mya->ok);
+    be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();

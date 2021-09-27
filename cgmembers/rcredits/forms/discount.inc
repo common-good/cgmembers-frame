@@ -21,7 +21,7 @@ function formDiscount($form, &$sta) {
     <p>%PROJECT saves you credit card fees AND it funds wonderful community initiatves. But for that all to work, your customers have to sign up for %PROJECT!</p>
     <p>Fill out this form to create a lmiited-time discount for %PROJECT members. The discount will be used by %PROJECT as an incentive for new members to sign up and as an incentive for current members to buy from your business!</p>
     <p>You can also advertise this discount to reward customer loyalty and to get all your customers to pay with %PROJECT (saving you thousands of dollars on credit card fees in the longer term).</p>
-    <p>If you skip this step, you can find it again on the Community menu.</p>
+    <p>If you skip this step, you can find it again on the Company menu.</p>
 X
   );
   //  A printable sheet of coupons will be displayed (to be cut in half three times). <-- No. Mail the coupons to them.
