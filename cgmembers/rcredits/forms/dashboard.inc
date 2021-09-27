@@ -85,7 +85,7 @@ function formDashboard($form, &$sta, $args = '') {
   $balance = item($balance, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account
-    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to activate.)', '_a', 'a id="activate-credit"');
     $credit = $mya->depends ? '$0' : u\fmtAmt(-$mya->floor);
     $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based normally on your account\'s average monthly activity over the past 6 months.'), w\suffix($suffix));
   

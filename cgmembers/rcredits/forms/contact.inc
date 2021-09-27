@@ -13,7 +13,7 @@ function formContact($form, &$sta) {
   global $mya;
 
   $nameDesc = t('usename desc');
-  if ($mya->ok) $nameDesc .= '<br>' . ($mya->co ? t('Your username and %PROJECT webpage address') : t('triggers new card', 'field', t('name')) . t('Your username')) . t(' will also change.');
+  if ($mya->stepIsDone('contact')) $nameDesc .= '<br>' . ($mya->co ? t('Your %PROJECT webpage address will also change.') : '');
   $title = t('Contact Information');
   $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required($mya->fullName));
 //  $onchange = w\onchange("jQuery('.form-item-pass').show();");

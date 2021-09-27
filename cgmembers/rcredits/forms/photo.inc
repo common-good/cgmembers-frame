@@ -16,6 +16,12 @@ function formPhoto($form, &$sta, $arg = '') {
 
   $chooserStyle = 'btn-md btn-primary';
   extract(just('ok err recrop', $arg, NULL));
+  
+  if ($ok) {
+    say('got photo');
+    return goNextStep('photo');
+  }
+
   $recrop = $recrop ? "$base_url/account-photo/orig=1/" . now() : '';
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
@@ -23,34 +29,24 @@ function formPhoto($form, &$sta, $arg = '') {
   $recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
   $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
 
-  if ($ok) {
-    say('got photo');
-    $chooserStyle = 'btn-xs btn-secondary';
-// No! wait for user to be happy with the photo   $mya->stepDone('photo');
-    extract(w\setupFoot()); // get nextStep and progress fields
-    $buttonName = count($mya->stepsLeft()) > 1 ? t('Next') : t('Finish');
-    $allSet = $mya->member ? t('you\'re all set') : t('click "%buttonName" above', compact('buttonName'));
-    $desc = t('If you like this photo, %allSet. Otherwise:', compact('allSet'));
-  } else {
-    if ($err) say($err, 'err');
-    if ($mya->hasPhoto) {
-      extract(w\setupFoot()); // be sure new member has a chance to continue
-    } else { $nextStep = item(w\skipButton()); }
-    $desc = $mya->co
-    ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
-    : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
-    <ul>
-    <li>It should be a color photo of you and only you (you can crop other people out).</li>
-    <li>It must show clearly your full face (no sunglasses, eyes open).</li>
-    <li class="loud">Include the top of your head and your chin, with just a little space above and below.</li></ul>', '_b', 'b class="loud"');    
-    $desc .= t('<p>2. Drag to reposition, use the buttons to adjust size and rotation, then click the <%img>button to upload. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/green-checkmark.png\" height=\"20\" /");
-  }
+  if ($err) say($err, 'err');
+  if ($mya->hasPhoto) {
+    extract(w\setupFoot()); // be sure new member has a chance to continue
+  } else { $nextStep = item(w\skipButton()); }
+  $desc = $mya->co
+  ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
+  : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
+  <ul>
+  <li>It should be a color photo of you and only you (you can crop other people out).</li>
+  <li>It must show clearly your full face (no sunglasses, eyes open).</li>
+  <li class="loud">Include the top of your head and your chin, with just a little space above and below.</li></ul>', '_b', 'b class="loud"');    
+  $desc .= t('<p>2. Drag to reposition, use the buttons to adjust size and rotation, then click the <%img>button to upload. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/green-checkmark.png\" height=\"20\" /");
   
   $title = $mya->co ? t('Company Photo') : t('Photo ID Picture');
 
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');
-    if (!$mya->co and $mya->ok) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
+    if (!$mya->co and $mya->stepIsDone('photo')) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
     $del = $mya->superAdmin ? submit(t('Delete')) : NULL;
   } else {
     $choose = t('Choose a Photo File');

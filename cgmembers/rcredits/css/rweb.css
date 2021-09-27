@@ -49,7 +49,6 @@ input.short {width:100px; display:inline-block;}
 .white {color:white;} /* to make things disappear */
 .noCalendar::-webkit-inner-spin-button,
 .noCalendar::-webkit-calendar-picker-indicator {display:none; -webkit-appearance:none; -moz-appearance:none;}
-.suffix {display:inline-block; margin-left:5px;}
 
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
@@ -59,7 +58,7 @@ iframe {border:0; float:right; margin-right:-60px;}
 
 /* form ul {padding-left:30px;} */
 form ul>li {display: block;}
-.btn-back {height:28px; font-size:13px; padding:0 6px; line-height:2px;}
+.btn-back {height:28px; font-size:12px; padding:0 6px;}
 .btn-back span {font-size:140%;}
 
 form ul>li:before {
@@ -186,7 +185,7 @@ ol {margin-left:25px; padding-left:25px;}
 
 /* Basic FORM Layout (labels and data) */
 form {max-width:834px; margin:0 auto;}
-.form-horizontal .form-group {margin:0 0 15px 0;}
+.form-horizontal .form-group {margin:0 0 4px 0;} /*{margin:0 0 15px 0;}*/
 .form-group input,
 .form-item-img img {max-width:100%;}
 .frm-wide, .frm-nolabs {padding:0;}
@@ -194,6 +193,12 @@ form {max-width:834px; margin:0 auto;}
 .form-type-item .control-label {padding-top:0;}
 .middle .control-label {padding-top:9px;} /* for when the item has a field in it */
 .form-horizontal .control-data {float:left; width:60%;}
+.suffix {display:inline-block; margin-left:5px; padding-top:9px; height:20px; vertical-align:top;}
+.form-item-honor .suffix,
+.form-item-periods .suffix,
+.form-item-actions .suffix,
+.form-item-backing .suffix,
+.form-item-creditLine .suffix {padding-top:0;}
 
 .frm-wider .control-label {float:left; width:10%;}
 .frm-wider .control-data {float:left; width:80%;}
@@ -221,7 +226,7 @@ form {max-width:834px; margin:0 auto;}
   body:not(.page-partner):not(.page-settings-partnerend) .form-item-title .control-label {display:none;}
   body:not(.page-partner):not(.page-settings-partnerend) .form-item-title {width:100%; max-height:46px; overflow:hidden; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
   body:not(.page-partner) .form-item-title .control-data,
-  body:not(.page-partner) .form-item-logo .control-data {width:100%; max-width:100% !important; padding:0 6px; float:none;}
+  body:not(.page-partner) .form-item-logo .control-data {width:100%; max-width:100% !important; padding:0 6px; float:none; text-align:center !important;}
   body:not(.page-partner) .form-item-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   .page-card #main {margin:0 0 0 10px !important;}
@@ -848,7 +853,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-scanqr .control-data {width:100%;}
 
 /* Pay / Charge / Tx */
-.form-item-periods select {width:40px; display:inline-block; margin-right:10px;}
+.form-item-periods select {width:40px; display:inline-block;}
 #frm-tx .form-item-start,
 #frm-tx .form-item-end,
 #tx .form-item-start,
@@ -1012,13 +1017,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Bank (Get) */
 #frm-get #edit-get {margin-right:70px;}
 
-/* TaxInfo 1099-B (phasing out in 2020) */
-#f1099b td:first-child {width:60px;} /* date */
-#f1099b td:first-child +td {min-width:75px;} /* amount */
-#f1099b td:first-child +td+td {min-width:200px;} /* account */
-#f1099b .num {text-align:right;}
-
 /* TaxInfo */
+#frm-taxinfo #edit-subtext>label,
+#frm-taxinfo #edit-posttext>label {display:none;}
+#frm-taxinfo #edit-subtext .control-data,
+#frm-taxinfo #edit-posttext .control-data {width:100%;}
+#frm-taxinfo #edit-posttext {margin-top:10px;}
 #frm-taxinfo #edit-posttext p {font-size:12px;}
 #frm-taxinfo #summary {width:auto;}
 #frm-taxinfo #summary .count {text-align:center;}
@@ -1184,8 +1188,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-signup  #companyInfo {top:0; margin:0 0 10px 0; padding:0 15px; border:1px solid darkgreen; background-color:lightyellow;}
 #frm-signup .form-item-companyPhon label span {display:none;}
 /* #frm-signup #edit-buysat .checkbox {width:150px;} */
-.form-item-physical, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px;}
+.form-item-physical, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px !important; margin-bottom:10px !important;}
 .form-item-physical>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
+.form-item-sameAddr {padding-top:3px !important;}
 #frm-signup .form-item-sponsor {display:none;}
 #frm-signup #tenure2 input,
 #frm-partnersignup #tenure2 input,
@@ -1384,14 +1389,14 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-backing #edit-signedby {max-width:200px; display:inline-block;}
 
 /* Balance Sheet */
-#frm-balancesheet .control-label {text-align:left; padding:0 0 0 35px; width:300px; font-weight:normal;}
+#frm-balancesheet .control-label {text-align:left; padding:0 0 0 0; width:280px; font-weight:normal;}
 #frm-balancesheet .form-group {margin-bottom:0;}
-#frm-balancesheet .control-data {width:100px; text-align:right; padding:0;}
+#frm-balancesheet .control-data {text-align:right; padding:0; width:50px;}
 #frm-balancesheet .form-item-title .control-data,
 #frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
 #frm-balancesheet .form-item-title .control-label,
 #frm-balancesheet #edit-subtext .control-label {width:0; min-width:0;}
-#frm-balancesheet #edit-posttext .control-data {text-align:left; width:450px; margin:30px 0 0 35px;}
+#frm-balancesheet #edit-posttext .control-data {text-align:left; width:450px; max-width:100%; margin:30px 0 0 0;}
 #frm-balancesheet #edit-posttext label {display:none;}
  #frm-balancesheet .form-item-assetLabel label,
 #frm-balancesheet .form-item-liabilityLabel label,

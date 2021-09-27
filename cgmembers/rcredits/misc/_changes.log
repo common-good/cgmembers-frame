@@ -1,3 +1,11 @@
+2021-09-27 feature/touchup
+. improved formatting of notices and other pages
+. added a PROTOCOL constant for development machines using HTTP
+. fixed minor glitches and annoyances in the signup process
+. photo step now goes automatically to next step
+. we no longer offer to supply a phone
+. fixed bug that prevented standard donations
+
 2021-09-25 feature/receipt
 . we now allow logging of data parameter in AJAX
 . fixed formatting problems on receipts

@@ -116,7 +116,7 @@ EOF
 
     $form = compact(ray('title subtext txCount gross noCard withheld'));
     for ($i = 1; $i <= 12; $i++) $form["mo$i"] = item(u\fmtAmt($row["amt$i"], '$'), date("F", mktime(0, 0, 0, $i)) . ':');
-    return cgform($form + compact('posttext'));
+    return cgform($form + compact('posttext'), '', 'left');
   }
 }
 

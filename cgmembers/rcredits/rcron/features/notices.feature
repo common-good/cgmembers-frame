@@ -56,7 +56,7 @@ Scenario: a member gets some weekly notices
   | fullName   | Bea Two |**
   | range      | Transfers IN (week of %mdY-1w) and Transfers OUT (%mdY-1d) |
   | region     | new     |
-  | messages   | * %md<x>You rock.<br>* %md<x>You stone. |
+  | messages   | %_%md<x>You rock.<br>%_%md<x>You stone. |
   | balance    | $0 |
   | ourEmail   | %whatever@cg.org |
   | code       | ? |

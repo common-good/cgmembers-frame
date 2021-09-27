@@ -35,7 +35,6 @@ Scenario: Someone wants to open a company account
   | Federal ID    | |
   | Founded       | |
   | Referred By   | |
-  | Need Phone    | |
   
 Scenario: A company signs up
   Given next random code is "WHATEVER"
@@ -51,7 +50,6 @@ Scenario: A company signs up
   | sellCg    | 1            |
   | source    | thither      |
   | coType    | LLC          |
-  | needPhone | 1            |
   Then members:
   | uid       | .AAA         |**
   | fullName  | New Co       |
@@ -68,15 +66,11 @@ Scenario: A company signs up
   And these "u_relations":
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |
-  And these "tx_requests":
-  | payer | payee | amount         | purpose           |*
-  | .AAA  | cgf   | %EQUIP_DEPOSIT | equipment deposit |
   And we email "verify" to member "d@" with subs:
   | fullName | qid      | site      | code     | pass       |*
   | New Co   | NEWAAA-A | %BASE_URL | WHATEVER | co nonpass |
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
-  And we say "status": "refundable deposit"
   And member ".AAA" steps left "verifyemail fund contact backing photo donate company crumbs discount"
   And members have:
   | uid  | signed | signedBy |*

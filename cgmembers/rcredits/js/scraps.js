@@ -404,12 +404,12 @@ function doit(what, vs) {
     break;
     
   case 'donate':
+    $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideComment();
     $('.form-item-honor, .form-item-payHow span').hide();
     if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
     var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
     var ach = $('#ach'); ach.hide();
-    var submit = $('.form-item-submit');
     $('#edit-payhow-1').click(function () {
       ach.hide(); coverCCFee.show(); 
       if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
