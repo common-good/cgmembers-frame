@@ -1,3 +1,9 @@
+2021-10-06 feature/nonmember-recur
+. fixed non-member recurring donations and added tests
+. removed recurs flag in tx_hdrs
+. fixed bug in recurring txs: ending is now at end of day, not start
+. began standardizing start-of-day identifiers in tests (see gherkin changes)
+
 2021-09-27 feature/touchup
 . improved formatting of notices and other pages
 . added a PROTOCOL constant for development machines using HTTP

@@ -391,7 +391,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   $DBTX = \db_transaction();
   $extra = ray('inv', $nvid) + just('api for cat', $data, NULL);
   if ($payAmount < $amount) $extra['partial'] = 1;
-  if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+  if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
@@ -448,7 +448,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'noask'
  *   'funding'
  *   'button': paid from a CGPay button on a company website
- *   'crumbs', 'recurs', 'gift': gift info
+ *   'crumbs', 'gift': gift info
  *   'ruleId': the id of the rule associated with this transaction
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
@@ -539,7 +539,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
 
     // Apply any roundup
-    if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
+    if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recursId and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
       if ($cents = fmod($needed, 1.0)) {
         txEntryPair($entries, 1 - $cents, [$loserId, UID_ROUNDUPS], t('roundup donation'), BCAT_GIFT, E_AUX);
         $needed = ceil($needed); // == 1-$cents
@@ -1207,13 +1207,15 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  *   string $bankAccount: the non-member bank account, if any (for ACH donations (or payments, NYI))
  *   string $purpose: transaction description
  *   int $deposit: date deposited
+ *   int $recursId: related tx_timed record ID
+ *   int $flags: transaction flags
  * @return the transaction ID associated with the transfer request
  */
 function createUsdTransfer($a, $amount, $options = []) {
   u\EXPECT(compact(ray('a amount options')), 'acct int|float assoc');
   global $channel; 
   
-  extract(just('explicit created completed pid cat purpose deposit bankAccount', $options, NULL));
+  extract(just('explicit created completed pid cat purpose deposit bankAccount recursId flags', $options, NULL));
 
   u\setDft($explicit, $channel != TX_CRON);
   u\setDft($created, now());
@@ -1225,7 +1227,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   : [E_BANK, 0, $amount >= 0 ? UID_BANK_IN : UID_BANK_OUT, nni($a->vsecure, 'bankAccount', NULL)];
   u\EXPECT($bankAccount or $deposit or ($pid and $amount < 0), 'bad bank account in bank transfer request: ' . pr($options + compact('payee')));
 
-  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));
+  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId));
   txEntryPair($txes, 0, [$bankId, $payee], $purpose, $cat, $eType); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
   if ($amount) handleSurTx($txes, $buyer, $seller, abs($amount), FALSE);
@@ -1266,10 +1268,10 @@ function completeUsdTx($xid, $explicit, $completed = NULL) {
 
   $DBTX = \db_transaction();
   $res = db\update('txs2', compact(ray('xid completed')), 'xid');
-  $res0 = db\update('tx_hdrs', ray('xid created', $xid, $completed), 'xid');
+//  $res0 = db\update('tx_hdrs', ray('xid created', $xid, $completed), 'xid');
   $res1 = db\update('tx_entries', ray('id amount', -$eid, -$amount), 'id');
   $res2 = db\update('tx_entries', ray('id amount', $eid, $amount), 'id');
-  if (!($res and $res0 and $res1 and $res2)) {
+  if (!($res and $res1 and $res2)) {
     r\tellAdmin(t('usd update failed'), $info);
     $DBTX->rollback();
     return FALSE;

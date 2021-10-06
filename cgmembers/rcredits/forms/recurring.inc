@@ -33,7 +33,7 @@ function formRecurring($form, &$sta, $args = '') {
   foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
 
   $sql = <<< X
-    SELECT id as recId, IF(:myid=tm.from,tm.to,tm.from) AS fWho, tm.from=:myid AS paying, 
+    SELECT id as recId, IF(:myid=tm.from, tm.to, IF(tm.from=:MATCH_PAYER, tm.payer, tm.from)) AS fWho, tm.from=:myid AS paying, tm.payerType, 
       tm.amount, tm.purpose AS fPurpose, tm.period, tm.periods, tm.start, tm.end,
       MAX(
         IF(tm.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
@@ -49,7 +49,7 @@ X;
   $q = db\q($sql, compact('myid'));
   
   foreach ($q as $row) {
-    extract((array)$row);
+    extract((array) $row);
     $fAmount = u\fmtAmt($amount, '$');
     $fPeriod = ucfirst(r\recurDesc($period, $periods));
     $fCreated = u\fmtDate($start, TRUE);
@@ -58,7 +58,7 @@ X;
     $fEnd = $end ? u\fmtDate($end, TRUE) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;
-    $html .= addLine(compact($fields), $classes, "$url0/recId=$recId");
+    $html .= addLine(compact($fields), $classes, "$url0/recId=$recId", $payerType == REF_PERSON);
   }
   $html .= '<tr><td class="gap" colspan="7"></td></tr>' . "\n";
   
@@ -82,12 +82,16 @@ X;
   return cgform(compact(ray('title transactions')));
 }
 
-function addLine($info, $classes, $url) {
+function addLine($info, $classes, $url, $person = FALSE) {
   global $rUrl, $mya;
 
   extract($info);
-  $a = r\acct($fWho);
-  $fWho = $a->bestName;
+  if ($person) {
+    $fWho = db\get('fullName', 'people', ray('pid', $fWho));
+  } else {
+    $a = r\acct($fWho);
+    $fWho = $a->bestName;
+  }
   $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
   if ($mya->admin) foreach (ray('ok:O, closed:-, hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   $res = "<tr>\n";

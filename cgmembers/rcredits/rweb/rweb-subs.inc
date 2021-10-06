@@ -900,7 +900,9 @@ function pickPassword($reset = TRUE, $req = '') {
  */
 function boxId($code, $uid, $version = NULL) {
   global $channel;
-  if ($id = nni($_COOKIE, $cookid = 'boxnum' . $uid) and !test()) return $id; // we only get this if last set today
+
+  $cookid = 'boxnum' . $uid;
+  if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', compact(ray('code uid')))) {
     $access = now();
     db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date

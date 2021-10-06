@@ -10,8 +10,8 @@ Setup:
   | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
   | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |             |     0 |
   And these "txs":
-  | xid | created   | amount | payer | payee | purpose |*
-  |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
+  | xid | created | amount | payer | payee | purpose |*
+  |   1 | %now-4m |    100 | .ZZB | .ZZA | loan    |
 
 Scenario: A brand new recurring payment can be completed
   Given these "tx_timed":
@@ -20,7 +20,7 @@ Scenario: A brand new recurring payment can be completed
   When cron runs "recurs"
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | flags  |*
-  |   2 | %today  |     10 | .ZZA  | .ZZB  | pmt     | recurs |
+  |   2 | %now    |     10 | .ZZA  | .ZZB  | pmt     |        |
   And we notice "paid you" to member ".ZZB" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | pmt          | ?        |
@@ -38,23 +38,44 @@ Scenario: A brand new recurring payment can be completed
 
 Scenario: A second recurring payment can be completed
   Given these "tx_timed":
-  | id | start     | from | to   | amount | period | purpose |*
-  |  8 | %today-8d | .ZZA | .ZZB |     10 | week   | pmt     |
+  | id | start    | from | to   | amount | period | purpose |*
+  |  8 | %now0-8d | .ZZA | .ZZB |     10 | week   | pmt     |
   And these "txs":
-  | xid | created   | amount | payer | payee | purpose | flags  | recursId |*
-  |   2 | %today-8d |     10 | .ZZA  | .ZZB  | pmt     | recurs |        8 |
+  | xid | created | amount | payer | payee | purpose | flags  | recursId |*
+  |   2 | %now-8d |     10 | .ZZA  | .ZZB  | pmt     |        |        8 |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created   | amount | payer | payee | purpose | flags  | recursId |*
-  |   3 | %today-1d |     10 | .ZZA  | .ZZB  | pmt     | recurs |        8 |
+  | xid | created | amount | payer | payee | purpose | flags  | recursId |*
+  |   3 | %now-1d |     10 | .ZZA  | .ZZB  | pmt     |        |        8 |
 
+Scenario: A second recurring payment can be completed from a non-member
+  Given these "people":
+  | pid | fullName |*
+  | 123 | Ned Nine |
+  And these "tx_timed":
+  | id | start    | from         | to   | amount | period | purpose | payerType   | payer |*
+  |  8 | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   |
+  And these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   2 | %now-8d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 2   | %now-8d | %now-8d   | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
+  When cron runs "recurs"
+  Then these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   3 | %now-1d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 3   | %now-1d | %now      | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
+  
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":
   | id | action | start      | from | to   | amount | period | purpose |*
   |  8 | pay    | %yesterday | .ZZA | .ZZC |     10 | month  | pmt     |
   And these "txs":
   | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
-  |   2 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
+  |   2 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     |        |        8 |
   When cron runs "recurs"
   Then count "txs" is 2
   
@@ -64,11 +85,11 @@ Scenario: A recurring payment happened long enough ago to repeat
   |  8 | %yesterday-1w | .ZZA | .ZZC |     10 | week   | pmt     |
   And these "txs":
   | xid | created       | amount | payer | payee | purpose | flags  | recursId |*
-  |   2 | %yesterday-1w |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
+  |   2 | %yesterday-1w |     10 | .ZZA  | .ZZC  | pmt     |        |        8 |
   When cron runs "recurs"
   Then these "txs":
   | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
-  |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
+  |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     |        |        8 |
   And count "txs" is 3
   And count "tx_requests" is 0
   
@@ -86,8 +107,8 @@ Scenario: A recurring payment cannot be completed
   |  8 | %yesterday | .ZZA | .ZZB |    200 | week   | pmt     |
   When cron runs "recurs"
   Then these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for  | flags  | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |        8 |
+  | nvid | created | status       | amount | payer | payee | for  | flags  | recursId |*
+  |    1 | %now    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  |        |        8 |
   And count "tx_requests" is 1
   And these "txs2":
   | txid | amount | payee | completed | deposit |*
@@ -108,8 +129,8 @@ Scenario: A recurring payment cannot be completed
 Skip because member should be allowed to be invoiced?
 Scenario: A recurring payment invoice cannot be completed because member is uncarded
   Given these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for | flags  |*
-  |    1 | %today    | %TX_APPROVED |     50 | .ZZA  | .ZZB  | pmt | recurs |
+  | nvid | created | status       | amount | payer | payee | for | flags  |*
+  |    1 | %now    | %TX_APPROVED |     50 | .ZZA  | .ZZB  | pmt |        |
   And member ".ZZA" has no photo ID recorded
   When cron runs "getFunds"
   Then count "txs" is 1

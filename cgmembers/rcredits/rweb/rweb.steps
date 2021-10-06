@@ -172,6 +172,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  *     MAKE tx AMemberPaysAnotherMemberRepeatedly
+ *     MAKE tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     MAKE tx AMemberPaysAnotherMemberLater
  */
@@ -358,6 +359,7 @@ function members($list) {return t\members($list);}
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST undo AMemberReversesAPaymentFromSomeone
@@ -1052,6 +1054,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST undo AMemberReversesAPaymentFromSomeone
  */
@@ -1751,6 +1754,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     BOTH tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     MAKE txs Setup
@@ -1806,6 +1810,7 @@ function variableIs($k, $v) {return t\varIs($k, $v);}
  * field (ARG) is (ARG) field (ARG)
  *
  * in: TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  */
 function fieldIsField($fld1, $op, $fld2) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1828,6 +1833,7 @@ function fieldIsField($fld1, $op, $fld2) {
  * date field (ARG) rounded (ARG) in (ARG) record (ARG) (id field (ARG))
  *
  * in: TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  */
 function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
   global $testOnly; if (!$testOnly) return FALSE;

@@ -241,8 +241,7 @@ function addToTxs2($amount, $coA, $period, $pid, $honorId = NULL, $bankAccount =
       $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, t('donation'), PER_1));
     } else w\say('no cc recur');
   }
-  $data = ray('gift recurs', 1, (bool) $recursId);
-  list ($purpose, $explicit, $cat, $completed) = [t('donation'), TRUE, BCAT_GIFT, now()];
+  list ($purpose, $explicit, $cat, $completed, $gift) = [t('donation'), TRUE, BCAT_GIFT, now(), TRUE];
   $deposit = $bankAccount ? 0 : now();
   $info = compact(ray('purpose pid completed deposit explicit cat bankAccount isSavings recursId'));
   $xid = be\createUsdTransfer($coA, $amount, $info);
@@ -276,7 +275,7 @@ function submitCG($sta) {
     $purpose = t('donation');
     $recursId = $period == PER_1 ? NULL
     : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $coId, $amount, $period, $purpose, DUR_1));
-    $data = ray('gift recurs', 1, (bool) $recursId);
+    $data = ray('gift', TRUE);
     if ($mya->ok and $z = $mya->payApproved($coId, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
     } else say('gift transfer later');
