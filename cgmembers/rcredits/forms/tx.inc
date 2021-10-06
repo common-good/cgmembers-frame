@@ -109,7 +109,7 @@ function formTx_submit($form, &$sta) {
   $DBTX = \db_transaction();
   
   if ($delay or $repeats) { // delaying or repeating, so create a rule template
-    if (!$end) $end = NULL;
+    if ($end) $end = tomorrow($end) - 1; else $end = NULL; // end at end of day, not start of day
     list ($action, $thing, $way) = $paying ? [ACT_PAY, t('payment'), 'from to'] : [ACT_CHARGE, t('invoice'), 'to from'];
     $info = ray($way, $mya->id, $uid);
  
@@ -136,8 +136,8 @@ function formTx_submit($form, &$sta) {
     r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
     $ok = TRUE;
   } else { // no delay, transact now
-    $data = $repeats ? ['recurs' => 1] : [];
-    if ($start) $data['created'] = $start; // superAdmin chose a date in the past
+    $data = [];
+    if ($start and $start < today()) $data['created'] = $start; // superAdmin chose a date in the past
     if ($fbo) $data += compact('cat');
 
     $z = $paying

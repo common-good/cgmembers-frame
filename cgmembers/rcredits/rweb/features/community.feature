@@ -45,15 +45,15 @@ Setup:
   |   8 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
 #  And statistics get set "%tomorrow-1m"
   And these "txs": 
-  | xid | created   | amount | payer | payee | purpose | goods      | channel  | flags  |*
-  |  15 | %today-2w |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |        |
-  |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |        |
-  |  23 | %today-6d |    100 | .ZZA | .ZZB | real V  | %FOR_GOODS | %TX_WEB  |        |
-  |  27 | %today-2d |      4 | ctty | .ZZA | grant   | %FOR_GOODS | %TX_WEB  |        |
-  |  28 | %today-2d |      5 | ctty | .ZZD | loan    | %FOR_USD   | %TX_WEB  |        |
-  |  29 | %today-2d |     -6 | ctty | .ZZC | fine    | %FOR_GOODS | %TX_WEB  |        |
-  |  30 | %today-1d |    100 | .ZZC | .ZZA | payroll | %FOR_GOODS | %TX_WEB  |        |
-  |  33 | %today-1d |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON | recurs,gift |
+  | xid | created   | amount | payer | payee | purpose | goods      | channel  | flags |*
+  |  15 | %today-2w |     50 | .ZZB  | .ZZC  | p2b     | %FOR_GOODS | %TX_WEB  |       |
+  |  18 | %today-1w |    120 | .ZZA  | .ZZC  | this Q  | %FOR_GOODS | %TX_WEB  |       |
+  |  23 | %today-6d |    100 | .ZZA  | .ZZB  | real V  | %FOR_GOODS | %TX_WEB  |       |
+  |  27 | %today-2d |      4 | ctty  | .ZZA  | grant   | %FOR_GOODS | %TX_WEB  |       |
+  |  28 | %today-2d |      5 | ctty  | .ZZD  | loan    | %FOR_USD   | %TX_WEB  |       |
+  |  29 | %today-2d |     -6 | ctty  | .ZZC  | fine    | %FOR_GOODS | %TX_WEB  |       |
+  |  30 | %today-1d |    100 | .ZZC  | .ZZA  | payroll | %FOR_GOODS | %TX_WEB  |       |
+  |  33 | %today-1d |      1 | .ZZC  | .AAB  | gift    | %FOR_GOODS | %TX_CRON | gift  |
   Then balances:
   | uid  | balance |*
   | ctty |   -3.00 |

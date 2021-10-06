@@ -255,6 +255,7 @@ function recur($template) {
   $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template shouldStart'));
+  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
 
   if ($period and $period != PER_1) {
     $when = r\recurDesc($period, $periods);
@@ -274,12 +275,11 @@ function recur($template) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't remind until the right day
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
-    if (!$res = db\get('bankAccount,isSavings,payee', '(txs2 JOIN txs_noreverse USING(xid)) x', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
+    if (!$res = db\get('bankAccount,isSavings,payee', 'txs2 t2 JOIN txs_noreverse t USING(xid)', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY t2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
-    $data = ray('gift recurs', 1, TRUE);
-    $info = ray('purpose explicit cat completed recursId deposit', t('donation'), FALSE, BCAT_GIFT, now(), $id, 0);
+    $info = ray('purpose explicit cat created completed recursId deposit gift', $purpose, FALSE, BCAT_GIFT, $created, now(), $id, 0, TRUE);
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
     be\thanks(FALSE, $pid, $amount, $period, $periods, $coA->id, FALSE);
@@ -291,7 +291,7 @@ function recur($template) {
       if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
     }
 
-    $data = ray('created recurs', $shouldStart, TRUE); // keep this synced with template even if cron fails for a few days
+    $data = compact('created');
     if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
   
     if ($action == 'pay') {

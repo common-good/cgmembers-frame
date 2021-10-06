@@ -100,13 +100,13 @@ X
      FROM users u LEFT JOIN users c ON c.uid=u.community
      WHERE IFNULL(u.jid,0)=0 AND c.uid<0 GROUP BY c.fullName",
 
-//     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_RECURS,0,amount)) AS `payments to CG`
+//     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.recursId,0,amount)) AS `payments to CG`
   t('Actual Donations to Common Good and Community') =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
-    SUM(IF(t.:IS_RECURS,amt,0)) AS recurring,
+    SUM(IF(t.recursId,amt,0)) AS recurring,
     SUM(IF(uid2=:UID_ROUNDUPS,amt,0)) AS roundups,
     SUM(IF(uid2=:UID_CRUMBS,amt,0)) AS crumbs,
-    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:UID_ROUNDUPS, :UID_CRUMBS) AND NOT t.:IS_RECURS,amt,0)) AS other
+    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:UID_ROUNDUPS, :UID_CRUMBS) AND t.recursId IS NULL, amt, 0)) AS other
     FROM txs t JOIN users u ON u.uid=t.uid1
     WHERE u.community=:ctty 
     AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS))

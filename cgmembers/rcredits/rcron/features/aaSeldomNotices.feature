@@ -3,6 +3,8 @@ AS a member
 I WANT to hear about what's going on in my account
 SO I can take appropriate action
 
+# These tests may fail after midnight
+
 Setup:
   Given members:
   | uid  | fullName   | flags     | email | notices      |*
@@ -31,8 +33,8 @@ Scenario: It's time to warn about an upcoming annual donation to CG
   | id | action | start       | from | to  | amount | period | purpose |*
   |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
   And these "txs":
-  | xid | created     | amount | payer | payee | purpose | flags       | recursId |*
-  |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift,recurs | 1        |
+  | xid | created     | amount | payer | payee | purpose | flags | recursId |*
+  |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift  | 1        |
   When cron runs "annualGift"
   Then we email "annual-gift" to member "d@example.com" with subs:
   | amount | when    | atag | track |*

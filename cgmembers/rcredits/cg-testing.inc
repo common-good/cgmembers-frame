@@ -279,7 +279,7 @@ function doTxs($info, $thing) {
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
   $map = 'amt:amount, uid1:payer, uid2:payee';
-  //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
+  //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup gift loan investment stake fine noask funding'; // These are flags that might appear
   
   foreach (ray($map) as $k => $k2) if (isset($info[$k])) {
     $info[$k2] = $info[$k];

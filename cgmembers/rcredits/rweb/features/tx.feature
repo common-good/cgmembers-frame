@@ -48,7 +48,7 @@ Scenario: A member confirms request to charge another member
   | Abe One   | $100   | labor   |
   And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
-  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
+  |    1 | %now    | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -84,10 +84,10 @@ Scenario: A member confirms request to pay another member
   | paid   | Bea Two   | $100   |
   And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Bea Two  | Abe One    | $100   | labor        |
+  | %now   | Bea Two  | Abe One    | $100   | labor        |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | boxId | taking |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |
+  |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -103,7 +103,7 @@ Scenario: A member confirms request to pay another member a lot
   | pay | Our Pub | %MAX_AMOUNT | %FOR_GOODS     | food    |
   Then these "txs":
   | xid | created | amount        | payer | payee | purpose      | taking |*
-  |   1 | %today  | %MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
+  |   1 | %now    | %MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
 Scenario: A member confirms request to pay a member company
   Given next DO code is "whatever"
@@ -115,14 +115,14 @@ Scenario: A member confirms request to pay a member company
   | paid   | Our Pub   | $100   |
   And we notice "paid you linked" to member ".ZZC" with subs:
   | created | fullName | otherName | amount | payeePurpose | aPayLink |*
-  | %today  | Our Pub  | Abe One   | $100 | stuff | ? |
+  | %now    | Our Pub  | Abe One   | $100 | stuff | ? |
   And that "notice" has link results:
   | ~name | Abe One |
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking |*
-  |   1 | %today  |    100 | .ZZA  | .ZZC | stuff        | 0      |
+  |   1 | %now    |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -213,17 +213,38 @@ Scenario: A member pays another member repeatedly
   | paid | Bea Two   | $100   | weekly |
   And we notice "paid you" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Bea Two  | Abe One    | $100   | labor        |
+  | %now    | Bea Two  | Abe One    | $100   | labor        |
   And these "txs":
-  | xid | created   | amount | payer | payee | purpose      | taking | recursId |*
-  |   1 | %daystart |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
+  | xid | created | amount | payer | payee | purpose      | taking | recursId |*
+  |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
 #  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "tx_timed":
   | id | from | to   | amount | period | purpose | start     | end | action | duration |*
-  |  4 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
+  |  4 | .ZZA | .ZZB |    100 | week   | labor   | %now0     |     | pay    | once     |
   And date field "start" rounded "yes" in "tx_timed" record "4" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "tx_timed/id/1/start"
 
+Scenario: A member pays another member repeatedly with an end date
+  When member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | purpose | period | periods | end     |*
+  | pay | Bea Two | 100    |  labor  | week   |       1 | %mdY+4w |
+  Then we say "status": "report tx|repeats" with subs:
+  | did  | otherName | amount | often  |*
+  | paid | Bea Two   | $100   | weekly |
+  And we notice "paid you" to member ".ZZB" with subs:
+  | created | fullName | otherName | amount | payeePurpose |*
+  | %now    | Bea Two  | Abe One    | $100   | labor        |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose      | taking | recursId |*
+  |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 0      |        1 |
+#  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
+  And these "tx_timed":
+  | id | from | to   | amount | period | purpose | start | end                | action | duration |*
+  |  1 | .ZZA | .ZZB |    100 | week   | labor   | %now0 | %(%tomorrow0+4w-1) | pay    | once     |
+  And date field "start" rounded "yes" in "tx_timed" record "1" (id field "id")
+  And date field "end" rounded "no" in "tx_timed" record "1" (id field "id")
+  And field "tx_hdrs/xid/1/created" is ">=" field "tx_timed/id/1/start"
+  
 Scenario: A member ask to pay another member too much, repeatedly
   Given these "tx_timed":
   | id | from | to   | amount | period | purpose | start | end | action | duration |*
@@ -250,5 +271,5 @@ Scenario: A member pays another member later
   | payment |
   And count "txs" is 0
   And these "tx_timed":
-  | id | from | to   | amount | period | purpose | start        | end | action | duration |*
-  |  1 | .ZZA | .ZZB |    100 | once   | labor   | %daystart+3d |     | pay    | once     |
+  | id | from | to   | amount | period | purpose | start    | end | action | duration |*
+  |  1 | .ZZA | .ZZB |    100 | once   | labor   | %now0+3d |     | pay    | once     |

@@ -18,7 +18,7 @@ if (@$submit) {
 	);
 	
   $res = openssl_pkey_new($config);
-/**/  if (!$res) die('FAIL new');
+/**/  if (!$res) die('FAIL new: ' . openssl_error_string());
   openssl_pkey_export($res, $privKey, NULL, $config);
 
 /**/	echo $privKey . "<br><br>len=" . strlen($privKey);

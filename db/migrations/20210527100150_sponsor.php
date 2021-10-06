@@ -66,8 +66,6 @@ class Sponsor extends AbstractMigration {
       ('Payments to affiliates', 'Expense', '22'),
       ('Depreciation, depletion, and amortization', 'Expense', '22'),
       ('Insurance', 'Expense', '23');
-//      ('Other expenses', 'Expense', '24');
-
 X
     );
   }
