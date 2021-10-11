@@ -315,9 +315,6 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     TEST card AMemberUndoesACharge
  *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
@@ -481,13 +478,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     TEST card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     TEST changeaccount AMemberChangesAccount
+ * in: TEST changeaccount AMemberChangesAccount
  *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -532,9 +523,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     TEST card AMemberUndoesACharge
  *     TEST card AMemberAddsATip
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST cgpay AMemberClicksACGPayButton
@@ -677,10 +665,7 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     TEST card AMemberUndoesACharge
- *     TEST card AMemberAddsATip
+ * in: TEST card AMemberAddsATip
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
@@ -720,12 +705,7 @@ function without($content) {
 /**
  * with options: (ARG)
  *
- * in: TEST card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     TEST card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
+ * in: 
  */
 function withOptions($options, $debug = TRUE) {return t\shownWith($options, 'options', $debug);}
 
@@ -1047,7 +1027,6 @@ function memberOnetimePasswordIs($id, $pass) {
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST card AMemberUndoesACharge
  *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
@@ -1171,13 +1150,6 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE card AMemberUndoesACharge
  *     MAKE card AMemberAddsATip
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
@@ -1214,7 +1186,6 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -1629,10 +1600,6 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     BOTH bank ASlaveMemberRequestsATransfer
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     BOTH card AMemberUndoesACharge
  *     BOTH card AMemberAddsATip
  *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE cc SomeoneCompletesACreditCardDonation
@@ -2084,16 +2051,7 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: BOTH card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE card AMemberUndoesACharge
- *     MAKE card AMemberAddsATip
+ * in: MAKE card AMemberAddsATip
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
@@ -2255,12 +2213,7 @@ function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 /**
  * cryptcookie (ARG) is (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE card AMemberUndoesACharge
- *     MAKE card AMemberAddsATip
+ * in: MAKE card AMemberAddsATip
  */
 function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 
@@ -2336,14 +2289,7 @@ function memberAjaxWith($id, $op, $data) {
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberUndoesACharge
- *     MAKE card AMemberAddsATip
+ * in: MAKE card AMemberAddsATip
  *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
@@ -2364,7 +2310,7 @@ function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 /**
  * we first (ARG) then (ARG)
  *
- * in: TEST card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ * in: 
  */
 function weFirstThen($first, $then) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -2378,11 +2324,7 @@ function weFirstThen($first, $then) {
 /**
  * member (ARG) completes (ARG) with: (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE cc SomeoneAsksToMakeACreditCardDonation
+ * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization

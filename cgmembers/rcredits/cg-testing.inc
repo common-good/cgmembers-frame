@@ -1125,7 +1125,7 @@ function logIn($id) {
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
       r\setAcct($a);
     }
-    $boxId = w\boxId($box, $a->id);
+    $boxId = w\boxId($box, $a);
   }
   return TRUE;
 }

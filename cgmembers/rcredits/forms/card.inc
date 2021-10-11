@@ -72,9 +72,10 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   $for = selectFld(REQ . t('For:'), '', '', $choices);
   $desc = textFld(t('For:'), [t('Description')]);
   jsx('card', compact(ray('choice0Count')));
+  $mobileCo = ($scannerA->co and u\isMobile());
 
   $charge = submit(BARE . t('Charge'));
-  $pay = ($mya or $trust) ? submit(BARE . t('Pay')) : NULL;
+  $pay = (($mya or $trust) and !$mobileCo) ? submit(BARE . t('Pay')) : NULL;
   $go = submit(BARE . t('Go'));
   $buttons = fieldSet('buttons', compact(ray('charge pay go')));
   $uid = hidFld($a->id);
@@ -169,7 +170,7 @@ function cardDone($z) {
   $buttons = "$lnkShowQr$lnkScanQr";
   if ($xid and $tx = r\Tx::read($xid) and !$tx->reversesXid and !$tx->reversedByXid) {
     foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
-    if (tipAmt($tx)) $tip = '';
+    if (!$actorA->coCan(CO_TIP) or tipAmt($tx)) $tip = '';
     $buttons = "$undo<br>$buttons<br>$tip$receipt";
     $buttons = item($buttons);
     $tx = r\Tx::read($xid);
@@ -262,6 +263,6 @@ function getScannerA() {
   
   if ($mya) return $mya;
   $scannerA = r\acct(r\cook('scanner'));
-  $boxId = w\boxId($box, $scannerA->id);
+  $boxId = w\boxId($box, $scannerA);
   return $scannerA;
 }

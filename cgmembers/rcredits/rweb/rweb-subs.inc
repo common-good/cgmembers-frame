@@ -894,19 +894,20 @@ function pickPassword($reset = TRUE, $req = '') {
 /**
  * Return the box record ID for the given machine code and account record ID.
  * @param int $code: machine identifier
- * @param int $uid: current account ID (can be a company)
+ * @param int $uid: current account (can be a company)
  * @param string $version: app version (web version is not used here)
  * @return the box record ID
  */
-function boxId($code, $uid, $version = NULL) {
+function boxId($code, $a, $version = NULL) {
   global $channel;
 
+  $uid = $a->id;
   $cookid = 'boxnum' . $uid;
   if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', compact(ray('code uid')))) {
     $access = now();
     db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
-  } else $id = r\acct($uid)->makeBox($code, $channel, $version);
+  } else $id = $a->makeBox($code, $channel, $version);
   return r\setCook($cookid, $id, now() + SESSION_LIFE);
 }
 
