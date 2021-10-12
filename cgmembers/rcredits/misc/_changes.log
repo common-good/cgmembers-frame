@@ -1,3 +1,12 @@
+2021-10-11 feature/fix-scanqr
+. fixed scanqr array overflow by undating the scanner and adding max dimension options
+. fixed bug: some phones were using front camera to scan qr
+. fixed bug in w\boxId() that crashed on "disconnect this device"
+. tightened up format on page showing customer picture after scan
+. fixed some .suffix alignment problems in CSS
+. we now suppress Pay button for companies scanning a card
+. TIP button is now suppressed unless company activates it
+
 2021-10-06 feature/nonmember-recur
 . fixed non-member recurring donations and added tests
 . removed recurs flag in tx_hdrs

@@ -2,7 +2,17 @@ import QrScanner from './x/qr-scanner.min.js';
   
 QrScanner.WORKER_PATH = 'rcredits/js/x/qr-scanner-worker.min.js';
 
-navigator.mediaDevices.getUserMedia({video: true}) // constraints
+navigator.mediaDevices.getUserMedia({video: { // constraints
+    width: {
+      ideal: 1920,
+      max: 2560
+    },
+    height: {
+      ideal: 1080,
+      max: 1440
+    },
+    facingMode: {ideal: 'environment'}
+}})
   .then(function(localMediaStream) { // successCallback
     $('#edit-result').hide();
 

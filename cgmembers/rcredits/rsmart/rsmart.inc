@@ -619,7 +619,7 @@ function badDevice(&$device, $signin, $version) {
   }
 
   // find device in the db or put it there
-  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya->id, $version);
+  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version);
 
   return FALSE;
 }

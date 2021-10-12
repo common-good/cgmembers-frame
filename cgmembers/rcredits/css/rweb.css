@@ -198,7 +198,9 @@ form {max-width:834px; margin:0 auto;}
 .form-item-periods .suffix,
 .form-item-actions .suffix,
 .form-item-backing .suffix,
-.form-item-creditLine .suffix {padding-top:0;}
+.form-item-creditLine .suffix,
+.form-item-bankAccount .suffix,
+.form-item-acct .suffix {padding-top:0;}
 
 .frm-wider .control-label {float:left; width:10%;}
 .frm-wider .control-data {float:left; width:80%;}
@@ -443,7 +445,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 #frm-card .form-item-buttons {text-align:center;}
 #frm-card .form-item-buttons .btn {margin:0 30px; display:inline-block; text-align:center;}
-#frm-card .form-item-buttons .btn-done.btn-md {margin-top:80px; margin-bottom:80px;}
+#frm-card .form-item-buttons .btn-done.btn-md {margin-top:40px; margin-bottom:40px;}
 #frm-card .form-item-buttons label {display:none;}
 #frm-card .form-item-buttons .control-data {width:100%;}
 #frm-card .form-item-buttons .btn-tip:not(.btn-done) {margin:20px 0;}
@@ -469,7 +471,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-card .form-radio, #frm-card #edit-submit {display:none;}
 
 @media (max-width:768px) {
-  #frm-card .control-label {width:75px; min-width:75px;}
+  #frm-card .control-label {display:none; width:75px; min-width:75px;}
 }
 
 .page-card-receipt {width:48mm; padding:0; margin:0 4.5mm;}
