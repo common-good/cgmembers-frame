@@ -23,7 +23,7 @@ Setup:
   | 1001 |  .ZZA |   1000 | %today-3m  | %today-3m  |
   | 1002 |  .ZZB |   2000 | %today-3m  | %today-3m  |
   | 1003 |  .ZZC |   3000 | %today-3m  | %today-3m  |
-  | 1004 |  .ZZA |     11 | %lastm+5d  | %lastm+2d  |
+  | 1004 |  .ZZA |     11 | %lastm+2d  | %lastm+2d  |
   | 1005 |  .ZZA |    -22 | %lastm+8d  | %lastm+8d  |
   | 1006 |  .ZZA |    -33 | %lastm+10d | %lastm+10d |
   # creates txs 1-6

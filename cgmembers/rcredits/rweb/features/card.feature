@@ -145,8 +145,8 @@ Scenario: A member scans an individual card, with scanner set, signed in, no rel
 
 Scenario: a member card is charged, with scanner set, not signed in
   Given members have:
-  | uid  | selling   |*
-  | .ZZC | groceries |
+  | uid  | selling   | coFlags |*
+  | .ZZC | groceries | tip     |
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"

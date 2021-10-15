@@ -709,8 +709,8 @@ class Acct {
     $a = $this;
     return db\get("SUM(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail, COUNT(*) as count",
                   "users u INNER JOIN u_relations r ON r.main=u.uid",
-                  "r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id",
-                  ray('id jid', $a->id, $a->jid ?: -1));
+                  "r.other IN (:uids) AND r.:IS_DRAW AND r.main NOT IN(:uids)",
+                  ray('uids', $a->uids));
   }
   
   /**
@@ -722,9 +722,9 @@ class Acct {
     $sql = <<< X
       SELECT u.uid, (balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail
       FROM users u INNER JOIN u_relations r ON r.main=u.uid
-      WHERE r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id
+      WHERE r.other IN (:uids) AND r.:IS_DRAW AND r.main NOT IN (:uids)
 X;
-    return db\q($sql, ray('id jid', $a->id, $a->jid ?: -1));
+    return db\q($sql, ray('uids', $a->uids));
   }
   
   /**

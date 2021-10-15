@@ -935,16 +935,17 @@ function getFunds1($item) {
   $pending = 0;
   $sql = <<< o
     SELECT i.* FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
-    WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer=:uid
+    WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer IN (:uids)
     ORDER BY i.nvid
 o;
-  $q = db\q($sql, compact('uid'));
+  $q = db\q($sql, ['uids' => $a->uids]);
   while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
   if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
+  $balPlusPend = $a->balance + $pending;
 
   list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
   ? [$a->minimum + $pending, tr('to target')]
-  : [min($pending, $a->balance + $pending), t('to pending')]; // this could be negative (just enough to pay pending)
+  : [($a->balance < 0 and $balPlusPend > 0) ? $balPlusPend : min($pending, $balPlusPend), t('to pending')]; // this could be negative (just enough to pay pending)
 
   $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
   $debtTimeout = FALSE; // disable this 

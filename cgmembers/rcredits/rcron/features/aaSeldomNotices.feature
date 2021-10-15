@@ -26,51 +26,51 @@ Scenario: a weekly notice member doesn't get notices on other days
 # This test (and the next) fails near the end of February in or after a leap year (yearAgo+7d <> now+7d-1y)
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:
-  | uid  | fullName | flags  | bankAccount        | activated   |*
-  | .ZZD | Dee Four | ok     | USkk98765432100004 | %now-1y     |
-  | .ZZE | Eve Five | ok     | USkk98765432100005 | %yearAgo+7d |
+  | uid  | fullName | flags  | bankAccount        | activated    |*
+  | .ZZD | Dee Four | ok     | USkk98765432100004 | %now0-1y     |
+  | .ZZE | Eve Five | ok     | USkk98765432100005 | %yearAgo0+7d |
   And these "tx_timed":
-  | id | action | start       | from | to  | amount | period | purpose |*
-  |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
+  | id | action | start        | from | to  | amount | period | purpose |*
+  |  1 | pay    | %yearAgo0+7d | .ZZD | cgf |      1 | year   | gift!   |
   And these "txs":
-  | xid | created     | amount | payer | payee | purpose | flags | recursId |*
-  |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift  | 1        |
+  | xid | created      | amount | payer | payee | purpose | flags | recursId |*
+  |   1 | %yearAgo0+7d | 10     | .ZZD  | cgf   | gift!   | gift  | 1        |
   When cron runs "annualGift"
   Then we email "annual-gift" to member "d@example.com" with subs:
-  | amount | when    | atag | track |*
-  |     $1 | %mdY+7d |    ? |     ? |
+  | amount | when     | atag | track |*
+  |     $1 | %mdY0+7d |    ? |     ? |
   And we email "annual-gift" to member "e@example.com" with subs:
-  | amount | when    | atag | track |*
-  |     $0 | %mdY+7d |    ? |     ? |
+  | amount | when     | atag | track |*
+  |     $0 | %mdY0+7d |    ? |     ? |
 
 Scenario: It's time to renew backing
   Given members:
-  | uid  | fullName | flags  | backing | backingDate | backingNext |*
-  | .ZZD | Dee Four | ok     |       4 | %yearAgo+7d | %NUL        |
-  | .ZZE | Eve Five | ok     |       5 | %yearAgo+7d | 3           |
-  | .ZZF | Fox Co   | ok,co  |       6 | %yearAgo+8d | %NUL        |
-  | .ZZG | Glo Sevn | ok     |       7 | %yearAgo+6d | %NUL        |
-  | .ZZH | Hal Co   | ok,co  |       8 | %yearAgo+7d | %NUL        |
-  | .ZZI | Ivy Nine | ok     |       9 | %yearAgo-1d | %NUL        |
-  | .ZZJ | Joe Ten  | ok     |      10 | %yearAgo-1d | 4           |
+  | uid  | fullName | flags  | backing | backingDate  | backingNext |*
+  | .ZZD | Dee Four | ok     |       4 | %yearAgo0+7d | %NUL        |
+  | .ZZE | Eve Five | ok     |       5 | %yearAgo0+7d | 3           |
+  | .ZZF | Fox Co   | ok,co  |       6 | %yearAgo0+8d | %NUL        |
+  | .ZZG | Glo Sevn | ok     |       7 | %yearAgo0+6d | %NUL        |
+  | .ZZH | Hal Co   | ok,co  |       8 | %yearAgo0+7d | %NUL        |
+  | .ZZI | Ivy Nine | ok     |       9 | %yearAgo0-1d | %NUL        |
+  | .ZZJ | Joe Ten  | ok     |      10 | %yearAgo0-1d | 4           |
   When cron runs "renewBacking"
   Then we email "renew-backing" to member "d@example.com" with subs:
-  | amount | when    | atag | track |*
-  |     $4 | %mdY+7d |    ? |     ? |
+  | amount | when     | atag | track |*
+  |     $4 | %mdY0+7d |    ? |     ? |
   And we email "renew-backing" to member "h@example.com" with subs:
-  | amount | when    | atag | track |*
-  |     $8 | %mdY+7d |    ? |     ? |
+  | amount | when     | atag | track |*
+  |     $8 | %mdY0+7d |    ? |     ? |
   And we do not email "renew-backing" to member "e@example.com"
   And we do not email "renew-backing" to member "f@example.com"
   And we do not email "renew-backing" to member "g@example.com"
   And we do not email "renew-backing" to member "i@example.com"
   And we do not email "renew-backing" to member "j@example.com"
   And members:
-  | uid  | backing | backingDate | backingNext |*
-  | .ZZD |       4 | %yearAgo+7d | %NUL        |
-  | .ZZE |       5 | %yearAgo+7d | 3           |
-  | .ZZF |       6 | %yearAgo+8d | %NUL        |
-  | .ZZG |       7 | %yearAgo+6d | %NUL        |
-  | .ZZH |       8 | %yearAgo+7d | %NUL        |
-  | .ZZI |       9 | %daystart   | %NUL        |
-  | .ZZJ |       4 | %daystart   | %NUL        |
+  | uid  | backing | backingDate  | backingNext |*
+  | .ZZD |       4 | %yearAgo0+7d | %NUL        |
+  | .ZZE |       5 | %yearAgo0+7d | 3           |
+  | .ZZF |       6 | %yearAgo0+8d | %NUL        |
+  | .ZZG |       7 | %yearAgo0+6d | %NUL        |
+  | .ZZH |       8 | %yearAgo0+7d | %NUL        |
+  | .ZZI |       9 | %now0        | %NUL        |
+  | .ZZJ |       4 | %now0        | %NUL        |

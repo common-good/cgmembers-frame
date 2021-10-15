@@ -476,7 +476,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
 
   $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op snap', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'), $actorA->snap or $otherA->snap);
-  if ($amount <= 0) r\tellAdmin(t('non-positive amount in be\\transfer'), $erInfo); // should never happen
+  if ($amount <= 0 and !test()) r\tellAdmin(t('non-positive amount in be\\transfer'), $erInfo); // should never happen except in tests
 
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {

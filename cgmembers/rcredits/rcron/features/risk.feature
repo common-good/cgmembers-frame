@@ -47,30 +47,30 @@ Setup:
   | pay    | .ZZH | cgf |      5 | year    |
   | pay    | .ZZI | cgf |      5 | year    |
   And these "txs": 
-  | xid | created   | amount | payer | payee | purpose | channel | flags   |*
-  |   1 | %today-7m |    250 | ctty  | .ZZA  | signup  | %TX_SYS |         |
-  |   2 | %today-6m |    250 | ctty  | .ZZB  | signup  | %TX_SYS |         |
-  |   3 | %today-6m |    250 | ctty  | .ZZE  | signup  | %TX_SYS |         |
-  |   4 | %today-5m |     10 | .ZZB  | .ZZA  | cash E  | %TX_APP |         |
-  |   5 | %today-1m |   1100 | .ZZA  | .ZZC  | cash    | %TX_APP |         |
+  | xid | created  | amount | payer | payee | purpose | channel | flags   |*
+  |   1 | %now-7m |    250 | ctty  | .ZZA  | signup  | %TX_SYS |         |
+  |   2 | %now-6m |    250 | ctty  | .ZZB  | signup  | %TX_SYS |         |
+  |   3 | %now-6m |    250 | ctty  | .ZZE  | signup  | %TX_SYS |         |
+  |   4 | %now-5m |     10 | .ZZB  | .ZZA  | cash E  | %TX_APP |         |
+  |   5 | %now-1m |   1100 | .ZZA  | .ZZC  | cash    | %TX_APP |         |
   # (cash) is required else a transaction fee transaction is created
-  |   6 | %today-3w |    240 | .ZZA  | .ZZB  | what G  | %TX_APP |         |
-  |   7 | %today-2w |     50 | .ZZB  | .ZZC  | cash P  | %TX_APP |         |
-  |   8 | %today-1w |    120 | .ZZA  | .ZZH  | offline | %TX_APP | offline |
-  |   9 | %today-6d |    100 | .ZZA  | .ZZB  | cash V  | %TX_WEB |         |
-  |  10 | %today-1d |    120 | .ZZA  | .ZZC  | undoneBy:17 | %TX_APP |         |
-  |  11 | %today-1d |   -120 | .ZZA  | .ZZC  | undoes:14 | %TX_APP |         |
-  |  12 | %today-1d |     40 | .ZZC  | .ZZE  | labor   | %TX_WEB |         |
-  |  13 | %today-1d |     10 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
-  |  14 | %today-1d |     11 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
+  |   6 | %now-3w |    240 | .ZZA  | .ZZB  | what G  | %TX_APP |         |
+  |   7 | %now-2w |     50 | .ZZB  | .ZZC  | cash P  | %TX_APP |         |
+  |   8 | %now-1w |    120 | .ZZA  | .ZZH  | offline | %TX_APP | offline |
+  |   9 | %now-6d |    100 | .ZZA  | .ZZB  | cash V  | %TX_WEB |         |
+  |  10 | %now-1d |    120 | .ZZA  | .ZZC  | undoneBy:17 | %TX_APP |         |
+  |  11 | %now-1d |   -120 | .ZZA  | .ZZC  | undoes:14 | %TX_APP |         |
+  |  12 | %now-1d |     40 | .ZZC  | .ZZE  | labor   | %TX_WEB |         |
+  |  13 | %now-1d |     10 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
+  |  14 | %now-1d |     11 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
   And these "txs2":
   | txid | payee | amount | completed |*
-  |    1 | .ZZA  |    400 | %today-2m |  
-  |    2 | .ZZB  |    100 | %today-2m |  
-  |    3 | .ZZC  |    300 | %today-2m |  
-  |    4 | .ZZE  |    200 | %today    |  
-  |    5 | .ZZF  |   -600 | %today    |  
-  |    6 | .ZZC  |   -500 | %today    |
+  |    1 | .ZZA  |    400 | %now-2m  |  
+  |    2 | .ZZB  |    100 | %now-2m  |  
+  |    3 | .ZZC  |    300 | %now-2m  |  
+  |    4 | .ZZE  |    200 | %now     |  
+  |    5 | .ZZF  |   -600 | %now     |  
+  |    6 | .ZZC  |   -500 | %now     |
   And member field values:
   | uid  | field      | value |*
   | .ZZB | community  |    -2 |
