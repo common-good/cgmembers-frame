@@ -93,7 +93,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $fsFee = hidFld($fsFee);
   $noteSuffix = suffix(lnk('', t('Add comment')));
 
-  $form = compact(ray('logo title subtext amtChoice amount options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee'));
+  $form = compact(ray('logo title subtext amtChoice amount options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId'));
   $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : ray('submit', submit(t('Donate'), '', '', $noteSuffix));
   return cgForm($form);
 }
@@ -122,12 +122,12 @@ function formDonate_validate($form, &$sta) {
 function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   global $testReturnUrl;
+
+  if ($mya) return submitCG($sta);
   
   $dbFields = 'fullName email notices phone zip country city state notes source';
   extract(just($input = $dbFields . ' amount period recursId honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
   
-  if ($mya) return submitCG($sta);
-
   $coA = r\acct($coId);
   list ($city, $state) = r\zipCity($zip);
   $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
@@ -261,7 +261,7 @@ function submitCG($sta) {
     $was = (object) db\get('amount, period, periods', 'tx_timed', ray('id', $recursId));
     $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
     r\endRule('tm', $recursId);
-    say(t('Your previous recurring gift has been canceled.'));
+    say('prev gift canned');
   } else $was = t('no previous recurring donation');
 
   if ($amount > 0) {

@@ -1,3 +1,8 @@
+2021-10-14 feature/recur-fix
+. fixed some bugs by replacing :myid with :uids
+. fixed bug that kept new recurring donation from replacing the previous one
+. when getting funds in cron and going from negative balance to positive, we now get enough to pay all requests
+
 2021-10-11 feature/fix-scanqr
 . fixed scanqr array overflow by undating the scanner and adding max dimension options
 . fixed bug: some phones were using front camera to scan qr

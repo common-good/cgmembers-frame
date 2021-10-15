@@ -13,7 +13,7 @@ Setup:
   | cgf    |       0 |
   | .ZZA   |     100 |
   | .ZZC   |     100 |
-  
+
 Scenario: A member donates
   Given next DO code is "whatever"
   When member ".ZZA" visits page "community/donate"
@@ -74,8 +74,31 @@ Scenario: A member makes a recurring donation
   And we notice "gift sent" to member ".ZZA" with subs:
   | amount | rewardAmount |*
   |    $10 |        $0.50 | 
-  
+
 Scenario: A member makes a new recurring donation
+  Given these "tx_timed":
+  | id | start     | from | to  | amount | period |*
+  | 1  | %today-1d | .ZZA | cgf |     25 | year   |
+  When member ".ZZA" visits page "community/donate"
+  Then we show "donation replaces" with:
+  | period | amt |*
+  | yearly | $25 |
+
+  When member ".ZZA" completes form "community/donate" with values:
+  | amtChoice | amount | period | honor  | honored |*
+  |        -1 |     10 | month  | memory | Jane Do |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose  | recursId |*
+  |   1 | %today  |     10 | .ZZA  | cgf   | donation | 2        |
+  And we say "status": "prev gift canned"
+  And we say "status": "gift thanks" with subs:
+  | coName | %PROJECT |**
+  And these "tx_timed":
+  | id | start     | from | to  | amount | period | end  |*
+  | 1  | %today-1d | .ZZA | cgf |     25 | year   | %now |
+  | 2  | %today    | .ZZA | cgf |     10 | month  | %NIL |
+
+Scenario: A member makes a new recurring donation of zero
   Given these "tx_timed":
   | start     | from | to  | amount | period |*
   | %today-1d | .ZZA | cgf |     25 | year   |
@@ -85,17 +108,15 @@ Scenario: A member makes a new recurring donation
   | yearly | $25 |
 
   When member ".ZZA" completes form "community/donate" with values:
-  | amtChoice | amount | period | honor  | honored | share |*
-  |        -1 |     10 | month  | memory | Jane Do |    10 |
-  Then these "txs":
-  | xid | created | amount | payer | payee | purpose  |*
-  |   1 | %today  |     10 | .ZZA  | cgf   | donation |
-  And we say "status": "gift thanks" with subs:
-  | coName | %PROJECT |**
+  | amtChoice | amount | period |*
+  |        -1 |      0 | year   |
+  Then we say "status": "prev gift canned"
+  And count "txs" is 0
   And these "tx_timed":
-  | start  | from | to  | amount | period |*
-  | %today | .ZZA | cgf |     10 | month  |
-  
+  | start     | from | to  | amount | period | end  |*
+  | %today-1d | .ZZA | cgf |     25 | year   | %now |
+  And count "tx_timed" is 1
+
 Scenario: A company makes a recurring donation
   When member ".ZZC" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*

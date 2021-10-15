@@ -28,6 +28,7 @@ global $tStrings; $tStrings = array(
   'balance unchanged' => t('Your balance is unchanged, pending payment.'),
   'denial done' => t('The invoice has been marked "denied".'),
   'invoice cancel done' => t('The payment request has been canceled.'),
+  'prev gift canned' => t('Your previous recurring gift has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
   'your demand' => t('Your total request for %RCREDITS is now %request.'),

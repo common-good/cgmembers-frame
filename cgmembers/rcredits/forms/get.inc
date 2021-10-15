@@ -16,8 +16,6 @@ function formGet($form, &$sta, $args = '') {
   if (!$mya->hasBank) return w\go('/settings/fund');
   
   \drupal_page_is_cacheable(false); // suppress caching, so buttons work right
-  $myid = $mya->id;
-  $jid = $mya->jid ?: 0;
   extract(just('cancel expedite', $args, NULL));
   if ($cancel and $mya) return cancelTx($cancel);
   if ($expedite and $mya and $mya->admin) {
@@ -29,18 +27,18 @@ function formGet($form, &$sta, $args = '') {
   $subtext = t('<p>When you transfer funds FROM your bank account, you are buying Common Good credit. That credit is backed partly by Dollars in your Common Good Community\'s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>].</p>
   <p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund'));
 
-  $subs = compact(ray('myid jid'));
-  $toBank24 = db\get('-amount', 'txs2_bank', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', $subs + ['dayAgo' => strtotime('-1 day')]);
+  $toBank24 = db\get('-amount', 'txs2_bank', 'payee IN (:uids) AND amount<0 AND created>:dayAgo', ray('uids dayAgo', $mya->uids, strtotime('-1 day')));
   if (empty($toBank24)) { // limit to one withdrawal request per 24 hours
     $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
     foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
-      $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $myid, strtotime("-$days days")));
+      $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
       $avail = min($avail, $limit - $sofar);
     }
   } else { $avail = 0; }
 
+  $subs = ray('uids', $mya->uids);
   foreach (ray('in out other') as $k) {
-    $where = 'payee IN (:myid, :jid) AND txid>0 AND ';
+    $where = 'payee IN (:uids) AND txid>0 AND ';
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
     if ($amt = db\sum('ABS(amount)', 'txs2_bank', $where, $subs)) {
@@ -106,13 +104,12 @@ function formGet_submit($form, &$sta) {
  * @param int $way: in or out (relative to Common Good)
  */
 function cancelTx($way) {
-  global $mya; $myid = $mya->id;
+  global $mya;
   
-  $subs = ray('myid jid', $myid, $mya->jid);
-  $where = 'payee IN (:myid, :jid) AND deposit=0 AND txid>0 AND ';
+  $where = 'payee IN (:uids) AND deposit=0 AND txid>0 AND ';
   $where .= $way == 'in' ? 'amount>0' : 'amount<0';
 
-  while ($xid = db\get('xid', 'txs2_bank', $where, $subs)) {
+  while ($xid = db\get('xid', 'txs2_bank', $where, ray('uids', $mya->uids))) {
     $crit = compact('xid');
     db\del('txs2_bank', $crit);
     say('bank tx canceled', $crit);
