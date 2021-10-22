@@ -5,7 +5,7 @@
     See also the EventListener for 'activate', below.
     */
 
-var normal = true;
+var normal = false;
 var cacheName = 'cgPay';
 var filesToCache = [
 //  'rcredits/images/favicons/manifest.json',
