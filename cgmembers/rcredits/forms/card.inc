@@ -18,15 +18,17 @@ use CG\Db as db;
 function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya, $box, $boxId;
 
-  if (!$scanner = r\cook('scanner')) {
+  if (!r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
     $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN)));
     if ($accts) return chooseScanner($accts, "$dom/$code");
-    $scanner = $mya->mainQid;
-  }
-  $scannerA = $mya ?: r\acct($scanner); // allow even friends to use the device, without changing standard scanner
+    $scannerA = $mya;
+    r\setCook('scanner', $mya->mainQid);
+  } else $scannerA = getScannerA(); // allow even friends to use the device, without changing standard scanner
 
-  if ($dom == 'done') {    
+  if (!$dom) { // no parameters specified -- just running the app
+    return startup($scannerA);
+  } elseif ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
     return cardDone($z);
   } elseif ($dom == 'disconnect') {
@@ -48,7 +50,6 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     
   if ($scannerA->id == $a->id) return softErr(t('You cannot transact with yourself, so there is no point in scanning your own card.'));
   
-  r\setCook('scanner', $scanner);
   $trust = r\cook('trust');
   $myName = $scannerA->fullName;
   $title = t('You: ') . $myName;
@@ -87,6 +88,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
 function formCard_validate($form, &$sta) {
   extract(just('mode amount', $sta['input'], NULL));
+
   if ($mode == 'choose') return TRUE;
   
   // mode = 'normal'    
@@ -98,12 +100,12 @@ function formCard_submit($form, &$sta) {
   global $mya;
   
   extract(just('mode account tail amount desc uid', $sta['input'], NULL));
+
   if ($mode == 'choose') { // chose an account to scan from
     $scannerA = r\acct($account);
+    w\signout(TRUE);
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
-    $page = u\urlify("/card/$tail");
-    if (test()) $page = "/card/$tail"; // because changeWho simulates urlify for tests
-    return changeWho('', "page=$page&acct=$scannerA->id", $sta);
+    return go("/card/$tail");
   }
 
   // mode = 'normal'    
@@ -153,6 +155,21 @@ function chooseScanner($choices, $tail) {
 }
 
 /**
+ * Show startup screen, having already chosen an associated account.
+ */
+function startup($actorA) {
+  global $mya;
+
+  $title = t('You: ') . $actorA->bestName;
+  $subtext = ($mya and !in_array(r\cook('scanner'), [$mya->mainQid, $mya->qid])) ? t('<b class="loud">NOTE:</b> You are signed in, so you will be transacting on behalf of the current account, not the device\'s default scanning account.') : NULL;
+  $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
+  $lnkScanQr = btn('/scan-qr', ($mya and !$mya->co) ? t('Scan a CG Card') : t('Scan a Customer Card'), '', 'md', clas('btn-done'));
+  $buttons = "$lnkShowQr$lnkScanQr";
+
+  return cgform(compact(ray('title subtext buttons')));
+}
+
+/**
  * Report a result, showing useful links.
  */
 function cardDone($z) {
@@ -163,7 +180,7 @@ function cardDone($z) {
   if (!$xid and $subs) extract(just('xid', $subs, NULL));
   if ($msg) say($msg, $ok ? '' : 'err');
 
-  $title = t('You: ' . ($actorA ? $actorA->bestName : t('Scanner')));
+  $title = t('You: ') . ($actorA ? $actorA->bestName : t('Scanner'));
   $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
   $lnkScanQr = btn('/scan-qr', t('Scan Another QR'), '', 'md', clas('btn-done'));
   
@@ -172,7 +189,6 @@ function cardDone($z) {
     foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
     if (!$actorA->coCan(CO_TIP) or tipAmt($tx)) $tip = '';
     $buttons = "$undo<br>$buttons<br>$tip$receipt";
-    $buttons = item($buttons);
     $tx = r\Tx::read($xid);
     $msg = t('Reverse your %amt charge to %who (%dt)?', 'amt who dt', u\fmtAmt($tx->amt2), $tx->a1->fullName, u\fmtDate($tx->created));
     jsx('cardDone', compact('msg'));
@@ -263,6 +279,6 @@ function getScannerA() {
   
   if ($mya) return $mya;
   $scannerA = r\acct(r\cook('scanner'));
-  $boxId = w\boxId($box, $scannerA);
+  $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
   return $scannerA;
 }
