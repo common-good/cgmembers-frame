@@ -1,3 +1,21 @@
+2021-10-21 feature/pwa0
+. wapp now signs out automatically after choosing account to connect to device
+. wapp warns user if signed in
+. most scripts and css are now cached by sw.js
+. app home page works offline
+. better error-handling in scanqr.js
+
+eachA(function ($a) {
+  if ($a->hasBank and (!$a->stepIsDone('fund') or !$a->risk('hasBank'))) {
+    $a->setRisk('hasBank');
+    $a->stepDone('fund');
+    w\say("$a->fullName has bank");
+  }
+  if ($a->hasPhoto and !$a->stepIsDone('photo')) {$a->stepDone('photo'); w\say("$a->fullName has photo");}
+  if ($dt = $a->backingDate and !$a->stepIsDone('backing')) {$a->stepDone('backing'); w\say("$a->fullName has backing as of " . u\fmtDate($dt));}
+  if (!$dt = $a->backing+0 and $a->stepIsDone('backing')) {$a->stepDone('backing', FALSE); w\say("$a->fullName has NO backing");}
+});
+
 2021-10-14 feature/recur-fix
 . fixed some bugs by replacing :myid with :uids
 . fixed bug that kept new recurring donation from replacing the previous one

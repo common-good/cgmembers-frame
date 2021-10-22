@@ -189,7 +189,6 @@ function menu($submenu = '') {
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
     'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'superadmin'],
-    'sadmin/offline' => ['call', t('Offline Test'), 'Offline 2', 'superadmin'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
@@ -208,7 +207,9 @@ function menu($submenu = '') {
     'member' => ['call', 'Company Profile', 'Profile', ANY],
     'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
-    'card' => ['call', t('Card'), 'Card 1 2', ANY], // might wanna be 'sell ok' if user can stay signed in
+    'app' => ['call', t('Web App'), 'Card', ANY], // call app from mobile icon (no params)
+    'card' => ['call', t('Card'), 'Card 1 2', ANY],
+    'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
     'disconnect' => ['norm', t('Disconnect Device'), 'Card disconnect', 'scanner'],
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site

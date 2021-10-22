@@ -76,16 +76,15 @@ if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
 $favicon = <<<EOF
   <link rel="apple-touch-icon" sizes="180x180" href="$rUrl/images/favicons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="$rUrl/images/favicons/favicon-32x32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="$rUrl/images/favicons/favicon-16x16.png" sizes="16x16">
-  <link rel="manifest" href="$rUrl/images/favicons/manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="$rUrl/images/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="$rUrl/images/favicons/favicon-16x16.png">
+  <link rel="manifest" href="$rUrl/images/favicons/manifest.json?$version">
   <link rel="mask-icon" href="$rUrl/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
   <link rel="shortcut icon" href="$rUrl/images/favicons/favicon.ico">
-  <meta name="msapplication-config" content="$rUrl/images/favicons/browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="msapplication-config" content="$rUrl/images/favicons/browserconfig.xml?$version">
   <meta name="theme-color" content="#ffffff">
 EOF;
-//  : '  <link rel="shortcut icon" href="' . $rUrl . '/images/icons/rFavicon.ico" type="image/vnd.microsoft.icon" />';
-//   <link rel="stylesheet" href="$rUrl/css/x/bootstrap-glyphicons.css?$version" /> 
 
 /**/ echo <<<EOF
 <!DOCTYPE html>

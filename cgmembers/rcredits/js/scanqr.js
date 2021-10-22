@@ -19,15 +19,21 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
     const scanner = new QrScanner(document.getElementById('scanqr'), 
       result => {
         scanner.stop();
-        var slash = result.split('/'); // HTTP:,,DOM.RC2.ME,code
-        var dot = slash[2].split('.');
-        var uri = '/card/' + dot[0] + '/' + slash[3];
+        if (result == '') {
+          scanner.start();
+        } else {
+          var slash = result.split('/'); // HTTP:,,DOM.RC2.ME,code
+          if (slash !== undefined && slash.length > 3) {
+            var dot = slash[2].split('.');
+            var uri = '/card/' + dot[0] + '/' + slash[3];
 
-        if (dot[2] == 'ME') {
-          if (dot[1] == 'RC2') {location.href = 'https://new.commongood.earth' + uri; throw '';}
-          if (dot[1] == 'RC4') {location.href = 'https://demo.commongood.earth' + uri; throw '';}
+            if (dot[2] == 'ME') {
+              if (dot[1] == 'RC2') {location.href = 'https://new.commongood.earth' + uri; throw '';}
+              if (dot[1] == 'RC4') {location.href = 'https://demo.commongood.earth' + uri; throw '';}
+            }
+          }
+          $('#edit-result').html('<center><h2>No valid QR code found.</h2><p><a href="' + result + '">' + result + '</a></p></center>').show();
         }
-        $('#edit-result').html('<center><h2>QR Result:</h2><p><a href="' + result + '">' + result + '</a></p></center>').show();
       },
       error => {if (error != 'No QR code found') alert(error);} // gets called repeatedly with 'No QR code found'
     );
