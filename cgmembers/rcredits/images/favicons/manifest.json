@@ -10,7 +10,7 @@
     {"type": "image/png", "sizes": "192x192", "src": "android-chrome-192x192.png"}
   ],
   "lang": "en-US",
-  "start_url": "/index.php",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "white",
   "theme_color": "white"
