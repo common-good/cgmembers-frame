@@ -6,19 +6,19 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'c340d43bf873e9e8f73beb7e4d0224f0077efe60',
+    'reference' => 'dd64a4112858fe19259b4bd278a60703260cbb3f',
     'name' => 'common-good/cg',
   ),
   'versions' => 
   array (
     'bacon/bacon-qr-code' => 
     array (
-      'pretty_version' => '2.0.3',
-      'version' => '2.0.3.0',
+      'pretty_version' => '2.0.4',
+      'version' => '2.0.4.0',
       'aliases' => 
       array (
       ),
-      'reference' => '3e9d791b67d0a2912922b7b7c7312f4b37af41e4',
+      'reference' => 'f73543ac4e1def05f1a70bcd1525c8a157a1ad09',
     ),
     'common-good/cg' => 
     array (
@@ -27,7 +27,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'c340d43bf873e9e8f73beb7e4d0224f0077efe60',
+      'reference' => 'dd64a4112858fe19259b4bd278a60703260cbb3f',
     ),
     'dasprid/enum' => 
     array (
@@ -40,21 +40,21 @@
     ),
     'endroid/qr-code' => 
     array (
-      'pretty_version' => '4.0.3',
-      'version' => '4.0.3.0',
+      'pretty_version' => '4.3.5',
+      'version' => '4.3.5.0',
       'aliases' => 
       array (
       ),
-      'reference' => '06b0ac1c2a0633628c1ae904e6ae13fd6808d3ee',
+      'reference' => '5630e192948b466d418608ecce697465d20260af',
     ),
     'quickbooks/v3-php-sdk' => 
     array (
-      'pretty_version' => '6.0.1',
-      'version' => '6.0.1.0',
+      'pretty_version' => '6.0.2',
+      'version' => '6.0.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'a4139a9cc439a5c03edec070d56344b1dc82056f',
+      'reference' => '036e8f1de4c9d6fd17474694e5de61313e231872',
     ),
   ),
 );

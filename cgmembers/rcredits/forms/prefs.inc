@@ -41,7 +41,7 @@ function formPrefs($form, &$sta) {
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
   $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Let members identify my account only by phone, email, or account ID &mdash; not by name."), $mya->can(B_NOSEARCH));
   
-  $desc = t('Use your %PROJECT card as a <i>credit</i> card, allowing your account balance to go negative, limited by your credit limit (currently %limit), based on your average monthly account activity. When you use your credit line  (that is, when your balance goes negative) it is a short-term loan from my %PROJECT community. <span class="loud">In choosing this option, you agree to bring your balance back up above zero within 30 days.</span>', 'limit', u\fmtAmt(-$mya->floor));
+  $desc = t('Use your %PROJECT card as a <i>credit</i> card, allowing your account balance to go negative, limited by your credit limit (currently %limit), based on your average monthly account activity. When you use your credit line  (that is, when your balance goes negative) it is a short-term loan from your %PROJECT community. <span class="loud">In choosing this option, you agree to bring your balance back up above zero within 30 days.</span>', 'limit', u\fmtAmt(-$mya->floor));
   if (!$mya->hasBank or !$mya->refill) {
     $desc .= t(' <b>NOTE:</b> This setting is disabled unless you <%a>choose automatic refills from a bank account</a>, with a target balance.', '_a', atag('/settings/fund'));
     $extra = disabled() + suffix(t(' (see <b>NOTE</b>)'));

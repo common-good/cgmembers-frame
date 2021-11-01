@@ -18,13 +18,15 @@ use CG\Db as db;
 function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya, $box, $boxId;
 
+  $scannerA = getScannerA(); // allow even friends to use the device, without changing standard scanner
+
   if (!r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
     $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN)));
     if ($accts) return chooseScanner($accts, "$dom/$code");
     $scannerA = $mya;
-    r\setCook('scanner', $mya->mainQid);
-  } else $scannerA = getScannerA(); // allow even friends to use the device, without changing standard scanner
+    r\setCook('scanner', $mya->mainQid); // proSe with no other accounts, first time, so set scanner and stay signed in
+  } elseif (!$scannerA) return go('app'); // scanner account no longer exists 
 
   if (!$dom) { // no parameters specified -- just running the app
     return startup($scannerA);
@@ -103,7 +105,7 @@ function formCard_submit($form, &$sta) {
 
   if ($mode == 'choose') { // chose an account to scan from
     $scannerA = r\acct($account);
-    w\signout(TRUE);
+    if ($scannerA->id != $mya->id) w\signout(TRUE);
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
     return go("/card/$tail");
   }
@@ -278,7 +280,9 @@ function getScannerA() {
   global $mya, $box, $boxId;
   
   if ($mya) return $mya;
-  $scannerA = r\acct(r\cook('scanner'));
+  $scanner = r\cook('scanner');
+  $scannerA = r\acct($scanner);
+  if ($scanner and (!$scannerA or !w\boxIdCheck($box, $scannerA))) return r\setCook('scanner', NULL);
   $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
   return $scannerA;
 }

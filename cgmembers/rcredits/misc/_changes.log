@@ -1,3 +1,13 @@
+2021-10-26 feature/photo-qr
+. changed logo in the middle of payment QRs to be member's photo
+. fixed bugs in cardCode handling
+. simplified footer
+. maybe fixed bug in caching
+. u\getContents() function, as a temporary workaround to changes in (and breakage of) OpenSSL
+. fixed bug: if choosing self as the account to use for scanning, we no longer sign out
+. fixed security bug related to trusting scan cookie for an invalid boxId
+. changed default configuration path for misc/makeKey.php to be WAMP's not XAMP's
+
 2021-10-21 feature/pwa0
 . wapp now signs out automatically after choosing account to connect to device
 . wapp warns user if signed in

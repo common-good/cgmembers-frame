@@ -927,16 +927,20 @@ EOF;
       : ($this->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
   }
   
-  public function cardCode() {return $this->qo->agentCode ? $this->agentA->cardCode2 : $this->cardCode;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
+  public function cardCode() {return $this->noAgent() ? $this->cardCode : $this->agentA->cardCode2;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
+  
+  private function noAgent() {return $this->proSe ?: ($this->anyAdmin and !r\relation(1, $this->id, $this->agentId));}
 
   /**
    * Create an rCard security code for the given account (either for an individual or a company agent).
    */
-  function makeCardCode($newCode = '') {
+  function makeCardCode($newCode = NULL) {
     $a = $this;
     $aA = $a->agentA;
-    $field = $this->qo->agentCode ? 'cardCode2' : 'cardCode';
-    $qid = ($a->anyAdmin and !$this->qo->agentCode) ? $a->mainQid : $a->qid;
+    $noAgt = $a->noAgent();
+    u\EXPECT(!($a->co and $noAgt) or (test() and $newCode == ''), 'companies cannot have a cardCode'); // allow tests to set company cardCode blank
+    $field = $noAgt ? 'cardCode' : 'cardCode2';
+    $qid = $noAgt ? $a->mainQid : $a->qid;
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode()); // resave the secure fields
@@ -1675,7 +1679,7 @@ X;
    */
   public function photoHtml($small = FALSE, $unique = FALSE) {
     $a = $this;
-    if (test()) return $a->photo;
+    if (test()) return $a->agentA->photo;
     return '<div id="user-picture"><img src="' . $a->photoSrc($small, $unique) . '" alt="profile picture" /></div>';
   }
   
@@ -1687,14 +1691,14 @@ X;
    * @return: value for the src attribute to display the account's picture (with a default image if none or not permitted)
    * Use result with DRUPAL_ROOT . $result OR $base_url . $result
    */
-  public function photoSrc($small = FALSE, $unique = FALSE) {
+  public function photoSrc($small = FALSE, $unique = FALSE, $qr = FALSE) {
     global $mya, $base_url;
     $a = $this;
     
     if ($unique) $unique = '&t=' . now();
     $thing = $small ? 'thumb' : 'photo';
-    if ($a != $mya) { // not our own photo (anybody can see a company's photo, otherwise encode)
-      $qid = $a->co ? "qid=$a->mainQid" : ('code=' . u\cryRay(ray('qid sid', $a->mainQid, session_id())));
+    if ($qr or $a != $mya) { // not our own photo (anybody can see a company's photo, otherwise encode)
+      $qid = $a->co ? "qid=$a->mainQid" : ('code=' . u\cryRay(ray('qid sid qr', $a->mainQid, session_id(), $qr)));
     } else { $qid = ''; }
       
     return "$base_url/account-$thing/$qid$unique";
