@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
-            "version": "2.0.3",
-            "version_normalized": "2.0.3.0",
+            "version": "2.0.4",
+            "version_normalized": "2.0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Bacon/BaconQrCode.git",
-                "reference": "3e9d791b67d0a2912922b7b7c7312f4b37af41e4"
+                "reference": "f73543ac4e1def05f1a70bcd1525c8a157a1ad09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Bacon/BaconQrCode/zipball/3e9d791b67d0a2912922b7b7c7312f4b37af41e4",
-                "reference": "3e9d791b67d0a2912922b7b7c7312f4b37af41e4",
+                "url": "https://api.github.com/repos/Bacon/BaconQrCode/zipball/f73543ac4e1def05f1a70bcd1525c8a157a1ad09",
+                "reference": "f73543ac4e1def05f1a70bcd1525c8a157a1ad09",
                 "shasum": ""
             },
             "require": {
@@ -28,7 +28,7 @@
             "suggest": {
                 "ext-imagick": "to generate QR code images"
             },
-            "time": "2020-10-30T02:02:47+00:00",
+            "time": "2021-06-18T13:26:35+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -52,7 +52,7 @@
             "homepage": "https://github.com/Bacon/BaconQrCode",
             "support": {
                 "issues": "https://github.com/Bacon/BaconQrCode/issues",
-                "source": "https://github.com/Bacon/BaconQrCode/tree/2.0.3"
+                "source": "https://github.com/Bacon/BaconQrCode/tree/2.0.4"
             },
             "install-path": "../bacon/bacon-qr-code"
         },
@@ -108,17 +108,17 @@
         },
         {
             "name": "endroid/qr-code",
-            "version": "4.0.3",
-            "version_normalized": "4.0.3.0",
+            "version": "4.3.5",
+            "version_normalized": "4.3.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/endroid/qr-code.git",
-                "reference": "06b0ac1c2a0633628c1ae904e6ae13fd6808d3ee"
+                "reference": "5630e192948b466d418608ecce697465d20260af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/endroid/qr-code/zipball/06b0ac1c2a0633628c1ae904e6ae13fd6808d3ee",
-                "reference": "06b0ac1c2a0633628c1ae904e6ae13fd6808d3ee",
+                "url": "https://api.github.com/repos/endroid/qr-code/zipball/5630e192948b466d418608ecce697465d20260af",
+                "reference": "5630e192948b466d418608ecce697465d20260af",
                 "shasum": ""
             },
             "require": {
@@ -135,10 +135,9 @@
                 "ext-gd": "Enables you to write PNG images",
                 "khanamiryan/qrcode-detector-decoder": "Enables you to use the image validator",
                 "roave/security-advisories": "Makes sure package versions with known security issues are not installed",
-                "setasign/fpdf": "Enables you to use the PDF writer.",
-                "symfony/security-checker": "Checks your composer.lock for vulnerabilities"
+                "setasign/fpdf": "Enables you to use the PDF writer"
             },
-            "time": "2021-03-21T10:51:29+00:00",
+            "time": "2021-09-17T07:50:43+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -172,7 +171,7 @@
             ],
             "support": {
                 "issues": "https://github.com/endroid/qr-code/issues",
-                "source": "https://github.com/endroid/qr-code/tree/4.0.3"
+                "source": "https://github.com/endroid/qr-code/tree/4.3.5"
             },
             "funding": [
                 {
@@ -184,17 +183,17 @@
         },
         {
             "name": "quickbooks/v3-php-sdk",
-            "version": "6.0.1",
-            "version_normalized": "6.0.1.0",
+            "version": "6.0.2",
+            "version_normalized": "6.0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/intuit/QuickBooks-V3-PHP-SDK.git",
-                "reference": "a4139a9cc439a5c03edec070d56344b1dc82056f"
+                "reference": "036e8f1de4c9d6fd17474694e5de61313e231872"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/intuit/QuickBooks-V3-PHP-SDK/zipball/a4139a9cc439a5c03edec070d56344b1dc82056f",
-                "reference": "a4139a9cc439a5c03edec070d56344b1dc82056f",
+                "url": "https://api.github.com/repos/intuit/QuickBooks-V3-PHP-SDK/zipball/036e8f1de4c9d6fd17474694e5de61313e231872",
+                "reference": "036e8f1de4c9d6fd17474694e5de61313e231872",
                 "shasum": ""
             },
             "require": {
@@ -209,7 +208,7 @@
                 "ext-curl": "Uses Curl to make HTTP Requests",
                 "guzzlehttp/guzzle": "Uses Guzzle to make HTTP Requests"
             },
-            "time": "2021-05-07T17:13:54+00:00",
+            "time": "2021-08-18T17:42:47+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -238,7 +237,7 @@
             ],
             "support": {
                 "issues": "https://github.com/intuit/QuickBooks-V3-PHP-SDK/issues",
-                "source": "https://github.com/intuit/QuickBooks-V3-PHP-SDK/tree/6.0.1"
+                "source": "https://github.com/intuit/QuickBooks-V3-PHP-SDK/tree/6.0.2"
             },
             "install-path": "../quickbooks/v3-php-sdk"
         }

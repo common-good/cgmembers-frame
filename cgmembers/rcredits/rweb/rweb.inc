@@ -437,32 +437,39 @@ function showAllCharts($ctty = 0) {
 }
 
 function formFooter() {
-  global $base_url, $rUrl;
+  global $mya, $base_url, $rUrl;
+
   $year = date('Y');
-
-  global $mya;
-  $extraLinks = ($mya and $mya->can(B_MANAGE)) 
-  ? t('|<%aDonate>Donate</a> | <%aInvite>Invite Someone</a> | ',
-    '_aDonate _aInvite', atag('/community/donate'), atag('/community/invite'))
-  : ($mya ? '' : t('|<%aSignin>Sign in</a> |', '_aSignin', atag('/signin')));
-
   $helpType = $mya ? '' : 'other';
   $helpModal = modal('help-modal', '', '', '', 'X');
+
+  if (!$mya) {
+    $links[] = lnk('/signin', t('Sign in'));
+  } elseif ($mya->can(B_MANAGE)) {
+    $links[] = lnk('/community/donate', t('Donate'));
+    $links[] = lnk('/community/invite', t('Invite Someone'));
+  }
+
+  $links[] = lnk(r\promoLink('about-us'), t('About Us')) . (u\isMobile() ? '<br>' : '');
+  $links[] = lnk('/community/agreement', t('The Agreement'));
+  $links[] = lnk(r\promoLink('about-us/privacy-and-security'), t('Security'));
+  $links[] = lnk("/help/$helpType", t('Help'));
+  $links = join(' | ', $links);
+  list ($copyright, $nonprofit) = ray(t('copyright, a nonprofit organization'));
   
-  $markup = "<hr><div id=\"footer-menu\">$extraLinks" . t(<<<EOF
-|   <%aSite>About Us</a> |
-    <%aAgree>The Agreement</a> |
-    <%aSecurity>Security</a> |
-    <%aHelp>Help</a>
+  $markup = tr(<<< X
+|<hr><div id=\"footer-menu\">
+$links
 <br>&nbsp;
 </div>
-<span class="copyright">copyright &copy; %year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, a nonprofit organization</span><br/>
+<span class="copyright">$copyright &copy; $year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, $nonprofit</span><br/>
 %CGF_POSTALADDR<br/>
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <span class="no-print"><br>IP: %ip
 $helpModal</span>
-EOF
-  , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
+X
+  , '_aSite _aEmail ip', atag(r\promoLink()), u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
+  
 //    <%aCttys>Communities</a> |
 
   $footerText = item($markup); // unique name for this page

@@ -24,6 +24,7 @@ var filesToCache = [
   'rcredits/js/parse-query.js',
   'rcredits/js/misc.js',
   'rcredits/js/scraps.js',
+  'rcredits/js/scanqr.js',
   'rcredits/js/x/qr-scanner.min.js',
   'rcredits/js/x/qr-scanner.min.js.map',
   'rcredits/js/x/qr-scanner-worker.min.js',

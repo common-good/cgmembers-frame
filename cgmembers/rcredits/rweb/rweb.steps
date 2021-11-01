@@ -1635,8 +1635,10 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     BOTH bank ASlaveMemberRequestsATransfer
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
+ *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
+ *     BOTH card AMemberCardIsChargedWithScannerSetNotSignedIn
+ *     BOTH card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     BOTH card AMemberUndoesACharge
  *     BOTH card AMemberAddsATip
  *     TEST cc SomeoneAsksToMakeACreditCardDonation

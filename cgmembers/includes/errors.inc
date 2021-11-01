@@ -59,7 +59,10 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   global $channel;
   list($severity_msg, $severity) = nni(drupal_error_levels(), $level, ['unknown error', WATCHDOG_ERROR]);
 
-  if ($level == E_WARNING and substr($msg, 0, 6) == 'fopen(') return; // work around flaw in fopen
+  if ($level == E_WARNING) {
+    $ignore = explode(', ', 'fopen(');
+    foreach ($ignore as $k) if (strpos($msg, $k) !== FALSE) return; // work around flaws in fopen and file_get_contents
+  }
   if ($severity == WATCHDOG_DEBUG) return;
 ///  debug($context); echo pr($context); // handy when debugging
 

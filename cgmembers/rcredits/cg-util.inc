@@ -739,12 +739,14 @@ function firstUnusedId($key, $table, $start = 1, $end = 0, $where0 = '1', $subs 
  * @param image $img0: the image to change
  * @param int ($w, $h): new width and height
  * @param int ($x1, $y1): where to begin cropping
- * @param int ($cropW, $cropH): how big an image to end up with
+ * @param int ($cropW, $cropH): how big an image to end up with (including border, if any)
  * @param int $angle: how far to rotate the image (in degrees)
  * @return the modified image
  */
 function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angle = 0) {
   list ($w0, $h0) = [imagesx($img0), imagesy($img0)];
+  list ($bX, $bY) = [max(0, $cropW - $w), max(0, $cropH - $h)]; // borders, if cropped image is bigger than new width or height
+  flog(compact(ray('w0 h0 w h x1 y1 cropW cropH angle bX bY')));
   
   if ($w0 != $w or $h0 != $h) { // resize
     $img1 = imagecreatetruecolor($w, $h); // resize the original image to size of editor
@@ -756,13 +758,14 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
     $x1 += (imagesx($img1) - $w) / 2; // diff between rotated & original sizes
     $y1 += (imagesy($img1) - $h) / 2;
   }
-  
+
   if ($cropW or $cropH) { // crop
-    $img2 = imagecreatetruecolor($cropW, $cropH); // crop image into selected area
-    imagecolortransparent($img2, imagecolorallocate($img2, 0, 0, 0));
-    imagecopyresampled($img2, $img1, 0, 0, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
+    $img2 = imagecreatetruecolor($cropW, $cropH); // area to crop image into
+    if ($bX or $bY) imagefill($img2, 0, 0, imagecolorallocate($img2, 255, 255, 255)); // white borders
+    $cropW -= $bX; $cropH -= $bY;
+    imagecopyresampled($img2, $img1, $bX / 2, $bY / 2, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
   } else $img2 = $img1;
-  
+
   return $img2;
 }
 
@@ -1763,7 +1766,7 @@ function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
-function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
+function img2string($img, $quality = 100) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
@@ -1771,7 +1774,7 @@ function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists(
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
-function isMobile() {return (bool) preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
+function isMobile() {return (bool) preg_match(MOBILE_REGEX, nni($_SERVER, 'HTTP_USER_AGENT'));}
 function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
 function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
@@ -1782,3 +1785,4 @@ function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists
 function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}
+function getContents($url) {return file_get_contents($url, FALSE, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));}

@@ -661,6 +661,8 @@ abstract class DatabaseConnection extends PDO {
    *   $options['throw_exception'] is TRUE.
    *
    * @throws PDOException
+   *
+   * @TODO: this function fails in PHP 8. Maybe rename it "quer" and change all calls to it.
    */
   public function query($query, array $args = array(), $options = array()) {
 

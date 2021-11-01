@@ -12,14 +12,14 @@ Setup:
   
 Scenario: An online-only member tries to display their QR
   When member ".ZZA" visits "show-qr"
-  Then we show "QR Code for Abe One"
+  Then we show "Abe One"
   And with:
   | complete |
 
 Scenario: A card member displays their QR
   Given member ".ZZA" has "card" steps done: "all"
   When member ".ZZA" visits "show-qr"
-  Then we show "QR Code for Abe One"
+  Then we show "Abe One"
   And with QR "HTTP://6VM.RC4.ME/KDJIaA1aA1aA1"
   And without:
   | complete |

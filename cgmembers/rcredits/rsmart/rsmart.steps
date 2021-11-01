@@ -452,6 +452,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  *     MAKE transact BuyerAgentLacksPermissionToBuy
  *     MAKE transact DeviceSendsWrongProof
  *     MAKE transact ACashierInTheSameCommunityAsksToChargeSomeoneUnconfirmed
+ *     MAKE transact CashierAsksToChargeSixNinetynine
  */
 function agentAsksDeviceToChargeForAt($agent, $device, $member, $amount, $goods, $description, $created) {
   return reconcilingOnChargingForAtForce($agent, $device, $member, $amount, $goods, $description, $created, 0);
@@ -567,6 +568,7 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
  *     MAKE offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithAppOffline
  *     MAKE offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithAppOnline
  *     MAKE offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithTxDateAfterTheChange
+ *     MAKE transact CashierAsksToChargeSixNinetynine
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -764,3 +766,10 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH undo ACashierReversesATransactionWithInsufficientFunds
  */
 function these($thing, $list) {return t\these($thing, $list);}
+
+/**
+ * cron runs (ARG)
+ *
+ * in: MAKE transact CashierAsksToChargeSixNinetynine
+ */
+function cronRuns($op) {return t\cronRuns($op);}

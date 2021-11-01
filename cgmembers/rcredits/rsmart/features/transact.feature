@@ -164,3 +164,11 @@ Scenario: A cashier in the same community asks to charge someone unconfirmed
 #  Then we return error "not confirmed" with subs:
 #  | youName  | inviterName |*
 #  | Eve Five | Dee Four    |
+
+Scenario: Cashier asks to charge six ninety-nine
+  Given members have:
+  | uid  | notices |*
+  | .ZZB | offer:d,need:d,tip:w,in:d,out:d,misc:m |
+  | .ZZC | offer:d,need:d,tip:w,in:d,out:d,misc:m |
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $6.99 for "goods": "food" at %now
+  And cron runs "notices"

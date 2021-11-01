@@ -10,7 +10,7 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 //use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
-//use Endroid\QrCode\Label\Font\NotoSans;
+use Endroid\QrCode\Label\Font\NotoSans;
 use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
 use Endroid\QrCode\Writer\PngWriter;
 
@@ -25,7 +25,7 @@ function formShowQr($form, &$sta, $args = '') {
   if (!$mya->ok) return softErr(t('You cannot display this account\'s QR code until you have completed the steps to set it up.'));
   if (!$mya->canBuy) return softErr(t('You do not have permission to use this account\'s QR code.'));
 
-  $title = t('QR Code for ') . $mya->bestName;
+  $title = $mya->bestName;
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
   if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : ($mya->ok and $mya->stepsDone('card'))) {
@@ -40,6 +40,7 @@ function formShowQr($form, &$sta, $args = '') {
 }
 
 function genQr($url) {
+  global $mya;
   require_once DRUPAL_ROOT . '/vendor/autoload.php';
 
   return Builder::create()
@@ -49,11 +50,13 @@ function genQr($url) {
     ->encoding(new Encoding('ISO-8859-1'))
     ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
     ->size(300)
-    ->margin(10)
+    ->margin(5)
     ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-    ->logoPath(R_ROOT . '/images/logo-in-white-square56.png')
-//    ->labelText('This is the label')
-//    ->labelFont(new NotoSans(20))
+    ->logoPath(str_replace('https:', 'http:', $mya->agentA->photoSrc(FALSE, TRUE, TRUE)))
+    ->logoResizeToWidth(99)
+    ->logoResizeToHeight(136)
+    ->labelText($mya->agentA->bestName . ", $mya->city, $mya->st") 
+    ->labelFont(new NotoSans(10))
 //    ->labelAlignment(new LabelAlignmentCenter())
     ->build()
     ->getDataUri();

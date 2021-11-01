@@ -41,9 +41,11 @@ interface BuilderInterface
 
     public function logoPath(string $logoPath): BuilderInterface;
 
-    public function logoResizeToWidth(string $logoResizeToWidth): BuilderInterface;
+    public function logoResizeToWidth(int $logoResizeToWidth): BuilderInterface;
 
-    public function logoResizeToHeight(string $logoResizeToHeight): BuilderInterface;
+    public function logoResizeToHeight(int $logoResizeToHeight): BuilderInterface;
+
+    public function logoPunchoutBackground(bool $logoPunchoutBackground): BuilderInterface;
 
     public function labelText(string $labelText): BuilderInterface;
 
@@ -54,8 +56,6 @@ interface BuilderInterface
     public function labelMargin(MarginInterface $labelMargin): BuilderInterface;
 
     public function labelTextColor(ColorInterface $labelTextColor): BuilderInterface;
-
-    public function labelBackgroundColor(ColorInterface $labelBackgroundColor): BuilderInterface;
 
     public function validateResult(bool $validateResult): BuilderInterface;
 

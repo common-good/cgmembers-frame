@@ -61,6 +61,10 @@ Scenario: A member scans an individual card, with no scanner set, signed in, wit
   And cryptcookie "qid" is "NEWZZB"
   And cookie "trust" is "1"
   And cookie "scanner" is ""
+  And cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZC |
 
   When member ".ZZB" visits "card/6VM/KDJIAa1"
   Then we show "Scan From Which Account?" with:
@@ -89,6 +93,10 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | .ZZC | groceries |
   And cookie "trust" is "1"
   And cookie "scanner" is "NEWZZC"
+  And cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZC |
 
   When member "?" visits "card/6VM/KDJIAa1"
   Then we show
@@ -109,6 +117,10 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | .ZZC | groceries |
   And cookie "trust" is ""
   And cookie "scanner" is "NEWZZC"
+  And cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZC |
 
   When member "?" visits "card/6VM/KDJIAa1"
   Then we show
@@ -150,6 +162,10 @@ Scenario: a member card is charged, with scanner set, not signed in
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
+  And cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZC |
 
   When member "?" completes "card/6vm/KDJIAa1" with:
   | op     | amount | desc      |*
@@ -175,7 +191,11 @@ Scenario: a member card is paid, with scanner set, not signed in
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
-  
+  And cookie "box" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZC |
+
   When member "?" completes "card/6vm/KDJIAa1" with:
   | op     | amount | desc      |*
   | pay    | 10     | groceries |
