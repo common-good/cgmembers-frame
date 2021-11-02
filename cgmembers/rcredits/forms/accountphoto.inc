@@ -25,13 +25,11 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   list($zot, $type) = explode('-', $page);
   $dftImgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
 
-  extract(just('orig qid code qr', $args, NULL));
-  if ($code and $ray = u\decryRay($code)) extract(just('qid sid qr', $ray, NULL));
+  extract(just('orig qid sid qr code cardCode', $args, NULL)); // most of these are passed only in code, but set them NULL now
+  if ($code and $ray = u\decryRay($code)) extract(just('qid sid qr cardCode', $ray, NULL));
+  $a = $qid ? r\acct($qid) : $mya;
   
-  if ($code and nn($sid) != session_id() and !isDEV) { // allow insecure file_get_contents on dev
-    $photo = NULL;
-  } elseif ($a = $qid ? r\acct($qid) : $mya) {
-    if ($qr) $a = $a->agentA; // use agent's photo, if embedding in QR
+  if ($a and (!$qid or $sid == session_id() or $cardCode == $a->cardCode)) {
     $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   } else { $photo = NULL; }
   
@@ -43,5 +41,5 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   }
 
   header("Content-type: image/jpeg");
-  return exitJust($photo ?: \file_get_contents(R_ROOT . "/images/icons/$dftImgFlnm"));
+  return exitJust(strlen($photo) ? $photo : \file_get_contents(R_ROOT . "/images/icons/$dftImgFlnm"));
 }

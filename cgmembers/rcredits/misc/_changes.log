@@ -1,3 +1,21 @@
+2021-11-02 feature/cry-photoids
+. photoids are now encrypted and kept online
+. photoids are displayed on summary page, for admin
+. created a general purpose file encryption/decryption mechanism
+. account photo link now includes encrypted cardCode + session_id to keep it unpredictable
+. QR photo and name now show correctly for superAdmin
+. creditLine is now editable on summary page for admins
+. right and left panes on summary page are now switched so they show right on small screen (for admin)
+. ghost of helper dropdown now suppressed on summary page (for admin)
+. we now warn admin if numFld or intFld is called with a formatted default
+. all outward links (target="_blank") no include rel="noreferrer noopener" (see theme/html.tpl)
+. improved log content
+. fixed some numFld and intFld defaults
+. fixed bug in (unused) u\ordinal() function
+. .heic: newbsw,caaabj; .octet-stream: nebabt
+. for x in *; do mv "$x" "${x%.}"; done
+. chdir(PHOTOID_DIR); foreach(glob('*') as $flnm) if ($flnm != 't') u\cryFile(PHOTOID_DIR . '/' . $flnm);
+
 2021-10-26 feature/photo-qr
 . changed logo in the middle of payment QRs to be member's photo
 . fixed bugs in cardCode handling

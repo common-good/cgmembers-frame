@@ -52,7 +52,6 @@ input.short {width:100px; display:inline-block;}
 
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
-iframe {border:0; float:right; margin-right:-60px;}
 .form-type-checkboxes > .control-label {padding-top:0;}
 .form-item-cq input {width:200px; display:inline-block;}
 
@@ -200,6 +199,7 @@ form {max-width:834px; margin:0 auto;}
 .form-item-backing .suffix,
 .form-item-creditLine .suffix,
 .form-item-bankAccount .suffix,
+.form-item-altId .suffix,
 .form-item-acct .suffix {padding-top:0;}
 
 .frm-wider .control-label {float:left; width:10%;}
@@ -1428,7 +1428,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-graphs .control-label {display:none;}
 #frm-graphs .form-type-item {margin-top:15px; margin-bottom:0;}
 #frm-graphs .description {clear:none;}
-#frm-graphs #edit-charts div, #frm-graphs iframe {float:left;}
+#frm-graphs iframe {border:0; float:left; margin-right:-60px;}
+#frm-graphs #edit-charts div {float:left;}
 #frm-graphs .form-item-title {margin-bottom:0; font-weight:bold;}
 /* #frm-graphs #edit-subheader {margin-top:0; margin-bottom:35px; font-size:110%;}  */
 #frm-graphs #edit-subtext {margin-left:0;} 

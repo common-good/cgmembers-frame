@@ -1698,7 +1698,7 @@ X;
     if ($unique) $unique = '&t=' . now();
     $thing = $small ? 'thumb' : 'photo';
     if ($qr or $a != $mya) { // not our own photo (anybody can see a company's photo, otherwise encode)
-      $qid = $a->co ? "qid=$a->mainQid" : ('code=' . u\cryRay(ray('qid sid qr', $a->mainQid, session_id(), $qr)));
+      $qid = $a->co ? "qid=$a->mainQid" : ('code=' . u\cryRay(ray('qid sid qr cardCode', $a->mainQid, session_id(), $qr, $a->cardCode)));
     } else { $qid = ''; }
       
     return "$base_url/account-$thing/$qid$unique";

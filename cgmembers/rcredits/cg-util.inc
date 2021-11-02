@@ -646,7 +646,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
 
 //  $useTextLogToo = FALSE; // isDEV;
 
-  $qid = $mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
+  $qid = $mya ? $mya->qid . ($mya->proSe ? '' : strtolower('.' . $mya->agentA->mainQid . ($mya->anyAdmin ? '(a)' : ''))) : t('nobody');
   $time = date('d H:i:s');
 
   if (is_array($info)) {
@@ -658,6 +658,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
 /**/ flog($s = "$qid/$time/$type/$info");
+  return $s;
 //  if (!test())
 //  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  
@@ -1656,6 +1657,27 @@ EOF;
 }
 
 /**
+ * Return the mime type of a file or string.
+ * @param string $r: the resource: Path to the file; Or the String content
+ * @param string $t: type of the resource -- "str" or "file"
+ * @return the mime type
+ */
+function mimeType($r, $t = 'file') {
+  $finfo = new \finfo(FILEINFO_MIME_TYPE);
+  return $t == 'str' ? $finfo->buffer($r) : $finfo->file($r);
+}
+
+/**
+ * Return a decrypted file and its mime type.
+ */
+function decryFile($path) {
+  $s = file_get_contents($path);
+  $s = u\decry('S', $s);
+  $mimeType = u\mimeType($s, 'str');
+  return [$s, $mimeType];
+}
+
+/**
  * return (or set) URL parameters, handling tests appropriately
  */
 function _GET($ray = NULL) {
@@ -1765,7 +1787,7 @@ function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'),
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
-function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
+function ordinal($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n%100>=20)+($n==0))*10 + $n%10) ));}
 function img2string($img, $quality = 100) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
@@ -1786,3 +1808,4 @@ function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . P
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists
 function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}
 function getContents($url) {return file_get_contents($url, FALSE, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));}
+function cryFile($path) {file_put_contents($path, u\cry('S', file_get_contents($path)));}

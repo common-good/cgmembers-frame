@@ -94,7 +94,7 @@ function strip(&$v) {
   } else $v = preg_replace('~<[!/a-z][^>]*(>|$)~i', '', $v); // not strip_tags, which zaps <3, etc.
 }
 
-define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.php $base_url/sadmin/export-list/"); // base_url not self, because we use this to sanitize page too
+define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.php $base_url/sadmin/export-list/ $base_url/show-doc/"); // base_url not self, because we use this to sanitize page too
 
 /** Set Content-Security-Policy
  * We might want to use require-sri-for eventually for even our own scripts and style sheets
@@ -120,7 +120,7 @@ function setCSP() {
     . "default-src 'self';"
     . "connect-src 'self';"
     . "font-src 'self';"
-    . "frame-src " . FRAME_SOURCES . ';' // we use iframes for admin member download and for graphs
+    . tr("frame-src %FRAME_SOURCES;") // we use iframes for admin member download and for graphs
     . "manifest-src 'self';"
     . "media-src 'self';"
     . "object-src 'none';"
@@ -129,7 +129,7 @@ function setCSP() {
     . "style-src 'self' $styleSource;"
     . "worker-src 'self';"
     . "form-action 'self';"
-    . "frame-ancestors 'none';"
+    . "frame-ancestors 'self';"
 //    . "report-uri /csp-report.php?sid=$sid;"
   );
 

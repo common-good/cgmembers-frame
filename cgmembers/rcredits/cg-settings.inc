@@ -8,7 +8,7 @@ define('R_SERVER_ID', 'NEW'); // qid header for this region's server (New Englan
 // other 3rd letters: M=ME H=NH V=VT C=CT R=RI P=PA B=Boston
 define('ADMIN_NAME', 'William Spademan');
 define('SIGNATORY', 'William Spademan, President');
-define('R_ADMIN_EMAIL', 'wspademan@gmail.com'); // regional admin's personal email
+define('R_ADMIN_EMAIL', 'wspademan@CommonGood.earth'); // regional admin's personal email
 //define('R_ADMIN_ADDRESS', 'PO Box 305, Ashfield, MA 01330');
 define('R_ADMIN_PHONE', '+14136281021');
 define('R_REGION_EIN', '46-1821792');

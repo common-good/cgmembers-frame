@@ -231,7 +231,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
 /**
  * members: (ARG)
  *
- * in: MAKE accredit Setup
+ * in: MAKE aacc Setup
+ *     MAKE accredit Setup
  *     MAKE ajax Setup
  *     MAKE backing Setup
  *     TEST backing AMemberIncreasesBackingAmount
@@ -240,7 +241,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
- *     MAKE cc Setup
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -309,7 +309,8 @@ function members($list) {return t\members($list);}
 /**
  * we say (ARG): (ARG) with subs: (ARG)
  *
- * in: TEST backing AMemberDecreasesBackingAmount
+ * in: TEST aacc SomeoneCompletesACreditCardDonation
+ *     TEST backing AMemberDecreasesBackingAmount
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -319,7 +320,6 @@ function members($list) {return t\members($list);}
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     TEST card AMemberUndoesACharge
- *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -530,7 +530,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST accredit AMemberCompanyGivesACustomerCredit
+ * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
+ *     TEST accredit AMemberCompanyGivesACustomerCredit
  *     TEST backing AMemberVisitsTheBackingPage
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
@@ -539,7 +540,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberUndoesACharge
  *     TEST card AMemberAddsATip
- *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -1218,9 +1218,9 @@ function membersHave($list) {return t\membersHave($list);}
 /**
  * we redirect to (ARG)
  *
- * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
+ *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
@@ -1621,7 +1621,9 @@ function weScripWithSubs($script, $args = []) {
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE accredit Setup
+ * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE aacc SomeoneCompletesACreditCardDonation
+ *     MAKE accredit Setup
  *     TEST accredit AMemberCompanyGivesACustomerCredit
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE backing AMemberIncreasesBackingAmount
@@ -1641,8 +1643,6 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     BOTH card AMemberUndoesACharge
  *     BOTH card AMemberAddsATip
- *     TEST cc SomeoneAsksToMakeACreditCardDonation
- *     MAKE cc SomeoneCompletesACreditCardDonation
  *     MAKE cgpay Setup
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -2121,7 +2121,7 @@ function cookieIs($nm, $v) {
 /**
  * someone visits (ARG) where code is: (ARG)
  *
- * in: MAKE cc SomeoneCompletesACreditCardDonation
+ * in: MAKE aacc SomeoneCompletesACreditCardDonation
  *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
@@ -2345,7 +2345,8 @@ function memberAjaxWith($id, $op, $data) {
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
@@ -2353,7 +2354,6 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
  *     MAKE card AMemberUndoesACharge
  *     MAKE card AMemberAddsATip
- *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
@@ -2387,11 +2387,11 @@ function weFirstThen($first, $then) {
 /**
  * member (ARG) completes (ARG) with: (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
@@ -2412,7 +2412,7 @@ function withQR($url) {
 /**
  * next captcha is (ARG)
  *
- * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
+ * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE signup Setup

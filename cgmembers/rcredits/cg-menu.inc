@@ -222,6 +222,7 @@ function menu($submenu = '') {
     'cgpay-code' => ['call', t('Supply a CGPay button code'), '', ANY, 'code'],
     'show-qr' => ['call', t('Show My QR Code'), 'ShowQr', 'read'],
     'scan-qr' => ['call', t('Scan a QR Code'), 'ScanQr', ANY],
+    'show-doc' => ['call', t('Show an encrypted document'), 'ShowDoc 1', ANY],
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,

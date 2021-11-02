@@ -71,6 +71,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
 }
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.
+$page = str_replace('target="_blank"', 'target="_blank" rel="noreferrer noopener"', $page); // flout tabnabbing
 
 if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
