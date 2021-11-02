@@ -359,8 +359,12 @@ function adminSummary() {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
       } elseif ($mya->superAdmin) { // altId is V-encrypted
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
-        $altId = textFld(t('<a>Alt ID / DOB:</a>'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
-        if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) $photoIdSrc = "$base_url/show-doc/code=" . u\cryRay(ray('path admin', PHOTOID_DIR . "/$mya->mainQid", 'admin'));
+        $label = t('Alt ID / DOB:');
+        if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) {
+          $photoIdSrc = "$base_url/show-doc/code=" . u\cryRay(ray('path admin', PHOTOID_DIR . "/$mya->mainQid", 'admin'));
+          $label = "<a>$label</a>";
+        }
+        $altId = textFld($label, [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
       }
     }
     
