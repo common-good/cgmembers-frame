@@ -147,6 +147,18 @@ function doit(what, vs) {
     });
     break;
 
+  case 'adminSummary': 
+    $('.tickle').click(function () {
+      var tickle = $(this).attr('tickle');
+      $('#edit-tickle').val(tickle);
+      $('#edit-submit').click();
+    });
+
+    var photoid = $('.form-item-photoid');
+    photoid.hide();
+    $('.form-item-altId a').click(function () {$('.form-item-photoid iframe').attr('src', vs['photoIdSrc']); photoid.toggle();});
+    break;
+    
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
@@ -158,8 +170,8 @@ function doit(what, vs) {
       });
     });
     $('#edit-note').focus();
-
-    var fid = '#edit-helper';
+    
+    var fid = 'input#edit-helper'; // "input" is required here to distinguish from item
     var form = fform(fid);
     suggestWho(fid, '1');
     break;
@@ -763,14 +775,6 @@ function doit(what, vs) {
     break;
     
   case 'back-button': $('.btn-back').click(function () {history.go(-1); return false;}); break;
-    
-  case 'tickle': 
-    $('.tickle').click(function () {
-      var tickle = $(this).attr('tickle');
-      $('#edit-tickle').val(tickle);
-      $('#edit-submit').click();
-    });
-    break;
     
   case 'coupons':
     var purposeDft = $('#edit-purpose').val();

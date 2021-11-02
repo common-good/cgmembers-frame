@@ -95,7 +95,7 @@ Scenario: An administrator views the investment page
   | Requests to Cash Out (0): |  $0 | Cash Out ||
    | Investments (0):          |  $0 | List | Propose |
   | Loss Reserve:             |  $0 | ||
-  | Expense Reserve:          |  $0 | Save ||
+  | Expense Reserve:          |   0 | Save ||
   | Club Net Value:           |  $0 | ||
   | Total Member Stakes (0):  |  $0 | ||
   | Available for Dividends:  |  $0 | Issue Dividends ||
@@ -411,7 +411,7 @@ Scenario: Members increase and decrease their stakes
   | Requests to Cash Out (1): |    $20 | Cash Out ||
    | Investments (1):          |   $600 | List | Propose |
   | Loss Reserve:             |    $10 | ||
-  | Expense Reserve:          |     $0 | Save ||
+  | Expense Reserve:          |      0 | Save ||
   | Club Net Value:           | $5,610 | ||
   | Total Member Stakes (2):  |   $100 | ||
   | Available for Dividends:  | $5,510 | Issue Dividends ||
@@ -500,7 +500,7 @@ Scenario: The investment club issues dividends
   Then we show "Issue Dividends" with:
   | Available for Dividends | $5,500 |
   | | (10.0% is reserved for Common Good) |
-  | Total Dividends to Issue | $5500 |
+  | Total Dividends to Issue | 5500 |
   | Issue Dividends | |
   
   When member "I:B" completes form "invest/dividends" with values:

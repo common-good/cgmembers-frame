@@ -447,7 +447,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
 
   if ($type == 'int') u\setDft($x['step'], 1);
-  $type = strtr($type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
+  $type = strtr($type0 = $type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
   if (in($subtype = $type, 'number tel date email range password')) {
     $dft = nni($x, 'default_value', NULL);
     if ($type == 'tel') {
@@ -455,7 +455,12 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
       u\setDft($x['min'], 0);
-      if ($dft) $x['default_value'] = str_replace(',', '', $dft); // commas prevent it from displaying (HTML bug as of 10/15/2020)
+      $bad = $type0 == 'int' ? '/[$\\,\\.]/' : '/[$\\,]/';
+      if ($dft and preg_match($bad, $dft)) {
+        if (test()) u\FAIL('bad char in dft');
+        r\tellAdmin("bad char in $type0 fld dft", compact(ray('type0 dft label help x options')));
+        $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
+      }
     } elseif ($type == 'date') {
       if ($dft) $x['default_value'] = date('Y-m-d', $dft);
     }

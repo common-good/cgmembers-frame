@@ -43,6 +43,8 @@ function genQr($url) {
   global $mya;
   require_once DRUPAL_ROOT . '/vendor/autoload.php';
 
+  $aA = $mya->superAdmin ? $mya : $mya->agentA;
+
   return Builder::create()
     ->writer(new PngWriter())
 //    ->writerOptions([])
@@ -52,10 +54,10 @@ function genQr($url) {
     ->size(300)
     ->margin(5)
     ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-    ->logoPath(str_replace('https:', 'http:', $mya->agentA->photoSrc(FALSE, TRUE, TRUE)))
+    ->logoPath($aA->photoSrc(FALSE, TRUE, TRUE))
     ->logoResizeToWidth(99)
     ->logoResizeToHeight(136)
-    ->labelText($mya->agentA->bestName . ", $mya->city, $mya->st") 
+    ->labelText($aA->bestName . ", $mya->city, $mya->st") 
     ->labelFont(new NotoSans(10))
 //    ->labelAlignment(new LabelAlignmentCenter())
     ->build()

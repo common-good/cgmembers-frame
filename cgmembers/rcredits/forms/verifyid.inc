@@ -48,13 +48,14 @@ function formVerifyId_validate($form, &$sta) {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k]['file'];
   if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
   if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
-  $mimetype = mime_content_type($tmp_name);
-  $ext = explode('/', $mimetype )[1];
-  $path = PHOTOID_DIR . "/$mya->mainQid.$ext";
+//  $mimetype = mime_content_type($tmp_name);
+//  $ext = explode('/', $mimetype )[1];
+  $path = PHOTOID_DIR . "/$mya->mainQid";
   u\deleteFile($path);
   rename($tmp_name, $path);
+  u\cryFile($path);
 
-  $sta['input']['filedata'] = serialize(compact(ray('path mimetype type error size idtype')));
+  $sta['input']['filedata'] = serialize(compact(ray('path type error size idtype name size')));
 }
 
 function formVerifyId_submit($form, &$sta) {
@@ -64,8 +65,7 @@ function formVerifyId_submit($form, &$sta) {
   $mya->update('legalName dob yob', $legalName ?: $mya->fullName, $dob, date('Y', $dob)); // must precede ->verifySsn...
 
   if (nn($filedata)) {
-    $filedata = unserialize($filedata);
-    r\tellAdmin('id to verify', $filedata, TRUE, $filedata['path']);
+    r\tellAdmin('id to verify', unserialize($filedata));
   } else {
     $mya->update(compact('federalId'));
     $mya->verifySsnInBackground();

@@ -36,7 +36,7 @@ function formSummary($form, &$sta) {
   } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     
   $gifts = u\fmtAmt($mya->totalGifts());
-
+  
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\lnk('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
@@ -65,8 +65,11 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
-    $creditLine = $mya->underage ? NULL : item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
-//    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
+    $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
+
+    $creditLine = $mya->admin
+    ? numFld(t('Credit Line:'), $desc, dft(-$mya->floor) + suffix($suffix))
+    : ($mya->underage ? NULL : item($credit, t('Credit Line:'), $desc, w\suffix($suffix)));
 
   } else $acctType = t('community account');
 
@@ -77,8 +80,10 @@ function formSummary($form, &$sta) {
 //    if ($mya->jid) $copyEmail .= 
   } else $extra = $copyAcct = $copyEmail = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
+  
+  $photoid = item('<iframe width="100%" height="600"></iframe>');
 
-  $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
+  $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine photoid';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
@@ -87,14 +92,14 @@ function formSummary($form, &$sta) {
     $class = ['class' => ['admin']];
     $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
     $left = w\fieldSet('left2', $fields, '', '', $class);
-    $form = compact('right', 'left');
+    $form = compact('left', 'right');
     $form['none'] = submit('none'); // force _submit despite lack of submit button    
   } else $form = $fields;
 
   if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
   
   jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
-  
+
   return cgform($form, 'wide');
 
 }
@@ -103,7 +108,7 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName creditLimit dob altId altSt active helper moves tickle adminable', $sta['input'], NULL));
+  extract(just('uid legalName creditLine dob altId altSt active helper moves tickle adminable', $sta['input'], NULL));
   if ($tickle !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
 
   if ($dob and !formBasic_validate($form, $sta, 'dob')) return;
@@ -128,9 +133,9 @@ function formSummary_validate($form, &$sta) {
   if (!nn($active) and $mya->ok) { // de-activating
     if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
-  if (isset($creditLimit) and $err = u\badAmount($creditLimit)) return sayFieldErr($err, 'creditLimit'); 
+  if (isset($creditLine) and $err = u\badAmount($creditLine)) return sayFieldErr($err, 'creditLine'); 
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');
-  foreach (ray('tickle helper creditLimit') as $k) if (isset($$k)) $sta['input'][$k] = $$k;
+  foreach (ray('tickle helper creditLine') as $k) if (isset($$k)) $sta['input'][$k] = $$k;
 }
 
 function formSummary_submit($form, &$sta) {
@@ -140,7 +145,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
+  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
   if (!$mya->cAdmin) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
@@ -182,9 +187,11 @@ function formSummary_submit($form, &$sta) {
     }
   }
   
+  if (isset($creditLine)) $floor = -$creditLine;
   $fields = 'notes';
-  foreach (ray('legalName tickle moves helper') as $k) if (nn($$k)) $fields .= " $k"; // don't overwrite
+  foreach (ray('floor legalName tickle moves helper') as $k) if (nn($$k)) $fields .= " $k"; // don't overwrite
   $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
+
   $mya->update($info);
   unset($DBTX);
   
@@ -237,7 +244,6 @@ function adminSummary() {
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));
       
-//      $creditLimit = numFld(t('Credit limit:'), '', dft(u\fmtAmt(-$mya->floor)));
 //      if ($mya->stepsDone['prefs']) { // don't even look at these if newbie hasn't chosen yet
 //        $minimum = numFld(t('Minimum:'), '', dft(u\fmtAmt($mya->minimum)));
 //        $achMin = numFld(t('ACH Min:'), '', dft(u\fmtAmt($mya->achMin ?: R_ACHMIN_DEFAULT, 's')));
@@ -252,7 +258,7 @@ function adminSummary() {
       $risk = item(round($mya->risk) . ' ' . button(t('Recalc'), "$base_url/rerisk/acct/$uid/1"), t('Risk Score:'));
       if (!$mya->co) $trust = item(number_format($mya->trust, 1), t('Trust:'));
 
-      if (!$mya->ok or $mya->helper == 1) {
+      if (!$mya->ok or in($mya->helper, '0 1')) {
         if ($helper = $mya->helper ?: ($mya->co ? $mya->agentId : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
           $hA = r\acct($helper);
           $helper = $hA->fullName;
@@ -353,7 +359,8 @@ function adminSummary() {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
       } elseif ($mya->superAdmin) { // altId is V-encrypted
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
-        $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+        $altId = textFld(t('<a>Alt ID / DOB:</a>'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+        if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) $photoIdSrc = "$base_url/show-doc/code=" . u\cryRay(ray('path admin', PHOTOID_DIR . "/$mya->mainQid", 'admin'));
       }
     }
     
@@ -365,7 +372,7 @@ function adminSummary() {
 //  $back = item('<a href="' . $base_url . '/sadmin/member-list">Go to Member List</a>', ' ');
 
   $uid = hidFld($uid); // must postcede js (which uses uid)
-  w\jsx('tickle');
+  w\jsx('adminSummary', 'photoIdSrc', nn($photoIdSrc));
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
   $info = []; foreach (ray("noEnter details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;

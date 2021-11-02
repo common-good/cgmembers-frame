@@ -19,15 +19,15 @@ function formInvestDividends($form, &$sta, $args = '') {
   $amt = u\fmtAmt($avail0 = $clubVal - $stakes);
   
   $title = t('Issue Dividends');
-  $avail0 = hidFld($avail0);
   $avail = item($amt, t('Available for Dividends:'), t('(%pct is reserved for %PROJECT)', 'pct', u\fmtAmt(ICLUB_TITHE, '%')));
   if ($avail0 <= 0) {
     $amount = item(t('You cannot issue dividends at this time.'));
     $submit = NULL;
   } else {
-    $amount = numFld(REQ . t('Total Dividends to Issue:'), '', dft($amt));
+    $amount = numFld(REQ . t('Total Dividends to Issue:'), '', dft($avail0));
     $submit = t('Issue Dividends');
   }
+  $avail0 = hidFld($avail0);
   $back = backButton();
   return cgform(compact(ray('back title avail0 avail amount submit')));
 }
