@@ -28,7 +28,7 @@ function formShowQr($form, &$sta, $args = '') {
   $title = $mya->bestName;
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
-  if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : ($mya->ok and $mya->stepsDone('card'))) {
+  if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : $mya->card) {
     $qr = item(tr('<img src="%data" />', '_data', genQr($testQr = qrUrl($mya))));
     u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {

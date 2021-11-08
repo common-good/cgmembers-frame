@@ -1051,11 +1051,14 @@ function ctype_print_unicode($input) {
  * @param int $max: maximum date (if any)
  * @return FALSE if date is okay, else an error index
  */
-function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
+function badDate(&$s, $min = NULL, $max = NULL) {
+  u\setDft($min, strtotime('1/1/1800')); // avoid overflow in database
+  u\setDft($max, strtotime('1/1/2300'));
   if (!$dt = u\s2t(nn($s))) return 'bad date'; // slashes makes it mdy (else dmy assumed)
+
   if ($min !== '' and ($dt < $min or $dt > $max)) {
     $err = $dt < $min ? 'date too early' : 'date too late';
-    if (mb_strlen($s) < 9) $err .= '|year is 4 digits';
+    if ($ray = preg_split('~[/ \\,\\.]~', $s) and strlen($ray[count($ray) - 1]) < 4) $err .= '|year is 4 digits';
     return $err;
   }
   $s = $dt;
@@ -1794,7 +1797,7 @@ function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : 
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
-function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
+function joi($m, $ray) {return join($m, array_filter($ray));} // removes empty elements before joining
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
 function isMobile() {return (bool) preg_match(MOBILE_REGEX, nni($_SERVER, 'HTTP_USER_AGENT'));}
 function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}

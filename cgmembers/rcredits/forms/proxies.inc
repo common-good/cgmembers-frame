@@ -16,7 +16,7 @@ function formProxies($form, &$sta, $args = '') {
   foreach ([1, 2] as $i) {
     if ($p[$i] = $mya->proxy($i)) {
       $pi = r\acct($p[$i])->fullName;
-    } else $pi = t('(none chosen)');
+    } else $pi = t('(choose someone)');
     $proxy[$i] = $pi . ' ' . spinLink("/prox/page=Proxy&priority=$i&" . eLink($sta), t('Show Choices'), '', 'primary', 'xs');
   }
   $gotBoth = ($p[1] and $p[2]);
@@ -30,9 +30,9 @@ EOF
 
 //  if ($gotBoth) $mya->stepDone('proxies'); // sometimes doesn't get set in formProxy (dunno why)
   $proxy1 = item($proxy[1], t('Proxy:'), t('Who will vote on your behalf, when you don\'t vote directly? (You can change your choices at any time.)'));
-  $proxy2 = item($proxy[2], t('Alternate:'), t('Who will vote on your behalf, if your Proxy doesn\'t vote either? (even before resorting to your Proxy\'s Proxy)'));
-  $form = compact(ray('title subtext proxy1 proxy2')) + ($mya->stepIsDone('proxies') ? [] : w\setupFoot());
-  return cgform($form);
+  $proxy2 = $p[1] ? item($proxy[2], t('Alternate:'), t('Who will vote on your behalf, if your Proxy doesn\'t vote either? (even before resorting to your Proxy\'s Proxy)')) : NULL;
+
+  return cgform(compact(ray('title subtext proxy1 proxy2')));
 }
 
 function formProxies_validate($form, &$sta) {

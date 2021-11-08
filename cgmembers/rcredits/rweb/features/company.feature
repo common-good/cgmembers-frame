@@ -14,9 +14,9 @@ Setup:
   
 Scenario: A member visits the company info page
   When member "C:A" visits page "settings/company"
-  Then we show "Company Information" with:
+  Then we show "Company Settings" with:
   |~page title | %PROJECT web page |
-  | Company name  | Our Pub |
+  | Name       | Our Pub |
 
 Scenario: A member updates company info
   When member "C:A" confirms form "settings/company" with values:

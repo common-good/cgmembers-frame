@@ -75,3 +75,10 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  * in: MAKE grading AMemberGradesAProposal
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
+
+/**
+ * member (ARG) has (ARG) steps done: (ARG)
+ *
+ * in: MAKE grading AMemberGradesAProposal
+ */
+function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}

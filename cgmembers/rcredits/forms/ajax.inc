@@ -81,7 +81,7 @@ function ajax($args = NULL) {
       if ($fld == 'delete') {
         db\del('u_relations', compact('reid'));
         $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
-        $msg = u\joins($msg, '|', ajaxMsg(tr('deleted relation', $subs)));
+        $msg = u\joi('|', [$msg, ajaxMsg(tr('deleted relation', $subs))]);
       } else { $a->setRel($fld, $v); }
       return ajaxMsg($msg); // show messages, if any
     } else { $a->setRel($fld, $v); } // toggle

@@ -76,14 +76,14 @@ for (state of statesStr.split(',')) {
 $ = jQuery;
 
 /**
- * On click of "sameAddr" field, set postal address fields equal to physical address fields.
+ * On click of "sameAddr" field, set physical address fields equal to postal address fields.
  * On submit of signup or contact form, set (aggregate) postalAddr field and return true.
  */
 function setPostalAddr(same) {
   if (same) {
     $('.form-item-sameAddr').hide();
     var fields = ['address', 'city', 'state', 'zip'];
-    for (i = 0; i < fields.length; i++) $('#edit-' + fields[i] + '2').val($('#edit-' + fields[i]).val());
+    for (i = 0; i < fields.length; i++) $('#edit-' + fields[i]).val($('#edit-' + fields[i] + '2').val());
   } else {
     var state = $('#edit-state2').val();
     var city = $('#edit-city2').val();

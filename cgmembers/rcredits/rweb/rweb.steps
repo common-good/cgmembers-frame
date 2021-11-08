@@ -99,7 +99,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signupco ACompanySignsUp
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signupco ACompanySuppliesCrumbsChoices
- *     MAKE signupco ACompanyAccountManagerCreatesADiscount
  *     MAKE signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     MAKE signup AMemberSignsUp
  *     MAKE signup AMemberVerifiesID
@@ -108,13 +107,11 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberVerifiesEmail
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
- *     MAKE signup AMemberDonates
- *     MAKE signup AMemberChoosesCrumbs
- *     MAKE signup AMemberChoosesProxies
- *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
- *     MAKE signup AMemberChoosesToStepUp
+ *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberInvites
+ *     MAKE signup AMemberDonates
+ *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE tx AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForGoods
@@ -291,7 +288,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberVerifiesEmail
  *     TEST signup AMemberGivesContactInfo
- *     MAKE signup AMemberChoosesToStepUp
+ *     TEST signup AMemberSetsBacking
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE sponsor Setup
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
@@ -417,7 +414,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanySuppliesCrumbsChoices
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
@@ -426,13 +422,11 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberVerifiesEmail
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
- *     TEST signup AMemberDonates
- *     TEST signup AMemberChoosesCrumbs
- *     TEST signup AMemberChoosesProxies
- *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
- *     TEST signup AMemberChoosesToStepUp
+ *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
+ *     TEST signup AMemberDonates
+ *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
@@ -508,21 +502,18 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
- *     TEST signupco ACompanySuppliesCrumbsChoices
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberSetsPreferences
  *     TEST signup AMemberVerifiesEmail
- *     TEST signup AMemberClicksFinish
+ *     TEST signup AMemberClicksGetACard
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
- *     TEST signup AMemberDonates
- *     TEST signup AMemberChoosesCrumbs
- *     TEST signup AMemberChoosesProxies
+ *     TEST signup AMemberClicksGetAVote
  *     TEST signup AMemberSetsCalling
- *     TEST signup AMemberSetsBacking
- *     TEST signup AMemberChoosesToStepUp
+ *     TEST signup AMemberInvites
+ *     TEST signup AMemberDonates
  *     TEST signup AMemberConfirmsSocialSecurityNumber
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -643,10 +634,11 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanySuppliesCompanyInformation
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
+ *     TEST signupco ACompanySuppliesCrumbsChoices
  *     TEST signup AMemberVerifiesID
- *     TEST signup AMemberChoosesToStepUp
- *     TEST signup AMemberInvites
+ *     TEST signup AMemberVerifiesEmail
+ *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
@@ -705,8 +697,8 @@ function with($content) {return weShow($content);}
  *     TEST relations MemberCompanyHasRelations
  *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST showrecurs AMemberStopsAnAutopayment
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
- *     TEST signup AMemberInvites
+ *     TEST signupco ACompanySuppliesCrumbsChoices
+ *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -901,8 +893,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signup ANewbieVisitsTheIndividualSignupPage
  *     MAKE signup AMemberVerifiesEmail
- *     MAKE signup AMemberClicksFinish
- *     MAKE signup AMemberChoosesToStepUp
+ *     MAKE signup AMemberClicksGetACard
+ *     MAKE signup AMemberClicksGetAVote
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
@@ -1203,12 +1195,10 @@ function statisticsGetSet($time) {
  *     TEST signupco ACompanySignsUp
  *     BOTH signupco ACompanyVerifiesEmailWhileSignedIn
  *     BOTH signupco ACompanySuppliesCompanyInformation
- *     TEST signupco ACompanySuppliesCrumbsChoices
- *     MAKE signupco ACompanyAccountManagerCreatesADiscount
+ *     BOTH signupco ACompanySuppliesCrumbsChoices
  *     MAKE signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberConnectsABankAccount
- *     TEST signup AMemberChoosesCrumbs
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
@@ -1550,7 +1540,6 @@ function memberViewsStatementFor($id, $month) {
  * we tell (ARG) CO (ARG) with subs: (ARG)
  *
  * in: TEST gift AMemberDonatesWithInsufficientFunds
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 
@@ -1746,10 +1735,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     MAKE signupco Setup
  *     TEST signupco ACompanySignsUp
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
- *     MAKE signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
+ *     MAKE signup AMemberChoosesProxies
  *     MAKE sponsor Setup
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup
@@ -1922,14 +1910,13 @@ function memberOnetimepasswordIsExpires($id, $pass, $expires) {
  * next random password is (ARG)
  *
  * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
- *     MAKE signup AMemberSignsUp
  */
 function nextRandomPasswordIs($code) {global $nextPass; return $nextPass = $code;}
 
 /**
  * member (ARG) password is set to (ARG)
  *
- * in: TEST signup AMemberSignsUp
+ * in: 
  */
 function memberPasswordIsSetTo($id, $pass) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1955,23 +1942,21 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanySuppliesCrumbsChoices
- *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberSetsPreferences
  *     TEST signup AMemberVerifiesEmail
- *     TEST signup AMemberClicksFinish
+ *     TEST signup AMemberClicksGetACard
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
- *     TEST signup AMemberDonates
- *     TEST signup AMemberChoosesCrumbs
- *     TEST signup AMemberChoosesProxies
- *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
- *     TEST signup AMemberChoosesToStepUp
+ *     TEST signup AMemberClicksGetAVote
+ *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
+ *     TEST signup AMemberDonates
+ *     TEST signup AMemberChoosesProxies
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  */
 function memberStepsLeft($id, $left0) {
@@ -2002,38 +1987,22 @@ function memberStepsLeft($id, $left0) {
  *     MAKE signupco ACompanyVerifiesEmailWhileSignedIn
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signupco ACompanySuppliesCrumbsChoices
- *     MAKE signupco ACompanyAccountManagerCreatesADiscount
  *     MAKE signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     MAKE signup AMemberVerifiesID
  *     MAKE signup AMemberConnectsABankAccount
  *     MAKE signup AMemberSetsPreferences
  *     MAKE signup AMemberVerifiesEmail
- *     MAKE signup AMemberClicksFinish
+ *     MAKE signup AMemberClicksGetACard
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
- *     MAKE signup AMemberDonates
- *     MAKE signup AMemberChoosesCrumbs
- *     MAKE signup AMemberChoosesProxies
- *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
- *     MAKE signup AMemberChoosesToStepUp
+ *     MAKE signup AMemberClicksGetAVote
+ *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberInvites
+ *     MAKE signup AMemberDonates
+ *     MAKE signup AMemberChoosesProxies
  */
-function memberHasStepsDone($id, $task, $steps) {
-  global $testOnly;
-  
-  if ($steps == 'all') $steps = u\consta('s', $task);
-  $a = r\acct(t\uid($id));
-  if (!$testOnly) {
-    $a->update('steps', 0);
-    $a->setTask($task);
-    foreach(ray($steps) as $k) $a->stepDone($k);
-  } else {
-    if ($a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
-  }
-  foreach(ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
-  return TRUE;  
-}
+function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
 
 /**
  * step done (ARG)
@@ -2144,8 +2113,7 @@ function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
 /**
  * member (ARG) has (ARG) stepup rules
  *
- * in: MAKE signup AMemberChoosesToStepUp
- *     MAKE stepup AMemberChoosesAPertransactionStepUp
+ * in: MAKE stepup AMemberChoosesAPertransactionStepUp
  */
 function memberHasStepupRules($id, $count) {
   global $testOnly; if ($testOnly) return FALSE; // but this would be easy to handle

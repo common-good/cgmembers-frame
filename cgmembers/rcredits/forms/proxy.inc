@@ -19,9 +19,9 @@ function formProxy($form, &$sta, $args = '') {
   $dft = $mya->proxy($priority);
   $dftOther = $mya->proxy(3 - $priority);
   if (!$choices = proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&" . eLink($sta), 'no local proxy');
-  if (!$mya->ok and count($choiceList ?: []) <= 2) { // no real choices, so don't make the member choose
+  if (count($choiceList ?: []) <= 2) { // no real choices, so don't make the member choose
     if (!$dft) $mya->proxy($priority, nni($choiceList, 0, UID_PLACEHOLDER1));
-    if (!$dftOther) $mya->proxy(3 - $priority, nn($choiceList, $dft ? 0 : 1, UID_PLACEHOLDER2));
+    if (!$dftOther) $mya->proxy(3 - $priority, nni($choiceList, $dft ? 0 : 1, UID_PLACEHOLDER2));
     say('no local proxy');
     return w\goNextStep('proxies');
   }

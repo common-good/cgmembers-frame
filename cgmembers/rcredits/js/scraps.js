@@ -14,6 +14,7 @@ function doit(what, vs) {
   function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');}
   function reportErr(j) {if (!j.ok) $.alert(j.message, 'Error');}
   function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
+  function debtOk() {$('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report); $(this).parent().hide();});}
 
   function suggestWhoScrap() {
     var fid = fieldId();
@@ -29,6 +30,12 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'company':
+    var adv = $('.form-item-advanced');
+    adv.hide();
+    $('.form-item-showAdvanced a').click(function () {$('.form-item-showAdvanced').hide(); adv.show();});
+    break;
+    
   case 'crud':
     var url = baseUrl + '/' + vs['url'];
     var id = vs['id'];
@@ -160,7 +167,7 @@ function doit(what, vs) {
     break;
     
   case 'summary':
-    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    debtOk();
     $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
     $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
     $('.zapEmail').click(function () {
@@ -177,7 +184,7 @@ function doit(what, vs) {
     break;
     
   case 'dashboard':
-    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    debtOk();
     $('#endorse a').click(function () {$('#endorse').hide();});
     $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
     $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
@@ -443,16 +450,6 @@ function doit(what, vs) {
     break;
     
   case 'addr':
-/*    print_country(vs['country'], vs['state'], vs['state2']);
-    $('#frm-signup, #frm-contact').submit(function () {
-      $('#edit-hidcountry').val($('#edit-country').val());
-      $('#edit-hidstate').val($('#edit-state').val());
-      $('#edit-hidstate2').val($('#edit-state2').val());
-    });
-    $('.form-item-country select').change(function () {
-      print_state(this.options[this.selectedIndex].value,'','state');
-      print_state(this.options[this.selectedIndex].value,'','state2');
-    });*/
     $('.form-item-sameAddr input[type="checkbox"]').change(function () {setPostalAddr(true);});
     break;
 
@@ -701,7 +698,9 @@ function doit(what, vs) {
     break;
 
   case 'signupco':
+    var legalname = $('#edit-legalname');
     $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
+    $('#edit-fullname').change(function () {if (legalname.val() == '') legalname.val($(this).val());});
     break;
     
   case 'agree':
@@ -735,13 +734,15 @@ function doit(what, vs) {
   case 'amtChoice':
     var amtChoiceWrap = $('.form-item-amtChoice');
     var amtChoice = $('#edit-amtchoice');
+    var amt = $('#edit-amount');
     var other = $('.form-item-amount'); 
 
     amtChoice.change(function () {
       if(amtChoice.val() == '-1') {
         other.show(); 
         amtChoiceWrap.hide();
-        $('#edit-amount').focus();
+        amt.val('').focus().removeAttr('required');
+        fform('#edit-amount').submit(function () {if (amt.val() == '') amt.val(0);}); // "Water" donation defaults to zero
       } else other.hide();
     });
     amtChoice.change();
@@ -756,17 +757,6 @@ function doit(what, vs) {
     form.submit(function (e) {return setPostalAddr(false);});
     break;
 
-  case 'verifyemail':
-    var pw = $('.form-item-pw');
-    if (vs['verify'] == 1) {
-      reqNot(pw);
-    } else pw.show().focus();
-    $('.form-item-showPass input').click(function() {
-      pw.toggle();
-      if (pw.is(':visible')) $('#edit-pw').focus();
-    });
-    break;
-    
   case 'veto':
     $('.veto .checkbox input').change(function () {
       var opti = this.name.substring(4);

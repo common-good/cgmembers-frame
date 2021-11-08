@@ -16,15 +16,17 @@ function formBacking($form, &$sta, $args = '') {
   $subtext = item(t(<<< X
   <p>Backing makes it possible for your community and region to make investments, loans, and grants. Whereas bank investments are backed (partially) by the FDIC, Common Good investments, loans, and grants are backed by the members.</p>
   
-  <p>Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
+  <p>In the event of a cash crunch within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community and Region, for all the great things it funded) [<%aExample>example</a>]. %more</p>
 
-  <p>In the event of a cash crunch within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community and Region, for all the great things it funded) [<%aExample>example</a>].</p>
+  <div class="more">
+  <p>Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
   
   <p>When you receive a reminder message a week ahead of a year from now, you can renew, decrease, or increase your backing amount. If you take no action before the renewal date, your backing promise is automatically renewed unchanged for another 12 months.</p>
+  </div>
 
   <p>"If there is a cash crunch within the next 12 months, I promise to buy this amount of %PROJECT credit to back the system as described above."</p>
 X
-  , '_aCrunch _aExample', atag('/help/cashflow'), atag('/help/backing-example')), BARE);
+  , '_aCrunch _aExample _more', atag('/help/cashflow'), atag('/help/backing-example'), btn('', t('More'), 'default', '', clas('showMore'))), BARE);
   
   $choices0 = ray('10000 2000 500 100 20 1');
   $dft = ($mya->backing + 0) ?: 1;

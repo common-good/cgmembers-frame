@@ -19,7 +19,7 @@ Setup:
 Scenario: A company tries to sign up directly
   When member "?" visits page "signup-co"
   Then we show "Open a Company Account" with:
-  | open an individual account |
+  | open a personal account |
 
 Scenario: Someone wants to open a company account
   When member ".ZZA" visits page "signup-co/relate=1"
@@ -32,10 +32,9 @@ Scenario: Someone wants to open a company account
   | Company Phone | |
   | Selling       | |
   | Sell Credit   | |
-  | Federal ID    | |
   | Founded       | |
-  | Referred By   | |
-  
+  | Federal ID    | |
+
 Scenario: A company signs up
   Given next random code is "WHATEVER"
   When member ".ZZA" completes form "signup-co/relate=1" with values:
@@ -48,7 +47,6 @@ Scenario: A company signs up
   | email     | d@           |
   | selling   | fish         |
   | sellCg    | 1            |
-  | source    | thither      |
   | coType    | LLC          |
   Then members:
   | uid       | .AAA         |**
@@ -60,18 +58,17 @@ Scenario: A company signs up
   | phone     | +14132530004 |
   | email     | d@           |
   | selling   | fish         |
-  | source    | thither      |
   | coType    | LLC          |
 #  | coFlags   | sellcg       |
   And these "u_relations":
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |
-  And we email "verify" to member "d@" with subs:
-  | fullName | qid      | site      | code     | pass       |*
-  | New Co   | NEWAAA-A | %BASE_URL | WHATEVER | co nonpass |
-  And we show "Verify Your Email Address"
+  And we email "verify-co" to member "d@" with subs:
+  | fullName | qid    | site      | code     | pwMsg      |*
+  | New Co   | NEWAAA | %BASE_URL | WHATEVER | co nonpass |
+  And we show "Connect a Checking Account"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "verifyemail fund contact backing photo donate company crumbs discount"
+  And member ".AAA" steps left "fund contact backing photo donate company crumbs verifyemail"
   And members have:
   | uid  | signed | signedBy |*
   | .AAA | %today | Abe One  |
@@ -84,10 +81,10 @@ Scenario: A company signs up
   And we say "status": "verified email"
   And we say "status": "info saved|step completed"
   And we say "status": "continue co setup"
-  And member ".AAA" steps left "fund contact backing photo donate company crumbs discount"
+  And member ".AAA" steps left "fund contact backing photo donate company crumbs"
 
 Scenario: A company verifies email while signed in
-  Given member ".ZZC" has "co" steps done: "signup fund contact backing photo donate company crumbs discount"
+  Given member ".ZZC" has "co" steps done: "signup fund contact backing photo donate company crumbs"
   And members have:
   | uid  | flags  |*
   | .ZZA | ok     |
@@ -95,7 +92,7 @@ Scenario: A company verifies email while signed in
   When member "C:A" visits page "settings/verifyemail/qid=NEWZZC-A&verify=1&code=WHATEVER"
   Then we show "You: Our Pub"
   And we say "status": "verified email"
-  And we say "status": "info saved|ok complete|co complete|join thanks"
+  And we say "status": "info saved|success|co ok|pioneer thanks"
   And member ".ZZC" steps left ""
   And members have:
   | uid  | flags             |*
@@ -107,22 +104,21 @@ Scenario: A company supplies company information
   | uid  | website   | selling |*
   | .ZZC | ourpub.co | drinks  |
   When member "C:A" visits page "settings/company"
-  Then we show "Company Information" with:
-  | CGPay Button    | |
-  | Photo           | |
-  | Company name    | Our Pub |
+  Then we show "Company Settings" with:
+  | Shortcuts       | |
+  | Name            | Our Pub |
   | Private         | |
   | Categories      | |
   | Selling         | drinks |
   | Short Desc      | |
   | Employees       | |
   | Annual Gross    | |
-  | Founded         | |
   | Website         | ourpub.co |
+  | Tips            | |
+  | Founded         | |
   | Describe        | |
   | App permissions | |
   | Nudge Every     | |
-  | Tips            | |
 
   When member "C:A" completes form "settings/company" with values:
   | fullName    | Our Pub |**
@@ -153,64 +149,69 @@ Scenario: A company supplies company information
   And we show "Share When You Receive" with:
   | Crumbs |
   And we say "status": "info saved|step completed"
-  And member ".ZZC" steps left "crumbs discount"
+  And member ".ZZC" steps left "crumbs"
 
 Scenario: A company supplies crumbs choices
   Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company"
+  And members have:
+  | uid  | flags     |*
+  | .ZZA | member ok |
   When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
   Then members have:
   | uid  | crumbs |*
   | .ZZC | .03    |
-  And we show "Get Your Customers Signed Up"
-  And we say "status": "info saved|step completed"
-  And member ".ZZC" steps left "discount"
 
-Scenario: A company account manager creates a discount
-  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company crumbs"
-  And members have:
-  | uid  | task   |*
-  | .ZZC | co     |
-  And members have:
-  | uid  | flags     |*
-  | .ZZA | ok,member |
-  When member "C:A" completes form "community/discount" with values:
-  | amount | minimum | start | end     | useMax | type     |*
-  |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
-  Then these "coupons":
-  | coupid | fromId | amount | useMax | flags | start      | end                         |*
-  |      1 |   .ZZC |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
-  And we say "status": "Your discount was created successfully."
-  And we tell ".ZZC" CO "New Coupons!" with subs:
-  | quid      | .ZZC |**
-  | type      | discount |
-  | amount    | 20 |
-  | minimum   | 120 |
-  | useMax    | 3 |
-  | purpose   | on your purchase of $120 or more |
-  | start     | %daystart |
-  | end       | %(%daystart+3m+%DAY_SECS-1) |
-  | automatic | 1 |
-  | company   | Our Pub |
-  | gift      | |
-  | forOnly   | |
+#  And we show "Get Your Customers Signed Up"
+#  And we say "status": "info saved|step completed"
+#  And member ".ZZC" steps left "discount"
+
+#Scenario: A company account manager creates a discount
+#  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company crumbs"
+#  And members have:
+#  | uid  | task   |*
+#  | .ZZC | co     |
+#  And members have:
+#  | uid  | flags     |*
+#  | .ZZA | ok,member |
+#  When member "C:A" completes form "community/discount" with values:
+#  | amount | minimum | start | end     | useMax | type     |*
+#  |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
+#  Then these "coupons":
+#  | coupid | fromId | amount | useMax | flags | start      | end                         |*
+#  |      1 |   .ZZC |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
+#  And we say "status": "Your discount was created successfully."
+#  And we tell ".ZZC" CO "New Coupons!" with subs:
+#  | quid      | .ZZC |**
+#  | type      | discount |
+#  | amount    | 20 |
+#  | minimum   | 120 |
+#  | useMax    | 3 |
+#  | purpose   | on your purchase of $120 or more |
+#  | start     | %daystart |
+#  | end       | %(%daystart+3m+%DAY_SECS-1) |
+#  | automatic | 1 |
+#  | company   | Our Pub |
+#  | gift      | |
+ # | forOnly   | |
+
   And we show "You: Our Pub" with:
   | Balance: | $0 |
   And without:
   | Finish |
-  And we say "status": "info saved|ok complete|co complete|join thanks"
+  And we say "status": "info saved|success|co ok|pioneer thanks"
   And member ".ZZC" steps left ""
 #  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
 #  | quid | status |*
 #  | .ZZC | member |
 
 Scenario: An unverified company agent completes a company account
-  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company discount"
+  Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company"
   And members have:
   | uid  | flags  |*
   | .ZZA |        |
   When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
-  Then we say "status": "info saved"
-  And we say "status": "tentative complete|co complete"
+  Then we say "status": "info saved|success"
+  And we say "status": "co tentative|pioneer thanks"
   And member ".ZZC" steps left ""

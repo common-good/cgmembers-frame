@@ -12,10 +12,14 @@ function formCompany($form, &$sta, $arg = '') {
   $myid = $mya->id;
 //  if ($arg == 'gotPhoto') say('got photo');
 
+  jsx('company');
+  
   $myCats = db\q('SELECT iid FROM r_user_industries WHERE uid=:myid', compact('myid'))->fetchCol();
-  $links = t('<%a>See your public %PROJECT web page</a> (in a new window)', 
-    '_a', atag("/member/$mya->name", ['id' => 'show-webpage'] + w\away()));
-  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website (or emails) or use this secret code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', u\ry('P', $mya->emailCode), atag('/company/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
+  $links = item(join('<br>', [
+    lnk("/member/$mya->name", t('See your public %PROJECT web page'), w\away()),
+    lnk('/co/cgbutton', t('Create a CGPay button for your website (or emails).')),
+    lnk('/settings/photo?' . rand(), t('Change your company photo.')),
+  ]), t('Shortcuts:') );
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';
@@ -42,12 +46,10 @@ $permissions
 </table></div>
 EOF;
 
-  $title = t('Company Information');
-  $links = item($links, ' ');
-  $name = item($mya->fullName, t('Company name:'));
-  $photo = item(t('<%a>Change your company photo</a>', '_a', atag('/settings/photo?' . rand())), t('Photo:'));
+  $title = t('Company Settings');
+  $name = item($mya->fullName, t('Name:'));
   $private = boxFld('private', t('Private:'), t('Hide this company from the public (omit from public listings)'), $mya->coCan(CO_PRIVATE) ?: 0);
-  $categories = selectFld(t('Categories:'), t('Hold down the Ctrl key to select more than one'), ['multiple' => TRUE] + dft($myCats), coCats());
+  $categories = selectFld(t('Categories:'), t('Hold down the Ctrl key to select more than one'), ray('multiple size', TRUE, 8) + dft($myCats), coCats());
   $selling = w\sellingFld($mya->selling);
   $can2 = item($permissions, t('App permissions:'), t('Download the CGPay app from Google Play Store. Limit app permissions here, or go to <%aRel>Relations</a> settings to limit them for each agent.', '_aRel', atag('/settings/relations')));
 //    $shareRpos = boolFld(t('Share rPOS:'), t('Allow other companies to use our POS device(s).'), $mya->coCan(CO_SHARE_RPOS) ?: 0);
@@ -68,8 +70,11 @@ EOF;
     $fast = NULL; // boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   } else { $fast = $atm = NULL; }
+  
+  $showAdvanced = item(btn('', t('Advanced Settings'), 'default'), NBSP);
+  $advanced = fieldSet(NBSP, compact(ray('founded logo descPreface description can2 staleNudge')));
 
-  return cgform(compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross founded website logo descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  return cgform(compact(ray('title links name private categories selling shortDesc employees gross website tips showAdvanced advanced fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {

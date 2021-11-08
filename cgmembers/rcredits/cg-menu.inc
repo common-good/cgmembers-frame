@@ -56,8 +56,8 @@ function menu($submenu = '') {
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
     'community' => ['norm', t('Community'), 'Community', ANY],
-    'community/endorse' => ['call', t('Invite / Endorse'), 'Endorse 2', ANY, '', t(), 'share-alt'],
-    'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
+    'community/endorse' => ['call', t('Invite People'), 'Endorse 2', ANY, '', t(), 'share-alt'],
+    'community/invite' => ['sub', t('Invite People'), 'Invite 2', ANY, '', t(), 'share-alt'],
     'community/invite/all' => ['call', t('Shouters'), 'Shouters 3', ANY],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],
     'community/invite/print' => ['call', t('Print Invite'), '', 'manage', 'printInvite'],

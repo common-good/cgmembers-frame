@@ -56,21 +56,19 @@ X
   w\backButton() . '</p>';
   
   if ($i == 'general') return t(<<< X
-    <p>Here's what to click, to find what you want. Some items will not appear, if your account is not yet active or if you do not have permission.</p>
+    <p>Here's what to click on the menu.</p>
     <ul>
-      <li><b>Dashboard</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
-      <li><b>Charge</b>: Invoice another participant.</li>
-      <li><b>Pay</b>: Transfer %RCREDITS to another participant.</li>
-      <li><b>Bank</b> Transfer money to or from your bank account.</li>
-      <li><b>History</b>: See a list of your recent transactions, invoices, notices, monthly statements, or annual tax forms (Form 1099-K).</li>
-      <li><b>Community</b>. See how the %PROJECT economy is doing in your community. Review the %PROJECT Agreement, signed by all %PROJECT members. Find a participating company. Help the %PROJECT community grow by making a financial contribution or by inviting someone.</li>
-      <li><b>Company</b>. Find tools, reports, and settings for your company account.</li>
-      <li><b>Settings</b>. Change your account settings, including contact information, general preferences, security settings, bank account connection, relations with other accounts, and proxy choices.</li>
-      <li><b>Photo (Choose an Account to Manage)</b>: Click your photo in the upper right corner, to select an account to manage, if you have more than one.</li>
+      <li><b>Dashboard</b>. An overview of your account and links to the most common pages.</li>
+      <li><b>Invest</b>. For participation in the %PROJECT Investment Club.</li>
+      <li><b>History</b>. A picture of your finances.</li>
+      <li><b>Community</b>. Options for collaboration, donations, and community democracy.</li>
+      <li><b>Company</b>. Tools, reports, and settings for your company account.</li>
+      <li><b>Settings</b>. Configuration and preferences for your account.</li>
+      <li><b>Photo</b>: Click your photo in the upper right corner, <a class="loud">to select an account</a>, if you have more than one.</li>
     </ul>
-    <p>If you don't see the help you need here, please <%aEmail>email us</a> or use this form to send a secure encrypted message (if your message is secret).</p>
+    <p>Can't find what you need? <%aEmail>email us</a> or send us a secure message below. Comments and suggestions are especially welcome!</p>
 X
-  , '_aEmail', u\emailTag($regEmail, t('help with %PROJECT')));
+  , '_aEmail', u\emailTag($regEmail, t('help with my %PROJECT account')));
 
   if ($i == 'other') return t(<<< X
     <h2>Need Help Signing In?</h2>

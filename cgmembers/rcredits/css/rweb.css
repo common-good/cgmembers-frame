@@ -11,6 +11,7 @@
   #footer {border-top:1px solid #666666; padding-top:8px;}
 }
 
+.more {display:none;}
 .clear {clear:both;}
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
@@ -200,6 +201,7 @@ form {max-width:834px; margin:0 auto;}
 .form-item-creditLine .suffix,
 .form-item-bankAccount .suffix,
 .form-item-altId .suffix,
+.form-item-amtDpy .suffix,
 .form-item-acct .suffix {padding-top:0;}
 
 .frm-wider .control-label {float:left; width:10%;}
@@ -236,6 +238,8 @@ form {max-width:834px; margin:0 auto;}
   
   .form-horizontal {padding-top:10px; margin:0 15px;}
   .mlab-above .control-label {width:100%; padding-left:0; text-align:left;}
+  .mlab-above.form-type-item .control-label {margin-bottom:0;}
+  .mlab-above.form-type-item {margin-bottom:10px;}
   
   .form-horizontal .control-data {width:70%;}
   .mlab-above .control-data {width:100%; padding-top:0 !important;}
@@ -885,9 +889,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-dashboard #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
 #frm-dashboard #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
-#frm-dashboard .form-item-buttons {margin-top:30px; text-align:left;}
+#frm-dashboard .form-item-buttons {margin-top:15px; text-align:left;}
 #frm-dashboard .form-item-buttons .btn {margin:0 20px 0 0;}
-#frm-dashboard .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center;}
+#frm-dashboard .form-item-continue {margin-bottom: 20px;}
+#frm-dashboard .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center; margin-bottom:15px;}
 .btn-options {margin:0 20px 0 0;}
 
 #frm-dashboard #edit-choiceList {display:table;}
@@ -1058,6 +1063,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-company #permissions table {width:auto;}
 #frm-company #permissions td {text-align:center;}
 #frm-company #permissions #perm-head td {background-color:white;}
+#frm-company #edit-showAdvanced {padding-left:0;}
 
 .filter-wrapper {
   /*margin:-15px auto 20px auto;*/
@@ -1186,12 +1192,13 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Signup (New account) */
 #frm-signup  .form-item-title,
 #frm-trial .form-item-title {margin-bottom:0;}
-#edit-forother .control-data {padding-top:0; font-size:80%;} /* for both Signup and Trial */
+@media (max-width:768px) {#frm-signup .form-item-subtext label {display:none;}}
+#edit-forother .control-data {padding-bottom:8px;} /* for both Signup and Trial */
 #frm-signup  #companyInfo {top:0; margin:0 0 10px 0; padding:0 15px; border:1px solid darkgreen; background-color:lightyellow;}
 #frm-signup .form-item-companyPhon label span {display:none;}
 /* #frm-signup #edit-buysat .checkbox {width:150px;} */
-.form-item-physical, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px !important; margin-bottom:10px !important;}
-.form-item-physical>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
+.form-item-postal, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px !important; margin-bottom:10px !important;}
+.form-item-postal>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
 .form-item-sameAddr {padding-top:3px !important;}
 #frm-signup .form-item-sponsor {display:none;}
 #frm-signup #tenure2 input,

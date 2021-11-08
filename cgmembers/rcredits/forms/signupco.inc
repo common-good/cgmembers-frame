@@ -25,10 +25,11 @@ function formSignupCo($form, &$sta, $args = '') {
   extract(just('relate', $args, FALSE));
   if (!$mya) { // not signed in (presumably from promo site)
     $subtext = t(<<< X
-      <p>To open a company account, the first step is to open an individual account. This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified.</p>
-      <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Dashboard page.</p>
+      <p>To open a company account, the first step is to open a personal account. To get started, <%aSignup>click here</a>.</p>
+      <p><b>If you already have a personal account</b>, <%aSignin>click here</a> to create a company account.</p>
+      <p>This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified (just like a bank account).</p>
 X
-    , '_a', w\atag('/signup/' . $args));
+    , '_aSignin _aSignup', atag(first('/signin', '/signup-co/relate=1&' . $args)), atag('/signup/' . $args));
     return cgform(compact(ray('title subtext')));
   }
 
@@ -48,8 +49,6 @@ X
   
 //  $forother = item(w\lnk('/signup/' . $args, t('open a personal account instead')));
   
-  u\setDft($source, nni($_COOKIE, 'ad'));
-  $source2 = hidFld($source);
   $args = hidFld($args);
 
   $coTypes = ray(CO_TYPES);
@@ -68,14 +67,13 @@ X
 
   $selling = textFld(t('Selling:'), [t('Products'),t('Enter a <b>VERY SHORT</b> transaction description (for example "food") for when you make a sale. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($mya->selling) + maxlen(SELLING_MAXLEN));
   $sellCg = boolFld(t('Sell Credit:'), t('Do you want to accept customer cash in exchange for your %PROJECT credit (recommended)?'), 1);
-  $source = $source ? hidFld($source) : sourceFld('');
 
   $midtext = t('<h3>%PROJECT Agreement</h3><p>I commit this company to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', '_a', 'a id="show-agreement"');
   extract(just('agreement details', formAgreement($form, $sta)));
   $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId founded source midtext agreement submit args agentQid')));
+  return cgform(compact(ray('title subtext coType fullName legalName email zip phone selling sellCg founded federalId midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
@@ -101,10 +99,9 @@ function formSignupCo_validate($form, &$sta) {
 }
   
 function formSignupCo_submit($form, &$sta) {
-  global $mya;
   
-  $dbFields = 'coType source selling fullName legalName email flags phone federalId founded zip state helper';
-  extract(just($dbFields . ' sellCg source2 agentQid args', $sta['input'], NULL));
+  $dbFields = 'coType selling fullName legalName email flags phone federalId founded zip state helper';
+  extract(just($dbFields . ' sellCg agentQid args', $sta['input'], NULL));
   extract(just('code', nn($args, []), NULL));
 
   signout(TRUE);
@@ -114,15 +111,14 @@ function formSignupCo_submit($form, &$sta) {
   $legalName = $legalName ?: $fullName;
   
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
-  if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
 
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
-  r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)
+  r\setAcct($newA->id, $sta);
   
   foreach (ray(CO_APP_DFTS) as $i) $newA->setCoBit(APP_CANS + $i);
-  if ($sellCg) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $mya->setCoBit($k);
+  if ($sellCg) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $newA->setCoBit($k);
 
   list ($myid, $name) = [$newA->id, $newA->name];  
   $qid = $newA->mainQid;
@@ -131,13 +127,11 @@ function formSignupCo_submit($form, &$sta) {
   $pw1 = $newA->oneTimePass($name, TRUE);
 
   $newA->newRelation(ray('other otherNum owner permission', $agentA->id, 1, TRUE, r\perm(B_MANAGE)));
-  $mya->tell('verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')));
+  $newA->tell('verify-co', ray('qid code pwMsg', $qid, $pw1, t('co nonpass')));
 
   if ($code) w\invitation($code, $myid); // mark invitation used
-  
-  say('info saved');
 
-  $mya->update('signed, signedBy', now(), $agentA->fullName);
-  $mya->stepDone('agree');
+  $newA->update('signed, signedBy', now(), $agentA->fullName);
+  $newA->stepDone('agree');
   return w\goNextStep('signup'); 
 }

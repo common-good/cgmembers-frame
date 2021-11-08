@@ -35,7 +35,7 @@ function formPhoto($form, &$sta, $arg = '') {
   } else { $nextStep = item(w\skipButton()); }
   $desc = $mya->co
   ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
-  : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
+  : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them). <%b>Requirements</b>:
   <ul>
   <li>It should be a color photo of you and only you (you can crop other people out).</li>
   <li>It must show clearly your full face (no sunglasses, eyes open).</li>

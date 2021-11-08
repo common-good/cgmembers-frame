@@ -59,7 +59,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $disabled = w\disabled();
     } else $_warning = '';
 
-    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft(number_format($amount, 2)));
+    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($amount, 2));
     $amount = u\fmtAmt($amount);
     $remains = $amount == $subs['amount'] ? '' : t(' (%amount remaining)', compact('amount'));
     $subtext = t('<p>Pay %amount to %who for %what%remains.</p>%warning', $subs + compact(ray('_warning remains')));

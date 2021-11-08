@@ -20,8 +20,11 @@ if (@$submit) {
   $res = openssl_pkey_new($config);
 /**/  if (!$res) die('FAIL new: ' . openssl_error_string());
   openssl_pkey_export($res, $privKey, NULL, $config);
+  
+  $res2 = openssl_pkey_get_private($privKey);
+  $ray = openssl_pkey_get_details($res2); // test the result (gives an error message if the resource is no good)
 
-/**/	echo $privKey . "<br><br>len=" . strlen($privKey);
+/**/	echo "<pre>$privKey</pre><br><br>len=" . strlen($privKey);
 //	file_put_contents("$flnm-private.key", $privKey);
 ///	print_r(openssl_pkey_get_details($res));
 //	$pubKey = openssl_pkey_get_details($res)['key'];

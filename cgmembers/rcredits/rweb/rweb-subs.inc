@@ -890,7 +890,7 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully'), autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
+  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully (your password will not be visible when you sign in).'), autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
   jsx('pw');
   focusOn('pw');
   return compact(ray('pw'));
@@ -1304,16 +1304,16 @@ function contactFields($defaults = []) {
   $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
   $dbFlds = 'phone address city state zip country tenure owns postalAddr source';
-  $fields = 'phone physical address city state country zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 source';
+  $fields = 'phone postal address2 city2 state2 zip2 postalAddr hidState hidState2 sameAddr2 address city state country zip owns tenure source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
   extract($defaults + (array) $mya->account($dbFlds));
 
-  if (nn($postalAddr)) list ($address2, $city2, $state2, $zip2) = u\parseAddr(nn($postalAddr));
-  if (!nn($state2)) $state2 = 0; // otherwise default fails in countrys.js
+  if (nn($postalAddr)) {
+    list ($address2, $city2, $state2, $zip2) = u\parseAddr(nn($postalAddr));
+  } else foreach (ray('address city state zip') as $k) ${$k . 2} = nn($$k);
 
-  foreach (['state', 'state2'] as $k) {
-    if (nn($$k)) $$k = db\get('id', 'r_states', ":$k IN (id, name, abbreviation) and country_id=:R_COUNTRY_ID", compact($k));
-  }
+  foreach (['state', 'state2'] as $k) $$k = r\stateNum($$k);
+  if (!nn($state2)) $state2 = 0; // otherwise default fails in countrys.js
   js('states'); // required for setPostalAddr, whether or not the fields are shown
 
   if ($step0 and nn($address) and nn($city) and nn($state) and !u\badZip($zip) 
@@ -1343,22 +1343,23 @@ function contactFields($defaults = []) {
     jsx('addr');
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
-    $country = selectFld(t('Country:'), t(''), dft($country ?: US_COUNTRY_ID), r\countryList()); // can't use required() here
-    $physical = item('', t('Physical Address'));
-    $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(nn($address)));
-    $city = textFld(t('City:'), [t('City where you live')], required(nn($city)));
-    $state = stateFld(nn($state)); // can't use required() here
-    $zip = zipFld(nn($zip));
     
-    $sameAddr2 = ($step0 ? nn($state2) : !(nn($mya) and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
-    ? item('', t('Mailing Address')) 
-    : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0);
-    
-    $postalAddr = hidFld();
+    $postal = item('', t('Mailing Address'));
     $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(nn($address2)));
     $city2 = textFld(t('City:'), [t('Postal city')], required(nn($city2)));
     $state2 = stateFld(nn($state2));
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(nn($zip2)));
+    $postalAddr = hidFld();
+    
+    $sameAddr2 = ($step0 ? nn($address) : !(nn($mya) and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
+    ? item('', t('Physical Address')) 
+    : w\boxFld('sameAddr', t('Physical Address'), t('same as above'), 0);
+    
+    $country = selectFld(t('Country:'), t(''), dft($country ?: US_COUNTRY_ID), r\countryList()); // can't use required() here
+    $address = textFld(REQ . t('Street Address:'), [t('Physical address')], dft(nn($address)));
+    $city = textFld(t('City:'), [t('City where you live')], required(nn($city)));
+    $state = stateFld(nn($state)); // can't use required() here
+    $zip = zipFld(nn($zip));
     
     if ((!nn($mya) or !$mya->co) and !nn($source)) {
   //    $other = $step0 ? item('', t('Other Information')) : NULL;
@@ -2148,13 +2149,12 @@ function skipStep($substitute = NULL, $justDid = '') {
 
   if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
-  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg) ?: 'dashboard');
-    
   unset($stepsLeft[0]);
-  if (!in($step, S_OPTIONAL)) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
+  $stepsLeft[] = $substitute ?: $step; // put this step at the end
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
   $nextStep = $mya->nextStepUrl($justDid, $msg) ?: 'dashboard';
   if ($justDid and $msg) w\say($msg);
+
   return w\go($nextStep);
 }
 

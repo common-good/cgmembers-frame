@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58s'; // software version
+const R_VERSION = '3.58t'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -141,6 +141,8 @@ define('R_LAUNCH', strtotime('12/15/2013')); // original launch date
 const EMAIL_DOMAIN = CG_DOMAIN; // replace this with CG_DOMAIN when ready
 const SYS_EMAIL = 'system@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
+const APP_URL = 'cg4.us/app';
+
 define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
 define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
 const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
@@ -165,7 +167,7 @@ const US = '<span class="us">us</span>';
 const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
-const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
+const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut founded'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
@@ -438,22 +440,20 @@ const FUNDBY_CASH = 2; // buy with cash at a participating business
 // Membership steps
 const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup agree verifyid fund preferences verifyemail';
-const S_CARD = 'photo contact donate crumbs proxies work backing stepup invite';
-const S_CO = 'signup verifyemail fund contact backing photo donate company crumbs discount';
+const S_CARD = S_PERSON . ' photo contact backing';
+const S_CO = 'signup fund contact backing photo donate company crumbs verifyemail';
 const S_SELL = 'ssn contact crumbs'; // keep this for when an individual member goes over the limit for no 1099
-const S_VOICE = 'contact donate proxies work backing invite'; // add comment
+const S_VOTE = S_CARD . ' work invite donate proxies'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
 
-const S_MEM_TASKS = 'card co'; // followup tasks for members
-const S_PTASKS = 'person card sell voice partner';
+const S_FU_TASKS = 'card vote co'; // followup tasks for members
+const S_PTASKS = 'person card sell vote partner';
 const S_COTASKS = 'co partner';
-
-const S_OPTIONAL = 'discount stepup'; // optional steps
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
 // for documentation of IS_OK etc. see u\SUBS()
-const B_MEMBER = 0; // fulfilled membership requirements (ready to be approved).
+const B_MEMBER = 0; // fulfilled membership requirements (ready for admin approval, if not automatically approved by SSN).
 const B_CONFIRMED = 1; // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
 const B_OK = 2; // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
 const B_CARDED = 3; // card has been printed and mailed

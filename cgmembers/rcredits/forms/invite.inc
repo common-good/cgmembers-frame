@@ -14,7 +14,6 @@ function formInvite($form, &$sta, $args = '') {
   extract(just('edit example code', $args, NULL));
 
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
-  if ($mya->co) say(t('To endorse %PROJECT, use your personal account.'));
 
   $quote = db\get('quote', 'u_shout', ray('uid', $mya->id)) ?: SHOUT_TEXT;
   if (!$mya->co and (!$mya->shouter or $edit)) return endorse($mya, $quote, $edit);
@@ -24,11 +23,10 @@ function formInvite($form, &$sta, $args = '') {
   $signed = u\fmtDate($mya->signed, TRUE);
   $code = $mya->iCardCode(IBY_EMAIL); // this code is different from the one emailed in form
   $info = compact(ray('fullName quote phone signed'));
-  $buttons = btn('/community/invite/all', t('Recent Endorsements'));
 
   if ($example) return exampleInvite($info, $code);
 
-  return inviteOne($mya, $code, $info, $buttons); // nonperson or already signed
+  return inviteOne($mya, $code, $info); // nonperson or already signed
 }
 
 function formInvite_validate($form, &$sta) {
@@ -54,6 +52,7 @@ function formInvite_submit($form, &$sta) {
       list ($uid, $title) = [$mya->id, $position];
       db\updateOrInsert('u_shout', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
       say(t('Thank you for endorsing %PROJECT!')); // might be new or edited
+      if ($mya->stepCount('vote')) say(t('Come back later to the "Community/Invite People" page to send email invitations to your friends, neighbors, and colleagues to sign up for %PROJECT.'));
     } else {
       r\tellAdmin(t('non-endorsement'), $input + ray('fullName', $mya->fullName));
       if ($whyNot) say(t('Thank you for telling us! We will use your feedback to improve.'));
@@ -85,11 +84,10 @@ function exampleInvite($subs, $code, $emailCoded = '') {
 /**
  * Form to invite one person
  */
-function inviteOne($mya, $code, $info, $buttons) {
+function inviteOne($mya, $code, $info) {
   $title = t('Invite Someone');
 
-  if ($mya->shouter) $buttons .= btn('/community/invite/edit=1', t('Edit Yours'));
-  if (db\exists('r_invites', 'inviter=:id', ray('id', $mya->id))) $buttons .= btn('/community/invite/invited-whom', t('Who you invited'));
+  $buttons = db\exists('r_invites', 'inviter=:id', ray('id', $mya->id)) ? btn('/community/invite/invited-whom', t('Who you invited')) : NULL;
 
   $_aInvite = atag(BASE_URL . "/signup/code=$code");
   $_aStd = atag("/community/invite/example=1&allow=acct&qid=$mya->mainQid&ecode=$mya->emailCode", away());
@@ -116,7 +114,10 @@ function endorse($mya, $quote, $edit) {
   if ($info) extract($info); else foreach (ray($fields) as $k) $$k = NULL;
   $position = $title;
   
-  $title = t('Invite People');
+  $buttons = btn('/community/invite/all', t('Recent Endorsements'));
+  if ($mya->shouter) $buttons = btn('/community/invite/edit=1', t('Edit Yours'));
+
+  $title = t('Endorse / Invite People');
   $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement (you can also add your own words after you click Yes):</p><h5>%SHOUT_TEXT<br><small>&mdash; (your name here, along with many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
   
   $sawVideo = boolFld(REQ . t('Saw Video?'), '', $edit ? $sawVideo : 0, NULL, clas('mlab-left'));
@@ -131,5 +132,5 @@ function endorse($mya, $quote, $edit) {
   $postPhoto = boxFld('postPhoto', NBSP, t('You may also include my photo and my answer (above) in a media post.'), $edit ? $postPhoto : 0);
 
   jsx('invite', 'edit', $edit);
-  return cgform(compact(ray('title subtext sign sawVideo whyNot question quote org position website usePhoto postPhoto')) + w\setupFoot());
+  return cgform(compact(ray('buttons title subtext sign sawVideo whyNot question quote org position website usePhoto postPhoto')) + w\setupFoot());
 }

@@ -198,11 +198,12 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     f('a.deleteUid', $a->id);
   } , $where);
-  eachA(function ($a) { // delete robots
-    if (!$a->member and !$a->ok and $a->nextStep() == 'verifyemail' and now() - $a->created > 7*DAY_SECS and $a->steps+0 == 1 and strhas($a->source, 'self ()')) {
-      $s = str_replace('self () ', '', $a->source);
+  eachA(function ($a) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
+    if (!$a->member and !$a->ok and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and $a->steps+0 == 1 and strhas($a->source, 'self ()')) {
+      r\tellAdmin('robot created ' . $a->mainQid);
+/*      $s = str_replace('self () ', '', $a->source);
       $s = str_replace('knows: ', '', $s);
-      if (!strhas($s, ' ')) f('a.deleteUid', $a->id);
+      if (!strhas($s, ' ')) f('a.deleteUid', $a->id); */
     }
   });
 
@@ -914,7 +915,7 @@ function txRisk1($xid) {
  *    handling approved invoices and investment requests as we go
  */
 function getFunds() {
-  queueEach('getFunds1', 'SELECT uid, request, stakeid FROM users LEFT JOIN r_stakes USING (uid) WHERE (request IS NULL OR request>0) AND :MASTER AND uid>:UID_CANON9 AND :IS_OK');
+  queueEach('getFunds1', 'SELECT u.uid, request, stakeid FROM users u LEFT JOIN r_stakes s ON s.uid IN (u.uid, jid) AND request>0 WHERE (jid=0 OR u.uid<jid) AND u.uid>:UID_CANON9 AND u.:IS_OK');
 
   $sql = 'SELECT DISTINCT xid,channel FROM txs2_bank WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);

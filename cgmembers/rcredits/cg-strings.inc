@@ -8,6 +8,8 @@ use \CG\Web as w;
 
 require_once __DIR__ . '/defs.inc';
 
+$appATag = tr('a href="https://%APP_URL" target="_blank"');
+
 global $tStrings; $tStrings = array(
   // reports
   'crash msg' => t('<h4>Well Darn.</h4><p>You have encountered a software glitch. Our tech team has been notified.</p><p>In case more information would be helpful to them, please consider reporting this problem &mdash; and what you were trying to do &mdash; to %CGF_EMAIL.</p><p>Thank you for your patience and thank you for participating in %PROJECT!</p>'),
@@ -157,10 +159,13 @@ global $tStrings; $tStrings = array(
   'crumbs desc' => t('crumbs donation: %pct of past month receipts'),
   'sent email' => t('<p>We sent a confirmation link to <b>%email</b>.</p><p>Click it to continue (if it doesn\'t show up right away, check your Spam folder).</p>'),
   'proxy help' => t(<<<EOF
-    <p><b>Direct democracy</b> is at the heart of the %PROJECT design. In each community, members meet to discuss and decide on funding priorities for incentives, grants, loans, and investments of %RCREDITS for the greater good.</p>
-    <p>You assign a person in your community as your ongoing Representative (Proxy). This should be a member you know and trust and generally agree with. Whenever you don't vote, your Representative votes for you. The Representative's vote simply counts double (one vote for them and one vote for you). If your Representative also fails to vote, then your Representative's Proxy votes for all three of you.<br><br>Everyone's voice is counted, whether or not they vote directly &mdash; one person one vote.</p>
+    <p><b>Direct democracy</b> is at the heart of the %PROJECT design. In each community, members meet to discuss and decide on funding priorities for the greater good.</p>
+    <p>You assign a person in your community as your ongoing Representative (Proxy). Someone you know and trust. Whenever you don't vote, your Representative's vote counts double (one vote for them and one vote for you). If your Representative also fails to vote, then your Representative's Proxy votes for all three of you. [<a class="showMore">more</a>]</p>
+    <div class="more">
+    <p>Everyone's voice is counted, whether or not they vote directly &mdash; one person one vote.</p>
     <p>Our community's most trusted Representatives (chosen by many people to be their proxy) will meet in person to research and debate specific issues. These trusted Representatives ("Trustees") do not decide broad policy issues &mdash; all members decide the policy issues. Instead, Trustees oversee public discussions, choose wording for questions to be voted on, take action as directed by the members, and assure that the system is running smoothly.</p>
-    <p>There is no way to tell who has chosen you as their proxy. <i>Your proxy does NOT have access to your %PROJECT account, bank account, or personal information.</i></p>
+    <p>There is no way for anyone to tell who has chosen you as their proxy. And <i>Your proxy does NOT have access</i> to your %PROJECT account, bank account, or personal information.</p>
+    </div>
 EOF
   ),
   'repeats' => t('<br>This payment will repeat %often.'),
@@ -214,22 +219,30 @@ EOF
   'repeat invite' => t('Come back any time, to send more invitations (click "Invite Someone" at the bottom of any page).'),
   'gift transfer later' => t('<br><br>Funds will be transferred when you have money in your account.'),
   'repeat gift' => t('If you wish to make a donation again sometime, click "Membership" in the upper right corner, then on "Donate".'),
-  'tentative partial' => t('<h3>You Completed the Minimum Setup</h3>Once a staff member has approved your account, you will be able to make purchases and accept payments online.'),
-  'tentative complete' => t('<h3>Your Account Setup Is Complete!</h3>Next, a staff member will approve your account.'),
-  'ok partial' => t('<h3>You Completed the Minimum Setup</h3>You may now make purchases and accept payments online.'),
-  'ok complete' => t('<h3>Your Account Setup Is Complete!</h3>'),
-  'want a card' => t('Want a free %PROJECT card for local purchases and be a voting member of your %PROJECT community?'),
-  'get a card below' => t('Click "Get Card" in the Next Steps below.'),
-  'finish get card' => t('<p>To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Get Card". Then complete the remaining steps one by one as they appear.</p>'),
-  'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
-  'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
+
+  'success' => t('<h2>Success!</h2>'), // upon completion of a task
+  
+  'member tentative' => t('<h3>You Completed the Minimum Signup</h3><p>Once a staff member approves your account, you can send and receive payments online. However, there are a few more steps before you can get your %PROJECT card, make in-person purchases, and vote in your %PROJECT community.</p><p>Click "Get a Card" below to continue, or sign in again later to finish.</p>'),
+  'card tentative' => t('<h3>Your %PROJECT card will arrive in the mail within about a week.</h3><p>Once a staff member approves your account, you can also send and receive payments online or use our web app (<%a>%APP_URL</a>) on your phone for in-person transactions.</p><p>There are just a few more steps to become a voting member of your %PROJECT community. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
+  'voter tentative' => t('<h3>Your Account Setup Is Complete!</h3>A staff member will approve your account shortly.'),
+  'co tentative' => t('<p>Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. A staff member will approve your account shortly.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments (or simply use your device\'s camera to scan a customer card.</p><p>Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
+
+  'member ok' => t('<h3>You Completed the Minimum Signup</h3><p>You can now send and receive payments online. However, there are a few more steps before you can get your %PROJECT card, make in-person purchases, and vote in your %PROJECT community.</p><p>Click "Get a Card" below to continue, or sign in again later to finish.</p>'),
+  'card ok' => t('<h3>Your %PROJECT card will arrive in the mail within about a week.</h3><p>Meanwhile, you can send and receive payments online or use our web app (<%a>%APP_URL</a>) on your phone for in-person transactions! There are just a few more steps to become a voting member of your %PROJECT community.</p><p>Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
+  'voter ok' => t('<h3>Your Account Setup Is Complete!</h3>'),
+  'co ok' => t('<p>Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments (or simply use your device\'s camera to scan a customer card. Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
+
   'join thanks' => t('Thank you for joining us!'),
+  'pioneer thanks' => t('Thank you for helping pioneer the %PROJECT economy!'),
+
+  'want a card' => t('Want a free %PROJECT card for local purchases?'),
+  'finish get card' => t('<p>To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Get Card". Then complete the remaining steps one by one as they appear.</p>'),
+//  'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'gift thanks' => t('<p>Thank you so much for your donation to %coName! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
   'check it out' => t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),
   'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
 //  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
-//  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
   'next steps' => t('<span class="loud">See some important Next Steps listed below.</span>'),
   'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
   'must be confirmed' => t('An email has been sent to %inviterName, who will need to confirm the invitation before you can use your %PROJECT Account. Or you can do your first rCard transaction with %inviterName as confirmation.'),
@@ -387,7 +400,7 @@ EOF
   'trial co over' => t('Temporary "trial" company accounts are limited to %TRIALCO_DAY_LIMIT days and  $%TRIALCO_AMT_LIMIT in total payments received. This payment cannot go through, because it would put the account over that amount.'),
   'trial co end' => t('The time for your %PROJECT trial is over. If you haven\'t yet, please go to %CG_DOMAIN to sign up for a personal account (required for a full company account), then sign in to your company account to complete it.'),
   'ssn needed' => t('You have reached the maximum legal amount or number of transactions allowed for one year in your state without a Social Security Number. Please sign in at %CG_DOMAIN and follow the prompts to add your Social Security Number to your account.'),
-  'co nonpass' => t('None. Sign in to your personal account, then click your photo in the upper right corner to select the company account.'),
+  'co nonpass' => t('Always sign in to your PERSONAL account. Then click your photo in the upper right corner to manage the company account.'),
   'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember. Or include an emoji!</p>'),
   'bad locus' => t('That location is not specific enough. Try again with a postal code or full address.'),
   'post success' => t('Success! Your post is confirmed.'),
@@ -418,7 +431,7 @@ EOF
   'bad phone' => t('That is not a proper phone number.'),
   'not your account' => t('That is not your account ID.'),
   'bad account number' => t('Your bank account number must be 3-17 digits long.'),
-  'bad federal id' => t('That is not a correct %what. Try again.'),
+  'bad federal id' => t('That is not a correct EIN. Try again.'),
   'bad nonce' => t('That is not the right verification code. Try again (start over).'),
   'op canceled' => t('Operation Canceled.'),
   'demand not yet' => t('You will be notified when there is some %RCREDITS for you to buy with US Dollars.'),

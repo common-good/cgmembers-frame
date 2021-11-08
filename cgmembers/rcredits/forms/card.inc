@@ -23,7 +23,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   if (!r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
     $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN)));
-    if ($accts) return chooseScanner($accts, "$dom/$code");
+    if ($accts) return chooseScanner($accts, $dom ? "$dom/$code" : '');
     $scannerA = $mya;
     r\setCook('scanner', $mya->mainQid); // proSe with no other accounts, first time, so set scanner and stay signed in
   } elseif (!$scannerA) return go('app'); // scanner account no longer exists 
@@ -99,15 +99,18 @@ function formCard_validate($form, &$sta) {
 }
 
 function formCard_submit($form, &$sta) {
-  global $mya;
+  global $mya, $box;
   
   extract(just('mode account tail amount desc uid', $sta['input'], NULL));
 
   if ($mode == 'choose') { // chose an account to scan from
     $scannerA = r\acct($account);
-    if ($scannerA->id != $mya->id) w\signout(TRUE);
+    if ($scannerA->id != $mya->id) {
+      w\signout(TRUE);
+      w\boxId($box, $scannerA); // create boxid if it doesn't exist yet
+    }
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
-    return go("/card/$tail");
+    return go($tail ? "/card/$tail" : '/app');
   }
 
   // mode = 'normal'    

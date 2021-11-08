@@ -30,7 +30,7 @@ function formPrefs($form, &$sta) {
   );
   $statements = radiosFld(t('Statements:'), '', dft((int) $mya->can(B_PAPER)), $mediumRadios);
 
-  $showAdvancet = item(t('<a>Show advanced options</a>'), ' '); // different name from showAdvanced (for CSS)
+  $showAdvancet = item(t('<a>Show advanced options</a>'), NBSP); // different name from showAdvanced (for CSS)
 
   // Advanced settings
 //  if ($mya->ok and $mya->share) $share = w\shareFld($mya); // don't show this during signup (it's on the donation page)
@@ -82,7 +82,6 @@ function formPrefs_submit($form, $sta) {
   global $mya;
 
   extract(just('food snap roundup statements nosearch debtOk secretBal', $sta['input'], NULL));
-///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
   $fields = 'food snap';
   $food /= 100;
 
