@@ -1472,7 +1472,7 @@ function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR 
 function emailBody($key) {return str_replace('%body', emailTemplate($key), emailTemplate(R_EMAIL_FRAME));}
 function realCountry($country) {return db\get('name', 'r_countries', 'id=:country', compact('country'));}
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
-function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : FALSE;}
+function stateNum($st) {return $st ? db\get('id', 'r_states', ':st IN (id, name, abbreviation) and country_id=:US_COUNTRY_ID', compact('st')) : FALSE;}
 function fullState($abbrev, $country = R_COUNTRY_ID) {return db\get('name', 'r_states', 'abbreviation=:abbrev and country_id=:country', compact('abbrev', 'country'));}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}

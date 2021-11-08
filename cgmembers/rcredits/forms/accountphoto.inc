@@ -29,10 +29,10 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   if ($code and $ray = u\decryRay($code)) extract(just('qid sid qr cardCode', $ray, NULL));
   $a = $qid ? r\acct($qid) : $mya;
   
-  if ($a and (!$qid or $sid == session_id() or $cardCode == $a->cardCode)) {
+  if ($a and (!$qid or $sid == session_id() or $cardCode == $a->cardCode or $a->co)) {
     $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   } else { $photo = NULL; }
-  
+
   if (strlen($photo) and $qr) { // add borders for embedding in QR code
     $im = imagecreatefromstring($photo);
     list ($w0, $h0) = [imagesx($im), imagesy($im)];

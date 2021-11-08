@@ -18,7 +18,6 @@ const TX_EXCLUDE_FLDS = 'deleted';
 const TXE_EXCLUDE_FLDS = 'deleted';
 const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt';
 const TXS_MAP = 'entryType:type, cat:cat, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
-const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
   
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
@@ -32,13 +31,24 @@ function createViews($m, $stopAt) {
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) {
 /**/ echo "view: $table\n";
-//    print_r(VIEWS_NOT_TO_DROP); echo "\n";
-//    echo in_array($table, VIEWS_NOT_TO_DROP); echo "\n";
-    if (! in_array($table, VIEWS_NOT_TO_DROP)) { // don't drop
-      $m->doSql('  DROP VIEW IF EXISTS ' . $table);
-    }
+    $m->doSql('  DROP VIEW IF EXISTS ' . $table);
   }
   
+  $m->doSql('CREATE VIEW descendants AS
+      WITH RECURSIVE descendants AS (
+        SELECT iid AS base, industry AS baseIndustry, iid, industry FROM r_industries
+        UNION ALL
+        SELECT d.base AS base, d.baseIndustry AS baseIndustry, c.iid, c.industry 
+        FROM r_industries c INNER JOIN descendants d ON d.iid = c.parent )
+      SELECT base, baseIndustry, iid AS descendant, industry AS descendantIndustry FROM descendants');
+  $m->doSql('CREATE VIEW ancestors AS
+      WITH RECURSIVE ancestors AS (
+        SELECT iid AS base, industry AS baseIndustry, iid, industry, parent FROM r_industries
+        UNION ALL
+        SELECT a.base AS base, a.baseIndustry AS baseIndustry, p.iid, p.industry, p.parent
+        FROM r_industries p INNER JOIN ancestors a ON p.iid = a.parent )
+      SELECT base, baseIndustry, iid AS ancestor, industry AS ancestorIndustry FROM ancestors');
+      
   // get current list of columns
   $txFldList = array_map(function($f) {return $f->getName();}, $m->table('tx_hdrs_all')->getColumns());
   $tx_flds = array_diff($txFldList, ray(TX_EXCLUDE_FLDS));

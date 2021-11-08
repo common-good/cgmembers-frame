@@ -45,7 +45,7 @@ function formSignup($form, &$sta, $args = '') {
 
   if (!nn($helper)) {
     $helper = nn($partner) ?: 0;
-    $forother = item(t('If you already have a %PROJECT account, <%aSignin>Sign in</a>.<br>Did you want to open a <%aCo>COMPANY account</a> instead?', '_aSignin _aCo', atag('/signin'), atag('/signup-co/' . http_build_query($args))));
+    $forother = item(t('If you already have a %PROJECT account, <%aSignin>Sign in</a>. Did you want to open a <%aCo>COMPANY account</a> instead?', '_aSignin _aCo', atag('/signin'), atag('/signup-co/' . http_build_query($args))));
   } else $forother = NULL;
 
   if (!nn($code)) $code = 'self ()';
@@ -62,8 +62,8 @@ function formSignup($form, &$sta, $args = '') {
   $subtext = nn($joint)
   ? t('<%b>NOTE:</b> From here on, "you" means the person for whom you are creating a new account, which will be joined to an existing account (creating a joint account).') 
   : t(<<<EOF
-<p>Opening a %PROJECT Account takes 10-15 minutes and is very much like opening an online bank account, plus a couple extra steps for security and democracy. After this page we will guide you through <%b>several short steps</b>.</p>
-<p>If you need help, please <%aHelp>ask</a> (our contact information is at the bottom of every page).</p>
+<p>Sign-up takes about 5 minutes for online transactions &mdash; plus a couple extra steps to get a %PROJECT card.</p>
+<p>If you need help, please <%aHelp>ask</a>.</p>
 EOF
   , '_b _aHelp', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')));
 
@@ -161,8 +161,7 @@ function formSignup_submit($form, &$sta) {
   tellStaffNewMember($info); // report to admin
 
   $pw1 = $mya->oneTimePass($mya->name, TRUE);
-  $mya->update('pass', $pass = u\randPass());
-  $mya->tell('verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass));
+  $mya->tell('verify', ray('name qid code', $mya->name, $mya->mainQid, $pw1));
 
   if (!nn($confirmed)) {
     u\EXPECT((bool) $h, 'unconfirmed with no helper');

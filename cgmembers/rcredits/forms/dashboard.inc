@@ -20,7 +20,7 @@ function formDashboard($form, &$sta, $args = '') {
 
   if ($mya->admin2 and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
   
-  $special = $endorse = NULL;
+  $special = $endorse = $continue = NULL;
   
   if ($mya->ok and !$mya->co) {
     $special = item(t('|<%aCovid>COVID-19</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"'), '', '', clas('m-nolabs'));
@@ -40,13 +40,18 @@ function formDashboard($form, &$sta, $args = '') {
     if ($stepUrl = $mya->nextStepUrl('', $msg)) { // steps to be done
       if (!$mya->ok and r\referrer() == 'signin') return w\go($stepUrl); // go right to next step if not approved
       say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
-    } elseif (!$mya->ok) { // no steps to do, but not open
-      if ($mya->co) {
-        say(tr('tentative complete|co complete'));
-      } elseif ($mya->stepCount('card')) { // not eligible for card yet
-        say(tr('tentative partial|want a card|get a card below'));
-      } else { say(tr('tentative complete|card soon')); }
-    }
+    } elseif ($mya->co) {
+        if (!$mya->ok) { // no steps to do, but not open
+          r\tellAdmin('unapproved company!', ['qid' => $mya->mainQid]);
+          say(tr('co tentative|pioneer thanks')); // UNUSED?
+        }
+    } elseif ($mya->stepCount('card')) { // not eligible for card yet
+      if (!$mya->ok) say(tr('member tentative|join thanks'));
+      $continue = btn('/scraps/card', t('Get a Card'), 'success', 'lg');
+    } elseif ($mya->stepCount('vote')) { // not eligible to vote yet
+      if (!$mya->ok) say(tr('card tentative'));
+      $continue = btn('/scraps/vote', t('Get a Vote'), 'success', 'lg');
+    } elseif (!$mya->ok) say(tr('voter tentative|pioneer thanks'));
   }
 
   if ($mya->canManage and $mya->member) {
@@ -56,13 +61,16 @@ function formDashboard($form, &$sta, $args = '') {
     $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
     $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
-  } else $invite = $makeCo = $makeJoint = '';
+    $donate = w\lnk('/community/donate', t('Donate'));
+  } else $invite = $makeCo = $makeJoint = $donate = '';
 
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
+  $reopen = $mya->closed ? w\lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
+  $comment = w\lnk('/help', t('Comment, question, or suggestion'));
   
   if ($mya->member and !$mya->closed) {
-    foreach (ray('invite makeJoint makeCo reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
+    foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits') as $k) if ($$k) $shortcuts[] = $$k;
     $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
   } else $shortcuts = NULL;
 
@@ -87,9 +95,9 @@ function formDashboard($form, &$sta, $args = '') {
   if (!$mya->isCtty) { // unless this is a community or region account
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to activate.)', '_a', 'a id="activate-credit"');
     $credit = $mya->depends ? '$0' : u\fmtAmt(-$mya->floor);
-    $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based normally on your account\'s average monthly activity over the past 6 months.'), w\suffix($suffix));
+    $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based on your account\'s average monthly activity.'), w\suffix($suffix));
   
-    $choiceList = ($mya->member or $mya->closed) ? choiceListFld() : NULL;
+//    $choiceList = ($mya->member or $mya->closed) ? choiceListFld() : NULL;
     
   } else {
     $acctType = t('community account');
@@ -97,7 +105,7 @@ function formDashboard($form, &$sta, $args = '') {
   }
   
   jsx('dashboard', 'payDesc chargeDesc', t('Pay'), t('Charge'));
-  $dashboard = fieldSet('dashboard', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
+  $dashboard = fieldSet('dashboard', compact(ray('endorse title acct buttons balance creditLine continue special shortcuts')), BARE);
   $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
 
   return cgform(compact('dashboard', 'tx'), '', 'left');
@@ -109,7 +117,7 @@ function formDashboard_submit($form, &$sta) {return formTx_submit($form, $sta);}
 /**
  * Return a list of important next steps for the account.
  * @todo: add comment as an option?
- */
+ *//*
 function choiceListFld() {
   global $mya;
   
@@ -155,3 +163,4 @@ X
   $choiceList = "<div id=\"edit-choiceList\">\n%hdr\n<div class=\"table\">$choiceList\n</div>\n</div>\n";
   return item(tr($choiceList, '_hdr', t('<h3>Next Steps</h3>')), BARE);
 }  
+*/

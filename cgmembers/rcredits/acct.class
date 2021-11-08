@@ -226,6 +226,8 @@ class Acct {
       case 'helperA': return $a->helper ? r\acct($a->helper) : '';
       case 'anyAdmin': return ($a->cAdmin2 or $a->isAdmin2);
       case 'usa': return ($a->country == US_COUNTRY_ID);
+      case 'card': return ($a->ok and $a->stepsDone('card'));
+      case 'vote': return ($a->ok and $a->stepsDone('vote'));
       
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
@@ -763,7 +765,7 @@ X;
    */
   public function proxy($priority = 1, $proxy = NULL) {
     $a = $this;
-    $subs = ['person' => $a->id, 'priority' => $priority];
+    $subs = ray('person priority', $a->id, $priority);
     if (empty($proxy)) { // return it
       return db\get('proxy', 'r_proxies', 'person=:person AND priority=:priority', $subs);
     } else { // set it
@@ -1016,8 +1018,7 @@ EOF;
     $a = $this;
     u\setDft($msg, $stepDone ? 'info saved' : '');
     if ($a->closed) return '';
-    $inTask = ($a->task != '');
-    $cardTask = ($a->task == 'card'); // remember current task before marking step done
+    $task0 = $a->task; // remember current task before marking step done
 
     if ($stepDone) {
       $stepCounts = !$a->stepIsDone($stepDone);
@@ -1025,20 +1026,25 @@ EOF;
     } else { $stepCounts = FALSE; }
     
     if ($a->task and $nextStep = $a->nextStep()) {
-      if ($stepDone and in($stepDone, r\taskSteps($a->task))) u\joins($msg, '|', 'step completed'); // say completed only when relevant
+      if ($stepDone and in($stepDone, r\taskSteps($a->task))) $msg = u\joi('|', [$msg, 'step completed']); // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
-    if ($stepDone and $a->member and $inTask) { // no current task (nothing to be done next) and just did the final step
+    if ($stepDone and $a->member and $task0 != '') { // no current task (nothing to be done next) and just did the final step
       if (!$a->ok and ($a->co ? ($a->helperA->ok or $a->agentA->ok) // automatic approval if company agent is OK,
         : ($a->hasFid and !$a->risk('ssnOff')))) { // OR if individual is verified (helperA needed for verifyemail.inc)
         include_once R_ROOT . '/cg-activate.inc';
         r\activate($a, $a->helper ?: 0);
       }
+      $msg = u\joi('|', [$msg, 'success']);
       if ($a->ok) { // account needs no approval (accounts needing approval get a persistent message on the dashboard)
-        $msg2 = $a->co ? 'ok complete|co complete' : ($cardTask ? 'ok complete|card soon' : 'ok partial|want a card|get a card below');
-//'individual approval';
-        u\joins($msg, '|', "$msg2|join thanks"); // show on display, not on done
+        $msg2 = $a->co ? 'co ok|pioneer thanks'
+        : ($task0 == 'person' ? 'member ok|join thanks'
+        : ($task0 == 'card' ? 'card ok'
+        : ($task0 == 'vote' ? 'voter ok|pioneer thanks' : '') ));
+        u\EXPECT($msg2, 'bad task');
+
+        $msg = u\joi('|', [$msg, $msg2]); // show on display, not on done
         $a->update('stepsLeft task', '', ''); // mark task complete
       }
     }

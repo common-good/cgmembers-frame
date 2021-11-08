@@ -18,16 +18,16 @@ Scenario: A member visits the contact info page
   | Email | a@ |
   | Phone | +1 413 200 1000 |
 #  | Country | United States |
-  | Physical Address | |
-  | Street Address | 1 A St. |
-  | City | Atown |
-  | State | Alaska |
-  | Postal Code | 99100 |
   | Mailing Address | |
   | Street Address | 1 A |
   | City | T |
   | State | Arkansas |
   | Postal Code | 23456 |
+  | Physical Address | |
+  | Street Address | 1 A St. |
+  | City | Atown |
+  | State | Alaska |
+  | Postal Code | 99100 |
 
 Scenario: A member updates contact info
   When member ".ZZA" confirms form "settings/contact" with values:

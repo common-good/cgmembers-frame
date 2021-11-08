@@ -36,15 +36,21 @@ function formPass_validate($form, &$sta) {
  */
 function formPass_submit($form, &$sta, $goto = '') {
   extract(just('uid', $sta['input'], NULL));
-  $a = r\acct($uid); // defaults to current account when called from formResend_submit (without uid)
-  $qid = $a->mainQid;
-  if ($a->co) $qid .= '-A'; // happens only when opening a company account
-  $code = $a->oneTimePass();
+  
   $verify = (bool) $goto;
-  $a->tell($verify ? 'verify' : 'password-reset', compact(ray('qid code')));
+  $a = r\acct($uid); // defaults to current account when called from formResend_submit (without uid)
+  $qid = $a->co ? "$a->mainQid-A" : $a->mainQid;
+
+  list ($template, $pwMsg) = $verify
+  ? ($a->co ? ['verify-co', t('Always sign in to your PERSONAL account. Then click your photo to choose the company account.')] : ['verify', ''])
+  : ['password-reset', ''];
+  
+  $code = $a->oneTimePass();
+  
+  $a->tell($template, compact(ray('qid code pwMsg')));
   if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) {
     $page = $goto ?: 'reset';
     say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/qid=%qid&code=%code&verify=%verify">reset</a>', compact(ray('page qid code verify'))));
   }
-  return w\go($goto ?: '/empty', $goto ? t('Email sent') : 'password reset');
+  return w\go($goto ?: '/empty', $verify ? t('Email sent') : 'password reset');
 }

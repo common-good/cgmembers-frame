@@ -52,6 +52,7 @@ function formEvents($form, &$sta, $args = '') {
   extract(just('question do results eid noProxies qid', $args, NULL));
   if ($mya and !$qid) $args = str_replace('qid=&ecode=', "qid=$mya->mainQid&ecode=$mya->emailCode", $args);
   $mya = w\eLinkAcct($sta, $args, $mya ? 'acct' : 'individual'); // allow any signed in account, so user can switch to personal account, below
+  if (!$mya->vote) return softErr(t('You have some steps left to become a %PROJECT voting member. <%a>Click here to continue</a>.', '_a', atag('/scraps/vote')));
 
   $cttyA = $mya->cttyA;
   if ($aA = r\acct()) list ($cAdmin, $superAdmin) = [$aA->cAdmin, $aA->superAdmin]; // get signed-in account, if any

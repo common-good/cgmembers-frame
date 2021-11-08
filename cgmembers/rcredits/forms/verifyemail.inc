@@ -36,10 +36,10 @@ function formVerifyEmail($form, &$sta, $args = '') {
       say('verified email');
       say($msg);
       if ($a->ok) {
-        return go('empty'); // just say the message if done with signup
+        return go('empty'); // just say the message if done with signup (no need to sign back in)
       } else {
         say(tr('continue co setup'));
-        return go('signin?name=' . $a->agentA->mainQid);
+        return go('signin?name=' . $a->agentA->mainQid); // showing agent account ID is okay (secure) because the code matched
       }
     }
   } elseif ($a->co) {
@@ -50,18 +50,13 @@ function formVerifyEmail($form, &$sta, $args = '') {
   $a->stepDone('verifyemail'); // this step is unique in that it is completed simply by visiting the page
   
   $title = t('Verified!');
-  $subtext = tr('verified email');
+  $subtext = tr('verified email') . tr('pass advice');
   $submit = submit($a->stepCount() > 1 ? t('Next') : t('Finish')); // can't use setupFoot() here because not signed in
-
-  $subtext .= t('<p>If you want a different password than the one we emailed you, you can change it here.</p>') . t('pass advice');
-  $showPass = boolFld(t('Change Password?'), t('Do you want to change your assigned password?'));
-  $passFlds = compact('showPass') + w\pickPassword(FALSE);
   
   $uid = hidFld($a->id);
-  jsx('verifyemail', compact('verify'));
   $verify = hidFld($verify);
 
-  return cgform(compact(ray('title subtext uid verify')) + $passFlds + compact('submit'));
+  return cgform(compact(ray('title subtext uid verify')) + w\pickPassword(FALSE) + compact('submit'));
 }
 
 function formVerifyEmail_validate($form, &$sta) {if (nni($sta['input'], 'showPass')) return formChangePassword_validate($form, $sta);}
@@ -78,5 +73,6 @@ function formVerifyEmail_submit($form, &$sta) {
     $mya->update('pass', $pw);
   }
 
+  if (!$mya->stepCount()) say('success'); // special case because step was completed just by visiting this page
   return w\goNextStep('verifyemail');
 }

@@ -16,16 +16,14 @@ if (ajaxSid) var sTimeout = sessionLife == 0 ? 0 : sessionTimeout(); // Warn the
 
 if (sessionLife == 0 && 'serviceWorker' in navigator) navigator.serviceWorker.register(baseUrl + '/sw.js');
   
-jQuery("#which, #help").addClass("popup");
-jQuery('button[type="submit"]').click(function() {
-  this.form.opid.value = this.id;
-//  $('<input type="hidden" name="opid" />').appendTo(this.form).val(this.form.id);
-});
+$('.showMore').click(function () {$('.more').show(); $(this).hide();});
+$("#which, #help").addClass("popup");
+$('button[type="submit"]').click(function() {this.form.opid.value = this.id;});
 
 $('[data-toggle="popover"][data-trigger="hover"]').click(function () {$(this).popover('toggle');});
 $('.submenu .popmenu a').click(function () {$(this).find('.glyphicon').css('color', 'darkblue');});
 $('.submenu a[data-trigger="manual"]').click(function () {
-  if (isSafari) location.href = baseUrl + '/' + $(this).parents('.submenu').attr('id').replace('menu-', ''); // work around Safari bug (doesn't show menus on hover)
+//  if (isSafari) location.href = baseUrl + '/' + $(this).parents('.submenu').attr('id').replace('menu-', ''); // work around Safari bug (doesn't show menus on hover)
   $(this).popover('toggle');
   $('.submenu a').not($(this)).popover('hide');
 });

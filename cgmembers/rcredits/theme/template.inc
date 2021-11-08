@@ -137,7 +137,7 @@ function rcredits_form($variables) {
   $frmName = str_replace('cgwebform', '', $element['#id']);
   if ($frmName == 'prox') {
     $args = basename($_SERVER['REQUEST_URI']);
-    extract(just('page', $args));
+    extract(just('page', $args, ''));
     $frmName = strtolower($page);
   }
   $element['#id'] = "frm-$frmName"; // CGF
@@ -284,6 +284,7 @@ function rcredits_form_element($variables) {
   $parentName = isset($parents) ? strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']) : '';
   $for = nn($name) ?: $parentName;
   if ($for == 'title') $children = "<h3>$children</h3>";
+//  foreach (ray('field_prefix children field_suffix') as $k) if(is_array(nn($$k))) die("$k: " . pr($$k));
   $children = nn($field_prefix) . $children . nn($field_suffix);
 
   u\setDft($title_display, 'before');

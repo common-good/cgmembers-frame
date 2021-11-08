@@ -370,6 +370,28 @@ function doRequests($info) {
 }
 
 /**
+ * Check or set steps done for a given task.
+ */
+function hasStepsDone($id, $task, $steps) {
+  global $testOnly;
+  
+  if ($steps == 'all') $steps = u\consta('s', $task);
+  if ($task == 'card') $steps = trim(join(' ', [S_PERSON, $steps]));
+  if ($task == 'vote') $steps = trim(join(' ', [S_PERSON, S_CARD, $steps]));
+
+  $a = r\acct(t\uid($id));
+  if (!$testOnly) {
+    $a->update('steps', 0);
+    $a->setTask($task);
+    foreach(ray($steps) as $k) $a->stepDone($k);
+  } else {
+    if ($a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
+  }
+  foreach(ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
+  return TRUE;  
+}
+
+/**
  * Interpret an id in a transaction or invoice.
  * @param string $id: qid or partial qid (eg NEWAAA or .AAA or C:A or NEWZZC-A)
  * @param int $main: (RETURNED) the payer or payee

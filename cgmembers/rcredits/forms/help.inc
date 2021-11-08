@@ -30,7 +30,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
   $text = item(($signedIn or $what)? helpText($what ?: 'general', $tag, $args) : $stranger);
   if ($signedIn and !$what) {
     
-    $message = areaFld(t('Send a message to a %PROJECT Administrator:'), '', required());
+    $message = areaFld(REQ, [t('Message to a %PROJECT administrator')]);
 // Fix this before uncommenting (nobody uses it anyway)    $file = fileFld(t('Secure Attachment:'), t('(optionally) attach a file to your message. The file will be encrypted.'));
     $submit = t('Send');
   } else { $message = $submit = NULL; }

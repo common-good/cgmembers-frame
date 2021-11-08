@@ -1,3 +1,29 @@
+2021-11-03 feature/simpler-signup
+. split off photo, contact, and backing steps to get a card (requiring the rest, to vote)
+. added "card" and "vote" virtual account fields
+. eachA(function ($a) {if ($a->signed) $a->stepDone('agree');});
+. fixed bug in app that broke associating with a company
+. fixed bug in cr\getFunds that affected only members of the Investment Club
+. replaced u\joins() function with u\joi(), which concatenates an array, dropping empty elements
+. improved various completion messages and gave the string names a consistent pattern
+. made founded a big int
+. fixed company photo not appearing in company member page
+. shortened some text by adding a "more" button
+. cleaned up company info page, moving several items to "advanced" and moving cgbutton instructions to the cgbutton form
+. improved instructions on connect page (the fund step)
+. cleaned up format and text on various other signup steps
+. improved verifyemail step (templates, etc), including not providing a default password
+. made proxies default properly
+. finally fixed odd menu behavior on mobile, by disabling the special case for Safari!!
+. legalName now defaults, for companies
+. water now defaults to blank, which is accepted as zero
+. reversed order of postal and physical on contact page
+. misc/makeKey.php now outputs in copyable format
+. removed source question from company signup
+. revised overall help page
+. removed bypassable steps from the signup flow
+. added ancestors and descendants to the VIEWS that get recreated
+
 2021-11-02 feature/cry-photoids
 . photoids are now encrypted and kept online
 . photoids are displayed on summary page, for admin

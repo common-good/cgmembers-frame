@@ -21,7 +21,6 @@ Scenario: A newbie visits the individual signup page
 Scenario: A member signs up
   Given member is logged out
   And next random code is "WHATEVER"
-  And next random password is "quick brown fox jumped"
   When member "?" completes form "signup" with values:
   | fullName | email | phone        | zip   | acctType     | cq | ca |*
   | Al Aargh | z@    | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
@@ -29,10 +28,9 @@ Scenario: A member signs up
   | uid  | fullName | legalName | email | phone        | zip   | state |*
   | .AAA | Al Aargh | Al Aargh  | z@    | +14132530000 | 01002 | MA    |
   And we email "verify" to member "z@" with subs:
-  | fullName | qid    | site      | code     | pass                   |*
-  | Al Aargh | NEWAAA | %BASE_URL | WHATEVER | quick brown fox jumped |
+  | fullName | qid    | site      | code     |*
+  | Al Aargh | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is "WHATEVER"
-  And member ".AAA" password is set to "quick brown fox jumped"
   And member ".AAA" is logged in
   And we show "Identity Verification"
   And we say "status": "info saved|step completed"
@@ -91,19 +89,22 @@ Scenario: A member verifies email
   # no change to password
 #  | pass1 | pass2 |*
 #  |       |       |
-  Then we show "You: Bea Two"
+  Then we show "You: Bea Two" with:
+  | Get a Card |
   And member ".ZZB" steps left ""
   And members:
   | uid  | flags       | task |*
   | .ZZB | member,ided |      |
-  And we say "status": "tentative partial|want a card|get a card below"
+  And we say "status": "success"
+  And we say "status": "info saved"
+  And we say "status": "member tentative|join thanks"
 
-Scenario: A member clicks Finish
+Scenario: A member clicks Get a Card
   Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences verifyemail"
   Then member ".ZZB" steps left ""
   When member ".ZZB" visits page "scraps/card"
   Then we show "Photo ID Picture"
-  And member ".ZZB" steps left "photo contact donate crumbs proxies work backing stepup invite"
+  And member ".ZZB" steps left "photo contact backing"
 
 Scenario: A member uploads a photo
   Given member ".ZZB" has "card" steps done: ""
@@ -112,7 +113,7 @@ Scenario: A member uploads a photo
   | nextStep |
   Then we show "Contact Information"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "contact donate crumbs proxies work backing stepup invite"
+  And member ".ZZB" steps left "contact backing"
 
 Scenario: A member gives contact info
   Given member ".ZZB" has "card" steps done: "photo"
@@ -145,35 +146,80 @@ Scenario: A member gives contact info
   | tenure     | 27             |
   | risks      |                |
   # owns, so no rents risk
-  And we show "Donate to %PROJECT"
+  And we show "Backing Promise"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "donate crumbs proxies work backing stepup invite"
+  And member ".ZZB" steps left "backing"
+
+Scenario: A member sets backing  
+  Given member ".ZZB" has "card" steps done: "photo contact"
+  When member ".ZZB" completes form "community/backing" with values:
+  | amtChoice |*
+  |       100 |
+  Then we show "You: Bea Two" with:
+  | Get a Vote |
+  And member ".ZZB" steps left ""
+  And members:
+  | uid  | task |*
+  | .ZZB |      |
+  And we say "status": "info saved|success"
+  And we say "status": "card tentative"
+
+Scenario: A member clicks Get a Vote
+  Given member ".ZZB" has "card" steps done: "photo contact backing"
+  Then member ".ZZB" steps left ""
+  When member ".ZZB" visits page "scraps/vote"
+  Then we show "Your Work"
+  And member ".ZZB" steps left "work invite donate proxies"
+
+Scenario: A member sets calling
+  Given member ".ZZB" has "vote" steps done: ""
+  When member ".ZZB" completes form "settings/work" with values:
+  | calling  | company | companyPhone | companyOptions |*
+  | whatever | Cor Pub |              | employee       |
+  Then these "relations":
+  | main | other | flags    | created |*
+  | .ZZC | .ZZB  | employee | %now    |
+  And we show "Invite People"
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "invite donate proxies"
+
+Scenario: A member invites
+  Given member ".ZZB" has "vote" steps done: "work"
+  When member ".ZZB" completes form "community/invite" with values:
+  | sign | quote | org  | position | website |*
+  | 1    | cuz   | MeCo | Boss     | me.co   |
+  Then these "u_shout":
+  | uid  | quote | org  | title | website |*
+  | .ZZB | cuz   | MeCo | Boss  | me.co   |
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "donate proxies"
+  And we show "Donate to %PROJECT"
 
 Scenario: A member donates
-  Given member ".ZZB" has "card" steps done: "photo contact"
+  Given member ".ZZB" has "vote" steps done: "work invite"
   When member ".ZZB" completes form "community/donate" with values:
   | amtChoice | period | honor | honored |*
   |        50 | month  |     - |         |
-  Then we show "Share When You Receive"
+  Then we show "Proxies"
   And we say "status": "gift thanks" with subs:
   | coName | %PROJECT |**
   And we say "status": "gift transfer later"
   And we say "status": "step completed"
-  And member ".ZZB" steps left "crumbs proxies work backing stepup invite"
+  And member ".ZZB" steps left "proxies"
 
-Scenario: A member chooses crumbs
-  Given member ".ZZB" has "card" steps done: "photo contact donate"
-  When member ".ZZB" completes form "community/crumbs" with values:
-  | crumbs | 1.5 |**
-  Then members have:
-  | uid  | crumbs |*
-  | .ZZB | .015   |
-  And we show "Proxies"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "proxies work backing stepup invite"
+#Scenario: A member chooses crumbs
+#  Given member ".ZZB" has "card" steps done: "photo contact donate"
+#  When member ".ZZB" completes form "community/crumbs" with values:
+#  | crumbs | 1.5 |**
+#  Then members have:
+#  | uid  | crumbs |*
+#  | .ZZB | .015   |
+#  And we show "Proxies"
+#  And we say "status": "info saved|step completed"
+#  And member ".ZZB" steps left "proxies work backing stepup invite"
 
 Scenario: A member chooses proxies
-  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs"
+  Given member ".ZZB" has "vote" steps done: "work invite donate"
   And these "r_proxies":
   | person | proxy | priority |*
   | .ZZB   | .ZZA  |        1 |
@@ -181,71 +227,36 @@ Scenario: A member chooses proxies
   When member ".ZZB" completes form "settings/proxies" with values:
   | op       |*
   | nextStep |
-  Then we show "Your Work"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "work backing stepup invite"
-
-Scenario: A member sets calling
-  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies"
-  When member ".ZZB" completes form "settings/work" with values:
-  | calling  | company | companyPhone | companyOptions |*
-  | whatever | Cor Pub |              | employee       |
-  Then these "relations":
-  | main | other | flags    | created |*
-  | .ZZC | .ZZB  | employee | %now    |
-  And we show "Backing Promise"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "backing stepup invite"
-
-Scenario: A member sets backing  
-  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work"
-  When member ".ZZB" completes form "community/backing" with values:
-  | amtChoice |*
-  |       100 |
-  Then we show "Step Up"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "stepup invite"
-  
-Scenario: A member chooses to Step Up
-  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work backing"
-  And members:
-  | uid  | fullName | flags | coType    | zip   |*
-  | .ZZF | Fox Co   | ok,co | nonprofit | 02006 |
-  | .ZZG | Glo Co   | ok,co | nonprofit | 02007 |
-  And member ".ZZF" has "%STEPUP_MIN" stepup rules
-  And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
-
-  When member ".ZZB" visits page "community/stepup"
-  Then we show "Step Up" with:
-  | Organization | Amount | When |
-  | Fox Co       |        |      |
-  | Glo Co       |        |      |
-  
-  When member ".ZZB" completes form "community/stepup" with values:
-  | submit |*
-  |        |
-  Then we show "Invite People"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "invite"
-
-Scenario: A member invites
-  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work backing stepup"
-  When member ".ZZB" completes form "community/invite" with values:
-  | sign | quote | org  | position | website |*
-  | 1    | cuz   | MeCo | Boss     | me.co   |
-  Then these "u_shout":
-  | uid  | quote | org  | title | website |*
-  | .ZZB | cuz   | MeCo | Boss  | me.co   |
+  Then we say "status": "info saved|success"
+  And member ".ZZB" steps left ""
   And we show "You: Bea Two" with:
   | Shortcuts |
   And without:
-  | Finish |
-  And we say "status": "info saved"
-  And we say "status": "tentative complete|card soon"
-  And member ".ZZB" steps left ""
-#  And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
-#  | quid | status |*
-#  | .ZZB | member |
+  | Get a |
+  And we say "status": "voter tentative|pioneer thanks"
+
+
+#Scenario: A member chooses to Step Up
+#  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work backing"
+#  And members:
+#  | uid  | fullName | flags | coType    | zip   |*
+#  | .ZZF | Fox Co   | ok,co | nonprofit | 02006 |
+#  | .ZZG | Glo Co   | ok,co | nonprofit | 02007 |
+#  And member ".ZZF" has "%STEPUP_MIN" stepup rules
+#  And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
+
+#  When member ".ZZB" visits page "community/stepup"
+#  Then we show "Step Up" with:
+#  | Organization | Amount | When |
+#  | Fox Co       |        |      |
+#  | Glo Co       |        |      |
+  
+#  When member ".ZZB" completes form "community/stepup" with values:
+#  | submit |*
+#  |        |
+#  Then we show "Invite People"
+#  And we say "status": "info saved|step completed"
+#  And member ".ZZB" steps left "invite"
 
 Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"

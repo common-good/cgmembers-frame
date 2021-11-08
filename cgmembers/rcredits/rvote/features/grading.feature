@@ -18,6 +18,7 @@ Setup:
   | 2  |     1 | Play    | Funner   | energy     |  health | very     | there | %daystart | %daystart+2d |   2000 |       48 | ctty |
 
 Scenario: A member grades a proposal
+  Given member ".ZZA" has "vote" steps done: "all"
   When member ".ZZA" visits page "community/events"
   Then we show "Community Democracy" with:
   || Common Good Western Mass |
