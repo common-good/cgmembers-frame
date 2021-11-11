@@ -705,6 +705,7 @@ function memberFieldValues($list) {
  * "?" in a field means ignore its value when testing
  */
 function doBalances($info) {
+  global $conf; if (!$conf) die('no conf in doBal');
   global $testOnly;
   static $testXid = 0;
 
@@ -1575,8 +1576,8 @@ function clear($ch = 0) {
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');
 
-  ctty('aab')->setBit(B_OK);
-  ctty('aab')->setBit(B_UP);
+  a('aab')->cttyA->setBit(B_OK);
+  a('aab')->cttyA->setBit(B_UP);
 }
 
 function fixPageArgs($page) {
@@ -1897,7 +1898,7 @@ function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);}
-function rewarding() {return ctty('aab')->cttyRewardy;}
+function rewarding() {return a('aab')->cttyA->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
 

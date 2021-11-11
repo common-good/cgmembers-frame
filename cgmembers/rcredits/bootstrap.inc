@@ -4,7 +4,7 @@ use CG\Util as u;
 use CG\Db as db;
 use CG\Web as w;
 use CG\Testing as t;
-
+  
 /**
  * @file
  * Functions that need to be loaded on every request.
@@ -573,7 +573,6 @@ function variable_initialize($conf = []) {
  */
 function getV($name, $default = NULL) {
   global $conf;
-
   return isset($conf[$name]) ? $conf[$name] : $default;
 }
 function variable_get($nm, $dft = NULL) {return getV($nm, $dft);} // for legacy Drupal
@@ -1247,12 +1246,167 @@ function strhas($string, $what, $insensitive = FALSE) {
 }
 function strihas($string, $what) {return strhas($string, $what, TRUE);}
 
-function si(&$s, $i, $c) {$s = substr($s, 0, $i) . $c . substr($s, $i + 1);} // assign character
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
 function nni($ray, $i, $else = '') {return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;} // same as nn but for indexed value
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
+
+/**
+ * Return the current time (or hypothetical current time for testing).
+ */
+function now() {
+  global $tTime; // hypothetical time, if any (set in gherkin/test.php), for running a test on development machine
+  return nn($tTime, time());
+}
+function today($dt = NOW) {return strtotime('today', $dt);}
+function yesterday($dt = NOW) {return strtotime('yesterday', today($dt));}
+function tomorrow($dt = NOW) {return strtotime('tomorrow', today($dt));}
+
+/**
+ * Set or return a global variable.
+ */
+function g($k, $v = NULL) {
+  global $$k;
+  if (isset($v)) $$k = $v;
+  return $$k;
+}
+
+/** Miscellaneous functions for debugging
+ *
+ */
+/**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
+/**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : now()); return $result;} // convert and display unixtime or string time
+function btxid($bankTxId = '') {
+  $dt = DAY_SECS * substr($bankTxId, 0, 5);
+  $dt = date('Ymd', $dt + DAY_SECS); // add a day for U.S. timezones
+  $acct = substr(ESCROW_IN, 0, 6) . substr($bankTxId, 5, 5);
+  $txid = substr($bankTxId, -7);
+  return $acct . $dt . $txid;
+///  debug(date('m/d/Y H:i:s a', $dt));
+}
+function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in txs2 and r_usd2)
+  list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
+  list ($txidLen, $acctLen) = isDEV ? [1, 4] : [7, 5];
+  $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);
+  return 0 + $res; // (intval fails here)
+}
+
+function a($id = '', $agent = '', $create = FALSE) { // return an account object
+  global $lastA;
+  if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
+  $id = preg_replace('/your Common Good account \\(|\\)/', '', $id); // makes it easy to copy account ID and paste it into who() or a()
+  if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
+  $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+  return $lastA;
+}
+function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
+
+/**
+ * Log to file and return log file name
+ */
+/**/ function flog($s = '', $chan = NULL) {
+  global $channel; u\setDft($chan, nn($channel, TX_HACK));
+  $logDir = LOG_DIR . ray(TX_CHANNELS)[$chan];
+  if (!is_dir($logDir)) {
+    mkdir($logDir, 0775);
+    u\EXPECT(is_dir($logDir), 'directory creation failed');
+    if ($chan == TX_CRON) r\tellAdmin(t('You will need to create %logDir by hand', compact('logDir')));
+  }
+  $logFlnm = $logDir . '/' . date('Ym') . '.log';
+//  if ($chan == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
+  if (func_num_args()) file_put_contents($logFlnm, pr($s) . "\n", FILE_APPEND); // new log file every month
+  return $logFlnm;
+}
+
+/**/ function lug($s) {u\loga('debug', $s);}
+function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
+function args() {return debug_backtrace()[1];}
+function showq($sql, $subs = []) {return dnp(strtr(u\SUBS($sql), u\prefixKeys(':', $subs)));}
+/**/ function dnp($s) {print_r($s); debug($s); return $s;}
+
+function who($s = '', $agent = '') {
+  $a = is_object($s) ? $s : a($s, $agent); 
+  $res = "$a->fullName ($a->mainQid $a->id)";
+  if (!$a->proSe) {
+    $aa = $a->agentA;
+    $res .=  " -- agent $aa->fullName ($aa->mainQid $aa->id)";
+  }
+/**/  debug($res);
+  return $a; // show whose account
+}
+
+/**
+ * Return a field of the indicated account.
+ * @param string $field: name of field to return
+ * @param mixed $a: account, qid, partial qid, or account record ID (defaults to current account)
+ */
+function af($field, $a = NULL) {
+  if (!isset($a)) $a = r\acct(); elseif (!is_object($a)) $a = a($a);
+  return $a ? $a->$field : NULL;
+}
+
+/**
+ * Return a function result, for a nicknamed namespace function.
+ * For example, f('u.fmtAmt 35.2') returns CG\Util\fmtAmt(35.2) = "$35.20".
+ * f('u.func arg1 arg2') OR f('u.func', arg1, arg2)
+ */
+
+// define('ONE_CRON_OP', 'one cron op'); // flags a call of f('cr. in PHP window, to prevent side-effects
+
+function f($func) {
+  global $cronOp; 
+  list ($prefix, $funcName) = explode('.', $func);
+  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
+  if ($flnm = nni($incs, $prefix)) require_once R_ROOT . "/$flnm";
+
+  if ($prefix == 'v') {
+    include_once R_ROOT . '/rvote/rvote.inc';
+    include_once R_ROOT . '/rvote/rvote-ballot.inc';
+    include_once R_ROOT . '/rvote/rvote-results.inc';
+  }
+  
+  $args = func_get_args();
+  if (strpos($func, ' ') and count($args) == 1) $args = ray($args[0]);
+//  $func = array_shift($args);
+  array_shift($args);
+  if ($prefix == 'cr' and $funcName != 'queue') $cronOp = $funcName; // $args ? $args[0] : ONE_CRON_OP;
+  return call_user_func_array(funcNickname($func), $args);
+}
+/**/ function d($s) {debug($result = call_user_func_array('f', func_get_args()));} // debug(f(...))
+
+/**
+ * Return the intended fully-qualified function name.
+ * @param string $func: a function name of the form x.func, where x is an abbreviated namespace
+ * @return the intended function name
+ */
+function funcNickname($func) {
+  list ($n, $func) = explode('.', $func);
+  $funcs = array_combine(ray('r w s u be db t p a cr y v i'), ray(' Web Smart Util Backend DB Testing SMS Admin Cron Special Vote Install'));
+  return 'CG\\' . ($funcs[$n] ? $funcs[$n] . '\\' : '') . $func;
+}
+
+/**
+ * Utility to do something for each record of a table
+ */
+function eachR($tnm, $func, $where = '1', $subs = []) {
+  if (!is_callable($func)) $func = funcNickname($func);
+  if (!$q = db\q("SELECT * FROM $tnm WHERE $where", $subs)) return w\say(t('Bad query'));
+  while ($row = $q->fetchAssoc()) $func($row);
+  w\say('Done');
+}
+  
+/**
+ * Utility to do something to each member account (see example below)
+ * call: eachA($func);
+ * or    eachA(function($a) {...});
+ */
+function eachA($func = 'a.changeIt', $where = 'uid>:UID_CANON9') {
+  if (mb_strpos($where, 'ORDER BY') === FALSE) $where .= ' ORDER BY uid';
+  $result = q("SELECT uid FROM users u WHERE $where")->fetchCol();
+  if (!is_callable($func)) $func = funcNickname($func);
+  foreach ($result as $uid) $func(a($uid));
+}
 
 /**
  * Formats a string for HTML display by replacing variable placeholders.
@@ -1829,6 +1983,7 @@ function drupal_bootstrap() {
 
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
+  
   // Register autoload functions so that we can access classes and interfaces.
   // The database autoload routine comes first so that we can load the database
   // system without hitting the database. That is especially important during
@@ -1840,6 +1995,13 @@ function drupal_bootstrap() {
   drupal_block_denied(ip_address());
 
   _drupal_bootstrap_variables();
+  require_once R_ROOT . '/cg-strings.inc';
+  require_once R_ROOT . '/cg-db.inc'; // must be after _drupal_bootstrap_variables
+  require_once R_ROOT . '/acct.class';
+  require_once R_ROOT . '/qo.class';
+  require_once R_ROOT . '/cg.inc';
+  require_once R_ROOT . '/cg-testing.inc'; // 
+
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
   

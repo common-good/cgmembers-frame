@@ -9,7 +9,6 @@ use CG\Cron as cr;
  *
  */
 define('DRUPAL_ROOT', __DIR__ . '/../..');
-//include_once DRUPAL_ROOT . '/includes/bootstrap.inc';
 require_once __DIR__ . '/../bootstrap.inc';
 require_once __DIR__ . '/rcron.inc';
 

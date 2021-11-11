@@ -1672,7 +1672,7 @@ X;
    */
   public function eachPartner($func) {
     $sql = 'SELECT r.main, r.code FROM u_relations r JOIN users u ON u.uid=r.main WHERE r.other=:id AND r.:IS_CUSTOMER AND u.:IS_PARTNER ORDER BY r.code';
-    $res = q($sql, ['id' => $this->id])->fetchAllKeyed();
+    $res = db\q($sql, ['id' => $this->id])->fetchAllKeyed();
     foreach ($res as $main => $code) $func(r\acct($main), $this, $code);
   }
   

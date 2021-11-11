@@ -1,3 +1,9 @@
+2021-11-10 feature/neaten
+. combined most of rcredits.module into bootstrap.inc
+. removed some unused functions, including ctty()
+. removed si() function, which is inferior to PHP's substr_replace
+. improved robot deletion and joint account error handling in cron
+
 2021-11-03 feature/simpler-signup
 . split off photo, contact, and backing steps to get a card (requiring the rest, to vote)
 . added "card" and "vote" virtual account fields
