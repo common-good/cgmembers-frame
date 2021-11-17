@@ -32,5 +32,5 @@ function formPrintCards($form, &$sta, $args = '') {
   }
   $list = join("\n", $list); 
   
-  return cgform(compact(ray('title list')));
+  return cgform(compact(ray('title list')), 'wide nolabs');
 }
