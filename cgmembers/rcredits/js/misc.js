@@ -19,6 +19,7 @@ if (sessionLife == 0 && 'serviceWorker' in navigator) navigator.serviceWorker.re
 $('.showMore').click(function () {$('.more').show(); $(this).hide();});
 $("#which, #help").addClass("popup");
 $('button[type="submit"]').click(function() {this.form.opid.value = this.id;});
+$('.ptree').click(function () {$(this).next().toggle();});
 
 $('[data-toggle="popover"][data-trigger="hover"]').click(function () {$(this).popover('toggle');});
 $('.submenu .popmenu a').click(function () {$(this).find('.glyphicon').css('color', 'darkblue');});

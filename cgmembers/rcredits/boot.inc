@@ -9,7 +9,7 @@ strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we e
  
 global $base_url, $base_path, $base_root, $styleNonce;
 global $databases, $drupal_hash_salt, $cryHows;
-global $cookie_domain, $conf, $is_https, $base_secure_url, $base_insecure_url;
+global $cookie_domain, $is_https, $base_secure_url, $base_insecure_url;
 global $CGdomain;
 
 require __DIR__ . '/defs.inc';
@@ -46,9 +46,6 @@ ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refr
 setlocale(LC_ALL, 'C'); // Set sane locale settings, to ensure consistent string, dates, times and numbers handling.
 
 $drupal_hash_salt = $db_salt;
-
-$conf = array();
-$conf['cron_safe_threshold'] = 0; // disable poorman's cron
 
 $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
 

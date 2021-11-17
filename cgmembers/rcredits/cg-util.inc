@@ -1622,6 +1622,20 @@ function getBit($n, $b = NULL, $prefix = 'b') {return is_null($b) ? $n : (bool) 
 function setBit(&$n, $b, $on = TRUE, $prefix = 'b') {return $n = $on ? (nn($n, 0) | u\bit($b, $prefix)) : (nn($n, 0) & ~u\bit($b, $prefix));}
 
 /**
+ * Output an array as a collapsible tree.
+ * Replace [element] => <newline> ( 
+ *         ...
+ *         )
+ *    with <a class="ptree">[element]</a><div>
+ *         ...
+ *         </div>
+ */
+function ptree($ray) {
+    $out = preg_replace('/([ \t]*)(\[[^\]]+\][ \t]*\=\>[ \t]*[a-z0-9 \t_]+)\n[ \t]*\(/iU', "'\\1<a class=\"ptree\">\\2</a><div>'", print_r($ray, TRUE));
+    return preg_replace('/^\s*\)\s*$/m', '</div>', $out); // replace ')' on its own on a new line (surrounded by whitespace is ok) with '</div>
+}
+
+/**
  * Return a date the given number of units after start.
  */
 function dateIncr($start, $number, $units) {

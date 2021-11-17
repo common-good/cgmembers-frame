@@ -17,11 +17,6 @@ use CG\Backend as be;
 use CG\Web as w; // use sparingly
 use CG\Testing as t;
 
-require_once __DIR__ . '/cg-strings.inc';
-require_once __DIR__ . '/cg-db.inc';
-require_once __DIR__ . '/acct.class';
-require_once __DIR__ . '/qo.class';
-
 /**
  * Return TRUE if the current account has all the required permissions.
  */

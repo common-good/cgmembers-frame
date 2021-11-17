@@ -40,10 +40,10 @@ function formDashboard($form, &$sta, $args = '') {
     if ($stepUrl = $mya->nextStepUrl('', $msg)) { // steps to be done
       if (!$mya->ok and r\referrer() == 'signin') return w\go($stepUrl); // go right to next step if not approved
       say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
-    } elseif ($mya->co) {
+    } elseif ($mya->co and $mya->id != 1) {
         if (!$mya->ok) { // no steps to do, but not open
           r\tellAdmin('unapproved company!', ['qid' => $mya->mainQid]);
-          say(tr('co tentative|pioneer thanks')); // UNUSED?
+          say(tr('co tentative|pioneer thanks')); // UNUSED except in tests?
         }
     } elseif ($mya->stepCount('card')) { // not eligible for card yet
       if (!$mya->ok) say(tr('member tentative|join thanks'));

@@ -1550,10 +1550,10 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  */
 function communityIs($bit, $setting) {
   global $testOnly;
-  $ctty = ctty('aab');
+  $cttyA = a('aab')->cttyA;
   $bit = u\consta('b', $bit);
   $setting = ($setting == 'on');
-  return $testOnly ? ($ctty->can($bit) == $setting) : $ctty->setBit($bit, $setting);
+  return $testOnly ? ($cttyA->can($bit) == $setting) : $cttyA->setBit($bit, $setting);
 }
 
 /**

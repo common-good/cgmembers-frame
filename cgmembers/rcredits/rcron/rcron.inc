@@ -35,8 +35,8 @@ YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
-const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
+const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
+const LOGLESS_OPS = 'acctHourly oneAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -193,23 +193,6 @@ X;
   
   if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) r\tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
 
-  $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
-  eachA(function ($a) { // acts weird; do this last
-    if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
-    f('a.deleteUid', $a->id);
-  } , $where);
-  eachA(function ($a) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
-    if (!$a->member and !$a->ok and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and $a->steps+0 == 1 and strhas($a->source, 'self ()')) {
-      r\tellAdmin('robot created ' . $a->mainQid);
-/*      $s = str_replace('self () ', '', $a->source);
-      $s = str_replace('knows: ', '', $s);
-      if (!strhas($s, ' ')) f('a.deleteUid', $a->id); */
-    }
-  });
-
-  if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
-//  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
-
   // Notice which bank accounts have been verified
   $where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM txs2_bank d2 WHERE d2.txid=-d.txid) IS NULL';
 
@@ -220,6 +203,42 @@ X;
     unset($DBTX);
   }
   db\q('DELETE FROM x_txs2 WHERE amount=0'); // no need to track these
+}
+
+/**
+ * Delete accounts that aren't real or are abandoned.
+ */
+function eachAcct() {
+  queueEach('oneAcct', "SELECT uid, (BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0) AS badPartner FROM users WHERE uid > 0 AND uid NOT :CANONIC");
+  queueNext();
+}
+
+function oneAcct($item) {
+  extract(just('uid badPartner', $item));
+  $a = r\acct($uid);
+  if ($badPartner) { // delete stale unused partner accounts
+    if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
+    db\del('users', 'uid', $a->id);
+  } elseif (!$a->member and !$a->ok and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
+    $s = strtr($a->source, ['self() '=>'', 'knows: '=>'']);
+    if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
+      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, u\fmtDate($a->created)));
+//        f('a.deleteUid', $a->id);
+    }
+  }
+  
+  if ($a->jid) {
+    if (!db\exists('users', 'uid=:jid1 AND jid<>:uid1', ray('jid1 uid1', $a->uid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
+    if (r\relation('permission', $a->uid, $a->jid) != r\perm(B_JOINT)
+        or r\relation('permission', $a->jid, $a->uid) != r\perm(B_JOINT)) r\tellAdmin('bad relation', $item);
+
+    if ($a->masterA->hasBank xor $a->masterA->risk('hasBank')) {
+      $a->setRisk('hasBank', $a->masterA->hasBank);
+      r\tellAdmin('hasBank was set wrong', $item);
+    }
+  }
+  
+  //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 
 /**
@@ -648,32 +667,6 @@ function cgc($item) {
     }
   }
 }  
-
-/**
- * Check accounts for consistency, scams, whatever.
- */
-function checkAccts() {
-  $sql = <<< X
-SELECT DISTINCT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedUid FROM users u
-LEFT JOIN u_relations r ON r.main=u.uid
-LEFT JOIN users u2 ON u2.uid=u.jid
-WHERE u.uid<>0 AND u.jid AND r.permission=:B_JOINT-:B_RELATED
-X;
-  queueEach('checkAcct1', $sql);
-  queueNext();
-}
-
-function checkAcct1($item) {
-  extract($item);
-  $a = r\acct($uid);
-  if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedUid != $jid) r\tellAdmin('bad relation', $item);
-
-  if ($a->masterA->hasBank xor $a->masterA->risk('hasBank')) {
-    $a->setRisk('hasBank', $a->masterA->hasBank);
-    r\tellAdmin('hasBank was set wrong', $item);
-  }
-  //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
-}
 
 /**
  * Analyze anew how each member relates to other members.
