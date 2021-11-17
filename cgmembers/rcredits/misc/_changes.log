@@ -1,3 +1,7 @@
+2021-11-17 feature/print-cards
+. made a separate admin page for printing CG cards
+. fixed bug in reset password (template typo)
+
 2021-11-10 feature/neaten
 . combined most of rcredits.module into bootstrap.inc
 . removed some unused functions, including ctty()
