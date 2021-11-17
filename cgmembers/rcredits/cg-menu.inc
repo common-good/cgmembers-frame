@@ -189,6 +189,7 @@ function menu($submenu = '') {
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
     'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'superadmin'],
+    'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'superadmin'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],

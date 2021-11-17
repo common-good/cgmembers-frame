@@ -437,6 +437,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Notice Preferences */
 #frm-noticeprefs .k-type {font-weight:bold; font-size:14px;}
 
+/* Print Cards */
+#frm-printcards .form-item-list {display:table-row; width:100%;}
+#frm-printcards .form-item-list div {display:table-cell; padding:10px 20px;}
+
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 
