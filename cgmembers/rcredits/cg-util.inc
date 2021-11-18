@@ -1162,7 +1162,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
  * Parse the mailing address into its constituent parts.
  * @param string $addr: the address to parse
  * @param bool $separateNum: return street number and address separately
- * @return [addr, city, state, zip, $country, $num] (one or more will be empty or ER, if error)
+ * @return [addr, city, state, zip, country, num] (one or more will be empty or ER, if error)
  */
 function parseAddr($addr, $separateNum = FALSE) {
   if (substr_count($addr, '/') > 1) $addr = str_replace('/', ',', $addr);

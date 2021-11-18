@@ -226,6 +226,7 @@ function doAccounts($info = []) {
 
   u\setDft($address, '1 My Street');
   u\setDft($city, 'Mytown');
+  u\setDft($state, R_STATE_ID);
   $st = r\realState($state);
   u\setDft($postalAddr, nn($address2) ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
 

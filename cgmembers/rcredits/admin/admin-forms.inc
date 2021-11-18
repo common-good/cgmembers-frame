@@ -241,7 +241,7 @@ function formFollowup($form, &$sta, $args = []) {
       AND :IS_OK AND NOT :IS_CARDED AND (steps & $wantsCardQ)=$wantsCardQ
       AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK)
       AND NOT IFNULL(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%', FALSE)
-      ORDER BY fullName
+      ORDER BY :IS_CO, fullName
 X;
     if ($ids = db\q($sql)->fetchCol()) {
       $cnt = count($ids);
