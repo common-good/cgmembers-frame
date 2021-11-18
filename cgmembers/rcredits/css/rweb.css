@@ -438,8 +438,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-noticeprefs .k-type {font-weight:bold; font-size:14px;}
 
 /* Print Cards */
-#frm-printcards .form-item-list {display:table-row; width:100%;}
-#frm-printcards .form-item-list div {display:table-cell; padding:10px 20px;}
+#frm-printcards .form-item-list>div {display:table-row; width:100%;}
+#frm-printcards .form-item-list>div div {display:table-cell; padding:10px 20px; min-width:130px;}
+#frm-printcards .form-item-list>div div.card-btn {width:350px;}
 
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}

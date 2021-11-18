@@ -1,3 +1,7 @@
+2021-11-08 feature/print-cards2
+. added printable mailing label merge data to list of cards to print
+. improved formatting on Cards to Print page
+
 2021-11-17 feature/print-cards
 . made a separate admin page for printing CG cards
 . fixed bug in reset password (template typo)
