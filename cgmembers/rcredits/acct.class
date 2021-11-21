@@ -1388,7 +1388,7 @@ o;
    */
   public function giftsDesc(&$period = '', &$totalGifts = '') {
     $a = $this;
-    $gift = '';
+    $gift = $honored = $last = '';
     $subs = ['id' => $a->id];
 
     $sql = <<< X
@@ -1398,15 +1398,15 @@ o;
       WHERE tm.action=:ACT_PAY AND tm.from=:id AND tm.to=:CGID
       AND tm.end IS NULL
 X;
-    $res = db\q($sql, $subs)->fetchAssoc();
-    if ($res) extract($res);
-
-    if ($res and $period) {
-      $recurDesc = r\recurDesc($period, $periods);
-      $recurAmt = u\fmtAmt($recurAmt);
-      $recurStart = u\fmtDate($recurStart, TRUE);
-      $gift = "<%b>$recurAmt</b> $recurDesc";
-    } else { $period = $gift = ''; }
+    if ($res = db\q($sql, $subs)->fetchAssoc()) {
+      extract($res);
+      $honored = $honored ? (u\honorDesc($honor) . $honored) : '';
+      if ($period) {
+        $recurDesc = ucwords(r\recurDesc($period, $periods));
+        $recurAmt = u\fmtAmt($recurAmt);
+        $gift = "$recurAmt $recurDesc";
+      }
+    }
 
     $sql = <<< X
       SELECT created AS lastGiftDate, amt AS lastGift 
@@ -1414,24 +1414,18 @@ X;
       WHERE uid1=:id AND uid2=:CGID AND :IS_GIFT
       ORDER BY created DESC LIMIT 1
 X;
-    $res = db\q($sql, $subs)->fetchAssoc();
-    if ($res) {
+    if ($res = db\q($sql, $subs)->fetchAssoc()) {
       extract($res);
       $last = t('Last: %lastGift (%lastGiftDate)', 'lastGift lastGiftDate', u\fmtAmt($lastGift), u\fmtDate($lastGiftDate, TRUE));
-      $gift = u\unite($gift, $last, ', ');
-      if (nn($honored)) $gift = u\unite($gift, u\honorDesc($honor) . $honored, ', ');
     }
     
-    $amt = $a->totalGifts();
-    $totalGifts = ($amt) ? u\fmtAmt($amt) : null;
-    if (!empty($totalGifts)) {
-      $totalGifts = t('<%b>%totalGifts</b> to date', compact('totalGifts'));
-    }
-    $totalGifts .= trim(($a->roundup ? t(' +<%b>roundups</b>') : '') .
-                        ($a->crumbs > 0 ? t(' +<%b>%crumbs% crumbs</b>', 'crumbs', $a->crumbs * 100) : ''));
-    foreach (ray('totalGifts gift') as $k) $$k = tr($$k, '_b', 'b class="positive"'); // must do to each, not together
+    $roundups = $a->roundup ? t('Roundups') : '';
+    $crumbs = $a->crumbs > 0 ? t('%crumbs% Crumbs', 'crumbs', $a->crumbs * 100) : '';
+    $all = u\joi(t(' plus '), [$gift, u\joi(t(' and '), [$roundups, $crumbs])]) ?: t('none');
+    $all .= $honored;
+    if ($ever = $a->totalGifts()) $all .= t('<br>%ever to date. ', 'ever', u\fmtAmt($ever)) . $last;
 
-    return u\unite($totalGifts, $gift, ', ');
+    return $all;
   }
 
   /**

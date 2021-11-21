@@ -361,6 +361,7 @@ function members($list) {return t\members($list);}
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     TEST undo ACustomerReversesARefundFromAStore
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
 
@@ -1054,6 +1055,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     TEST undo ACustomerReversesARefundFromAStore
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1758,6 +1760,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST txs AdminReversesABankTransfer
  *     MAKE undo Setup
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     BOTH undo ACustomerReversesARefundFromAStore
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -2335,6 +2338,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE undo AMemberReversesAPaymentFromSomeone
+ *     MAKE undo ACustomerReversesARefundFromAStore
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 

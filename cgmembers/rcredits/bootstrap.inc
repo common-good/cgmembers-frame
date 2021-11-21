@@ -1403,7 +1403,7 @@ function eachR($tnm, $func, $where = '1', $subs = []) {
  */
 function eachA($func = 'a.changeIt', $where = 'uid>:UID_CANON9') {
   if (mb_strpos($where, 'ORDER BY') === FALSE) $where .= ' ORDER BY uid';
-  $result = q("SELECT uid FROM users u WHERE $where")->fetchCol();
+  $result = db\q("SELECT uid FROM users u WHERE $where")->fetchCol();
   if (!is_callable($func)) $func = funcNickname($func);
   foreach ($result as $uid) $func(a($uid));
 }

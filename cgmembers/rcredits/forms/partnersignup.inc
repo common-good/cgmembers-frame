@@ -322,7 +322,7 @@ function gotSolarOne($info) {
   global $mya, $pagePartner, $solarOneInfo; // $solarOneInfo is for error handling
 
   $keys = 'smtid pid co fullName orgName address city state zip email phone m_number source';
-  /*debug(*/ if (isDEV and !is_array($info) and $info == 1) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
+  /*debug(*/ if (isDEV and !is_array($info) and $info == 1) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', str_replace('@', '+j@', R_ADMIN_EMAIL), '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding', '(system)');
@@ -537,7 +537,7 @@ function sendToCRM($pA, $data) {
   if (test()) return;
   $data['created'] = date('Y-m-d');
   foreach (ray('created upfront') as $k) unset($data[$k]);
-//  $data['debugEmail'] = 'wspademan@gmail.com';
+//  $data['debugEmail'] = R_ADMIN_EMAIL;
 //  $data['debug'] = 1;
   $res = u\post(SF_URL, $data); // send data to partner's Salesforce (fails on DEV)
   // NOT YET u\post(CRM_URL, $data); // send data to the partner's CRM program

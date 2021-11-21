@@ -180,6 +180,7 @@ EOF
   'recur stopped' => t('Success: The recurring transaction is ended.'),
   'recur already ended' => t('That recurring transaction is already ended.'),
   'recur not yours' => 'invalid recur id', // don't let on that these are different
+  'tx not yours' => t('That is not your transaction.'),
   'already reversed' => t('Transaction #%xid is already reversed.'),
   'already reverse requested' => t('You already requested a reversal of transaction #%xid.'),
   'thing scheduled' => t('Your %thing has been scheduled.'),

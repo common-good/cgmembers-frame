@@ -16,7 +16,7 @@ function formPrintCards($form, &$sta, $args = '') {
   global $base_url;
   extract(just('ids', $args, NULL));
   if (!$ids) return softErr(t('No cards to print.'));
-  $addrs = "ID\tline1\tline2\tline3\n"; // text for envelope label mailmerge
+  $addrs = "ID\tline1\tline2\tline3\tgift\n"; // text for envelope label mailmerge
   $addrI = 0;
   
   $title = t('Cards to Print');
@@ -28,12 +28,12 @@ function formPrintCards($form, &$sta, $args = '') {
     list ($addr, $city, $st, $zip) = u\parseAddr($a->postalAddr);
     $addr .= "<br>$city, $st $zip";
     $nm = lnk("$base_url/change-account/acct=$uid", $a->fullName);
-    $gift = str_replace('+', ' +', $a->giftsDesc() ?: '-');
+    $gift = strstr($a->giftsDesc() . '<br>', '<br>', TRUE); // ignore total gifts and last gift
     $btn = $a->co ? a\showRelations($a) : btn("/print-rcard/$a->id", 'Card');
 
     $ph = "$qid<br>$ph";
     $addr = "$nm<br>$addr";
-    $addrs .= ++$addrI . "\t" . str_replace('<br>', "\t", $addr) . "\n"; // addrI is just for LibreOffice Base import
+    $addrs .= u\joi("\t", [++$addrI, str_replace('<br>', "\t", $addr), $gift]) . "\n"; // addrI is just for LibreOffice Base import
 
     $line = ''; foreach (ray('ph addr gift btn') as $k) $line .= "<div class=\"card-$k\">${$k}</div>";
     $list[] = "<div>$line</div>";

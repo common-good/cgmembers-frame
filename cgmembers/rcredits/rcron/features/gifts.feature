@@ -18,7 +18,7 @@ Scenario: A donation to CG is visible to admin
   | %today | .ZZA | cgf |     10 | week   | gift!   |
   When member "A:B" visits page ""
   Then we show "Summary" with:
-  | Donations: | $10 weekly |
+  | Donations: | $10 Weekly |
 
 Scenario: A brand new recurring donation to CG can be completed
   Given these "tx_timed":

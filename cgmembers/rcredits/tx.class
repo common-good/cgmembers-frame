@@ -75,8 +75,10 @@ class Tx {
     case 'e2': return $tx->getPayeeEntry();
     case 'uid1': return $tx->e1->uid;
     case 'uid2': return $tx->e2->uid;
-    case 'a1': return r\acct($tx->payerId);
-    case 'a2': return r\acct($tx->payeeId);
+    case 'agt1': return $tx->e1->agentUid;
+    case 'agt2': return $tx->e2->agentUid;
+    case 'a1': return r\acct($tx->uid1, $tx->agt1);
+    case 'a2': return r\acct($tx->uid2, $tx->agt2);
     case 'amt1': return $tx->e1->amount;
     case 'amt2': return $tx->e2->amount;
     case 'taking': return ($tx->actorId == $tx->uid2);
@@ -85,7 +87,7 @@ class Tx {
     case 'actorA': return r\acct($tx->actorId, $tx->actorAgentId);
     case 'actorAmount': return $tx->getActorAmount();
     case 'payerAmount': return $tx->payerEntry->amount;
-    case 'otherA': return r\acct($tx->otherId);
+    case 'otherA': return r\acct($tx->otherId, $tx->taking ? $tx->agt1 : $tx->agt2);
     
     case 'banking': return $tx->a1->isBank();
     case 'outer': return ($tx->uid1 == UID_OUTER);
@@ -286,16 +288,18 @@ EOF;
   }
 
   /**
-   * Determine whether the record can be undone
+   * Determine whether the record can be undone by the given account.
+   * @param acct $a:
    * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
    * @return a txRet object on "no Undo", or FALSE if the current agent CAN undo it on behalf of the current account
    */
-  function noUndo(&$subs = []) {
+  function noUndo($a, &$subs = []) {
     if ($this->reversedByXid) return be\txRet(FALSE, 'already undone');
+    if (!in($a->id, [$this->uid1, $this->uid2])) return be\txRet(FALSE, t('tx not yours'));
 
-    list ($a1, $a2) = u\order($this->toMe, $this->actorA, $this->otherA); // second agent's permissions are irrelevant?
-    if ($zErr = r\txPermErr($a1, $a2, $this->toMe, $this->actorEntry->amount < 0)) return $zErr;
-
-    return FALSE;
+    $neg = ($this->amt2 > 0);
+    $isToMe = ($this->uid1 == $a->id); // reversing tx is to me if I was the payer
+    
+    return r\txPermErr($a, $isToMe ? $this->a2 : $this->a1, $isToMe xor $neg, $neg);
   }
 } // end of class tx
