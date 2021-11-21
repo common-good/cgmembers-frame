@@ -297,7 +297,7 @@ function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
     $tx->otherA->tellOut('charge disputed', $subs = $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
     $amount = u\fmtAmt($otherE->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
-    $otherUid = $tx->otherUid;
+    $otherUid = $tx->otherId;
     $other = $tx->otherA->fullName;
     return txRet(TRUE, 'report undo', compact(ray('amount other tofrom solution otherUid')));
   }
