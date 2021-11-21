@@ -163,7 +163,10 @@ function doit(what, vs) {
 
     var photoid = $('.form-item-photoid');
     photoid.hide();
-    $('.form-item-altId a').click(function () {$('.form-item-photoid iframe').attr('src', vs['photoIdSrc']); photoid.toggle();});
+    $('.form-item-altId a').click(function () {
+      $('.form-item-photoid iframe').attr('src', vs['photoIdSrc']).contents().find('img').attr('max-width', '100%');
+      photoid.toggle();
+    });
     break;
     
   case 'summary':

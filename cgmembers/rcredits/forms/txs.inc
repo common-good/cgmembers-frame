@@ -112,7 +112,7 @@ function reverseTx($xid, &$sta, $args) {
     }
 
     $DBTX = \db_transaction();
-    $z = be\reverse($xid); // create an offsetting tx
+    $z = be\reverse($xid, $mya); // create an offsetting tx
     if (!$z->ok) return go($url, $msg, 'err');
     $tx['deposit'] = now();
     $tx['xid'] = $z->subs['xid'];

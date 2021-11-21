@@ -1203,7 +1203,7 @@ function riskList($risks, $descs) {
  * Check account permissions for a transaction or invoice. Note that invoicing a not-yet-complete account is permitted.
  * @param acct $a1: the account paying or requesting payment (the actor)
  * @param acct $a2: the other account
- * @param bool $taking: the first account is taking money from the second (charging or invoicing)
+ * @param bool $taking: the first account is (really) taking money from the second (charging or invoicing)
  * @param bool $neg: the amount is negative (refunding or undoing)
  * @return a txRet object on error, else FALSE
  */
@@ -1215,7 +1215,8 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   // Check a1
   if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
   
-  if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
+  $confirmed = ($a1->co ? ($a1->agentA->confirmed or $a1->helperA->confirmed) : $a1->confirmed);
+  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);

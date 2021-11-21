@@ -275,7 +275,7 @@ function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
   $xidSub = compact('xid');
   $tx = $mya->lastTx("xid=:xid AND $where", $xidSub + $subs);
   if (empty($tx)) return txRet(FALSE, 'undo no match', $subs);
-  if (!$force and $zErr = $tx->noUndo($subs)) return $zErr;
+  if (!$force and $zErr = $tx->noUndo($mya, $subs)) return $zErr;
 
   if (db\exists('tx_hdrs', 'reversesXid=:xid', $xidSub)) return txErr(t('already reversed', $xidSub), $subs);
   if (db\exists('tx_requests', 'reversesXid=:xid AND status NOT IN (:TX_DENIED)', $xidSub)) return txErr(t('already reverse requested', $xidSub), $subs);
@@ -285,7 +285,7 @@ function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
   $posUndo = ($channel == TX_APP and $tx->created >= now() - REVERSE_WINDOW);
 
   if ($toMe or $posUndo) { // someone paid me (at my initiative or theirs)
-    return reverse($xid); // create an offsetting transaction
+    return reverse($xid, $mya); // create an offsetting transaction
   } elseif ($byMe) { // I paid someone (on my initiative)
 ///    debug("other=$tx->otherId actor=$tx->actorId amt=$otherE->amount posUndo=$posUndo toMe=$toMe");
     return invoice($tx->actorA, $tx->otherA, $otherE->amount, $otherE->description, $tx->goods, ray('reversesXid', $xid), $tx->recursId);
@@ -306,9 +306,10 @@ function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
 /**
  * Create an offsetting transaction (nearly the same as the original but with the entries negated).
  * @param int $xid: record ID of the transaction to reverse
+ * @param acct $mya: current account (not global, in case not signed in)
  * @returns object $txRet: result, message, and subs
  */
-function reverse($xid) {
+function reverse($xid, $mya) {
   global $channel;
   $subs = compact('xid');
 
@@ -341,7 +342,7 @@ function reverse($xid) {
   
   unset($DBTX);
 
-  $z = sendNotifications('undo', $newTx, 0);
+  $z = sendNotifications($mya, 'undo', $newTx, 0);
 
   $message = 'report undo' . ($tx->otherA->isCanonic ? '' : '|report tx');
 
@@ -464,7 +465,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   u\EXPECT('string acct acct number string|array int assoc', $type, $actorA, $otherA, $amount, $purpose, $goods, $data);
   u\EXPECT($actorA and $otherA, 'missing a transfer account');
   global $scanned, $channel;
-  
+
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
@@ -600,7 +601,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   unset($DBTX);
   
   // Notify both parties by email about any completed transaction
-  $res = sendNotifications($type, $tx, $shortfall);
+  $res = sendNotifications($actorA, $type, $tx, $shortfall);
   if ($type == 'payment' and $gainerA->sponsored) {
     list ($period, $periods) = [PER_1, 0];
     if ($per = db\get('period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
@@ -688,8 +689,7 @@ function advanceCredit($for, $buyer, $seller, $credit) {
  * Send appropriate notifications and return a success message array
  * @return a txRet object
  */
-function sendNotifications($type, $tx, $shortfall) {
-  global $mya;
+function sendNotifications($mya, $type, $tx, $shortfall) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
   if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
@@ -711,8 +711,8 @@ function sendNotifications($type, $tx, $shortfall) {
       $notices = ['', 'bank tx canceled'];
       $did = t('reversed');
     } else {
-      $notices = $positive ? ['re-charged you', 'you re-charged'] : ['refunded you', 'you refunded'];
-      $did = $positive ? 're-charged' : ($goods ? 'refunded' : 'credited'); // positive is double reverse
+      $notices = $positive ? ($tx->taking ? ['re-charged you', 'you re-charged'] : ['you refunded', 'refunded you']) : ['refunded you', 'you refunded'];
+      $did = $positive ? ($tx->taking ? 're-charged' : 'refunded') : ($goods ? 'refunded' : 'credited'); // positive is double reverse
     }
   } else u\FAIL("unknown type: '$type'.");
 
@@ -726,7 +726,7 @@ function sendNotifications($type, $tx, $shortfall) {
       $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
     if ($notice and !$a->isCanonic) $a->$tell($notice, $args);
-    if ($i == (($mya ? $tx->toMe : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
+    if ($i == (($mya ? ($mya->id == $tx->uid2) : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }
 
   $msg = 'report tx';

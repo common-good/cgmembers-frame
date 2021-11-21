@@ -1,3 +1,19 @@
+2021-11-21 feature/better-undo
+. fixed bugs in r\txPermErr and undo notifications
+. made acct::giftsDesc() provide gift information in format for mail merge
+. fixed bug in eachA function (was using deleted function q())
+. printcards now provides almost everything we need for printing welcome letters
+. added js to set maximum size of photoID, but it will need a nonce or hash for CSP
+
+eachA(function ($a) {
+  if ($task = $a->task) {
+    if ($task = 'voice') $task = 'vote';
+    $s0 = $a->stepsLeft ?: [];
+    $a->setTask($task);
+    if (($a->stepsLeft ?: []) != $s0) debug($a->stepsLeft);
+  }
+});
+
 2021-11-08 feature/print-cards2
 . added printable mailing label merge data to list of cards to print
 . improved formatting on Cards to Print page
