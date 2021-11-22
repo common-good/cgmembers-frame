@@ -331,6 +331,8 @@ function reverse($xid, $mya) {
   $newTx->reversesXid = $xid;
   $newTx->entries = [];
   $newTx->created = now();
+  $newTx->actorId = $mya->id;
+  $newTx->actorAgentId = $mya->agentId;
   foreach ($tx->entries as $oldE) {
     $newE = clone $oldE;
     $newE->id = NULL;

@@ -287,7 +287,7 @@ function doTxs($info, $thing) {
     unset($info[$k]);
   }
 
-  extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  extract(just($hdrFlds . ' ' . $testFlds, $info, NULL));
   extract(just('cat rel rule', $info, 0));
 
   if (!$reversesXid) $reversesXid = NULL;
@@ -299,14 +299,15 @@ function doTxs($info, $thing) {
   $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
   if ($type or !$testOnly) $type = $type ? (is_numeric($type) ? $type : (u\consta('E', $type) ?: -1)) : E_PRIME;
   foreach (ray($uidFlds) as $k) if (isset($$k)) $$k = t\uid($$k);
-  list ($actorId, $actorAgentId) = $taking ? [$payee, $payeeAgent] : [$payer, $payerAgent];
+  u\setDft($actorId, $taking ? $payee : $payer);
   if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
 
   if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
-    if (!isset($info['goods'])) $goods = mb_strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
+    if (!isset($info['goods'])) $goods = strhas($payeeFor, 'cash') ? FOR_USD : FOR_GOODS;
+    u\setDft($actorAgentId, ($taking ? $payeeAgent : $payerAgent) ?: $actorId);
     $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
                 now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
-    foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
+    foreach ($dfts as $k => $v) if (!isset($$k)) $$k = $v;
     foreach (ray('payerAgent payeeAgent', $payer, $payee) as $k => $v) if (!$$k) $$k = $v;
   }
 

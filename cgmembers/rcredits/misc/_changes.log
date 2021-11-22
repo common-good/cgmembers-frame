@@ -1,3 +1,7 @@
+2021-11-21 feature/undo-tweaks
+. reversing tx now has proper actorId and actorAgentId
+. actorId and actorAgentId default properly in tests
+
 2021-11-21 feature/better-undo
 . fixed bugs in r\txPermErr and undo notifications
 . made acct::giftsDesc() provide gift information in format for mail merge
