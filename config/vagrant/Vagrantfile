@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision :ansible do |ansible|
     ansible.limit = "all"
     ansible.verbose = "v"
-    ansible.playbook = "commongood-provision.yaml"
+    ansible.playbook = "commongood-01-provision.yaml"
   end
 
   # apply customizations from Common Good doc: Step by step Development Environment Setup
