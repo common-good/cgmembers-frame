@@ -60,8 +60,8 @@
 
     - name: Apply write permissions to selected rcredits subdirectories
       file:
-        path:/var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
-        mode:0755
+        path: /var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
+        mode: 0755
       with_items:
         - admin
         - rcron

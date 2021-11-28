@@ -10,6 +10,14 @@
 
   tasks:
 
+    - name: Apply php-fpm config
+      template:
+        src: templates/etc/php-fpm.d/{{ item }}.j2
+        dest: /etc/php-fpm.d/{{ item }}
+      with_items:
+        - www.conf
+
+
     - name: Work around git apparently using git instead of https on submodules
       become_user: "{{ commongoodOSUser }}"
       command: "git config --global url.\"https://github.com/\".insteadOf git@github.com:"
@@ -24,8 +32,8 @@
 
     - name: Apply write permissions to selected rcredits subdirectories
       file:
-        path:/var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
-        mode:0755
+        path: /var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
+        mode: 0755
       with_items:
         - admin
         - rcron

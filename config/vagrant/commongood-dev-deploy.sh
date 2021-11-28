@@ -12,8 +12,8 @@
 # this script presumes all install and setup steps completed previously
 
 # deploy (only) common good software
-ansible-playbook -i commongood-dev.inventory commongood-30-deploy.yaml
+ansible-playbook --ask-vault-pass --inventory commongood-dev.inventory commongood-30-deploy.yaml
 
 # apply hacks to config, scripts, etc.
-ansible-playbook -i commongood-dev.inventory commongood-99-hacks.yaml
+ansible-playbook --ask-vault-pass --inventory commongood-dev.inventory commongood-99-hacks.yaml
 

@@ -46,11 +46,6 @@
 
   tasks:
 
-    #- name: Install Common Good software prerequisites
-    #  package:
-        #name: ['nginx', 'php', 'mysql', 'mysql-server']
-        #moved to roles
-
     - name: Install php extensions
       package:
         name: ['php-json',
