@@ -1,0 +1,72 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+
+  vars_files:
+    - vars/commongood.yaml
+
+
+  tasks:
+
+    - name: Work around git apparently using git instead of https on submodules
+      become_user: "{{ commongoodOSUser }}"
+      command: "git config --global url.\"https://github.com/\".insteadOf git@github.com:"
+
+    - name: Download (github) cgmembers-frame repository
+      become_user: "{{ commongoodOSUser }}"
+      git:
+        repo: https://github.com/common-good/cgmembers-frame
+        dest: /var/www/cgmembers-frame
+        force: yes
+        accept_hostkey: yes
+
+    - name: Apply write permissions to selected rcredits subdirectories
+      file:
+        path:/var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
+        mode:0755
+      with_items:
+        - admin
+        - rcron
+        - rsmart
+        - rvote
+        - rweb
+
+    - name: Apply config.json and phinx.json files
+      become_user: "{{ commongoodOSUser }}"
+      template:
+        src: templates/cgmembers-frame/config/{{ item }}.j2
+        dest: /var/www/cgmembers-frame/config/{{ item }}
+      with_items:
+        - config.json
+        - phinx.json
+
+    - name: Create directory(ies) 'cgPhotoTemp' and 'cgLogs' and allow web writes
+      become_user: "{{ commongoodOSUser }}"
+      file:
+        path: /var/www/cgmembers-frame/{{ item }}
+        setype: httpd_sys_rw_content_t
+        state: directory
+        mode: 0777
+      with_items:
+        - cgPhotoTemp
+        - cgLogs
+
+
+    - name: (Re)start nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: (Re)start php-fpm
+      service:
+        name: php-fpm
+        state: restarted
+
+
+    - name: Recommend test
+      debug: 
+        msg: Please run the test suite in the Common Good software
+
+ 

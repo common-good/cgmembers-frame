@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+    - name: Apply mysql sql-mode="" workaround
+      template:
+        src: templates/etc/my.cnf.d/{{ item }}.cnf.j2
+        dest: /etc/my.cnf.d/{{ item }}.cnf 
+      with_items:
+        - mysql-commongood
+
+    - name: Replace for sql_mode NO_AUTO_CREATE_USER error
+      replace:
+        path: /var/www/cgmembers-frame/cgmembers/includes/database/mysql/database.inc
+        regexp: '      ''sql_mode'' => "SET sql_mode = ''ANSI,STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER''",'
+        replace: '      ''sql_mode'' => "SET sql_mode = ''ANSI,STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO''", //,NO_AUTO_CREATE_USER''",'
+    - name: Replace for system keyword replace curly braces with backticks as wrapper
+      replace:
+        path: /var/www/cgmembers-frame/cgmembers/{{ item }}
+        regexp: '\{system\}'
+        replace: '`system`'
+      with_items:
+        - includes/database/mysql/database.inc
+        - includes/install.inc
+        - includes/locale.inc
+        - includes/module.inc
+        - includes/registry.inc
+        - includes/update.inc
+        - modules/block/block.module
+        - modules/system/system.api.php
+        - modules/system/system.module
+        - modules/system/system.test
+        - rcredits/admin/admin-forms.inc
+        - rcredits/api/api.steps
+        - rcredits/bootstrap.inc
+        - rcredits/cg-util.inc
+
+    - name: Recommend test
+      debug: 
+        msg: Please run the test suite in the Common Good software
+
+ 

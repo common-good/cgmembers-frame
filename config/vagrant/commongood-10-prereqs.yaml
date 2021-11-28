@@ -1,0 +1,67 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+
+  vars_files:
+    - vars/mysql.yaml
+
+
+  pre_tasks:
+
+    - name: Assure pymysql is present
+      pip:
+        name: pymysql
+        state: present
+
+    - name: Import key for mysql-repo 
+      rpm_key: 
+        state: present 
+        key: http://repo.mysql.com/RPM-GPG-KEY-mysql
+    - name: Install the MySQL repo.
+      yum:
+        name: http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+        state: present
+      when: ansible_os_family == "RedHat"
+  
+    - name: Override variables for MySQL (RedHat).
+      set_fact:
+        mysql_daemon: mysqld
+        mysql_packages: ['mysql-server']
+        #mysql_log_error: /var/log/mysqld.err
+        mysql_log_error: /var/log/mysql/mysqld.err
+        mysql_syslog_tag: mysqld
+        mysql_pid_file: /var/run/mysqld/mysqld.pid
+        mysql_socket: /var/lib/mysql/mysql.sock
+      when: ansible_os_family == "RedHat"
+
+
+  roles:
+
+    - { role: geerlingguy.mysql }
+    - { role: geerlingguy.nginx }
+    - { role: geerlingguy.php }
+
+
+  tasks:
+
+    #- name: Install Common Good software prerequisites
+    #  package:
+        #name: ['nginx', 'php', 'mysql', 'mysql-server']
+        #moved to roles
+
+    - name: Install php extensions
+      package:
+        name: ['php-json',
+               'php-bz2',
+               'php-curl',
+               'php-fileinfo',
+               'php-gd',
+               'php-gettext',
+               'php-mbstring',
+               'php-exif',
+               'php-mysqli',
+               'php-pdo',
+               'php-mbstring']
+ 

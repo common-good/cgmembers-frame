@@ -1,0 +1,129 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+
+  vars_files:
+    - vars/commongood.yaml
+
+
+  tasks:
+
+    - name: Add the user '{{ commongoodOSUser }}'
+      ansible.builtin.user:
+        name: "{{ commongoodOSUser }}"
+        shell: /bin/bash
+        groups: nginx
+        append: yes
+
+    - name: Apply nginx virtual host (vhost) config
+      template:
+        src: templates/etc/nginx/{{ item }}.conf.j2
+        dest: /etc/nginx/{{ item }}.conf
+      with_items:
+        - nginx
+
+    - name: Install php extensions
+      package:
+        name: ['php-json',
+               'php-bz2',
+               'php-curl',
+               'php-fileinfo',
+               'php-gd',
+               'php-gettext',
+               'php-mbstring',
+               'php-exif',
+               'php-mysqli',
+               'php-pdo',
+               'php-mbstring']
+
+    - name: Create cgmembers-frame web root directory
+      file:
+        path: /var/www/cgmembers-frame
+        state: directory
+        owner: "{{ commongoodOSUser }}"
+        group: "{{ commongoodOSUser }}"
+        mode: 0755
+
+    - name: Work around git apparently using git instead of https on submodules
+      become_user: "{{ commongoodOSUser }}"
+      command: "git config --global url.\"https://github.com/\".insteadOf git@github.com:"
+
+    - name: Download (github) cgmembers-frame repository
+      become_user: "{{ commongoodOSUser }}"
+      git:
+        repo: https://github.com/common-good/cgmembers-frame
+        dest: /var/www/cgmembers-frame
+        force: yes
+        accept_hostkey: yes
+
+    - name: Apply write permissions to selected rcredits subdirectories
+      file:
+        path:/var/www/cgmembers-frame/cgmembers/rcredits/{{ item }}
+        mode:0755
+      with_items:
+        - admin
+        - rcron
+        - rsmart
+        - rvote
+        - rweb
+
+    - name: Apply config.json and phinx.json files
+      become_user: "{{ commongoodOSUser }}"
+      template:
+        src: templates/cgmembers-frame/config/{{ item }}.j2
+        dest: /var/www/cgmembers-frame/config/{{ item }}
+      with_items:
+        - config.json
+        - phinx.json
+
+    - name: Create directory(ies) 'cgPhotoTemp' and 'cgLogs' and allow web writes
+      become_user: "{{ commongoodOSUser }}"
+      file:
+        path: /var/www/cgmembers-frame/{{ item }}
+        setype: httpd_sys_rw_content_t
+        state: directory
+        mode: 0777
+      with_items:
+        - cgPhotoTemp
+        - cgLogs
+
+
+    - name: (Re)start nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: (Re)start php-fpm
+      service:
+        name: php-fpm
+        state: restarted
+
+
+# TODO: complete below, person running deploy to browse to page, input values, and 
+# put results into config (via prompt? using curl and parsing output? etc. etc.)
+#
+#    - name: Generate encryption secrets/passwords
+#    - name: Generate keys using cgMembers/rcredits/misc/makeKey.php
+#      command:
+#        name: /etc/pki/tls/openssl.cnf
+#
+#    - name: Generate keys using cgMembers/rcredits/misc/makeKey.php
+#generate keys
+#$k = <key>;
+#          debug(a(1)->makeVKeyE($k));
+#debug(u\b64encode(u\unfmtKey(u\pubKey($k)))
+# set cg.cnf
+# foreach (ray('S V R C P H') as $k) {
+#  $pw = $k == 'R' ? a(1)->vKeyPw : '';
+#  $v = u\cry($k, 'Success!', FALSE, $pw);
+#  if ($k == 'V') $pw = r\vKey();
+#  debug("k=$k " . u\decry($k, $v, $pw));
+#}
+
+    - name: Recommend test
+      debug: 
+        msg: Please run the test suite in the Common Good software
+
+ 

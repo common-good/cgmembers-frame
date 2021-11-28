@@ -1,0 +1,10 @@
+# from galaxy
+- src: geerlingguy.repo-epel
+- src: geerlingguy.pip
+- src: geerlingguy.github-users
+- src: geerlingguy.mysql
+- src: geerlingguy.nginx
+- src: geerlingguy.php
+
+# from GitHub
+# none yet

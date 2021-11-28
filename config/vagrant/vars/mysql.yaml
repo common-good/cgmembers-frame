@@ -1,0 +1,10 @@
+mysql_root_password: < to be completed >
+mysql_databases:
+  - name: commongood
+    encoding: latin1
+    collation: latin1_general_ci
+mysql_users:
+  - name: commongood
+    host: "%"
+    password: < to be completed >
+    priv: "commongood.*:ALL"

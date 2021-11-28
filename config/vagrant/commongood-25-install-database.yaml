@@ -1,0 +1,53 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+
+  vars_files:
+    - vars/commongood.yaml
+    - vars/mysql.yaml
+
+
+  tasks:
+
+    # Leave these steps to role?
+    #- name: Create database 'commongood'
+    #  community.mysql.mysql_db:
+    #    name: commongood
+    #    state: present
+    #- name: Create database user 'commongood'
+    #  community.mysql.mysql_db:
+    #    name: commongood
+    #    state: present
+    #
+    # CREATE USER 'commongood'@'localhost' IDENTIFIED BY 'commongood';
+    # GRANT ALL PRIVILEGES ON commongood . * TO 'commongood'@'localhost';
+
+    - name: Apply configured database build files
+      become_user: "{{ commongoodOSUser }}"
+      template:
+        src: templates/cgmembers-frame/{{ item }}.j2
+        dest: /var/www/cgmembers-frame/{{ item }}
+      with_items:
+        - importdb.sh
+        - db/import-startup.sql
+
+    - name: Apply execute permissions to database build scripts
+      file:
+        path: /var/www/cgmembers-frame/{{ item }}
+        mode: 0744
+      with_items:
+        - cleardb.sh
+        - importdb.sh
+        - migrate.sh
+        - phinx.sh
+        - recreate.sh
+
+    - name: Build database 'commongood'
+      command:
+      args:
+        cmd: bash /var/www/cgmembers-frame/recreate.sh
+        chdir: /var/www/cgmembers-frame
+
+ 

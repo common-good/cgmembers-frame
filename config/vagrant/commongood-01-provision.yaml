@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+
+  roles:
+    - { role: geerlingguy.repo-epel }
+    - { role: geerlingguy.pip }
+
+
+  tasks:
+
+    - name: Update OS
+      package:
+        name: '*'
+        state: latest
+
+    - name: Install basic packages (no configuration)
+      package:
+        name: ['vim',
+               'zip',
+               'bash-completion',
+               'wget',
+               'tmux',
+               'git',
+               "{{ ( (ansible_facts.distribution_major_version | default(0) | int) < 8) | ternary('libselinux-python','python3-libselinux') }}"
+              ]
+

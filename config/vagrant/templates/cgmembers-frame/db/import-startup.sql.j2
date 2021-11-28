@@ -1,0 +1,5 @@
+drop database if exists {{ mysql_databases.0.name }};
+create database {{ mysql_databases.0.name }};
+use {{ mysql_databases.0.name }};
+SET GLOBAL log_bin_trust_function_creators = 1;
+source db/startup.sql;
