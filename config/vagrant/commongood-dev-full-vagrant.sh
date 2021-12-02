@@ -22,7 +22,7 @@ vagrant up
 #ansible-playbook -i commongood-dev.inventory commongood-01-provision.yaml
 
 # create users, etc.
-ansible-playbook -i commongood-dev.inventory commongood-05-base.yaml
+ansible-playbook --ask-vault-pass -i commongood-dev.inventory commongood-05-base.yaml
 
 # install software prerequisites
 ansible-playbook -i commongood-dev.inventory commongood-10-prereqs.yaml

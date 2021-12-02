@@ -24,6 +24,13 @@
       with_items:
         - nginx
 
+    - name: Apply php-fpm config
+      template:
+        src: templates/etc/php-fpm.d/{{ item }}.j2
+        dest: /etc/php-fpm.d/{{ item }}
+      with_items:
+        - www.conf
+
     - name: Install php extensions
       package:
         name: ['php-json',
