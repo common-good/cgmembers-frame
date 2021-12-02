@@ -28,6 +28,7 @@ function formRecurring($form, &$sta, $args = '') {
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
   $from = "<img src=\"$rUrl/images/icons/arrow-left-green.png\" border=0 />";
+  $extraCrit = $mya->anyAdmin ? '1' : '(tm.end IS NULL OR tm.end>:NOW)';
   
   $html = "<table>\n";
   foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
@@ -43,6 +44,7 @@ function formRecurring($form, &$sta, $args = '') {
     LEFT JOIN txs x ON x.recursId=tm.id
     LEFT JOIN tx_requests i ON i.recursId=tm.id
     WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tm.from,tm.to) 
+    AND $extraCrit
     GROUP BY tm.id
     ORDER BY tm.end IS NOT NULL, tm.to=:myid, tm.start DESC, tm.id DESC
 X;
@@ -86,14 +88,15 @@ function addLine($info, $classes, $url, $person = FALSE) {
   global $rUrl, $mya;
 
   extract($info);
+  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+
   if ($person) {
     $fWho = db\get('fullName', 'people', ray('pid', $fWho));
   } else {
     $a = r\acct($fWho);
     $fWho = $a->bestName;
+    if ($mya->admin) foreach (ray('ok:k, closed:., hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   }
-  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
-  if ($mya->admin) foreach (ray('ok:O, closed:-, hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

@@ -19,7 +19,8 @@ function formGet($form, &$sta, $args = '') {
   extract(just('cancel expedite', $args, NULL));
   if ($cancel and $mya) return cancelTx($cancel);
   if ($expedite and $mya and $mya->admin) {
-    be\completeUsdTx($expedite, TRUE);
+    be\completeUsdTx($expedite);
+    be\usdTxFollowup($xid);
     return sayEmpty(t('Bank transfer successfully expedited.'));
   }
   

@@ -86,7 +86,7 @@ function formCompany_validate($form, &$sta) {
   if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');
 
   foreach (ray('website logo') as $k) if ($$k = preg_replace('~https?://~i', '', nn($$k))) {
-    if (!test() and !file_get_contents('https://' . $$k)) return sayFieldErr(t('That %k URL does not exist.', compact('k')), $k);
+// disabled until external file_get_contents debugged    if (!test() and !file_get_contents('https://' . $$k)) return sayFieldErr(t('That %k URL does not exist.', compact('k')), $k);
   }
   
   u\preray(compact(ray($fields)), $sta['input']);

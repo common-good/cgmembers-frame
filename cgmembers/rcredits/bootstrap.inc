@@ -1307,14 +1307,14 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
  */
 /**/ function flog($s = '', $chan = NULL) {
   global $channel; u\setDft($chan, nn($channel, TX_HACK));
+
   $logDir = LOG_DIR . ray(TX_CHANNELS)[$chan];
-  if (!is_dir($logDir)) {
-    mkdir($logDir, 0775);
-    u\EXPECT(is_dir($logDir), 'directory creation failed');
-    if ($chan == TX_CRON) r\tellAdmin(t('You will need to create %logDir by hand', compact('logDir')));
+  foreach ([LOG_DIR, $logDir] as $dir) if (!is_dir($dir)) {
+    if ($chan == TX_CRON) r\tellAdmin(t('You may need to create %dir by hand', compact('dir')));
+    mkdir($dir, 0775);
+    u\EXPECT(is_dir($dir), 'directory creation failed: ' . $dir);
   }
   $logFlnm = $logDir . '/' . date('Ym') . '.log';
-//  if ($chan == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
   if (func_num_args()) file_put_contents($logFlnm, pr($s) . "\n", FILE_APPEND); // new log file every month
   return $logFlnm;
 }

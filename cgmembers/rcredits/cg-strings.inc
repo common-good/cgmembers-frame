@@ -183,7 +183,7 @@ EOF
   'tx not yours' => t('That is not your transaction.'),
   'already reversed' => t('Transaction #%xid is already reversed.'),
   'already reverse requested' => t('You already requested a reversal of transaction #%xid.'),
-  'thing scheduled' => t('Your %thing has been scheduled.'),
+  'thing scheduled' => t('Your %thing to %who has been scheduled for %start.'),
   'refundable deposit' => t('%PROJECT will supply a smartphone running the CGPay app. Your account has been invoiced $%EQUIP_DEPOSIT as a refundable deposit.'),
   'see tax info' => t('Your 1099-K information form for calendar year %year (or any tax year you select) is available any time. Sign in at %CG_DOMAIN and select "Tax Info" on the History menu. This form is just for your information and you are not required to file it with your tax return.'),
   // reports

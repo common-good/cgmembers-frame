@@ -21,8 +21,8 @@ Scenario: Someone asks to make a credit card donation
 
   Given next captcha is "37"
   When member "?" completes "community/donate" with:
-  | fullName | email | zip   | amtChoice | amount | comment  | cq | ca |*
-  | Zee Zot  | z@    | 01026 | 0         | 26     | awesome! | 37 | 74 |
+  | fullName | email | phone          | zip   | amtChoice | amount | comment  | cq | ca |*
+  | Zee Zot  | z@    | (413) 262-2626 | 01026 | 0         | 26     | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullname | email | zip   | city       |*
   | 1   | Zee Zot  | z@    | 01026 | Cummington |

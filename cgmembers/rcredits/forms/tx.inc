@@ -102,6 +102,7 @@ function formTx_submit($form, &$sta) {
   if (!$who) return fboTx($input);
 
   $uid = whoId($sta);
+  $a = r\acct($uid);
   u\setDft($goods, FOR_GOODS);
   $delay = ($start > today());
   $repeats = ($periods > 0);
@@ -116,11 +117,7 @@ function formTx_submit($form, &$sta) {
     if ($repeats) {
       // warn user if they already have a repeating transaction like this with this other account
       $where = "tm.from=:from AND tm.to=:to AND action=:ACT_PAY AND period<>:PER_1 AND IFNULL(end, :NOW + 1) > :NOW";
-      if (!$delay and db\exists('tx_timed tm', $where, $info)) {
-        $otherName = db\get('fullName', 'users', compact('uid'));
-        say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
-      }
-      
+      if (!$delay and db\exists('tx_timed tm', $where, $info)) say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $a->fullName, atag('/history/recurring')));
       $repeatSubs = ray('often', r\recurDesc($period, $periods));
       $repeatMsg = 'repeats';
     } else list ($periods, $period) = [1, PER_1];
@@ -132,8 +129,8 @@ function formTx_submit($form, &$sta) {
   
   if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
     $msg = 'thing scheduled';
-    $subs = compact('thing');
-    r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
+    $subs = ray('thing who start', $thing, $a->fullName, u\fmtDate($start, TRUE));
+    $a->tell($msg, $subs, '', $paying ? SEND_OUT : SEND_IN);
     $ok = TRUE;
   } else { // no delay, transact now
     $data = [];
@@ -142,7 +139,7 @@ function formTx_submit($form, &$sta) {
 
     $z = $paying
     ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL)
-    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL);
+    : be\invoice($mya, $a, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL);
     extract(just('ok msg subs', $z));
   }
 
@@ -168,7 +165,7 @@ function fboTx($input) {
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
-  $info = ray('purpose pid completed deposit explicit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, TRUE, $cat);
+  $info = ray('purpose pid completed deposit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, $cat);
   $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($xid, 'outer transfer failed');
   say('info saved');

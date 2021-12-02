@@ -79,7 +79,7 @@ function formSummary($form, &$sta) {
     $copyEmail = "$mya->fullName <$mya->email>";
 //    if ($mya->jid) $copyEmail .= 
   } else $extra = $copyAcct = $copyEmail = '';
-  $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
+  $accountId = item('<div></div>' . ($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:') . '<wbr>'); // empty div and .. for double-click select
   
   $photoid = item('<iframe width="100%" height="600"></iframe>');
 

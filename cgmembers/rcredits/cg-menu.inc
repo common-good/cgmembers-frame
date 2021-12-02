@@ -109,6 +109,7 @@ function menu($submenu = '') {
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(), 'cog'],
+    'settings/notices' => ['sub', t('Notices'), 'NoticePrefs', ANY, '', t(), 'envelope'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
@@ -118,7 +119,6 @@ function menu($submenu = '') {
 
     'reset' => ['call', t('Choose New Password'), 'ResetPassword 1', ANY],
     'settings/skip' => ['call', t('Skip Step'), '', 'manage', 'skipStep'],
-    'settings/notices' => ['call', t('Notices'), 'NoticePrefs', ANY],
     'settings/ssn' => ['call', t('Correct SSN'), 'Ssn 2', 'manage'],
     'settings/password' => ['call', t('Request New Password'), 'Pass 2', ANY],
     'settings/security/change-password' => ['call', 'Change Password', 'ChangePassword', 'manage'],
@@ -236,7 +236,7 @@ function menu($submenu = '') {
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'api' => ['call', 'API', '1', ANY, 'api'],
     'cc' => ['call', 'Credit Card Donation', 'Donate 1', ANY],
-    'donate-fbo' => ['call', t('Donate'), 'Donate 1', ANY],
+    'donate-fbo' => ['call', t('Donate'), 'Donate 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
 
   foreach ($items as $k => $v) {

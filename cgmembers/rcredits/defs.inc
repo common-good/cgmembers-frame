@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58y'; // software version
+const R_VERSION = '3.58z'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -700,7 +700,9 @@ const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear 
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
-  'fbo-thanks' => t('Thank you for your donation!'),
+  'thanks-nonmember' => t('Thank you for your donation!'),
+  'thanks-member' => t('Thank you for your donation!'),
+  'fbo-thanks-nonmember' => t('Thank you for your donation!'),
   'fbo-thanks-member' => t('Thank you for your donation!'),
   'fbo-report' => t('You have a donation'),
   'nonmember' => t('%PROJECT invitation followup'),
