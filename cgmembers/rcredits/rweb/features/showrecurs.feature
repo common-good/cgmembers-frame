@@ -5,10 +5,10 @@ SO I can see what they are and terminate them.
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags      | created  |*
-  | .ZZA | Abe One    | -100  | personal    | ok,roundup | %now-15m |
-  | .ZZB | Bea Two    | -200  | personal    | ok,co      | %now-15m |
-  | .ZZC | Corner Pub | -300  | corporation | ok,co      | %now-15m |
+  | uid  | fullName   | floor | acctType    | flags            | created  |*
+  | .ZZA | Abe One    | -100  | personal    | ok,roundup,admin | %now-15m |
+  | .ZZB | Bea Two    | -200  | personal    | ok,co            | %now-15m |
+  | .ZZC | Corner Pub | -300  | corporation | ok,co            | %now-15m |
   And these "people":
   | pid | fullName |*
   | 123 | Ned Nine |
@@ -45,6 +45,23 @@ Scenario: A member looks at their Recurring Payments
   | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13m | %mdY+6d  |          | [close] |
   | [R] | Bea Two    | 43.00  | that      | Weekly     | %mdY-13m |          | %mdY-11m |         |
   | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          | [close] |
+  
+Scenario: A non-admin looks at their Recurring Payments
+  Given members have:
+  | uid  | flags      |*
+  | .ZZA | ok,roundup |
+  # not admin so don't show closed items
+  When member ".ZZA" visits page "history/recurring"
+  Then we show "Automated Payments" with:
+  |~Way | Who        | Amount | Purpose   | How often? | Starting | Next     | Ending   |~Close   |
+  | [R] | Corner Pub | 37.00  | this      | Quarterly  | %mdY-13m | %mdY     |          | [close] |
+  | [R] | Bea Two    | 59.59  | something | Yearly     | %mdY-16m | %mdY     |          | [close] |
+  | [L] | Ned Nine   | 99.87  | donation  | Weekly     | %mdY-2d  | %mdY+5d  |          | [close] |
+  | [L] | Bea Two    | 22.00  | nothing   | Quarterly  | %mdY-1m  | %mdY+2m  |          | [close] |
+  | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13m | %mdY+6d  |          | [close] |
+  | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          | [close] |
+  And without:
+  | 43.00  | that      |
 
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99901&do=stop"

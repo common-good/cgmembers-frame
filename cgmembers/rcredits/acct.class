@@ -825,8 +825,8 @@ EOF;
    * @param integer $uid: account record id
    * @param string $index: email index or message index
    * @param assoc $subs: substitutions/parameters for the message
-   * @param string $topic: optional specific topic (otherwise look in $GLOBALS['topics'])
-   * @param string $type: type of message, so we know when to send (if empty, email immmediately)
+   * @param string $topic: optional specific topic (otherwise look in $GLOBALS['topics']) -- ignored unless sending immediately
+   * @param string $type: type of message, so we know when to send -- if empty, send immmediately
    */
   public function tell($index, $subs = [], $topic = '', $type = '') {
     $a = $this;
@@ -850,6 +850,7 @@ EOF;
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
     } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }
   }
+
   public function tellIn($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_IN);}
   public function tellOut($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_OUT);}
   public function tellMisc($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_MISC);}
@@ -1266,11 +1267,13 @@ o;
     }
 
     $amount = round($amount, 2);
+    $fuMsg = '';
 
     if (!$combined) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
-      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created explicit')));
+      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created')));
+      if ($fuMsg = be\usdTxFollowup($xid, FALSE)) $fuMsg = '|' . $fuMsg; // fuMsg is not needed here (use 'available now' instead)
       u\EXPECT($xid, 'saving usd record');
     }
 
@@ -1788,15 +1791,21 @@ X;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');
     if ($payeeA->legalName != CGF_LEGALNAME) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    $shortfall = NULL;
 
     if ($a->ok) {
-      $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
-      if ($z->ok) return $z;
+      for ($i = 0; ; $i++) { // try again if getting funds is likely to help
+        $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
+        if ($z->ok) return $z;
+        if ($i > 0 or !$shortfall = nni($z->subs, 'shortfall') or $shortfall > $a->creditLine) break; // try just once to fill shortfall
+        $shortfall -= $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
+        if ($a->avail($goods) < $amount) break;
+      }        
     } else $z = be\txRet(FALSE, 'you wait');
 
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    $a->getFunds(nni($z->subs, 'shortfall') ?: $amount, t('to cover your payment request #%nvid', $z2->subs));
+    $a->getFunds($shortfall > 0 ? $shortfall : $amount, t('to cover your payment request #%nvid', $z2->subs));
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
   }
 

@@ -57,7 +57,7 @@ function formDonate($form, &$sta, $args = NULL) {
   }
 
   $options = item($options);
-  if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin', '/donate?' . $_SERVER['QUERY_STRING'])));
+  if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin', '/community/donate?' . $_SERVER['QUERY_STRING'])));
     
   $logo = logoFld($coA);
   $title = t('Donate to ') . $coA->bestName;
@@ -101,8 +101,8 @@ function formDonate($form, &$sta, $args = NULL) {
 function formDonate_validate($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   extract(just($flds = 'amount fullName phone email zip country coId', $sta['input'], NULL));
-  
-  if ($coId == CGID) return w\checkAmtChoice($sta);
+
+  if ($mya and $coId == CGID) return w\checkAmtChoice($sta);
 
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount'); // fix amount
   if (!$mya) {
@@ -110,7 +110,7 @@ function formDonate_validate($form, &$sta) {
     $fullName = u\normalizeCase($fullName);
     
     if ($err = u\badPhone($phone)) return err($err, 'phone');
-    if (!emailOkay($email, FALSE)) return;
+    if (!emailOkay($email, TRUE)) return; // allow duplicate emails so a member can donate with CC
     if ($err = u\badZip($zip, $country)) return err($err, 'zip');
     if (!checkBankAccount($sta)) return;
     if (badCaptcha($sta)) return;
@@ -156,7 +156,7 @@ function formDonate_submit($form, &$sta) {
     return be\thanks(FALSE, $pid, $amount, $period, 1, $coA->id, TRUE);
  
   } else { // credit card donation
-    $code = u\cryRay(ray('pid amount period coId', $pid, number_format($amount, 2), $period, $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests)
+    $code = u\cryRay(ray('pid amount period coId', $pid, number_format($amount, 2, '.', ''), $period, $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests, but omit commas so it's still a number)
     $return = $testReturnUrl = BASE_URL . "/community/donate/op=done&code=$code";
     u\EXPECT(strlen($return) <= 1024, 'cc return url too long');
     $cancel_return = str_replace('=done', '=cancel', $return);

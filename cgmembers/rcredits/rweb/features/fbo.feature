@@ -1,7 +1,7 @@
 Feature: FBO
 AS a sponsored member company or administrator
 I WANT to track payments to and from non-members
-SO I can accept donations and make payments for a fiscally-sponsored organization.
+SO I can accept donations and make payments for a fiscally-sponsored organization or a member nonprofit.
 
 Setup:
   Given members:
@@ -80,7 +80,7 @@ Scenario: A non-member donates to a sponsored member
   | .ZZB |       0 |
   | .ZZC |      95 |
   | cgf  |       5 |
-  And we email "fbo-thanks" to member "d@" with subs:
+  And we email "fbo-thanks-nonmember" to member "d@" with subs:
   | fullName     | Dee Forn        |**
   | date         | %mdY            |
   | coName       | Our Pub         |
@@ -230,7 +230,7 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
   | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
   | 4   | 1   | .ZZC       | cgf   | 3.69   | fbo cc fee | %E_USD_FEE |
-  And we email "fbo-thanks" to member "z@" with subs:
+  And we email "fbo-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
   | coName       | Our Pub         |
@@ -268,7 +268,7 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
   | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
   And count "tx_entries" is 4
-  And we email "fbo-thanks" to member "z@" with subs:
+  And we email "fbo-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
   | coName       | Our Pub         |

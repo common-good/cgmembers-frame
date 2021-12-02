@@ -844,10 +844,11 @@ function thanks($member, $id, $amount, $period, $periods, $coId, $redirect) {
   unset($subs['fullName']); // salutation to co name, not donor name
   $coA->tellIn('fbo-report', $subs);
 
-  $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone));
+  $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
+  $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
   if ($member) {
     $a->tellOut('fbo-thanks-member', $subs);
-  } else r\rMail('fbo-thanks', [$email => $fullName], $subs);
+  } else r\rMail('fbo-thanks-nonmember', [$email => $fullName], $subs);
 
   $msg = tr('gift thanks' . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
   return $redirect ? w\sayEmpty($msg) : w\say($msg);
@@ -1201,7 +1202,6 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  * @param acct $a: the account to or from which money is to be moved
  * @param numeric $amount: the amount to transfer
  * @param assoc $options: any of these keyed values:
- *   bool $explicit: request was created manually, not automatically
  *   int $created: the UNIX time at which the transfer is deemed to be created (defaults to now)
  *   int $completed: mark the transaction complete on this date
  *   int $pid: record ID of associated people record (NULL if none)
@@ -1217,9 +1217,8 @@ function createUsdTransfer($a, $amount, $options = []) {
   u\EXPECT(compact(ray('a amount options')), 'acct int|float assoc');
   global $channel; 
   
-  extract(just('explicit created completed pid cat purpose deposit bankAccount recursId flags', $options, NULL));
+  extract(just('created completed pid cat purpose deposit bankAccount recursId flags', $options, NULL));
 
-  u\setDft($explicit, $channel != TX_CRON);
   u\setDft($created, now());
   u\setDft($purpose, $amount > 0 ? t('from bank') : t('to bank'));
   $payee = $a->id;
@@ -1242,7 +1241,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   $info += just('pid txid', $options);
   $txid = db\insert('txs2', $info, 'txid');
 
-  if ($completed and !completeUsdTx($info + ['eid' => $tx->entries[0]->id], $explicit, $completed)) return FALSE;
+  if ($completed) completeUsdTx($info + ['eid' => $tx->entries[0]->id], $completed);
   
   unset($DBTX);
   
@@ -1252,12 +1251,11 @@ function createUsdTransfer($a, $amount, $options = []) {
 /**
  * Mark a USD transfer complete, update the amounts in the corresponding transaction entries, and report.
  * @param mixed $xid: record ID of the transfer transaction or an assoc of the relevant information
- * @param bool $explicit: <transfer was not created automatically>
  * @param datetime $completed: when the transaction was completed, defaults to the current time
  * @return bool <success>
  */
-function completeUsdTx($xid, $explicit, $completed = NULL) {
-  u\EXPECT([$xid, $explicit, $completed], 'int|assoc bool int|empty');
+function completeUsdTx($xid, $completed = NULL) {
+  u\EXPECT([$xid, $completed], 'int|assoc int|empty');
   u\setDft($completed, now());
   
   if (is_array($info = $xid)) {
@@ -1279,13 +1277,31 @@ function completeUsdTx($xid, $explicit, $completed = NULL) {
     return FALSE;
   }
   unset($DBTX);
-  
-  if ($amount > 0 and !$pid) {  
-    $transfer = $explicit ? t('transfer') : t('automatic transfer');
-    $amount = u\fmtAmt($amount);
-    r\acct($payee)->tellIn('transfer-in complete', compact('transfer', 'amount'));
-  }
+
   return TRUE;
+}
+
+/**
+ * Report completion of a transfer from a member's bank account to their CG account.
+ * @param int $xid: transaction record ID
+ * @param bool $report: <report success rather than returning it>
+ * @return FALSE if transfer is outgoing, non-member, or not complete
+ *    otherwise if report is TRUE, report success and return TRUE, else return a success message
+ */
+function usdTxFollowup($xid, $report = TRUE) {
+  $info = db\get('payee,amount,pid,completed,channel', 'txs2', compact('xid'));
+  u\EXPECT((bool) $info, 'txs2 record missing: ' . $xid);
+  extract($info);
+  
+  if ($completed and $amount > 0 and !$pid) {   
+    $transfer = $channel == TX_CRON ? t('automatic transfer') : t('transfer');
+    $amount = u\fmtAmt($amount);
+    $msg = tr('transfer-in complete', compact('transfer', 'amount'));
+    if ($report) {
+      r\acct($payee)->tellIn($msg);
+      return TRUE;
+    } else return $msg;
+  } else return FALSE;
 }
 
 /**

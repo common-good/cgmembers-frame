@@ -173,6 +173,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     MAKE tx AMemberPaysAnotherMemberLater
+ *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -360,6 +361,7 @@ function members($list) {return t\members($list);}
  *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     TEST undo AMemberReversesAPaymentFromSomeone
  *     TEST undo ACustomerReversesARefundFromAStore
  */
@@ -624,6 +626,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST relations AMemberAddsARelation
  *     TEST scancard SomeoneScansACompanyAgentCard
  *     TEST showrecurs AMemberLooksAtTheirRecurringPayments
+ *     TEST showrecurs ANonadminLooksAtTheirRecurringPayments
  *     TEST showrecurs AMemberStopsARecurringTransaction
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
@@ -697,6 +700,7 @@ function with($content) {return weShow($content);}
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
  *     TEST showqr ACardMemberDisplaysTheirQR
+ *     TEST showrecurs ANonadminLooksAtTheirRecurringPayments
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanySuppliesCrumbsChoices
  *     TEST signup AMemberChoosesProxies
@@ -785,6 +789,7 @@ function withoutOptions($options) {
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     BOTH txs Setup
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
@@ -875,6 +880,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE scancard SomeoneScansAMemberCard
  *     MAKE scancard SomeoneScansACompanyAgentCard
  *     MAKE showrecurs AMemberLooksAtTheirRecurringPayments
+ *     MAKE showrecurs ANonadminLooksAtTheirRecurringPayments
  *     MAKE showrecurs AMemberStopsARecurringTransaction
  *     MAKE showrecurs AMemberStopsAStoppedRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
@@ -1054,6 +1060,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
  *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     TEST undo AMemberReversesAPaymentFromSomeone
  *     TEST undo ACustomerReversesARefundFromAStore
  */
@@ -1194,6 +1201,7 @@ function statisticsGetSet($time) {
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     MAKE showrecurs ANonadminLooksAtTheirRecurringPayments
  *     TEST signupco ACompanySignsUp
  *     BOTH signupco ACompanyVerifiesEmailWhileSignedIn
  *     BOTH signupco ACompanySuppliesCompanyInformation
@@ -1203,6 +1211,7 @@ function statisticsGetSet($time) {
  *     TEST signup AMemberConnectsABankAccount
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
+ *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
 function membersHave($list) {return t\membersHave($list);}
@@ -1755,6 +1764,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     MAKE txs Setup
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
  *     TEST txs AdminReversesABankTransfer

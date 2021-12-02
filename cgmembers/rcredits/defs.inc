@@ -700,7 +700,9 @@ const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear 
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
-  'fbo-thanks' => t('Thank you for your donation!'),
+  'thanks-nonmember' => t('Thank you for your donation!'),
+  'thanks-member' => t('Thank you for your donation!'),
+  'fbo-thanks-nonmember' => t('Thank you for your donation!'),
   'fbo-thanks-member' => t('Thank you for your donation!'),
   'fbo-report' => t('You have a donation'),
   'nonmember' => t('%PROJECT invitation followup'),

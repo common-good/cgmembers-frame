@@ -267,9 +267,38 @@ Scenario: A member pays another member later
   | op  | who     | amount | purpose | start   |*
   | pay | Bea Two | 100    |  labor  | %mdy+3d |
   Then we say "status": "thing scheduled" with subs:
-  | thing   |*
-  | payment |
+  | thing   | who     | start   |*
+  | payment | Bea Two | %mdY+3d |
   And count "txs" is 0
   And these "tx_timed":
   | id | from | to   | amount | period | purpose | start    | end | action | duration |*
   |  1 | .ZZA | .ZZB |    100 | once   | labor   | %now0+3d |     | pay    | once     |
+
+Scenario: A member pays, backed by an inactive credit line
+  Given members have:
+  | uid  | floor | balance |*
+  | .ZZB | -100  | 0       |
+  When member ".ZZB" confirms form "tx/pay" with values:
+  | op  | who     | amount | purpose |*
+  | pay | Abe One | 10     | lunch   |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | taking |*
+  |   2 | %now    | 10     | .ZZB  | .ZZA  | lunch   | 0      |
+  And balances:
+  | uid  | balance |*
+  | .ZZB | 0       |
+  And we say "status": "banked|bank tx number|available now" with subs:
+  | action | amount | tofrom | why                               | checkNum |*
+  | draw   | $10    | from   | to cover your $10 payment request | 1        |
+  And we notice "banked|bank tx number|available now" to member ".ZZB" with subs:
+  | action | amount | tofrom | why                               | checkNum |*
+  | draw   | $10    | from   | to cover your $10 payment request | 1        |
+  And we say "status": "report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Abe One   | $10    |
+  And we notice "you paid" to member ".ZZB" with subs:
+  | otherName | amount | payerPurpose |*
+  | Abe One   | $10    | lunch        |
+  And we notice "paid you" to member ".ZZA" with subs:
+  | otherName | amount | payeePurpose |*
+  | Bea Two   | $10    | lunch        |

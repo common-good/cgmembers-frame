@@ -219,7 +219,7 @@ function oneAcct($item) {
   if ($badPartner) { // delete stale unused partner accounts
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     db\del('users', 'uid', $a->id);
-  } elseif (!$a->member and !$a->ok and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
+  } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
     $s = strtr($a->source, ['self() '=>'', 'knows: '=>'']);
     if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
       r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, u\fmtDate($a->created)));
@@ -918,7 +918,8 @@ function getFunds() {
 
 function completeUsdTx($item) {
   extract(just('xid channel', $item));
-  be\completeUsdTx($xid, $channel != TX_CRON);
+  be\completeUsdTx($xid);
+  be\usdTxFollowup($xid);
 }
 
 function getFunds1($item) {

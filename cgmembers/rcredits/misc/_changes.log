@@ -1,3 +1,16 @@
+2021-12-02 feature/usdtx-followup
+. separated messaging from be\completeUsdTx() -- using be\usdTxFollowup(), so it can be handled more sensibly
+. added notice preferences to Settings menu
+. online payment shortfalls are now remedied immediately, when possible
+. parent log directory is now created automatically
+. some hooks put in for handling donations to organizations not sponsored by CgBiz
+. "thing scheduled" message is now more descriptive
+. temporarily disabled check for existence of webpage and logo, pending resolution of file_get_contents('http... issue
+. fixed some little bugs in donate.inc (allow duplicate emails, look form amtChoice only if signed in, ignore commas in donation amount)
+. suppress closed automations in Automatic Transactions list (unless admin)
+. make account ID double-click selectable
+. people who sign up as interested in the investment club are no longer flagged to delete
+
 2021-11-21 feature/undo-tweaks
 . reversing tx now has proper actorId and actorAgentId
 . actorId and actorAgentId default properly in tests
