@@ -1,0 +1,7 @@
+    github_users:
+      - name: <githubusername for addition>
+        groups: wheel
+
+#    github_users_absent:
+#      - name: <githubusername for removal>
+
