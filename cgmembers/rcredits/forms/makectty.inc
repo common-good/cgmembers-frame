@@ -18,8 +18,8 @@ function formMakeCtty($form, &$sta) {
   // from w\contactFields
   $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')]);
   $postalAddr = textFld(REQ . t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], dft(nn($postalAddr)));
-  $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off') + $ein);
-  $founded = foundedFld($mya->founded, REQ);
+  $federalId = passFld(REQ . t('einTitle'), [t('einDesc')], autofill('off'));
+  $founded = foundedFld();
 
   $submit = submit();
   

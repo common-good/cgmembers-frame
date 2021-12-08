@@ -636,14 +636,13 @@ function expect1($arg, $value, $type, $ret) {
  * @param string $type: type of log entry (if FALSE, don't log anything)
  * @param mixed $info: the information to log (string or assoc)
  * @param int $adhocChannel: a second channel used from within the primary channel
- * @return the log record id (for exception handler and shutdown function)
+ * @return what was logged
  */  
 function loga($type, $info = [], $adhocChannel = FALSE) {
   global $mya;
   global $channel;
-  
-/**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
+/**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 //  $useTextLogToo = FALSE; // isDEV;
 
   $qid = $mya ? $mya->qid . ($mya->proSe ? '' : strtolower('.' . $mya->agentA->mainQid . ($mya->anyAdmin ? '(a)' : ''))) : t('nobody');
@@ -656,11 +655,9 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     if (nni($info, 'toEmail')) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
     $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
-  }
-/**/ flog($s = "$qid/$time/$type/$info");
-  return $s;
-//  if (!test())
-//  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
+  } elseif (!$info) return '';
+  
+/**/ return flog("$qid/$time/$type/$info");
 }  
 
 /**
@@ -1553,7 +1550,7 @@ function strUnscramble($s, $key) {return strScramble($s, $key, TRUE);}
  */
 function noSecrets($ray) {
   global $channel;
-  foreach ($ray as $k => $v) if (in($k, R_NOLOG) and !($k == 'data' and $channel == TX_AJAX)) $ray[$k] = '(?)';
+  foreach ($ray as $k => $v) if (in($k, NOLOG_FLDS) and !($k == 'data' and $channel == TX_AJAX)) $ray[$k] = '(?)';
   return $ray;
 }
 

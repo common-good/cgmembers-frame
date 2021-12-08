@@ -60,7 +60,10 @@ function charge($args) {
       if ($code != $co->emailCode) {
         if (strpos($code, ' ') or !$coRay = u\decryRay($code) or nni($coRay, 'cocode') != $co->emailCode) return apiErr(t('bad code in request')); // space in code is probably "bad company ID or cocode" message
         $t = now() - nni($coRay, 'now', 0);
-        if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout'); // error for customer
+        if ($t < 0 or $t > AUTHCODE_TIMEOUT) {
+          r\tellAdmin('co code timeout', compact(ray('code t')) + $coRay + $args);
+          return w\softErr('co code timeout'); // error for customer
+        }
       }
     } else { $tst = t('<span class="loud">DEMO</span>'); }
   }

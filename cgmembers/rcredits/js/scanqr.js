@@ -19,9 +19,11 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
     const scanner = new QrScanner(document.getElementById('scanqr'), 
       result => {
         scanner.stop();
-        if (result == '') {
+        
+        if (result === undefined || result == '') { // nothing yet
           scanner.start();
-        } else {
+
+        } else if (true || strhas(result, '/')) { // Common Good card
           var slash = result.split('/'); // HTTP:,,DOM.RC2.ME,code
           if (slash !== undefined && slash.length > 3) {
             var dot = slash[2].split('.');
@@ -33,6 +35,11 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
             }
           }
           $('#edit-result').html('<center><h2>No valid QR code found.</h2><p><a href="' + result + '">' + result + '</a></p></center>').show();
+
+        } else { // admin password
+          setCookie(cname, cvalue, exdays);
+          location.href = ('' + document.location).replace(/scan-qr.*/, '') + 'sadmin'; throw '';
+
         }
       },
       error => {if (error != 'No QR code found') alert(error);} // gets called repeatedly with 'No QR code found'

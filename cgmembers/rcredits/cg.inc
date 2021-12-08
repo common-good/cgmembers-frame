@@ -459,7 +459,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
 /**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
   $message = t($index, $subs);
-  foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
+  foreach (ray(NOLOG_FLDS) as $k) unset($subs[$k]); // secret stuff
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
   $tellCOA = $uid == 1 ? $mya : ($uid == 0 ? NULL : r\acct($uid));
