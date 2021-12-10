@@ -16,7 +16,7 @@ function formTxs($form, &$sta, $args = '') {
   global $mya;
   global $testPeriod;
   global $agtViaBoxHelp, $base_url;
-  
+
   w\downloadCheck('history/transactions');
   
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');

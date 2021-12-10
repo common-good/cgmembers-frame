@@ -7,6 +7,19 @@ require_once __DIR__ . '/util.inc';
 
 class Model extends AbstractMigration {
   public function change() {
-    
+    $oldTable = $this->table('old');
+    $oldTable->rename('legacy_r_txs');
+    $hdrTable = $this->table('tx_hdrs_all', ray('id primary_key comment', false, 'xid', 'Record of all rCredits transactions in the region'));
+    $hdrTable->addColumn('xid', 'integer', ray('length identity null comment', phx::INT_BIG, true, false, 'the unique transaction ID'));
+    $t = $this->table('budget_cats', ray('comment', 'income and expense categories'));
+    $t->addColumn('checksOut', 'integer', ray('length null comment', phx::INT_MEDIUM, TRUE, 'expected number of outgoing payments monthly'));
+    $t->addColumn('category', 'string', ray('length null comment', 255, TRUE, 'category'));
+    $t->addColumn('description', 'text', ray('length null comment', phx::TEXT_LONG, TRUE, 'description of category')); // or BLOB_TINY/_REGULAR/_MEDIUM/_LONG
+    $t->addColumn('type', 'enum', ray('values comment', ray('Income Expense Asset Liability'), 'balance sheet account type'));
+    $t->addColumn('backing', 'decimal', ray('precision scale null default comment after', 11, 2, false, '0', 'amount account-holder chose to back', phx::FIRST));
+    $t->addColumn('backingDate', 'integer', ray('length null default comment after', phx::INT_BIG, false, '0', 'date account-holder started backing', 'backing'));
+    $t->create();
+    $t->update();
+    if ($this->isMigratingUp()) {}
   }
 }

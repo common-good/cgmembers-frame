@@ -36,7 +36,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose pid'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
@@ -65,6 +65,13 @@ function fixData(&$info, $direct = FALSE) {
   }
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
+  if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = u\cry('R', r\vKey(), FALSE, DEV_VKEYPW); // this is such a long constant, better to recreate it each time
+  
+  if (isset($can) and !is_array($can)) {
+    $newcan = 0; 
+    foreach (ray($can) as $k) $newcan |= is_numeric($k) ? $k : u\bit(u\consta('a', $k));
+    $can = $newcan;
+  }
 
   if (nn($who)) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -104,6 +111,20 @@ function fixData(&$info, $direct = FALSE) {
   return $info;
 }
 
+function cookieIs($nm, $v) {
+  global $testOnly, $box;
+
+  if (!$testOnly) r\setCook($nm, $v);
+  if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
+    
+  return t\eq("cookie $nm", $v, nni($_COOKIE, $nm));
+}
+
+function isSignedIn($id) {
+  global $testOnly, $mya;
+  return $testOnly ? ($mya and $mya = r\acct() and t\uid($id) == $mya->id) : t\login($id);
+}
+
 /**
  * Say whether the given variable is set correctly OR set it.
  */
@@ -111,6 +132,7 @@ function varIs($k, $v) {
   global $testOnly;
   return ($v == ($testOnly ? getv($k) : setv($k, $v)));
 }
+
 /**
  * Interpret flag names
  */
@@ -131,6 +153,11 @@ function fixFlags($flags) {
 function fixEmail(&$email) {
   if (substr(nn($email), -1, 1) == '@') $email .= EMAILX;
   return $email = plain($email);
+}
+
+function memberScansAdminCard($id, $vKeyPw) {
+  global $testOnly; if ($testOnly) return FALSE;
+  return t\memberVisitsPage($id, 'sadmin/panel/code=' . u\cryRay(compact('vKeyPw')));
 }
 
 function doRecords($list, $thing) {
@@ -707,7 +734,7 @@ function memberFieldValues($list) {
  * "?" in a field means ignore its value when testing
  */
 function doBalances($info) {
-  global $conf; if (!$conf) die('no conf in doBal');
+/**/  global $conf; if (!$conf) die('no conf in doBal');
   global $testOnly;
   static $testXid = 0;
 
@@ -1509,6 +1536,7 @@ function clear($ch = 0) {
   \drupal_static_reset(); // clear out drupal central storage
 
   $tables = [             // RELATED TO
+    'admins',             // users
     'cache',              // -
     'flood',              // -
     'messages',           // posts

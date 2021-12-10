@@ -23,7 +23,7 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
         if (result === undefined || result == '') { // nothing yet
           scanner.start();
 
-        } else if (true || strhas(result, '/')) { // Common Good card
+        } else if (has(result, '/')) { // Common Good card
           var slash = result.split('/'); // HTTP:,,DOM.RC2.ME,code
           if (slash !== undefined && slash.length > 3) {
             var dot = slash[2].split('.');
@@ -37,8 +37,10 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
           $('#edit-result').html('<center><h2>No valid QR code found.</h2><p><a href="' + result + '">' + result + '</a></p></center>').show();
 
         } else { // admin password
-          setCookie(cname, cvalue, exdays);
-          location.href = ('' + document.location).replace(/scan-qr.*/, '') + 'sadmin'; throw '';
+          post('vKeyPw', {vKeyPw:result}, function (j) {
+            location.href = ('' + document.location).replace(/scan-qr.*/, '') + 'sadmin/panel/code=' + j.code;
+            throw '';
+          });
 
         }
       },

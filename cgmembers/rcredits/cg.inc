@@ -557,18 +557,26 @@ function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if sp
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
- * If superAdmin is not signed in, return FALSE.
+ * If no admin is signed in with super permission, return FALSE.
  */
 function vKey() {
   global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
-  $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
-  
-  if (test() and (!$mya or $mya->id != 1)) return FALSE;
-  if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
-  if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
+  $ermsg = t(' Create a new vKeyE and vKeyPw (see acct::makeVKeyE).');
 
-  return u\decry('R', $vKeyE, $pw);
+  if (!$mya) return FALSE;
+
+  if ($mya->id == 1) { // old style: admin account only
+    if (test() and (!$mya or $mya->id != 1)) return FALSE;
+    if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+    if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
+    return u\decry('R', $vKeyE, $pw);
+  } else { // new style
+    if (test() and !$mya) return FALSE;
+    if (!$mya or !$vKeyE = $mya->agentA->vKeyE) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
+    if (!$vKeyPw = r\cryptCook('vKeyPw')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+    return u\decry('R', $vKeyE, $vKeyPw);
+  }
 }
 
 /**

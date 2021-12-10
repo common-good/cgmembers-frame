@@ -152,6 +152,7 @@ class Acct {
    * @return the value if it exists, else NULL
    */
   public function __get($field) {
+    global $mya;
     $a = $this; $uid = $a->id;
     $uidSub = compact('uid');
     $a->reread(); // make sure record has been read in
@@ -236,9 +237,10 @@ class Acct {
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
       case 'hasCustomers': return db\exists('u_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
-      case 'superAdmin': return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
-      case 'bankInfo': return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
-                                : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
+      case 'superAdmin': return $a->id == 1 ?: ($mya and $mya->agentId == $a->agentId and $a->admin and r\cook('vKeyPw') and (db\get('can', 'admins', ray('uid', $a->agentId)) & u\bit(A_SUPER)));
+      case 'vKeyE': return $mya->admin ? db\get('vKeyE', 'admins', ['uid' => $a->agentId]) : NULL; // mya not a
+      case 'can': return $a->admin ? db\get('can', 'admins', ['uid' => $a->agentId]) : NULL;
+      case 'bankInfo': return ($routing = substr($a->bankAccount, 4, 9)) ? db\get('*', 'r_banks', 'route=:routing', compact('routing')) : NULL;
       case 'shouter': return db\exists('u_shout', $uidSub);
       case 'tempPhotoFilename': return r\pic("$a->mainQid.jpg");
       case 'ssnErr': return is_array($a->ssnData) ? nni($a->ssnData, SSN_ERR_INDEX) : FALSE;
@@ -1645,19 +1647,32 @@ X;
   }
 
   /**
-   * Encrypt the highly sensitive data private key for a new regional admin's sign-in form.
+   * Encrypt the region's private key (for decrypting highly sensitive data) for a new regional admin.
    * @param string $vKey: key text (PEM-formatted or not) or file path with key text
-   *   If $vKey is omitted, get it from the current administrator
-   *   WARNING: This function invalidates an admin's flash drive sign-in form.
-   * @return the encrypted private key (vKeyE), encrypted with the account's own password (vKeyPw).
+   * @param string $vKeyPw: password to use in u\b64 format (defaults to 32 random pseudo-bytes)
+   * @param bool $showQr: <return a QR as opposed to just b64 of the vKeyPw> (default TRUE)
+   *   If $vKey is omitted, get it from the current signed-in superAdmin account
+   *   WARNING: This function invalidates the account's current vKeyE and vKeyPw, if any
+   *   vKeyE (vKey Encrypted) is vKey R-encrypted with password vKeyPw
+   *   vKeyE gets saved in the admins table, vKeyPw is returned, b64'd, as HTML for a printable QR
+   * @return HTML for a printable QR image for the account holder to scan to get super powers
    */
-  public function makeVKeyE($vKey = '') {
-    $a = $this;
-    if (!$vKey = u\unfmtKey($vKey) and !$vKey = r\vKey()) return t('No private key given or available.');
-    $a->update('vKeyPw', $vKeyPw = openssl_random_pseudo_bytes(32));
-    if (isDEV) \setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
+  public function makeVKeyE($vKey = NULL, $vKeyPw = NULL, $showQr = TRUE) {
+    $a = $this; $uid = $a->id;
+    $vKey = isset($vKey) ? u\unfmtKey($vKey) : r\vKey();
+    if (!$vKey) return t('No private key given or available.');
+    require_once R_ROOT . '/forms/showqr.inc'; // for qrHtml()
+    
+    $vKeyPw = $vKeyPw ? u\b64decode($vKeyPw) : openssl_random_pseudo_bytes(32);
+//    if (isDEV) setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
+
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
-    return u\b64encode($vKeyE); // ready for signin form on flash drive
+
+    $id = db\get('id', 'admins', compact('uid'));
+    db\updateOrInsert('admins', ray('id uid vKeyE can', $id, $uid, $vKeyE, u\bit(A_SUPER)));
+    $pw = u\b64encode($vKeyPw);
+
+    return $showQr ? w\qrHtml($pw, '', t('%PROJECT SuperAdmin')): $pw;
   }
   
   /**

@@ -48,6 +48,7 @@ function extraSetup() {
  *     MAKE changes Setup
  *     MAKE checks Setup
  *     MAKE deletion Setup
+ *     MAKE super Setup
  */
 function members($list) {return t\members($list);}
 
@@ -137,16 +138,19 @@ function with($content) {return t\weShow($content);}
  * these (ARG): (ARG)
  *
  * in: MAKE 1099s Setup
+ *     MAKE aaOther Setup
  *     TEST aaOther AdminDeletesAnAccount
  *     MAKE ach Setup
  *     BOTH ach AdminDownloadsACHRequests
  *     MAKE activate Setup
+ *     MAKE checks Setup
  *     BOTH checks AdminPrintsChecks
  *     MAKE deletion Setup
  *     TEST deletion ADeletedbyviewRecordIsDeleted
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
+ *     MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -231,3 +235,43 @@ function weDeleteTableRecord($tnm, $record) {
   if (u\starts($v, '.') or strhas($v, ':')) $v = t\uid($v);
   return ($tnm == 'users' and $idFnm = 'uid') ? f('a.deleteUid', $v) : db\del($tnm, $fnm, $v);
 }
+
+/**
+ * member (ARG) is signed in
+ *
+ * in: MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ */
+function memberIsSignedIn($id) {return t\isSignedIn($id);}
+
+/**
+ * member (ARG) visits (ARG)
+ *
+ * in: MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ */
+function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
+
+/**
+ * we show (ARG)
+ *
+ * in: TEST super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ */
+function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
+
+/**
+ * member (ARG) scans admin card (ARG)
+ *
+ * in: MAKE 1099s Setup
+ *     MAKE aaOther Setup
+ *     MAKE ach Setup
+ *     MAKE activate Setup
+ *     MAKE checks Setup
+ *     MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ */
+function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
+
+/**
+ * cryptcookie (ARG) is (ARG)
+ *
+ * in: TEST super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ */
+function cryptcookieIs($nm, $v) {return t\cookieIs($nm, u\ry('C', $v));}

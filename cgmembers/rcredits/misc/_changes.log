@@ -1,3 +1,11 @@
+2021-12-08 feature/supers
+. created admins table
+. any admin can become a super by scanning a superAdmin QR
+. an empty key can now be passed to db\updateOrInsert() to indicate none
+. restructured ajax elseif chain to use switch/case
+. generalize QR-generator in showqr.inc, to accommodate superAdmin cards
+. improved phinx model migration function (with diverse examples)
+
 2021-12-08 feature/log-less
 . suppressed logging of api timeouts and fixed logging of page visits
 . now reports to admin when an api call times out

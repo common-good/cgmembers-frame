@@ -300,6 +300,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE stepup Setup
  *     MAKE tx Setup
  *     MAKE txs Setup
+ *     MAKE txs AdminReversesABankTransfer
  *     MAKE undo Setup
  */
 function members($list) {return t\members($list);}
@@ -790,7 +791,7 @@ function withoutOptions($options) {
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
- *     BOTH txs Setup
+ *     TEST txs Setup
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
 function balances($list) {return t\balances($list);}
@@ -1338,10 +1339,7 @@ function aMemberPostsToWithValues($page, $values) {return memberConfirmsFormWith
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signup AMemberSignsUp
  */
-function memberIsLoggedIn($id) {
-  global $testOnly, $mya;
-  return $testOnly ? ($mya and $mya = r\acct() and t\uid($id) == $mya->id) : t\login($id);
-}
+function memberIsLoggedIn($id) {return t\isSignedIn($id);}
 
 /**
  * next random code is (ARG)
@@ -1765,9 +1763,9 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
- *     MAKE txs Setup
+ *     BOTH txs Setup
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
- *     TEST txs AdminReversesABankTransfer
+ *     BOTH txs AdminReversesABankTransfer
  *     MAKE undo Setup
  *     TEST undo AMemberReversesAPaymentFromSomeone
  *     BOTH undo ACustomerReversesARefundFromAStore
@@ -2091,14 +2089,7 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
  */
-function cookieIs($nm, $v) {
-  global $testOnly, $box;
-
-  if (!$testOnly) r\setCook($nm, $v);
-  if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
-    
-  return t\eq("cookie $nm", $v, $_COOKIE[$nm]);
-}
+function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
 
 /**
  * someone visits (ARG) where code is: (ARG)
@@ -2439,3 +2430,10 @@ function varEncrypts($var, $ray) {
   $want = u\cryRay($ray[0]);
   return $testOnly ? t\eq(t('test Var'), nni($testVars, $var)) : ($testVars[$var] = $want);
 }
+
+/**
+ * member (ARG) scans admin card (ARG)
+ *
+ * in: MAKE txs AdminReversesABankTransfer
+ */
+function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}

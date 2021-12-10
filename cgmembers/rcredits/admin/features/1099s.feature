@@ -16,6 +16,10 @@ Setup:
   |activated  | %now-20m                    | %now-20m   | %now-20m    |
   |state      | MA                          | MA         | MA          |
   | federalId | 001010001                   | 001010002  | 001010003   |
+  And these "admins":
+  | uid  | vKeyE     | can   |*
+  | .ZZB | DEV_VKEYE | super |
+  And member ".ZZB" scans admin card "%DEV_VKEYPW"
   And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |

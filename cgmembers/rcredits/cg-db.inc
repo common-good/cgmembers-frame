@@ -143,13 +143,14 @@ function insert($table, $info, $key = 'id') {
  * Insert or update a database record 
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (defaults to 'id')
+ * @param string $key: record key name (defaults to 'id', ignore if NULL)
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
 function updateOrInsert($table, $info, $key = 'id') {
   if (nni($info, $key) and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
+    if (!nni($info, $key)) unset($info[$key]); // handle empty key (meaning "omitted")
     return db\insert($table, $info, $key);
   }
 }

@@ -28,122 +28,131 @@ function ajax($args = NULL) {
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 
-/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op data myid aid')));
   $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
+/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op myid aid')) + $data); // pass data as array so its NOLOG args get hidden
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
-  if ($op == 'qBtn') { // question mark help button
+  switch ($op) {
+    case 'qBtn': // question mark help button
     include_once R_ROOT . '/help-scraps.inc';
     return ajaxRet(helpScrap($data['topic']));
+    
+    case 'vKeyPw': return ajaxRet(ray('code', u\cryRay(just('vKeyPw', $data))));
   
-  } elseif ($op == 'ssn') { // verify member's SSN
-    if ($mya) $mya->ssnCheck();
-    exit();
+    case 'ssn': // verify member's SSN
+      if ($mya) $mya->ssnCheck();
+      exit();
     
-  } elseif ($op == 'cgPayCode') { // get cgPay code
-    include_once R_ROOT . '/forms/code.inc';
-    extract(just('fer expires', $data));
-    $data['for'] = nni(ray('credit,gift,,donate'), $fer); // fer=2 (other) is ignored
-    unset($data['fer']);
-    if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
-    foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
-    $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
-    return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
+    case 'cgPayCode': // get cgPay code
+      include_once R_ROOT . '/forms/code.inc';
+      extract(just('fer expires', $data));
+      $data['for'] = nni(ray('credit,gift,,donate'), $fer); // fer=2 (other) is ignored
+      unset($data['fer']);
+      if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
+      foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
+      $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
+      return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
     
-  } elseif ($op == 'suggestWho') { // get selections for a whoFld (see w\whoFldSubmit()
-    $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
-    return exitJust(u\jsonize($res ? array_values($res) : []));
+    case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
+      $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
+      return exitJust(u\jsonize($res ? array_values($res) : []));
     
-  } elseif ($op == 'setNotice') { // change notice preference for one notice type (code, type, freq)
-    extract(just('code type freq', $data, ''));
-    if (!$ray = u\decryRay($code)) return ajaxErr(t('Bad ID code.'));
-    $idRay = just('pid uid', $ray);
-    $tnm = nni($idRay, 'pid') ? 'people' : 'users';
-    $notices = ray(db\get('notices', $tnm, $idRay));
-    $notices[$type] = $freq;
-    db\update($tnm, $idRay + ray('notices', u\deray($notices)), key($idRay));
-    
-  } elseif ($op == 'relations') {
-    extract(just('name v', $data, ''));
-    list ($fld, $reid) = explode('-', $name);
-    $other = r\relation('other', $reid);
-    $a = r\acct($myid, $other);
-    
-    if ($fld == 'delete' or $fld == 'permission') {
-      list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
-      $v0 = r\relation('permission', $reid);
-      if ($mya->co and $v < $managePerm and $fld == 'permission' and !db\exists('u_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
-      if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
-        if ($v == $joinPerm and db\exists('u_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
-        $msg = r\setJoin($reid, $v == $joinPerm);
-      } else { $msg = ''; }
-      
-      if ($fld == 'delete') {
-        db\del('u_relations', compact('reid'));
-        $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
-        $msg = u\joi('|', [$msg, ajaxMsg(tr('deleted relation', $subs))]);
-      } else { $a->setRel($fld, $v); }
-      return ajaxMsg($msg); // show messages, if any
-    } else { $a->setRel($fld, $v); } // toggle
-    
-  } elseif ($op == 'changeCtty') { // change member's community
-    extract(just('newCtty retro', $data));
-    if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
-//    ajaxRet(['msg' => "uid is $uid, newCtty is $newCtty"]);
+    case 'setNotice': // change notice preference for one notice type (code, type, freq)
+      extract(just('code type freq', $data, ''));
+      if (!$ray = u\decryRay($code)) return ajaxErr(t('Bad ID code.'));
+      $idRay = just('pid uid', $ray);
+      $tnm = nni($idRay, 'pid') ? 'people' : 'users';
+      $notices = ray(db\get('notices', $tnm, $idRay));
+      $notices[$type] = $freq;
+      db\update($tnm, $idRay + ray('notices', u\deray($notices)), key($idRay));
+      return ajaxMsg(t('Done!'));
 
-  } elseif ($op == 'getLocus') {
-    u\FAIL('ajax getLocus unused');
-    extract(just('location', $data));
-    return ajaxRet(array_combine(ray('latitude longitude zip'), u\getLocus($location)));
+    case 'relations':
+      extract(just('name v', $data, ''));
+      list ($fld, $reid) = explode('-', $name);
+      $other = r\relation('other', $reid);
+      $a = r\acct($myid, $other);
+      
+      if ($fld == 'delete' or $fld == 'permission') {
+        list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
+        $v0 = r\relation('permission', $reid);
+        if ($mya->co and $v < $managePerm and $fld == 'permission' and !db\exists('u_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
+        if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
+          if ($v == $joinPerm and db\exists('u_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
+          $msg = r\setJoin($reid, $v == $joinPerm);
+        } else { $msg = ''; }
+        
+        if ($fld == 'delete') {
+          db\del('u_relations', compact('reid'));
+          $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
+          $msg = u\joi('|', [$msg, ajaxMsg(tr('deleted relation', $subs))]);
+        } else { $a->setRel($fld, $v); }
+        return ajaxMsg($msg); // show messages, if any
+      } else {
+        $a->setRel($fld, $v); // toggle
+        return ajaxMsg(t('Done!'));
+      }
     
-  } elseif ($op == 'setBit') {
-    extract(just('bit on', $data));
-    if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
-      $mya->setBit($b, $on);
-    } else return ajaxErr(t('nope'));
+    case 'changeCtty': // change member's community
+      extract(just('newCtty retro', $data));
+      if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
+      return ajaxMsg(t('Done!'));
+
+    case 'getLocus':
+      u\FAIL('ajax getLocus unused');
+      extract(just('location', $data));
+      return ajaxRet(array_combine(ray('latitude longitude zip'), u\getLocus($location)));
+      
+    case 'setBit':
+      extract(just('bit on', $data));
+      if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
+        $mya->setBit($b, $on);
+        return ajaxMsg(t('Done!'));
+      } else return ajaxErr(t('nope'));
     
-  } elseif ($op == 'eval' and isDEV) {
-    extract(just('jsCode', $data, ''));
-    return ajaxRet(u\decryRay($jsCode));
+    case 'eval':
+      if (!isDEV) return;
+      extract(just('jsCode', $data, ''));
+      return ajaxRet(u\decryRay($jsCode));
     
-  } elseif ($op == 'set') {
-    extract(just('k v', $data));
-    if ($mya) {
-      if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
-      $mya->update($k, $v);
-    } else return ajaxErr(t('nope'));
+    case 'set':
+      extract(just('k v', $data));
+      if ($mya) {
+        if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
+        $mya->update($k, $v);
+        return ajaxMsg(t('Done!'));
+      } else return ajaxErr(t('nope'));
     
-  } elseif ($op == 'dpOffset') {
-    if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
-    extract(just('amount', $data));
-    if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
-    // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);
-    ajaxMsg($msg);
+    case 'dpOffset':
+      if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
+      extract(just('amount', $data));
+      if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
+      // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);
+      return ajaxMsg($msg);
     
-  } elseif ($op == 'who') {
-    extract(just('who question amount selfErr restrict', $data));
-    $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-    $who = be\identify($who, $mya, $selfErr, $restrict);
-    if (is_string($who)) return ajaxErr(tr($who));
-    if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->id, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
+    case 'who':
+      extract(just('who question amount selfErr restrict', $data));
+      $amtDpy = u\fmtAmt(nn($amount) ?: 0);
+      $who = be\identify($who, $mya, $selfErr, $restrict);
+      if (is_string($who)) return ajaxErr(tr($who));
+      if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->id, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
+      
+      // $who must be an array, so create modal selection form
+      $choice = selectFld(BARE, '', ['size' => 12], $who);
+      $which = render($choice);
+      $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
+      $message = '';
+      return ajaxRet(compact('which', 'title', 'message'));
     
-    // $who must be an array, so create modal selection form
-    $choice = selectFld(BARE, '', ['size' => 12], $who);
-    $which = render($choice);
-    $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
-    $message = '';
-    ajaxRet(compact('which', 'title', 'message'));
+    case 'whoami': // return one or more data fields
+      return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
     
-  } elseif ($op == 'whoami') { // return one or more data fields
-//    $data = just('fullName', ray($data)); // limit what we can get to what we need
-    return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
+    case 'bumpShout':
+      return db\q('UPDATE u_shout SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
     
-  } elseif ($op == 'bumpShout') {
-    db\q('UPDATE u_shout SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
-    
-  } else return ajaxErr(t('Invalid op'));
+    default: return ajaxErr(t('Invalid op'));
+  }
   
-  return ajaxMsg(t('Done!'));
 }
 
 function ajaxErr($msg) {return ajaxMsg($msg, 0);}
