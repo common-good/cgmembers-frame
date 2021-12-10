@@ -29,7 +29,11 @@ function formShowQr($form, &$sta, $args = '') {
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
   if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : $mya->card) {
-    $qr = item(tr('<img src="%data" />', '_data', genQr($testQr = qrUrl($mya))));
+    $aA = $mya->superAdmin ? $mya : $mya->agentA;
+    $logo = $aA->photoSrc(FALSE, TRUE, TRUE);
+    $text = $aA->bestName . ", $mya->city, $mya->st";
+    $testQr = qrUrl($mya);
+    $qr = item(qrHtml($testQr, $logo, $text));
     u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
     $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag($mya->co ? '/dashboard' : '/scraps/card'));
@@ -39,29 +43,31 @@ function formShowQr($form, &$sta, $args = '') {
   return cgform(compact(ray('title subtext qr')));
 }
 
-function genQr($url) {
-  global $mya;
+function qrHtml($data, $logo, $text) {return tr('<img src="%data" />', '_data', genQr($data, $logo, $text));}
+
+function genQr($data, $logo, $text) {
   require_once DRUPAL_ROOT . '/vendor/autoload.php';
 
-  $aA = $mya->superAdmin ? $mya : $mya->agentA;
-
-  return Builder::create()
+  $qr = Builder::create()
     ->writer(new PngWriter())
 //    ->writerOptions([])
-    ->data($url)
+    ->data($data)
     ->encoding(new Encoding('ISO-8859-1'))
     ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
     ->size(300)
     ->margin(5)
     ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-    ->logoPath($aA->photoSrc(FALSE, TRUE, TRUE))
-    ->logoResizeToWidth(99)
-    ->logoResizeToHeight(136)
-    ->labelText($aA->bestName . ", $mya->city, $mya->st") 
-    ->labelFont(new NotoSans(10))
+    ->labelFont(new NotoSans(10));
 //    ->labelAlignment(new LabelAlignmentCenter())
-    ->build()
-    ->getDataUri();
+    
+  if ($logo) $qr
+    ->logoPath($logo)
+    ->logoResizeToWidth(99)
+    ->logoResizeToHeight(136);
+    
+  if ($text) $qr->labelText($text);
+
+  return $qr->build()->getDataUri();
 }
 
 /**
@@ -94,6 +100,7 @@ function qrUrl($a) {
 
 /**
  * Mask the image (to create a QR that looks like our logo, using very dark blue and green)
+ * Not Yet USED
  */
 function image_mask(&$src, &$mask) {
   imagesavealpha($src, true);

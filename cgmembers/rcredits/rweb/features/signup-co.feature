@@ -131,7 +131,7 @@ Scenario: A company supplies company information
   | founded     | %mdY-9y |
   | website     | Rpub.com |
   | description | really good ale |
-  | can         | 0=>0, 0=>2 |
+  | can         | 0=>0, 1=>2 |
   | staleNudge  | 8 |
   | tips        | 1 |
   Then members have:

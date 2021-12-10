@@ -1303,7 +1303,8 @@ function a($id = '', $agent = '', $create = FALSE) { // return an account object
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
 
 /**
- * Log to file and return log file name
+ * Log a string, array, or object to a file
+ * @return the log entry OR, if nothing was logged, the log filename
  */
 /**/ function flog($s = '', $chan = NULL) {
   global $channel; u\setDft($chan, nn($channel, TX_HACK));
@@ -1315,8 +1316,9 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
     u\EXPECT(is_dir($dir), 'directory creation failed: ' . $dir);
   }
   $logFlnm = $logDir . '/' . date('Ym') . '.log';
-  if (func_num_args()) file_put_contents($logFlnm, pr($s) . "\n", FILE_APPEND); // new log file every month
-  return $logFlnm;
+  $s = pr($s);
+  if (func_num_args()) file_put_contents($logFlnm, $s . "\n", FILE_APPEND); // new log file every month
+  return $s ?: $logFlnm;
 }
 
 /**/ function lug($s) {u\loga('debug', $s);}

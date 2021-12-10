@@ -761,18 +761,18 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   global $formArray, $formSta, $rUrl;
   global $mya;
 
-  if (!(nni($formSta, 'confirm')) and !in($function, R_NOLOG_FORMS)) {
-    $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
+  if (!(nni($formSta, 'confirm')) and !in($function, NOLOG_FORMS)) {
+    $path = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
     $logit = TRUE;
-    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($formName, $k)) {
+    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($path, $k)) {
       if ($i >= 2) return hack(t('blog attack'));
       $logit = FALSE;
     }
     
     if ($logit) {
       if ($logs = $_POST) {
-        u\loga('in', $formName . substr(pr(u\noSecrets($logs)), 5)); // without "Array"
-      } else {u\loga('form', [$formName]);}
+        u\loga('in', $path . substr(pr(u\noSecrets($logs)), 5)); // without "Array"
+      } else u\loga('form', $path);
     }
   }
 
@@ -1789,7 +1789,7 @@ function say($index = NULL, $args = [], $errField = '') {
 //    jsx('focus-on', 'field', $errField);
   } else \drupal_set_message($message, nn($errField) == 'ERR' ? 'error' : 'status', FALSE);
   $adminReport = ($mya and $mya->admin2 and mb_strlen($message) > 200);
-  if (!$hasTable and !$adminReport) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
+  if (!$hasTable and !$adminReport and !in($index, ray(NOLOG_MSGS))) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
   return FALSE;
 }
 

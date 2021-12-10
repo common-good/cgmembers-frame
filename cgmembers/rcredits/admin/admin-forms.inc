@@ -21,10 +21,15 @@ define('T_MSG_FILE', 'test-messages.txt');
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
 function formAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid', $args, NULL));
+  extract(just('qid code', $args, NULL));
   global $mya;
   if (!$mya->cAdmin) hack('panel');
   
+  if ($code) { // called from scanqr.js
+    extract(just('vKeyPw', u\decryRay($code), NULL));
+    if ($vKeyPw) r\setCryptCook('vKeyPw', $vKeyPw, 0);
+  }
+
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
@@ -51,6 +56,7 @@ function formAdminPanel($form, &$sta, $args = '') {
     $ssnLink = submi(t('SSN Link'));
     $seeSecure = submi(t('See Secure'));
     $resetSSN = submi(t('Recheck SSN'));
+    $makeVKeyE = submi(t('Make vKeyE'));
     $make2 = boxFld('make', t('Make:'));
   }
 
@@ -69,7 +75,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do);
   
-  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData');
+  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN makeVKeyE askForAppData seeAppData');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
@@ -79,7 +85,7 @@ function formAdminPanel($form, &$sta, $args = '') {
 function formAdminPanel_submit($form, &$sta) {
   global $base_url;
   global $mya;
-  
+
   extract(just('account make', $sta['input'], NULL));
   $op = op($sta);
 
@@ -124,6 +130,11 @@ function formAdminPanel_submit($form, &$sta) {
     $a->setBit(B_MEMBER, FALSE);
     $a->stepDone('verifyid', FALSE);
     $a->update('ssnData', '');    
+  } elseif ($op == 'makeVKeyE' and $a) {
+    if (!$make) return err(t('You must check the "Make" box to create a superAdmin card.'));
+    if (!$mya->superAdmin) return err(t('You must have superAdmin permission to create a superAdmin card.'));
+    if ($a->id == $mya->agentId) return err(t('You cannot revoke and recreate your own superAdmin card.'));
+    exitJust($a->makeVKeyE());
   } elseif ($op == 'seeData') {
     if ($a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
     /*  } elseif ($op == 'connectBank') {
@@ -476,7 +487,7 @@ EOF;
   if ($mya->superAdmin) {
 //    $go = btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks')) . ' ' . 
     $go = item(btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file')));
-  }
+  } else $go = NULL;
   
   $deposits = item(a\deposits(), ' ');
   w\jsx('deposits');

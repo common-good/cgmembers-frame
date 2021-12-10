@@ -1075,6 +1075,7 @@ EOF;
   unset($result[$myid]); // if self is one of many results, ignore it
   if (!$result) return $err ?: tr('unknown member', compact('who'));
   
+  if ($atPos and $uid = array_search($who0, $result)) $result = [$uid => $who0];
   if (count($result) == 1) return r\acct(key($zot = $result)); // return the one entry (zot resets the pointer)
   return $result; // array of choices
 }

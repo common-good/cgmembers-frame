@@ -519,7 +519,7 @@ EOF
   'too many joins' => t('You can join to only one other account.'),
   'maybe not cash' => t('If you are actually reimbursing someone or paying them for goods or services (for example, employee labor), choose a different button under "For".'),
   'link expired' => t('That link has expired.'),
-  'login failed' => t('Your attempt to sign in failed. Click the "Password problems" link if you need a new password.'),
+  'login failed' => t('Your attempt to sign in failed. Click the "Forgot password" link if you need a new password.'),
   'bad file type' => t('Bad file type: %filetype'),
   'file save error' => t('Your file upload did not succeed.'),
   'forced without perm' => t('<p>An unauthorized transaction was made using a Company %PROJECT card.</p><ul><li>Date: %date</li><li>Customer: %a2 (by %agent2)</li><li>Company: %a1 (by %agent1)</li><li>Amount: %amount</li><li>For: %for</li></ul><p>This transaction was taken offline, so there was no way to know the agent lacked authorization.</p>'),

@@ -165,6 +165,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
+    'admins:uid:D',
     'people:uid',
     // posts
     // post_cats

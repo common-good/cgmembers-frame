@@ -6,13 +6,16 @@ SO everything works smoothly
 Setup:
   Given members:
   | uid  | fullName | address | city | state | zip | email | flags                   | minimum | federalId |*
-  # 1 (superAdmin)
-  | .ZZB | Bea Two  | 2 B St. | Bton | MA    | 02000      | b@    | ok               |     200 | 222222222 |
+  | .ZZB | Bea Two  | 2 B St. | Bton | MA    | 02000      | b@    | ok,admin         |     200 | 222222222 |
   | .ZZD | Dee Four | 4 D St. | Dton | MA    | 04000      | d@    | member,confirmed |     400 | 444444444 |
-
+  And these "admins":
+  | uid  | vKeyE     | can   |*
+  | .ZZB | DEV_VKEYE | super |
+  And member ".ZZB" scans admin card "%DEV_VKEYPW"
+  
 # This scene assures that field changes made to users in migrations get made also to x_users
 Scenario: Admin deletes an account
-  When member "B:1" visits page "sadmin/delete-account/NEWZZD"
+  When member ".ZZB" visits page "sadmin/delete-account/NEWZZD"
   Then these "x_users":
   | uid  | fullName | deleted |*
   | .ZZD | Dee Four | %now    |

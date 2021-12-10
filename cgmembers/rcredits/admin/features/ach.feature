@@ -15,6 +15,10 @@ Setup:
   | .ZZA | Abe One  | -500  | ok,confirmed,admin | 1 A, Aton, MA 01001 |     1 | USkk21187028101 |           |
   | .ZZB | Bea Two  | -500  | ok,confirmed,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |           |
   | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 | sponsored |
+  And these "admins":
+  | uid  | vKeyE     | can   |*
+  | .ZZA | DEV_VKEYE | super |
+  And member ".ZZA" scans admin card "%DEV_VKEYPW"
   And these "people":
   | pid | fullName |*
   |   6 | Flo Six  |

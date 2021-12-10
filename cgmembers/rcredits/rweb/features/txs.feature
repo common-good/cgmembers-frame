@@ -23,7 +23,14 @@ Setup:
   |   14 |  .ZZA |     11 | %today-3d  |         0  | %today-13m |
   |   15 |  .ZZA |    -22 | %today-4d  | %today-4d  |          0 |
   |   16 |  .ZZA |    -33 | %today-4d  | %today-4d  |          0 |
-  # The usd transfers create same-numbered transactions
+  Then these "txs": 
+  | xid | created    | amount | payer   | payee | purpose   |*
+  |   1 | %today-13m |   1000 | bank-in | .ZZA  | from bank |
+  |   2 | %today-13m |   2000 | bank-in | .ZZB  | from bank |
+  |   3 | %today-13m |   3000 | bank-in | .ZZC  | from bank |
+  |   4 | %today-3d  |      0 | bank-in | .ZZA  | from bank |
+  |   5 | %today-4d  |    -22 | bank-out| .ZZA  | to bank   |
+  |   6 | %today-4d  |    -33 | bank-out| .ZZA  | to bank   |
   And balances:
   | uid  | balance |*
   | .ZZA |     945 |
@@ -121,8 +128,15 @@ Scenario: A member looks at transactions with roundups
   | 48  | %mdy-1w | Corner Pub      | this Q                   | -120.00 | 1,750.00 |    |
 
 Scenario: Admin reverses a bank transfer
-  When member "A:1" visits page "history/transactions/period=5"
-  And member "A:1" clicks X on transaction 1
+  Given members:
+  | uid  | fullName  | flags              |*
+  | .ZZD | Dee Admin | ok,confirmed,admin |
+  And these "admins":
+  | uid  | vKeyE     | can   |*
+  | .ZZD | DEV_VKEYE | super |
+  When member ".ZZD" scans admin card "%DEV_VKEYPW"
+  When member "A:D" visits page "history/transactions/period=5"
+  And member "A:D" clicks X on transaction 1
   Then these "txs2":
   | txid | payee | amount | created  | completed  | deposit | xid |*
   |  -11 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  51 |

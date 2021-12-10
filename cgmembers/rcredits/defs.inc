@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.58z'; // software version
+const R_VERSION = '3.59a'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -199,9 +199,10 @@ const LOCPAT_CITYST = '|^([^,/\\s]+[^,/]+)\\s*[,/]?([a-zA-Z]{2})$|';
 const R_ADMIN_CAN_MANAGE_CTTYS = TRUE; // should be false once communities can manage themselves
 const R_CRON_PERIOD = 5*60; // how many seconds between cron runs (must divide an hour evenly)
 const R_MAX_TASK_TIME = 1*60; // what's the longest a queued cron task might take
-const R_NOLOG = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
-const R_NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Dashboard Summary Php'; // don't log visits to these forms
-const R_ANON_FORMS = R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'; // no login required
+const NOLOG_FLDS = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
+const NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Dashboard Summary Php'; // don't log visits to these forms
+const NOLOG_MSGS = 'co code timeout,foobar'; // don't log saying these messages
+const R_ANON_FORMS = NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'; // no login required
 const SSN_ERR_INDEX = 'CGerror'; // where to put/find error messages in ssnData
 const BY_CASH = '(cash)'; // app includes this in description, for a purchase of CG credit by cash
 const BY_CHECK = '(check)'; // app includes this in description, for a purchase of CG credit by check
@@ -695,6 +696,8 @@ const DUR_1 = 'once';
 
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
+
+const A_SUPER = 0; // all superAdmin permissions
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));
