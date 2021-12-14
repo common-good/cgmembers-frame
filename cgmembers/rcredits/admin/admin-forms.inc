@@ -27,7 +27,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($code) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($code), NULL));
-    if ($vKeyPw) r\setCryptCook('vKeyPw', $vKeyPw, 0);
+    if ($vKeyPw) r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
   }
 
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show

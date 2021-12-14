@@ -16,16 +16,35 @@
 # For syntax checking, see:
 # http://www.frobee.com/robots-txt-check
 
+User-agent: MJ12Bot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SEMrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MauiBot
+Disallow: /
+
 User-agent: *
 Crawl-delay: 10
 # Directories
 Disallow: /includes/
 Disallow: /misc/
 Disallow: /modules/
-Disallow: /profiles/
-Disallow: /scripts/
-Disallow: /themes/
+Disallow: /vendor/
+Disallow: /rcredits/
 # Files
+Disallow: /pay-with-cg
+Disallow: /cgpay
 Disallow: /CHANGELOG.txt
 Disallow: /cron.php
 Disallow: /INSTALL.mysql.txt

@@ -237,7 +237,7 @@ class Acct {
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
       case 'hasCustomers': return db\exists('u_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
-      case 'superAdmin': return $a->id == 1 ?: ($mya and $mya->agentId == $a->agentId and $a->admin and r\cook('vKeyPw') and (db\get('can', 'admins', ray('uid', $a->agentId)) & u\bit(A_SUPER)));
+      case 'superAdmin': return $a->agentId == 1 ?: ($mya and $mya->agentId == $a->agentId and $a->admin and r\cook('vKeyPw') and (db\get('can', 'admins', ray('uid', $a->agentId)) & u\bit(A_SUPER)));
       case 'vKeyE': return $mya->admin ? db\get('vKeyE', 'admins', ['uid' => $a->agentId]) : NULL; // mya not a
       case 'can': return $a->admin ? db\get('can', 'admins', ['uid' => $a->agentId]) : NULL;
       case 'bankInfo': return ($routing = substr($a->bankAccount, 4, 9)) ? db\get('*', 'r_banks', 'route=:routing', compact('routing')) : NULL;
@@ -1576,7 +1576,7 @@ X;
     if ($bit <= B_MAX) { // ordinary bits
       $can = (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.
       if (in($bit, [B_OADMIN, B_ADMIN2, B_CADMIN2, B_CADMIN, B_ADMIN])) {
-        if ($a->id == 1) return TRUE; // this didn't use to be necessary (9/20/2017)
+        if ($a->agentId == 1) return TRUE; // this didn't use to be necessary (9/20/2017)
         if (!$a->proSe) return ($aa = $a->agentA and $aa->can($bit)); // admin permissions are for agent instead (in tests, agent sometimes doesn't exist)
         if (!$can and $bit < (R_ADMIN_CAN_MANAGE_CTTYS ? B_ADMIN : B_CADMIN)) return $a->can($bit + 1); // not this admin bit, maybe the next higher? IMPORTANT NOTE: this gives cAdmin2 Admin2 permission, so always use ->isAdmin2 rather than ->admin2 unless you WANT cAdmin2 to have the permission in question
       }
@@ -1601,7 +1601,7 @@ X;
     $id = $a->id;
     
     $cans[B_PERSON] = !$a->can(B_CO);
-    if ($id == 1) $cans[B_ADMIN] = TRUE;
+    if ($a->agentId == 1) $cans[B_ADMIN] = TRUE;
 
     $perm = ($aa->can(B_CADMIN) and $a->community == $aa->community) ? B_MANAGE : ($a->proSe ? B_MANAGE : 0);
       

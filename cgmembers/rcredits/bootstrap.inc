@@ -9,8 +9,10 @@ use CG\Testing as t;
  * @file
  * Functions that need to be loaded on every request.
  */
- 
-/**/ if (preg_match('/msie [1-7][^0]/i', @$_SERVER["HTTP_USER_AGENT"])) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
+
+$agt = nni($_SERVER, 'HTTP_USER_AGENT');
+/**/ if (preg_match('/msie [1-7][^0]/i', $agt)) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
+foreach (ray('MJ12Bot PetalBot AhrefsBot SEMrushBot DotBot MauiBot') as $k) if (strihas($agt, $k)) exit('creepy crawly');
 
 const VERSION = '7.34'; // The current Drupal version.
 const THEME = 'rcredits'; // The only theme we use.

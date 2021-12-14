@@ -105,7 +105,7 @@ function formSignin_submit($form, &$sta, $goto = 'dashboard') {
   u\loga('signin', ['qid' => $mya->qid]);
   if ($mya->superAdmin) superSignin();
   if ($then and $res = then($then)) return $res;
-  return w\go($mya->admin2 ? 'sadmin/followup' : $goto);
+  return w\go($mya->admin2 ? 'sadmin/panel' : $goto);
 }
 
 /**

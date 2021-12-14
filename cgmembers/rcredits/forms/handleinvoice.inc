@@ -29,7 +29,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
   if ($mya and !in($mya->id, [$payer, $payee])) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   if (!$mya) { // not signed in (might have changed in previous line)
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$code or !$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
+    if (!$code) return go('/signin'); // probably admin browser refresh (but timed out)
+    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
 
     extract(just('op v', $info, NULL));
     u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');

@@ -248,7 +248,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
 
   if (nn($acct) == 'signout') return signout();
-  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
+  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('/signin')));
   if (!$mya = r\acct($acct, $agt = $mya ? $mya->agentId : NULL)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya), pr($agt))); // tentative new account (agent is the same, so adminishness is the same)
   if (!$mya->can()) {
     if (!$mya->cAdmin2 and !$mya->isAdmin2) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));

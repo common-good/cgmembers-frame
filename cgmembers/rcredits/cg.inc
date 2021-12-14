@@ -566,7 +566,7 @@ function vKey() {
 
   if (!$mya) return FALSE;
 
-  if ($mya->id == 1) { // old style: admin account only
+  if ($mya->agentId == 1) { // old style: admin account only
     if (test() and (!$mya or $mya->id != 1)) return FALSE;
     if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
     if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
