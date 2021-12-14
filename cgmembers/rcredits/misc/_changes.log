@@ -1,3 +1,7 @@
+2021-12-13 feature/super-signin
+. move superSignin function to where admins sign in
+. delete vKeyPw cookie on signout
+
 2021-12-08 feature/supers
 . created admins table
 . any admin can become a super by scanning a superAdmin QR

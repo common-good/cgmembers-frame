@@ -27,7 +27,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($code) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($code), NULL));
-    if ($vKeyPw) r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
+    if ($vKeyPw) superSignin ();
   }
 
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
@@ -975,4 +975,17 @@ function formVariableEdit_submit($form, &$sta) {
   extract(just('name new', $sta['input']));
   setv($name, $new);
   say(t('Saved new value for %name.', compact('name')));
+}
+
+/**
+ * Do periodic stuff that only superAdmin can do.
+ */
+function superSignin() {
+  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
+  if (u\decry('V', u\cry('V', 'test')) != 'test') return softErr(t('Your admin password is invalid.'));
+  
+  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
+    $a = r\acct($uid);
+    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+  }
 }

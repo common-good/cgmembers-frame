@@ -103,18 +103,6 @@ function formSignin_submit($form, &$sta, $goto = 'dashboard') {
   $mya = r\setAcct($uid, $sta);
 
   u\loga('signin', ['qid' => $mya->qid]);
-  if ($mya->superAdmin) superSignin();
   if ($then and $res = then($then)) return $res;
   return w\go($mya->admin2 ? 'sadmin/panel' : $goto);
-}
-
-/**
- * Do periodic stuff that only superAdmin can do.
- */
-function superSignin() {
- 
-  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
-    $a = r\acct($uid);
-    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
-  }
 }

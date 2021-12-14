@@ -264,6 +264,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  */
 function signout($continue = FALSE) {
   global $mya;
+  
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
@@ -276,6 +277,7 @@ function signout($continue = FALSE) {
   }
   
   if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
+  r\deleteCook('vKeyPw'); // no longer a superAdmin, if we ever were
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');
@@ -488,4 +490,3 @@ function whosin($ctty = '') {
   if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit(); // empty list
   return exitJust($list);
 }
-
