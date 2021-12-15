@@ -1,3 +1,6 @@
+2021-12-15 feature/negbal
+. account with negative balance now get brought up to zero only if paying a pending invoice (bug fix)
+
 2021-12-13 feature/super-signin
 . move superSignin function to where admins sign in
 . delete vKeyPw cookie on signout

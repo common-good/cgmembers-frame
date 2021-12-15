@@ -208,6 +208,15 @@ Scenario: a member account needs more funding while not yet verified and somethi
   |   2 |      0 | bank-in | .ZZA  | from bank |     1 |
   And count "txs2" is 2
   And count "txs" is 2
+  
+Scenario: a member has a negative balance, but no agreement to bring it up to zero
+  Given members have:
+  | uid  | balance | floor | flags               |*
+  | .ZZA | -100    | 0     | ok,bankOk,confirmed |
+  | .ZZB | 0       | 0     | ok,confirmed        |
+  | .ZZC | 0       | 0     | ok,co               |
+  When cron runs "getFunds"
+  Then count "txs2" is 0  
 
 # bug fix test
 Scenario: a dormant joint member with a negative balance hasn't had wentNeg set yet
