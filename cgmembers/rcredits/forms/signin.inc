@@ -100,9 +100,12 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
   extract(just('qid then uid', $sta['input'], NULL));
+  
   $mya = r\setAcct($uid, $sta);
+  $agt = strtolower($mya->qid);
+  if ($dftAcct = r\cook('dftAcct') and $dftA = r\acct($dftAcct, $uid) and $dftA->can(B_READ)) r\setAcct($dftA->id, $sta);
 
-  u\loga('signin', ['qid' => $mya->qid]);
+  u\loga('signin', compact('agt') + ($dftAcct ? compact('dftAcct') : []) );
   if ($then and $res = then($then)) return $res;
   return w\go($mya->admin2 ? 'sadmin/panel' : $goto);
 }

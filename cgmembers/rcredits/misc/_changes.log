@@ -1,3 +1,6 @@
+2021-12-17 feature/dft-acct
+. company agents can now sign in to the company account by default
+
 2021-12-15 feature/negbal
 . account with negative balance now get brought up to zero only if paying a pending invoice (bug fix)
 

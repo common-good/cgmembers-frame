@@ -136,6 +136,7 @@ function menu($submenu = '') {
     'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
+    'settings/dft-acct' => ['call', 'Default Account', 'DftAcct', 'read'],
     'settings/partnersteptwo' => ['call', 'Partner Signup Agreement Etc.', 'PartnerStepTwo', 'manage'],
     'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerSignup end=1', ANY],
 
