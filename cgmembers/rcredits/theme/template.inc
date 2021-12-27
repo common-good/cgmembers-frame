@@ -284,7 +284,6 @@ function rcredits_form_element($variables) {
   $parentName = isset($parents) ? strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']) : '';
   $for = nn($name) ?: $parentName;
   if ($for == 'title') $children = "<h3>$children</h3>";
-//  foreach (ray('field_prefix children field_suffix') as $k) if(is_array(nn($$k))) die("$k: " . pr($$k));
   $children = nn($field_prefix) . $children . nn($field_suffix);
 
   u\setDft($title_display, 'before');
@@ -292,7 +291,7 @@ function rcredits_form_element($variables) {
   $boxy = in($type, 'radio checkbox') ? $type : '';
 
   $class = $boxy ? 'option' : 'control-label';
-  if ($title_display == 'invisible') $class[] = 'sr-only';
+  if ($title_display == 'invisible') $class .= ' sr-only';
   $label = ($boxy ? ($children . nn($title)) : nn($title)) ?: NBSP;
   $label = w\tag('label', $label, compact('for', 'class'));
   if (nn($bare)) return $boxy ? $label : $children;

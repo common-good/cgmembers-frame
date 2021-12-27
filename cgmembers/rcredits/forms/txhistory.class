@@ -90,7 +90,7 @@ EOF;
     // I am payee and amount > 0 or I am payer and amount < 0
     $reallyToMe = $info['myAmount'] > 0;
 
-    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe)) {
+    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->admReverseBankTx) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe)) {
       $this->buttons = w\btn("$this->baseUrl&undo=$xid", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
     } else $this->buttons = '';
     

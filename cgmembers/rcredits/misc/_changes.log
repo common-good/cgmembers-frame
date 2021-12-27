@@ -1,3 +1,13 @@
+2021-12-20 feature/supercan
+. ACH deposit details no longer go past end of page
+. cadmins and admins now have more specific permissions, including what superadmin can do
+. fixed bug in menu handler that handled lack of page permissions wrong
+. added an account equality method acct::eq()
+. separated out "we show PDF" from "we show" in test steps
+. moved t\fullQid() to bootstrap (for function a())
+. creditline now always says disabled if it is
+. fixed class error in template.inc
+
 2021-12-15 feature/negbal
 . account with negative balance now get brought up to zero only if paying a pending invoice (bug fix)
 

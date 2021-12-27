@@ -769,7 +769,7 @@ function votingWelcome($endDate, $proxLink) {
 EOF
   , '_a', w\atag($proxLink)));
   
-  if ($mya = r\acct() and $mya->superAdmin) {
+  if ($mya = r\acct() and $mya->admShowVotes) {
     $showVotes = w\submit(t('Show votes'));
     $noVote = w\submit(t('Didn\'t vote yet'));
     $noDirect = w\submit(t('Didn\'t vote directly'));

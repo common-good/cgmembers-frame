@@ -890,7 +890,8 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-  if ($type == 'V' and !t\deCryVok()) u\FAIL('deCry(V) by non-super');
+  global $mya, $cryTest;
+  if ($type == 'V' and !t\deCryVok()) {r\tellAdmin(t('deCry(V) by non-super') . (nn($cryTest) == 'test' ? pr($mya) : trace())); return NULL;}
   return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
 }
 
@@ -1289,8 +1290,8 @@ function deb($arg = '') {
  * @return assoc: the resultant array (FALSE if the needle is not found)
  */
 function insertBefore($bundle, $haystack, $needle) {
-  if (!$i = array_search($needle, array_keys($haystack))) return FALSE;
-  return array_slice($haystack, 0, $i) + $bundle + array_slice($haystack, $i);
+  $i = array_search($needle, array_keys($haystack));
+  return $i === FALSE ? FALSE : array_slice($haystack, 0, $i) + $bundle + array_slice($haystack, $i);
 }
 
 function formatNum($num, $format) {

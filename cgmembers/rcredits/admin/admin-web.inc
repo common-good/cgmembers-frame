@@ -21,7 +21,7 @@ function seeSecure($a) {
   }
   $a->update('secure', nn($new, []));
 
-  if ($mya->superAdmin) {
+  if ($mya->admV) {
     $vsecure = $a->vsecure;
     foreach (ray(VSECURE_FLDS) as $k) if (isset($vsecure[$k])) {
       $vnew[$k] = $vsecure[$k]; // reorder

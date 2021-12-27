@@ -175,6 +175,7 @@ class Acct {
     if ($nick == 'rel') return $a->proSe ? NULL : $a->relFld($field);
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
     if ($nick == 'cof') return $a->co ? $a->coCan($field) : NULL;
+    if ($nick == 'adm') return $a->anyAdmin ? $a->adminCan($field) : FALSE;
     if ($nick == 'ctt' and $field != 'cttyA') return $a->cttyA->can(u\consta('b', substr($field, 4))); // ctty bit
 
     if ($obj = nni(self::$rs, $a->id) and property_exists($obj, $field)) { // actual database field?
@@ -237,9 +238,6 @@ class Acct {
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
       case 'hasCustomers': return db\exists('u_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
-      case 'superAdmin': return $a->agentId == 1 ?: ($mya and $mya->agentId == $a->agentId and $a->admin and r\cook('vKeyPw') and (db\get('can', 'admins', ray('uid', $a->agentId)) & u\bit(A_SUPER)));
-      case 'vKeyE': return $mya->admin ? db\get('vKeyE', 'admins', ['uid' => $a->agentId]) : NULL; // mya not a
-      case 'can': return $a->admin ? db\get('can', 'admins', ['uid' => $a->agentId]) : NULL;
       case 'bankInfo': return ($routing = substr($a->bankAccount, 4, 9)) ? db\get('*', 'r_banks', 'route=:routing', compact('routing')) : NULL;
       case 'shouter': return db\exists('u_shout', $uidSub);
       case 'tempPhotoFilename': return r\pic("$a->mainQid.jpg");
@@ -247,6 +245,8 @@ class Acct {
       case 'hasPhoto': return db\exists('u_photo', $uidSub);
       case 'photo': return ($res = db\get('photo', 'u_photo', $uidSub)) ? u\decry('H', $res) : '';
       case 'thumb': return db\get('thumb', 'u_photo', $uidSub) ?: '';
+      case 'signedIn': return $a->eq($mya); // use only in r\access
+      case 'investor': return ($a->iclub or db\exists('r_stakes', $uidSub));
       case 'changes':
         $chFlds = 'oldValue,newValue';
         foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {
@@ -259,10 +259,14 @@ class Acct {
 
   /**
    * Return the 3-character field prefix, if any, and remove it from the field name.
+   * The character following the prefix must be uppercase.
+   * @param string $field: the original virtual property
+   * @param string $field (RETURNED): a field or flag name in some related table, if such exists; otherwise unchanged
+   * @return: the 3-character prefix that indicates where to find the wanted data
    */
   private function getNick(&$field) {
     $nick = substr($field, 0, 3); // possibly meaningful prefix (ctt if the prefix is ctty)
-    if (in($nick, 'can raw rel coy cof') and $field != 'rawChanges') {
+    if (preg_match('/^(can|raw|rel|coy|cof|adm)[A-Z]/', $field)) {
       $field = lcfirst(substr($field, 3));
       return $nick;
     }
@@ -270,6 +274,7 @@ class Acct {
     if (in($field, CO_FLDS)) return 'coy';
     if (in($field, B_LIST . ' ' . B_CTTY_BITS)) return 'can';
     if (in($field, CO_FLAGS)) return 'cof';
+    // admin permission fields must include the adm prefix
     return $nick;
   }
 
@@ -280,7 +285,7 @@ class Acct {
    * @throw warning if the field does not exist
    */
   private function getSpecial($field) {
-    global $mya, $sceneTest;
+    global $sceneTest;
     $a = $this;
     foreach (ray('data secure vsecure') as $k) {
       if ($a->special($field, strtoupper($k))) {
@@ -449,7 +454,6 @@ class Acct {
    * Update the account record in the database (with no special treatment of joint accounts).
    */
   public function update1($info) { // public only for testing
-    global $mya;
     $a = $this;
 
     if (!is_array($info)) $info = rayy(func_get_args());
@@ -528,7 +532,7 @@ class Acct {
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $k => $v) {
-      $ak = ((!$mya or !$mya->superAdmin or (test() and !$mya->admin)) and in($k, VSECURE_FLDS)) ? t('(encrypted)') : $a->$k;
+      $ak = (in($k, VSECURE_FLDS) and !$a->admSeeChanges) ? t('(encrypted)') : $a->$k;
       if ($v == $ak or (is_numeric($v) and is_numeric($ak) and $v + 0 == $ak + 0)) continue; // don't record if no change
 
       $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
@@ -635,16 +639,6 @@ class Acct {
   }
 
   /**
-   * Return a filename for the back of invitation cards (to print)
-   */
-  public function invitationBack() {
-    $a = $this;
-    $forCG = ($a->id == CGID and $a->superAdmin);
-    $filename = ($a->co and !$forCG) ? 'InvitationCardsBackCo.pdf' : 'InvitationCardsBack.pdf';
-    return 'http://cg4.us/doc/' . $filename;
-  }
-
-  /**
    * Return the amount not available, including draws from related accounts, depending on the purpose.
    * If there are fees for drawing from a related account, they are added to the amount needed.
    * If the account has permission to cash out while serving as an ATM their rewards amount will not limit them.
@@ -666,7 +660,7 @@ class Acct {
     // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
     if ($a->isCanonic) return 0;
 
-    if ($a->co and COMPANY_FREEZE and $a == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
+    if ($a->co and COMPANY_FREEZE and $a->eq($actor) and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
     if ($avail >= $need) return 0; // plenty without drawing from other accounts
 
@@ -1477,7 +1471,25 @@ X;
     $txRiskBits = array_flip(array_keys(ray(K_TX_RISKS)));
     return is_numeric($bit = nni($acctRiskBits, $bitName)) ? $bit : $txRiskBits[$bitName];
   }
-  
+
+  /**
+   * Say whether the current agent has the specified admin permission.
+   * Permissions that require "very secure" data, are denied unless the admin has scanned a SuperAdmin card.
+   */
+  public function adminCan($bitName = NULL) {
+    global $mya;
+    $a = $this; $uid = $a->agentId;
+
+    if (!$a->anyAdmin) return FALSE; // only admins have admin powers
+    if ($uid == UID_SUPER) return TRUE; // uid 1 always has all powers (as a backup for one trusted admin -- not to be used otherwise)
+    
+    $bitName = lcfirst($bitName);
+    $cans = db\get('can', 'admins', compact('uid'));
+    if ($cans & r\adminCanBit($bitName) == 0) return FALSE; // this admin doesn't have that bit
+    if (in($bitName, A_VLIST)) return ($a->admin and r\cook('vKeyPw')); // need admin and V permission for these
+    return TRUE;
+  }
+   
   //  private static function flagBit($bit) {return is_numeric($bit) ? $bit : u\consta('b', $bit);}
   public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit, 'co');}
   public function setCoBit($bit, $on = TRUE) {$this->setBit($bit, $on, 'coFlags');}
@@ -1669,7 +1681,7 @@ X;
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
 
     $id = db\get('id', 'admins', compact('uid'));
-    db\updateOrInsert('admins', ray('id uid vKeyE can', $id, $uid, $vKeyE, u\bit(A_SUPER)));
+    db\updateOrInsert('admins', ray('id uid vKeyE can', $id, $uid, $vKeyE, adminCanBit('v')));
     $pw = u\b64encode($vKeyPw);
 
     return $showQr ? w\qrHtml($pw, '', t('%PROJECT SuperAdmin')): $pw;
@@ -1738,7 +1750,6 @@ X;
     $fid = $a->vsecure['federalId'];
     if ($fid == '000000000') return t('Nonmember SSN.');
     if ($fid == '999999999') return t('SSN is a test.');
-    //    if (u\isEncrypted($a->federalId)) return t('SSN available only to superAdmin');
     if ($a->ssnData and !u\starts($a->ssnErr, SSN_TIMEOUT_MSG) and !$force) return $a->ssnData;
     
     $max = 5;
@@ -1895,10 +1906,11 @@ X;
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
   public function firstCo() {return db\get('fullName', 'u_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
-    $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
+    $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->admMakeAdmin ? ' admin' : ''));
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
   public function setDftAppCans() {foreach (ray(CO_APP_DFTS) as $i) $this->setCoBit(APP_CANS + $i);}
+  public function eq($a2) {return ($a2 and $this->id == $a2->id and $this->agentId == $a2->agentId);}
 
 } // end of class
 

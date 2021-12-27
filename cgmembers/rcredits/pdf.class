@@ -48,7 +48,6 @@ class Pdf extends \TCPDF {
    */
   public function say($text, $x, $y, $w = '', $h = '', $format = '', $align = '', $borders = 0) {
     global $pdfSays; if (isDEV) $pdfSays[] = $text;
-// maybe use this instead of pdfSays?    global $formOut; if (isDEV) $formOut['text'] .= "$text ";
     $formats = [];
     $font = 'Arial';
     $size = PDF_FONT_SIZE;
@@ -80,8 +79,7 @@ class Pdf extends \TCPDF {
    * Overrides parent just for testing.
    */
   public function Cell($w, $h=0, $txt='', $border=0, $ln=0, $align='', $fill=false, $link='', $stretch=0, $ignore_min_height=false, $calign='T', $valign='M') {
-    global $formOut; if (isDEV) $formOut['text'] = $formOut['text'] . "$txt ";
-    
+    global $pdfSays; if (isDEV) $pdfSays[] = $txt;
     parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
   }    
     

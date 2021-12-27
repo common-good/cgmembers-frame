@@ -20,8 +20,9 @@ function formDonate($form, &$sta, $args = NULL) {
   if ($op == 'cancel') return softErr('We apologize. Our donation form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.');
 
   if ($code = nni($args, 'code')) { // donating to a sponsored org
-    if (!$ray = getCGPayArgs($args)) return; // error message already shown
+    if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
     extract(just('coA s_amount', $ray));
+    if (!nn($coA)) return; // softErr
   } else $coA = r\acct(CGID); // vanilla CG donation page
   
   jsx('donate');

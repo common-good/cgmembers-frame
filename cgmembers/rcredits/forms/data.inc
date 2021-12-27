@@ -17,7 +17,6 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   
   if ($q) {
     $d = substr($q, 0, 1);
-//    if (strhas('0123456789', $d)) $q = $d . $q; // leading digit, if any
     $url = $isco ? '/history/company-reports' : '/community/data';
     w\go("$url/qName=" . urlencode($q));
   }

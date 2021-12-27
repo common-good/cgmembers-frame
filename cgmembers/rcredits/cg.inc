@@ -29,19 +29,17 @@ function access($perms = NULL) {
     $pass =
       $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
     : ($perm == 'dev' ? isDEV
-    : ($perm == 'signedIn' ? (bool) $mya
     : ($perm == 'scanner' ? (bool) r\cook('scanner')
-    : ($perm == 'iclub' ? ($mya and $mya->iclub)
-    : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
-    : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
-    : ($perm == 'prose' ? ($mya and $mya->proSe)
-    : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
-    : ($mya and $mya->can(u\consta('b', $perm))) )))))))));
+    : (!$mya ? FALSE
+    : (
+       (adminPerm($perm) or in($perm, 'signedIn investor iclub')) ? $mya->$perm : $mya->can(u\consta('b', $perm))
+      ) )));
+
     if ($not ? $pass : !$pass) return FALSE;
   }
   return TRUE;
 }
+function adminPerm($perm) {return preg_match('/^adm[A-Z]/', $perm);}
 
 /**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
@@ -103,7 +101,7 @@ function stampNote($note) {
   if ($mya) {
     if ($mya->proSe) {
       $rep = t('self');
-    } elseif ($mya->superAdmin) {
+    } elseif ($mya->id == UID_SUPER) {
       $rep = 'sadmin';
     } else {
       list ($first, $last) = u\parseName($mya->agentA->fullName);
@@ -566,15 +564,17 @@ function vKey() {
 
   if (!$mya) return FALSE;
 
-  if ($mya->agentId == 1) { // old style: admin account only
-    if (test() and (!$mya or $mya->id != 1)) return FALSE;
-    if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+  if ($mya->agentId == UID_SUPER) { // old style: admin account only
+    if (test() and $mya->id != UID_SUPER) return FALSE;
+    if (!$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
     if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
     return u\decry('R', $vKeyE, $pw);
   } else { // new style
-    if (test() and !$mya) return FALSE;
-    if (!$mya or !$vKeyE = $mya->agentA->vKeyE) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
-    if (!$vKeyPw = r\cryptCook('vKeyPw')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+    if (!$vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->id)) or !$vKeyPw = r\cryptCook('vKeyPw')) {
+      $msg = t('missing ') . ($vKeyE ? 'vKeyPw!' : 'vKeyE!');
+      if (isPRODUCTION) r\tellAdmin($msg . trace());
+      return w\softErr($msg);
+    }
     return u\decry('R', $vKeyE, $vKeyPw);
   }
 }
@@ -1488,7 +1488,6 @@ function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;
 function signedIn() {return r\acct() ? TRUE : FALSE;}
 function iCodeDesc($iCode) {$iCodeDescs = ray(IBYS); return $iCodeDescs[min($iCode, IBY_ICARD) - IBY0];}
 function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORDER BY created,fullName")->fetchAllKeyed();}
-function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->vKeyPw);}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == UID_BANK_IN or $uid == UID_BANK_OUT);}
@@ -1500,3 +1499,4 @@ const CREDIT_RULE_ROW = [ACT_SURTX, MATCH_PAYEE, MATCH_PAYER, 0.00, 1.00, REF_AC
 function isCreditRule($row) {return (array_values(just('action from to amount portion payerType payeeType minimum', $row)) == CREDIT_RULE_ROW);}
 function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
 function budgetCats($type = 'Income') {return db\keyed("id, CONCAT(MID(type, 1, 1), ' ', category)", 'budget_cats', "id NOT IN (3,7,9,10,11,16,28,32) ORDER BY type<>:type, category", compact('type'));}
+function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}

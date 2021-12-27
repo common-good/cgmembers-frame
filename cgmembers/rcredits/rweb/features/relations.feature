@@ -98,12 +98,13 @@ Scenario: Member company has relations
 Scenario: It's complicated
   Given these "u_relations":
   | main | agent | num | permission | employee | owner |*
-  | .ZZA | .ZZD  |   0 | manage     | 1        | 1       |
-  | .ZZD | .ZZA  |   0 |            | 0        | 0       |
-  | .ZZA | .ZZC  |   0 | buy        | 0        | 0       |
-  | .ZZC | .ZZA  |   1 | scan       | 1        | 0       |
   | .ZZA | .ZZB  |   0 | sell       | 1        | 1       |
+  | .ZZA | .ZZC  |   0 | buy        | 0        | 0       |
+  | .ZZA | .ZZD  |   0 | manage     | 1        | 1       |
   | .ZZB | .ZZA  |   0 |            | 1        | 0       |
+  | .ZZC | .ZZA  |   1 | scan       | 1        | 0       |
+  | .ZZC | .ZZD  |   1 | manage     | 1        | 0       |
+  | .ZZD | .ZZA  |   0 |            | 0        | 0       |
   When member ".ZZA" visits page "settings/relations"
   Then we show "Relations" with:
   | other      | Employee | Family | Permission  |
@@ -122,6 +123,10 @@ Scenario: It's complicated
   |~Header  |
   | Family |
   When member "C:A" visits page "settings/relations"
+  Then we say "error": "no page permission" with subs:
+  | page | Corner Pub: Relations |**
+  
+  When member "C:D" visits page "settings/relations"
   Then we show "Relations" with:
   | other   | Employee | Owns | Permission  |
   | Abe One | Yes      | No   | %can_scan |

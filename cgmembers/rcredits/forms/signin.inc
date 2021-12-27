@@ -73,7 +73,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   if (!$success) return say('login failed', 'qid');
   $sta['input']['uid'] = $uid; // especially for cgpay
 
-  if ($a->superAdmin) {
+  if ($a->id == UID_SUPER) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
     if ($pw2 and !$a->pw2) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
@@ -86,7 +86,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     }
   }
   
-  if (!$a->superAdmin) { // why does this fail for superAdmin? (but who cares?)
+  if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
     r\setCryptCook('qid', $a->mainQid, NULL);
     r\setCook('trust', $a->admin2 ? 0 : ($trust ? 1 : 0));
   }

@@ -89,7 +89,7 @@ function formTx_validate($form, &$sta) {
   }
   
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->superAdmin ? today() - 180 * DAY_SECS : today())) return say($err, $k);
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->admEditTxDate ? today() - 180 * DAY_SECS : today())) return say($err, $k);
   u\preray(compact(ray('fullName zip amount start end')), $sta['input']);
 }
 

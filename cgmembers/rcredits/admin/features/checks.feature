@@ -16,8 +16,8 @@ Setup:
   | .ZZB | Bea Two  | -500  | ok,confirmed,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
   | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
   And these "admins":
-  | uid  | vKeyE     | can   |*
-  | .ZZA | DEV_VKEYE | super |
+  | uid  | vKeyE     | can         |*
+  | .ZZA | DEV_VKEYE | printChecks |
   And member ".ZZA" scans admin card "%DEV_VKEYPW"
   
 Scenario: admin prints checks
@@ -32,7 +32,7 @@ Scenario: admin prints checks
   | New IN | 3 |
 
   When member ".ZZA" visits page "sadmin/checks/way=IN&date=0&mark=1"
-  Then we show pdf with:
+  Then we show PDF with:
   |~name    |~postalAddr          |~phone        |~transit      |~acct |~xid |~date |~amt   |~amount |~bank |*
   | Abe One | 1 A, Aton, MA 01001 | 413 772 0001 | 53-7028/2118 |   01 |   2 | %dmy | $ 400 | Four Hundred and NO/100 | Greenfield Co-op Bank |
   | Bea Two | 2 B, Bton, MA 01002 | 413 772 0002 | 53-7028/2118 |   02 |   3 | %dmy | $ 100 | One Hundred and NO/100 | Greenfield Co-op Bank |

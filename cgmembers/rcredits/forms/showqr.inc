@@ -29,7 +29,7 @@ function formShowQr($form, &$sta, $args = '') {
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
   if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : $mya->card) {
-    $aA = $mya->superAdmin ? $mya : $mya->agentA;
+    $aA = $mya->agentId == UID_SUPER ? $mya : $mya->agentA;
     $logo = $aA->photoSrc(FALSE, TRUE, TRUE);
     $text = $aA->bestName . ", $mya->city, $mya->st";
     $testQr = qrUrl($mya);

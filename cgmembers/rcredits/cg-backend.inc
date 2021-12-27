@@ -1164,7 +1164,7 @@ function accountChoices() {
   $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
 
   if ($mya->admin or $mya->isAdmin2) {
-    $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';
+    $where = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (uid<0) DESC, $nameOrder");
   } elseif ($mya->cAdmin2) {
     $sql = <<<EOF
