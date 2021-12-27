@@ -12,16 +12,26 @@ Setup:
   
 Scenario: A superAdmin grants super permission to another admin
   Given these "admins":
-  | uid  | vKeyE     | can   |*
-  | .ZZA | DEV_VKEYE | super |
+  | uid  | vKeyE     | can           |*
+  | .ZZA | DEV_VKEYE | v,printChecks |
+  And these "txs2":
+  | xid  | payee | amount | deposit    |*
+  | 3    | .ZZB  | 123    | %yesterday |
   And member ".ZZA" is signed in
+
   When member ".ZZA" scans admin card "%DEV_VKEYPW"
-  Then cryptcookie "vKeyPw" is "%DEV_VKEYPW"
-  
-  When member ".ZZA" visits "sadmin/deposits"
-  Then we show "Bank Transfers"
-  
+  Then cryptcookie "vKeyPw" is "%DEV_VKEYPW" decrypted
+
+  When member ".ZZA" visits "sadmin/checks/way=In&date=%yesterday"
+  Then we show PDF with:
+  | Bea Two | 123.00 | for %PROJECT credit |
+
   When member ".ZZB" is signed in
   And member ".ZZB" scans admin card "%DEV_VKEYPW"
-  And member ".ZZB" visits "sadmin/deposits"
-  Then we show ""
+  Then we say "error": "no page permission" with:
+  | page | Panel |**
+
+Scenario: A member tries to do a high-level admin thing
+  When member ".ZZB" visits "sadmin/checks/way=In&date=%yesterday"
+  Then we say "error": "no page permission" with:
+  | page | Checks |**

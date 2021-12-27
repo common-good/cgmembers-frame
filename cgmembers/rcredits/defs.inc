@@ -3,7 +3,6 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-
 const R_VERSION = '3.59a'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -697,7 +696,8 @@ const DUR_1 = 'once';
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const A_SUPER = 0; // all superAdmin permissions
+const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un10 editNotes editTxAmt editTxDate export generalInvite makeCtty makeRules makeAdmin makeVAdmin memberSettings mutualAid un21 payFrom printCards printChecks recheckSsn reconcile reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un33 setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
+const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations/permissions that require access to very secure data
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));

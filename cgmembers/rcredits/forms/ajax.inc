@@ -124,7 +124,7 @@ function ajax($args = NULL) {
       } else return ajaxErr(t('nope'));
     
     case 'dpOffset':
-      if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
+      if (!$mya or !$mya->admReconcile) return ajaxErr(t('You do not have permission.'));
       extract(just('amount', $data));
       if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
       // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);

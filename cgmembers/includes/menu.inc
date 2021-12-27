@@ -1,6 +1,7 @@
 <?php
 use CG\Web as w;
 use CG\Util as u;
+use CG\Db as db;
 
 /**
  * @file
@@ -496,29 +497,37 @@ function menu_get_item($path = NULL, $router_item = NULL) {
  * @param $deliver
  *   (optional) A boolean to indicate whether the content should be sent to the
  *   browser using the appropriate delivery callback (TRUE) or whether to return
- *   the result to the caller (FALSE).
+ *   the result to the caller (FALSE). $deliver == 'test' if called from a test.
  */
 function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   global $mya;
 
+  $testing = ((string) $deliver == 'test');
+  
   if ($router_item = menu_get_item($path)) {
+    if ($testing) _menu_check_access($router_item, $router_item['original_map']); // in case current account changed
     if ($router_item['access']) {
-      if ($flnm = $router_item['include_file']) {
-        require_once DRUPAL_ROOT . "/$flnm";
-      }
-      $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-    } elseif ($mya) {
-      if ($router_item['path'] == 'signin') {
-        return w\go('dashboard', t('You are already signed in.'));
-      } else { return w\softErr(t('no page permission')); }
-    } else { return w\go('signin'); }
-  } else { $page_callback_result = MENU_NOT_FOUND; }
+      if ($flnm = $router_item['include_file']) require_once DRUPAL_ROOT . "/$flnm";
+      $res = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
+    } else $res = MENU_ACCESS_DENIED;
+  } else $res = MENU_NOT_FOUND;
 
   // Deliver the result of the page callback, or if requested, return it raw, so calling code can do more processing.
-  if ($deliver) {
+  if ($deliver !== FALSE) {
+    if ($res == MENU_ACCESS_DENIED) {
+      if ($mya) {
+        if ($router_item['path'] == 'signin') {
+          return w\go('dashboard', t('You are already signed in.'));
+        } else {
+          $who = db\exists('u_relations', 'other=:uid AND permission>0', ray('uid', $mya->id)) ? "$mya->fullName: " : '';
+          return w\softErr(tr('no page permission', 'page', $who . $router_item['title']));
+        }
+      } else return w\goFirst('signin');
+    }
+    if ($testing) return $res; // this simulates actual delivery
     $default_delivery_callback = nn($router_item) ? $router_item['delivery_callback'] : NULL;
-    drupal_deliver_page($page_callback_result, $default_delivery_callback);
-  } else { return $page_callback_result; }
+    drupal_deliver_page($res, $default_delivery_callback);
+  } else return $res;
 
 }
 
@@ -2102,108 +2111,6 @@ function menu_local_tasks($level = 0) {
   }
   return $empty;
 }
-
-/**
- * Retrieves contextual links for a path based on registered local tasks.
- *
- * This leverages the menu system to retrieve the first layer of registered
- * local tasks for a given system path. All local tasks of the tab type
- * MENU_CONTEXT_INLINE are taken into account.
- *
- * For example, when considering the following registered local tasks:
- * - node/%node/view (default local task) with no 'context' defined
- * - node/%node/edit with context: MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE
- * - node/%node/revisions with context: MENU_CONTEXT_PAGE
- * - node/%node/report-as-spam with context: MENU_CONTEXT_INLINE
- *
- * If the path "node/123" is passed to this function, then it will return the
- * links for 'edit' and 'report-as-spam'.
- *
- * @param $module
- *   The name of the implementing module. This is used to prefix the key for
- *   each contextual link, which is transformed into a CSS class during
- *   rendering by theme_links(). For example, if $module is 'block' and the
- *   retrieved local task path argument is 'edit', then the resulting CSS class
- *   will be 'block-edit'.
- * @param $parent_path
- *   The static menu router path of the object to retrieve local tasks for, for
- *   example 'node' or 'admin/structure/block/manage'.
- * @param $args
- *   A list of dynamic path arguments to append to $parent_path to form the
- *   fully-qualified menu router path; for example, array(123) for a certain
- *   node or array('system', 'navigation') for a certain block.
- *
- * @return
- *   A list of menu router items that are local tasks for the passed-in path.
- *
- * @see contextual_links_preprocess()
- * @see hook_menu()
- *//* UNUSED
-function menu_contextual_links($module, $parent_path, $args) {
-  die('context');
-  static $path_empty = array();
-
-  $links = array();
-  // Performance: In case a previous invocation for the same parent path did not
-  // return any links, we immediately return here.
-  if (isset($path_empty[$parent_path]) && strpos($parent_path, '%') !== FALSE) {
-    return $links;
-  }
-  // Construct the item-specific parent path.
-  $path = $parent_path . '/' . implode('/', $args);
-
-  // Get the router item for the given parent link path.
-  $router_item = menu_get_item($path);
-  if (!$router_item || !$router_item['access']) {
-    $path_empty[$parent_path] = TRUE;
-    return $links;
-  }
-  $data = &drupal_static(__FUNCTION__, array());
-  $root_path = $router_item['path'];
-
-  // Performance: For a single, normalized path (such as 'node/%') we only query
-  // available tasks once per request.
-  if (!isset($data[$root_path])) {
-    // Get all contextual links that are direct children of the router item and
-    // not of the tab type 'view'.
-    $data[$root_path] = db_select('menu_router', 'm')
-      ->fields('m')
-      ->condition('tab_parent', $router_item['tab_root'])
-      ->condition('context', MENU_CONTEXT_NONE, '<>')
-      ->condition('context', MENU_CONTEXT_PAGE, '<>')
-      ->orderBy('weight')
-      ->orderBy('title')
-      ->execute()
-      ->fetchAllAssoc('path', PDO::FETCH_ASSOC);
-  }
-  $parent_length = drupal_strlen($root_path) + 1;
-  $map = $router_item['original_map'];
-  foreach ($data[$root_path] as $item) {
-    // Extract the actual "task" string from the path argument.
-    $key = drupal_substr($item['path'], $parent_length);
-
-    // Denormalize and translate the contextual link.
-    _menu_translate($item, $map, TRUE);
-    if (!$item['access']) {
-      continue;
-    }
-    // All contextual links are keyed by the actual "task" path argument,
-    // prefixed with the name of the implementing module.
-    $links[$module . '-' . $key] = $item;
-  }
-
-  // Allow modules to alter contextual links.
-  drupal_alter('menu_contextual_links', $links, $router_item, $root_path);
-
-  // Performance: If the current user does not have access to any links for this
-  // router path and no other module added further links, we assign FALSE here
-  // to skip the entire process the next time the same router path is requested.
-  if (empty($links)) {
-    $path_empty[$parent_path] = TRUE;
-  }
-
-  return $links;
-} */
 
 /**
  * Returns the rendered local tasks at the top level.

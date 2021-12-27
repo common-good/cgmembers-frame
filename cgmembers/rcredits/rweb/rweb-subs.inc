@@ -360,7 +360,7 @@ function queryPermitted($qName, &$sql = '', &$subtext = '') {
   } else {
     list ($zot, $d, $qName) = $m;
     if (mb_strpos($sql0, ':myid')) $subtext = "<div><h4>for $mya->fullName</h4>$text2</div>";
-    return $d >= ($mya->superAdmin ? 0 : ($mya->admin ? 1 : ($mya->cAdmin2 ? 2 : ($mya->co ? B_CO : 9))))
+    return $d >= ($mya->admV ? 0 : ($mya->admin ? 1 : ($mya->cAdmin2 ? 2 : ($mya->co ? B_CO : 9))))
     ? $qName
     : FALSE;
   }
@@ -786,7 +786,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   $formSta['cache'] = TRUE;
 //    $formSta['method'] = 'post';
   if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help')) {
-    if ($mya and $mya->superAdmin) {
+    if ($mya and $mya->admWhileDown) {
       say(t('The system is DOWN.'));
       //if (!$mya->cttyUp) say(t('The community is DOWN.'));
     } else $formName = 'CG\\Web\\formSystemDown';
@@ -2328,7 +2328,7 @@ function rent($element) {return \render($element);} // Drupal makes render hard,
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
-function softErr($msg) {sayEmpty($msg, 'err');}
+function softErr($msg) {return sayEmpty($msg, 'err');}
 function sayEmpty($msg, $type = '') {say($msg, $type); return w\go('empty');}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}

@@ -55,7 +55,7 @@ function formEvents($form, &$sta, $args = '') {
   if (!$mya->vote) return softErr(t('You have some steps left to become a %PROJECT voting member. <%a>Click here to continue</a>.', '_a', atag('/scraps/vote')));
 
   $cttyA = $mya->cttyA;
-  if ($aA = r\acct()) list ($cAdmin, $superAdmin) = [$aA->cAdmin, $aA->superAdmin]; // get signed-in account, if any
+  if ($aA = r\acct()) $cAdmin = $aA->cAdmin; // get signed-in account, if any
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
@@ -74,8 +74,8 @@ function formEvents($form, &$sta, $args = '') {
       if (!$mya->proSe or $mya->co) { // "or" is necessary if a voting link is accidentally sent to a company
         $switch = r\changeAcctLink($mya->agentId, t('Switch to your personal account'));
         $msg = $mya->co ? t('Companies cannot vote.') : t('You cannot vote on behalf of someone else.');
-        w\say("$msg|$switch.", $superAdmin ? '' : 'err');
-        if (!$superAdmin) return compact('title');
+        w\sayErr("$msg|$switch.");
+        return compact('title');
       }
 
     $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";

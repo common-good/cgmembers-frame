@@ -277,7 +277,7 @@ function signout($continue = FALSE) {
   }
   
   if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
-  r\deleteCook('vKeyPw'); // no longer a superAdmin, if we ever were
+  r\deleteCook('vKeyPw'); // no longer admV, if we ever were
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');

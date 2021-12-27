@@ -63,7 +63,7 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? t('(disabled)') : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
 
@@ -96,7 +96,7 @@ function formSummary($form, &$sta) {
     $form['none'] = submit('none'); // force _submit despite lack of submit button    
   } else $form = $fields;
 
-  if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
+  if ($mya->id == UID_SUPER) $form = just('title accountId accountName', $form); // don't show much for Anonymous super
   
   jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
 
@@ -196,7 +196,7 @@ function formSummary_submit($form, &$sta) {
   unset($DBTX);
   
   say('info saved');
-  if ($mya->superAdmin and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup');
+  if ($mya->admDeleteAcct and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup'); // 
 }
 
 function setRisksAndFlags($a, $risks, $adminable) {
@@ -218,7 +218,7 @@ function adminSummary() {
 
   $uid = $mya->id;
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
-  if ($mya->proSe and !$mya->superAdmin) return []; // nothing special on admin's own account
+  if ($mya->proSe and !$mya->anyAdmin) return []; // nothing special on admin's own account
   
   $noEnter = TRUE; // prevent submission by pressing Enter
   
@@ -282,17 +282,11 @@ function adminSummary() {
     $legalName = textFld(t('Legal Name:'), '', required($mya->legalName));    
     $shortName = textFld(t('Short Name:'), t('Shortest usable version of full name.'), dft($mya->shortName));
     
-//    if ($mya->superAdmin or ($mya->cAdmin and $mya->activated)) $active = ($mya->isCtty)
-    $active = ($mya->superAdmin or ($mya->cAdmin and $mya->ok)) // allowing all admins to activate causes a mess
+    $active = ($mya->admActivate or ($mya->admClose and $mya->ok)) // allowing all admins to activate causes a mess
     ? boolFld(t('Active?'), t('Is account approved to use %PROJECT?'), $mya->ok)
     : item($mya->ok ? t('Yes') : t('No'), t('Active:'));
 
-    if ($mya->member and !$mya->co and $mya->superAdmin) $ssnShow = item(a\ssnShow($mya));
-/*    if ($mya->admin) {
-      $dba = ($mya->co and $owner = r\relation('other', 'main=:uid', compact('uid')) and r\acct($owner)->federalId == $mya->federalId);
-      $ssnDft = $mya->federalId ? ($dba ? t('SSN') : R_ON_FILE) : '';
-      $federalId = $mya->superAdmin ? textFld(t('EIN/SSN:'), '', $ssnDft) : item($ssnDft);
-    } */
+    if ($mya->member and !$mya->co and $mya->admSeeSsn) $ssnShow = item(a\ssnShow($mya));
   
     $acctRisks = ray(K_ACCT_RISKS);
     $riskBits = array_keys($acctRisks);
@@ -343,7 +337,7 @@ function adminSummary() {
     $details = item(callDetails($tickleType, $mya->tickle));
 //    $preNote = item($tip);
 
-    if ($mya->superAdmin) {
+    if ($mya->admEditNotes) {
       $notes = areaFld(t('Notes:'), '', dft(unplain($mya->notes))); // only needed for default in areaFld
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
@@ -351,13 +345,13 @@ function adminSummary() {
     $dob = $altSt = $altId = NULL;
 
     if (!$mya->co) {
-      if ($mya->superAdmin or !$mya->hasId) {
+      if ($mya->admV or !$mya->hasId) {
         $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
         $dob = rendA('dob', $dob);
       }
       if ($mya->hasFid) {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
-      } elseif ($mya->superAdmin) { // altId is V-encrypted
+      } elseif ($mya->admV) { // altId is V-encrypted
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
         $label = t('Alt ID / DOB:');
         if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) {

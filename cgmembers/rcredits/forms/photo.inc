@@ -47,7 +47,7 @@ function formPhoto($form, &$sta, $arg = '') {
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');
     if (!$mya->co and $mya->stepIsDone('photo')) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
-    $del = $mya->superAdmin ? submit(t('Delete')) : NULL;
+    $del = $mya->admDeletePhoto ? submit(t('Delete')) : NULL;
   } else {
     $choose = t('Choose a Photo File');
     $del = NULL;

@@ -51,7 +51,7 @@ function menu($submenu = '') {
     'history/statements' => ['sub', t('Statements'), 'Statements 2', 'read', '', t(), 'list-alt'],
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(), 'envelope'],
     'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(), 'pawn'],
-    'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(), 'refresh'],
+    'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cAdmin', '', t(), 'refresh'],
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
@@ -75,8 +75,8 @@ function menu($submenu = '') {
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(), 'bell'],
     
     'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'ok'],
-    'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cadmin'],
-    'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cadmin'],
+    'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cAdmin'],
+    'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cAdmin'],
     'community/events/proposal' => ['call', t('Funding Proposal'), 'Proposal 3', ANY],
     'community/events/proposal-report' => ['call', t('Proposal Report'), 'ProposalReport 3', 'manage'],
     'community/events/proposal-notes' => ['call', t('Proposal Notes'), 'ProposalNotes 3', 'manage'],
@@ -89,7 +89,7 @@ function menu($submenu = '') {
     'community/find-company' => ['sub', t('Find a Company'), 'FindCo 2', ANY, '', t(), 'search'],
 // temporarily disabled    'community/grant' => ['sub', t('Get Paid to Organize'), 'Grant', 'prose', '', t(), 'apple'],
 //    'community/funds' => ['sub', t('Funds in Each Community'), 'CttyFunds', ANY, '', t(), 'usd'],
-    'community/graphs' => ['sub', t('%PROJECT Graphs'), 'Graphs 2', 'cadmin', '', t(), 'stats'],
+    'community/graphs' => ['sub', t('%PROJECT Graphs'), 'Graphs 2', 'cAdmin', '', t(), 'stats'],
     'community/balance-sheet' => ['sub', t('Balance Sheet'), 'BalanceSheet 2', ANY, '', t(), 'pause'],
     'community/flags' => ['sub', t('Risk Flags'), 'Flags 2', ANY, '', t(), 'flag'],
     'community/chart-data' => ['call', t('Chart Data'), '2', ANY, 'chartData'],
@@ -154,43 +154,44 @@ function menu($submenu = '') {
     
     'prejoin' => ['call', 'Open a Joint Account', 'Prejoin', 'manage'],
     'handle-invoice' => ['call', 'Handle Invoice', 'HandleInvoice 1', ANY],
-    'rerisk' => ['call', 'Recalculate Risk', 'Rerisk 1 2 3', 'cadmin2'],
+    'rerisk' => ['call', 'Recalculate Risk', 'Rerisk 1 2 3', 'cAdmin2'],
     
     'sadmin' => ['norm', t('Admin'), 'Admin', isDEV ? ANY : 'admin2'],
-    'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'cadmin'],
+    'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'cAdmin'],
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin2'],
-    'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'cadmin2'],
-    'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'cadmin2'],
-    'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'superadmin'],
-    'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cadmin'],
-    'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'superadmin'],
+    'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'cAdmin2'],
+    'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'cAdmin2'],
+    'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'admSeeDeposits'],
+    'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cAdmin'],
+    'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'admMakeCtty'],
     'sadmin/groups' => [isDEV ? 'sub' : 'call', t('Groups'), 'Groups 2', 'admin'],
     'sadmin/rules' => [isDEV ? 'sub' : 'call', t('Rules'), 'Rules 1 2', 'admin'],
     'sadmin/timed' => [isDEV ? 'sub' : 'call', t('Timed'), 'Rules 1 2', 'admin'],
     'sadmin/people' => [isDEV ? 'sub' : 'call', t('People'), 'People 2', 'admin'],
     'sadmin/check-sanity' => [isDEV ? 'sub' : 'call', 'Check database consistency', '0', 'admin', 'checkSanity'],
-//    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
-    'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'superadminORdev'],
-    'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'superadminORdev'],
+//    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
+    'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
+    'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'admCode'],
 
     'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admin2'],
-    'sadmin/deposit-details' => ['call', t('Deposit Details'), '2', 'superadmin', 'depositDetails'],
-    'sadmin/checks' => ['call', t('Checks'), '2', 'superadmin', 'printChecks'],
-    'sadmin/achs' => ['call', t('ACHs'), '2', 'superadmin', 'achBatch'],
-    'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'cadmin'],
-    'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'superadmin'],
-    'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'superadmin'],
-    'rcredits/util' => ['call', 'Util', '2', 'superadminORdev', 'util'],
-    'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'superadmin', 'deleteAccount'],
-    'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'superadmin'],
-    'sadmin/variables/edit' => ['call', t('Edit Variable'), 'VariableEdit', 'superadmin'],
-    'print-rcard' => ['call', t('Print ID Card'), '1 2', 'cadmin', 'memberID'],
+    'sadmin/deposit-details' => ['call', t('Deposit Details'), '2', 'admSeeDeposits', 'depositDetails'],
+    'sadmin/checks' => ['call', t('Checks'), '2', 'admPrintChecks', 'printChecks'],
+    'sadmin/achs' => ['call', t('ACHs'), '2', 'admAch', 'achBatch'],
+    'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'cAdmin'],
+    'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'admReconcile'],
+    'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'admReconcile'],
+    'rcredits/util' => ['call', 'Util', '2', 'admCode', 'util'], // remove this after 6/1/2022
+    'sadmin/util' => ['call', 'Util', '2', 'admCode', 'util'],
+    'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'admDeleteAcct', 'deleteAccount'],
+    'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'admCode'],
+    'sadmin/variables/edit' => ['call', t('Edit Variable'), 'VariableEdit', 'admCode'],
+    'print-rcard' => ['call', t('Print ID Card'), '1 2', 'cAdmin', 'memberID'],
     'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
-    'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'superadmin'],
-    'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'superadmin'],
+    'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'admCode'],
+    'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'admPrintCards'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
@@ -280,7 +281,7 @@ function menu1($path, $title, $type, $function, $args, $perms = '') {
 
   foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
   
-  $adminPerms = (strihas($perms, 'admin'));
+  $adminPerms = (strihas($perms, 'admin') or u\starts($perms, 'adm'));
   $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
   $smart = ($path == 'pos');
 

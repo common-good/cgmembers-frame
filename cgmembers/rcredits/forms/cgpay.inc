@@ -22,6 +22,7 @@ function formCGPay($form, &$sta, $args = '') {
   $args = $args ? urlq2ray($args) : $_POST;
   if (!$res = getCGPayArgs($args)) return; // if there were errors, don't continue
   extract($res); // coA, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
+  if (!nn($coA)) return; // softErr
   
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');

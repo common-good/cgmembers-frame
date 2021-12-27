@@ -1,3 +1,13 @@
+2021-12-20 feature/supercan
+. ACH deposit details no longer go past end of page
+. cadmins and admins now have more specific permissions, including what superadmin can do
+. fixed bug in menu handler that handled lack of page permissions wrong
+. added an account equality method acct::eq()
+. separated out "we show PDF" from "we show" in test steps
+. moved t\fullQid() to bootstrap (for function a())
+. creditline now always says disabled if it is
+. fixed class error in template.inc
+
 2021-12-17 feature/dft-acct
 . company agents can now sign in to the company account by default
 
@@ -4097,7 +4107,7 @@ function special2() {
 . comprehensive tests for signin and password reset
 . eliminated Contact step by including it in initial signup form, using Google's zipcode lookup api
 . anyone with refund permission now gets a "request card" link on Relations page
-. we now explain the 5% APR inflation adjustment as what we’re using until we have a realistic number.
+. we now explain the 5% APR inflation adjustment as what we're using until we have a realistic number.
 . we now figure savings as total of 30 day minimum balance
 . stats are now calculated in such a way that we can redo them all retroactively, using admin fixStats()
 . stats for all communities
@@ -4260,7 +4270,7 @@ function special2() {
 . made invite a primary link
 . made sign out a primary link
 . shortened transfer time from bank: when there are insuffient funds, now updates cached usd amount and retries.
-• fixed bug: "I didn’t give a security answer, but it says on file"
+. fixed bug: "I didn't give a security answer, but it says on file"
 . we now check hourly for deposits into the Dwolla/%PROJECT Account
 . member is now alerted immediately when funds arrive in their account for the first time (bona)
 . created 1099B reports for members and for electronic filing with IRS and state
@@ -4515,7 +4525,7 @@ function special2() {
 . everything uploaded to production server
 
 2013-08-06
-. changed "virtual payments" to "payment exchanges”
+. changed "virtual payments" to "payment exchanges"
 . Changed maximum bank delay to 10 days.  Patched on production server. Fixes double bank withdrawal bug. 
 . City and state zip code without using USPS API 
 . Icons on settings page 

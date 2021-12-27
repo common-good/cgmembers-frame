@@ -48,10 +48,10 @@ Setup:
 
 Scenario: A member looks at a statement for previous month
   When member ".ZZA" views statement for %lastmy
-  Then we show "ZZA" with:
+  Then we show PDF with:
   | Starting | From Bank | Paid   | Received | Ending   |
   | 1,000.00 | -44.00    | 460.00 | 1,110.00 | 1,606.00 |
-  And with:
+  And we show PDF with:
   | Tx  | Date        | Name          | Purpose   | Amount   |
   |   4 | %lastmd+2d  | --            | from bank |    11.00 |
   | 104 | %lastmd+3d  | Bea Two       | cash E    |    10.00 |
@@ -61,6 +61,3 @@ Scenario: A member looks at a statement for previous month
   |   5 | %lastmd+8d  | --            | to bank   |   -22.00 |
   | 203 | %lastmd+9d  | Bea Two       | cash V    |  -100.00 |
   |   6 | %lastmd+10d | --            | to bank   |   -33.00 |
-  And without:
-  | rebate  |
-  | bonus   |

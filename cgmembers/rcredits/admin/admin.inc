@@ -90,13 +90,11 @@ function setupBasicAccounts() {
 }
 
 /**
- * Re-setup the test cards on the STAGING server, after importing data from the PRODUCTION server.
- * Set bogus email addresses and phones so we DEFINITELY don't accidentally email someone (happened once)
+ * Re-setup the test cards on the DEMO server.
  */
-
 function makeTestAccounts() {
   global $mya;
-  if (isPRODUCTION or !$mya->superAdmin) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  if (isPRODUCTION or (!isDev and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
@@ -288,7 +286,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     }
   }
 
-  if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
+  if ($mya and $mya->admChangeUid) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
   return TRUE;
 }
 
@@ -638,11 +636,14 @@ EOF;
       if ($firstline) {
         $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
         $date = strftime('%Y%m%d', $deposit ?: $today);
-        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
-        if (!$deposit or $deposit >= $today - 90 * DAY_SECS) $details .= ' ' . 
-          ($deposit ? w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH')) : '');
-        if ($count) $details .= ' ' .  // don't show undeposited checks (a recipe for disaster)
-          ($deposit ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks')) : '');
+//        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
+        $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
+        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum", t('details'));
+//        if (!$deposit or $deposit >= $today - 90 * DAY_SECS) 
+        if ($deposit) {
+          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH'));
+          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks')); // don't show undeposited checks (a recipe for disaster)
+        }
 
       } else $dateDpy = $details = '';
 
@@ -829,7 +830,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
  * Make sure the very secure fields are encrypted with the admin's extra password.
  *//*
      function secureVery($a = '') {
-     if (!r\acct()->superAdmin) return; // don't bother if not admin
+     if (!r\acct()->admV) return; // don't bother if not super
      if ($a) {
      if ($vflds = just(VSECURE_FLDS, $a->secure)) return $a->update($vflds); // extra encryption
      } else {

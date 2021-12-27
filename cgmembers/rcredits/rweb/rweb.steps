@@ -351,6 +351,7 @@ function members($list) {return t\members($list);}
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberDonates
@@ -648,7 +649,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
- *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
@@ -668,7 +668,6 @@ function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\w
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
- *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -707,7 +706,6 @@ function with($content) {return weShow($content);}
  *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
- *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
@@ -1136,7 +1134,7 @@ function memberScansMemberCard($id1, $id2) {
  */
 function memberCardCodeIs($id, $cardCode) {
   global $testOnly; if ($testOnly) return FALSE;
-  $a = r\acct(t\fullQid($id));
+  $a = r\acct(\fullQid($id));
   $secure = compact('cardCode') + ($a->secure ?: array());
   return $a->update(compact('secure'));
 }
@@ -1148,7 +1146,7 @@ function memberCardCodeIs($id, $cardCode) {
  */
 function agentCardCodeIs($id, $cardCode2) {
   global $testOnly; if ($testOnly) return FALSE;
-  $a = r\acct(t\fullQid($id));
+  $a = r\acct(\fullQid($id));
   $secure = compact('cardCode2') + ($a->secure ?: array());
   return $a->update(compact('secure'));
 }
@@ -2437,3 +2435,10 @@ function varEncrypts($var, $ray) {
  * in: MAKE txs AdminReversesABankTransfer
  */
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
+
+/**
+ * we show PDF with: (ARG)
+ *
+ * in: TEST statement AMemberLooksAtAStatementForPreviousMonth
+ */
+function weShowPDFWith($list) {return t\pdfHas($list);}

@@ -22,11 +22,55 @@ const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
 
+
 global $base_path;
 define('BASE_PATH', $base_path);
 define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
 define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
 
+/**
+ * Output the message with the given background color.
+ * Return FALSE (meaning error in returns from callers) unless a color is specified.
+ */
+function output($msg, $color = 'error') {
+  global $wholeModule;
+  if (test() and !nn($wholeModule)) \drupal_set_message(color($msg, $color));
+  return $color == 'error' ? FALSE : TRUE;
+}
+
+/**
+ * @param mixed $msg: what to give a background color to (can be any data type)
+ * Not to be confused with the color() function in test.php
+ */
+function color($msg, $color = 'normal') {
+  $msg = pr($msg);
+  return "<pre class=\"test-$color\">$msg</pre>";
+}
+
+/**
+ * Simplify HTML output to provide a summary for test results.
+ */
+function strip($form) {
+  $form = str_replace('&nbsp;', ' ', $form);
+  $form = preg_replace('~<fieldset id="help".*?</fieldset>~sm', '', $form); // remove help div
+  $form = preg_replace('~<div[^>]*class="gone.*?</div>~sm', '', $form); // remove hidden divs (not nested)
+  $form = preg_replace('~<option value="[^"]*">.*?</option>~sm', '', $form); // remove unselected options (fails for dropdowns created on the fly, eg state and country)
+  $form = preg_replace('~<input type="hidden".*?/>~sm', '', $form); // remove hidden inputs
+  $form = preg_replace('/<input[^>]* value=" *(.*?) *".*?>/sm', '$1', $form); // show button labels
+  $form = preg_replace('/<input[^>]* checked[^>]* data-on="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle on
+  $form = preg_replace('/<input[^>]* data-on="([^"]*)"[^>]* checked[^>]*>/sm', '$1', $form); // ditto (either order)
+  $form = preg_replace('/<input[^>]* data-off="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle off
+  $form = preg_replace_callback('~<img src="([^"]+)"[^>]*>~sm', function ($m) {
+      $s = strtr(basename($m[1]), ray('.gif .png .jpg', '', '', ''));
+      $s = strtr($s, ray('-red -blue -green', '', '', ''));
+      return '[' . strtr($s, ray('arrow-left arrow-right', 'L', 'R')) . ']';
+    }, $form);
+  $form = preg_replace('/> *</sm', '> <', $form); // make sure there's exactly one space between things
+  $form = preg_replace('/\s*$\s*/sm', PHP_EOL, strip_tags($form));
+  ///     if (strpos($form, '<html') !== FALSE) die($form);
+  return $form;
+}
+ 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
  * @param assoc $info: field names and values
@@ -65,15 +109,19 @@ function fixData(&$info, $direct = FALSE) {
   }
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
-  if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = u\cry('R', r\vKey(), FALSE, DEV_VKEYPW); // this is such a long constant, better to recreate it each time
+
+  if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = u\b64decode(<<<X
+YCFSWVhCWnJsUE5QRHFyTWZWZUhybjBnNTdPZDB5aDkyK1R0L29VRVFaZUU0N2F2cm9PWDFPRS9RRG1JQVQrQ2htK1VoREpSS2RUZG1rbG9EQnQwMXZUY1BvcnhJeWxGUUlvd29uNjdBNnJPYUJvQytUNEtIR2JCT2dWd00wMnpmb2w3WW5WeUxnblQ4c0FMWWZVTWRPMG1Oak83NXpkUmhML0hiRUFnSnRvYkUyUVN2azVpRy96SDBGd21aR2JUSTVObzRlb0UwTDBXWExLdUhsSGtaR3FYWVByeFd5K1JWaEpTYjhaUVdlTTNkMFpIcE5mdS9sd2lOejgrS1huTVMzK2xRazE2U2JhZXlEcmYvSzAyYVNDUFlwTUM0Tjk1TzdEUkFqWkgxN2pFRHBFbW5NVmpvMWd0TjFHWmw4cTY4eUtJT2NPN2hrMjJjaTU2UzlEYmFQYkxnbloxZkpvUVhWZXRUV0diV0NrbzBEY3laSWRkcmNYUU5qWGdha0c2ZmgxT3RkRVRTZjRXUEZPeXhZUzBxYmFhWFdmK0FLWVBrRDJiS0ZYZHI0Yk1nb3RvWmtGWnFwTzV1alVDSEluUzBrVkl6UVhGcjZXa0RZVnp0eDE4NEZtbEZEbFFmcmFIa3JJd3dVemZPYzFXRTkzc09LSnc5c0JFbXkwRmVnTmdZWkhVZ01VZjc1czV5VlFac3NJdEdxcnMvb1NwUHFNdXlXcDVvemhNSVhZb3dNN1NWNG4zbkpjQ2hzNHRMQVc3WVBZZjdKWFo1cXlpcGlEaGI1VXJoVm4ycFJHempzQk5sVGVGMWx6aE9KNEp5TmxDNzJJc0lYd2JIckZwdytjUEw2ZUMydDJLbmxYVXJ6UFdpZVNvb3FXbDNqWGkyWUJhVG9XMFo1azBoNkpTZEs2U2FIaUdVTk9uUEZqY2d5VGJsRTJPck15MUhWSitPckZhN3FLRWpjalhNK0pPaUdhK3FCSDQvaURadG9nZEw4NTN6UG1tLy9XK1NWRHFhWUR3dEVaOFFjUXZDNEpWOVhsTG0zeUduMjQvUHhBc0pKd05QdzRyZHMxN3Z5TkEzK2lGRWpKMnUyV3VJRlhRMEV5SFF1eXFvTER2RzNrWlg1Y0lZMi9jRlpYM01BTEN2RklLcEMyeGpaWGtadzlqTlM3OVN1NUYyVjhDZGI4TXFITXZPc3pqbWNRYURNRlJlc2M3b3MwS05TK3Z6czZRYmREb25uR2lPZkFFNVNiWXZUakh2bUdEaDBGUWZhQ3BYcmxVNlcvWVd6WDhZeGJzdEtRMWFZS0Y2bGZDeVFMbGQ0SjdlYU52cTBNNHl4dFRleWQ2SFN1K2p2TjVMeHZ4UWVKN0hwUzdqSUtDdHVUVTBFVTdtNDZTQS9tMktwYVZYVE1mYmN2a1lmUWt6RVBwaGlORi9HVWw1S0dIeS9laTFtZnZyRzE1YUlDM25ZVmoxeVFMRG5LZlZJQ20zeXREdzBuVXcxTjNWanQyL1VPTDkrNmhqcUZLeHd3dXFEN0M4UjRiemtKeTBuOWlGOWlEOW4zN2UzRFhKMDQ0QlVWZ25jOElOVnlYODRFQXQ4QzBUTVhaQ3ZLZE9mVkpQY1RiZ3h2RTNqNkhQZGlHL010eGFFYUJLcWFDV1BmeUZsZ1hKcXQrNHJBTktaSjloN3Y0eldlL0doWDVmU1JTd0xaQWdFNHZNUnRySmdZSTdEOVdHZWNGUzFwWmg0YlRtaXEzSW16QXlYQW5BeGo0MkI4elBCVWdLdTIrNXB5SHVCNFVETnBjUHJlVTNlV2c3byszOUp5UVhxTnIyQ2JtUVdrdENzU2o3ZlQveXJNd3JvajJHVlpPcFJueGY1SGFPTE11NGZvN3hxUCtDYWdJK3p6M3RNMzFUSEpNbmdtNVlxNUhBK2p0b2lVRmZDZk81a2pMeldRNG5JUFlHV24vZHdaTkFPRS9SMkhMTWRaUWNGc2RqSXhkS3RscUJxUlR3UVVLVWVzNGl3dWc0VkhqUittZGl5Z1ovVERraDhrRTdtZmNsTnBYanRLU1RBSFZvSEtxY0hXMzU4VTRxQ3Vmcy8xTCt1ZXo2YmkzUzZ3ZzlJbzdlZ1NWZmxVMkQ3RUpPM1F5VzJjME1TM25vc2t0aFRqMlBLRmZDSEUwZzBtUUp5eEdmaz0
+X
+  );
   
   if (isset($can) and !is_array($can)) {
     $newcan = 0; 
-    foreach (ray($can) as $k) $newcan |= is_numeric($k) ? $k : u\bit(u\consta('a', $k));
+    foreach (ray($can) as $bitName) $newcan |= r\adminCanBit($bitName);
     $can = $newcan;
   }
 
-  if (nn($who)) $who = t\fullQid($who);
+  if (nn($who)) $who = \fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
   if (isset($adminable)) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
@@ -116,8 +164,25 @@ function cookieIs($nm, $v) {
 
   if (!$testOnly) r\setCook($nm, $v);
   if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
-    
   return t\eq("cookie $nm", $v, nni($_COOKIE, $nm));
+}
+
+function pdfHas($list) {
+  global $testOnly, $pdfSays;
+  $in = strip_tags(join(' ', nn($pdfSays) ?: []));
+  $px = 0;
+  foreach ($list as $k => $v) {
+    foreach ($v as $one) {
+      $p = mb_strpos($in, $one, $px);
+      if ($p === FALSE) {
+        t\output("Can't find \"$one\" in \"$in\" starting at $px. Actual:");
+        t\output($pdfSays);
+        return FALSE;
+      }
+      $px = $p + mb_strlen($one);
+    }
+  }
+  return TRUE;
 }
 
 function isSignedIn($id) {
@@ -637,7 +702,7 @@ function notice($notice, $id, $subs = []) {
  */
 function deCryVok() {
   global $mya, $sceneTest;
-  return (!isDEV or !test() or ($mya and $mya->admin) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these')); // admin stands in for super in tests
+  return (!isDEV or !test() or ($mya and $mya->admin) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these memberScansAdminCard'));
 }
 
 /**
@@ -879,22 +944,6 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
 }
 
 /**
- * Accept abbreviations of alphabetic ids for accounts, transactions, and relations
- * @param string $q: the possibly-abbreviated id
- * @return: the full id (if $q is numeric or an already-full alphabetic id, return it unchanged)
- * For rSmart tests, the qid always has a dot.
- */
-function fullQid($q) {
-  global $channel;
-  if (is_numeric($q) or !$q) return $q;
-  if (strlen($q) == 1 and !is_numeric($q)) $q = '.ZZ' . $q;
-  if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
-  u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in u_relations: $q");
-  return $q;
-  //  return ($channel == TX_APP and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
-}
-
-/**
  * Interpret the given identifier (int, full qid, or local qid) as an account ID.
  */
 function uid($id, $field = '') {
@@ -904,7 +953,7 @@ function uid($id, $field = '') {
              r\serverUid(), CGID, UID_BANK_IN, UID_BANK_OUT, UID_CRUMBS, UID_ROUNDUPS);
   if ($res = nni($map, $id)) return $res;
 
-  $qo = r\qo(t\fullQid2($id));
+  $qo = r\qo(fullQid2($id));
   return $qo->id; //  return r\qo($id)->$field; FAILS
 }
 function agentId($id) {return t\uid($id, 'agentId');}
@@ -915,7 +964,7 @@ function agentId($id) {return t\uid($id, 'agentId');}
  * @return the account object (NULL if there is no account for that ID)
  */
 function acct($id) {
-  return r\acct(t\fullQid2($id)) ?: output(t('"%id" is not an account id', compact('id')));
+  return r\acct(fullQid2($id)) ?: output(t('"%id" is not an account id', compact('id')));
 }
 
 function getErrors() {
@@ -1087,10 +1136,10 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  */
 function hitServer($op, $info = [], $agent, $device = '', $version = 230) {
   global $rposResult;
-  if ($agent) $agent = t\fullQid2($agent);
+  if ($agent) $agent = fullQid2($agent);
   extract(just('amount member code created proof goods', $info));
   if (is_numeric(nn($amount))) $amount = number_format($amount, 2);
-  if (nn($member)) $member = t\fullQid2($member);
+  if (nn($member)) $member = fullQid2($member);
   if ($version >= 217) foreach (['agent', 'member'] as $k) if (nn($$k)) $$k = str_replace('.', '', $$k);
   if (nn($proof) == 'calc' and nn($member)) {
     if ($a = r\acct($member)) u\setDft($code, $a->cardCode());
@@ -1123,21 +1172,21 @@ function fullQid2($agent) {
   // FAILS if (strlen($agent) > 7) return $agent;
   if (strpos($agent, ':')) { // company:agent
     list ($cpy, $agt) = explode(':', $agent);
-    $cpy = t\fullQid($cpy);
-    $agt = is_numeric($agt) ? $agt : t\fullQid($agt); // numeric agt actually fails anyway (fudge for superAdmin login -- agt=1)
-    //    return t\fullQid(r\qid($cpy, $agt));
+    $cpy = \fullQid($cpy);
+    $agt = is_numeric($agt) ? $agt : \fullQid($agt); // numeric agt actually fails anyway (fudge for superAdmin login -- agt=1)
+    //    return \fullQid(r\qid($cpy, $agt));
     return r\qid($cpy, $agt);
   } elseif (strpos($agent, '#')) { // company#agentNum (deprecated)
     list ($cpy, $agt) = explode('#', $agent);
-    $cpy = t\fullQid('.ZZ' . $cpy);
+    $cpy = \fullQid('.ZZ' . $cpy);
     if (is_numeric($agt)) $agt = u\n2a($agt, 1, 36);
     return "$cpy-$agt";
-  } else return t\fullQid($agent);
+  } else return \fullQid($agent);
 }
 
 function parseQr($qr) {
   list ($member, $code) = explode(',', $qr . ',');
-  return [t\fullQid2($member), $code];
+  return [fullQid2($member), $code];
   //  list ($member, $m, $code) = mb_split('/([\.-])/', $qr, 0, PREG_SPLIT_DELIM_CAPTURE);
   //  $member = R_SERVER_ID . ($m == '-' ? ':' : $m) . $member;
 }
@@ -1170,9 +1219,10 @@ function logIn($id) {
     w\signout(TRUE);
   } else {
     list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
-    $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
+    $a = r\acct(\fullQid($qid), $agt ? \fullQid($agt) : '');
     if (!u\isAcct($a)) return t\output("id not account: $id (qid=$qid agt=$agt)");
-    if ($a != $mya) {
+
+    if (!$a->eq($mya)) {
       w\signout(TRUE);
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
       r\setAcct($a);
@@ -1306,13 +1356,17 @@ function pageForm($page) {
   $xlastGo = nn($lastGo); // notice whether a goto happens. ignore all but the deepest (last).
 
   $lastPage = $page;
-  $result = \menu_execute_active_handler($page, FALSE);
+  $result = \menu_execute_active_handler($page, 'test');
 
   if (is_numeric($result)) {
     $result = $result == MENU_NOT_FOUND ? 'not found'
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
-  } elseif (nn($lastGo) == $xlastGo) setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
+  } elseif (nn($lastGo) == $xlastGo and test()) {
+    if (!$result) list ($result, $formOut) = [$formOut, '']; // for example, for PDFs
+    if ($formOut) t\output('TEST WARNING: formOut is not empty in t\pageForm(): ' . pr($formOut));
+    setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
+  }
 
   return $formArray; // this got set in w\showForm
 }
@@ -1414,27 +1468,6 @@ function radioOptions($form) {
   return strip_tags(join(PHP_EOL, $matches[0]));
 }
 
-function strip($form) {
-  $form = str_replace('&nbsp;', ' ', $form);
-  $form = preg_replace('~<fieldset id="help".*?</fieldset>~sm', '', $form); // remove help div
-  $form = preg_replace('~<div[^>]*class="gone.*?</div>~sm', '', $form); // remove hidden divs (not nested)
-  $form = preg_replace('~<option value="[^"]*">.*?</option>~sm', '', $form); // remove unselected options (fails for dropdowns created on the fly, eg state and country)
-  $form = preg_replace('~<input type="hidden".*?/>~sm', '', $form); // remove hidden inputs
-  $form = preg_replace('/<input[^>]* value=" *(.*?) *".*?>/sm', '$1', $form); // show button labels
-  $form = preg_replace('/<input[^>]* checked[^>]* data-on="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle on
-  $form = preg_replace('/<input[^>]* data-on="([^"]*)"[^>]* checked[^>]*>/sm', '$1', $form); // ditto (either order)
-  $form = preg_replace('/<input[^>]* data-off="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle off
-  $form = preg_replace_callback('~<img src="([^"]+)"[^>]*>~sm', function ($m) {
-      $s = strtr(basename($m[1]), ray('.gif .png .jpg', '', '', ''));
-      $s = strtr($s, ray('-red -blue -green', '', '', ''));
-      return '[' . strtr($s, ray('arrow-left arrow-right', 'L', 'R')) . ']';
-    }, $form);
-  $form = preg_replace('/> *</sm', '> <', $form); // make sure there's exactly one space between things
-  $form = preg_replace('/\s*$\s*/sm', PHP_EOL, strip_tags($form));
-  ///     if (strpos($form, '<html') !== FALSE) die($form);
-  return $form;
-}
-
 /**
  * Compare two values and complain if they aren't close to equal.
  * @return <the values are equal>
@@ -1479,25 +1512,6 @@ function POST($values = NULL) {
     $_POST = $T_POST = $values;
   }
   return $T_POST;
-}
-
-/**
- * @param mixed $msg: what to give a background color to (can be any data type)
- * Not to be confused with the color() function in test.php
- */
-function color($msg, $color = 'normal') {
-  $msg = pr($msg);
-  return "<pre class=\"test-$color\">$msg</pre>";
-}
-
-/**
- * Output the message with the given background color.
- * Return FALSE (meaning error in returns from callers) unless a color is specified.
- */
-function output($msg, $color = 'error') {
-  global $wholeModule;
-  if (test() and !nn($wholeModule)) \drupal_set_message(color($msg, $color));
-  return $color == 'error' ? FALSE : TRUE;
 }
 
 /**
@@ -1690,7 +1704,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
 
-  $model = t\strip($formOut[$type]);
+  $model = t\strip(nni($formOut, $type));
   //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 
   if (!$content) return FALSE; // probably an accidental single-row array with no labels
@@ -1937,7 +1951,7 @@ function hitAPI($op, $userId, $password, $requests) {
   global $rAPIResult;
   include_once __DIR__ . '/forms/api.inc';
 
-  $userId = t\fullQid2($userId);
+  $userId = fullQid2($userId);
   foreach ($requests as $i => $zot) fixData($requests[$i]);
   $request = u\jsonize(compact(ray('op userId password requests')));
   w\api(compact('request'));

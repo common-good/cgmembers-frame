@@ -198,6 +198,8 @@ function handleInput($input, &$sfData = []) {
   
   foreach (ray('fullName orgName city address m_city m_address') as $k) if (isset($input[$k])) $input[$k] = u\normalizeCase($input[$k]);
   extract($info = just($keys, $input));
+  if ($email and $a = r\acct($email) and $fullName == $a->fullName and $a->partnerInfo) return partnerErr(t('You (%fullName) are already signed up with email %email.', compact(ray('fullName email'))));
+  u\setDft($owns, 0); // avoids warning that owns is not defined when compacted below
 
   // set Salesforce parameters
   $oid = '00DA0000000gGh5';

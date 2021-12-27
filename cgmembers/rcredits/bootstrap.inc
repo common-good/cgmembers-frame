@@ -1048,7 +1048,7 @@ function drupal_unpack($obj, $field = 'data') {
 function test($testing = NULL) {
   if (!isDEV) return FALSE;
   global $TESTING;
-  if (isset($testing)) setv('testing', $TESTING = $testing);
+  if (isset($testing)) setv('testing', $TESTING = ($testing and $_SERVER['QUERY_STRING'])); // we're not testing when displaying a list of tests
   return isset($TESTING) ? $TESTING : getv('testing');
 }
 
@@ -1299,10 +1299,25 @@ function a($id = '', $agent = '', $create = FALSE) { // return an account object
   if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
   $id = preg_replace('/your Common Good account \\(|\\)/', '', $id); // makes it easy to copy account ID and paste it into who() or a()
   if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
-  $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+  $lastA = r\acct(fullQid($id), fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
   return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
+
+/**
+ * Accept abbreviations of alphabetic ids for accounts, transactions, and relations
+ * @param string $q: the possibly-abbreviated id
+ * @return: the full id (if $q is numeric or an already-full alphabetic id, return it unchanged)
+ */
+function fullQid($q) {
+  global $channel;
+  if (is_numeric($q) or !$q) return $q;
+  if (strlen($q) == 1 and !is_numeric($q)) $q = '.ZZ' . $q;
+  if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
+  u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in u_relations: $q");
+  return $q;
+  //  return ($channel == TX_APP and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
+}
 
 /**
  * Log a string, array, or object to a file

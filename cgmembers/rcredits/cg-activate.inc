@@ -48,7 +48,7 @@ function activate($a, $helper) {
       }
     }
 
-    if (!$a->helperA->co and !$a->helperA->superAdmin) {
+    if (!$a->helperA->co and !$a->helperA->id == UID_SUPER) {
       $fullName = $a->fullName;
       $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
       if ($helped == ORGANIZER_GRANT_MIN) {
