@@ -110,7 +110,7 @@ function update($table, $info, $key = 'id') {
  * (replaces half the functionality of drupal_write_record)
  * @param string $table: table name
  * @param assoc $info: data to insert
- * @param string $key: key field name, defaults to 'id'
+ * @param string $key: key field name (or any unique-valued field), defaults to 'id'
  * @return: record key of the inserted record (FALSE on failure)
  */
 function insert($table, $info, $key = 'id') {
@@ -143,7 +143,7 @@ function insert($table, $info, $key = 'id') {
  * Insert or update a database record 
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (defaults to 'id', ignore if NULL)
+ * @param string $key: record key name (or any unique-valued field) (defaults to 'id', ignore if NULL)
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
 function updateOrInsert($table, $info, $key = 'id') {

@@ -489,8 +489,8 @@ function renameUploads($files, $meter) {
   if ($files) foreach ($files as $f => $one) {
     if (!$one['name']) {if (isDEV) break; else return partnerErr('missing file');}
     extract(just('name type tmp_name error size', $one));
-    if ($size > 10 * MAX_ID_SIZE * 1024 * 1024) {
-      w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to %partner by postal mail or as attachments to an email (%partnerEmail).</p>', 'partner partnerEmail', $pA->fullName, $pA->email), 'err');
+    if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) {
+      w\say(t('<p>That file is too big. The maximum size is %MAX_UPLOAD_SIZE MB. You will need to send the photos of your electric bill to %partner by postal mail or as attachments to an email to %partnerEmail.</p>', 'partner partnerEmail', $pA->fullName, $pA->email), 'err');
       $flnms = NULL;
       break;
     }

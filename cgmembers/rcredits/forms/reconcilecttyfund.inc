@@ -25,11 +25,11 @@ function formReconcileCttyFund_validate($form, &$sta) {
    $txKs = ray(OFX_TX_FLDS);
 
   foreach ([1, 2] as $i) {
-    $flnm = w\uploadFile($err, "file$i");
-    if (!$flnm) {
-      if ($i == 1) return w\say($err, 'file1'); else break;
+    $fileData = uploadFile(NULL, NULL, "file$i");
+    if (!is_array($fileData)) {
+      if ($i == 1) return w\say($fileData, 'file1'); else break;
     }
-    $s = file_get_contents($flnm);
+    $s = file_get_contents($fileData['path']);
 
     if (!$acct[$i] = ofxData('bankId acctId', $s)) return w\say(t('File #%i is not a valid OFX file.', $subs = compact($i)), 'file1');
     if (!$dts[$i] = ofxData('dtStart dtEnd', $s)) return w\say(t('File #%i is not a valid OFX file.', $subs), 'file1');

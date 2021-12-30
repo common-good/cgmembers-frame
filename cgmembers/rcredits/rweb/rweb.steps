@@ -557,7 +557,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
- *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST dashboard AMemberClicksTheDashboardTab
  *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
@@ -661,8 +660,7 @@ function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\w
 /**
  * with: (ARG)
  *
- * in: TEST custstatement ACompanyLooksAtACustomerStatement
- *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ * in: TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
@@ -2439,6 +2437,7 @@ function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, 
 /**
  * we show PDF with: (ARG)
  *
- * in: TEST statement AMemberLooksAtAStatementForPreviousMonth
+ * in: TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  */
 function weShowPDFWith($list) {return t\pdfHas($list);}

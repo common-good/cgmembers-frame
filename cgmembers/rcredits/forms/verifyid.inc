@@ -44,20 +44,14 @@ function formVerifyId_validate($form, &$sta) {
   if (!formBasic_validate($form, $sta, $checkFlds)) return w\go('/settings/verifyid/setMethod=' . $method);
   if ($ssnMethod) return;
   
-  // not SSN verification
-  foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k]['file'];
-  if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
-  if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
-//  $mimetype = mime_content_type($tmp_name);
-//  $ext = explode('/', $mimetype )[1];
+  // not SSN verification, so handle uploaded file
   $path = PHOTOID_DIR . "/$mya->mainQid";
-  u\deleteFile($path);
-  rename($tmp_name, $path);
+  $fileData = uploadFile($path, NULL);
+  if (!is_array($fileData)) return err($fileData . t(' Maybe try emailing it?'), 'file');
+  $sta['input']['filedata'] = serialize($fileData + compact('idtype'));
   u\cryFile($path);
-
-  $sta['input']['filedata'] = serialize(compact(ray('path type error size idtype name size')));
 }
-
+  
 function formVerifyId_submit($form, &$sta) {
   global $mya;
   extract(just('legalName filedata dob federalId', $sta['input'], NULL));

@@ -327,7 +327,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   if (test()) f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
-/**/  if (!test()) debug(compact(ray('subject to reply body'))); // show stuff to tester
+    if (!test()) t\output(compact(ray('subject to reply message')), 'email'); // show stuff to tester
     if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE;
   }
   

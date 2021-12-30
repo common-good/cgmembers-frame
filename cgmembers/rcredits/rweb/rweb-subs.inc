@@ -105,22 +105,29 @@ function goFar($url, $params = '') {
 }
 
 /**
- * Process an uploaded file, returning the filename (or returning FALSE and setting an error message).
- * If the file upload is optional, the caller can ignore the error message.
- * @param string $err: (RETURNED) error message, if any
- * @param string $fld: field name of file input (defaults to "file")
- * @return filename of the temporary uploaded file (FALSE if failure)
+ * Handle an uploaded file and return an array of file data (or an error message).
+ * @param string $path: where to put the uploaded file (defaults to temporary file's path)
+ * @param string $types: space-delimited list of acceptable mime types
+ * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
+ * @param string $fldName: field name of file upload field (defaults to "file")
+ * @return an assoc of file data OR the error message
  */
-function uploadFile(&$err = '', $fld = 'file') {
-  if (!nni($_FILES['files']['name'], $fld)) return !$err = t('upload required');
-  $file = new \stdClass();
-  foreach ($_FILES['files'] as $k => $v) $file->$k = $v[$fld];
-  if (function_exists('mime_content_type') and $filetype = mime_content_type($file->tmp_name)) {
-    if (!in($filetype, 'text/csv text/plain')) return !$err = t('bad file type', compact('filetype'));
-  }
-  if ($file->size > MAX_UPLOAD_SIZE) return !$err = t('That file is too big.');
-  if (!$file->size) return !$err = t('That file is empty.');
-  return $file->tmp_name;
+function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
+  foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
+  
+  if ($types and $filetype = mime_content_type($tmp_name) and !in($filetype, $types)) return t('bad file type', compact('filetype'));
+  if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
+  if ($error) return t('File upload failed.');
+  if (!$size) return t('That file is empty.');
+//  $ext = explode('/', $mimetype )[1];
+
+  if ($path) {
+    if (!$replaceOk and file_exists($path)) return t('That filename is taken. Try again.');
+    u\deleteFile($path);
+    rename($tmp_name, $path);
+  } else $path = $tmp_name;
+
+  return compact(ray('path type error name size'));
 }
 
 function htmlItem($name, $id, $value, $class, $other = []) {return $value;}
@@ -2060,9 +2067,10 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
  * @param string $help: help verbage
  * @param string $href: where to go on click (defaults to nowhere)
  * @param string $class: html class(es)
+ * @param string $trigger: how to trigger the popup (click|hover|focus|manual)
  */
-function popHelp($text, $help, $href = '', $class = '') {
-  $trigger = $href == '#' ? 'hover' : 'hover'; // click doesn't work :(
+function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
+  $trigger = $trigger ?: ($href == '#' ? 'click hover' : 'click hover');
   list ($href, $tag) = ($href and $href != '#') ? [" href=\"$href\"", 'a'] : ['', 'span'];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
@@ -2336,3 +2344,4 @@ function tabindex($n) {return ['tabindex' => $n];}
 function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
 function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}
 function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}
+function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}

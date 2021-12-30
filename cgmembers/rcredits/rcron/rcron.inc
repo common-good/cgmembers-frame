@@ -131,6 +131,13 @@ function everyHour() { // stuff to do every hour
   }
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
+  
+  // discard expired encrypted files
+  $list = scandir(MSG_DIR);
+  foreach ($list as $flnm) {
+    if (!is_numeric($flnm)) continue;
+    if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
+  }
 
 }
 

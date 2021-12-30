@@ -805,6 +805,10 @@ function decryRay($code) {
  *   C cookie
  *   H photo
  *   D device (PGP then b64)
+ *   M secret message (maintains length)
+ * Each of an encryption type's methods is: xor, rot, scram, b64, pgp, or any standard AES method
+ * Only the first 16 bytes of an IV for an AES method. Otherwise the IV can be any length.
+ *
  * @param string $data: the data to be encrypted / decrypted
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
@@ -844,7 +848,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
   } else $iv = u\b64decode($iv);
   
   $hows = $de ? array_reverse(ray($hows)) : ray($hows);
-  
+
   foreach ($hows as $how) {
     switch ($how) {
       case 'xor': $data = strXor($data, $pw . $iv); break; // deXor is the same

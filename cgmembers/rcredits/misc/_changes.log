@@ -1,3 +1,13 @@
+2021-12-29 feature/admin-admin
+. Created an administrative interface for setting admin permission bits
+. Also added encrypted files to the member-to-member messaging (to be able to send admins an encrypted superAdmin QR image)
+. moved admin panel to its own file
+. added QR Scan link to top of admin panel.
+. emails are now displayed on dev and staging machines with clickable links, for easier testing.
+. added "M"-type encryption for messages (including on production, staging, and demo).
+. refactured our w\uploadFile function for use in more places
+. changed popovers on summary page to use click as a trigger, rather than hover (works better)
+
 2021-12-20 feature/supercan
 . ACH deposit details no longer go past end of page
 . cadmins and admins now have more specific permissions, including what superadmin can do

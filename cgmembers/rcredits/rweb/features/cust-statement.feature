@@ -35,12 +35,13 @@ Setup:
 
 Scenario: A company looks at a customer statement
   When agent "C:B" views "customer" statement for member ".ZZA"
-  Then we show "Corner Pub" with:
+  Then we show PDF with:
+  || Corner Pub |
   || 3 C St. |
   || Abe One: Account NEWZZA |
   || 1 A St. |
   || STATEMENT |
-  And with:
+  And we show PDF with:
 # NOTE: Description data must be in last position because that's the order it is generated in.
 # | Date    |        | Invoiced | Paid    |  Balance | Description        |
   | Date    |        | Description     | Invoiced | Credits  |  Balance |
@@ -55,7 +56,7 @@ Scenario: A company looks at a customer statement
   | %mdY-3d | tx #19 |          |   80.00 |  -100.00 | this CF            |
   | %mdY-2d | inv #5 | 2,000.00 |         | 1,900.00 | realist            |
   | %mdY-1d | tx #20 |          | -100.00 | 2,000.00 | pool CJ            |
-  And with:
+  And we show PDF with:
   || Account Balance: $2,000.00 |
 
 Scenario: A statement goes onto multiple pages

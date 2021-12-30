@@ -176,7 +176,7 @@ class Acct {
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
     if ($nick == 'cof') return $a->co ? $a->coCan($field) : NULL;
     if ($nick == 'adm') return $a->anyAdmin ? $a->adminCan($field) : FALSE;
-    if ($nick == 'ctt' and $field != 'cttyA') return $a->cttyA->can(u\consta('b', substr($field, 4))); // ctty bit
+    if ($nick == 'ctt') return $field == 'a' ? r\acct($a->community) : $a->cttyA->can(u\consta('b', $field)); // ctty bit
 
     if ($obj = nni(self::$rs, $a->id) and property_exists($obj, $field)) { // actual database field?
       $res = $obj->$field; // get the raw data, then handle any encryption
@@ -201,10 +201,10 @@ class Acct {
       case 'proSe': return ($a->id == $a->agentId);
       case 'qid': return $a->qo->qid;
       case 'uids': return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
+      case 'adminCans': return db\get('can', 'admins', $uidSub);
       case 'bestName': return str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
       case 'isCtty': return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
       case 'isRegion': return (substr($a->name, -1, 1) == '.');
-      case 'cttyA': return r\acct($a->community);
       case 'region': return r\uidRegion($a->id);
       case 'regionA': return r\acct($a->region);
       case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
@@ -262,20 +262,21 @@ class Acct {
    * The character following the prefix must be uppercase.
    * @param string $field: the original virtual property
    * @param string $field (RETURNED): a field or flag name in some related table, if such exists; otherwise unchanged
-   * @return: the 3-character prefix that indicates where to find the wanted data
+   * @return: the 3-character prefix that indicates where to find the wanted data (FALSE if none)
    */
   private function getNick(&$field) {
     $nick = substr($field, 0, 3); // possibly meaningful prefix (ctt if the prefix is ctty)
-    if (preg_match('/^(can|raw|rel|coy|cof|adm)[A-Z]/', $field)) {
-      $field = lcfirst(substr($field, 3));
+    if (preg_match('/^(can|raw|rel|coy|cof|ctty|adm)[A-Z]/', $field)) {
+      $field = lcfirst(substr($field, $nick == 'ctt' ? 4 : 3));
       return $nick;
     }
+    
     if (in($field, REL_FLDS . ' ' . REL_FLAGS)) return 'rel';
     if (in($field, CO_FLDS)) return 'coy';
     if (in($field, B_LIST . ' ' . B_CTTY_BITS)) return 'can';
     if (in($field, CO_FLAGS)) return 'cof';
     // admin permission fields must include the adm prefix
-    return $nick;
+    return FALSE;
   }
 
   /**
@@ -1472,6 +1473,11 @@ X;
     return is_numeric($bit = nni($acctRiskBits, $bitName)) ? $bit : $txRiskBits[$bitName];
   }
 
+  public function setAdminBits($vs) {
+    $cans = 0; foreach ($vs ?: [] as $bit) $cans |= u\bit($bit);
+    db\updateOrInsert('admins', ray('uid can', $this->id, $cans), 'uid');
+  }
+
   /**
    * Say whether the current agent has the specified admin permission.
    * Permissions that require "very secure" data, are denied unless the admin has scanned a SuperAdmin card.
@@ -1481,10 +1487,11 @@ X;
     $a = $this; $uid = $a->agentId;
 
     if (!$a->anyAdmin) return FALSE; // only admins have admin powers
-    if ($uid == UID_SUPER) return TRUE; // uid 1 always has all powers (as a backup for one trusted admin -- not to be used otherwise)
     
     $bitName = lcfirst($bitName);
-    $cans = db\get('can', 'admins', compact('uid'));
+    $cans = $a->agentA->adminCans;
+
+    if ($uid == UID_SUPER) return TRUE; // uid 1 always has all powers (as a backup for one trusted admin -- not to be used otherwise)
     if ($cans & r\adminCanBit($bitName) == 0) return FALSE; // this admin doesn't have that bit
     if (in($bitName, A_VLIST)) return ($a->admin and r\cook('vKeyPw')); // need admin and V permission for these
     return TRUE;
@@ -1530,7 +1537,7 @@ X;
       u\setBit($flags, $bit, $on);
     }
     $a->update(compact('flags'));
-  }  
+  } 
 
   /**
    * Say whether another active account has the same address

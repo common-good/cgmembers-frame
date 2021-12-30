@@ -184,6 +184,7 @@ const R_SHARE_MAX = 50; // minimum sharing percentage
 const R_SHARE_DFT = 25; // default sharing percentage
 define('R_SHARING_MSG', t('sharing rewards with CGF'));
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
+const MAX_FILE_HOURS = 72; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 
@@ -228,8 +229,7 @@ const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
-const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
-const MAX_ID_SIZE = 10; // max ID size in MB
+const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
 
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
@@ -385,6 +385,7 @@ const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid
 const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
+const MSG_DIR = SHARED_DIR . '/msgs';
 const FBO_CC_FEE = 3; // percentage of donation amount to charge for credit card donations to sponsored organizations
 define('METHOD_OPTS', t('email phone text')); // contact method options
 
@@ -696,7 +697,7 @@ const DUR_1 = 'once';
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un10 editNotes editTxAmt editTxDate export generalInvite makeCtty makeRules makeAdmin makeVAdmin memberSettings mutualAid un21 payFrom printCards printChecks recheckSsn reconcile reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un33 setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
+const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un8 editNotes editTxAmt editTxDate export generalInvite makeCtty makeRules makeAdmin makeVAdmin memberSettings mutualAid un20 payFrom printCards printChecks recheckSsn reconcile reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un32 setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
 const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations/permissions that require access to very secure data
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page

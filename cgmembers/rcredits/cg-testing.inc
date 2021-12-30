@@ -34,12 +34,14 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  */
 function output($msg, $color = 'error') {
   global $wholeModule;
-  if (test() and !nn($wholeModule)) \drupal_set_message(color($msg, $color));
+  if (!isPRODUCTION and !nn($wholeModule)) \drupal_set_message(color($msg, $color)); // make sure we don't do this on production
   return $color == 'error' ? FALSE : TRUE;
 }
 
 /**
+ * Return the message in a given color box.
  * @param mixed $msg: what to give a background color to (can be any data type)
+ * @param string $color: any of highlight|normal|expect|email|input|output|screen|error|doublesize|success|fail|report-ok|report-no|next|pass|divlink|hdr
  * Not to be confused with the color() function in test.php
  */
 function color($msg, $color = 'normal') {
@@ -173,6 +175,7 @@ function pdfHas($list) {
   $px = 0;
   foreach ($list as $k => $v) {
     foreach ($v as $one) {
+      if ($one === '') continue;
       $p = mb_strpos($in, $one, $px);
       if ($p === FALSE) {
         t\output("Can't find \"$one\" in \"$in\" starting at $px. Actual:");
