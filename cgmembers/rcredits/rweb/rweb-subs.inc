@@ -345,7 +345,7 @@ EOF;
 /**
  * Say whether the member has permission to run the named query (all queries are for members only).
  * @param string $qName: name of the query -- if first character is a digit, restrict to admins/companies
- *   0=super 1=admin 2=cAdmin2 B_CO(6)=company
+ *   0=super 1=admRegion 2=admin B_CO(6)=company
  * @param string $sql: the query, optionally followed by subtext, after a tilda (~)
  *                     (RETURNED) the query modified to apply to the current community, if appropriate
  * @param string $subtext: (RETURNED) the explanatory text, if any
@@ -367,7 +367,7 @@ function queryPermitted($qName, &$sql = '', &$subtext = '') {
   } else {
     list ($zot, $d, $qName) = $m;
     if (mb_strpos($sql0, ':myid')) $subtext = "<div><h4>for $mya->fullName</h4>$text2</div>";
-    return $d >= ($mya->admV ? 0 : ($mya->admin ? 1 : ($mya->cAdmin2 ? 2 : ($mya->co ? B_CO : 9))))
+    return $d >= ($mya->admV ? 0 : ($mya->admRegion ? 1 : ($mya->admin ? 2 : ($mya->co ? B_CO : 9))))
     ? $qName
     : FALSE;
   }
@@ -710,10 +710,10 @@ function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
     
-  $signerA = ($mya->cAdmin or ($mya->co and $mya->proSe))
+  $signerA = ($mya->admin or ($mya->co and $mya->proSe))
   ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) 
   : $mya->agentA;
-  return textFld(t('Signed:'), $behalf . t('Type your full legal name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
+  return textFld(REQ . t('Signed:'), $behalf . t('Type your full legal name here ') . "($signerA->legalName)", dft($mya->admManageAccts ? $signerA->legalNameDpy : ''));
 }
 
 /**
@@ -722,7 +722,7 @@ function signedBy() {
 function badSignature(&$sta) {
   global $mya;
   $legalName = r\agent()->legalNameDpy;
-  if (!$mya->cAdmin and strcasecmp(trim($sta['input']['signedBy']), $legalName) != 0) return say('bad signature', compact('legalName'), 'signedBy');
+  if (!$mya->admManageAccts and strcasecmp(trim($sta['input']['signedBy']), $legalName) != 0) return say('bad signature', compact('legalName'), 'signedBy');
 }  
   
 /**
@@ -1358,7 +1358,7 @@ function contactFields($defaults = []) {
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(nn($zip2)));
     $postalAddr = hidFld();
     
-    $sameAddr2 = ($step0 ? nn($address) : !(nn($mya) and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
+    $sameAddr2 = ($step0 ? nn($address) : !(nn($mya) and $mya->admin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Physical Address')) 
     : w\boxFld('sameAddr', t('Physical Address'), t('same as above'), 0);
     
@@ -1435,7 +1435,7 @@ function no_selection($list) {
 
 function adminField($label) {
   global $mya;
-  return ($mya->cAdmin and $mya->federalId) ? item(R_ON_FILE, $label) : NULL;
+  return ($mya->admin and $mya->federalId) ? item(R_ON_FILE, $label) : NULL;
 }
 
 /**
@@ -1795,7 +1795,7 @@ function say($index = NULL, $args = [], $errField = '') {
     \form_set_error($errField, $message);
 //    jsx('focus-on', 'field', $errField);
   } else \drupal_set_message($message, nn($errField) == 'ERR' ? 'error' : 'status', FALSE);
-  $adminReport = ($mya and $mya->admin2 and mb_strlen($message) > 200);
+  $adminReport = ($mya and $mya->admin and mb_strlen($message) > 200);
   if (!$hasTable and !$adminReport and !in($index, ray(NOLOG_MSGS))) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
   return FALSE;
 }

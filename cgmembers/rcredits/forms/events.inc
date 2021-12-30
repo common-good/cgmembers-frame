@@ -55,7 +55,7 @@ function formEvents($form, &$sta, $args = '') {
   if (!$mya->vote) return softErr(t('You have some steps left to become a %PROJECT voting member. <%a>Click here to continue</a>.', '_a', atag('/scraps/vote')));
 
   $cttyA = $mya->cttyA;
-  if ($aA = r\acct()) $cAdmin = $aA->cAdmin; // get signed-in account, if any
+  if ($aA = r\acct()) $cAdmin = $aA->admManageVote; // get signed-in account, if any
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);

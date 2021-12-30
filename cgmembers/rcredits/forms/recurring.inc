@@ -28,7 +28,7 @@ function formRecurring($form, &$sta, $args = '') {
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
   $from = "<img src=\"$rUrl/images/icons/arrow-left-green.png\" border=0 />";
-  $extraCrit = $mya->anyAdmin ? '1' : '(tm.end IS NULL OR tm.end>:NOW)';
+  $extraCrit = $mya->admin ? '1' : '(tm.end IS NULL OR tm.end>:NOW)';
   
   $html = "<table>\n";
   foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
@@ -95,7 +95,7 @@ function addLine($info, $classes, $url, $person = FALSE) {
   } else {
     $a = r\acct($fWho);
     $fWho = $a->bestName;
-    if ($mya->admin) foreach (ray('ok:k, closed:., hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
+    if ($mya->admRegion) foreach (ray('ok:k, closed:., hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   }
   $res = "<tr>\n";
   

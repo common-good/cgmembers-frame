@@ -23,7 +23,7 @@ function formSecurity($form, &$sta, $arg = '') {
   $title = t('Security Information');
   $change = item($btns, t('Change:'), ['', $mya->ok ? t('triggers new card', 'field', 'photo') : ' ']);
   
-  $disAdmin = ($mya->cAdmin and !$mya->proSe) ? disabled() : [];
+  $disAdmin = ($mya->admin and !$mya->proSe) ? disabled() : [];
   $questionDesc = t('Type a question no one but you could guess the answer to.');
   $question = $mya->co ? NULL : textFld(t('Question:'), [t('Choose a security question'), $questionDesc], required($mya->question) + $disAdmin);
   $answer = $mya->co ? NULL : textFld(t('Answer:'), [t('The answer to that question')], required($mya->answer) + $disAdmin);

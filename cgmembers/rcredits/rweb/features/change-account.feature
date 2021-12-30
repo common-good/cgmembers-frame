@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | flags     |*
   | .ZZA | Abe One  | ok        |
-  | .ZZB | Bea Two  | ok,cAdmin |
+  | .ZZB | Bea Two  | ok,admin  |
   | .ZZC | Our Pub  | co,ok     |
   And these "u_relations":
   | main | agent | num | permission |*

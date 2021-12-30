@@ -531,7 +531,7 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 function balrew($a, $old = FALSE) {
   global $mya;
   if (!$mya->co) $a = $mya;
-  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
+  $balance = (($a->secret and $mya->co) ? '*' : '') . round($a->balance, 2);
   $creditLine = $mya->debt ? -$mya->floor : '';
   if ($old) $rewards = $mya->debt ? $creditLine : 0;
   return compact(ray($old ? 'balance rewards' : 'balance creditLine'));

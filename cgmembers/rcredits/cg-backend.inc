@@ -351,7 +351,7 @@ function reverse($xid, $mya) {
   $ok = TRUE;
 //  $txid = $xid; // txid is xid in transaction reports
 //  $created = $newTx->created;
-  if ($channel == TX_APP) $z->subs['balance'] = $tx->otherA->can(B_SECRET) ? '*0' : $tx->otherA->balance; // report customer balance for POS transactions, not actor's
+  if ($channel == TX_APP) $z->subs['balance'] = $tx->otherA->secret ? '*0' : $tx->otherA->balance; // report customer balance for POS transactions, not actor's
   $solution = 'reversed';
 //  $otherName = $tx->otherA->fullName;
   $subs = compact(ray('ok solution')) + $z->subs;
@@ -559,7 +559,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       $short = u\fmtAmt($shortfall);
       if ($loserA->refill) $shortfall += $loserA->avail($goods); // don't leave refillable accounts using credit line in acct::getFunds()
       $avail = u\fmtAmt($needed - $shortfall);
-      $msg = $reallyTaking ? ($otherA->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
+      $msg = $reallyTaking ? ($otherA->secret ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
       return txErr($msg, compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
@@ -998,7 +998,7 @@ function identify($who, $mya, $selfErr, $restrict) {
   if (!$mya) return 'search forbidden';
   $myid = $mya->id;
   $who = $who0 = trim($who);
-  $searchable = $mya->anyAdmin ? '1' : '(IF(activated, :IS_OK, :IS_MEMBER) AND !:IS_NOSEARCH)';
+  $searchable = $mya->admin ? '1' : '(IF(activated, :IS_OK, :IS_MEMBER) AND !:IS_NOSEARCH)';
 
   if ($atPos = mb_strpos($who, '@')) { // email or location (point to @)
     $at = trim(mb_substr($who, $atPos + 1)); // what's after the @
@@ -1029,7 +1029,7 @@ function identify($who, $mya, $selfErr, $restrict) {
         $err = tr('unfound', 'who where', $who, t('in that city'));
       }
     }
-  } elseif ($mya->anyAdmin and is_numeric($who) and mb_strlen($who) > 10) {
+  } elseif ($mya->admin and is_numeric($who) and mb_strlen($who) > 10) {
     list ($where, $subs) = ['uid=:who', compact('who')];
     $err = tr('unfound', 'who where', t('anyone'), t('with that record ID'));
   } elseif ($phone = u\fmtPhone($who, '+n')) { // phone
@@ -1040,14 +1040,14 @@ function identify($who, $mya, $selfErr, $restrict) {
     list ($where, $subs) = nameCriteria($who);
 
     if (preg_match('/^([A-Z]+|[a-z]+)$/', $who)) { // all upper or all lower
-      $qid = mb_strtoupper(($mya->anyAdmin and mb_strlen($who) == 3) ? R_SERVER_ID . $who : $who);
+      $qid = mb_strtoupper(($mya->admin and mb_strlen($who) == 3) ? R_SERVER_ID . $who : $who);
       if (u\isQid($qid) and $a = r\acct($qid)) $where = "($where OR uid=$a->id)";
     }
     $err = tr('unfound', 'who where', $who, t('(Try using their email or phone or, if they are not nearby, add "@" followed by their postal code or city (or city, state))'));
   }
       
   if ($restrict) $where .= ' AND ' . $restrict;
-  if (!$mya->admin and !$mya->isAdmin2 and !$atPos and !nn($cphone)) { // look only locally unless company
+  if (!$mya->admRegion and !$atPos and !nn($cphone)) { // look only locally unless company
     $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
     list ($lat, $lon) = [$mya->latitude ?: 0, $mya->longitude ?: 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
@@ -1057,7 +1057,7 @@ function identify($who, $mya, $selfErr, $restrict) {
   $company = t('company');
   $anon = "IF(:IS_CO, '$individual', '$company')";
   $uidCrit = 'uid NOT :CANONIC';
-  if ($mya->admin) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
+  if ($mya->admRegion) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 
@@ -1163,10 +1163,10 @@ function accountChoices() {
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
   $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
 
-  if ($mya->admin or $mya->isAdmin2) {
+  if ($mya->admRegion) {
     $where = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (uid<0) DESC, $nameOrder");
-  } elseif ($mya->cAdmin2) {
+  } elseif ($mya->admin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w

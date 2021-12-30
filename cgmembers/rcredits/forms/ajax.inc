@@ -105,7 +105,7 @@ function ajax($args = NULL) {
       
     case 'setBit':
       extract(just('bit on', $data));
-      if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
+      if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN) {
         $mya->setBit($b, $on);
         return ajaxMsg(t('Done!'));
       } else return ajaxErr(t('nope'));

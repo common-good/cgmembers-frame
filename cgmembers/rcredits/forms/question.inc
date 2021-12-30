@@ -64,7 +64,7 @@ function formQuestion($form, &$sta, $args = '') {
   $optOrders = ray('N:No change (static),S:Shuffle (randomize),Z:Reverse sometimes');
   $optOrder = selectFld(t('Option order:'), ['', t('In a Multiple choice or Budget question, how to scramble the options, if at all')], dft(nn($optOrder)), $optOrders);
   
-  if ($mya->cAdmin) $submit = submit();
+  if ($mya->admManageVote) $submit = submit();
   $back = button(t('Back to Event'), "$base_url/community/events/event/do=edit&eid=$eid");
   
   return cgform(compact(ray('title back id list type event text detail linkDiscussion budget optOrder submit')));

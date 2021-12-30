@@ -39,7 +39,7 @@ function formOption($form, &$sta, $args = '') {
     $maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(nn($max)));
   }
   
-  if ($mya->cAdmin) $submit = submit();
+  if ($mya->admManageVote) $submit = submit();
   
   return cgform(compact(ray('title id question text detail minimum maximum submit')));
 }

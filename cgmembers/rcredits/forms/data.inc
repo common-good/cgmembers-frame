@@ -24,10 +24,10 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   $sql0 = urldecode(nn($sql));
   $qName0 = nn($qName);
 
-  $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
-  $submit = $mya->admin ? submit(t('Go')) : NULL;
+  $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
+  $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
-  if ($mya->admin and $sql0) {
+  if ($mya->admRegion and $sql0) {
     $title = t('MySQL Query');
     try {
       $q = db\adminQ($sql0);

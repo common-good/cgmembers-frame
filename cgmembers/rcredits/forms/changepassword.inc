@@ -14,7 +14,7 @@ function formChangePassword($form, &$sta) {
   global $mya;
   $title = t('Choose a New Password');
   $subtext = tr('pass advice');
-  $pass = $mya->cAdmin ? NULL : passFld(REQ . t('Current (old) Password:'));
+  $pass = $mya->admManageAccts ? NULL : passFld(REQ . t('Current (old) Password:'));
   $submit = t('Save');
   return cgform(compact('title', 'subtext') + w\pickPassword(TRUE, REQ) + compact('pass', 'submit'));
 }
@@ -23,7 +23,7 @@ function formChangePassword_validate($form, &$sta) {
   global $mya;
   extract(just('pass', $sta['input'], NULL));
 
-  if (!$mya or !$mya->cAdmin) {
+  if (!$mya or !$mya->admin) {
     if (isset($pass) and !$mya->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
   }
 }

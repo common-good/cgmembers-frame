@@ -48,7 +48,7 @@ function formPass_submit($form, &$sta, $goto = '') {
   $code = $a->oneTimePass();
   
   $a->tell($template, compact(ray('qid code pwMsg')));
-  if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) {
+  if (isDEV or (NOT_PRODUCTION and $a->admin)) {
     $page = $goto ?: 'reset';
     say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/qid=%qid&code=%code&verify=%verify">reset</a>', compact(ray('page qid code verify'))));
   }

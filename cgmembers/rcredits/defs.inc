@@ -481,15 +481,15 @@ const B_SAVINGS = 22; // the connected bank account is a savings or money market
 const B_CASHOUTW = 23; // cash out automatically every 7 days
 const B_CASHOUTM = 24; // cash out automatically every 30 days
 const B_ICLUBQ = 25; // interested in investment club
-const B_OADMIN = 26; // can moderate the Offers/Needs/Tips board in a community
-const B_ADMIN2 = 27; // is an overall admin assistant or bank partner or government regulator (read-only except notes)
-const B_CADMIN2 = 28; // is a community sub-administrator (read-only except notes)
-const B_CADMIN = 29; // is a community administrator
-const B_ADMIN = 30; // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
+const B_u26 = 26; // can moderate the Offers/Needs/Tips board in a community
+const B_u27 = 27; // 
+const B_u28 = 28; // 
+const B_u29 = 29; // is a community administrator
+const B_ADMIN = 30; // is an administrator (has a record in the admins table)
 
 const B_MAX = 62; // maximum bit number
-const B_ADMINABLE = 'member confirmed carded oAdmin cAdmin cAdmin2 nonudge partner iclubq cgc invites rewardy noneg'; // for cAdmin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq oAdmin admin2 cAdmin2 cAdmin admin';
+const B_ADMINABLE = 'member confirmed carded nonudge partner iclubq cgc invites rewardy noneg'; // for admin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 u29 admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags
@@ -529,16 +529,6 @@ const B_MANAGE = 106; // can manage all aspects of the account
 const B_JOINT = 107; // make this a joint account (subsuming the other, with permission) -- no companies!
 $GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept %PROJECT card payments'), t('give refunds & give USD for %RCREDITS'), t('send invoices'), t('make purchases'), t('manage account'), t('joint account'));
 const B_PERMISSIONS = 'related read scan refund sell buy manage joint';
-
-// Other special pseudo-bit values for r\Acct::can() and rweb.module menus
-const B_MANAGING_CTTY = 120; // cadmin is actually managing a qualified account
-const B_PERSON = 121; // personal account (!co)
-const B_DEV = 122; // isDEV or is admin
-const B_u123 = 123; //
-const B_CTTYUP = 124; // account's community is operating (see also B_UP)
-const B_BANK = 125; // account has a connected bank account
-const B_CLOSED = 126; // account is closed
-const B_SHOW_ALL = 999; // special signal to r\Acct::can() to return all permissions
 
 // Canonic strings
 define('S_REFUND', t('refund'));
@@ -697,7 +687,7 @@ const DUR_1 = 'once';
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un8 editNotes editTxAmt editTxDate export generalInvite makeCtty makeRules makeAdmin makeVAdmin memberSettings mutualAid un20 payFrom printCards printChecks recheckSsn reconcile reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un32 setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
+const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un8 editNotes editTx export generalInvite helpSignup makeCtty makeRules makeAdmin makeVAdmin manageAccts manageVote mutualAid un21 nonmemberTx payFrom printCards printChecks recheckSsn reconcile region reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un35 seeTxInfo setCredit setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
 const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations/permissions that require access to very secure data
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page

@@ -185,7 +185,7 @@ function formAccounts($form, &$sta) {
   if (!$mya) return [];
   $myid = $mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
-  if ($mya->anyAdmin) { // admin: show a search box instead of a list of choices
+  if ($mya->admin) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
     $submit = submit('Go Account!!');
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
@@ -201,9 +201,9 @@ function formAccounts($form, &$sta) {
   foreach ($accounts as $uid => $choice) {
     $a = r\acct($uid);
     if (!$a and isDEV) continue; // ignore missing account if testing -- "current" account has been undermined is all
-    if ($mya->anyAdmin) {
+    if ($mya->admin) {
       $qid = $a->mainQid;
-      if ($mya->cAdmin2 and !$mya->admin) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
+      if ($mya->admin and !$mya->admRegion) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
       if ($a->isCtty) { // show communities in a separate category
 //        $class = $a->id < 0 ? 'cgc' : '';
         $choice = r\cttyName($uid);
@@ -251,8 +251,8 @@ function changeWho($zot, $args = '', &$sta = '') {
   if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('/signin')));
   if (!$mya = r\acct($acct, $agt = $mya ? $mya->agentId : NULL)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya), pr($agt))); // tentative new account (agent is the same, so adminishness is the same)
   if (!$mya->can()) {
-    if (!$mya->cAdmin2 and !$mya->isAdmin2) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
-    if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+    if (!$mya->admin) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
+    if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   }
   r\setAcct($mya, $sta); // set new current account
   return w\go($page);
@@ -276,7 +276,7 @@ function signout($continue = FALSE) {
     session_unset();
   }
   
-  if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
+  if ($mya and !$mya->admin and !$continue) r\setCook('trust', NULL);
   r\deleteCook('vKeyPw'); // no longer admV, if we ever were
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
@@ -351,7 +351,7 @@ function formCgBiz($form, &$sta, $id) {
  */
 function formInvitedWhom($form, &$sta) {
   global $mya;
-  $uid = $mya->cAdmin ? $mya->id : $mya->agentId;
+  $uid = $mya->admin ? $mya->id : $mya->agentId;
   
   $title = t('Your Invitees');
   $subtext = t('<p>If the status of someone you invited is "<span class="invite-incomplete">Not Complete</span>", they have not finished setting up an account and may need your help.</p><p>If the status is "<span class="invite-expired">expired</span>", you may want to call them and send another invitation.</p>');

@@ -17,7 +17,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $fbo = $mya->sponsored;
   
   $pay = in($type, 'pay both');
-  $charge = (in($type, 'charge both') and (!$fbo or $mya->admin)); // don't show charge button for sponsored org, except to admin
+  $charge = (in($type, 'charge both') and (!$fbo or $mya->admNonmemberTx)); // don't show charge button for sponsored org, except to authorized admin
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
   $opDesc = $pay ? $payDesc : $chargeDesc;
   
@@ -63,7 +63,7 @@ function formTx($form, &$sta, $type, $args = '') {
   // duplicate scraps.js's question, restrict, and allowNonmember in whoFldSubmit() for testing
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
-  $admin = $mya->admin;
+  $admin = $mya->admNonmemberTx;
   jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin')));
   
   $paying = hidFld($pay);
@@ -81,7 +81,7 @@ function formTx_validate($form, &$sta) {
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
   $uid = $a->id; */
   if (!$who) {
-    if (!$paying and !$mya->admin) return say(t('Only %PROJECT admins can charge non-members.'), 'err');
+    if (!$paying and !$mya->admNonmemberTx) return say(t('Only authorized %PROJECT admins can charge non-members.'), 'err');
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
     if ($zip and $err = u\badZip($zip)) return say($err, 'zip');
     if ($phone and $err = u\badPhone($phone)) return say($err, 'phone');
@@ -158,14 +158,14 @@ function fboTx($input) {
   global $mya;
 
   extract($input);
-  u\EXPECT($fbo and ($paying or $mya->admin), 'fbo income by non-admin');
+  u\EXPECT($fbo and ($paying or $mya->admNonmemberTx), 'fbo income by non-admin');
   $uid = UID_OUTER;
   
   $DBTX = \db_transaction();
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
-  $info = ray('purpose pid completed deposit cat', $purpose, $pid, now(), $mya->admin ? now() : 0, $cat);
+  $info = ray('purpose pid completed deposit cat', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat);
   $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($xid, 'outer transfer failed');
   say('info saved');

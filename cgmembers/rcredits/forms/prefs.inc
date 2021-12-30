@@ -28,7 +28,7 @@ function formPrefs($form, &$sta) {
     t('I will accept electronic statements**.'), 
     t('I choose to receive printed statements by mail. <div>I agree to pay $%R_STATEMENT_COST per month to cover the postage and handling costs for this service.</div>')
   );
-  $statements = radiosFld(t('Statements:'), '', dft((int) $mya->can(B_PAPER)), $mediumRadios);
+  $statements = radiosFld(t('Statements:'), '', dft((int) $mya->paper), $mediumRadios);
 
   $showAdvancet = item(t('<a>Show advanced options</a>'), NBSP); // different name from showAdvanced (for CSS)
 
@@ -37,9 +37,9 @@ function formPrefs($form, &$sta) {
 
   $noticeRadios = array(t('daily'), t('weekly'), t('monthly'));
 
-  $secretBal = boolFld(t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->can(B_SECRET));
+  $secretBal = boolFld(t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->secret);
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
-  $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Let members identify my account only by phone, email, or account ID &mdash; not by name."), $mya->can(B_NOSEARCH));
+  $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Let members identify my account only by phone, email, or account ID &mdash; not by name."), $mya->nosearch);
   
   $desc = t('Use your %PROJECT card as a <i>credit</i> card, allowing your account balance to go negative, limited by your credit limit (currently %limit), based on your average monthly account activity. When you use your credit line  (that is, when your balance goes negative) it is a short-term loan from your %PROJECT community. <span class="loud">In choosing this option, you agree to bring your balance back up above zero within 30 days.</span>', 'limit', u\fmtAmt(-$mya->floor));
   if (!$mya->hasBank or !$mya->refill) {

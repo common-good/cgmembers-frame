@@ -52,7 +52,6 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
 //  if ($a->co and db\exists('users', 'uid<>:id AND address=:address AND zip=:zip', ray('id address zip', $a->id, $a->address, $a->zip))) setRisk('homeCo'); // company shares physical address
   if ($a->co and $a->dupAddr()) setRisk('homeCo'); // company shares physical address (encryption requires func)
   setRisk('shady', $a); // no substantial internet search results and/or no SSN history
-//  if ($a->can(B_BANK)) setRisk('hasBank'); // has a connected bank account
   setRisk('hasBank', $a); // has a connected bank account
   if ($uid != CGID and db\get('SUM(amount*perYear(period, periods))', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:id AND tm.to=:CGID AND tm.end IS NULL', $idSub) + 0 < K_MISER_DONATION and !$a->roundup and $a->crumbs == 0) setRisk('miser'); // unusually small donation to CGF
   

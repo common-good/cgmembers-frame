@@ -413,7 +413,7 @@ function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = 
   $where = 1;
   
   $flagsField = ($table == 'tx_hdrs') ? TX_FLAGS : B_LIST;
-  if (!$mya->admin and $joinFields) {
+  if (!$mya->admRegion and $joinFields) {
     if ($table != 'users') {
       if (!is_array($joinFields)) $joinFields = ray($joinFields);
       $fieldCount = count($joinFields);

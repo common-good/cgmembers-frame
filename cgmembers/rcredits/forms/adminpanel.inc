@@ -17,7 +17,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   extract(just('qid code', $args, NULL));
   global $mya;
 
-  if (!$mya or !$mya->cAdmin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
+  if (!$mya or !$mya->admin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
   
   if ($code) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($code), NULL));
@@ -46,7 +46,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admTen99) $do1099ktest = submi(t('1099-K TEST'));
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
-  if ($mya->admin) $tables .= ' notices boxes do stats usd nonmembers';
+  if ($mya->admRegion) $tables .= ' notices boxes do stats usd nonmembers';
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -102,7 +102,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($account) {
     if (!$a = a($account)) return say('That is not an account.'); // should use whois first
     svar('adminingAcct', $account); // remember what account we're working on
-    if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
+    if (!$mya->admRegion and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
   } else $a = $mya;
   
   if ($a and $op == 'printId') {
@@ -122,7 +122,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
   } elseif ($op == 'resetSSN' and $a) {
@@ -153,7 +153,7 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
-    $crit = $mya->admin ? '1' : 'community=' . $mya->community;
+    $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
         global $signupCos;
         if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);

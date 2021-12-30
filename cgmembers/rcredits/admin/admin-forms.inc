@@ -58,7 +58,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-  if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('dashboard');
+  if (!$mya or !$mya->admin) return w\go('dashboard');
   
   extract(just('one recent', $args, null));
 
@@ -68,7 +68,7 @@ function formFollowup($form, &$sta, $args = []) {
   $now = now();
   $signupBit = r\allSteps()['signup'];
   $todayEnd = strtotime('tomorrow') - 1;
-  list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
+  list ($where1, $where2) = ($mya->admRegion and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
   $cttys[key($cttys)] = t('Seedpack');
   foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
@@ -167,12 +167,11 @@ function formMemberList($form, &$sta) {
   global $base_url;
   global $mya;
 
-  $cAdmin = $mya->cAdmin;
-  $ctty = r\acct($mya->community);
+  $cttyA = $mya->cttyA;
 
-  $title = (($cAdmin and $ctty) ? $ctty->fullName : '') . t(' Member List');
+  $title = ((!$mya->proSe and $cttyA) ? $cttyA->fullName : '') . t(' Member List');
   $sql = 'SELECT uid, login, access, fullName, notes, :IS_CO AS co FROM users WHERE uid>:UID_CANON9 AND community=:cttyId AND NOT :IS_NONUDGE ORDER BY :IS_OK, IF(:IS_OK, fullName, 0-login)'; // -login fails because it gets treated as a string
-  $q = db\q($sql, ray('cttyId', $ctty->id));
+  $q = db\q($sql, ray('cttyId', $cttyA->id));
   $list = "<table id='memberlist'>\n";
   $emails = '';
   while ($row = $q->fetchAssoc()) {
@@ -188,7 +187,7 @@ function formMemberList($form, &$sta) {
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);
 
-    if ($cAdmin) {
+    if (TRUE) {
       $bits = []; // zap previous value
       foreach (ray('member ok bank') as $one) if ($a->can(u\consta('b', $one))) $bits[] = $one;
       $bits = $bits ? ('<span class="memberlist-bits"> ' . join(' ', $bits) . "</span><br>\n") : '';
@@ -243,7 +242,7 @@ EOF
   
 $chimp = boolFld(t('Export to email list?'), '', TRUE);
   
-$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : hidFld(FALSE); // temporary for CGF oversight
+$allCttys = $mya->admRegion ? boxFld('allCttys', t('All communities:'), '', TRUE) : hidFld(FALSE); // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
@@ -557,8 +556,8 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   require_once R_ROOT . '/forms/showqr.inc'; // for qrUrl()
   
   $a = r\acct($id, $agent);
-  $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
-  if (!$a or ($cttyErr and !$retroactive)) u\FAIL('No such account ia: ' . $id . ':' . $agent);
+  $cttyErr = (!$mya or (!$mya->admRegion and $a->community != $mya->community));
+  if (!$a or ($cttyErr and !$retroactive)) u\FAIL('No such account ID: ' . $id . ':' . $agent);
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)

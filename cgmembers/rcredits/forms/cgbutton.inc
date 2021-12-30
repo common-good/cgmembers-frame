@@ -26,7 +26,7 @@ X
   u\ry('P', $mya->emailCode) );
   
   $forVals = t('Credit,Gift of Credit,Other');
-  if ($mya->admin and $mya->legalName == r\acct(CGID)->legalName) $forVals .= t(',Donate to CG acct');
+  if ($mya->admRegion and $mya->legalName == r\acct(CGID)->legalName) $forVals .= t(',Donate to CG acct');
   $selling = explode("\n", $mya->selling)[0];
 
   $button = radiosFld(REQ . t('Type:'), '', dft(2), ray(t('Link,Text Button,Image Button')));

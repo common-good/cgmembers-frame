@@ -57,19 +57,19 @@ function formEvent($form, &$sta, $args='') {
 
 
   
-  } elseif (!$mya->cAdmin) return w\hack('event permission');
+  } elseif (!$mya->admManageVote) return w\hack('event permission');
 
   if ($do == 'edit') {
     if ($vote or $grading) { // must precede setting $type field
 //      list ($header, $page) = $vote ? [t('Questions'), 'question'] : [t('Proposals'), 'proposal'];
       list ($header, $page) = [t('Questions'), 'question'];
-      if ($mya->cAdmin) $header .= ' ' . button(t('Add Question'), "$base_url/community/events/$page/eid=$eid", '', 'warning');
+      if ($mya->admManageVote) $header .= ' ' . button(t('Add Question'), "$base_url/community/events/$page/eid=$eid", '', 'warning');
 
       $q = db\q('SELECT id AS qid,text,detail,type,budget FROM r_questions WHERE event=:eid ORDER BY id', compact('eid'));
       while ($row = $q->fetchAssoc()) {
         extract($row, EXTR_PREFIX_ALL, 'q');
         $budget = $q_budget ? u\fmtAmt($q_budget) : '-';
-        $buttons = $mya->cAdmin ? button(t('Edit'), "$base_url/community/events/$page/qid=$q_qid", '', 'warning') : '';
+        $buttons = $mya->admManageVote ? button(t('Edit'), "$base_url/community/events/$page/qid=$q_qid", '', 'warning') : '';
         $list[] = <<<EOF
 <tr><td>$q_text</td><td>$q_type</td><td>$budget</td><td>$buttons</td></tr>
 EOF;
@@ -98,7 +98,7 @@ EOF;
   $details = areaFld(t('Details:'), [t('Event Details')], dft(nn($details)));
   $start = dateFld(REQ . t('Start:'), [t('Start Date')], dft(nn($start)));
   $end = dateFld(REQ . t('End:'), [t('End Date')], dft(nn($end)));
-  if ($mya->cAdmin) $submit = submit();
+  if ($mya->admManageVote) $submit = submit();
   $back = button(t('Back to Events'), "$base_url/community/events");
   
   foreach (ray('title back id list type event details start end submit') as $k) if (isset($$k)) $form[$k] = $$k;

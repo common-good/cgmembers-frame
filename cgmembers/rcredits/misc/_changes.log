@@ -1,3 +1,7 @@
+2021-12-30 feature/admin-overhaul
+. got rid of all admin flags except B_ADMIN (depending instead on admins table)
+. got rid of acct::getCans() function (using ::relCan() instead)
+
 2021-12-29 feature/admin-admin
 . Created an administrative interface for setting admin permission bits
 . Also added encrypted files to the member-to-member messaging (to be able to send admins an encrypted superAdmin QR image)

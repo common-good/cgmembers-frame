@@ -88,7 +88,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   
   if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
     r\setCryptCook('qid', $a->mainQid, NULL);
-    r\setCook('trust', $a->admin2 ? 0 : ($trust ? 1 : 0));
+    r\setCook('trust', $a->admin ? 0 : ($trust ? 1 : 0));
   }
   
   return TRUE; // TRUE is used by formBuy()
@@ -107,5 +107,5 @@ function formSignin_submit($form, &$sta, $goto = 'dashboard') {
 
   u\loga('signin', compact('agt') + ($dftAcct ? compact('dftAcct') : []) );
   if ($then and $res = then($then)) return $res;
-  return w\go($mya->admin2 ? 'sadmin/panel' : $goto);
+  return w\go($mya->admin ? 'sadmin/panel' : $goto);
 }
