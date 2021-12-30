@@ -7,6 +7,7 @@
 . added "M"-type encryption for messages (including on production, staging, and demo).
 . refactured our w\uploadFile function for use in more places
 . changed popovers on summary page to use click as a trigger, rather than hover (works better)
+. reworked acct::getNick() function to detect typos better
 
 2021-12-20 feature/supercan
 . ACH deposit details no longer go past end of page
