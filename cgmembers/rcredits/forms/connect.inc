@@ -33,7 +33,7 @@ function formConnect($form, &$sta, $args = '') {
   $saveWeekly = numFld(t('Save Weekly:'), [t('Additional amount to add weekly to Target Balance'), t('Putting money away as savings can be a challenge. This may help: choose a small additional amount to be added automatically to your %what every week.', 'what', t('Target Balance'))], dft($mya->saveWeekly));
   
   $targetFields = fieldSet('targetFields2', compact(ray('target achMin saveWeekly')), BARE);
-  //$bankAccountType = radiosFld(t('Type:'), '', required($mya->can(B_SAVINGS)), $typeOptions);
+  //$bankAccountType = radiosFld(t('Type:'), '', required($mya->savings), $typeOptions);
     
   if ($mya->hasBank) {
     $title = t('Banking Settings');

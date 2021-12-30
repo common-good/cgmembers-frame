@@ -12,7 +12,7 @@ use CG\Db as db;
 function formVerifyId($form, &$sta, $args = '') {
   global $mya;
   
-  if ($mya->stepIsDone('ssn') and !$mya->admin) return w\goNextStep(''); // don't allow DIY redo after SSN is verified
+  if ($mya->stepIsDone('ssn') and !$mya->admRecheckSsn) return w\goNextStep(''); // don't allow DIY redo after SSN is verified
   extract(just('setMethod', $args, 0));
 
   if (u\isMobile()) js('x/jquery.finger.min');

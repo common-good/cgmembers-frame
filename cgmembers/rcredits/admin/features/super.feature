@@ -5,12 +5,12 @@ SO I can handle routine operations of the regional server, such as bank transfer
 
 Setup:
   Given members:
-  | uid  | fullName | flags              |*
-  | .ZZA | Abe One  | ok,confirmed,admin |
-  | .ZZB | Bea Two  | ok,confirmed       |
-  | .ZZC | Cor Pub  | ok,confirmed,co    |
+  | uid  | fullName | flags               |*
+  | .ZZA | Abe One  | ok,confirmed,admin  |
+  | .ZZB | Bea Two  | ok,confirmed        |
+  | .ZZC | Cor Pub  | ok,confirmed,co     |
   
-Scenario: A superAdmin grants super permission to another admin
+Scenario: An admin prints checks
   Given these "admins":
   | uid  | vKeyE     | can           |*
   | .ZZA | DEV_VKEYE | v,printChecks |
@@ -31,7 +31,14 @@ Scenario: A superAdmin grants super permission to another admin
   Then we say "error": "no page permission" with:
   | page | Panel |**
 
-Scenario: A member tries to do a high-level admin thing
+Scenario: A member tries to do an admin thing
   When member ".ZZB" visits "sadmin/checks/way=In&date=%yesterday"
   Then we say "error": "no page permission" with:
   | page | Checks |**
+
+Scenario: An admin tries to do an admin thing with insufficient permissions
+  When member ".ZZA" visits "sadmin/checks/way=In&date=%yesterday"
+  Then we say "error": "no page permission" with:
+  | page | Checks |**
+
+Scenario: A superAdmin grants super permission to another admin

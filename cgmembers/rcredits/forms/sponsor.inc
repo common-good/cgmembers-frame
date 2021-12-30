@@ -28,7 +28,7 @@ function formSponsor($form, &$sta, $args = '') {
   $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
   
-  if ($isCo and ($mya->ok or $mya->admin)) {
+  if ($isCo and ($mya->ok or $mya->admRegion)) {
     if (!$mya->can(B_MANAGE)) return say('no sponsor perm', 'err');
     $contact = $fullName = $phone = $email = $zip = $country = $source = NULL;
     if ($mya->sponsored or u\starts($mya->fullName, t('%PROJECT FBO '))) $gross = $employees = $comments = NULL;

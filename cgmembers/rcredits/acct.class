@@ -175,7 +175,7 @@ class Acct {
     if ($nick == 'rel') return $a->proSe ? NULL : $a->relFld($field);
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
     if ($nick == 'cof') return $a->co ? $a->coCan($field) : NULL;
-    if ($nick == 'adm') return $a->anyAdmin ? $a->adminCan($field) : FALSE;
+    if ($nick == 'adm') return $a->admin ? $a->adminCan($field) : FALSE;
     if ($nick == 'ctt') return $field == 'a' ? r\acct($a->community) : $a->cttyA->can(u\consta('b', $field)); // ctty bit
 
     if ($obj = nni(self::$rs, $a->id) and property_exists($obj, $field)) { // actual database field?
@@ -194,7 +194,6 @@ class Acct {
     
     switch ($field) { // handle pseudo-fields (every case returns)
       case 'mainQid': return $a->qo->mainQid;
-      case 'isAdmin2': return (bool) ($a->agentA->flags & u\bit(B_ADMIN2)); // not ->can() included by cAdmin etc. (see note in can())
       case 'phoneDash': return u\fmtPhone($a->phone, '-');
       case 'st': return r\realState($a->state, $a->country);
       case 'agentA': return r\acct($a->agentId);
@@ -226,7 +225,6 @@ class Acct {
       case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
       case 'masterA': return $a->slave ? $a->jA : $a;
       case 'helperA': return $a->helper ? r\acct($a->helper) : '';
-      case 'anyAdmin': return ($a->cAdmin2 or $a->isAdmin2);
       case 'usa': return ($a->country == US_COUNTRY_ID);
       case 'card': return ($a->ok and $a->stepsDone('card'));
       case 'vote': return ($a->ok and $a->stepsDone('vote'));
@@ -681,7 +679,7 @@ class Acct {
     $a = $this;
     
     // no going into debt without permission
-    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->can(B_DEBT)) {
+    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt) {
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
     } else {$floor = $a->floor;}
 
@@ -929,7 +927,7 @@ EOF;
   
   public function cardCode() {return $this->noAgent() ? $this->cardCode : $this->agentA->cardCode2;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
   
-  private function noAgent() {return $this->proSe ?: ($this->anyAdmin and !r\relation(1, $this->id, $this->agentId));}
+  private function noAgent() {return $this->proSe ?: ($this->admin and !r\relation(1, $this->id, $this->agentId));}
 
   /**
    * Create an rCard security code for the given account (either for an individual or a company agent).
@@ -1108,7 +1106,7 @@ EOF;
    * Return the Community Admin's account record ID.
    */
   function cAdminUid() {
-    return db\get('uid', 'users', 'community=:ctty AND :IS_CADMIN', ray('ctty', $this->community));
+    return db\get('uid', 'users', 'community=:ctty AND :IS_ADMIN', ray('ctty', $this->community));
   }
   
   /**
@@ -1486,7 +1484,7 @@ X;
     global $mya;
     $a = $this; $uid = $a->agentId;
 
-    if (!$a->anyAdmin) return FALSE; // only admins have admin powers
+    if (!$a->admin) return FALSE; // only admins have admin powers
     
     $bitName = lcfirst($bitName);
     $cans = $a->agentA->adminCans;
@@ -1592,60 +1590,40 @@ X;
     
     if ($a->isCanonic and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return true;
 
-    if ($bit <= B_MAX) { // ordinary bits
-      $can = (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.
-      if (in($bit, [B_OADMIN, B_ADMIN2, B_CADMIN2, B_CADMIN, B_ADMIN])) {
-        if ($a->agentId == 1) return TRUE; // this didn't use to be necessary (9/20/2017)
+    if ($bit <= substr_count(B_LIST, ' ')) { // ordinary bits
+      if ($bit == B_DEBT and $a->underage) return FALSE; // credit card regulations say no credit line if underage
+      if ($bit == B_ADMIN) {
+        if ($a->agentId == UID_SUPER) return TRUE; // this didn't use to be necessary (9/20/2017)
         if (!$a->proSe) return ($aa = $a->agentA and $aa->can($bit)); // admin permissions are for agent instead (in tests, agent sometimes doesn't exist)
-        if (!$can and $bit < (R_ADMIN_CAN_MANAGE_CTTYS ? B_ADMIN : B_CADMIN)) return $a->can($bit + 1); // not this admin bit, maybe the next higher? IMPORTANT NOTE: this gives cAdmin2 Admin2 permission, so always use ->isAdmin2 rather than ->admin2 unless you WANT cAdmin2 to have the permission in question
       }
-      return $can;
+      return (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.
     }
 
-    if ($bit == B_CTTYUP) return $a->cttyA->up;
-
-    if ($bit == B_BANK) return $a->hasBank; // might get set after getCans() is called
-    if ($bit == B_CLOSED) return $a->closed;
-    $cans = nn(self::$perms[$a->id][$a->agentId]) ?: $a->getCans($bit);
-    return $cans[$bit];
+    if ($bit > B_RELATED and $bit <= B_JOINT) return $a->relCan($bit);
+    u\FAIL('bad can bit: ' . $bit);
   }
 
   /**
-   * Set up permissions (::$perms) if we haven't yet
-   * @return the permissions array for this account
+   * Say whether the agent has a particular permission on the account they are managing.
    */
-  private function getCans($bit) {
+  private function relCan($bit) {
     $a = $this;
     $aa = $this->agentA;
-    $id = $a->id;
-    
-    $cans[B_PERSON] = !$a->can(B_CO);
-    if ($a->agentId == 1) $cans[B_ADMIN] = TRUE;
 
-    $perm = ($aa->can(B_CADMIN) and $a->community == $aa->community) ? B_MANAGE : ($a->proSe ? B_MANAGE : 0);
-      
-    if (!$perm) $perm = max(B_RELATED + $a->permission,
-      ($aa->can(B_OADMIN) or $aa->can(B_ADMIN2) 
-        or ($aa->can(B_CADMIN2) and $a->community == $aa->community)) ? B_READ : 0);
-      
-    for ($i = B_RELATED; $i <= B_MANAGE; $i++) $cans[$i] = ($i <= $perm); // set all, even the false ones
+    if ($bit == B_BUY and $a->trialco) return FALSE; // trial companies can't buy
+    if (in($bit, [B_SELL, B_BUY]) and !$a->ok) return FALSE; // inactive accounts can't transact
+    if ($a->proSe) return TRUE;
 
-    $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
-    //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
-    $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
+    $perm = $a->permission;
+    $adminPerm = $aa->id == UID_SUPER ? B_MANAGE
+    : (!$aa->admin ? 0
+    : ((!($a->admRegion and R_ADMIN_CAN_MANAGE_CTTYS) and $a->community != $aa->community) ? 0
+    : ($aa->admManageAccts ? B_MANAGE
+    : ($aa->admPayFrom ? B_BUY
+    : ($aa->admChargeFrom ? B_SELL : 0) ))));
 
-    if ($aa->can(B_ADMIN) and R_ADMIN_CAN_MANAGE_CTTYS) { // temporary extra power, until communities are independent
-      $cans[B_READ] = $cans[B_SCAN] = $cans[B_REFUND] = $cans[B_SELL] = $cans[B_BUY] = $cans[B_MANAGE] = TRUE;
-    }
-    
-    // Lastly, place restrictions on buying and selling
-
-    if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
-    if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
-    if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
-    
-    ksort($cans); // easier to debog
-    return self::$perms[$id][$a->agentId] = $cans;
+    if (!$perm and !$adminPerm) return FALSE;
+    return (max($perm + B_RELATED, $adminPerm) >= $bit);
   }
 
   /**
@@ -1657,7 +1635,7 @@ X;
   public function makeBox($code, $channel, $version = NULL) {
     $a = $this;
     $uid = $a->id;
-    if ($a->anyAdmin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
+    if ($a->admin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
 
     $created = $access = now();
     $boxnum = db\get('MAX(boxnum)', 'r_boxes', compact('uid')) + 1;
@@ -1913,7 +1891,7 @@ X;
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
   public function firstCo() {return db\get('fullName', 'u_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
-    $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->admMakeAdmin ? ' admin' : ''));
+    $res = ray(B_ADMINABLE . ($this->admMakeAdmin ? ' admin' : ''));
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
   public function setDftAppCans() {foreach (ray(CO_APP_DFTS) as $i) $this->setCoBit(APP_CANS + $i);}
@@ -1986,7 +1964,7 @@ function setAcct($myid = '', &$sta = NULL) {
   if (!$myid) return $mya = NULL;
 
   if ($a = r\acct($myid, $agentId)) { // we get NULL here when current account is deleted
-    if ($a->proSe or !$a->admin2) $a->accessed(); // admin access doesn't count
+    if ($a->proSe or !$a->admin) $a->accessed(); // admin access doesn't count
   } else { $a = setAcct(NULL); }
   return $mya = $a;
 }

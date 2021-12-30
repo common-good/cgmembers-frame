@@ -67,7 +67,7 @@ EOF;
   $gross = numFld(t('Annual Gross:'), [t('Approximate annual gross income')], required($mya->gross));
   $staleNudge = intFld(t('Nudge Every:'), [t('Number of days between nudges'), t('Wait this many days before nudging a customer to pay an invoice you sent them (zero means never send a reminder).')], required($mya->staleNudge ?: STALE_NUDGE));
   $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
-  if ($mya->cAdmin) {
+  if ($mya->admManageAccts) {
     $fast = NULL; // boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   } else { $fast = $atm = NULL; }
@@ -103,8 +103,8 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoCans(nn($can));
   $mya->setCoBit(CO_PRIVATE, nn($private));
   $mya->setCoBit(CO_TIP, $tips);
-  if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
-  if ($mya->cAdmin) $mya->setCoBit(CO_ATM, nn($atm));
+  if ($mya->admManageAccts) $mya->setCoBit(CO_FAST, nn($fast));
+  if ($mya->admManageAccts) $mya->setCoBit(CO_ATM, nn($atm));
   $info = []; foreach (ray('description shortDesc website logo selling employees gross staleNudge founded') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
   if (nn($categories)) $mya->setCategories($categories);

@@ -19,7 +19,7 @@ function formAgreement($form, &$sta) {
     $date = u\fmtDate($date);
     say('signed agreement', compact('date'));
     $signedBy = item("Signed by <b>$mya->signedBy</b>, $date");
-  } elseif (!$mya->co and !$mya->proSe and !$mya->cAdmin) { // can't sign for someone else!
+  } elseif (!$mya->co and !$mya->proSe and !$mya->admHelpSignup) { // can't sign for someone else!
     say('self must sign', 'signedBy');
   } elseif (!$mya->co) {
     $signedBy = NULL;
@@ -72,7 +72,7 @@ X
 function formAgreement_validate($form, &$sta) {
   global $mya;
 //  list ($i0, $i9) = $mya->co ? [1, R_AGREE_9 - 1] : [R_AGREE_0, R_AGREE_9]; // companies omit prolog and democracy question
-//  if (!$mya->co and !$mya->cAdmin) for ($i = $i0; $i <= $i9; $i++) if (!@$sta['input']["check$i"]) return say('incomplete agreement', "check$i");
+//  if (!$mya->co and !$mya->admin) for ($i = $i0; $i <= $i9; $i++) if (!@$sta['input']["check$i"]) return say('incomplete agreement', "check$i");
 //  if (w\badSignature($sta)) return;
 }
 
@@ -80,7 +80,7 @@ function formAgreement_submit($form, &$sta) {
   global $mya;
   $signed = now();
 //  extract(just('signedBy', $sta['input']));
-  $aa = ($mya->cAdmin or ($mya->co and $mya->proSe)) ? $mya->helperA : $mya->agentA;
+  $aa = ($mya->admHelpSignup or ($mya->co and $mya->proSe)) ? $mya->helperA : $mya->agentA;
   $signedBy = $aa->fullName;
   $mya->update($info = compact('signed', 'signedBy'));
   return w\goNextStep('signup');

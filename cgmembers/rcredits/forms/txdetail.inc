@@ -28,7 +28,7 @@ function formTxDetail($form, &$sta, $args = '') {
   if (in_array($myid, $uids)) {
     $uid = $uid1 == $myid ? $uid2 : $uid1; // set $uid to other account
   } else {
-    if (!$mya->admin) return softErr(t('That transaction is not one of yours.'));
+    if (!$mya->admRegion) return softErr(t('That transaction is not one of yours.'));
     $uid = $uid1 == UID_OUTER ? $uid1 
     : (($uid1 <= UID_CANON9 or $uid1 == CGID or ($uid2 != CGID and r\isCGs($uid1))) ? $uid2 : $uid1);
   }
@@ -70,14 +70,14 @@ X;
   $me = item($meA->fullName, $wayMe);
   
   $amt = editIf($mya->admEditTxAmt, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
-  $addr = ($toMe or $mya->anyAdmin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
+  $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
-  $cat = $mya->admin ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
-  $for = editIf($mya->admin, '', t('For:'), $purpose);
+  $cat = $mya->admEditTx ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
+  $for = editIf($mya->admEditTx, '', t('For:'), $purpose);
   $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));
   $chan = item(ray(TX_CHANNELS)[$channel], t('Channel:'));
 
-  if ($mya->admin) {
+  if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
     $type = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
 

@@ -64,7 +64,7 @@ EOF;
     $owner = toggle('owner', $owner, $ii);
     $customer = toggle('customer', $customer, $ii);
     $permissions = $GLOBALS['share permissions'];
-// NO    if (!$mya->can(B_JOINED)) $permissions[$permission = B_JOINT] .= '?'; // pending agreement
+
     if ($co or $otherCo or !$mya->ok or !$a->ok) unset($permissions[r\perm(B_JOINT)]); // no joint accounts with a company or nonmember
     $perm = $otherPerson ? dropdown('permission', $permission, $permissions, $ii) : R_NONE;
     $delete = btn('', '&cross;', 'default', '', ray('name', "delete-$ii"));

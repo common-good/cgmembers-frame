@@ -24,7 +24,7 @@ function formProposal($form, &$sta, $args = '') {
   list ($ctty, $cttyName) = [$cttyA->id, $cttyA->fullName];
   list ($cttyEmail, $cttyPhone) = [$cttyA->email, u\fmtPhone($cttyA->phone)];
   
-  $where = ($mya and $mya->cAdmin) ? ':NOW>start ORDER BY end DESC' : ':NOW BETWEEN start AND end';
+  $where = ($mya and $mya->admManageVote) ? ':NOW>start ORDER BY end DESC' : ':NOW BETWEEN start AND end';
   if (!$res = db\get('end,event,id AS eid', 'r_events', "ctty=:ctty AND type='P' AND $where", compact('ctty'))) {
     w\softErr(t('We\'re very sorry. The deadline for submitting proposals has passed. Try again in the next funding cycle!'));
   }

@@ -26,7 +26,7 @@ function formSummary($form, &$sta) {
   }
 
   $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
-  if (!$mya->isCtty and $mya->cAdmin) {
+  if (!$mya->isCtty and $mya->admin) {
     if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
     $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
   }
@@ -43,7 +43,7 @@ function formSummary($form, &$sta) {
 
   $title = item(t('Account Summary'), '', suffix($buttons));
   $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
-  $address = $mya->cAdmin 
+  $address = $mya->admin 
   ? item(($mya->trialco ? $mya->contact : $mya->postalAddr)
     . '<br>' . u\fmtPhone($mya->phone) . ($mya->email ?
         "<br><span id=\"acctEmail\">$mya->email</span> "
@@ -67,13 +67,13 @@ function formSummary($form, &$sta) {
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
 
-    $creditLine = $mya->admin
+    $creditLine = $mya->admSetCredit
     ? numFld(t('Credit Line:'), $desc, dft(-$mya->floor) + suffix($suffix))
     : ($mya->underage ? NULL : item($credit, t('Credit Line:'), $desc, w\suffix($suffix)));
 
   } else $acctType = t('community account');
 
-  if ($mya->cAdmin) {
+  if ($mya->admin) {
     $extra = " id#$mya->id " . btn('', 'c', 'default', '', clas('copyAcct'));
     $copyAcct = t('your %PROJECT%co account (%qid)', 'co qid', $mya->co ? t(' company') : '', $mya->mainQid);
     $copyEmail = "$mya->fullName <$mya->email>";
@@ -88,7 +88,7 @@ function formSummary($form, &$sta) {
 //  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
-  if ($mya->admin2 and !$mya->proSe) {
+  if ($mya->admin and !$mya->proSe) {
     $class = ['class' => ['admin']];
     $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
     $left = w\fieldSet('left2', $fields, '', '', $class);
@@ -142,11 +142,11 @@ function formSummary_submit($form, &$sta) {
   global $mya;
   $op = op($sta);
 
-  if (!$mya->admin2) return; // hack attempt
+  if (!$mya->admManageAccts) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
   extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans', $sta['input'], NULL));
-  if (!$mya->cAdmin) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
+  if (!$mya->admManageAccts) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
     $tickleDone = $mya->ok ? ($note and $mya->tickle) : 'activate';
@@ -164,8 +164,8 @@ function formSummary_submit($form, &$sta) {
     $mya->stepDone('verifyid');
   }
 
-  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
-  if ($mya->admMakeVAdmin) $mya->setAdminBits(nn($adminCans));
+  if ($mya->admManageAccts) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
+  if ($mya->admMakeAdmin) $mya->setAdminBits(nn($adminCans));
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
@@ -211,7 +211,7 @@ function setRisksAndFlags($a, $risks, $adminable) {
 }
 
 /**
- * Return Summary fields exclusively for community admins (admin, admin2, cAdmin, cAdmin2).
+ * Return Summary fields exclusively for admins.
  */
 function adminSummary() {
   global $mya, $base_url;
@@ -219,7 +219,7 @@ function adminSummary() {
 
   $uid = $mya->id;
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
-  if ($mya->proSe and !$mya->anyAdmin) return []; // nothing special on admin's own account
+  if ($mya->proSe and !$mya->admin) return []; // nothing special on admin's own account
   
   $noEnter = TRUE; // prevent submission by pressing Enter
   
@@ -237,7 +237,7 @@ function adminSummary() {
       jsx('change-ctty', compact('uid'));
     }
 
-    if ($mya->cAdmin and !$mya->proSe) {
+    if ($mya->admin and !$mya->proSe) {
       require_once R_ROOT . '/admin/admin.inc';
 /*      $html = $mya->photoHtml(FALSE, TRUE);
       $photo = item("<a href=\"$base_url/settings/photo\">$html</a>");
@@ -276,7 +276,7 @@ function adminSummary() {
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   
-  if ($mya->cAdmin and !$mya->proSe) { // either a community or regular account (but not the cAdmin's own account)
+  if ($mya->admin and !$mya->proSe) { // either a community or regular account (but not the cAdmin's own account)
     include __DIR__ . '/../rweb/risk-descs.inc';
     include __DIR__ . '/../rweb/bit-descs.inc';
     include __DIR__ . '/../rweb/can-descs.inc';

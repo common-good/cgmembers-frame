@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
   | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
+  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,admin  |             |  -200 |
   And these "txs":
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |

@@ -6,7 +6,7 @@ use CG\Util as u;
 /**
  * @file
  * List of queries for the Community and Money Data page on the Community menu (for members only).
- * Queries beginning with a digit are for admins or companies only: 0=admV 1=admin 2=cAdmin or cAdmin2 B_CO=companies
+ * Queries beginning with a digit are for admins or companies only: 0=admV 1=admRegion 2=admin B_CO=companies
  * These special parameters are recognized:
  *  :ctty  the current account's community ID
  *  :myid  the current account's record ID

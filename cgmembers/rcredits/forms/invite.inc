@@ -65,7 +65,7 @@ function formInvite_submit($form, &$sta) {
     $code = r\invite($email, $mya->id, '', $subject, '', $mya->zip);
     r\rMail('invite', $email, $subs + compact(ray('code')), $mya);
     say('invite sent|repeat invite', compact('email'));
-    if (!$mya->admin) r\tellAdmin('invited', $subs + compact('email'), $mya->id);
+    if (!$mya->admRegion) r\tellAdmin('invited', $subs + compact('email'), $mya->id);
   }
 
   return r\acct() ? w\goNextStep('invite') : w\doSay();
@@ -99,7 +99,7 @@ function inviteOne($mya, $code, $info) {
 
   $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
   $submit = t('Send');
-  $foot = ($mya->proSe or !$mya->cAdmin) ? w\setupFoot($submit) : []; // don't let cAdmins send on behalf of anyone
+  $foot = ($mya->proSe or !$mya->admin) ? w\setupFoot($submit) : []; // don't let admins send on behalf of anyone
   jsx('invite-link');
 
   return cgform(compact(ray('buttons title subtext email subs')) + $foot);

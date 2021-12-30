@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Admin as a;
 
 include_once R_ROOT . '/admin/admin.inc';
 include_once R_ROOT . '/admin/admin-web.inc';
@@ -17,7 +18,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   extract(just('qid code', $args, NULL));
   global $mya;
 
-  if (!$mya or !$mya->cAdmin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
+  if (!$mya or !$mya->admin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
   
   if ($code) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($code), NULL));
@@ -46,7 +47,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admTen99) $do1099ktest = submi(t('1099-K TEST'));
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
-  if ($mya->admin) $tables .= ' notices boxes do stats usd nonmembers';
+  if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -102,7 +103,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($account) {
     if (!$a = a($account)) return say('That is not an account.'); // should use whois first
     svar('adminingAcct', $account); // remember what account we're working on
-    if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
+    if (!$mya->admRegion and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
   } else $a = $mya;
   
   if ($a and $op == 'printId') {
@@ -122,7 +123,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
   } elseif ($op == 'resetSSN' and $a) {
@@ -153,7 +154,7 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
-    $crit = $mya->admin ? '1' : 'community=' . $mya->community;
+    $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
         global $signupCos;
         if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
@@ -174,6 +175,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'recurs') return say(a\showQuery('tx_timed t', 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
+  if ($op == 'admins') return say(a\showQuery('(SELECT uid,fullName,can FROM users LEFT JOIN admins USING (uid) WHERE :IS_ADMIN OR can) x', 'fullName', 'uid, fullName, IFNULL(can, 0) AS can'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
   if ($op == 'relations') return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
   if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));

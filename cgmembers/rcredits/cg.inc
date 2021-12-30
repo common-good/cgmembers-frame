@@ -31,9 +31,7 @@ function access($perms = NULL) {
     : ($perm == 'dev' ? isDEV
     : ($perm == 'scanner' ? (bool) r\cook('scanner')
     : (!$mya ? FALSE
-    : (
-       (adminPerm($perm) or in($perm, 'signedIn investor iclub')) ? $mya->$perm : $mya->can(u\consta('b', $perm))
-      ) )));
+    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) )));
 
     if ($not ? $pass : !$pass) return FALSE;
   }

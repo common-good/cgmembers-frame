@@ -18,7 +18,7 @@ function formGet($form, &$sta, $args = '') {
   \drupal_page_is_cacheable(false); // suppress caching, so buttons work right
   extract(just('cancel expedite', $args, NULL));
   if ($cancel and $mya) return cancelTx($cancel);
-  if ($expedite and $mya and $mya->admin) {
+  if ($expedite and $mya and $mya->admRegion) {
     be\completeUsdTx($expedite);
     be\usdTxFollowup($xid);
     return sayEmpty(t('Bank transfer successfully expedited.'));
@@ -43,7 +43,7 @@ function formGet($form, &$sta, $args = '') {
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
     if ($amt = db\sum('ABS(amount)', 'txs2_bank', $where, $subs)) {
-      $xid = ($mya->admin and in($k, 'in other')) ? db\get('xid', 'txs2_bank', $where . ' AND completed=0 AND amount=' . $amt, $subs) : '';
+      $xid = ($mya->admRegion and in($k, 'in other')) ? db\get('xid', 'txs2_bank', $where . ' AND completed=0 AND amount=' . $amt, $subs) : '';
       $expedite = $xid ? ' ' . buttino('/get/expedite=' . $xid, t('Expedite')) : '';
       $link = $k == 'other' ? t('(not cancelable)') : buttino("/get/cancel=$k", t('Cancel'));
       $text = $k == 'out' ? t('%link %amt from %PROJECT to your bank account.')
@@ -65,7 +65,7 @@ function formGet($form, &$sta, $args = '') {
   $cashoutable = u\fmtAmt(max(0, min($mya->balance, $avail)));
  
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
-  $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->cAdmin ? t(' (no limit for admin)') : ''));
+  $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->admin ? t(' (no limit for admin)') : ''));
 
   $arrow = '<span class="glyphicon glyphicon-arrow-right"></span>';
   $get = submit(BARE . t('Bank %m CG', '_m', $arrow));
@@ -79,11 +79,11 @@ function formGet_validate($form, &$sta) {
   global $mya;
   if ($err = amtErr('amount', $sta)) return say($err, 'amount'); // negative caught by < R_ACHMIN below
   extract(just('amount avail', $sta['input']));
-  if (!$mya->cAdmin and $amount < R_ACHMIN) return say('bank too little', 'amount');
+  if (!$mya->admin and $amount < R_ACHMIN) return say('bank too little', 'amount');
 // (this is unnecessary)  if ($amount > R_MAX_DAILY_EXCHANGE) return say('max daily usd', 'amount');
   if (op($sta) == 'get') return;
   
-  if ($amount > ($mya->cAdmin ? round($mya->balance, 2) : $avail)) {
+  if ($amount > ($mya->admin ? round($mya->balance, 2) : $avail)) {
     $max = u\fmtAmt($avail);
     $extra = $mya->cttyRewardy ? '|short cash help' : '';
     return say('short put' . $extra, compact('max'), 'amount');

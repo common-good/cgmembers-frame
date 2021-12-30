@@ -26,7 +26,7 @@ function formPhoto($form, &$sta, $arg = '') {
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));
-  $recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
+  $recropIt = $mya->admManageAccts ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
   $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
 
   if ($err) say($err, 'err');
@@ -57,7 +57,7 @@ function formPhoto($form, &$sta, $arg = '') {
   w\svar('userAgent', nni($_SERVER, 'HTTP_USER_AGENT')); // for debugging spurious photo rotations
 
   $desc = item($desc);
-  $printCard = $mya->admin ? f('a.cardLink', $mya->id) : '';
+  $printCard = $mya->admRegion ? f('a.cardLink', $mya->id) : '';
   $newPhoto = item(<<<EOF
 <div id="choosePhotoWrap"><div class="btn $chooserStyle btn-success" id="choosePhoto">$choose</div> <div id="emailPhoto" class="btn btn-warning btn-xs">$emailIt</div> $recropIt $printCard</div>
 <div class="cropHeaderWrapper">
@@ -81,7 +81,7 @@ function formPhoto_submit($form, &$sta) {
   global $mya;
   
   if (op($sta) == 'del') {
-    u\EXPECT($mya->cAdmin and $mya->hasPhoto, 'del ghost photo');
+    u\EXPECT($mya->admDeletePhoto and $mya->hasPhoto, 'del ghost photo');
     $mya->stepDone('photo', FALSE);
     $mya->update('photo', '');
     $mya->setBit(B_MEMBER, FALSE);

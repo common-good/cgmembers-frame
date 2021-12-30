@@ -57,7 +57,7 @@ X
     $useMax = intFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
     $purpose = textFld(t('Description:'), [t('Discount on what')], dft(t('on any purchase')));
-//    if ($mya->admin) $forOnly = textFld(t('For only:'), [t('ID number of group'), t('If you want to restrict this discount to certain %PROJECT members, type the ID of their group.')]);
+//    if ($mya->admRegion) $forOnly = textFld(t('For only:'), [t('ID number of group'), t('If you want to restrict this discount to certain %PROJECT members, type the ID of their group.')]);
     $submit = t('Create');
               
     break;

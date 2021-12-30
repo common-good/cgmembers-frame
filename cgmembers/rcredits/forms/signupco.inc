@@ -33,7 +33,7 @@ X
     return cgform(compact(ray('title subtext')));
   }
 
-  $a = ($mya->cAdmin and $relate and !$mya->co) ? $mya : $mya->agentA; // admins open company accounts on behalf of others
+  $a = ($mya->admHelpSignup and $relate and !$mya->co) ? $mya : $mya->agentA; // admins open company accounts on behalf of others
 
   if ($coInfo = $a->signupCo) {
     extract(just('company companyPhone', $coInfo, '')); // predict co name

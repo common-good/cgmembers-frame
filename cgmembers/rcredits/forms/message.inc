@@ -76,7 +76,7 @@ function formMessage_submit($form, &$sta) {
     $message .= t('<br>Encrypted data expires at %tm on %dt.', 'tm dt', u\tm($at), u\fmtDate($at));
   }
 
-  if ($mya->anyAdmin) $mya = $mya->agentA;
+  if ($mya->admin) $mya = $mya->agentA;
   $fromNm = $mya->proSe ? $mya->fullName : ($mya->agentA->fullName . " ($mya->fullName)");
   r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$mya->email => $fromNm]);
   say('sent message', ray('fullName', $a->fullName));

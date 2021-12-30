@@ -87,7 +87,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  * we show PDF with: (ARG)
  *
  * in: TEST checks AdminPrintsChecks
- *     TEST super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ *     TEST super AnAdminPrintsChecks
  */
 function weShowPDFWith($list) {return t\pdfHas($list);}
 
@@ -139,7 +139,7 @@ function with($content) {return t\weShow($content);}
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
- *     MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ *     MAKE super AnAdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -228,15 +228,16 @@ function weDeleteTableRecord($tnm, $record) {
 /**
  * member (ARG) is signed in
  *
- * in: MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ * in: MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
 
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
- *     MAKE super AMemberTriesToDoAHighlevelAdminThing
+ * in: MAKE super AnAdminPrintsChecks
+ *     MAKE super AMemberTriesToDoAnAdminThing
+ *     MAKE super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -255,7 +256,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     MAKE ach Setup
  *     MAKE activate Setup
  *     MAKE checks Setup
- *     MAKE super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ *     MAKE super AnAdminPrintsChecks
  */
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
 
@@ -269,14 +270,15 @@ function cryptcookieIs($nm, $v) {return t\cookieIs($nm, u\ry('C', $v));}
 /**
  * cryptcookie (ARG) is (ARG) decrypted
  *
- * in: TEST super ASuperAdminGrantsSuperPermissionToAnotherAdmin
+ * in: TEST super AnAdminPrintsChecks
  */
 function cryptcookieIsDecrypted($nm, $v) {return cryptcookieIs($nm, u\b64decode($v));}
 
 /**
  * we say (ARG): (ARG) with: (ARG)
  *
- * in: TEST super ASuperAdminGrantsSuperPermissionToAnotherAdmin
- *     TEST super AMemberTriesToDoAHighlevelAdminThing
+ * in: TEST super AnAdminPrintsChecks
+ *     TEST super AMemberTriesToDoAnAdminThing
+ *     TEST super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
  */
 function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}

@@ -13,7 +13,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
   include_once R_ROOT . '/rweb/rweb-help.inc';
 
   $signedIn = ($mya = r\acct()) ? TRUE : FALSE; // no need to use eLinkAcct here, just pass args on to help()
-  if ($signedIn and $mya->cAdmin and $what and strpos($what2 = u\deurlify($what), '&')) {
+  if ($signedIn and $mya->admin and $what and strpos($what2 = u\deurlify($what), '&')) {
 /**/    die('this is not secure and secure attachments are temporarily disabled');
     extract(just('filename type', $what2));
     $s = file_get_contents($filename);

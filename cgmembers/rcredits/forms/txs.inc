@@ -34,7 +34,7 @@ function formTxs($form, &$sta, $args = '') {
     global $mya;
     $dt1 = strftime('%Y%m%d', $starting);
     $dt2 = strftime('%Y%m%d', $ending);
-    u\csvStart(($mya->cAdmin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
+    u\csvStart(($mya->admin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
     require_once __DIR__ . '/txhistorydownload.class';
     $processor = new TxHistoryDownload($uids, "$url");
   } else {
@@ -98,7 +98,7 @@ function reverseTx($xid, &$sta, $args) {
   global $mya;
 
   if (!$xid = (int) nn($xid)) return FALSE;
-  if (!$mya->lastTx(compact('xid'))) return err($mya->admin ? t('That is not a transaction for this account.') : t('That transaction does not exist.'));
+  if (!$mya->lastTx(compact('xid'))) return err($mya->admRegion ? t('That is not a transaction for this account.') : t('That transaction does not exist.'));
 
   $url = strstr("history/transactions/$args", '&undo=', TRUE); // don't loop when we redirect
 

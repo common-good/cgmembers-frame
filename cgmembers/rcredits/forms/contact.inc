@@ -18,7 +18,7 @@ function formContact($form, &$sta) {
   $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required($mya->fullName));
 //  $onchange = w\onchange("jQuery('.form-item-pass').show();");
   $email = emailFld(t('Email:'), '', required($mya->email));
-  $pass = $mya->cAdmin ? NULL : passFld(t('Password:'), t('Required for changing email address'));
+  $pass = $mya->admManageAccts ? NULL : passFld(t('Password:'), t('Required for changing email address'));
 
   $submit = submit();
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
@@ -46,7 +46,7 @@ function formContact_validate($form, &$sta) {
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!emailOkay($email, $mya->co, $mya)) return; // say('bad email', ray('email', $email), 'email');
-  if (!$mya->cAdmin and $email != $mya->email and !$mya->agentA->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
+  if (!$mya->admManageAccts and $email != $mya->email and !$mya->agentA->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
 //$pin != $mya->agentA->pin) return say('bad pin', 'pin');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (u\poAddress($address)) return say('po in location', 'address');

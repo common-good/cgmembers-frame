@@ -144,7 +144,7 @@ EOF;
     $extra['question'] = w\hidFld(-$proposal);
     $submit = w\submit(BARE . t('Done With Proposal #') . $qndpy, 'primary', 'md', w\clas('pull-right'));
     $extra['prev'] = w\submit('&laquo; ' . t('Previous'), 'primary', 'md', w\suffix(w\rendA('submit', $submit)));
-  } elseif ($qnum === FALSE and !$mya->admin) return !$err = t('That proposal is not viewable at this time.');
+  } elseif ($qnum === FALSE and !$mya->admManageVote) return !$err = t('That proposal is not viewable at this time.');
 
 //  $types = ray('Investment Loan Incentive Grant Other');
 
@@ -173,7 +173,7 @@ EOF;
     t('Sponsor:') => $sponsor,
   ];
   
-  if ($mya->cAdmin) $rows += [
+  if ($mya->admManageVote) $rows += [
     ' ----------' => '<small class="dim">' . t('for admin only:') . '</small>',
     t('Phone:') => $phone,
     t('Email:') => $email,
@@ -804,7 +804,7 @@ function gradingWelcome($endDate, $proxLink) {
 EOF
   , '_a', w\atag($proxLink)));
   
-  if ($mya = r\acct() and $mya->admin) {
+  if ($mya = r\acct() and $mya->admManageVote) {
   /*
     $showVotes = submit(t('Show votes'));
     $noVote = submit(t('Didn\'t vote yet'));

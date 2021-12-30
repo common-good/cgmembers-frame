@@ -245,7 +245,7 @@ X
   if ($admin) {
     list ($userSince, $phone) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone)];
     if ($personOk) $personOk = t(' (confirmed)');
-    if ($ok and $mya and $mya->cAdmin) $member = ' # ' . r\changeAcctLink($uid, r\qid($uid));
+    if ($ok and $mya) $member = ' # ' . r\changeAcctLink($uid, r\qid($uid));
     
     $who = <<< X
       $fullName ("$displayName")<b>$member</b><br>
@@ -616,8 +616,8 @@ function admin($zip) {
   global $mya;
   static $adminZips;
   
-  if (!$mya or !$mya->oAdmin) return FALSE;
-  if ($mya->admin) return TRUE;
+  if (!$mya or !$mya->admMutualAid) return FALSE;
+  if ($mya->admRegion) return TRUE;
   if (isset($adminZips) and in_array($zip, $adminZips)) return TRUE;
   if (r\communityId($zip) == $mya->agentA->community) { $adminZips[] = $zip; return TRUE; }
   return FALSE;

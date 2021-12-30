@@ -155,7 +155,7 @@ function formSignup_submit($form, &$sta) {
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
   if (!nn($owns)) $mya->setRisk('rents');
   
-  if ($h = $mya->helperA and nn($args) and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
+  if ($h = $mya->helperA and nn($args) and !$h->admHelpSignup) suCreatorRelation($helper, $args, $myid);
   $info += compact(ray('acctType qid name'));
 
   tellStaffNewMember($info); // report to admin

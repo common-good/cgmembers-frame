@@ -645,7 +645,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 //  $useTextLogToo = FALSE; // isDEV;
 
-  $qid = $mya ? $mya->qid . ($mya->proSe ? '' : strtolower('.' . $mya->agentA->mainQid . ($mya->anyAdmin ? '(a)' : ''))) : t('nobody');
+  $qid = $mya ? $mya->qid . ($mya->proSe ? '' : strtolower('.' . $mya->agentA->mainQid . ($mya->admin ? '(a)' : ''))) : t('nobody');
   $time = date('d H:i:s');
 
   if (is_array($info)) {

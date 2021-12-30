@@ -39,7 +39,7 @@ X;
     extract($row);
     $a = r\acct($uid);
     
-    if ($mya and $mya->admin) {  // rating: 0=unrated 1=poor 2=normal 3=great
+    if ($mya and $mya->admRegion) {  // rating: 0=unrated 1=poor 2=normal 3=great
       $rating = <<< X
         <div class="rating" qid="$a->mainQid" rating="$rating">*** </div>
 X;

@@ -705,7 +705,7 @@ function notice($notice, $id, $subs = []) {
  */
 function deCryVok() {
   global $mya, $sceneTest;
-  return (!isDEV or !test() or ($mya and $mya->admin) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these memberScansAdminCard'));
+  return (!isDEV or !test() or ($mya and $mya->admRegion) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these memberScansAdminCard'));
 }
 
 /**
