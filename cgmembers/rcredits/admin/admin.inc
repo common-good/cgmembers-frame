@@ -386,13 +386,17 @@ define('ID_KEYS', 'id uid uid1 uid2 t.uid myid payer payee main other inviter in
  * Return the given field, formatted for viewing.
  */
 function formatField($k, $v, $flagsField = B_LIST) {
+  global $base_url;
   $v = $v . ''; // convert to string
   if ($v and in($k, ID_KEYS) and strlen($v) >= strlen(CGID)) {
-    if ($a = r\acct($v)) $v = $a->name; else $v .= t(' (missing)'); // eg, when uid is changed
+    if ($a = r\acct($v)) $v = $k == 'uid' ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v); else $v .= t(' (missing)'); // eg, when uid is changed
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
   if ($v and in($k, R_DATE_FLDS)) $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
-  if ($k == 'flags') $v = "<div class=\"format-flags\">" . a\flagsDesc($v, $flagsField) . '</div>';
+  if (in($k, 'flags can')) {
+    $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
+    $v = "<div class=\"format-flags\">$flags</div>";
+  }
   return $v;
 }
 

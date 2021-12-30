@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Admin as a;
 
 include_once R_ROOT . '/admin/admin.inc';
 include_once R_ROOT . '/admin/admin-web.inc';
@@ -46,7 +47,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admTen99) $do1099ktest = submi(t('1099-K TEST'));
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
-  if ($mya->admRegion) $tables .= ' notices boxes do stats usd nonmembers';
+  if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -174,6 +175,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'recurs') return say(a\showQuery('tx_timed t', 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
+  if ($op == 'admins') return say(a\showQuery('(SELECT uid,fullName,can FROM users LEFT JOIN admins USING (uid) WHERE :IS_ADMIN OR can) x', 'fullName', 'uid, fullName, IFNULL(can, 0) AS can'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
   if ($op == 'relations') return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
   if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));
