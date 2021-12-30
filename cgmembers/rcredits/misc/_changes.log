@@ -1,3 +1,34 @@
+2021-12-29 feature/admin-admin
+. Created an administrative interface for setting admin permission bits
+. Also added encrypted files to the member-to-member messaging (to be able to send admins an encrypted superAdmin QR image)
+. moved admin panel to its own file
+. added QR Scan link to top of admin panel.
+. emails are now displayed on dev and staging machines with clickable links, for easier testing.
+. added "M"-type encryption for messages (including on production, staging, and demo).
+. refactured our w\uploadFile function for use in more places
+. changed popovers on summary page to use click as a trigger, rather than hover (works better)
+. reworked acct::getNick() function to detect typos better
+
+2021-12-20 feature/supercan
+. ACH deposit details no longer go past end of page
+. cadmins and admins now have more specific permissions, including what superadmin can do
+. fixed bug in menu handler that handled lack of page permissions wrong
+. added an account equality method acct::eq()
+. separated out "we show PDF" from "we show" in test steps
+. moved t\fullQid() to bootstrap (for function a())
+. creditline now always says disabled if it is
+. fixed class error in template.inc
+
+2021-12-17 feature/dft-acct
+. company agents can now sign in to the company account by default
+
+2021-12-15 feature/negbal
+. account with negative balance now get brought up to zero only if paying a pending invoice (bug fix)
+
+2021-12-13 feature/super-signin
+. move superSignin function to where admins sign in
+. delete vKeyPw cookie on signout
+
 2021-12-08 feature/supers
 . created admins table
 . any admin can become a super by scanning a superAdmin QR
@@ -4087,7 +4118,7 @@ function special2() {
 . comprehensive tests for signin and password reset
 . eliminated Contact step by including it in initial signup form, using Google's zipcode lookup api
 . anyone with refund permission now gets a "request card" link on Relations page
-. we now explain the 5% APR inflation adjustment as what we’re using until we have a realistic number.
+. we now explain the 5% APR inflation adjustment as what we're using until we have a realistic number.
 . we now figure savings as total of 30 day minimum balance
 . stats are now calculated in such a way that we can redo them all retroactively, using admin fixStats()
 . stats for all communities
@@ -4250,7 +4281,7 @@ function special2() {
 . made invite a primary link
 . made sign out a primary link
 . shortened transfer time from bank: when there are insuffient funds, now updates cached usd amount and retries.
-• fixed bug: "I didn’t give a security answer, but it says on file"
+. fixed bug: "I didn't give a security answer, but it says on file"
 . we now check hourly for deposits into the Dwolla/%PROJECT Account
 . member is now alerted immediately when funds arrive in their account for the first time (bona)
 . created 1099B reports for members and for electronic filing with IRS and state
@@ -4505,7 +4536,7 @@ function special2() {
 . everything uploaded to production server
 
 2013-08-06
-. changed "virtual payments" to "payment exchanges”
+. changed "virtual payments" to "payment exchanges"
 . Changed maximum bank delay to 10 days.  Patched on production server. Fixes double bank withdrawal bug. 
 . City and state zip code without using USPS API 
 . Icons on settings page 

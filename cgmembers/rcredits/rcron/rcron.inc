@@ -131,6 +131,13 @@ function everyHour() { // stuff to do every hour
   }
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
+  
+  // discard expired encrypted files
+  $list = scandir(MSG_DIR);
+  foreach ($list as $flnm) {
+    if (!is_numeric($flnm)) continue;
+    if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
+  }
 
 }
 
@@ -950,7 +957,7 @@ o;
     if ($debtTimeout) $why = tr('debt timeout', 'signed', u\fmtDate($a->signed, TRUE)) . "|$why";
   }
 
-  if ($target < $pending and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
+  if ($pending > 0 and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
     if (!$a->debt or $debtTimeout) { // time to get out of the negative
       list ($target, $why) = [$pending, tr('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
     }

@@ -805,6 +805,10 @@ function decryRay($code) {
  *   C cookie
  *   H photo
  *   D device (PGP then b64)
+ *   M secret message (maintains length)
+ * Each of an encryption type's methods is: xor, rot, scram, b64, pgp, or any standard AES method
+ * Only the first 16 bytes of an IV for an AES method. Otherwise the IV can be any length.
+ *
  * @param string $data: the data to be encrypted / decrypted
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
@@ -844,7 +848,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
   } else $iv = u\b64decode($iv);
   
   $hows = $de ? array_reverse(ray($hows)) : ray($hows);
-  
+
   foreach ($hows as $how) {
     switch ($how) {
       case 'xor': $data = strXor($data, $pw . $iv); break; // deXor is the same
@@ -890,7 +894,8 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-  if ($type == 'V' and !t\deCryVok()) u\FAIL('deCry(V) by non-super');
+  global $mya, $cryTest;
+  if ($type == 'V' and !t\deCryVok()) {r\tellAdmin(t('deCry(V) by non-super') . (nn($cryTest) == 'test' ? pr($mya) : trace())); return NULL;}
   return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
 }
 
@@ -1289,8 +1294,8 @@ function deb($arg = '') {
  * @return assoc: the resultant array (FALSE if the needle is not found)
  */
 function insertBefore($bundle, $haystack, $needle) {
-  if (!$i = array_search($needle, array_keys($haystack))) return FALSE;
-  return array_slice($haystack, 0, $i) + $bundle + array_slice($haystack, $i);
+  $i = array_search($needle, array_keys($haystack));
+  return $i === FALSE ? FALSE : array_slice($haystack, 0, $i) + $bundle + array_slice($haystack, $i);
 }
 
 function formatNum($num, $format) {

@@ -73,7 +73,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   if (!$success) return say('login failed', 'qid');
   $sta['input']['uid'] = $uid; // especially for cgpay
 
-  if ($a->superAdmin) {
+  if ($a->id == UID_SUPER) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
     if ($pw2 and !$a->pw2) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
@@ -86,7 +86,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     }
   }
   
-  if (!$a->superAdmin) { // why does this fail for superAdmin? (but who cares?)
+  if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
     r\setCryptCook('qid', $a->mainQid, NULL);
     r\setCook('trust', $a->admin2 ? 0 : ($trust ? 1 : 0));
   }
@@ -100,21 +100,12 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
   extract(just('qid then uid', $sta['input'], NULL));
+  
   $mya = r\setAcct($uid, $sta);
+  $agt = strtolower($mya->qid);
+  if ($dftAcct = r\cook('dftAcct') and $dftA = r\acct($dftAcct, $uid) and $dftA->can(B_READ)) r\setAcct($dftA->id, $sta);
 
-  u\loga('signin', ['qid' => $mya->qid]);
-  if ($mya->superAdmin) superSignin();
+  u\loga('signin', compact('agt') + ($dftAcct ? compact('dftAcct') : []) );
   if ($then and $res = then($then)) return $res;
-  return w\go($mya->admin2 ? 'sadmin/followup' : $goto);
-}
-
-/**
- * Do periodic stuff that only superAdmin can do.
- */
-function superSignin() {
- 
-  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
-    $a = r\acct($uid);
-    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
-  }
+  return w\go($mya->admin2 ? 'sadmin/panel' : $goto);
 }

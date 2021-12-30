@@ -19,6 +19,7 @@ function formCompany($form, &$sta, $arg = '') {
     lnk("/member/$mya->name", t('See your public %PROJECT web page'), w\away()),
     lnk('/co/cgbutton', t('Create a CGPay button for your website (or emails).')),
     lnk('/settings/photo?' . rand(), t('Change your company photo.')),
+    lnk('/settings/dft-acct', t('%doWhat to this account upon sign-in.', 'doWhat', r\cook('dftAcct') == $mya->mainQid ? t('Stop defaulting') : t('Default'))),
   ]), t('Shortcuts:') );
 
   $canDescs = ray(APP_CAN_BIT_DESCS);

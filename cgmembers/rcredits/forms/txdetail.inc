@@ -63,13 +63,13 @@ X;
   }
 
   list ($wayYou, $wayMe) = u\order($toMe xor $amt < 0, t('From:'), t('To:'));
-///debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));
+///    debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));
   $title = t('Transaction #%xid Detail', compact('xid'));
-  $created = editIf($mya->superAdmin, 'date', t('Date:'), $created, u\fmtDate($created, TRUE));
+  $created = editIf($mya->admEditTxDate, 'date', t('Date:'), $created, u\fmtDate($created, TRUE));
   $you = item($fullName, $wayYou);
   $me = item($meA->fullName, $wayMe);
   
-  $amt = editIf($mya->superAdmin, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
+  $amt = editIf($mya->admEditTxAmt, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
   $addr = ($toMe or $mya->anyAdmin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
   $cat = $mya->admin ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);

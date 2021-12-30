@@ -28,14 +28,14 @@ function ajax($args = NULL) {
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 
-  $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
-/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op myid aid')) + $data); // pass data as array so its NOLOG args get hidden
+  if ($data) $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
+/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op myid aid')) + ($data ?: [])); // pass data as array so its NOLOG args get hidden
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
     case 'qBtn': // question mark help button
-    include_once R_ROOT . '/help-scraps.inc';
-    return ajaxRet(helpScrap($data['topic']));
+      include_once R_ROOT . '/help-scraps.inc';
+      return ajaxRet(helpScrap($data['topic']));
     
     case 'vKeyPw': return ajaxRet(ray('code', u\cryRay(just('vKeyPw', $data))));
   
@@ -124,7 +124,7 @@ function ajax($args = NULL) {
       } else return ajaxErr(t('nope'));
     
     case 'dpOffset':
-      if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
+      if (!$mya or !$mya->admReconcile) return ajaxErr(t('You do not have permission.'));
       extract(just('amount', $data));
       if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
       // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);

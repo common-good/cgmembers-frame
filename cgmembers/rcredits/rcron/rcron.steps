@@ -240,6 +240,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     BOTH bank AMembersBankAccountGetsVerified
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
@@ -454,6 +455,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
  *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     TEST bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
@@ -524,6 +526,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly

@@ -248,7 +248,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
 
   if (nn($acct) == 'signout') return signout();
-  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
+  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('/signin')));
   if (!$mya = r\acct($acct, $agt = $mya ? $mya->agentId : NULL)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya), pr($agt))); // tentative new account (agent is the same, so adminishness is the same)
   if (!$mya->can()) {
     if (!$mya->cAdmin2 and !$mya->isAdmin2) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
@@ -264,6 +264,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  */
 function signout($continue = FALSE) {
   global $mya;
+  
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
@@ -276,6 +277,7 @@ function signout($continue = FALSE) {
   }
   
   if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
+  r\deleteCook('vKeyPw'); // no longer admV, if we ever were
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');
@@ -488,4 +490,3 @@ function whosin($ctty = '') {
   if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit(); // empty list
   return exitJust($list);
 }
-

@@ -276,8 +276,6 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 .box1 .checkbox, .form-horizontal .checkbox {padding-top:0; margin:0; min-height:0;}
 .form-horizontal .radio, .form-horizontal .radio-inline {margin-left:0; margin-right:15px;}
 
-#frm-adminpanel button {margin:0 10px 20px 0;}
-
 .confirmation .form-item-title .control-label {display:block !important;}
 /*.confirmation #actions .form-type-submit {display:inline-block; width:180px;}*/
 .confirmation #edit-confirm {margin-right:70px;}
@@ -943,7 +941,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
 
 #frm-summary .form-type-item {margin-bottom:5px;}
-#frm-summary .form-item-risks .control-data {margin-top:8px;}
+#frm-summary .form-item-risks .control-data,
+#frm-summary .form-item-adminable .control-data,
+#frm-summary .form-item-adminCans .control-data {margin-top:8px;}
 #frm-summary .checkbox {width:110px; font-size:85%; margin-bottom:5px;}
 #frm-summary .checkbox div {margin-top:2px;}
 #frm-summary label[for="edit-risks"],
@@ -1175,6 +1175,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Admin */
 .page-sadmin-panel #messages .status {background-image:none; margin:4px; padding:0;}
 .page-sadmin-panel #messages .status > ul {padding:0;}
+#frm-adminpanel button {margin:0 10px 20px 0;}
+#frm-adminpanel .form-item-lnkScanQr {margin-bottom:20px;}
 
 /* Admin Deposits */
 #frm-deposits label {display:none;}

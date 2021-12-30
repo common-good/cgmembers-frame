@@ -39,7 +39,7 @@ function showResult($ctty, $qi, $question, $noProxies, $withheader = TRUE) {
   $qu = db\get('id, type, text, detail, budget, minveto, result', 'r_questions', 'id=:question', compact('question'));
   extract($qu);
   
-  if ($mya->superAdmin or !nn($result)) {
+  if ($mya->admShowVotes or !nn($result)) {
 //    if ($type == 'E') return ''; // don't show essay results (and don't create ballots for them)
     
     $opts = optList($question);

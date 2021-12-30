@@ -105,7 +105,7 @@ function reverseTx($xid, &$sta, $args) {
   if ($tx = db\get('*', 'txs2', compact('xid'))) { // reversing bank transfer or outer tx
     foreach (just('txid amount', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
     extract(just('txid amount deposit completed pid', $tx));
-    if (!$mya->superAdmin) {
+    if (!$mya->admReverseBankTx) {
       if ($pid) {
 //        if ($deposit) return err(
       } else return err(t('To reverse a bank transfer, go to your <%a>Dashboard</a>, click "Bank", and either cancel a pending transfer or request a transfer back the other way.', '_a', atag('/dashboard')));

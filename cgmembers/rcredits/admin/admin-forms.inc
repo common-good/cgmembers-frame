@@ -17,171 +17,6 @@ include_once __DIR__ . '/admin-web.inc';
 define('T_MSG_FILE', 'test-messages.txt');
 
 /**
- * Make various administrative operations available to the admin and cAdmin.
- * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
- */
-function formAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid code', $args, NULL));
-  global $mya;
-  if (!$mya->cAdmin) hack('panel');
-  
-  if ($code) { // called from scanqr.js
-    extract(just('vKeyPw', u\decryRay($code), NULL));
-    if ($vKeyPw) r\setCryptCook('vKeyPw', $vKeyPw, 0);
-  }
-
-  $tables = 'users txs usd recurs proxies relations invites'; // tables to show
-  $queries = [
-              '' => '',
-              ];
-  
-  $title = t('System Administration');
-  
-  $toSMT = submi(t('To SMT'));
-  $inviteeStatus = submi(t('Invitee Status'));
-  $signupCos = submi(t('Connections to Companies'));
-  $queries = selectFld(t('Query:'), '', '', $queries);
-  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: (svar('adminingAcct') ?: $mya->mainQid)));
-  
-  if ($mya->superAdmin) {
-    if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-
-    $do1099ktest = submi(t('1099-K TEST'));
-    $do1099k = submi('1099-K');
-    $reconcile = submi('Reconcile Ctty Fund');
-    $tables .= ' notices boxes do stats usd nonmembers';
-    $special = submi(t('Special'));
-    $askForAppData = submi(t('Ask for App Data'));
-    $seeAppData = submi(t('See App Data'));
-    $ssnLink = submi(t('SSN Link'));
-    $seeSecure = submi(t('See Secure'));
-    $resetSSN = submi(t('Recheck SSN'));
-    $makeVKeyE = submi(t('Make vKeyE'));
-    $make2 = boxFld('make', t('Make:'));
-  }
-
-  $printId = submi(t('Print ID'));
-  //  $connectBank = submi(t('Connect Bank'));
-  //  $seeHidden = submi(t('See Hidden'));
-  $seeData = submi(t('See Data'));
-  $seeChanges = submi(t('See Changes'));
-  if (!$mya->superAdmin and $ctty = $mya->community) { // not super
-    $cttyName = ($cttyA = r\acct($ctty)) ? $cttyA->fullName : NULL;
-    if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
-  }
-
-  $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
-  foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
-  $do = fieldSet('do', $do);
-  
-  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN makeVKeyE askForAppData seeAppData');
-  $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
-  $acctSet = fieldSet('acctSet', $acctSet);
-
-  return cgform(compact(ray('title do acctSet')));
-}
-
-function formAdminPanel_submit($form, &$sta) {
-  global $base_url;
-  global $mya;
-
-  extract(just('account make', $sta['input'], NULL));
-  $op = op($sta);
-
-  if ($op == 'start' or $op == 'stop') {
-    r\up($op == 'start');
-    return r\up() ? say(t('System is UP.')) : say(t('System is DOWN.'), 'ERR');
-  }
-  if ($op == 'special') return a\special();
-  if ($up = ($op == 'startCtty') or $op == 'stopCtty') {
-    $ctty = r\acct($mya->community);
-    $ctty->setBit(B_OK, $up);
-    return $up ? say(t('Community is UP.')) : say(t('Community is DOWN.'), 'ERR');
-  }
-
-  if ($account) {
-    if (!$a = a($account)) return say('That is not an account.'); // should use whois first
-    svar('adminingAcct', $account); // remember what account we're working on
-    if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
-  } else $a = $mya;
-  
-  if ($a and $op == 'printId') {
-    if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
-    if ($make) {
-      $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
-      $a->makeCardCode(); // this changes photo filename
-      if (file_exists($oldFile)) {
-        $newFile = $a->photoFilename(TRUE);
-        rename($oldFile, $newFile);
-      }
-    }
-    return w\go('print-rcard/' . $a->id . ($a->co ? "/$a->agentId" : ''));
-  } elseif ($op == 'askForAppData') {
-    $a->update('getAppData appData', '!report', []);
-    say(t('Request for app data sent to ') . $a->fullName);
-  } elseif ($op == 'seeAppData') {
-/**/  debug($a->appData);
-  } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
-    //      seeHidden($a);
-    seeSecure($a);
-  } elseif ($op == 'resetSSN' and $a) {
-    $a->setBit(B_MEMBER, FALSE);
-    $a->stepDone('verifyid', FALSE);
-    $a->update('ssnData', '');    
-  } elseif ($op == 'makeVKeyE' and $a) {
-    if (!$make) return err(t('You must check the "Make" box to create a superAdmin card.'));
-    if (!$mya->superAdmin) return err(t('You must have superAdmin permission to create a superAdmin card.'));
-    if ($a->id == $mya->agentId) return err(t('You cannot revoke and recreate your own superAdmin card.'));
-    exitJust($a->makeVKeyE());
-  } elseif ($op == 'seeData') {
-    if ($a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
-    /*  } elseif ($op == 'connectBank') {
-        r\Web\connectBank($a); */
-  } elseif ($op == 'seeChanges') {
-    w\go("sadmin/changes/$a->mainQid");
-  } elseif ($op == 'ssnLink') {
-    w\say($a->fullName. t(' SSN Link:') . tr('<br><br> &nbsp; %BASE_URL/do/doSsn~%code &nbsp; ', 'code', $a->doCode()));
-  } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
-    include_once R_ROOT . '/cg-yearly.inc';
-    r\Special\do1099s('K', nn($test1099));
-  } elseif ($op == 'reconcile') {
-    w\go('sadmin/reconcile-ctty-fund');
-  } elseif ($op == 'toSMT') {
-    a\toSMT();
-  } elseif ($op == 'inviteeStatus') {
-    return w\go('community/invite/invited-whom');
-  } elseif ($op == 'signupCos') {
-    global $signupCos; $signupCos = [];
-    $crit = $mya->admin ? '1' : 'community=' . $mya->community;
-    eachA(function ($a) {
-        global $signupCos;
-        if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
-        u\EXPECT([$a], 'Acct');
-        if ($signupCo = $a->signupCo) {
-          extract(just('company isOwner employee employeeOk contractor', $signupCo, ''));
-          $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, $isOwner ? t('owner') : (($employee or $employeeOk) ? t('employee') : ($contractor ? t('contractor') : '')), $company);
-        }
-      }, '(uid<0 OR uid>:UID_CANON9) AND ' . $crit . ' ORDER BY community');
-    ksort($signupCos);
-    w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
-  }
-  
-  // handle all other buttons with showQuery()
-  if ($op == 'users') return say(a\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
-  if ($op == 'txs') return say(a\showQuery('txs', 'xid DESC, type', 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init', 'uid1 uid2'));
-
-  if ($op == 'recurs') return say(a\showQuery('tx_timed t', 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
-  if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
-  if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
-  if ($op == 'proxies') return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
-  if ($op == 'relations') return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
-  if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));
-  foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", 'created DESC'));
-}
-
-/**
  * Display dated changes made to an account.
  * @param string $qid: the account QID (default to current account)
  */
@@ -212,7 +47,7 @@ function formSeeChanges($form, &$sta, $qid = '') {
   return cgform(compact(ray('title list')), 'nolabs');
 }
 
-function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
+function decryChange($type, $v) {global $mya; return ($type == 'V' and !$mya->admV) ? t('(secret)') : u\decry($type, $v);}
 
 /**
  * Show a list of standard calls to make (to help new members, check-in, ask for donation, etc.)
@@ -241,7 +76,7 @@ function formFollowup($form, &$sta, $args = []) {
   $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
-  if ($mya->superAdmin) {
+  if ($mya->admPrintCards) {
     $wantsCardP = 0; foreach(ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
     $wantsCardCo = 0; foreach(ray(S_CO) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
     $wantsCardQ = "IF(:IS_CO, $wantsCardCo, $wantsCardP)";
@@ -306,7 +141,7 @@ EOF;
      : ($tickle ? [t('followup'), 'fu']
      : ( [t('other'), 'fu'] )))))))));
 
-    if ($mya->superAdmin and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
+    if ($mya->admDeleteAcct and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
     if (in($color, $whities)) $color .= ' fu-whitey';
     $type = "<span class=\"fu-$color\">$type</span>";
     $call = u\fmtDate($tickle ?: $created);
@@ -484,7 +319,7 @@ EOF;
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
   $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amountIn)<b class="newout">New OUT:</b> %countOut (%amountOut)', compact(ray('countIn amountIn countOut amountOut')));
-  if ($mya->superAdmin) {
+  if ($mya->admAch) {
 //    $go = btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks')) . ' ' . 
     $go = item(btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file')));
   } else $go = NULL;
@@ -677,7 +512,9 @@ function achBatch($args) {
  define('CHECK_LIMIT', 42); // default maximum numbere of checks to print at a time
  
 function printChecks($args) {
-  extract(just('way date mark limit', $args));
+  extract(just('way date mark limit', $args, NULL));
+  if (!$way or is_null($date)) return w\softErr('You cannot print checks without specifying the "deposit" date and way (In, Out, or Bad).');
+  
   include_once R_ROOT . '/pdf.class';
   $ck = new r\Pdf();
   $ck->setPrintHeader(FALSE);
@@ -695,12 +532,14 @@ function printChecks($args) {
   $q = db\q($sql, $subs);
   $pos = 3; // before first position of 3, on 3-up check paper
   $count = 0;
+
   while ($tx = $q->fetchAssoc()) {
     if ($pos == 3) {$pos = 1; $ck->AddPage();} else $pos++;
     a\printCheck($ck, $pos, $tx, $mark);
     $count++;
   }
   $date = strftime('%Y-%m-%d', $date);
+
   if (test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
   //  say($count . t(' checks printed'));
 }
@@ -785,7 +624,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
 /*  if (now() < strtotime('6/20/2017')) {
     $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
   } else */
-  if ($mya and $mya->superAdmin) $a->setBit(B_CARDED);
+  if ($mya and $mya->admPrintCards) $a->setBit(B_CARDED);
   if (test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
 //  if (now() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
@@ -826,14 +665,14 @@ function formTestResults($form, &$sta, $args = '') {
     $list[] = "<div class=\"$type messages\">$value</div>\n";
   }
   $list = item(join('', nn($list, [])), BARE);
-  \drupal_get_messages(); // throw out any existing messages
+//  \drupal_get_messages(); // throw out any existing messages
 //  $title = $top ? t('Tests') : NULL;
 
   return cgForm(compact(ray('list')), 'wide');
 }
 
 /**
- * Delete an account (superAdmin only)
+ * Delete an account
  * @param mixed $uid: account to delete (uid, qid, acct or 'this')
  */
 function deleteAccount($uid) {
@@ -845,7 +684,7 @@ function deleteAccount($uid) {
   } elseif (!is_numeric($uid)) { $uid = r\acct(strtoupper($uid))->id; } // qid
   
   if (!$uid) return w\softErr(t('You must not delete account zero.'));
-  if ($uid == $mya->id) r\setAcct(1); // don't leave us on a deleted account (switch to superAdmin)
+  if ($uid == $mya->id) r\setAcct($mya->agentId); // don't leave us on a deleted account (switch to agent)
   a\deleteUid($uid);
   return w\go('/sadmin/followup');
 }
@@ -859,7 +698,11 @@ function checkSanity() {
   return w\go('sadmin');
 }
 
+/**
+ * Run a utility function.
+ */
 function util($arg) {
+
   switch ($arg) {
   case 'reset-menu':
     w\uncacheSubmenus();
@@ -893,9 +736,9 @@ function formHandy($form, &$sta) {
 
   $links = [
     'sadmin/check-sanity|Check database integrity|Sanity Check|ok',
-    'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
-    'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
-    'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+    'sadmin/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
+    'sadmin/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
+    'sadmin/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
     'sadmin/variables|Edit and delete site variables.|Variables|copy',
   ];
 

@@ -63,7 +63,7 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? t('(disabled)') : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
 
@@ -96,7 +96,7 @@ function formSummary($form, &$sta) {
     $form['none'] = submit('none'); // force _submit despite lack of submit button    
   } else $form = $fields;
 
-  if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
+  if ($mya->id == UID_SUPER) $form = just('title accountId accountName', $form); // don't show much for Anonymous super
   
   jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
 
@@ -145,7 +145,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
+  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans', $sta['input'], NULL));
   if (!$mya->cAdmin) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
@@ -165,6 +165,7 @@ function formSummary_submit($form, &$sta) {
   }
 
   if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
+  if ($mya->admMakeVAdmin) $mya->setAdminBits(nn($adminCans));
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
@@ -196,7 +197,7 @@ function formSummary_submit($form, &$sta) {
   unset($DBTX);
   
   say('info saved');
-  if ($mya->superAdmin and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup');
+  if ($mya->admDeleteAcct and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup'); // 
 }
 
 function setRisksAndFlags($a, $risks, $adminable) {
@@ -218,7 +219,7 @@ function adminSummary() {
 
   $uid = $mya->id;
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
-  if ($mya->proSe and !$mya->superAdmin) return []; // nothing special on admin's own account
+  if ($mya->proSe and !$mya->anyAdmin) return []; // nothing special on admin's own account
   
   $noEnter = TRUE; // prevent submission by pressing Enter
   
@@ -278,44 +279,53 @@ function adminSummary() {
   if ($mya->cAdmin and !$mya->proSe) { // either a community or regular account (but not the cAdmin's own account)
     include __DIR__ . '/../rweb/risk-descs.inc';
     include __DIR__ . '/../rweb/bit-descs.inc';
+    include __DIR__ . '/../rweb/can-descs.inc';
 
     $legalName = textFld(t('Legal Name:'), '', required($mya->legalName));    
     $shortName = textFld(t('Short Name:'), t('Shortest usable version of full name.'), dft($mya->shortName));
     
-//    if ($mya->superAdmin or ($mya->cAdmin and $mya->activated)) $active = ($mya->isCtty)
-    $active = ($mya->superAdmin or ($mya->cAdmin and $mya->ok)) // allowing all admins to activate causes a mess
+    $active = ($mya->admActivate or ($mya->admClose and $mya->ok)) // allowing all admins to activate causes a mess
     ? boolFld(t('Active?'), t('Is account approved to use %PROJECT?'), $mya->ok)
     : item($mya->ok ? t('Yes') : t('No'), t('Active:'));
 
-    if ($mya->member and !$mya->co and $mya->superAdmin) $ssnShow = item(a\ssnShow($mya));
-/*    if ($mya->admin) {
-      $dba = ($mya->co and $owner = r\relation('other', 'main=:uid', compact('uid')) and r\acct($owner)->federalId == $mya->federalId);
-      $ssnDft = $mya->federalId ? ($dba ? t('SSN') : R_ON_FILE) : '';
-      $federalId = $mya->superAdmin ? textFld(t('EIN/SSN:'), '', $ssnDft) : item($ssnDft);
-    } */
-  
+    if ($mya->member and !$mya->co and $mya->admSeeSsn) $ssnShow = item(a\ssnShow($mya));
+
+    // Risk bits
     $acctRisks = ray(K_ACCT_RISKS);
     $riskBits = array_keys($acctRisks);
     $risksEditable = array_flip(ray(K_ACCT_RISKS_EDITABLE));
+
     foreach ($riskBits as $k) {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
       if (!isset($risksEditable[$k])) $class .= ' noEdit';
-      $dpy = w\popHelp($k, nni($riskHelp, $k), '#');
+      $dpy = w\popHelp($k, nni($riskHelp, $k), '#', '', 'click');
       $aliases[$k] = "<div class=\"$class\">$dpy</div>";
     }
     $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
-    if ($mya->isCtty) $flagHelp = just(B_CTTY_BITS, $flagHelp);
 
+    // Flag bits
     $adminable = $mya->adminables();
+    if ($mya->isCtty) $flagHelp = just(B_CTTY_BITS, $flagHelp);
 
     foreach (ray($mya->isCtty ? B_CTTY_BITS : B_LIST) as $k) if (!preg_match('/u[0-9]+/', $k)) { // ignore undefined bits
       $blist[] = $k0 = $k;
       $class = in($k, $adminable) ? '' : 'noEdit';
       if ($mya->isCtty) $k = strtr($k, ray(B_ADMIN_BITS));
-      $dpy = w\popHelp($k, $flagHelp[$k0], '#');
+      $dpy = w\popHelp($k, $flagHelp[$k0], '#', '', 'click');
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
     }
     $adminable = bitsFld(t('Bits:'), $mya->flags, 'b', join(' ', $blist), $aliases);
+    
+    // Admin can bits
+    foreach (ray(A_LIST) as $k) if (!preg_match('/u[0-9]+/', $k)) { // ignore undefined bits
+      $adminCans[] = $k0 = $k;
+      $class = $mya->admMakeVAdmin ? '' : 'noEdit';
+      $dpy = w\popHelp($k, $cansHelp[$k0], '#', '', 'click');
+      $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
+    }
+
+    $adminCans = bitsFld(t('Admin Can:'), $mya->adminCans, '', join(' ', $adminCans), $aliases);
+
     $calling = item($mya->calling, t('Calling:'));
     $tenure = item($mya->tenure . t(' month(s)'), t('Tenure:'), t('How long had this person or company been at this address before opening a %PROJECT Account?'));
 
@@ -343,7 +353,7 @@ function adminSummary() {
     $details = item(callDetails($tickleType, $mya->tickle));
 //    $preNote = item($tip);
 
-    if ($mya->superAdmin) {
+    if ($mya->admEditNotes) {
       $notes = areaFld(t('Notes:'), '', dft(unplain($mya->notes))); // only needed for default in areaFld
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
@@ -351,13 +361,13 @@ function adminSummary() {
     $dob = $altSt = $altId = NULL;
 
     if (!$mya->co) {
-      if ($mya->superAdmin or !$mya->hasId) {
+      if ($mya->admV or !$mya->hasId) {
         $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
         $dob = rendA('dob', $dob);
       }
       if ($mya->hasFid) {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
-      } elseif ($mya->superAdmin) { // altId is V-encrypted
+      } elseif ($mya->admV) { // altId is V-encrypted
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
         $label = t('Alt ID / DOB:');
         if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) {
@@ -378,7 +388,7 @@ function adminSummary() {
   $uid = hidFld($uid); // must postcede js (which uses uid)
   w\jsx('adminSummary', 'photoIdSrc', nn($photoIdSrc));
   
-  $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
+  $bigFields = $mya->ok ? 'adminable risks adminCans ssnShow' : 'ssnShow adminable risks';
   $info = []; foreach (ray("noEnter details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
   return $info;
 }
