@@ -2,7 +2,7 @@
 use CG\Util as u;
 /**
  * @file
- * Set up the risk descriptions for HTML hover titles
+ * Descriptions of risk bits.
  */
 global $riskHelp; $riskHelp = array(
   'adminOk' => t('A %PROJECT community administrator says this account is low risk (flag set by administrator)'),

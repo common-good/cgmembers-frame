@@ -18,7 +18,7 @@ $gifts = "tm.amount * IF(tm.period='week', 52 / tm.periods, IF(tm.period='month'
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
-  1 . t('Food Fund Percentage Contributions') =>
+  1 . t('Food Fund Contributions') =>
     "SELECT COUNT(uid) AS participants, SUM(amt) AS monthly FROM (
       SELECT uid, SUM(food*amt) AS amt, IF(SUM(amt)=0, 0, 1) AS active  
       FROM (SELECT uid,food FROM users WHERE food>0) u 

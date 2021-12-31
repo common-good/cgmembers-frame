@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Set up the risk descriptions for HTML hover titles
+ * Descriptions of administrative permission bits.
  */
 $cansHelp = array(
   'ach' => t('Create an ACH batch file.'),
@@ -12,7 +12,7 @@ $cansHelp = array(
   'code' => t('Run PHP code within the server program context.'),
   'deleteAcct' => t('Delete an account.'),
   'deletePhoto' => t('Delete an account\'s photo (forcing replacement).'),
-  'un8' => t('XXX'),
+  'u8' => t('XXX'),
   'editNotes' => t('Edit account notes.'),
   'editTx' => t('Edit a transaction.'),
   'export' => t('Export a list of members.'),
@@ -25,8 +25,8 @@ $cansHelp = array(
   'manageAccts' => t('Change a member\'s settings.'),
   'manageVote' => t('Create and edit community ballot questions.'),
   'mutualAid' => t('Manage mutual aid data.'),
-  'un21' => t('XXX'),
   'nonmemberTx' => t('Input transactions with nonmembers (usually for the benefit of a fiscally sponsored organization).'),
+  'panel' => t('Can use administrative panel.'), // some other permissions (such as admV) require this
   'payFrom' => t('Pay someone from a member\'s account.'),
   'printCards' => t('Print %PROJECT cards.'),
   'printChecks' => t('Print e-checks to or from %PROJECT.'),
@@ -34,12 +34,12 @@ $cansHelp = array(
   'reconcile' => t('Reconcile %PROJECT accounts with %PROJECT bank accounts.'),
   'region' => t('Handle any account on the server, not just accounts in the admin\'s %PROJECT Community.'),
   'reverseBankTx' => t('Reverse a member\'s transfer to or from the bank.'),
+  'seeAccts' => t('View all accounts in the community or region.'),
   'seeCanonic' => t('View information about canonical accounts (such as cumulative Roundups).'),
   'seeChanges' => t('View changes made to an account after activation.'),
   'seeDeposits' => t('View pending and completed bank transfer requests.'),
   'seeSecure' => t('View secret information in member accounts.'),
   'seeSsn' => t('View a member\'s social security number.'),
-  'un35' => t('XXX'),
   'seeTxInfo' => t('See extensive details about a transaction.'),
   'setCredit' => t('Change an account\'s credit line.'),
   'setStepDone' => t('Mark a signup step as completed, for a prospective member.'),

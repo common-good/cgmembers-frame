@@ -687,7 +687,7 @@ const DUR_1 = 'once';
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto un8 editNotes editTx export generalInvite helpSignup makeCtty makeRules makeAdmin makeVAdmin manageAccts manageVote mutualAid un21 nonmemberTx payFrom printCards printChecks recheckSsn reconcile region reverseBankTx seeCanonic seeChanges seeDeposits seeSecure seeSsn un35 seeTxInfo setCredit setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
+const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto editNotes editTx export generalInvite helpSignup makeCtty makeRules makeAdmin makeVAdmin manageAccts manageVote mutualAid nonmemberTx panel payFrom printCards printChecks recheckSsn reconcile region reverseBankTx seeAccts seeCanonic seeChanges seeDeposits seeSecure seeSsn seeTxInfo setCredit setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
 const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations/permissions that require access to very secure data
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
