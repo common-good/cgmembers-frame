@@ -107,5 +107,5 @@ function formSignin_submit($form, &$sta, $goto = 'dashboard') {
 
   u\loga('signin', compact('agt') + ($dftAcct ? compact('dftAcct') : []) );
   if ($then and $res = then($then)) return $res;
-  return w\go($mya->admin ? 'sadmin/panel' : $goto);
+  return w\go($mya->admPanel ? 'sadmin/panel' : $goto);
 }

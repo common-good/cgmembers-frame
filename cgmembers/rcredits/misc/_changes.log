@@ -1,3 +1,9 @@
+2021-12-31 feature/stats
+. added a stats page (for our year-end report)
+
+2021-12-31 feature/admin-touchup
+. added admSeeAccts, admPanel, and admHelpSignup
+
 2021-12-30 feature/admins
 . added a list of admins to the admin panel
 . made uid a link to change account, in admin showQuery()

@@ -317,9 +317,9 @@ function adminSummary() {
     $adminable = bitsFld(t('Bits:'), $mya->flags, 'b', join(' ', $blist), $aliases);
     
     // Admin can bits
-    foreach (ray(A_LIST) as $k) if (!preg_match('/u[0-9]+/', $k)) { // ignore undefined bits
+    foreach (ray(A_LIST) as $k) if (!preg_match('/^u\\d+$/', $k)) { // ignore undefined bits
       $adminCans[] = $k0 = $k;
-      $class = $mya->admMakeVAdmin ? '' : 'noEdit';
+      $class = $mya->admMakeVAdmin ? '' : ((in($k, A_VLIST) or !$mya->admMakeAdmin) ? 'noEdit' : '');
       $dpy = w\popHelp($k, $cansHelp[$k0], '#', '', 'click');
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
     }

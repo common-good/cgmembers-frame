@@ -157,12 +157,12 @@ function menu($submenu = '') {
     'rerisk' => ['call', 'Recalculate Risk', 'Rerisk 1 2 3', 'admin'],
     
     'sadmin' => ['norm', t('Admin'), 'Admin', isDEV ? ANY : 'admin'],
-    'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'admin'],
+    'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'admPanel'],
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin'],
     'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'admExport'],
     'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'admExport'],
     'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'admSeeDeposits'],
-    'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'admin'],
+    'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'admHelpSignup'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'admMakeCtty'],
     'sadmin/groups' => [isDEV ? 'sub' : 'call', t('Groups'), 'Groups 2', 'admMakeRules'],
     'sadmin/rules' => [isDEV ? 'sub' : 'call', t('Rules'), 'Rules 1 2', 'admMakeRules'],
@@ -192,6 +192,7 @@ function menu($submenu = '') {
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin'],
     'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'admCode'],
     'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'admPrintCards'],
+    'sadmin/stats' => ['call', t('Stats'), 'Stats 2', 'admRegion'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],

@@ -185,7 +185,7 @@ function formAccounts($form, &$sta) {
   if (!$mya) return [];
   $myid = $mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
-  if ($mya->admin) { // admin: show a search box instead of a list of choices
+  if ($mya->admSeeAccts) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
     $submit = submit('Go Account!!');
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
@@ -196,24 +196,21 @@ function formAccounts($form, &$sta) {
   }
   
   if (!$accounts = be\accountChoices()) return [];
-  $choices = $ltrs = [];
+  $choices = [];
 
   foreach ($accounts as $uid => $choice) {
     $a = r\acct($uid);
     if (!$a and isDEV) continue; // ignore missing account if testing -- "current" account has been undermined is all
-    if ($mya->admin) {
+    if ($mya->admSeeAccts) {
       $qid = $a->mainQid;
-      if ($mya->admin and !$mya->admRegion) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
+      if (!$mya->admRegion) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
       if ($a->isCtty) { // show communities in a separate category
 //        $class = $a->id < 0 ? 'cgc' : '';
         $choice = r\cttyName($uid);
-        $ltrs['_'][$uid] = "<small>$qid</small> $choice";
       } else {
         $pos = substr($choice, 1, 2) == '. ' ? 3 
         : (substr($choice, 1, 1) == ' ' ? 2
         : (mb_strtoupper(substr($choice, 0, 4)) == 'THE ' ? 4 : 0));
-        $ltr = mb_strtoupper(substr($choice, $pos, 1));
-        $ltrs[$ltr][$uid] = "<small>$qid</small> $choice";
         $choice =  "$qid $choice";
       }
     }

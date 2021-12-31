@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Set help for flag bits.
+ * Descriptions of flag bits.
  */
 
 $flagHelp = array(
