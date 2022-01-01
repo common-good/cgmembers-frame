@@ -34,7 +34,16 @@ function formStats($form, &$sta, $args = '') {
     SUM(IF(uid2=:UID_CRUMBS, amt, 0)) AS crumbs
 X;
 
-  $res = db\get($flds, 'txs_noreverse', "(uid2 $isNotForProfit OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS)) AND amt>0 AND created $when", $timeSubs); // includes roundups and crumbs
+  $res = db\get($flds, 'txs_noreverse', "(uid2 $isNotForProfit OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS)) AND amt>0 AND created $when", $timeSubs); // includes roundups and crumbs and all donations to CG
+  
+$flds = <<<X
+    COUNT(DISTINCT uid1) AS numCGDonors,
+    SUM(1) AS numCGDonations,
+    SUM(amt) AS cgDonations
+X;
+
+  $except = "for2 NOT REGEXP('software|sponsorship|loan|repay')";
+  $res += db\get($flds, 'txs_noreverse', "uid2=:CGID AND amt>0 AND $except AND uid1 NOT :CANONIC AND created $when", $timeSubs);
 
   $flds = <<<X
     COUNT(DISTINCT uid1) AS numBuyers,

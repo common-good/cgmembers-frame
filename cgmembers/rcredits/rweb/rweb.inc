@@ -47,13 +47,8 @@ function formProx($form, &$sta, $args) {
  * Print a JSON array of communities
  */
 function cttyList() {
-  $cttys = db\q('SELECT uid,fullName FROM users WHERE uid<0 ORDER BY fullName')->fetchAllKeyed();
-  $cttys[1] = trim(str_replace(PROJECT, '', r\regionField('fullName')));
-  $cttys[0] = t('ALL communities');
-  foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
-  asort($cttys);
-  unset($cttys[$seed = r\serverUid()]);
-  $cttys[$seed] = t('Seedpack (no community yet)'); // last
+  $cttys = r\cttyList();
+//  $cttys[1] = trim(str_replace(PROJECT, '', r\regionField('fullName'))); // should go just before the seedpack (which is last)
   return exitJust(u\jsonize($cttys));
 }
 

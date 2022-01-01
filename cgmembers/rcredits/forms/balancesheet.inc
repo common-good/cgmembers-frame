@@ -13,51 +13,57 @@ use CG\Db as db;
 
 function formBalanceSheet($form, &$sta, $args = '') {
   global $mya;
-  $serverId = r\serverUid();
-
+  
+  extract(just('ctty', $args, $mya->community));
+  
   $negReservePct = getv('negReserve', .05);
   $backingReservePct = getv('backingReserve', .50);
+  $isMaster = '(uid>jid AND uid NOT :CANONIC)';
 
-  if  ($mya and $mya->id != 1) { // community only
+  $cttyChoice = cttyFld($ctty);
+  jsx('balance-sheet');
+
+  if  ($mya and $ctty != 0) { // community only
     // NOTE: uid>jid is normal accounts (in the community) that are independent or half a joint account
-    $cttyA = $mya->cttyA;
+    $cttyA = r\acct($ctty);
     $ctty = $mya->community;
     $subs = compact('ctty');
     $isCtty = 'community=:ctty';
 
     $title = t('Community Balance Sheet');
-    $subtext = t('for ') . $cttyA->fullName;
+    $subtext = t('For ') . $cttyA->fullName;
     $cgBalance = $cttyA->balance;
     $pool = db\sum('amount', 'txs2 t JOIN users u ON u.uid=t.payee', 'completed AND u.community=:ctty', $subs);
-    $poolTable = 'txs_proper JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2';
+    $poolTable = 'txs_proper JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2'; // NOT canonic?
     $pool += db\sum("IF(u1.$isCtty, -amt, amt)", $poolTable, "u1.$isCtty XOR u2.$isCtty", compact('ctty')); // inter-ctty
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid=:ctty', $subs);
     $invReserve = db\sum('shares*price*reserve', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid=:ctty', $subs);
-    $negatives = -db\sum('balance', 'users', 'balance<0 AND uid>jid AND community=:ctty AND uid<>:ctty', $subs);
+    $negatives = -db\sum('balance', 'users', "balance<0 AND $isMaster AND community=:ctty AND uid<>:ctty", $subs);
     $negReserve = $negatives * $negReservePct;
-    $backing = db\sum('backing', 'users', 'community=:ctty', $subs);
+    $backing = db\sum('backing', 'users', "$isMaster AND community=:ctty", $subs);
     $backingReserve = $backing * $backingReservePct;
     $invoicesFromUs = db\sum('amount', 'tx_requests', 'payee=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     
-    $balances = db\sum('balance', 'users', 'balance>0 AND uid>jid AND community=:ctty AND uid<>:ctty', $subs);
+    $balances = db\sum('balance', 'users', "balance>0 AND $isMaster AND community=:ctty AND uid<>:ctty", $subs);
     $invoicesToUs = db\sum('amount', 'tx_requests', 'payer=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     $otherAssets = $cttyA->otherAssets ?: 0;
     $otherLiabilities = $cttyA->otherLiabilities ?: 0;
+    
   } else { // whole region (server) overall
     // NOTE: (uid>jid OR uid<0) AND community<0 is accounts that are independent or half a joint account or roundups or crumbs
     $title = t('%PROJECT Balance Sheet');
-    $subtext = t('for all participating communities (totals)');
+    $subtext = t('For ALL participating communities (totals)');
     $cgBalance = NULL;
     $pool = db\sum('amount', 'txs2', 'completed');
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
     $invReserve = db\sum('shares*price*reserve', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
-    $negatives = -db\sum('balance', 'users', 'balance<0 AND (uid>jid OR uid<0) AND community<0');
+    $negatives = -db\sum('balance', 'users', "balance<0 AND ($isMaster OR uid<0) AND community<0");
     $negReserve = $negatives * getv('negReserve', .05);
-    $backing = db\sum('backing', 'users');
+    $backing = db\sum('backing', 'users', $isMaster);
     $backingReserve = $backing * getv('backingReserve', .50);
     $invoicesFromUs = db\sum('amount', 'tx_requests', 'payee<0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
-    $balances = db\sum('balance', 'users', 'balance>0 AND (uid>jid OR uid<0) AND community<0');
+    $balances = db\sum('balance', 'users', "balance>0 AND ($isMaster OR uid<0) AND community<0");
     $invoicesToUs = db\sum('amount', 'tx_requests', 'payer<0 AND payee>0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
     $otherAssets = $otherLiabilities = 0;
@@ -102,5 +108,5 @@ function formBalanceSheet($form, &$sta, $args = '') {
 ///  print_r(compact(ray("title subtext $assetKeys $liabilityKeys")));
 ///  debug(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
   
-  return cgform(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
+  return cgform(compact(ray("cttyChoice title subtext $assetKeys $liabilityKeys posttext")));
 }

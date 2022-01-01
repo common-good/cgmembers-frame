@@ -501,6 +501,7 @@ function emailFld() {return fld('email', func_get_args());}
 function rangeFld() {return fld('range', func_get_args());}
 function radiosFld() {return fld('radios', func_get_args());}
 function selectFld() {return fld('select', func_get_args());}
+function cttyFld($ctty, $withAll = TRUE) {return w\selectFld(t('Community:'), '', w\dft($withAll ? $ctty : ($ctty ?: r\serverUid())), r\cttyList($withAll));} // serverUid for UID_SUPER, if it has no ctty
 
 /**
  * Return a rendered set of radio buttons, because Drupal fails at it.

@@ -1408,6 +1408,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-balancesheet .control-label {text-align:left; padding:0 0 0 0; width:280px; font-weight:normal;}
 #frm-balancesheet .form-group {margin-bottom:0;}
 #frm-balancesheet .control-data {text-align:right; padding:0; width:50px;}
+#frm-balancesheet .form-item-cttyChoice .control-data {text-align:right; width:auto;}
+#frm-balancesheet .form-item-cttyChoice label {width:auto; margin-top:8px;}
+
 #frm-balancesheet .form-item-title .control-data,
 #frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
 #frm-balancesheet .form-item-title .control-label,

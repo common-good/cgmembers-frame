@@ -70,8 +70,6 @@ function formFollowup($form, &$sta, $args = []) {
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = ($mya->admRegion and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
-  $cttys[key($cttys)] = t('Seedpack');
-  foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
   
   $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"

@@ -218,7 +218,6 @@ function adminSummary() {
   include_once __DIR__ . '/../admin/admin.inc';  
 
   $uid = $mya->id;
-  $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
   if ($mya->proSe and !$mya->admin) return []; // nothing special on admin's own account
   
   $noEnter = TRUE; // prevent submission by pressing Enter
@@ -232,8 +231,8 @@ function adminSummary() {
   } else { // managing some individual account
     if (!$mya->ok) $mya->nextStep();
 
-    if ($mya->admin and !$mya->proSe) {
-      $community = r\cttys($mya->region, $ctty);
+    if ($mya->admManageAccts and !$mya->proSe) {
+      $community = cttyFld($mya->community, FALSE);
       jsx('change-ctty', compact('uid'));
     }
 
