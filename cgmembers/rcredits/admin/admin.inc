@@ -608,7 +608,7 @@ function flagsDesc($n, $list) {
   if (!is_numeric(key($bits))) $bits = array_keys($bits);
   for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
   $res = '';
-  for ($i=0; $i <= B_MAX; $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
+  for ($i=0; $i <= count($bits); $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
   return $res;
 }
 

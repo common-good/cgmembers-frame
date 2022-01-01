@@ -261,6 +261,10 @@ function doit(what, vs) {
   case 'dollar-pool-offset':
     $('#dp-offset').click(function () {post('dpOffset', {amount:vs['amount']}, report);});
     break;
+
+  case 'balance-sheet':
+    $('#edit-cttychoice').on('change', function () {location.href = baseUrl + '/community/balance-sheet/ctty=' + this.value;});
+    break;
     
   case 'change-ctty':
     $('#edit-community').on('change', function () {
@@ -268,12 +272,7 @@ function doit(what, vs) {
       changeCtty(newCtty, false);
     });
 
-    function changeCtty(newCtty, retro) {
-      /*        post('changeCtty', {newCtty:newCtty, retro:retro}, function(j) {
-                if (!j.ok) $.alert(j.message, 'Error');
-                }); */
-      post('changeCtty', {newCtty:newCtty, retro:retro}, reportErr);        
-    }
+    function changeCtty(newCtty, retro) {post('changeCtty', {newCtty:newCtty, retro:retro}, reportErr);}
     break;
 
   case 'focus-on': $('#edit-' + vs['field']).focus(); break;

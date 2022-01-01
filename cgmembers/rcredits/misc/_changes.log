@@ -1,3 +1,9 @@
+2021-12-31 feature/balance-sheet
+. fixed out-of-range but in a\flagsDesc()
+. fixed balance-sheet page so it doesn't count CANONIC accounts
+. added community selector to balance sheet page
+. added CG donations to stats page
+
 2021-12-31 feature/stats
 . added a stats page (for our year-end report)
 

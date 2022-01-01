@@ -232,23 +232,6 @@ function rdoMonth($time = NULL) {
 }
 
 /**
- * Return an array or dropdown of communities (just in the given region?).
- * @param int $region: current region uid
- * @param int $ctty: current community (if any, return a dropdown input field)
- * @return array of communities if $ctty is FALSE, otherwise a dropdown
- */
-function cttys($region, $ctty = FALSE) {
-  $where = 'uid<0'; // uid BETWEEN :region-(:R_REGION_MAX-1) AND :region-1
-  $sql = "SELECT uid,fullName FROM users WHERE $where ORDER BY fullName";
-  $ray = db\q($sql, compact('region'))->fetchAllKeyed();
-  if ($ctty) {
-    //    if (!@$cttys[$ctty]) u\preray([$ctty => $a->cttyA->fullName . t(' (outside the region)')], $cttys);
-    $ray[r\serverUid()] = t('Seedpack (no community yet)');
-    return w\selectFld(t('Community:'), '', w\dft($ctty), $ray);
-  } else return $ray;
-}
-
-/**
  * Record the current IP as approved (for whitelisting in WHM)
  * @param int $uid: account record ID
  * @param string $device: one device code for this account (not very important, but interesting, especially for POS)
@@ -1468,6 +1451,19 @@ function recurDesc($period, $periods = 1) {
   return $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p]) : ray(PERIODLY)[$p];
 }
 
+/**
+ * Return an assoc of communities indexed by uid, including 0 for overall and "Seedpack" for no-community-yet.
+ */
+function cttyList($withAll = TRUE) {
+  $cttys = db\q("SELECT uid,fullname FROM users WHERE uid<0 ORDER BY created,fullName")->fetchAllKeyed();
+  foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
+  if ($withAll) $cttys[0] = t('ALL communities');
+  asort($cttys);
+  unset($cttys[$seed = r\serverUid()]);
+  $cttys[$seed] = t('Seedpack (no community yet)'); // last
+  return $cttys;
+}
+
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
 function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR . "/$key.html");}
@@ -1485,7 +1481,6 @@ function usdin($for) {return u\abbreviates(S_USD_IN, is_array($for) ? $for[1] : 
 function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;}
 function signedIn() {return r\acct() ? TRUE : FALSE;}
 function iCodeDesc($iCode) {$iCodeDescs = ray(IBYS); return $iCodeDescs[min($iCode, IBY_ICARD) - IBY0];}
-function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORDER BY created,fullName")->fetchAllKeyed();}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == UID_BANK_IN or $uid == UID_BANK_OUT);}
