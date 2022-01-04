@@ -132,7 +132,7 @@ function formAdminPanel_submit($form, &$sta) {
     $a->update('ssnData', '');    
   } elseif ($op == 'makeVKeyE' and $a) {
     if (!$make) return err(t('You must check the "Make" box to create a superAdmin card.'));
-    if (!$mya->makeVAdmin) return err(t('You must have superAdmin permission to create a superAdmin card.'));
+    if (!$mya->admMakeVAdmin) return err(t('You must have superAdmin permission to create a superAdmin card.'));
     if ($a->id == $mya->agentId) return err(t('You cannot revoke and recreate your own superAdmin card.'));
     exitJust($a->makeVKeyE());
   } elseif ($op == 'seeData') {

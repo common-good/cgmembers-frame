@@ -65,11 +65,12 @@ X;
   list ($wayYou, $wayMe) = u\order($toMe xor $amt < 0, t('From:'), t('To:'));
 ///    debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));
   $title = t('Transaction #%xid Detail', compact('xid'));
-  $created = editIf($mya->admEditTxDate, 'date', t('Date:'), $created, u\fmtDate($created, TRUE));
+  $tm = u\fmtTime($created);
+  $created = editIf($mya->admEditTx, 'date', t('Date:'), $created, u\fmtDate($created, TRUE) . ' ' . $tm, suffix($tm));
   $you = item($fullName, $wayYou);
   $me = item($meA->fullName, $wayMe);
   
-  $amt = editIf($mya->admEditTxAmt, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
+  $amt = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
   $cat = $mya->admEditTx ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
@@ -96,7 +97,7 @@ X;
 function formTxDetail_validate($form, &$sta) {
   extract(just('created amt', $sta['input'], NULL));
 
-  if ($created and $err = u\badDate($created, now() - YEAR_SECS, tomorrow())) return say($err, 'created');
+  if ($created and $err = u\badDate($created, today() - 3 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($amt and $err = u\badAmount($amt, '!=0')) return say($err, 'amt');
   u\preRay(compact(ray('created amt')), $sta['input']);
 }

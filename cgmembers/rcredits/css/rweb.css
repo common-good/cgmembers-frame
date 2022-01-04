@@ -30,6 +30,7 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {-webkit-appearance:none; -moz-appearance:none; margin:0;}
 input[type=number] {-webkit-appearance:textfield; -moz-appearance:textfield;}
 input.short {width:100px; display:inline-block;}
+input[type=date].short {width:150px;}
 #edit-title .btn.add,
 #edit-title .btn.list,
 #edit-title .btn.delete {margin-left:5px; border-radius:15px; padding:0px 6px; font-weight:bold;}
@@ -1183,6 +1184,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-deposits .control-label {min-width:150px;} /* can't be more than 153px (dunno why) */
 #frm-deposits .newout {margin-left:50px;}
 #edit-deposits .control-label {width:50px;}
+#frm-deposits a.undo {float:right; color:red;}
 #frm-showdeposits a {display:none;}
 
 /* Change Password / Reset / Verify (first time or resetting password) (beginning with stuff from user.css) */
@@ -1407,7 +1409,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Balance Sheet */
 #frm-balancesheet .control-label {text-align:left; padding:0 0 0 0; width:280px; font-weight:normal;}
 #frm-balancesheet .form-group {margin-bottom:0;}
-#frm-balancesheet .control-data {text-align:right; padding:0; width:50px;}
+#frm-balancesheet .control-data {text-align:right; padding:0; width:100px;}
 #frm-balancesheet .form-item-cttyChoice .control-data {text-align:right; width:auto;}
 #frm-balancesheet .form-item-cttyChoice label {width:auto; margin-top:8px;}
 

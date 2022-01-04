@@ -43,7 +43,7 @@ Scenario: admin downloads ACH requests
   | %mdY-2w    | IN        |      1 | 100.00    |
 
   When member ".ZZA" visits page "sadmin/achs/date=0&mark=1"
-  Then we download "BSL-NOW.ach" with "ACH" records:
+  Then we download "BSL-<NOW>.ach" with "ACH" records:
   
 # const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
 # const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originPrefix:L1, originNum:R9, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7';

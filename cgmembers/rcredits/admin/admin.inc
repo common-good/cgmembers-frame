@@ -627,7 +627,6 @@ function deposits($starting = 0, $showTxIds = FALSE) {
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
-  $today = today();
   $ways = ray('In Out Bad', t('IN'), t('OUT'), t('BAD')); // translate, don't use strtoupper
   $q = db\q($sql, compact('starting')); // include today's potential deposit at the top
 
@@ -639,14 +638,12 @@ EOF;
       if (!$count) continue;
       if ($firstline) {
         $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
-        $date = strftime('%Y%m%d', $deposit ?: $today);
-//        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
+        $date = strftime('%Y%m%d', $deposit ?: today());
         $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum", t('details'));
-//        if (!$deposit or $deposit >= $today - 90 * DAY_SECS) 
-        if ($deposit) {
+        if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers
           $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH'));
-          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks')); // don't show undeposited checks (a recipe for disaster)
+          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'));
         }
 
       } else $dateDpy = $details = '';

@@ -69,7 +69,7 @@ function formFollowup($form, &$sta, $args = []) {
   $signupBit = r\allSteps()['signup'];
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = ($mya->admRegion and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
-  $cttys = r\cttyList();
+  $cttys = r\cttyList(); $cttys[r\serverUid()] = t('Seedpack'); // shorten Seedpack name
   
   $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
@@ -185,11 +185,8 @@ function formMemberList($form, &$sta) {
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);
 
-    if (TRUE) {
-      $bits = []; // zap previous value
-      foreach (ray('member ok bank') as $one) if ($a->can(u\consta('b', $one))) $bits[] = $one;
-      $bits = $bits ? ('<span class="memberlist-bits"> ' . join(' ', $bits) . "</span><br>\n") : '';
-    } else $bits = '';
+    $bits = []; foreach (ray('member ok hasBank') as $k) if ($a->$k) $bits[] = $k;
+    $bits = $bits ? ('<span class="memberlist-bits"> ' . join(' ', $bits) . "</span><br>\n") : '';
     
     $one = "<tr><td colspan=4 class=\"memberlist-line2\">$date &mdash; $steps$bits$notes</td></tr>\n";
     $list .= <<<EOF
@@ -299,10 +296,20 @@ function formPhp_submit($form, &$sta) {
 /**
  * Offer to print checks or a deposit slip for Dollar Pool transfers to or from member bank accounts.
  */
-function formDeposits($form, &$sta, $deposit = 0) {
+function formDeposits($form, &$sta, $args = NULL) {
   global $mya, $base_url;
-  //  if ($deposit) return w\go("sadmin/deposit/$deposit");
-
+  
+  extract(just('reverse', $args, NULL));
+  if ($reverse) {
+    if ($reverse < today()) {
+      err(t('That transfer batch is too old to reverse (before today).'));
+    } else {
+      $q = db\q('UPDATE txs2 SET deposit=0 WHERE deposit=:reverse', compact('reverse'));
+      $cnt = $q->rowCount();
+      say(t('%cnt transfers canceled.', compact('cnt')), $cnt ? NULL : 'err');
+    }
+  }
+  
   $title = t('Bank Transfers');
 
   $fields = <<<EOF
@@ -311,18 +318,21 @@ function formDeposits($form, &$sta, $deposit = 0) {
     SUM(IF(amount<0, 1, 0)) AS countOut,
     SUM(IF(amount>0, 1, 0)) AS countIn
 EOF;
-  $res = db\rows($fields, 'txs2', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
+  $res = db\rows($fields, 'txs2', "deposit=0 AND amount<>0 AND created<=:NOW"); // fails for db\get
   //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
   $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amountIn)<b class="newout">New OUT:</b> %countOut (%amountOut)', compact(ray('countIn amountIn countOut amountOut')));
+  
   if ($mya->admAch) {
-//    $go = btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks')) . ' ' . 
-    $go = item(btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file')));
+    $btns = btn("$base_url/sadmin/achs/date=0&mark=1", t('Download ACH File'));
+    $last = db\max('deposit', 'txs2', 'deposit<>0');
+    if ($last >= today()) $btns .= ' ' . lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', u\fmtDate($last, TRUE)), clas('undo'));
+    $go = item($btns);
   } else $go = NULL;
   
   $deposits = item(a\deposits(), ' ');
-  w\jsx('deposits');
+  w\jsx('deposits', 'msg', t('Are you sure you want to undo the most recent ACH batch (from today)? If the bank already accepted it, DON\'T DO IT!!!'));
 
   return cgform(compact(ray('title subtext go deposits')));
 }

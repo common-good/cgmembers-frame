@@ -304,7 +304,7 @@ function recur($template) {
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
-    $info = ray('purpose explicit cat created completed recursId deposit gift', $purpose, FALSE, BCAT_GIFT, $created, now(), $id, 0, TRUE);
+    $info = compact(ray('amount purpose created')) + ray('explicit cat completed recursId deposit gift', FALSE, BCAT_GIFT, now(), $id, 0, TRUE);
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
     be\thanks(FALSE, $pid, $amount, $period, $periods, $coA->id, FALSE);
@@ -1066,7 +1066,7 @@ function notice1($item) {
   
   $args += compact(ray('shout track code'));
   if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)
-  if (!$a->tell('notices', $args)) return;
+  if (!$a->tell('notices', $args)) return; // don't mark as sent if it isn't
   db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
 }
 
@@ -1148,7 +1148,7 @@ X;
  */
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
-  if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset autoincr
+  if ($cnt = db\count('queue')) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);
