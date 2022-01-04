@@ -15,12 +15,13 @@ function formMessage($form, &$sta, $args = '') {
   extract(just('code', $args, NULL));
   
   if ($code) return codeResult($code);
+  $a = ($mya->ok and $mya->relPermission >= r\perm(B_REFUND)) ? $mya : $mya->agentA; // explicit use of relPermission handles admins right
   
   jsx('message');
   $title = t('Send a Message');
   $subtext = t('<p>Complete this form and click Send. The other member receives an email from your email address. When they reply, you also have their email address, so you can communicate by email after that (you won\'t need to use this form again).</p><p>If you include an encrypted message, you receive notification when it has been seen. Secret information can be viewed/downloaded only by the intended recipient (even if your message is intercepted or forwarded).</p>');
   $to = textFld(REQ . t('To:'), [t('Recipient'),t('The account, name, or partial name of the member you want to send a message to.')]);
-  $subject = textFld(REQ . t('Subject:'), [t('Subject')], dft(t('a message from %PROJECT member ') . $mya->fullName));
+  $subject = textFld(REQ . t('Subject:'), [t('Subject')], dft(t('a message from %PROJECT member ') . $a->fullName));
   $message = areaFld(t('Message:'), [t('Your message goes here.')]);
   $addSecret = item(lnk('', t('Add some encrypted data')));
   $secret = areaFld(t('Secret:'), [t('Secret information here'), t('Max %SECRET_MAXLEN chars.')], maxlen(SECRET_MAXLEN));
@@ -28,9 +29,10 @@ function formMessage($form, &$sta, $args = '') {
   $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(48) + suffix(t(' hours')));
   $secrets = fieldSet('secrets', compact(ray('secret file expires')), BARE);
   $submit = t('Send');
+  $fromQid = hidFld($a->mainQid);
   w\whoFldSubmit('to', t('Send to %name?'), 'self-message', '');
 
-  return cgform(compact(ray('title subtext to subject message addSecret secrets submit')));
+  return cgform(compact(ray('title subtext to subject message addSecret secrets submit fromQid')));
 }
 
 function formMessage_validate($form, &$sta) {
@@ -52,15 +54,15 @@ function formMessage_validate($form, &$sta) {
 }
 
 function formMessage_submit($form, &$sta) {
-  extract(just('subject message secret fileData expires', $sta['input'], NULL));
-  global $mya, $base_url;
+  extract(just('subject message secret fileData expires fromQid', $sta['input'], NULL));
+  global $base_url;
   
   $uid = whoId($sta);
   $a = r\acct($uid);
   
   if ($fileData = unserialize($fileData) or strlen($secret)) { // encrypted file or message
     $at = now() + HOUR_SECS * $expires;
-    $ray = ray('qid from exp', $a->mainQid, $mya->mainQid, $at);
+    $ray = ray('qid from exp', $a->mainQid, $fromQid, $at);
     $message .= '<br>';
     
     if ($fileData) {
@@ -76,9 +78,10 @@ function formMessage_submit($form, &$sta) {
     $message .= t('<br>Encrypted data expires at %tm on %dt.', 'tm dt', u\tm($at), u\fmtDate($at));
   }
 
-  if ($mya->admin) $mya = $mya->agentA;
-  $fromNm = $mya->proSe ? $mya->fullName : ($mya->agentA->fullName . " ($mya->fullName)");
-  r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$mya->email => $fromNm]);
+  $fromA = r\acct($fromQid);
+  if ($fromA->admin) $fromA = $fromA->agentA;
+  $fromNm = $fromA->proSe ? $fromA->fullName : ($fromA->agentA->fullName . " ($fromA->fullName)");
+  r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$fromA->email => $fromNm]);
   say('sent message', ray('fullName', $a->fullName));
 }
 

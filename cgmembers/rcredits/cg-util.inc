@@ -643,7 +643,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
   global $channel;
 
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
-//  $useTextLogToo = FALSE; // isDEV;
 
   $qid = $mya ? $mya->qid . ($mya->proSe ? '' : strtolower('.' . $mya->agentA->mainQid . ($mya->admin ? '(a)' : ''))) : t('nobody');
   $time = date('d H:i:s');
@@ -652,7 +651,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     $map = ["\r" => '', "\n" => '', '    ' => ' '];
     if ($msg = nni($info, 'message')) $info['message'] = strtr(strip_tags(str_replace('>', '>|', $msg)), $map);
     if (nni($info, 'form_id')) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
-    if (nni($info, 'toEmail')) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
     $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   } elseif (!$info) return '';

@@ -301,15 +301,15 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
   
   // log
-  $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
-  $message = strtr($body, $logSubs);
-  $erInfo = compact(ray('index toEmail subject message'));
-  u\loga('email', $erInfo + ['toUid' => nn($toA) ? $toA->id : 'none']);
-  if (test()) f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
+  $whoDpy = nn($toA) ? $toA->mainQid : (is_array($to) ? reset($to) . ' <' . key($to) . '>' : "<$to>");
+  u\loga('email', $erInfo = t('%whoDpy %index (%subject)', compact(ray('whoDpy index subject'))));
+  
+  $testSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
+  $erInfo .= ':<br>' . strtr($body, $testSubs);
 
   if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
-    if (!test()) t\output(compact(ray('subject to reply message')), 'email'); // show stuff to tester
-    if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE;
+    t\output('Actual (in rMail) ' . pr($erInfo), 'email'); // output whether or not testing
+    if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE; // allow emails to admin from non-production servers
   }
   
   try { // catch SwiftMailer errors
@@ -361,8 +361,9 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
       if (!isDEV) u\loga('FATAL', $exErr);
 /**/  if ($channel == TX_WEB) die($exErr);
     }
-    u\EXPECT($toEmailSimple != R_ADMIN_EMAIL, 'cannot send admin email');
-    return r\tellAdmin(t('cannot send email'), $erInfo + compact('exErr'));
+//    u\EXPECT($toEmailSimple != R_ADMIN_EMAIL, 'cannot send admin email');
+    if ($toEmailSimple != R_ADMIN_EMAIL) r\tellAdmin(t('cannot send email'), compact(ray('erInfo exErr')));
+    return FALSE;
   }
   return TRUE;
 }
@@ -546,12 +547,12 @@ function vKey() {
   if (!$mya) return FALSE;
 
   if ($mya->agentId == UID_SUPER) { // old style: admin account only
-    if (test() and $mya->id != UID_SUPER) return FALSE;
+// (this doesn't look right)    if (test() and $mya->id != UID_SUPER) return FALSE;
     if (!$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
     if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
     return u\decry('R', $vKeyE, $pw);
   } else { // new style
-    if (!$vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->id)) or !$vKeyPw = r\cryptCook('vKeyPw')) {
+    if (!$vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->agentId)) or !$vKeyPw = r\cryptCook('vKeyPw')) {
       $msg = t('missing ') . ($vKeyE ? 'vKeyPw!' : 'vKeyE!');
       if (isPRODUCTION) r\tellAdmin($msg . trace());
       return w\softErr($msg);

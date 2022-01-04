@@ -41,9 +41,7 @@ function doit(what, vs) {
     var id = vs['id'];
     if (id) $('#edit-title .btn.list').click(function () {location.href = url + '';});
     $('#edit-title .btn.add').click(function () {location.href = url + '=add';});
-    if (id) $('#edit-title .btn.delete').click(function () {
-      yesno(vs['msg'], function () {location.href = url + '=' + vs['id'] + '&del=1';}); 
-    });
+    if (id) $('#edit-title .btn.delete').click(function () {return yesGo(url + '=' + vs['id'] + '&del=1', vs['msg']);});
     break;
   
   case 'message':
@@ -102,11 +100,7 @@ function doit(what, vs) {
     break;
     
   case 'cardDone':
-    $('.btn-undo').click(function () {
-      var href = $(this).attr('href');
-      yesno(vs['msg'], function () {location.href = href;}); // function () {}
-      return false; // prevent click result (leave it to yesno)
-    });
+    $('.btn-undo').click(function () {return yesGo(this.href, vs['msg']);});
     break;
     
   case 'cardTip': // handle tips
@@ -152,6 +146,7 @@ function doit(what, vs) {
       var res = clipCopy($(this).attr('data-flnm'));
       alert(res ? 'filename copied to clipboard' : 'copy to clipboard failed');
     });
+    $('.undo').click(function () {return yesGo(this.href, vs['msg']);});
     break;
 
   case 'adminSummary': 
@@ -319,11 +314,7 @@ function doit(what, vs) {
     break;
 
   case 'reverse-tx':
-    $('.txRow .buttons a[title="' + vs['title'] + '"]').click(function () {
-      var url = this.href;
-      yesno(vs['msg'], function () {location.href=url;}); 
-      return false;
-    });
+    $('.txRow .buttons a[title="' + vs['title'] + '"]').click(function () {return yesGo(this.href, vs['msg']);});
     break;
 
   case 'relations':
@@ -924,3 +915,4 @@ function confirmTip(vs, val) {
   });
   return false;
 }
+function yesGo(url, msg) {yesno(msg, function () {location.href=url;}); return false;} // false cancels click and leaves it to yesno()

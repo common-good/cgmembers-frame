@@ -1,3 +1,11 @@
+2022-01-04 feature/deposit-undo
+. added an UNDO button to reverse the most recent ACH batch
+. improved email logging
+. fixed bug in vKey() that kept admin from scanning in when viewing any other account
+. fixed bug in balance sheet page that kept commuity data from appearing
+. fixed message page so everyone can send from who they're supposed to be able to
+. fixed some admin permission typos (that caused crashes)
+
 2021-12-31 feature/balance-sheet
 . fixed out-of-range but in a\flagsDesc()
 . fixed balance-sheet page so it doesn't count CANONIC accounts

@@ -55,7 +55,7 @@ X;
   $res += db\get($flds, 'txs_noreverse', "uid2 NOT $isNotForProfit AND type=:E_PRIME AND amt>0 AND created $when", $timeSubs); // buys
   $res['ccFeesSaved'] = CC_SHARE * CC_RATE * $res['volume'];
   
-  debug($res);
+  say(pr($res));
     
   return cgform(compact(ray('title subtext')));
 }

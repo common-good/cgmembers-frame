@@ -14,7 +14,7 @@ use CG\Db as db;
 function formBalanceSheet($form, &$sta, $args = '') {
   global $mya;
   
-  extract(just('ctty', $args, $mya->community));
+  extract(just('ctty', $args, ($mya and $mya->agentId != UID_SUPER) ? $mya->community : r\serverUid()));
   
   $negReservePct = getv('negReserve', .05);
   $backingReservePct = getv('backingReserve', .50);
@@ -23,10 +23,9 @@ function formBalanceSheet($form, &$sta, $args = '') {
   $cttyChoice = cttyFld($ctty);
   jsx('balance-sheet');
 
-  if  ($mya and $ctty != 0) { // community only
+  if  ($ctty != 0) { // community only
     // NOTE: uid>jid is normal accounts (in the community) that are independent or half a joint account
     $cttyA = r\acct($ctty);
-    $ctty = $mya->community;
     $subs = compact('ctty');
     $isCtty = 'community=:ctty';
 
