@@ -1,3 +1,8 @@
+2022-01-13 feature/sweep
+. admin can now create a sweep rule, for example to send a company's balance to their bank weekly
+. fixed right-alignment of records in showRecords, for w\crud()
+. fixed rules and timed forms, which were missing some hidden fields
+
 2022-01-06 feature/separate-funcs
 . fixed bug in partnersignup.inc that omitted partner name and email from upload-file-too-big message
 . fixed bug in acct::signedIn

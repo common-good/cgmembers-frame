@@ -1046,7 +1046,8 @@ function memberOnetimePasswordIs($id, $pass) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ * in: TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberUndoesACharge
  *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit

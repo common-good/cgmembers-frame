@@ -397,7 +397,7 @@ function formatField($k, $v, $flagsField = B_LIST) {
   } elseif (in($k, 'flags can')) {
     $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
     $v = "<div class=\"format-flags\">$flags</div>";
-  } elseif (is_numeric($v)) $v = "<div class=\"alignR\">$v</div>";
+  }
   return $v;
 }
 

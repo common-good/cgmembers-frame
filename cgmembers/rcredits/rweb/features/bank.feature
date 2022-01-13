@@ -49,7 +49,10 @@ Scenario: a member moves credit to the bank
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
-
+  And we notice "banked" to member ".ZZA" with subs:
+  | action  | tofrom | amount | why             |*
+  | deposit | to     | $86    | at your request |
+  
 Scenario: a member draws credit from the bank with zero floor
   When member ".ZZB" completes form "get" with values:
   | op  | amount    |*

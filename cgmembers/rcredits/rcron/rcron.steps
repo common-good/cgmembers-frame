@@ -123,6 +123,7 @@ function bankTransferCountIs($count) {return (t\usdTransferCount() == $count);}
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ARecurringSweepCanBeCompleted
  *     TEST tickle ANewbieHasTakenOnlyTheFirstStep
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
  *     TEST weekly AMemberCashesOutAutomatically
@@ -428,6 +429,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs Setup
  *     BOTH recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     BOTH recurs ARecurringSweepCanBeCompleted
  *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
  *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmember
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -555,6 +557,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE notices AMemberGetsPostNotices
  *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     MAKE recurs ARecurringSweepCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmember
  *     MAKE recurs ARecurringPaymentHappenedYesterday

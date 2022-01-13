@@ -36,6 +36,18 @@ Scenario: A brand new recurring payment can be completed
   And count "txs2" is 0
   And count "tx_requests" is 0
 
+Scenario: A recurring sweep can be completed
+  Given these "tx_timed":
+  | action | start      | from | to       | amount | period | purpose |*
+  | pay    | %yesterday | .ZZA | bank-out |   %NUL | week   | pmt     |
+  When cron runs "recurs"
+  Then these "txs2":
+  | xid | created | amount | payee | completed | deposit |*
+  |   2 | %now    |   -100 | .ZZA  |      %now |       0 |
+  And we notice "banked" to member ".ZZA" with subs:
+  | action  | tofrom | amount | why                                   |*
+  | deposit | to     | $100   | (your automatic weekly bank transfer) |
+
 Scenario: A second recurring payment can be completed
   Given these "tx_timed":
   | id | start    | from | to   | amount | period | purpose |*
