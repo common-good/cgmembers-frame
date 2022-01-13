@@ -11,10 +11,10 @@ use CG\Db as db;
  * Called from both sadmin/rules and sadmin/timed
  */
  
-const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end tnm url flds';
+const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
 const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations';
 const RULE_FLDS = BOTH_FLDS . ' template code';
-const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code';
+const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code tnm url flds';
 const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code';
 const ZERO_FLDS = 'amount portion minimum start';
 const RULES_URL = 'sadmin/rules/id';
@@ -25,7 +25,6 @@ function formRules($form, &$sta, $type = '', $args = '') {
   
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
   list ($tnm, $url, $flds) = $type == 'rules' ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
-  
   extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
   if (nn($ret)) return $ret; // show list of records, if appropriate
 
@@ -113,7 +112,6 @@ function formRules_submit($form, &$sta) {
 
 function getStuff($sta) {
   extract(just('tnm flds url', $input = $sta['input'], NULL));
-
   $input = just($flds, $input, NULL);
   return [$tnm, $flds, $url, $input];
 }
