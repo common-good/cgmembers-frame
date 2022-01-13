@@ -11,7 +11,7 @@ use CG\Db as db;
  * Called from both sadmin/rules and sadmin/timed
  */
  
-const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
+const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end tnm url flds';
 const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations';
 const RULE_FLDS = BOTH_FLDS . ' template code';
 const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code';
@@ -27,7 +27,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
   list ($tnm, $url, $flds) = $type == 'rules' ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
   
   extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
-  if (nn($ret)) return $ret;
+  if (nn($ret)) return $ret; // show list of records, if appropriate
 
   if (isset($action)) $action = array_search($action, ray(ACT_LIST));
   foreach (ray('payerType payeeType') as $k) if (isset($$k)) $$k = array_search($$k, ray(REF_LIST));
@@ -45,7 +45,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $payee = textFld(t('Pays Payee:'), $payeDesc, dft($payee));
   $payeeType = radiosFld(REQ . t('Payee Type:'), '', dft($payeeType), ray(REF_LIST));
   $from = textFld(REQ . t('Then From:'), $fromToDesc, dft($from));
-  $to = textFld(REQ . t('To:'), $fromToDesc, dft($to));
+  $to = textFld(REQ . t('To:'), $fromToDesc . t(', %UID_BANK_OUT = bank'), dft($to));
   $action = radiosFld(REQ . t('Action:'), '', dft($action), ray(ACT_LIST));
   $amount = numFld(t('Amount:'), '', dft($amount > 0 ? $amount : '') + vmin(.01));
   $portion = numFld(t('Portion:'), '', dft($portion > 0 ? $portion : '') + vmin(.001) + step('.001'));
@@ -113,6 +113,7 @@ function formRules_submit($form, &$sta) {
 
 function getStuff($sta) {
   extract(just('tnm flds url', $input = $sta['input'], NULL));
+
   $input = just($flds, $input, NULL);
   return [$tnm, $flds, $url, $input];
 }

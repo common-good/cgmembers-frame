@@ -37,7 +37,7 @@ X
   $amtChoice = selectFld(t('Amount:'), '', required($dft) + suffix($minDesc), $choices);
   $amount = numFld(t('Amount:'), [t('Amount to back')], suffix($minDesc));
 //  $signedBy = w\signedBy();
-  $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
+  $date = item(u\fmtDate(now(), TRUE), t('Date:'));
   $posttext = item(t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.'), BARE);
 
   jsx('amtChoice');

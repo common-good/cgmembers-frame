@@ -243,7 +243,7 @@ class Acct {
       case 'hasPhoto': return db\exists('u_photo', $uidSub);
       case 'photo': return ($res = db\get('photo', 'u_photo', $uidSub)) ? u\decry('H', $res) : '';
       case 'thumb': return db\get('thumb', 'u_photo', $uidSub) ?: '';
-      case 'signedIn': return $a->eq($mya); // use only in r\access
+      case 'signedIn': return isset($mya); // use only in r\access
       case 'investor': return ($a->iclub or db\exists('r_stakes', $uidSub));
       case 'changes':
         $chFlds = 'oldValue,newValue';

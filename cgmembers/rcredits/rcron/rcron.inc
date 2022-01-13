@@ -310,7 +310,7 @@ function recur($template) {
     be\thanks(FALSE, $pid, $amount, $period, $periods, $coA->id, FALSE);
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
-    $fromA = r\acct($from); $toA = r\acct($to);
+    list ($fromA, $toA) = [r\acct($from), r\acct($to)];
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
       if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
@@ -323,9 +323,13 @@ function recur($template) {
       if (is_null($amount)) { // sweep
         if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
       }
-      $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
-      if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
-      $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
+      if ($to == UID_BANK_OUT) { // sweep to bank account
+        $fromA->bank(-$amount, t('(your automatic %when bank transfer)', compact('when')));
+      } else {
+        $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
+        if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
+        $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
+      }
     } else { // charge
       $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));

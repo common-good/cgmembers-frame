@@ -48,6 +48,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
   if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
+  $byState = submi('Accts By State');
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -71,7 +72,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
+  $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -166,7 +167,7 @@ function formAdminPanel_submit($form, &$sta) {
       }, '(uid<0 OR uid>:UID_CANON9) AND ' . $crit . ' ORDER BY community');
     ksort($signupCos);
     w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
-  }
+  } elseif ($op == 'byState') return byState();
   
   // handle all other buttons with showQuery()
   if ($op == 'users') return say(a\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
@@ -198,4 +199,19 @@ function superSignin($vKeyPw) {
     $a = r\acct($uid);
     if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
   }
+}
+
+/**
+ * Show a list of account counts by state (for our bank partners).
+ */
+function byState() {
+    $start = strtotime('+3 months', u\qtrDt()); // start of next quarter
+    for ($q = 0; $q < 7; $q++) {
+      $end = $start - 1;
+      $start = strtotime('-3 months', $start);
+      $qtr = date('Y', $start) . 'Q' . (floor((date('n', $start) - 1) / 3) + 1);
+      $flds[] = "SUM(IF(activated <= $end, 1, 0)) AS $qtr";
+    }
+    $flds = join(",\n", $flds);
+    return say(a\showQuery("(SELECT abbreviation AS state, $flds FROM users u JOIN r_states s ON s.id=u.state WHERE :IS_OK GROUP BY s.id) x", 'state'));
 }

@@ -836,9 +836,9 @@ function thanks($member, $id, $amount, $period, $periods, $coId, $redirect) {
     $postalAddr = u\unite($address, "$city, $st $zip", ', ');
   }
   
-  $note = u\starts($notes, u\fmtDate()) ? strstr(strstr($notes, ': ') . "\n", "\n", TRUE) : '';
+  $note = u\starts($notes, u\fmtDate(now())) ? strstr(strstr($notes, ': ') . "\n", "\n", TRUE) : '';
   
-  $subs0 += ray('date gift', u\fmtDate(NULL, TRUE), $gift);
+  $subs0 += ray('date gift', u\fmtDate(now(), TRUE), $gift);
 
   $subs = $subs0 + ray('donor donorPhone donorAddress donorEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
   unset($subs['fullName']); // salutation to co name, not donor name

@@ -260,7 +260,7 @@ function gotSignup($pA) {
   foreach (ray('address city state zip') as $k) {$$k = ${"m_$k"}; unset(${"m_$k"});}
   u\preRay(compact(ray('postalAddr address city state zip')), $info);
 
-  $flnms = renameUploads($_FILES, $customer);
+  $flnms = renameUploads($_FILES, $customer, $pA);
   
   if ($cgAccount) { // person already has an account, according to them (be careful not to trust that), so no need for this form
     if (!$mya = r\acct($cgAccount) or !$similar = u\similar($mya->fullName, $fullName, 5, .5) or !($mya->phone == u\fmtPhone(nn($phone), '+n') or $mya->email == $email)) {
@@ -482,7 +482,7 @@ X
  * Rename the uploaded files ASAP so PHP doesn't delete them
  * @return an array of new pathnames (NULL if none)
  */
-function renameUploads($files, $meter) {
+function renameUploads($files, $meter, $pA) {
   if (!is_dir(BILL_DIR)) {
     if (!mkdir(BILL_DIR, 0755)) return partnerErr('cannot create electric bill directory'); // required for tests
   }

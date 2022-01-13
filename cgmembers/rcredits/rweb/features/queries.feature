@@ -53,7 +53,7 @@ Scenario: A member visits the Community Data page
   | Expected Member Donations to CG and Community |
   | Expected Company Donations to CG and Community |
   And without:
-  | Food Fund Percentage Contributions |
+  | Food Fund Contributions |
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
@@ -62,7 +62,7 @@ Scenario: A member visits the Community Data page
 Scenario: An admin visits the Community Data page
   When member ".ZZB" visits page "community/data"
   Then we show "Community and Money Data" with:
-  | Food Fund Percentage Contributions |
+  | Food Fund Contributions |
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
@@ -75,8 +75,8 @@ Scenario: An admin visits the Community Data page
   | Where Do Our Members Hear About Common Good |
   
 Scenario: An admin runs a query about Food Fund
-  When member ".ZZB" runs query "Food Fund Percentage Contributions"
-  Then we show "Food Fund Percentage Contributions" with:
+  When member ".ZZB" runs query "Food Fund Contributions"
+  Then we show "Food Fund Contributions" with:
   | participants | monthly |
   |            0 |         |
   

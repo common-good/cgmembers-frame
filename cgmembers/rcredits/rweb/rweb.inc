@@ -390,16 +390,6 @@ function formBasic_validate($form, &$sta, $fields = R_BASIC_FLDS) {
 }
 
 /**
- * Show Common Good's accountant (or any employee) our Deposits page, without the buttons
- */
-function formShowDeposits($form, &$sta) {
-  global $mya;
-  if (!$mya or $mya->id != CGID) return w\softErr(t('You are not authorized to view that page.'));
-  include_once R_ROOT . '/admin/admin-forms.inc';
-  return w\formDeposits($form, $sta);
-}
-
-/**
  * Show a page when someone scans a Common Good card not with the CGPay app, for example with QRDroid.
  * RC4.ME and RC2.ME must do some interpretation and redirection (NYI on those sites)
  */
