@@ -37,7 +37,7 @@ function formMessage($form, &$sta, $args = '') {
 
 function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message secret expires', $sta['input'], NULL));
-  if (strhas($to, '@') and empty($secret)) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to');
+  if (strhas($to, '@') and !strhas($to, ' @ ') and empty($secret)) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to'); // !strhas is needed to accept results of autocomplete
   if (strlen($secret) and $expires <= 0) return say(t('Expires must be greater than zero.'), 'expires');
 //  if (!$a = w\whois($to, 'to', $info, 'self-message')) return FALSE;
 //  u\preray(ray('uid', $a->id), $sta['input']);

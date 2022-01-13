@@ -389,7 +389,7 @@ define('FMT_INT', 'trust count');
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @return: the formatted output
  */
-function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST, $url = '') {
+function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flags = B_LIST, $url = '') {
   global $base_url;
 
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
@@ -400,7 +400,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
   foreach ($ray as $row) {
     $line = '';
     foreach ($row as $k => $v) {
-      $v = $formatFunc($k, plain($v), $flagsField);
+      $v = $formatFunc($k, plain($v), $flags);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
       foreach (ray('balance bal credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {

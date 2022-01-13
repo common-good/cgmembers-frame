@@ -14,7 +14,7 @@ const CC_RATE = 0.02; // rough estimate of average credit card fees for consumer
  */
 function formStats($form, &$sta, $args = '') {
   global $mya;
-  extract(just('start end', $args, [strtotime('January 1'), strtotime('December 31')]));
+  extract(just('start end', $args, [strtotime('January 1'), strtotime('December 31') + DAY_SECS - 1]));
 
   $title = t('Statistics');
   $subtext = t('System-wide from %start to %end', 'start end', u\fmtDate($start, TRUE), u\fmtDate($end, TRUE));
@@ -36,7 +36,7 @@ X;
 
   $res = db\get($flds, 'txs_noreverse', "(uid2 $isNotForProfit OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS)) AND amt>0 AND created $when", $timeSubs); // includes roundups and crumbs and all donations to CG
   
-$flds = <<<X
+  $flds = <<<X
     COUNT(DISTINCT uid1) AS numCGDonors,
     SUM(1) AS numCGDonations,
     SUM(amt) AS cgDonations
@@ -44,7 +44,21 @@ X;
 
   $except = "for2 NOT REGEXP('software|sponsorship|loan|repay')";
   $res += db\get($flds, 'txs_noreverse', "uid2=:CGID AND amt>0 AND $except AND uid1 NOT :CANONIC AND created $when", $timeSubs);
+  
+  $amt = r\annualAmt();
+  $flds = <<<X
+    SUM($amt) AS cgAnnualGifts,
+    SUM(1) AS cgAnnualDonors,
+    SUM(IF($amt >= 1000, 1, 0)) AS cgAnnualDonors1k,
+    SUM(IF($amt BETWEEN 500 AND 999.99, 1, 0)) AS cgAnnualDonors500,
+    SUM(IF($amt BETWEEN 200 AND 499.99, 1, 0)) AS cgAnnualDonors200,
+    SUM(IF($amt BETWEEN 100 AND 199.99, 1, 0)) AS cgAnnualDonors100,
+    SUM(IF($amt BETWEEN 50 AND 99.99, 1, 0)) AS cgAnnualDonors50,
+    SUM(IF($amt BETWEEN 0 AND 49.99, 1, 0)) AS cgAnnualDonorsSmall
+X;
 
+  $res += db\get($flds, 'tx_timed tm', 'action=:ACT_PAY AND tm.to=:CGID AND IFNULL(end, NOW()+1)>NOW()');
+  
   $flds = <<<X
     COUNT(DISTINCT uid1) AS numBuyers,
     COUNT(DISTINCT uid2) AS numSellers,

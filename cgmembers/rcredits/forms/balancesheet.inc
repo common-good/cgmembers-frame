@@ -14,7 +14,7 @@ use CG\Db as db;
 function formBalanceSheet($form, &$sta, $args = '') {
   global $mya;
   
-  extract(just('ctty', $args, ($mya and $mya->agentId != UID_SUPER) ? $mya->community : r\serverUid()));
+  extract(just('ctty', $args, ($mya and $mya->agentId != UID_SUPER) ? $mya->community : 0));
   
   $negReservePct = getv('negReserve', .05);
   $backingReservePct = getv('backingReserve', .50);

@@ -67,7 +67,7 @@ Scenario: A member looks at the balance sheet
   And variable "backingReserve" is ".6"
   When member ".ZZA" visits page "community/balance-sheet"
   Then we show "Balance Sheet" with:
-  | for Common Good Western Mass | |
+  | For Common Good Western Mass | |
   | ASSETS  | |
   | Community Common Good Account | $-300.00 |
   | Dollar Pool | $6,100.00 |
@@ -91,7 +91,7 @@ Scenario: A non-member looks at the balance sheet
   And member is logged out
   When member "?" visits page "community/balance-sheet"
   Then we show "Balance Sheet" with:
-  | for all | |
+  | For ALL | |
   | ASSETS  | |
   | Dollar Pool | $6,000.00 |
   | Investments | $4,500.00 |

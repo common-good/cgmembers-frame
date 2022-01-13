@@ -392,11 +392,12 @@ function formatField($k, $v, $flagsField = B_LIST) {
     if ($a = r\acct($v)) $v = $k == 'uid' ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v); else $v .= t(' (missing)'); // eg, when uid is changed
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
-  if ($v and in($k, R_DATE_FLDS)) $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
-  if (in($k, 'flags can')) {
+  if ($v and in($k, R_DATE_FLDS)) {
+    $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
+  } elseif (in($k, 'flags can')) {
     $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
     $v = "<div class=\"format-flags\">$flags</div>";
-  }
+  } elseif (is_numeric($v)) $v = "<div class=\"alignR\">$v</div>";
   return $v;
 }
 
@@ -608,201 +609,8 @@ function flagsDesc($n, $list) {
   if (!is_numeric(key($bits))) $bits = array_keys($bits);
   for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
   $res = '';
-  for ($i=0; $i <= count($bits); $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
+  for ($i=0; $i < count($bits); $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
   return $res;
-}
-
-/**
- * Return a table of deposits.
- * for example a\deposits(0, TRUE); (to help with reconciliation)
- */
-function deposits($starting = 0, $showTxIds = FALSE) {
-  global $base_url;
-  $sql = <<<EOF
-    SELECT SUM(IF(amount>0 AND txid>0, amount, 0)) AS amountIn, SUM(IF(amount>0 AND txid>0, 1, 0)) AS countIn,
-      SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
-      SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
-      deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
-    FROM txs2 WHERE amount<>0 AND created<=:NOW AND created>=:starting
-    GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
-EOF;
-
-  $ways = ray('In Out Bad', t('IN'), t('OUT'), t('BAD')); // translate, don't use strtoupper
-  $q = db\q($sql, compact('starting')); // include today's potential deposit at the top
-
-  while ($row = $q->fetchAssoc()) {
-    extract($row);
-    $firstline = TRUE;
-    foreach ($ways as $way => $wayDesc) {
-      list ($total, $count) = [u\fmtAmt(${"amount$way"}, ''), number_format(${"count$way"})];
-      if (!$count) continue;
-      if ($firstline) {
-        $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
-        $date = strftime('%Y%m%d', $deposit ?: today());
-        $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
-        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum", t('details'));
-        if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers
-          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH'));
-          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'));
-        }
-
-      } else $dateDpy = $details = '';
-
-      if ($showTxIds) {
-        $where = $type == 'bad' ? 'txid<0' : ('txid>0 AND amount' . ($type == 'in' ? '>0' : '<0'));
-        $baids = db\col('bankTxId', 'txs2_bank', "deposit=:deposit AND $where", compact('deposit'));
-        foreach ($baids as $i => $baid) $baids[$i] = btxid($baid);
-        $bankTxIds = '<td>' . join(', ', $baids) . '</td>';
-      } else {$bankTxIds = '';}
-
-      $deposits[] =<<<EOF
-<tr>
-  <td>$dateDpy</td>
-  <td>$wayDesc</td>
-  <td>$count</td>
-  <td>$total</td>
-  <td>$details</td>
-  $bankTxIds
-</tr>
-EOF;
-      $firstline = FALSE;
-    }
-  }
-  $deposits = join("\n", nn($deposits) ?: []);
-  $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th>');
-  $header .= $showTxIds ? t('<th>Bank Tx IDs</th>') : '';
-  return <<<EOF
-<table id="deposits">
-<tr>$header</tr>
-$deposits
-</table>
-EOF;
-
-}
-
-/*
-    foreach (['In'=>t('IN'), 'Out'=>t('OUT'), 'Bad'=>t('BAD')] as $way => $wayDesc) {
-      list ($total, $count) = [u\fmtAmt(${"amount$way"}, ''), number_format(${"count$way"})];
-      if (!$count) continue;
-      $details = w\btn("/sadmin/deposit-details/way=$way&date=$deposit&total=$total&count=$count", t('details'), w\away());
-      if ($way == 'Out') {
-        list ($WAY, $date) = [t('OUT'), strftime('%Y%m%d', $deposit ?: today())];
-        $details = w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach$WAY-$date.csv")) . ' ' . $details;
-      }
-
-  list ($func, $label) = ($way != 'Out' or ($deposit > 0 and $deposit < strtotime('1/10/2017')))
-  ? ['checks', t('checks')] 
-  : ['achs', t('ACHes')];
-  $deposits[] =<<<EOF
-  <tr>
-  <td>$dateDpy</td>
-  <td>$wayDesc</td>
-  <td>$count</td>
-  <td>$total</td>
-  <td>$details &nbsp; <a href="$base_url/sadmin/$func/way=$way&date=$deposit&mark=0" target="_blank">$label</a></td>
-  </tr>
-EOF;
-  }
-  }
-  $deposits = @$deposits ? join("\n", $deposits) : '<tr><td colspan=5>No deposits</td></tr>';
-  $header = '<tr><th>Deposit</th><th></th><th>Count</th><th>Total</th><th></th></tr>';
-  return <<<EOF
-  <table id="deposits">
-  $header
-  $deposits
-  </table>
-EOF;
-  }
-*/
-
-/**
- * Print a check
- * @param Pdf $ck: the Check object to place the check in.
- * @param int $pos: what position on the current page (1, 2, or 3)
- * @param assoc $tx: relevant fields from the txs2_bank record
- * @param bool $mark: whether to set the deposit date for each relevant transfer, in txs2_bank
- */
-function printCheck(&$ck, $pos, $tx, $mark) {
-  extract(just('xid txid created payee amount deposit bankAccount', $tx));
-  $escrow = 'USkk' . ESCROW_ROUTING . ($amount > 0 ? ESCROW_IN : ESCROW_OUT);
-
-  $a = r\acct($payee);
-  $bankAccount = u\decry('V', $bankAccount);
-  if ($bankAccount != $a->bankAccount) {
-    r\tellAdmin(t('bank account misMatch in deposit (xid=%xid): %b1 (now), %b2 (deposit)', 'xid b1 b2', $xid, $a->bankAccount, $bankAccount));
-    if ($a->bankAccount) {
-      list ($b2, $bankAccount) = [$bankAccount, $a->bankAccount];
-      if (!$b2) db\update('txs2_bank', compact(ray('txid bankAccount')), 'txid'); // fix it (else save for analysis)
-    }
-  } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
-  
-  list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
-    //    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
-    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, BANK_DBA, $escrow] // from bank to escrow
-    : [PROJECT . ' (' . CGF_LEGALNAME . ')', CGF_POSTALADDR, CGF_PHONE, $escrow, $a->legalNameDpy, $bankAccount]; //e2b
-  $memo = $amount > 0 ? t('for %RCREDITS') : t('for DEPOSIT to account #') . substr($toAcct, 4 + 9);
-
-  list ($signature, $belowLine) = $amount > 0 
-    ? [t('Pre-authorized Check'), t('No Signature Required')] 
-    : ['', SIGNATORY];
-  
-  list ($W, $H) = array($ck->pageW, $ck->pageH);
-  $lineH = $ck->lineH; // standard line height in inches
-  $m = .25; // left/right margins
-  $mt = ($pos - 1) * CHECK_HEIGHT + $m; // top margin
-
-  $phone = u\fmtPhone($phone);
-  $routing = substr($fromAcct, 4, 9);
-  $account = substr($fromAcct, 4 + 9);
-
-  $bankInfo = db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-  if (!$bankInfo) return r\tellAdmin(t('Skipped transaction #%xid for %nm (no bank info)', 'xid nm', $xid, $a->fullName));
-
-  extract($bankInfo, EXTR_PREFIX_ALL, 'b');
-  if (strlen($b_zip) > 5) $b_zip = substr($b_zip, 0, 5) . '-' . substr($b_zip, 5);
-  if (!$prefix = db\get('id', 'r_transit', 'location=:location', ray('location', "$b_city, $b_state"))) {
-    $prefix = db\get('id', 'r_transit', 'location=:b_state', compact('b_state'));
-    u\EXPECT((bool) $prefix, 'no transit prefix');
-  }
-  $transit = $prefix . '-' . substr($routing, 4, 4) . '/' . substr($routing, 0, 4);
-  
-  $amount = abs($amount);
-  $dollars = floor($amount);
-  $cents = round(100 * ($amount - $dollars)) ?: t('NO');
-
-  $ck->say("<b>$fromName</b><br><small>$addr<br>$phone</small>", $m, $y = $mt, $W - $m);
-  $ck->say("$transit<br>$account", $W / 2, '', $W / 4, '', '8', 'C');
-  $ck->say("<b>$xid</b>", -$W / 4, '', -$W / 4 - $m, '', '', 'R');
-
-  $ck->say('DATE:', 6.7, $y += .4, '', .25, '8');
-  $ck->say(u\fmtDate($deposit ?: now()), 7.1, '', '', .25);
-
-  $ck->say('Pay to the<br>Order of', $m, $y += .4, '', 2 * $lineH, '8;CAPS');
-  $ck->say("  $toName", $m + .7, $y + $lineH, 5.9, $lineH, '', '', 'BR');
-  $ck->say('$ ' . number_format($amount, 2), 7, '');
-  
-  $ck->say(u\n2english($dollars) . " and $cents/100", $m, $y += .65, 6.9, $lineH, '', '', 'B');
-  $ck->say('DOLLARS', $m + 6.9, '', '', $lineH, '8');
-  //  $ck->Image(R_ROOT . '/images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
-  
-  $ck->say("<b>$b_name</b><br><small>$b_address<br>$b_city, $b_state $b_zip</small>", $m + 1, $y += .4, '', '', '9');
-  
-  $ck->say($signature, $W - $W / 3, $y + .35, $W / 3 - $m, $lineH, 'CAPS', 'C', 'B'); // $y+ not +=
-  $ck->say($belowLine, '', $y + .35 + $lineH, $W / 3 - $m, $lineH, '8;CAPS', 'C');
-  //  if (!$signature) $ck->Image(R_ROOT . '/images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
-  
-  $ck->say('MEMO:', $m, $y += .5, '', $lineH, '8');
-  $ck->say($memo, $m + .5, '');
-
-  // clear band must be at least .625" high, at least 0.1875" from bottom (so leave more). Micr should be 12pt
-  //  if ($a->id != 26742000000042) {
-  //    $ck->say("A{$routing}A {$account}C $xid", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR 12');
-  //  } else 
-  $account = str_replace('-', 'D', $account); // show dashes properly
-  $ck->say("C000{$xid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
-  //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
-  
-  if (!$deposit and $mark) db\update('txs2_bank', ray('deposit txid', today(), $txid), 'txid');
 }
 
 /*

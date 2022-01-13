@@ -1760,12 +1760,13 @@ function isName($value) {return preg_match('/^[ \\x{00c0}-\\x{01ff}a-zA-Z0-9\,\.
 function isAcct($acct) {return (is_object($acct) and get_class($acct) == 'CG\\Acct');}
 function hug($s, $arms = '()') {return mb_substr($arms, 0, 1) . $s . mb_substr($arms, -1, 1);} // deprecated
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
-function fmtDate($time = NULL, $numeric = FALSE) {return $time === '' ? '' : strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
-function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, now())));}
+function fmtDate($time = NOW, $numeric = FALSE) {return $time === '' ? '' : strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', $time);}
+function fmtTime($time = NOW) {return strtolower(strftime('%I:%M%p', $time, ));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', nn($n));}
-function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', nn($time, now())));}
-  function mdt1($time = NULL) {return monthDay1($time);}
+function monthDay1($time = NOW) {return strtotime(strftime('1%b%Y', $time));}
+function mdt1($time = NOW) {return monthDay1($time);}
+function qtrDt($time = NOW) {return mktime(0, 0, 0, floor((date('n', $time) - 1) / 3) * 3 + 1, 1, date('Y', $time));}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}
 function preray($prefix, &$r0) {u\EXPECT(is_array($prefix) and (is_array($r0) or is_object($r0)), 'badray');$r = $prefix + (array) $r0; $r0 = is_object($r0) ? (object) $r : $r;}

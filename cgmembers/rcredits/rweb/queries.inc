@@ -14,7 +14,7 @@ use CG\Util as u;
  */
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
-$gifts = "tm.amount * IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1)))";
+$gifts = r\annualAmt();
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
@@ -25,8 +25,7 @@ $queries = [
       LEFT JOIN (SELECT uid1 AS uid, amt FROM txs_noreverse WHERE :T_FOODY AND created>:NOW-:MONTH_SECS) t USING(uid)
       GROUP BY uid
     ) x",
-// SUM(active) AS active, 
-
+  
   2 . t('Most Trusted Members') => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC, fullName",
     

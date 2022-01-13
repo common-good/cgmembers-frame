@@ -20,7 +20,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   if (!$bank) $bank = BANK; // links give us '' instead of omitted
   list ($destName, $destNum, $originPrefix, $cutoff, $maxAch) = explode(', ', BANK_DATA[$bank]); // not ray() because of colons in the data
   $sp = ' '; // filler for routing number in header
-  $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility
+  $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility (blank for browser upload, "1" for direct-from-program upload)
   $reserve = ''; // leave reserved fields empty
   $count = $hash = $credits = $debits = 0;
 
