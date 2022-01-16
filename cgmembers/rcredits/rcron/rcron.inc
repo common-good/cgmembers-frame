@@ -307,7 +307,7 @@ function recur($template) {
     $info = compact(ray('amount purpose created')) + ray('explicit cat completed recursId deposit gift', FALSE, BCAT_GIFT, now(), $id, 0, TRUE);
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
-    be\thanks(FALSE, $pid, $amount, $period, $periods, $coA->id, FALSE);
+    be\thanks('fbo', FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];

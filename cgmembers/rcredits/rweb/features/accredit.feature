@@ -58,10 +58,10 @@ Scenario: A member tries to buy credit with credit
   | portion   | 1 |
   | amtMax    | 3 |
   | purpose   | any purchase |
-  And a button code for:
+  And button code "BUTTONCODE" for:
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 100.00 |
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | pass |*
   | .ZZA | a1   |
   Then count "txs" is 1

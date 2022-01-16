@@ -241,6 +241,7 @@ EOF
   'finish get card' => t('<p>To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Get Card". Then complete the remaining steps one by one as they appear.</p>'),
 //  'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'gift thanks' => t('<p>Thank you so much for your donation to %coName! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
+  'purchase thanks' => t('<p>Your payment to %coName is complete!</p>'), // used in be\thanks()
   'check it out' => t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),
   'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
@@ -260,7 +261,7 @@ EOF
   'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),
   'sent message' => t('Your message has been sent to %fullName.'),
   'pass saved' => t('Your new password has been saved.'),
-  'fbo cc fee' => t('credit card donation fee (%FBO_CC_FEE%)'),
+  'cc fee' => t('credit card processing fee (%CC_FEE%)'),
     
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',
@@ -304,6 +305,7 @@ EOF
   'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
   
   // error messages
+  'no paypal cancel' => t('We apologize. this form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
   'button expired' => t('That button has expired.'),
   'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),
   'field too long' => t('Field %field is too long (it must be no more than %max characters).'),

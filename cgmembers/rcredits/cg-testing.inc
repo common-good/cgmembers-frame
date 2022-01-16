@@ -562,7 +562,7 @@ function gotACH($flnm, $rows) {
  * Minimum parameters: main, agent (both are qids -- at least one must be local)
  */
 function doRelations($info) {
-  include_once __DIR__ . '/admin/admin-forms.inc';
+  include_once __DIR__ . '/forms/printcard.inc';
   global $testOnly, $memberIdCalled;
 
   //  t\fixData($info);
@@ -1303,6 +1303,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   global $fieldErr;
   global $testConfirmation; // confirmation message output, if any
   
+  fixTestVars($page);
   $values = nni($values, 0, []);
   global $testOp; $testOp = nni($values, 'op');
 

@@ -352,6 +352,8 @@ function doit(what, vs) {
     
   case 'cgbutton':
     var cgPayCode;
+    var ccOk = $('.form-item-ccOk input');
+    ccOk.click(function () {cgbutton();});
 
     $('#edit-item').focus();
     $('.form-item-button input').click(function () {cgbutton();});
@@ -370,7 +372,7 @@ function doit(what, vs) {
     $('.form-item-for input:checked').click(); // this also triggers getCGPayCode() and cgbutton()
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
-
+    
     function getCGPayCode() { // get a CGPay buttonn code
       post('cgPayCode', {
         item:$('#edit-item').val(),
@@ -398,6 +400,8 @@ function doit(what, vs) {
       $('.form-item-example').toggle(!isButton);
       
       var url = baseUrl + '/' + vs['page'];
+      if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
+      // to make this a cc donation to a non-sponsored member business, change /cgpay to /community/donate when the gift radio button is active
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
@@ -414,7 +418,9 @@ function doit(what, vs) {
       $('.form-item-example .control-data').html(html);
     }
     break;
-    
+
+  case 'cc': hideComment(); break;
+  
   case 'donate':
     $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideComment();

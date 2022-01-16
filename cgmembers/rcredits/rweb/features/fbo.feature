@@ -86,9 +86,9 @@ Scenario: A non-member donates to a sponsored member
   | coName       | Our Pub         |
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
-  | gift         | $100            |
-  And we email "fbo-report" to member "c@" with subs:
-  | gift         | $100                 |**
+  | amount       | $100            |
+  And we email "gift-report" to member "c@" with subs:
+  | amount       | $100                 |**
   | date         | %mdY                 |
   | donor        | Dee Forn             |
   | donorAddress | 4 Fr St, Fton, MA 01004 |
@@ -193,10 +193,10 @@ Scenario: A sponsored member views their transaction history
   | Channel     | Web |
 
 Scenario: A non-member donates to a sponsored organization by credit card
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member "?" visits "community/donate/code=TESTCODE"
+  When member "?" visits "community/donate/code=BUTTONCODE"
   Then we show "Donate to Our Pub" with:
   | Donation    |
   | Name        |
@@ -209,9 +209,9 @@ Scenario: A non-member donates to a sponsored organization by credit card
 
   Given next captcha is "37"
   And var "CODE" encrypts:
-  | pid | amount | period | coId   |*
-  | 1   | 123.00 | once   | NEWZZC |
-  When member "?" completes "community/donate/code=TESTCODE" with:
+  | type | item     | pid | period | amount | coId   |*
+  | fbo  | donation | 1   | once   | 123.00 | NEWZZC |
+  When member "?" completes "community/donate/code=BUTTONCODE" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
@@ -226,19 +226,19 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose    | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
-  | 4   | 1   | .ZZC       | cgf   | 3.69   | fbo cc fee | %E_USD_FEE |
+  | eid | xid | payer      | payee | amount | purpose  | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor  | %E_AUX     |
+  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_USD_FEE |
   And we email "fbo-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
   | coName       | Our Pub         |
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
-  | gift         | $123            |
-  And we email "fbo-report" to member "c@" with subs:
-  | gift         | $123                 |**
+  | amount       | $123            |
+  And we email "gift-report" to member "c@" with subs:
+  | amount       | $123                 |**
   | date         | %mdY                 |
   | donor        | Zee Zot              |
   | donorAddress | Greenfield, MA 01301 |
@@ -250,11 +250,11 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | coName | Our Pub |**
 
 Scenario: A non-member donates to a sponsored organization by ACH
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret |*
   | .ZZC    | Cc3    |
   And next captcha is "37"
-  When member "?" completes "community/donate/code=TESTCODE" with:
+  When member "?" completes "community/donate/code=BUTTONCODE" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
   Then these "people":
@@ -274,9 +274,9 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | coName       | Our Pub         |
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
-  | gift         | $123            |
-  And we email "fbo-report" to member "c@" with subs:
-  | gift         | $123                 |**
+  | amount       | $123            |
+  And we email "gift-report" to member "c@" with subs:
+  | amount       | $123                 |**
   | date         | %mdY                 |
   | donor        | Zee Zot              |
   | donorAddress | Greenfield, MA 01301 |
@@ -288,10 +288,10 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | coName | Our Pub |**
 
 Scenario: A member donates to a sponsored organization
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member ".ZZA" completes "community/donate/code=TESTCODE" with:
+  When member ".ZZA" completes "community/donate/code=BUTTONCODE" with:
   | amount | comment  | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
@@ -308,9 +308,9 @@ Scenario: A member donates to a sponsored organization
   | coName       | Our Pub         |
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
-  | gift         | $123 monthly    |
-  And we email "fbo-report" to member "c@" with subs:
-  | gift         | $123 monthly         |**
+  | amount       | $123 monthly    |
+  And we email "gift-report" to member "c@" with subs:
+  | amount       | $123 monthly         |**
   | date         | %mdY                 |
   | donor        | Abe One              |
   | donorAddress | 1 A, A, AK           |
@@ -339,9 +339,9 @@ Scenario: A member pays a sponsored organization
   | coName       | Our Pub         |
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
-  | gift         | $123 monthly    |
-  And we email "fbo-report" to member "c@" with subs:
-  | gift         | $123 monthly         |**
+  | amount       | $123 monthly    |
+  And we email "gift-report" to member "c@" with subs:
+  | amount       | $123 monthly         |**
   | date         | %mdY                 |
   | donor        | Abe One              |
   | donorAddress | 1 A, A, AK           |

@@ -111,7 +111,7 @@ function badZip(&$z, $country = US_COUNTRY_ID) {
   $z = preg_replace('/[^A-Za-z0-9\\-]/', '', $z);
   $pattern = $country == US_COUNTRY_ID ? '/^\\d{5}(\\-\\d{4})?$/' // United States
   : ($country == CA_COUNTRY_ID ? '/^(?!.*[DFIOQU])[A-VXY]\\d[A-Z] ?\\d[A-Z]\\d$/' // Canada
-  : '/*/' ); // allow any postal code for other countries, for now
+  : '/.*/' ); // allow any postal code for other countries, for now
   return (!preg_match($pattern, $z)) ? 'bad zip' : FALSE;
 }
 

@@ -15,7 +15,7 @@ const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount port
 const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations';
 const RULE_FLDS = BOTH_FLDS . ' template code';
 const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code tnm url flds';
-const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code';
+const NULL_FLDS = 'payer payee amount from to purpose useMax amtMax end template code';
 const ZERO_FLDS = 'amount portion minimum start';
 const RULES_URL = 'sadmin/rules/id';
 const TIMED_URL = 'sadmin/timed/id';
@@ -74,11 +74,11 @@ function formRules_validate($form, &$sta) {
 
   foreach (ray(ZERO_FLDS) as $k) if (isset($$k) and !$$k) $$k = 0;
   
-  foreach (ray('from to') as $k) if (!in($$k, [-1, -2])) {
-    if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $$k, $k);
+  foreach (ray('from to') as $k) if (!in($v0 = $$k, [MATCH_PAYER, MATCH_PAYEE, UID_BANK_OUT])) {
+    if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $v0, $k);
   }
-  foreach (ray('payer payee') as $k) if ($$k and !is_numeric($$k)) {
-    if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $$k, $k);
+  foreach (ray('payer payee') as $k) if ($v0 = $$k and !is_numeric($$k)) {
+    if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $v0, $k);
   }
   
   foreach (ray('payerType payeeType') as $k) $$k = ray(REF_LIST)[$$k];

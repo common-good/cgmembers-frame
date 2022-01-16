@@ -222,6 +222,7 @@ function menu($submenu = '') {
     'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY], // deprecated
     'authcode' => ['call', t('Supply a one-use auth code'), '1', ANY, 'authcode'], // deprecated
     'cgpay' => ['call', t('Pay With %RCREDITS'), 'CGPay', ANY],
+    'ccpay' => ['call', t('Pay By Credit Card'), 'CCPay 1', ANY],
     'cgpay-code' => ['call', t('Supply a CGPay button code'), '', ANY, 'code'],
     'show-qr' => ['call', t('Show My QR Code'), 'ShowQr', 'read'],
     'scan-qr' => ['call', t('Scan a QR Code'), 'ScanQr', ANY],
