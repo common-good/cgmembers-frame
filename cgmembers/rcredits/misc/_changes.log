@@ -1,3 +1,13 @@
+2022-01-06 feature/cc4all
+. any member business can now accept credit card payments (created with the Create A CGPay Button page)
+. refactored donate.inc to share credit card code with ccpay.inc
+. changed handling of test vars to be more consistent and reliable
+. fixed bug in u\badZip()
+. Automatic Payments page now shows admin the record IDs
+. fixed bug in Rules/Timed editor
+. renamed rWeb gift feature to donate
+. added great debugging aids to rWeb returnUrl step function
+
 2022-01-13 feature/sweep
 . admin can now create a sweep rule, for example to send a company's balance to their bank weekly
 . fixed right-alignment of records in showRecords, for w\crud()

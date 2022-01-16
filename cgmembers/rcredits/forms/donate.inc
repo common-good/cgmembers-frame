@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once R_ROOT . '/forms/ccpay.inc';
+
 /*
   Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account.
 */
@@ -16,16 +18,17 @@ function formDonate($form, &$sta, $args = NULL) {
   
   $op = nni($args, 'op');
 
-  if ($op == 'done') return completeCCGift($args);
-  if ($op == 'cancel') return softErr('We apologize. Our donation form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.');
+  if ($op == 'done') return completeCCPayment($args);
+  if ($op == 'cancel') return softErr(tr('no paypal cancel'));
 
   if ($code = nni($args, 'code')) { // donating to a sponsored org
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
-    extract(just('coA s_amount', $ray));
+    extract(just('coA s_amount', $ray, NULL));
     if (!nn($coA)) return; // softErr
   } else $coA = r\acct(CGID); // vanilla CG donation page
   
   jsx('donate');
+  
   $oftens = array_reverse(r\recurRay(TRUE));
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
   $recursId = $amtChoice = NULL;
@@ -58,12 +61,10 @@ function formDonate($form, &$sta, $args = NULL) {
   }
 
   $options = item($options);
-  if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin', '/community/donate?' . $_SERVER['QUERY_STRING'])));
     
   $logo = logoFld($coA);
   $title = t('Donate to ') . $coA->bestName;
 
-  $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft(nn($s_amount)));
   $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($isCG ? PER_YEAR : PER_1), $oftens);
   $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
   $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
@@ -72,12 +73,6 @@ function formDonate($form, &$sta, $args = NULL) {
   $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
   
   if (!$mya) {
-    $fullName = textFld(REQ . t('Name:'), [t('Your full name'), t('Your full name, properly capitalized')]);
-    $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
-    $email = emailFld(REQ . t('Email:'), [t('Email')]);
-    $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
-    $zip = zipFld(nn($zip));
-    
     $payHow = radiosFld(REQ . t('Pay By:'), '', dft(-1), [t('ACH (easier and saves us 3% in CC fees)'), t('Credit Card <span>(cannot automatically repeat)</span>')]);
     $coverCCFee = boxFld('coverCCFee', NBSP, t('Check here to cover the credit card processing fees also.'), 0);
     
@@ -86,168 +81,31 @@ function formDonate($form, &$sta, $args = NULL) {
     $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
     $isSavings = radiosFld(t('Type:'), '', dft(-1), [t('Checking'), t('Savings')]);
     $ach = fieldSet('ach', compact(ray('checkHint routingNumber bankAccount isSavings')), BARE);
-  } else $fullName = $phone = $email = $country = $zip = $payHow = $coverCCFee = $ach = NULL;
-  
-  $comment = areaFld(t('Comment:'));
-  list ($cq, $ca) = $mya ? [NULL, NULL] : w\captcha();
-  $coId = hidFld($coA->id);
-  $fsFee = hidFld($fsFee);
-  $noteSuffix = suffix(lnk('', t('Add comment')));
+  } else $payHow = $coverCCFee = $ach = NULL;
 
-  $form = compact(ray('logo title subtext amtChoice amount options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId'));
+  $fsFee = hidFld($fsFee);
+
+  $form = compact(ray('logo title subtext amtChoice options period honor coverFSFee payHow coverCCFee ach fsFee recursId'));
+  $form = payFlds(t('Donation:'), $coA, t('donation'), '', nn($s_amount), $form);
+  if (!nni($form, 'amount')) return $form; // error
+  
+  $noteSuffix = suffix(lnk('', t('Add comment')));
   $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : ray('submit', submit(t('Donate'), '', '', $noteSuffix));
+
   return cgForm($form);
 }
 
-function formDonate_validate($form, &$sta) {
-  $mya = w\eLinkAcct($sta); 
-  extract(just($flds = 'amount fullName phone email zip country coId', $sta['input'], NULL));
-
-  if ($mya and $coId == CGID) return w\checkAmtChoice($sta);
-
-  if ($err = u\badAmount($amount, '>0')) return say($err, 'amount'); // fix amount
-  if (!$mya) {
-    if ($err = u\badName($fullName)) return err($err, ['field' => 'fullName'], 'fullName');
-    $fullName = u\normalizeCase($fullName);
-    
-    if ($err = u\badPhone($phone)) return err($err, 'phone');
-    if (!emailOkay($email, TRUE)) return; // allow duplicate emails so a member can donate with CC
-    if ($err = u\badZip($zip, $country)) return err($err, 'zip');
-    if (!checkBankAccount($sta)) return;
-    if (badCaptcha($sta)) return;
-  }
-
-  u\preray(compact(ray($flds)), $sta['input']);
-}
+function formDonate_validate($form, &$sta) {return formCCPay_validate($form, $sta);}
 
 function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
-  global $testReturnUrl;
-
   if ($mya) return submitCG($sta);
-  
-  $dbFields = 'fullName email notices phone zip country city state notes source';
-  extract(just($input = $dbFields . ' amount period recursId honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
-  
-  $coA = r\acct($coId);
-  list ($city, $state) = r\zipCity($zip);
-  $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? .03 : 0));
 
-  $amount = round($amount + $feeCovered, 2);
-  $notices = NOTICE_NONE;
+  extract(just('amount fsFee payHow coverCCFee coverFSFee', $sta['input'], NULL));
+  $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? CC_FEE / 100 : 0));
+  $sta['amount'] = round($amount + $feeCovered, 2);
 
-  $comment = u\honorDesc($honor) . u\unite($honored, $comment, '/');
-  $notes = $comment ? r\stampNote($comment) : '';
-
-  $source = t('Donation FBO %nm (by %how)', 'nm how', $coA->bestName, $payHow ? t('cc') : t('ach'));
-  $reportInfo = compact(ray($input . ' feeCovered')); // include all fields in what we tell admin
-
-  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
-  
-  $DBTX = \db_transaction();
-  $pid = db\insert('people', $info, 'pid');
-  
-  $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
-  
-  if ($payHow == 0) { // bank transfer (the default)
-    $bankAccount = "USkk$routingNumber$bankAccount";
-    addToTxs2($amount, $coA, $period, $pid, $honorId, $bankAccount, $isSavings);
-    r\tellAdmin($source, $reportInfo);
-    unset($DBTX);
-    return be\thanks(FALSE, $pid, $amount, $period, 1, $coA->id, TRUE);
- 
-  } else { // credit card donation
-    $code = u\cryRay(ray('pid amount period coId', $pid, number_format($amount, 2, '.', ''), $period, $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests, but omit commas so it's still a number)
-    $return = $testReturnUrl = BASE_URL . "/community/donate/op=done&code=$code";
-    u\EXPECT(strlen($return) <= 1024, 'cc return url too long');
-    $cancel_return = str_replace('=done', '=cancel', $return);
-
-    $cmd = '_donations';
-    list ($first_name, $last_name) = u\parseName($fullName);
-    $no_shipping = 1;
-    $rm = 0; // 0 for GET, 2 for POST
-    $business = 'info@CommonGood.earth'; // CGF_EMAIL
-    $item_name = t('for %what', 'what', $coA->id == CGID ? t('general support') : $coA->bestName);
-    $data = compact(ray('cmd business amount first_name last_name email zip item_name return cancel_return no_shipping rm'));
-  //  if ($permo) $data += ray('a3 t3 p3 src', $amount, 'M', 1, 1); // t3=DWMY, p3=periods, src=1 for recur
-  //  if ($permo) unset($data['amount']);
-    $url = 'https://www.paypal.com/donate';
-    r\tellAdmin($source, $reportInfo + compact('return')); // include clickable return parameter in case the donation goes through but PayPal doesn't return
-    unset($DBTX);
-    return u\postnGo($url, $data); // does not return (until redirected from PayPal)
-  }
-}
-
-/**
- * Complete the CC donation accounting, upon return from PayPal.
- */
-function completeCCGift($args) {
-  extract(just('code', $args, NULL));
-
-  if (!$code or !$ray = u\decryRay($code)) return softErr(t('That code is flawed.'));
-  
-  extract(just('pid amount period coId honorId', $ray, NULL));
-  if (!($pid and $amount and $period and $coId)) return softErr(t('That code is missing a parameter.'));
-  $coA = r\acct($coId);
-    
-  $fullName = db\get('fullName', 'people', compact('pid'));
-  
-  $DBTX = \db_transaction();
-  $xid = addToTxs2($amount, $coA, $period, $pid, $honorId);
-  be\txEntryPair($txes, round($amount * FBO_CC_FEE / 100, 2), [$coA->id, CGID], tr('fbo cc fee'), NULL, E_USD_FEE);
-  be\insertTxes($txes, $xid);
-  unset($DBTX);
-  
-  r\tellAdmin(t('CC donation complete (FBO %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
-  
-  return be\thanks(FALSE, $pid, $amount, $period, 1, $coId, TRUE);
-}
-
-
-/**
- * Return the parameters in a CGPay link
- */
-function getCGPayArgs($args) {
-  global $testCode;
-
-  foreach ($args as $k => $v) if (!in($k, 'q code')) {
-    if (strlen($v) > CGPAY_MAXLEN) return exitErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
-    if (!in($k, CGPAY_VARS2)) return exitErr(t('"%k" is not a parameter. Check your spelling?', compact('k')));
-  }
-
-  if ($err = missingArgs($args, 'code')) return exitErr($err);
-  $code = $args['code'];
-  if (test() and $code == 'TESTCODE') $code = $testCode;
-  if (!$ray = u\decryRay($code)) return exitErr(t('The "code" parameter is not valid.'));
-  if ($dups = just($args, $ray)) return exitErr(t('Parameter "%k" attempts to override that parameter as encoded in "code".', 'k', $dups[0]));
-
-  foreach (ray(CGPAY_VARS) as $k) u\setDft($ray[$k], NULL); // make sure all possible parameters get extracted from return, even if not set
-  foreach (ray(CGPAY_VARS2) as $k) $ray["s_$k"] = nni($args, $k, NULL); // optional "suggested" parameters (amount, id, item, name) except for request
-  extract(just('expires account s_amount', $ray));
-  if ($expires and $expires < now()) return softErr(tr('button expired'));
-  $ray['coA'] = $coA = r\acct($account);
-  u\EXPECT($coA, 'missing account in code!');
-  if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));
-  return $ray;
-}
-
-/**
- * Add an "outer" record to txs2 for the donation.
- * @return the outer transaction record ID (xid)
- */
-function addToTxs2($amount, $coA, $period, $pid, $honorId = NULL, $bankAccount = NULL, $isSavings = NULL) {
-  $recursId = NULL;
-  if ($period != PER_1) {
-    if ($bankAccount) { // allow recurring donation only by ACH (not CC)
-      $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, t('donation'), PER_1));
-    } else w\say('no cc recur');
-  }
-  list ($purpose, $explicit, $cat, $completed, $gift) = [t('donation'), TRUE, BCAT_GIFT, now(), TRUE];
-  $deposit = $bankAccount ? 0 : now();
-  $info = compact(ray('purpose pid completed deposit explicit cat bankAccount isSavings recursId'));
-  $xid = be\createUsdTransfer($coA, $amount, $info);
-  if ($id = $honorId) db\update('r_honors', compact(ray('id xid')), 'id');
-  return $xid;
+  return submitNonMemberPayment($sta, 'fbo', compact('feeCovered'));
 }
 
 /**
@@ -283,7 +141,7 @@ function submitCG($sta) {
 
     $nm = $mya->fullName;
     if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    be\thanks(TRUE, $mya->id, $amount, $period, 1, $coId, !$mya->stepCount());
+    be\thanks('fbo', TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();

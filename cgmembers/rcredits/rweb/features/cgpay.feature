@@ -15,10 +15,10 @@ Setup:
   And member is logged out
 
 Scenario: A member clicks a CGPay button
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23.50  |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
   | Pay        | 23.50 to Our Pub |
   | For        | food |
@@ -26,17 +26,17 @@ Scenario: A member clicks a CGPay button
   | Password   |  |
 
 Scenario: A member clicks an expired CGPay button
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | item | amount | expires |*
   | .ZZC    | Cc3    | food | 23.50  | %now-1d |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we say "error": "button expired"
 
 Scenario: A member submits a CGPay button payment with account ID
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23     |
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | pass |*
   | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -47,10 +47,10 @@ Scenario: A member submits a CGPay button payment with account ID
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
 
 Scenario: A member clicks a CGPay button with variable amount
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | item |*
   | .ZZC    | Cc3    | food |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
   | Pay        | to Our Pub |
   | For        | food |
@@ -58,10 +58,10 @@ Scenario: A member clicks a CGPay button with variable amount
   | Password   |  |
 
 Scenario: A member submits a CGPay button payment with account ID and chosen amount
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | item |*
   | .ZZC    | Cc3    | food |
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | amount | pass |*
   | .ZZA | $23.45 | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -69,10 +69,10 @@ Scenario: A member submits a CGPay button payment with account ID and chosen amo
   | paid | Our Pub   | $23.45 |
 
 Scenario: A member clicks a button to buy 50% store credit
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 23.50  |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
   | Pay        | 23.50 to Our Pub |
   | For        | store credit |
@@ -80,17 +80,17 @@ Scenario: A member clicks a button to buy 50% store credit
   | Password   |  |
   
 Scenario: A member clicks a button to buy store credit for a different amount
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | for    | amount | credit |*
   | .ZZC    | Cc3    | credit | 23     | 30     |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
   | Pay        | 23.00 to Our Pub |
   | For        | $30 store credit |
   | Account ID |  |
   | Password   |  |
   
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | pass |*
   | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -126,10 +126,10 @@ Scenario: A member cancels their purchase of store credit
   | $23    | Abe One  |
 
 Scenario: A member types account ID to buy 50% store credit
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 23     |
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | pass |*
   | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -167,10 +167,10 @@ Scenario: a member redeems store credit
   |  1 | %now |
 
 Scenario: A member clicks a button to buy a gift of store credit
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | for    | amount | for  |*
   | .ZZC    | Cc3    | credit | 23.50  | gift |
-  When member "?" visits page "cgpay?code=TESTCODE"
+  When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
   | Pay          | 23.50 to Our Pub |
   | For          | store credit |
@@ -179,10 +179,10 @@ Scenario: A member clicks a button to buy a gift of store credit
   | Password     | |
 
 Scenario: A member types account ID to buy a gift of store credit
-  Given a button code for:
+  Given button code "BUTTONCODE" for:
   | account | secret | for      | amount | for  |*
   | .ZZC    | Cc3    | credit50 | 23     | gift |
-  When member "?" confirms "cgpay?code=TESTCODE" with:
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | for           | qid           | pass |*
   | b@example.com | a@example.com | a1   |
   Then we say "status": "success title|report tx" with subs:

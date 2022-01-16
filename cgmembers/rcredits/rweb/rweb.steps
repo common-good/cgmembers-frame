@@ -60,13 +60,13 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     MAKE donate AMemberDonates
+ *     MAKE donate AMemberMakesARecurringDonation
+ *     MAKE donate AMemberMakesANewRecurringDonation
+ *     MAKE donate AMemberMakesANewRecurringDonationOfZero
+ *     MAKE donate ACompanyMakesARecurringDonation
+ *     MAKE donate AMemberDonatesWithInsufficientFunds
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     MAKE gift AMemberDonates
- *     MAKE gift AMemberMakesARecurringDonation
- *     MAKE gift AMemberMakesANewRecurringDonation
- *     MAKE gift AMemberMakesANewRecurringDonationOfZero
- *     MAKE gift ACompanyMakesARecurringDonation
- *     MAKE gift AMemberDonatesWithInsufficientFunds
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
  *     MAKE invest AMemberBuysAStakeInTheClub
@@ -253,10 +253,11 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE custstatement Setup
  *     MAKE dashboard Setup
  *     MAKE demographics Setup
+ *     MAKE donate Setup
  *     MAKE download Setup
  *     MAKE fbo Setup
  *     MAKE flow Setup
- *     MAKE gift Setup
+ *     MAKE guest Setup
  *     MAKE investinterest Setup
  *     TEST investinterest ANonmemberExpressesInterest
  *     MAKE invest Setup
@@ -325,17 +326,18 @@ function members($list) {return t\members($list);}
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST donate AMemberDonates
+ *     TEST donate AMemberMakesARecurringDonation
+ *     TEST donate AMemberMakesANewRecurringDonation
+ *     TEST donate ACompanyMakesARecurringDonation
+ *     TEST donate AMemberDonatesWithInsufficientFunds
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST gift ACompanyMakesARecurringDonation
- *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
@@ -386,11 +388,11 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     TEST donate AMemberMakesANewRecurringDonation
+ *     TEST donate AMemberMakesANewRecurringDonationOfZero
+ *     TEST donate AMemberDonatesWithInsufficientFunds
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST gift AMemberMakesANewRecurringDonationOfZero
- *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest TheClubAddsAProposedInvestment
@@ -453,6 +455,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -562,14 +565,15 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
+ *     TEST donate AMemberDonates
+ *     TEST donate AMemberMakesANewRecurringDonation
+ *     TEST donate AMemberMakesANewRecurringDonationOfZero
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST flow AJointAccountSlaveMemberDraws
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST gift AMemberMakesANewRecurringDonationOfZero
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST investinterest AMemberExpressesInterest
  *     TEST investinterest ANonmemberExpressesInterest
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -759,13 +763,14 @@ function withoutOptions($options) {
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST dashboard Setup
  *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
+ *     MAKE donate Setup
  *     TEST download Setup
  *     TEST fbo Setup
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
  *     MAKE flow Setup
- *     MAKE gift Setup
+ *     TEST guest Setup
  *     MAKE invest Setup
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
  *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
@@ -832,11 +837,11 @@ function balances($list) {return t\balances($list);}
  *     MAKE dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     MAKE dashboard ACompanyAgentClicksTheDashboardTab
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
+ *     MAKE donate AMemberDonates
+ *     MAKE donate AMemberMakesANewRecurringDonation
+ *     MAKE donate AMemberMakesANewRecurringDonationOfZero
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
- *     MAKE gift AMemberDonates
- *     MAKE gift AMemberMakesANewRecurringDonation
- *     MAKE gift AMemberMakesANewRecurringDonationOfZero
  *     MAKE investinterest AMemberExpressesInterest
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -1051,8 +1056,8 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberUndoesACharge
  *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
+ *     TEST donate AMemberDonates
+ *     TEST donate AMemberMakesARecurringDonation
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
@@ -1221,6 +1226,7 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -1266,7 +1272,7 @@ function accountWasSetUpByMember($coId, $id) {
 /**
  * next DO code is (ARG)
  *
- * in: MAKE gift AMemberDonates
+ * in: MAKE donate AMemberDonates
  *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  */
 function nextDOCodeIs($code) {
@@ -1307,7 +1313,7 @@ function signupCompanyInfoForAccountIsRemembered($id) {
 /**
  * that (ARG) has link results: (ARG)
  *
- * in: TEST gift AMemberDonates
+ * in: TEST donate AMemberDonates
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  */
 function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $info);}
@@ -1545,7 +1551,7 @@ function memberViewsStatementFor($id, $month) {
 /**
  * we tell (ARG) CO (ARG) with subs: (ARG)
  *
- * in: TEST gift AMemberDonatesWithInsufficientFunds
+ * in: TEST donate AMemberDonatesWithInsufficientFunds
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 
@@ -1659,6 +1665,12 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE dashboard Setup
  *     MAKE dashboard AMemberClicksTheDashboardTabWithRoundups
  *     MAKE demographics Setup
+ *     TEST donate AMemberDonates
+ *     TEST donate AMemberMakesARecurringDonation
+ *     BOTH donate AMemberMakesANewRecurringDonation
+ *     BOTH donate AMemberMakesANewRecurringDonationOfZero
+ *     TEST donate ACompanyMakesARecurringDonation
+ *     TEST donate AMemberDonatesWithInsufficientFunds
  *     MAKE download Setup
  *     MAKE fbo Setup
  *     TEST fbo ANonmemberDonatesToASponsoredMember
@@ -1673,12 +1685,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
- *     BOTH gift AMemberMakesANewRecurringDonation
- *     BOTH gift AMemberMakesANewRecurringDonationOfZero
- *     TEST gift ACompanyMakesARecurringDonation
- *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     MAKE guest Setup
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE invest Setup
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     BOTH invest AMemberBuysAStakeInTheClub
@@ -1788,7 +1796,7 @@ function agentViewsStatementForMember($biz, $type, $cust) {
 /**
  * with choices: (ARG)
  *
- * in: TEST gift AMemberDonates
+ * in: TEST donate AMemberDonates
  */
 function withChoices($choices) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1868,10 +1876,10 @@ function memberIsUnconfirmed($id) {
  * in: TEST accredit AMemberTriesToBuyCreditWithCredit
  *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST donate AMemberMakesANewRecurringDonationOfZero
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
- *     TEST gift AMemberMakesANewRecurringDonationOfZero
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
  */
@@ -2254,37 +2262,6 @@ function weShowJSONOf($ray) {
 }
 
 /**
- * a button code for: (ARG)
- *
- * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
- *     MAKE cgpay AMemberClicksACGPayButton
- *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
- *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
- *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
- *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
- *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
- *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
- *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
- *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
- *     MAKE fbo AMemberDonatesToASponsoredOrganization
- *     MAKE signupandpay AMemberClicksACGPayButton
- *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
- */
-function aButtonCodeFor($args) {
-  include_once R_ROOT . '/forms/code.inc';
-  global $testOnly; if ($testOnly) return FALSE;
-  $info = $args[0];
-  t\fixData($info);
-  if ($secret = nni($info, 'secret')) $info['secret'] = $secret; // was u\ry('P', $secret);
-  global $testCode; $testCode = w\code($info);
-  t\output(t('Button code is ') . $testCode);
-  return !strhas($testCode, ' ');
-}
-
-/**
  * member (ARG) clicks (ARG) on page (ARG) with: (ARG)
  *
  * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
@@ -2328,6 +2305,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE flow AJointAccountSlaveMemberDraws
+ *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
@@ -2365,6 +2343,7 @@ function weFirstThen($first, $then) {
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
+ *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2385,6 +2364,7 @@ function withQR($url) {
  * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE signup Setup
  */
 function nextCaptchaIs($ca) {
@@ -2411,16 +2391,24 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
  * return URL (ARG)
  *
  * in: TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  */
 function returnURL($url) {
   global $testOnly, $testReturnUrl; if (!$testOnly) return FALSE;
-  return t\eq(t('return URL'), BASE_URL . $url, $testReturnUrl);
+  t\fixTestVars($url);
+  if (!$res = t\eq(t('return URL'), BASE_URL . $url, $testReturnUrl)) {
+    foreach (ray('want got', $url, $testReturnUrl) as $k => $urli) {
+      if ($$k = strstr($urli, 'code=')) t\output("$k: " . pr(u\decryRay(substr($$k, 5)))); else t\output("No code= in $k: $urli");
+    }
+  }
+  return $res;
 }
 
 /**
  * var (ARG) encrypts: (ARG)
  *
  * in: MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  */
 function varEncrypts($var, $ray) {
   global $testOnly, $testVars;
@@ -2442,3 +2430,35 @@ function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, 
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  */
 function weShowPDFWith($list) {return t\pdfHas($list);}
+
+/**
+ * button code (ARG) for: (ARG)
+ *
+ * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
+ *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ *     MAKE fbo AMemberDonatesToASponsoredOrganization
+ *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
+ *     MAKE signupandpay AMemberClicksACGPayButton
+ *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ */
+function buttonCodeFor($var, $args) {  include_once R_ROOT . '/forms/code.inc';
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testVars;
+
+  $info = $args[0];
+  t\fixData($info);
+//  if ($secret = nni($info, 'secret')) $info['secret'] = $secret; // was u\ry('P', $secret);
+  t\output(t('Button code is %code', 'code', $testVars[$var] = w\code($info)));
+  return !strhas($testVars[$var], ' ');
+}

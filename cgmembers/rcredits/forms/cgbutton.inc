@@ -12,7 +12,6 @@ use CG\Db as db;
  */
 function formCGButton($form, &$sta, $args = '') {
   global $mya, $base_url;
-  extract(just('nothing', $args));
 
   $fbo = ($mya->legalName == r\acct(CGID)->legalName); // fiscal sponsoring
 
@@ -35,6 +34,7 @@ X
   $text = textFld(REQ . t('Link Text:'), [t('Text')], dft(t('Pay with %PROJECT')));
   $amount = numFld(t('Price/Amt:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
   $credit = numFld(t('Store Credit:'), [t('Amount of credit')]);
+  $ccOk = $fbo ? NULL : boxFld('ccOk', NBSP, t('Also accept credit card payments'));
   $expires = dateFld(t('Expires:'), [t('Expiration date')]);
   $size = intFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + vmin(1) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
   $example = item(t('(Link will appear here)'), t('Link:'));
@@ -44,5 +44,5 @@ X
 
   jsx('cgbutton', ray('qid forVals selling style page', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, $page));
   
-  return cgform(compact(ray('title subtext button for item amount credit text expires example size html')));
+  return cgform(compact(ray('title subtext button for item amount credit ccOk text expires example size html')));
 }

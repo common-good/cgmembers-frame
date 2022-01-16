@@ -177,7 +177,7 @@ const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint ac
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
-const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'; // do not record changes to these fields: anything often-changed (automatically or not)
+const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
 const R_SHARE_MAX = 50; // minimum sharing percentage
@@ -386,7 +386,7 @@ const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 const MSG_DIR = SHARED_DIR . '/msgs';
-const FBO_CC_FEE = 3; // percentage of donation amount to charge for credit card donations to sponsored organizations
+const CC_FEE = 3; // percentage of transaction amount to charge for credit card processing
 define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
@@ -698,7 +698,9 @@ $GLOBALS['emailSubjects'] = array(
   'thanks-member' => t('Thank you for your donation!'),
   'fbo-thanks-nonmember' => t('Thank you for your donation!'),
   'fbo-thanks-member' => t('Thank you for your donation!'),
-  'fbo-report' => t('You have a donation'),
+  'gift-report' => t('You have a donation'),
+  'purchase-report' => t('You received a guest payment'),
+  'purchase-thanks-nonmember' => t('Your purchase is complete'),
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('new solar subscription'),
   'partner-contract' => t('Continue your Community Solar sign-up'),

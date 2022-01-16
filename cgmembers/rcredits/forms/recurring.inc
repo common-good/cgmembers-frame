@@ -95,7 +95,10 @@ function addLine($info, $classes, $url, $person = FALSE) {
   } else {
     $a = r\acct($fWho);
     $fWho = $a->bestName;
-    if ($mya->admRegion) foreach (ray('ok:k, closed:., hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
+    if ($mya->admRegion) {
+      foreach (ray('ok:k, closed:., hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
+      $button .= strstr($url, '=');
+    }
   }
   $res = "<tr>\n";
   

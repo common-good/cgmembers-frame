@@ -169,7 +169,7 @@ function fboTx($input) {
   $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($xid, 'outer transfer failed');
   say('info saved');
-  $res = $paying ? go('dashboard') : be\thanks(FALSE, $pid, $amount, PER_1, 0, $mya->id, TRUE);
+  $res = $paying ? go('dashboard') : be\thanks('fbo', FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
   unset($DBTX);
   
   return $res; // no need to continue (outer transactions never delay or repeat)

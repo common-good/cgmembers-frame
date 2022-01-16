@@ -1,4 +1,4 @@
-Feature: Gift
+Feature: Donate
 AS a member
 I WANT to donate to CGF
 SO I can enjoy the rCredit system's rapid growth and be a part of that.
