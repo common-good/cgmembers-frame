@@ -213,7 +213,6 @@ function menu($submenu = '') {
     'app' => ['call', t('Web App'), 'Card', ANY], // call app from mobile icon (no params)
     'card' => ['call', t('Card'), 'Card 1 2', ANY],
     'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
-    'disconnect' => ['norm', t('Disconnect Device'), 'Card disconnect', 'scanner'],
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
     'error' => ['call', 'System Error', '1', ANY, 'error'],

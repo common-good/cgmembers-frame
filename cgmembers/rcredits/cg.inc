@@ -29,9 +29,8 @@ function access($perms = NULL) {
     $pass =
       $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
     : ($perm == 'dev' ? isDEV
-    : ($perm == 'scanner' ? (bool) r\cook('scanner')
     : (!$mya ? FALSE
-    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) )));
+    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) ));
 
     if ($not ? $pass : !$pass) return FALSE;
   }

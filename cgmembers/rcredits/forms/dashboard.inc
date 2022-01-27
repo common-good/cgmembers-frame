@@ -55,22 +55,23 @@ function formDashboard($form, &$sta, $args = '') {
   }
 
   if ($mya->canManage and $mya->member) {
-    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
+    $invite = lnk('/community/invite', t('Invite a Friend or Business'));
     $hasMultipleAccounts = ($mya->co or db\exists('u_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
-//    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
-    $donate = w\lnk('/community/donate', t('Donate'));
+    $makeCo = $mya->depends ? '' : lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')));
+//    if (!$mya->jid and !$mya->co) $makeJoint = lnk('/signup/joint=1', t('Make this a joint account'));
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? lnk('/prejoin', t('Make this a Joint Account')) : '';
+    $donate = lnk('/community/donate', t('Donate'));
   } else $invite = $makeCo = $makeJoint = $donate = '';
 
-  $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
-  $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  $reopen = $mya->closed ? w\lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
-  $comment = w\lnk('/help', t('Comment, question, or suggestion'));
+  $disconnect = r\cook('scanner') ? lnk('/card/disconnect', t('Disconnect From CGPay App')) : '';
+  $reports = $mya->co ? lnk('/history/company-reports', t('Company Reports')) : '';
+  $deposits = $mya->id == CGID ? lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
+  $reopen = $mya->closed ? lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
+  $comment = lnk('/help', t('Comment, question, or suggestion'));
   
   if ($mya->member and !$mya->closed) {
-    foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits') as $k) if ($$k) $shortcuts[] = $$k;
+    foreach (ray('reopen disconnect invite makeJoint makeCo reports donate comment deposits') as $k) if ($$k) $shortcuts[] = $$k;
     $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
   } else $shortcuts = NULL;
 
@@ -159,7 +160,7 @@ X
   }
   
   $choiceList = '';
-  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
+  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= lnk("/$url", $desc) . "\n";
   $choiceList = "<div id=\"edit-choiceList\">\n%hdr\n<div class=\"table\">$choiceList\n</div>\n</div>\n";
   return item(tr($choiceList, '_hdr', t('<h3>Next Steps</h3>')), BARE);
 }  

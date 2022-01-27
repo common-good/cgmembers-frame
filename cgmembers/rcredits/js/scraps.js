@@ -31,6 +31,10 @@ function doit(what, vs) {
   switch(what) {
 
   case 'company':
+    $('.selfServe').click(function () {
+      setCookie('selfServe', vs['selfServe'], NEVER);
+      goPage('/card/selfServe/' + vs['selfServe']);
+    });
     var adv = $('.form-item-advanced');
     adv.hide();
     $('.form-item-showAdvanced a').click(function () {$('.form-item-showAdvanced').hide(); adv.show();});
@@ -100,6 +104,7 @@ function doit(what, vs) {
     break;
     
   case 'cardDone':
+    noGoBack();
     $('.btn-undo').click(function () {return yesGo(this.href, vs['msg']);});
     break;
     
@@ -168,6 +173,7 @@ function doit(what, vs) {
     debtOk();
     $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
     $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
+    $('.copyAddr').click(function () {clipCopy(vs['copyAddr']);});
     $('.zapEmail').click(function () {
       confirm(null, 'Really mark this email bad?', function () {
         $('#acctEmail, .copyEmail, .zapEmail').hide();
@@ -922,3 +928,4 @@ function confirmTip(vs, val) {
   return false;
 }
 function yesGo(url, msg) {yesno(msg, function () {location.href=url;}); return false;} // false cancels click and leaves it to yesno()
+function goPage(page) {location.href = baseUrl + page;}

@@ -15,27 +15,6 @@ use CG\Web as w;
 include_once R_ROOT . '/admin/admin.inc';
 include_once R_ROOT . '/admin/admin-web.inc';
 
-
-function formSMS($form, &$sta) {
-  $title = t('Test SMS');
-  $myNumber = svar('lastSMS');
-  $number = phoneFld(t('From (number): '), '', required($myNumber));
-  $message = textFld(t('Message: '));
-  $submit = t('Send it!');
-
-  focusOn('message');
-  $form = compact(ray('title number message submit'));
-  return cgform($form);  
-}
-
-function formSMS_submit($form, $sta) {
-  global $sms_devel; $sms_devel = TRUE;
-  extract(just('number message', $sta['input']));
-  $number = u\fmtPhone($number, '+n');
-  svar('lastSMS', $number);
-  \rsms_sms_incoming('process', $number, $message);
-}
-
 /**
  * Log back in to admin automatically (called after testing, in case session got destroyed).
  */

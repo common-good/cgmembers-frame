@@ -178,7 +178,7 @@ Scenario: a member card is charged, with scanner set, not signed in
   |   1 | %today  |     10 | .ZZA  | .ZZC  | groceries | 1      |
   And we show "You: Our Pub" with:
   | Undo |
-  | Scan Another QR |
+  | Scan a CG Card |
   | Tip |
   | Receipt |
   And without:
@@ -236,7 +236,7 @@ Scenario: a member undoes a charge
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Our Pub  | Abe One   | $123   | bread        |
   And we show "You: Our Pub" with:
-  | Scan Another QR |
+  | Scan a CG Card |
   And without:
   | Undo |
   | Show My QR |
@@ -274,7 +274,7 @@ Scenario: a member adds a tip
   |   3 |   3 |      2 | .ZZA  | .ZZC  | tip (20%) | %E_AUX   |
   And we show "You: Our Pub" with:
   | Undo |
-  | Scan Another QR |
+  | Scan a CG Card |
   | Receipt |
   And without:
   | Show My QR |
