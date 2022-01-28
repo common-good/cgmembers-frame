@@ -397,7 +397,11 @@ const CO_SOLE_PROPRIETOR = 1;
 const CO_PARTNERSHIP = 2;
 const CO_LLC = 3; // used in testing
 const CO_NONPROFIT = 6;
+const CO_COOPERATIVE = 8;
+const CO_CLUB = 9;
 const CO_CUSTODIAN = 12;
+
+const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
 
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit

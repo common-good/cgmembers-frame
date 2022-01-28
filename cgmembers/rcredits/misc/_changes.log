@@ -1,3 +1,8 @@
+2022-01-27 feature/donations-report
+. created donations report for nonprofits, clubs, and co-ops
+. expanded u\SUBS() to handle constant arrays
+. refactored out r\pContactInfo()
+
 2022-01-27 feature/self-serve 
 . app now has a self-serve feature (selectable on the company settings page)
 . fixed timed signout so it doesn't try to go to signout page upon re-signin

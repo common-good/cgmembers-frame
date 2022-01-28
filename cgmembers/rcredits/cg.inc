@@ -1452,6 +1452,18 @@ function recurDesc($period, $periods = 1) {
 }
 
 /**
+ * Return contact info for the given people record ID.
+ */
+function pContactInfo($pid) {
+  if (!$info = db\get('fullName,address,city,state,zip,phone,email', 'people', compact('pid'))) return u\FAIL(t('Missing non-member information!'));
+  extract($info);
+  $fullName .= t(' (non-member)');
+  $state = r\realState($state);
+  $addr = "$address, $city, $state $zip";
+  return [$fullName, $addr, $phone, $email];
+}
+
+/**
  * Return an assoc of communities indexed by uid, including 0 for overall and "Seedpack" for no-community-yet.
  */
 function cttyList($withAll = TRUE) {

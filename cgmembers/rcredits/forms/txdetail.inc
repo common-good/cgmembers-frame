@@ -52,15 +52,8 @@ X;
   extract($tx);
   $meA = r\acct($meId);
   
-  if ($uid1 == UID_OUTER and $toMe) {
-    if (!$info = db\get('fullName,address,city,state,zip,phone,email', 'people', compact('pid'))) return FAIL(t('Missing non-member information in transaction!'));
-    extract($info);
-    $fullName .= t(' (non-member)');
-    $state = r\realState($state);
-    $addr = "$address, $city, $state $zip";
-  } else {
-    list ($fullName, $addr, $phone, $email) = [$a->fullName, $a->postalAddr, $a->phone, $a->email];
-  }
+  list ($fullName, $addr, $phone, $email)
+    = ($uid1 == UID_OUTER and $toMe) ? r\pContactInfo($pid) : [$a->fullName, $a->postalAddr, $a->phone, $a->email];
 
   list ($wayYou, $wayMe) = u\order($toMe xor $amt < 0, t('From:'), t('To:'));
 ///    debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));

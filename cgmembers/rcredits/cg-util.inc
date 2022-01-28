@@ -547,8 +547,12 @@ function SUBS($string, $prefix = ':', $flagField = 'flags') {
   if ($prefix == ':') $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
   $subs = constantSubs($string, $prefix);
-  if ($prefix == ':') foreach ($subs as $k => $v) {
-    if (!is_numeric($v) and !strhas($v, ' ') and !strhas($v, '(')) $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+  if ($prefix == ':') foreach ($subs as $k => $v) if (!is_numeric($v)) {
+    if (is_array($v)) {
+      $subs[$k] = is_numeric(nni($v, 0)) ? ('(' . join(',', $v) . ')') : ("('" . join("','", $v) . "')");
+    } elseif (!strhas($v, ' ') and !strhas($v, '(')) {
+      $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+    }
   }
   $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
   return strtr($string, $subs);
