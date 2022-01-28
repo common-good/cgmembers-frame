@@ -1,3 +1,19 @@
+2022-01-27 feature/donations-report
+. created donations report for nonprofits, clubs, and co-ops
+. expanded u\SUBS() to handle constant arrays
+. refactored out r\pContactInfo()
+
+2022-01-27 feature/self-serve 
+. app now has a self-serve feature (selectable on the company settings page)
+. fixed timed signout so it doesn't try to go to signout page upon re-signin
+. added Barkrowler to list of bots
+. moved disconnect link to dashboard, so "scanner" permission is no longer needed.
+. outer and rebate txs are no longer included in 1099
+. added button to copy account name & address to clipboard
+. corrected "expire never" functionality for cookies
+. added no-go-back JS function (important for app in self-serve mode)
+. added automatic sweep to bank account (but not quite right)
+
 2022-01-06 feature/cc4all
 . any member business can now accept credit card payments (created with the Create A CGPay Button page)
 . refactored donate.inc to share credit card code with ccpay.inc

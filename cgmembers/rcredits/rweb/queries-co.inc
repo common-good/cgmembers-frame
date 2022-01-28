@@ -6,6 +6,7 @@ use CG\Util as u;
 /**
  * @file
  * List of queries for member companies.
+ * expects $mya not null
  * These special parameters are recognized:
  *  :ctty  the current account's community ID
  *  :myid  the current account's record ID
@@ -15,8 +16,12 @@ use CG\Util as u;
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query
 $phone = u\sqlSerialValue('r.data', 6);
 $nosearch = '<p class="small">* = information an account-holder has chosen not to share with you.</p>';
- 
-$queries = [
+
+if (in($mya->coType, [CO_NONPROFIT, CO_COOPERATIVE, CO_CLUB])) {
+  $queries = [t('Donations') => 'donations' . t('~<p>Contact information and total donations for each donor.</p>')];
+} else $queries = [];
+
+$queries += [
   t('Customers') => 'customers' . t('~<p>A list of your customers (anyone who has paid you). Click an account code for a customer statement.</p>') . $nosearch,
 
   t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $nosearch,

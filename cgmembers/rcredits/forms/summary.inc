@@ -44,8 +44,9 @@ function formSummary($form, &$sta) {
   $title = item(t('Account Summary'), '', suffix($buttons));
   $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
   $address = $mya->admin 
-  ? item(($mya->trialco ? $mya->contact : $mya->postalAddr)
-    . '<br>' . u\fmtPhone($mya->phone) . ($mya->email ?
+  ? item(($mya->trialco ? $mya->contact : $mya->postalAddr). NBSP
+    . btn('', 'c', 'default', '', clas('copyAddr')) . '<br>'
+    . u\fmtPhone($mya->phone) . ($mya->email ?
         "<br><span id=\"acctEmail\">$mya->email</span> "
       . btn('', 'c', 'default', '', clas('copyEmail'))
       . btn('', 'x', 'danger', '', clas('zapEmail'))
@@ -77,8 +78,9 @@ function formSummary($form, &$sta) {
     $extra = " id#$mya->id " . btn('', 'c', 'default', '', clas('copyAcct'));
     $copyAcct = t('your %PROJECT%co account (%qid)', 'co qid', $mya->co ? t(' company') : '', $mya->mainQid);
     $copyEmail = "$mya->fullName <$mya->email>";
+    $copyAddr = "$mya->fullName\n" . join("\n", explode(', ', $mya->postalAddr, 2));
 //    if ($mya->jid) $copyEmail .= 
-  } else $extra = $copyAcct = $copyEmail = '';
+  } else $extra = $copyAcct = $copyEmail = $copyAddr = '';
   $accountId = item('<div></div>' . ($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:') . '<wbr>'); // empty div and .. for double-click select
   
   $photoid = item('<iframe width="100%" height="600"></iframe>');
@@ -98,7 +100,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->id == UID_SUPER) $form = just('title accountId accountName', $form); // don't show much for Anonymous super
   
-  jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
+  jsx('summary', 'field copyAcct copyEmail copyAddr', 'helper', $copyAcct, $copyEmail, $copyAddr);
 
   return cgform($form, 'wide');
 

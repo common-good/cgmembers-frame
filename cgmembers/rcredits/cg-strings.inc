@@ -139,6 +139,7 @@ global $tStrings; $tStrings = array(
   'investment oversell' => t('That is more than you have invested!'),
   'dividends paid' => t('The club paid %got members (out of %count) a total of %sum in dividends, with %reCount members reinvesting a total of %reSum'),
   'banked' => t('The %PROJECT System has submitted a request to %action %amount %tofrom your bank %why. This transfer may take up to 5 business days to go through.'),
+  'auto bank transfer' => t('(your automatic %when bank transfer)'),
   'combined' => t('The transfer has been combined with an earlier request (%previous) for a total transfer of %total.'),
   'as needed' => t('Funds will be transferred from your bank account as needed.'),
   'bank tx number' => t('The transaction will appear on your bank statement as check #%checkNum.'),

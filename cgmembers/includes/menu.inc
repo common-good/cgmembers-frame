@@ -522,7 +522,7 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
           $who = db\exists('u_relations', 'other=:uid AND permission>0', ray('uid', $mya->id)) ? "$mya->fullName: " : '';
           return w\softErr(tr('no page permission', 'page', $who . $router_item['title']));
         }
-      } else return w\goFirst('signin');
+      } else return $router_item['path'] == 'signout' ? w\go('signin') : w\goFirst('signin');
     }
     if ($testing) return $res; // this simulates actual delivery
     $default_delivery_callback = nn($router_item) ? $router_item['delivery_callback'] : NULL;

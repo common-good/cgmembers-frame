@@ -547,8 +547,12 @@ function SUBS($string, $prefix = ':', $flagField = 'flags') {
   if ($prefix == ':') $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
   $subs = constantSubs($string, $prefix);
-  if ($prefix == ':') foreach ($subs as $k => $v) {
-    if (!is_numeric($v) and !strhas($v, ' ') and !strhas($v, '(')) $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+  if ($prefix == ':') foreach ($subs as $k => $v) if (!is_numeric($v)) {
+    if (is_array($v)) {
+      $subs[$k] = is_numeric(nni($v, 0)) ? ('(' . join(',', $v) . ')') : ("('" . join("','", $v) . "')");
+    } elseif (!strhas($v, ' ') and !strhas($v, '(')) {
+      $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+    }
   }
   $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
   return strtr($string, $subs);
@@ -1714,17 +1718,19 @@ function _GET($ray = NULL) {
 function nextBizDay($dt = NOW) {
   $dt = strtotime('+1 weekday', $dt); // advance to next weekday
   $holidays = [ // holidays in same year as the next weekday (or previous year, if next weekday is Saturday 1/1)
-    holiwiggle('1/1', $dt),
-    'third monday of january',
-    'third monday of february',
-//    easter_date(),    
-    'last monday may',
-    holiwiggle('7/4', $dt),
-    'first monday of september',
-    'second monday of october',
-    holiwiggle('11/11', $dt),
-    'fourth thursday of november',
-    holiwiggle('12/25', $dt),
+    holiwiggle('1/1', $dt), // New Years Day
+    'third monday of january', // MLK Jr. Day
+    'third monday of february', // Presidents Day
+//    'third monday of april', // Patriots Day (Massachusetts only)
+//    easter_date(), // Easter 
+    'last monday may', // Memorial Day
+    holiwiggle('7/4', $dt), // Independence Day
+//    'first sunday of august', // American Family Day (Arizona only)
+    'first monday of september', // Labor Day
+    'second monday of october', // Indigenous Peoples' Day
+    holiwiggle('11/11', $dt), // Veterans Day
+    'fourth thursday of november', // Thanksgiving
+    holiwiggle('12/25', $dt), // Christmas
   ];
   foreach ($holidays as $h) if (strtotime($h, $dt) == $dt) return strtotime('+1 weekday', $dt); // holiday. advance one more weekday
   return $dt;

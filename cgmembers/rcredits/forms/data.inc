@@ -59,7 +59,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $links = item(u\ul($links), NBSP);
     $form = compact(ray('title subtext sql submit links'));
   }
-  return cgform($form);
+  return cgform($form, 'wide nolabs');
 }
 
 function formData_validate($form, &$sta) {
@@ -87,7 +87,7 @@ function getReport($nm) {
   
   if ($nm == 'customers' or $nm == 'vendors') {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));
-    $colClasses = ray(',,,,num');
+    $colClasses = ray(',,,,alignR');
     list ($us, $them, $invUs, $invThem) = $nm == 'customers' ? [2, 1, 'payee', 'payer'] : [1, 2, 'payer', 'payee'];
     $whereInv = "$invUs=:myid AND amount<>0 GROUP BY $invThem";
     $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
@@ -109,7 +109,42 @@ X;
       $classes[] = $invs ? 'hiRow' : '';
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, nn($rowClasses)));
+    
   } elseif ($nm == 'demographics') {
     w\go('/history/company-reports/demographics');
+    
+  } elseif ($nm == 'donations') {
+    $heads = ray(t('Name,Phone,Email,Address,Member,Total,Count'));
+    $colClasses = ray(',,,,alignC,alignR,alignR');
+    $where = "uid2=:myid AND (cat IN :DONATION_CATS OR for2 RLIKE '.*\{donation|gift|grant\}.*')";
+    $sql = <<< X
+      (SELECT uid AS id, fullName AS `name`, phone, email, 'yes' AS member, SUM(x.amt) AS total, SUM(1) AS count
+      FROM txs x LEFT JOIN users u ON u.uid=x.uid1
+      WHERE type=:E_PRIME AND $where
+      GROUP BY uid
+
+      UNION
+      SELECT pid AS id, fullName AS `name`, phone, email, 'no' AS member, SUM(x.amt) AS total, SUM(1) AS count
+      FROM txs x JOIN txs2 x2 USING(xid) JOIN people p USING(pid)
+      WHERE type=:E_OUTER AND $where
+      GROUP BY pid)
+      
+      ORDER BY `name`
+X;
+
+    $q = db\q($sql, compact('myid'));
+    while ($row = $q->fetchAssoc()) {
+      extract($row);
+      if ($member == 'yes') {
+        $a = r\acct($id);
+        $address = $a->postalAddr;
+        list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email, $a->phone];
+      } else list ($zot, $address) = r\pContactInfo($id);
+      
+      if ($phone != '*') $phone = u\fmtPhone($a->phone, '-');
+      $res[] = [$name, $phone, $email, $address, $member, number_format($total, 2), number_format($count)];
+    }
+    return w\item(w\makeTable(nn($res), $heads, $colClasses, ''));
+    
   }
 }

@@ -198,7 +198,7 @@ function get1099($type, $payee, $year = NULL) {
     $end = strlen($year) < 6 ? strtotime('1/1/' . ($year + 1)) - 1 : strtotime('tomorrow', $year);
     $start = strtotime('1 year ago', $end) + 1;
     if (test()) list ($start, $end) = [NOW - 12 * 30 * DAY_SECS, NOW - 1];
-    $where = "uid2=:payee AND t.created BETWEEN $start AND $end AND type<>:E_BANK";
+    $where = "uid2=:payee AND t.created BETWEEN $start AND $end AND type NOT IN (:E_BANK,:E_OUTER,:E_REBATE)";
 
     if ($type == 'B') $sql = <<< X
       SELECT created, amt AS amount, uid1 AS payer, for2 AS `for`

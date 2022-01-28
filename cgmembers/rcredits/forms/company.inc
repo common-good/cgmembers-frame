@@ -12,15 +12,17 @@ function formCompany($form, &$sta, $arg = '') {
   $myid = $mya->id;
 //  if ($arg == 'gotPhoto') say('got photo');
 
-  jsx('company');
+  $selfServe = r\cook('selfServe') ? 0 : 1;
+  jsx('company', compact(ray('selfServe')));
   
   $myCats = db\q('SELECT iid FROM r_user_industries WHERE uid=:myid', compact('myid'))->fetchCol();
-  $links = item(join('<br>', [
+  $links = item(join('<br>', array_filter([ // array_filter to omit null entries
     lnk("/member/$mya->name", t('See your public %PROJECT web page'), w\away()),
-    lnk('/co/cgbutton', t('Create a CGPay button for your website (or emails).')),
-    lnk('/settings/photo?' . rand(), t('Change your company photo.')),
-    lnk('/settings/dft-acct', t('%doWhat to this account upon sign-in.', 'doWhat', r\cook('dftAcct') == $mya->mainQid ? t('Stop defaulting') : t('Default'))),
-  ]), t('Shortcuts:') );
+    lnk('/co/cgbutton', t('Create a CGPay button for your website (or emails)')),
+    lnk('/settings/photo?' . rand(), t('Change your company photo')),
+    lnk('/settings/dft-acct', t('%doWhat to this account upon sign-in', 'doWhat', r\cook('dftAcct') == $mya->mainQid ? t('Stop defaulting') : t('Default'))),
+    r\cook('scanner') ? lnk('', $selfServe ? t('Set this device to self-serve mode') : t('End self-serve mode on this device'), clas('selfServe')) : NULL,
+  ])), t('Shortcuts:') );
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';

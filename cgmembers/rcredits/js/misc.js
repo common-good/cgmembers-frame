@@ -297,8 +297,9 @@ function getCookie(name) {
 }
 
 /**
- * Set a cookie. Use exdays=99999 for "never expires"
+ * Set a cookie. Use exdays=NEVER for "never expires"
  */
+const NEVER = 2147483647;
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
@@ -319,6 +320,11 @@ function htmlEntities(str) {
 function fmtAmt(n) {
   var res = (Math.round((parseFloat(n) + Number.EPSILON) * 100) / 100).toLocaleString(undefined, {maximumFractionDigits:2});
   return (has(res, '.') && res.indexOf('.') == res.length - 2) ? res + '0' : res;
+}
+
+function noGoBack() {
+history.pushState(null, document.title, location.href);
+window.addEventListener('popstate', function (event) {history.pushState(null, document.title, location.href);});
 }
 
 /* function fmtAmt(n, minDigs, maxDigs) {

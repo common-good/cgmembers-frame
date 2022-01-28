@@ -30,12 +30,16 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   if (!$dom) { // no parameters specified -- just running the app
     return startup($scannerA);
+  } elseif ($dom == 'selfServe') { // same (run the app), but with a message about selfServe on or off
+    say(t('Self-Serve Mode is now ') . ($code ? t('ON') : t('OFF')));
+    if ($code) signout(TRUE); // self-serve mode has no effect when signed in
+    return startup($scannerA);
   } elseif ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
     return cardDone($z);
   } elseif ($dom == 'disconnect') {
     r\setCook('scanner', NULL);
-    return cardDone(ray('ok msg', TRUE, t('This device is no longer associated with any account.')));
+    return go('/app', t('The CGPay<sup>&trade;</sup> app is no longer associated with any account, on this device.'));
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
     $boxes = db\col('id', 'r_boxes', ray('code', $box)) ?: -1;
@@ -52,39 +56,42 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     
   if ($scannerA->id == $a->id) return softErr(t('You cannot transact with yourself, so there is no point in scanning your own card.'));
   
-  $trust = r\cook('trust');
   $myName = $scannerA->fullName;
-  $title = t('You: ') . $myName;
-  
+  $amount = numFld(t('Amount: '), [t('Amount')]);
+  $uid = hidFld($a->id);
+  $mode = hidFld('normal');
   $photo = item($a->agentA->photoHtml(FALSE, TRUE));
   $agentName = $a->agentA->fullName;
   $subtext = ($a->co ? "<small>$agentName</small><br>" : '') . "<b>$a->fullName</b><br>$a->city, $a->st";
 
-  $amount = numFld(t('Amount: '), [t('Amount')]);
-  if ($scannerA->co) { // we are a company
-    $choices = $scannerA->selling ? explode("\n", $scannerA->selling) : [];
-    $choice0Count = count($choices);
-    $choices = u\joinRays($choices, ray(t('Refund to customer, %you receives cash, Customer buys cash from %you', 'you', $scannerA->fullName)));
-  } else { // we are an individual
-    $choices = $a->co ? explode("\n", $scannerA->selling) : []; // if other is a company assume pay -- an individual cannot charge a company this way
-    $choice0Count = count($choices);
+  if (selfServe()) {
+    $title = t('Pay: ') . $myName;
+    $choices = $choices0 = explode("\n", $scannerA->selling);
+    $pay = submit(BARE . t('Pay'));
+    $buttons = fieldSet('buttons', compact('pay'));
+    
+  } else { // not selfServe
+    $title = t('You: ') . $myName;
+  
+    if ($scannerA->co) { // we are a company
+      $choices0 = $scannerA->selling ? explode("\n", $scannerA->selling) : [];
+      $choices = u\joinRays($choices0, ray(t('Refund to customer, %you receives cash, Customer buys cash from %you', 'you', $scannerA->fullName)));
+    } else { // we are an individual
+      $choices = $choices0 = $a->co ? explode("\n", $scannerA->selling) : []; // if other is a company assume pay -- an individual cannot charge a company this way
+    }
+    
+    $mobileCo = ($scannerA->co and u\isMobile());
+    $charge = submit(BARE . t('Charge'));
+    $pay = (($mya or r\cook('trust')) and !$mobileCo) ? submit(BARE . t('Pay')) : NULL;
+    $go = submit(BARE . t('Go'));
+    $buttons = fieldSet('buttons', compact(ray('charge pay go')));
   }
   
   $choices[] = t('Other:');
-  
   $for = selectFld(REQ . t('For:'), '', '', $choices);
   $desc = textFld(t('For:'), [t('Description')]);
-  jsx('card', compact(ray('choice0Count')));
-  $mobileCo = ($scannerA->co and u\isMobile());
+  jsx('card', 'choice0Count', count($choices0));
 
-  $charge = submit(BARE . t('Charge'));
-  $pay = (($mya or $trust) and !$mobileCo) ? submit(BARE . t('Pay')) : NULL;
-  $go = submit(BARE . t('Go'));
-  $buttons = fieldSet('buttons', compact(ray('charge pay go')));
-  $uid = hidFld($a->id);
-  $mode = hidFld('normal');
-//  foreach (ray('dom code') as $k) $$k = hidFld($$k);
-  
   return cgform(compact(ray('title photo subtext for desc amount buttons uid mode')));
 }
 
@@ -114,15 +121,12 @@ function formCard_submit($form, &$sta) {
   }
 
   // mode = 'normal'    
-  $scannerA = getScannerA();
-  $a = r\acct($uid);
+  list ($actorA, $a) = u\order(selfServe(), r\acct($uid), getScannerA());
   $op = op($sta);
-  
   $goods = strhas($desc, t('cash')) ? FOR_USD : FOR_GOODS;
   $type = ($op == 'charge' ? 'charge' : 'payment');
-  $z = be\transfer($type, $scannerA, $a, $amount, $desc, $goods);
+  $z = be\transfer($type, $actorA, $a, $amount, $desc, $goods);
 
-//  say($z->msg, $z->ok ? '' : 'err');
   return go('/card/done/' . u\cryRay($z));
 }
 
@@ -165,7 +169,7 @@ function chooseScanner($choices, $tail) {
 function startup($actorA) {
   global $mya;
 
-  $title = t('You: ') . $actorA->bestName;
+  $title = (selfServe() ? '' : t('You: ')) . $actorA->bestName;
   $subtext = ($mya and !in_array(r\cook('scanner'), [$mya->mainQid, $mya->qid])) ? t('<b class="loud">NOTE:</b> You are signed in, so you will be transacting on behalf of the current account, not the device\'s default scanning account.') : NULL;
   $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
   $lnkScanQr = btn('/scan-qr', ($mya and !$mya->co) ? t('Scan a CG Card') : t('Scan a Customer Card'), '', 'md', clas('btn-done'));
@@ -185,18 +189,19 @@ function cardDone($z) {
   if (!$xid and $subs) extract(just('xid', $subs, NULL));
   if ($msg) say($msg, $ok ? '' : 'err');
 
-  $title = t('You: ') . ($actorA ? $actorA->bestName : t('Scanner'));
+  $title = $actorA ? ((selfServe() ? t('Pay: ') : t('You: ')) . $actorA->bestName) : t('Scanner');
   $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
-  $lnkScanQr = btn('/scan-qr', t('Scan Another QR'), '', 'md', clas('btn-done'));
+  $lnkScanQr = btn('/scan-qr', t('Scan a CG Card'), '', 'md', clas('btn-done'));
   
   $buttons = "$lnkShowQr$lnkScanQr";
   if ($xid and $tx = r\Tx::read($xid) and !$tx->reversesXid and !$tx->reversedByXid) {
-    foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
-    if (!$actorA->coCan(CO_TIP) or tipAmt($tx)) $tip = '';
-    $buttons = "$undo<br>$buttons<br>$tip$receipt";
-    $tx = r\Tx::read($xid);
+    if (!selfServe()) { // omit most buttons in selfServe mode
+      foreach (ray(t('receipt:Receipt, undo:Undo, tip:Tip')) as $k => $desc) $$k = btn("/card/$k/xid=$xid", $desc, 'default', 'sm', clas("btn-done btn-$k"));
+      if (!$actorA->coCan(CO_TIP) or tipAmt($tx)) $tip = '';
+      $buttons = "$undo<br>$buttons<br>$tip$receipt";
+    }
     $msg = t('Reverse your %amt charge to %who (%dt)?', 'amt who dt', u\fmtAmt($tx->amt2), $tx->a1->fullName, u\fmtDate($tx->created));
-    jsx('cardDone', compact('msg'));
+    jsx('cardDone', compact(ray('msg')));
   }
 
   return cgform(compact(ray('title buttons')));
@@ -289,3 +294,5 @@ function getScannerA() {
   $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
   return $scannerA;
 }
+
+function selfServe() {global $mya; return (r\cook('selfServe') and !$mya);}

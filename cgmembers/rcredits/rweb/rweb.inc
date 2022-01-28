@@ -460,7 +460,7 @@ X
 //  $sid = db\get('sid', 'sessions', 'uid=:uid', ['uid' => $mya ? $mya->agentA->id : 0]);
   
   js('parse-query');
-  js('misc', 'baseUrl sid life isSafari', BASE_URL, session_id(), ($mya and !isDEV) ? SESSION_LIFE : 0, isSAFARI);
+  js('misc', 'baseUrl sid life isSafari', BASE_URL, session_id(), (isDEV or !$mya) ? 0 : SESSION_LIFE, isSAFARI);
   return compact('footerText');
 }
 

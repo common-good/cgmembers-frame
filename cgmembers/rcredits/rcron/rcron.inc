@@ -277,7 +277,8 @@ EOF;
   
 function recur($template) {
   extract(just('id maxStart period periods end duration durations action from to purpose amount payerType payer', $template));
-  $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
+  $shouldStart = FALSE ? 3 //is_null($amount) ? 
+  : (empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period));
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template shouldStart'));
   $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
@@ -323,8 +324,10 @@ function recur($template) {
       if (is_null($amount)) { // sweep
         if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
       }
-      if ($to == UID_BANK_OUT) { // sweep to bank account
-        $fromA->bank(-$amount, t('(your automatic %when bank transfer)', compact('when')));
+      if ($to == UID_BANK_OUT) { // transfer to bank account
+        $fromA->bank(-$amount, tr('auto bank transfer', compact('when')));
+      } elseif ($from == UID_BANK_IN) { // transfer from bank account
+        $toA->bank($amount, tr('auto bank transfer', compact('when')));
       } else {
         $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
         if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);

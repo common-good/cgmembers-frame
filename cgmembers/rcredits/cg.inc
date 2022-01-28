@@ -29,9 +29,8 @@ function access($perms = NULL) {
     $pass =
       $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
     : ($perm == 'dev' ? isDEV
-    : ($perm == 'scanner' ? (bool) r\cook('scanner')
     : (!$mya ? FALSE
-    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) )));
+    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) ));
 
     if ($not ? $pass : !$pass) return FALSE;
   }
@@ -1450,6 +1449,18 @@ function endRule($tbl, $id) {
 function recurDesc($period, $periods = 1) {
   $p = array_search($period, ray(PERIODS));
   return $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p]) : ray(PERIODLY)[$p];
+}
+
+/**
+ * Return contact info for the given people record ID.
+ */
+function pContactInfo($pid) {
+  if (!$info = db\get('fullName,address,city,state,zip,phone,email', 'people', compact('pid'))) return u\FAIL(t('Missing non-member information!'));
+  extract($info);
+  $fullName .= t(' (non-member)');
+  $state = r\realState($state);
+  $addr = "$address, $city, $state $zip";
+  return [$fullName, $addr, $phone, $email];
 }
 
 /**
