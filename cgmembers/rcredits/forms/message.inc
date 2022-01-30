@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+const MSG_URL0 = BASE_URL . '/community/message/x/code='; // add code to this
+
 /**
  * Send another member a message.
  */
@@ -37,7 +39,7 @@ function formMessage($form, &$sta, $args = '') {
 
 function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message secret expires', $sta['input'], NULL));
-  if (strhas($to, '@') and !strhas($to, ' @ ') and empty($secret)) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to'); // !strhas is needed to accept results of autocomplete
+  if (strhas($to, '@') and !strhas($to, ' @ ') and empty($secret) and !gotFile()) return say(t('If you know the member\'s email address, don\'t use this form unless you\'re including an encrypted message or file &mdash; just send them an email.'), 'to'); // !strhas is needed to accept results of autocomplete
   if (strlen($secret) and $expires <= 0) return say(t('Expires must be greater than zero.'), 'expires');
 //  if (!$a = w\whois($to, 'to', $info, 'self-message')) return FALSE;
 //  u\preray(ray('uid', $a->id), $sta['input']);
@@ -60,22 +62,14 @@ function formMessage_submit($form, &$sta) {
   $uid = whoId($sta);
   $a = r\acct($uid);
   
-  if ($fileData = unserialize($fileData) or strlen($secret)) { // encrypted file or message
+  if ($fileData = unserialize($fileData) or strlen($secret)) { // encrypted file and/or message
     $at = now() + HOUR_SECS * $expires;
     $ray = ray('qid from exp', $a->mainQid, $fromQid, $at);
-    $message .= '<br>';
-    
-    if ($fileData) {
-      $code = u\cryRay($ray + just('path name type size', $fileData));
-      $url = "$base_url/community/message/x/code=$code";
-      $message .= t('<br>Download encrypted file ("%name", %size MB): <%a>click here</a>.', '_a name size', atag($url, ['download'=>1]), $fileData['name'], round($fileData['size'] / 1000, 1));
-    }
-    if (strlen($secret)) { // encrypt secret message
-      $code = u\cryRay($ray + compact('secret'));
-      $url = "$base_url/community/message/x/code=$code";
-      $message .= t('<br>Secret: <%a>click here</a>.', '_a', atag($url));
-    }
-    $message .= t('<br>Encrypted data expires at %tm on %dt.', 'tm dt', u\tm($at), u\fmtDate($at));
+    if (strlen($secret)) $ray += compact('secret');
+    if ($fileData) $ray += just('path name type size', $fileData);
+
+    $message .= t('<p>Secret: <%a>click here</a>.<sup>*</sup></p>', '_a', atag(MSG_URL0 . u\cryRay($ray)));
+    $message .= t('<p>Encrypted data expires at %tm on %dt.</p><p class="smallish">* The encrypted message can be viewed only by you, on a device you have used (sometime in the past) to sign in to your %PROJECT account.', 'tm dt', u\tm($at), u\fmtDate($at));
   }
 
   $fromA = r\acct($fromQid);
@@ -92,22 +86,39 @@ function formMessage_submit($form, &$sta) {
 function codeResult($code) {
   global $box;
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
-  extract(just('qid from secret path name type size exp', $ray, NULL));
+  extract(just('qid from secret path name type size exp download', $ray, NULL));
   
   if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
   if (!db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That encrypted information is no longer available.'));
   
-  $msg = $secret ? 'crypt msg received' : 'crypt file received';
-  r\acct($from)->tell($msg, ray('who time', $intendedA->fullName, ucwords(strtolower(strftime('%I:%M:%S%p %A %m/%d/%Y')))), t('encrypted message received'));
-  
-  if ($secret) { // short message
-    return sayEmpty(t('<h3>Encrypted Message</h3>') . $secret);
-  } else { // file
+  $fromA = r\acct($from);
+
+  if ($download or $secret) {
+    $msg = $download ? 'crypt file received' : 'crypt msg received';
+    $fromA->tell($msg, ray('who time', $intendedA->fullName, ucwords(strtolower(strftime('%I:%M:%S%p %A %m/%d/%Y')))), t('encrypted message received'));
+  }
+
+  if ($download) {
     list ($s, $mimeType) = u\decryFile($path);
     header("Content-type: $mimeType");
     header("Content-Disposition: attachment; filename=\"$name\"");
     header("Content-Length: $size");
     return exitJust($s);
   }
+  
+  $title = t('Encrypted Message');
+  $subtext = t('(from %who)', 'who', $fromA->fullName);
+  $note = $secret ? "<br><p>$secret</p>" : '';
+  
+  if ($path) {
+    $download = $name;
+    $code = u\cryRay($ray + compact('download'));
+    $note .= t('<p>Download encrypted file: <%a>%name</a> (%type %size MB)</p><p>Use right-click to Save As a different filename.</p>', '_a name type size', atag(MSG_URL0 . $code, compact('download')), $name, $type, number_format(round($size / 1000), 1));
+    jsx('encrypted', 'msg', t('The file download is underway. It may take a few seconds to appear in your downloads folder.'));
+  }
+      
+  $note = item($note);
+  
+  return cgform(compact(ray('title subtext note')));
 }

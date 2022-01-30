@@ -30,6 +30,10 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'encrypted':
+    $('.form-item-note a[download]').click(function () {$.alert(vs['msg'], 'Download');});
+    break;
+
   case 'company':
     $('.selfServe').click(function () {
       setCookie('selfServe', vs['selfServe'], NEVER);
