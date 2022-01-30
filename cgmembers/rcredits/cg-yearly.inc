@@ -30,7 +30,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
  *
  * Example for 1099-NEC and 1099-R (paste in the PHP box on a DEV machine to generate):
  
-    include __DIR__ . '/../cg-yearly.inc';
+    include R_ROOT . '/cg-yearly.inc';
     $keys = 'nm ein co addr qid amount dt';
     $rows = [
       (get these from production server -- see below)
@@ -38,7 +38,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
     r\Special\do1099s('NEC', TRUE, $rows); // TRUE means <test>
  *
  * Get lines on production server with:
-     foreach (ray('aka nevabj etc') as $qid) {
+     foreach (ray('aka nevabj etc') as $qid) { // these can also be numeric account IDs
        $a = a($qid); $co = $a->co ? 1 : 0;
        e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
      }

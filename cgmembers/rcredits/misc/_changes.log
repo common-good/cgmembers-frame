@@ -1,3 +1,9 @@
+2022-01-29 feature/bank-dups
+. fixed bug that duplicated bank transfer notices
+. fixed timing of recurring transactions and sweeps
+. added company report: first donation date to Donations report
+. added company report: last year payments by payee
+
 2022-01-27 feature/donations-report
 . created donations report for nonprofits, clubs, and co-ops
 . expanded u\SUBS() to handle constant arrays

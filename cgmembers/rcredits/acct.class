@@ -1217,7 +1217,7 @@ o;
     }
 
     w\say($msg, $subs);
-    $a->tellOut($msg, $subs);
+    if ($amount > 0) $a->tellOut($msg, $subs); // already told, if the whole amount got transferred
 
     return $amtDone;
   }
@@ -1227,7 +1227,7 @@ o;
    * @param numeric $amount: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
    * @param bool $explicit: user requested this transfer explicitly
-   * @param string $report: (RETURNED) actual message to tell account-owner about the transfer
+   * @param string $report: (RETURNED) actual message to say to account-owner about the transfer (but not by email because we do that herein)
    * @return numeric: the amount transferred
    */
   public function bank($amount, $why = '', $explicit = FALSE, &$report = '') {

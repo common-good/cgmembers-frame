@@ -688,16 +688,18 @@ function notice($notice, $id, $subs = []) {
   $sql = 'SELECT message FROM r_notices WHERE uid=:uid AND sent=:sent ORDER BY msgid DESC';
   $info = ray('uid sent', $uid, nn($subs['sent']) ?: 0);
   $msgs = db\q($sql, $info)->fetchCol();
+  $cnt = 0;
   foreach ($msgs as $msg) {
+    t\output("GOT notice to $id: $msg");
     if (strtr(strip_tags($msg), $map) == $message) {
       $thatThing['notice'] = $msg; // remember for "And that <thing> blah blah blah"
-      return TRUE;
+      $cnt++;
     }
-    t\output("GOT notice to $id: $msg");
   }
 
-  t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
-  return FALSE;
+  if ($cnt < 1) t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
+  if ($cnt > 1) return t\output(t('GOT message to %id %cnt times: %msg', compact(ray('id cnt msg'))));
+  return TRUE;
 }
 
 /**

@@ -16,15 +16,26 @@ use CG\Util as u;
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query
 $phone = u\sqlSerialValue('r.data', 6);
 $nosearch = '<p class="small">* = information an account-holder has chosen not to share with you.</p>';
+$LYdt2 = strtotime('January 1') - 1;
+$LYdt1 = strtotime('1 year ago', $LYdt2 + 1);
 
 if (in($mya->coType, [CO_NONPROFIT, CO_COOPERATIVE, CO_CLUB])) {
-  $queries = [t('Donations') => 'donations' . t('~<p>Contact information and total donations for each donor.</p>')];
+  $queries = [t('Donations') => 'donations' . t('~<p>Contact information and total donations for each donor.</p>') . $nosearch];
 } else $queries = [];
 
 $queries += [
   t('Customers') => 'customers' . t('~<p>A list of your customers (anyone who has paid you). Click an account code for a customer statement.</p>') . $nosearch,
 
   t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $nosearch,
+  
+  t('Last Year Payments By Payee') => <<< X
+    SELECT uid, u.fullName, SUM(amt) AS total, SUM(IF(for1 LIKE '%labor%', amt, 0)) AS laborTotal
+    FROM txs_noreverse x join users u ON u.uid=x.uid2
+    WHERE x.created between $LYdt1 AND $LYdt2 AND x.uid1=:myid
+    GROUP BY u.uid
+    ORDER BY SUM(amt) DESC,u.fullName
+X
+  . t('~<p>Use this for 1099-NEC amounts.</p>'),
   
   t('Customer Demographics') => 'demographics',
   
