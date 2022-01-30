@@ -58,7 +58,7 @@ Scenario: A second recurring payment can be completed
   When cron runs "recurs"
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | flags  | recursId |*
-  |   3 | %now-1d |     10 | .ZZA  | .ZZB  | pmt     |        |        8 |
+  |   3 | %now    |     10 | .ZZA  | .ZZB  | pmt     |        |        8 |
 
 Scenario: A second recurring payment can be completed from a non-member
   Given these "people":
@@ -76,10 +76,10 @@ Scenario: A second recurring payment can be completed from a non-member
   When cron runs "recurs"
   Then these "txs":
   | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
-  |   3 | %now-1d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  |   3 | %now    |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
   And these "txs2":
   | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
-  | 3   | %now-1d | %now      | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
+  | 3   | %now    | %now      | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
   
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":
@@ -101,7 +101,7 @@ Scenario: A recurring payment happened long enough ago to repeat
   When cron runs "recurs"
   Then these "txs":
   | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
-  |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     |        |        8 |
+  |   3 | %now       |     10 | .ZZA  | .ZZC  | pmt     |        |        8 |
   And count "txs" is 3
   And count "tx_requests" is 0
   

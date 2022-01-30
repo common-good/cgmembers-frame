@@ -259,7 +259,7 @@ function recurs() {
       IF(tm.action=:ACT_SURTX, ru.start, 
       IF(tm.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
       i.created))
-    ) AS maxStart
+    ) AS lastRecur
     FROM tx_timed tm
     LEFT JOIN tx_rules ru ON ru.template=tm.id
     LEFT JOIN txs x ON x.recursId=tm.id
@@ -276,12 +276,13 @@ EOF;
 }
   
 function recur($template) {
-  extract(just('id maxStart period periods end duration durations action from to purpose amount payerType payer', $template));
-  $shouldStart = FALSE ? 3 //is_null($amount) ? 
-  : (empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period));
+  extract(just('id lastRecur period periods start end duration durations action from to purpose amount payerType payer', $template));
+  $lastRecurWanted = u\lastRecur($start, $periods, $period);
+  
+  $shouldStart = $lastRecur < $lastRecurWanted ? $lastRecurWanted : u\dateIncr($lastRecurWanted, $periods, $period);
+  //: (empty($lastRecur) ? now() : u\dateIncr($lastRecur, $periods, $period));
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template shouldStart'));
-  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
 
   if ($period and $period != PER_1) {
     $when = r\recurDesc($period, $periods);
@@ -289,16 +290,24 @@ function recur($template) {
   } else { $when = t('one-time'); }
 
   if ($action == 'surtx') {
-    if ($shouldStart > now() + WEEK_SECS) return; // don't create rules more than a week in advance
-    $rule = justNot(ray('id period periods duration durations start end maxStart'), $template);
+    if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't but don't do it more than a week in advance
+    $rule = justNot(ray('id period periods duration durations start end lastRecur'), $template);
     $rule['template'] = $id;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
+    return;
+  }
 
-  } elseif ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
-    if ($shouldStart > strtotime('tomorrow')) return; // don't remind until the right day
+  if (!in($action, 'pay charge')) return FAIL(t('bad action in template: ') . pr($erSubs));
+
+// No longer needed  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
+  $created = now();
+  if ($shouldStart >= strtotime('tomorrow', today())) return; // don't pay or charge until the right day
+
+
+  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
     if (!$res = db\get('bankAccount,isSavings,payee', 'txs2 t2 JOIN txs_noreverse t USING(xid)', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY t2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
@@ -309,8 +318,9 @@ function recur($template) {
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
     be\thanks('fbo', FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
-  } elseif (in($action, 'pay charge')) {
-    if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
+    return;
+
+  } else { // normal pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
@@ -339,7 +349,7 @@ function recur($template) {
     }
     if ($period == PER_1) r\endRule('tm', $id);
 
-  } else { FAIL(t('bad action in template: ') . pr($template)); }
+  }
   
 }
 

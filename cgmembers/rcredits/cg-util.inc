@@ -1649,6 +1649,19 @@ function dateIncr($start, $number, $units) {
 }
 
 /**
+ * Return the last time something periodic was supposed to happen.
+ * Not very efficient, but it's clear and it works.
+ */
+function lastRecur($start, $number, $units) {
+  $next = $start;
+  while ($next < now()) {
+    $start = $next;
+    $next = dateIncr($start, $number, $units);
+  }
+  return $start;
+}
+
+/**
  * Generates the SQL for determining whether a particular account meets the 
  * criteria for the payer or payee of a rule.
  * @param string $role -- must be 'payer' or 'payee'
