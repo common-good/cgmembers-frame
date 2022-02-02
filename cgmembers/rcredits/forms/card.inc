@@ -40,6 +40,14 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   } elseif ($dom == 'disconnect') {
     r\setCook('scanner', NULL);
     return go('/app', t('The CGPay<sup>&trade;</sup> app is no longer associated with any account, on this device.'));
+  } elseif ($dom == 'frontCamera') {
+    if (r\cook('frontCamera')) {
+      r\deleteCook('frontCamera');
+      return go('/app', t('BACK camera is now active.'));
+    } else {
+      r\setCook('frontCamera', 1);
+      return go('/app', t('FRONT camera is now active.'));
+    }
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
     $boxes = db\col('id', 'r_boxes', ray('code', $box)) ?: -1;
@@ -82,7 +90,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     
     $mobileCo = ($scannerA->co and u\isMobile());
     $charge = submit(BARE . t('Charge'));
-    $pay = (($mya or r\cook('trust')) and !$mobileCo) ? submit(BARE . t('Pay')) : NULL;
+    $pay = (($mya or r\cook('trust') or !$scannerA->co) and !$mobileCo) ? submit(BARE . t('Pay')) : NULL; // give individuals all app features
     $go = submit(BARE . t('Go'));
     $buttons = fieldSet('buttons', compact(ray('charge pay go')));
   }
@@ -171,7 +179,7 @@ function startup($actorA) {
 
   $title = (selfServe() ? '' : t('You: ')) . $actorA->bestName;
   $subtext = ($mya and !in_array(r\cook('scanner'), [$mya->mainQid, $mya->qid])) ? t('<b class="loud">NOTE:</b> You are signed in, so you will be transacting on behalf of the current account, not the device\'s default scanning account.') : NULL;
-  $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : '';
+  $lnkShowQr = ($mya or !$actorA->co) ? btn('/show-qr', t('Show My QR'), '', 'md', clas('btn-done')) : ''; // give individual all app features
   $lnkScanQr = btn('/scan-qr', ($mya and !$mya->co) ? t('Scan a CG Card') : t('Scan a Customer Card'), '', 'md', clas('btn-done'));
   $buttons = "$lnkShowQr$lnkScanQr";
 
@@ -280,19 +288,5 @@ function tip($tx, $tip) {
 }
 
 function tipAmt($tx) {return db\get('amt', 'txs', ray('xid uid1 uid2 type', $tx->xid, $tx->uid1, $tx->uid2, E_AUX));}
-
-/**
- * Return the account to scan from. Also set $boxId.
- */
-function getScannerA() {
-  global $mya, $box, $boxId;
-  
-  if ($mya) return $mya;
-  $scanner = r\cook('scanner');
-  $scannerA = r\acct($scanner);
-  if ($scanner and (!$scannerA or !w\boxIdCheck($box, $scannerA))) return r\setCook('scanner', NULL);
-  $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
-  return $scannerA;
-}
 
 function selfServe() {global $mya; return (r\cook('selfServe') and !$mya);}

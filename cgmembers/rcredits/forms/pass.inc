@@ -39,7 +39,7 @@ function formPass_submit($form, &$sta, $goto = '') {
   
   $verify = (bool) $goto;
   $a = r\acct($uid); // defaults to current account when called from formResend_submit (without uid)
-  $qid = $a->co ? "$a->mainQid-A" : $a->mainQid;
+  $qid = $a->co ? $a->qid : $a->mainQid;
 
   list ($template, $pwMsg) = $verify
   ? ($a->co ? ['verify-co', t('Always sign in to your PERSONAL account. Then click your photo to choose the company account.')] : ['verify', ''])

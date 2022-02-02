@@ -697,7 +697,7 @@ function notice($notice, $id, $subs = []) {
     }
   }
 
-  if ($cnt < 1) t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
+  if ($cnt < 1) return t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
   if ($cnt > 1) return t\output(t('GOT message to %id %cnt times: %msg', compact(ray('id cnt msg'))));
   return TRUE;
 }

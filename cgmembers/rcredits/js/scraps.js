@@ -30,6 +30,10 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'encrypted':
+    $('.form-item-note a[download]').click(function () {$.alert(vs['msg'], 'Download');});
+    break;
+
   case 'company':
     $('.selfServe').click(function () {
       setCookie('selfServe', vs['selfServe'], NEVER);
@@ -188,11 +192,18 @@ function doit(what, vs) {
     break;
     
   case 'dashboard':
+    $('.frontCamera, .disconnect').parent().hide();
+    $('.showAdvanced').click(function () {
+      $(this).parent().hide().next().css('margin-top', '10px');
+      $('.frontCamera, .disconnect').parent().show();
+    });
+
     debtOk();
     $('#endorse a').click(function () {$('#endorse').hide();});
     $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
     $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
     $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
+    
     break;
     
   case 'tx':

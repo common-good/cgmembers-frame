@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.59j'; // software version
+const R_VERSION = '3.59k'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -25,8 +25,8 @@ const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 40000',
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
+  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 60000',
   'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999', // debits only
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
@@ -154,6 +154,12 @@ const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in 
 const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s
 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
 const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
+
+const R_NONE = '<span class="none">--</span>'; // how to show an empty field let the tests see null values
+const R_AGREE_0 = 1; // number of the first point in the rCredits Agreement
+const R_AGREE_9 = 8; // number of the last point in the rCredits Agreement
+const REQ = '*'; // marks required fields (use this as start of field's label)
+const BARE = '-'; // marks bare (unwrapped) fields -- no div wrapper around them
 
 const NBSP = '&nbsp;'; // non-breaking space
 const DASH = '&mdash;';

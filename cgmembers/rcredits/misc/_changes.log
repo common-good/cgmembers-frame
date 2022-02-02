@@ -1,3 +1,20 @@
+2022-02-01 feature/front-camera
+. added an advanced link on the dashboard to switch between front and back camera for the app
+. added some rWeb Undo tests and improved accuracy of description when reversing a failed bank transfer
+. fixed tests to detect duplicate notices
+. added STATE code to 1099 reports even for NEC reports for which STATE code is irrelevant
+. app now lets individuals pay even when signed out
+. fixed bug in verification of company email
+. clarified some questions on fiscal sponsor application page
+. changed date of reversing bank transactions to today (rather than same date as the original)
+. signing out from app now leaves the member still in the app, except when disconnecting
+. footer is no longer show for app
+. transaction pairs are now read BANK and OUTER before auxiliary transactions, so tests can count on the order
+. fixed bug in recurring transactions that sometimes resulted in dups
+
+2022-01-30 feature/better-secrets
+. improved handling of secret messages and encrypted files
+
 2022-01-29 feature/bank-dups
 . fixed bug that duplicated bank transfer notices
 . fixed timing of recurring transactions and sweeps

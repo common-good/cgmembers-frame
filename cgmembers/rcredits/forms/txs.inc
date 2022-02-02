@@ -114,14 +114,15 @@ function reverseTx($xid, &$sta, $args) {
     $DBTX = \db_transaction();
     $z = be\reverse($xid, $mya); // create an offsetting tx
     if (!$z->ok) return go($url, $msg, 'err');
-    $tx['deposit'] = now();
+    $tx['deposit'] = $tx['created'] = $tx['completed'] = now();
     $tx['xid'] = $z->subs['xid'];
     db\insert('txs2', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
     if (!$deposit) db\update('txs2', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
     $mya->update('lastBounce floor', now(), max(0, $mya->floor));
     unset($DBTX);
     
-    return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
+    return w\go($url, t('reversed bank tx', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
+
   } else { // reversing normal transaction
     $z = be\undoTx($mya, $xid); // X (reverse it)
     return w\go($url, $z->msg, $z->ok ? '' : 'err'); // back to the normal form

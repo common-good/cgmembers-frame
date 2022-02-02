@@ -23,9 +23,9 @@ function formSponsor($form, &$sta, $args = '') {
   $mission = areaFld(REQ . t('Mission:'), [t('Organization\'s mission')], dft($isCo ? $mya->mission : '') + maxlen(250));
   $activities = areaFld(REQ . t('Activities:'), [t('Organization\'s activities'), t('What do you <i>do</i> to advance your mission?')], dft($isCo ? $mya->activities : '') + maxlen(250));
   $gross = numFld(REQ . t('Expected Income:'),[t('Gross annual income'), t('How much income do you expect in the next 12 months, before expenses?')], dft($isCo ? $mya->gross : ''));
-  $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees do you have?')], dft($isCo ? $mya->employees : ''));
-  $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
-  $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
+  $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees does the organization have?')], dft($isCo ? $mya->employees : ''));
+  $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks (not the dollar amount) you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
+  $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments (not the dollar amount) you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
   
   if ($isCo and ($mya->ok or $mya->admRegion)) {

@@ -29,6 +29,28 @@ Scenario: A member reverses a payment from someone
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Abe One  | Bea Two   | $123   | bread        |
 
+Scenario: A member reverses a payment to someone
+  Given these "u_relations":
+  | main | other | permission |*
+  | .ZZC | .ZZB  | scan       |
+  And these "txs":
+  | xid | amt  | uid1 | uid2 | agt1 | agt2 | purpose | actorId | actorAgentId |*
+  |   3 | -123 | .ZZA | .ZZC | .ZZA | .ZZB | labor   | .ZZC    | .ZZB         |
+  When member "A:1" visits "history/transactions/period=365&undo=3"
+  Then these "txs":
+  | xid | amt  | uid1 | uid2 | agt1 | agt2 | purpose | actorId | reversesXid |*
+  |   3 | -123 | .ZZA | .ZZC | .ZZA | .ZZB | labor   | .ZZC    |             |
+  |   4 |  123 | .ZZA | .ZZC | .ZZA | .ZZB | labor   | .ZZA    | 3           |
+  And we say "status": "report undo|tx desc active" with subs:
+  | solution | did      | otherName | amount |*
+  | reversed | refunded | Cor Pub   | $123   |  
+  And we notice "refunded you" to member ".ZZC" with subs:
+  | created | fullName | otherName | amount | payerPurpose |*
+  | %today  | Cor Pub  | Abe One   | $123   | labor        |
+  And we notice "you refunded" to member ".ZZA" with subs:
+  | created | fullName | otherName | amount | payeePurpose |*
+  | %today  | Abe One  | Cor Pub   | $123   | labor        |
+  
 Scenario: A customer reverses a refund from a store
   Given these "u_relations":
   | main | other | permission |*
@@ -50,3 +72,73 @@ Scenario: A customer reverses a refund from a store
   And we notice "you refunded" to member ".ZZA" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Abe One  | Cor Pub   | $123   | refund       |
+  
+Scenario: A member tries to reverse a non-existent transaction
+  When member ".ZZA" visits "history/transactions/period=365&undo=3"
+  Then we say "error": "no such tx"
+  And count "txs" is 1
+
+Scenario: An administrator reverses a bank transfer in
+  Given these "txs2":
+  | txid | payee | amount | created    | completed  | deposit    |*
+  |   11 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
+  Then these "txs": 
+  | xid | created    | amount | payer   | payee | purpose   |*
+  |   3 | %today-13m |   1000 | bank-in | .ZZA  | from bank |
+  When member "A:1" visits "history/transactions/period=365&undo=3"
+  Then we say "status": "reversed bank tx" with subs:
+  | amount | who     |*
+  | $1,000 | Abe One |
+  And we notice "bank tx canceled" to member ".ZZA" with subs:
+  | xid | 4 |**
+  And these "txs2":
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |  -11 |  .ZZA |  -1000 | %now    | %now      | %now    |   4 |
+  And these "txs":
+  | xid | created | amount | payer    | payee | purpose                  |*
+  |   4 | %now    |  -1000 | bank-out | .ZZA  | bank transfer adjustment |
+
+Scenario: An administrator reverses a bank transfer out
+  Given these "txs2":
+  | txid | payee | amount | created    | completed  | deposit    |*
+  |   11 |  .ZZA |  -1000 | %today-13m | %today-13m | %today-13m |
+  Then these "txs": 
+  | xid | created    | amount | payer    | payee | purpose |*
+  |   3 | %today-13m |  -1000 | bank-out | .ZZA  | to bank |
+  When member "A:1" visits "history/transactions/period=365&undo=3"
+  Then we say "status": "reversed bank tx" with subs:
+  | amount  | who     |*
+  | $-1,000 | Abe One |
+  And we notice "bank tx canceled" to member ".ZZA" with subs:
+  | xid | 4 |**
+#  This should be an immediate notice
+  And these "txs2":
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |  -11 |  .ZZA |   1000 | %now    | %now      | %now    |   4 |
+  And these "txs":
+  | xid | created | amount | payer   | payee | purpose                  |*
+  |   4 | %now    |   1000 | bank-in | .ZZA  | bank transfer adjustment |
+
+Scenario: An administrator reverses a non-member ACH in
+  Given these "txs":
+  | eid | xid | payer      | payee | amount | purpose | cat | type     |*
+  |   3 | 3   | %UID_OUTER | .ZZC  | 100    | grant   | 2   | %E_OUTER |
+  |   4 | 3   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
+  And these "txs2":
+  | txid | xid | payee | amount | completed | deposit | pid |*
+  |   11 | 3   | .ZZC  | 100    | %now      | %now    | 2   |
+  And these "people":
+  | pid | fullName | address | city | state | zip   |*
+  | 2   | Dee Forn | 4 Fr St | Fton | MA    | 01004 |
+  When member "C:1" visits "history/transactions/period=365&undo=3"
+  Then we say "status": "reversed bank tx" with subs:
+  | amount | who     |*
+  | $100   | Cor Pub |
+#  We should tell Cor Pub and Dee Forn immediately
+  And these "txs2":
+  | txid | xid | payee | amount | created | completed | deposit | pid |*
+  |  -11 | 4   | .ZZC  | -100   | %now    | %now      | %now    | 2   |
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose  | cat | type     |*
+  |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    | 2   | %E_OUTER |
+  |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | 2   | %E_AUX   |

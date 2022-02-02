@@ -64,14 +64,19 @@ function formDashboard($form, &$sta, $args = '') {
     $donate = lnk('/community/donate', t('Donate'));
   } else $invite = $makeCo = $makeJoint = $donate = '';
 
-  $disconnect = r\cook('scanner') ? lnk('/card/disconnect', t('Disconnect From CGPay App')) : '';
   $reports = $mya->co ? lnk('/history/company-reports', t('Company Reports')) : '';
   $deposits = $mya->id == CGID ? lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   $reopen = $mya->closed ? lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
   $comment = lnk('/help', t('Comment, question, or suggestion'));
   
+  if (r\cook('scanner')) { // only advance app links for now
+    $showAdvanced = lnk('', t('Advanced Links'), clas('showAdvanced'));
+    $frontCamera = lnk('/card/frontCamera', r\cook('frontCamera') ? t('Use BACK Camera') : t('Use FRONT camera'), clas('frontCamera'));
+    $disconnect = lnk('/card/disconnect', t('Disconnect From CGPay App'), clas('disconnect'));
+  } else $showAdvanced = $frontCamera = $disconnect = NULL;
+  
   if ($mya->member and !$mya->closed) {
-    foreach (ray('reopen disconnect invite makeJoint makeCo reports donate comment deposits') as $k) if ($$k) $shortcuts[] = $$k;
+    foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits showAdvanced frontCamera disconnect') as $k) if ($$k) $shortcuts[] = $$k;
     $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
   } else $shortcuts = NULL;
 

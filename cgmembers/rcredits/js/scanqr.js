@@ -11,7 +11,7 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
       ideal: 1080,
       max: 1440
     },
-    facingMode: {ideal: 'environment'}
+    facingMode: {ideal: getCookie('frontCamera') ? 'user' : 'environment'}
 }})
   .then(function(localMediaStream) { // successCallback
     $('#edit-result').hide();

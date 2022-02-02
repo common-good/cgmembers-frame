@@ -304,8 +304,7 @@ function recur($template) {
 
 // No longer needed  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
   $created = now();
-  if ($shouldStart >= strtotime('tomorrow', today())) return; // don't pay or charge until the right day
-
+  if ($shouldStart >= now()) return; // don't pay or charge until the right date and time
 
   if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
