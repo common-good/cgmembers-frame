@@ -138,8 +138,8 @@ Scenario: Admin reverses a bank transfer
   When member "A:D" visits page "history/transactions/period=5"
   And member "A:D" clicks X on transaction 1
   Then these "txs2":
-  | txid | payee | amount | created  | completed  | deposit | xid |*
-  |  -11 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  51 |
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |  -11 |  .ZZA |  -1000 | %now    | %now      | %now    |  51 |
   And these "txs":
   | xid | created | amt2  | uid1    | uid2 | description | type |*
   |  51 | %now    | -1000 | bank-in | .ZZA | to bank     | bank |

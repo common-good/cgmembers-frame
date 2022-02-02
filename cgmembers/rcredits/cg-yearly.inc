@@ -46,10 +46,13 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
   * For 1099-NEC edit just AMT. For 1099-R edit AMT, 0 (amount and date)
   
  */
+ 
 function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
   global $err1099;
   u\setDft($year, date('Y') - 1);
   $testMode = $testMode ? 'T' : '';
+
+  if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
   u\beginDownload("forms1099-$type-Y$year$testMode.bin"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
@@ -268,7 +271,7 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
     $withheld = u\lpad(0, 12) . u\lpad(0, 12);
     $tail = $twoBadTINs . sp(2) . $filerType . $pmtType . $txCount . sp(3) . $otherPSE . $mcc . sp(54) . $special . $withheld . STATE_CODE . EOL;
   } elseif ($type == 'NEC') {
-    $tail = $twoBadTINs . sp(3) . $fatca . sp(174) . $withheld . sp(2) . EOL;
+    $tail = $twoBadTINs . sp(3) . $fatca . sp(174) . $withheld . STATE_CODE . EOL; // include state (not sp(2)) even though not accepted in MA
   } elseif ($type == 'R') {
     $distCode = pad(7, 2);
     $totalDist = 1;
@@ -284,8 +287,7 @@ function recC($bCount, $totals) {
   
 function recK($type, $bCount, $totals) {
   $withheld = u\lpad(0, 18) . u\lpad(0, 18);
-  $st = $type == 'NEC' ? sp(2) : STATE_CODE; // no automatic state filing of 1099-NEC, as of Feb 2021
-  return 'K' . u\lpad($bCount, 8) . sp(6) . $totals . sp(196) . seq() . sp(199) . $withheld . sp(4) . $st . EOL;
+  return 'K' . u\lpad($bCount, 8) . sp(6) . $totals . sp(196) . seq() . sp(199) . $withheld . sp(4) . STATE_CODE . EOL; // include state (not sp(2)) even for NEC, even though not accepted in MA (IRS rejects it otherwise)
 }
 
 function recF($bCount, $aCount) {

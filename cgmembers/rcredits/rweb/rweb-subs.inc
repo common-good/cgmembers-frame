@@ -13,13 +13,6 @@ use CG\Admin as a;
  * rWeb subroutine file
  * Tools for rWeb forms.
  */
-
-define('R_NONE', '<span class="none">--</span>'); // how to show an empty field let the tests see null values
-define('R_AGREE_0', 1); // number of the first point in the rCredits Agreement
-define('R_AGREE_9', 8); // number of the last point in the rCredits Agreement
-define('REQ', '*'); // marks required fields (use this as start of field's label)
-define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around them
-
 require_once R_ROOT . '/cg-util.inc';
 require_once R_ROOT . '/cg-strings.inc';
 if (test()) require_once R_ROOT . '/cg-testing.inc';

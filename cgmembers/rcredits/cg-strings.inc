@@ -144,6 +144,7 @@ global $tStrings; $tStrings = array(
   'as needed' => t('Funds will be transferred from your bank account as needed.'),
   'bank tx number' => t('The transaction will appear on your bank statement as check #%checkNum.'),
   'bank tx canceled' => t('Your requested bank transfer has been canceled (transaction #%xid)'),
+  'reversed bank tx' => t('Reversed %amount bank transfer for %who.'), // for admin
   'drew' => t('A total of %amount has been drawn from your connected account(s) %why.'),
   'payment exchange received' => t('You received from %fullName a payment exchange of %amount -- that is, you traded that much US Dollars for %RCREDITS, receiving a bonus of %bonus on the exchange.'),
   'payment exchanges offered' => t('You made payment exchanges to %offers %whom, totaling %total.'),

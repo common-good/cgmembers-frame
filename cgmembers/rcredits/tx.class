@@ -201,7 +201,7 @@ class Tx {
       SELECT t.*, e.*
       FROM tx_hdrs t LEFT JOIN tx_entries e USING (xid)
       WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE $users)) $restrict
-      ORDER BY e.xid, e.entryType, ABS(e.id), (e.id < 0)
+      ORDER BY e.xid, e.entryType<>:E_PRIME, e.entryType<>:E_BANK, e.entryType<>:E_OUTER, e.entryType, ABS(e.id), (e.id < 0)
 EOF;
 
     $result = db\q($sql, []);

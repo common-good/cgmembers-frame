@@ -369,7 +369,11 @@ function members($list) {return t\members($list);}
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     TEST undo AMemberReversesAPaymentToSomeone
  *     TEST undo ACustomerReversesARefundFromAStore
+ *     TEST undo AnAdministratorReversesABankTransferIn
+ *     TEST undo AnAdministratorReversesABankTransferOut
+ *     TEST undo AnAdministratorReversesANonmemberACHIn
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
 
@@ -446,6 +450,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ *     TEST undo AMemberTriesToReverseANonexistentTransaction
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -1071,7 +1076,10 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     TEST undo AMemberReversesAPaymentToSomeone
  *     TEST undo ACustomerReversesARefundFromAStore
+ *     TEST undo AnAdministratorReversesABankTransferIn
+ *     TEST undo AnAdministratorReversesABankTransferOut
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1783,7 +1791,11 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH txs AdminReversesABankTransfer
  *     MAKE undo Setup
  *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     BOTH undo AMemberReversesAPaymentToSomeone
  *     BOTH undo ACustomerReversesARefundFromAStore
+ *     BOTH undo AnAdministratorReversesABankTransferIn
+ *     BOTH undo AnAdministratorReversesABankTransferOut
+ *     BOTH undo AnAdministratorReversesANonmemberACHIn
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -1892,6 +1904,7 @@ function memberIsUnconfirmed($id) {
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
+ *     TEST undo AMemberTriesToReverseANonexistentTransaction
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -2328,7 +2341,12 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE undo AMemberReversesAPaymentFromSomeone
+ *     MAKE undo AMemberReversesAPaymentToSomeone
  *     MAKE undo ACustomerReversesARefundFromAStore
+ *     MAKE undo AMemberTriesToReverseANonexistentTransaction
+ *     MAKE undo AnAdministratorReversesABankTransferIn
+ *     MAKE undo AnAdministratorReversesABankTransferOut
+ *     MAKE undo AnAdministratorReversesANonmemberACHIn
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 

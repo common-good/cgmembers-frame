@@ -333,6 +333,7 @@ function reverse($xid, $mya) {
   $newTx->created = now();
   $newTx->actorId = $mya->id;
   $newTx->actorAgentId = $mya->agentId;
+  
   foreach ($tx->entries as $oldE) {
     $newE = clone $oldE;
     $newE->id = NULL;
@@ -340,6 +341,13 @@ function reverse($xid, $mya) {
     $newE->amount = -$oldE->amount;
     $newTx->entries[] = $newE;
   }
+  
+  if (in($newTx->uid1, [UID_BANK_IN, UID_BANK_OUT])) {
+// NO! this is for things that didn't happen, so use the same account.    $newTx->entries[1]->uid = $newTx->entries[1]->uid == UID_BANK_IN ? UID_BANK_OUT : UID_BANK_IN;
+    $newTx->entries[0]->description = t('bank transfer adjustment');
+    $newTx->entries[1]->description = t('bank transfer adjustment');
+  }
+
   $xid = $newTx->insert();
   
   unset($DBTX);

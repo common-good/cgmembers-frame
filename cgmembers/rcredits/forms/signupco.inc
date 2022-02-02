@@ -121,7 +121,7 @@ function formSignupCo_submit($form, &$sta) {
   if ($sellCg) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $newA->setCoBit($k);
 
   list ($myid, $name) = [$newA->id, $newA->name];  
-  $qid = $newA->mainQid;
+  $qid = $newA->qid;
   tellStaffNewMember($info + compact(ray('qid name'))); // report to staff and user
   
   $pw1 = $newA->oneTimePass($name, TRUE);

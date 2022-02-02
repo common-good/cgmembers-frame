@@ -257,6 +257,10 @@ function changeWho($zot, $args = '', &$sta = '') {
 function signout($continue = FALSE) {
   global $mya;
   
+  $from = basename(nni($_SERVER, 'HTTP_REFERER'));
+  
+  if ($from == 'app' and $continue == 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
+  
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
@@ -272,6 +276,8 @@ function signout($continue = FALSE) {
   r\deleteCook('vKeyPw'); // no longer admV, if we ever were
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
+  
+  if ($from == 'app') return w\go('app'); // if signing out from app, stay there
   if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }
@@ -423,6 +429,11 @@ function showAllCharts($ctty = 0) {
 function formFooter() {
   global $mya, $base_url, $rUrl;
 
+  js('parse-query');
+  js('misc', 'baseUrl sid life isSafari', BASE_URL, session_id(), (isDEV or !$mya) ? 0 : SESSION_LIFE, isSAFARI);
+
+  if (in(PAGE, 'app card')) return [];
+  
   $year = date('Y');
   $helpType = $mya ? '' : 'other';
   $helpModal = modal('help-modal', '', '', '', 'X');
@@ -459,8 +470,6 @@ X
   $footerText = item($markup); // unique name for this page
 //  $sid = db\get('sid', 'sessions', 'uid=:uid', ['uid' => $mya ? $mya->agentA->id : 0]);
   
-  js('parse-query');
-  js('misc', 'baseUrl sid life isSafari', BASE_URL, session_id(), (isDEV or !$mya) ? 0 : SESSION_LIFE, isSAFARI);
   return compact('footerText');
 }
 
