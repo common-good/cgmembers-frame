@@ -60,7 +60,7 @@ EOF;
 
   $founded = foundedFld($mya->founded, REQ);
   $website = textFld(t('Website:'), [t('Website address'), t('Especially if you want to accept payments on your website, be sure to list it here.')], dft($mya->website));
-  $logo = textFld(t('Logo URL:'), [t('Logo web address')], dft($mya->logo));
+  $logo = textFld(t('Logo URL:'), [t('Logo web address')], $mya->hasLogo ? suffix(logoHtml($mya)) : []);
   $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page (optional).')); //, '', ['class'=>'help-block']);
 //  $description = fld('text_format', t('Description:'), [t('Arbitrarily complex description')], ['format' => 'filtered_html'] + dft(strtr($mya->description, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])));
   $description = areaFld(t('Describe:'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->description));
@@ -75,21 +75,28 @@ EOF;
   } else { $fast = $atm = NULL; }
   
   $showAdvanced = item(btn('', t('Advanced Settings'), 'default'), NBSP);
-  $advanced = fieldSet(NBSP, compact(ray('founded logo descPreface description can2 staleNudge')));
+  $advanced = fieldSet(NBSP, compact(ray('founded logo descPreface description can2 staleNudge fast atm')));
 
-  return cgform(compact(ray('title links name private categories selling shortDesc employees gross website tips showAdvanced advanced fast atm')) + w\setupFoot(''));
+  return cgform(compact(ray('title links name private categories selling shortDesc employees gross website tips showAdvanced advanced')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
-  extract(just($fields = 'selling employees gross staleNudge website logo founded', $sta['input']));
+  global $mya;
+  extract(just($fields = 'selling employees gross staleNudge website logo founded', $sta['input'], NULL));
+
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
   if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');
   if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');
 
-  foreach (ray('website logo') as $k) if ($$k = preg_replace('~https?://~i', '', nn($$k))) {
-// disabled until external file_get_contents debugged    if (!test() and !file_get_contents('https://' . $$k)) return sayFieldErr(t('That %k URL does not exist.', compact('k')), $k);
+  $website = preg_replace('~https?://~i', '', nn($website));
+  if ($website and !u\urlExists("https://$website")) return sayFieldErr(t('That website URL does not exist.'), 'website'); // disabled until external file_get_contents debugged    
+  if ($logo) {
+    if (!is_dir(LOGO_DIR)) mkdir(LOGO_DIR, 0755) or u\FAIL('cannot create photo ID directory'); // required for tests
+    if (!preg_match('~https?://~i', $logo)) $logo = 'https://' . $logo;
+    if (!u\copyFile($logo, LOGO_DIR . '/' . $mya->mainQid)) return sayFieldErr(t('That logo URL does not exist.'), 'logo');
+    $logo = '';
   }
   
   u\preray(compact(ray($fields)), $sta['input']);
@@ -100,8 +107,6 @@ function formCompany_submit($form, &$sta) {
 
   extract($rawInfo = just('private description shortDesc website logo selling categories can requireCashier employees gross staleNudge founded tips fast atm', $sta['input'], NULL));
   
-  $website = preg_replace('~https?://~i', '', nn($website));
-
   $mya->setCoCans(nn($can));
   $mya->setCoBit(CO_PRIVATE, nn($private));
   $mya->setCoBit(CO_TIP, $tips);

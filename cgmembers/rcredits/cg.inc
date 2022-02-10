@@ -34,6 +34,7 @@ function access($perms = NULL) {
 
     if ($not ? $pass : !$pass) return FALSE;
   }
+
   return TRUE;
 }
 function adminPerm($perm) {return preg_match('/^adm[A-Z]/', $perm);}
@@ -450,7 +451,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
-  $topic = mb_strlen($index) < 50 ? strip_tags($index) : '';
+  $topic = mb_strlen($index) < 100 ? strip_tags($index) : '';
   $message .= u\seeAssoc($subs);
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];

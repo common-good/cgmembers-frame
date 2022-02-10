@@ -24,6 +24,7 @@ function formTestResults($form, &$sta, $args = '') {
   
   r\setAcct(1, $sta);
   test(FALSE);
+  jsx('tests');
 
   $q = db\q('SELECT * FROM test WHERE type IN (:types) ORDER BY id', ['types' => ray('status error warning')]);
   while ($row = $q->fetchAssoc()) {

@@ -1,6 +1,7 @@
 import QrScanner from './x/qr-scanner.min.js';
   
 QrScanner.WORKER_PATH = 'rcredits/js/x/qr-scanner-worker.min.js';
+var front = getCookie('frontCamera');
 
 navigator.mediaDevices.getUserMedia({video: { // constraints
     width: {
@@ -11,7 +12,7 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
       ideal: 1080,
       max: 1440
     },
-    facingMode: {ideal: getCookie('frontCamera') ? 'user' : 'environment'}
+    facingMode: (front ? {ideal: 'user'} : {ideal: 'environment'})
 }})
   .then(function(localMediaStream) { // successCallback
     $('#edit-result').hide();

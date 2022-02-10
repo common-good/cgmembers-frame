@@ -624,3 +624,17 @@ function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
  * in: TEST daily AMemberHasABigDay
  */
 function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => $ray]);}
+
+/**
+ * member (ARG) has admin permissions: (ARG)
+ *
+ * in: MAKE gifts Setup
+ */
+function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms);}
+
+/**
+ * it's later
+ *
+ * in: MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ */
+function itsLater() {return t\itsLater();}

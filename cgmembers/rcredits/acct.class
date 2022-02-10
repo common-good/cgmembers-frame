@@ -243,6 +243,7 @@ class Acct {
       case 'hasPhoto': return db\exists('u_photo', $uidSub);
       case 'photo': return ($res = db\get('photo', 'u_photo', $uidSub)) ? u\decry('H', $res) : '';
       case 'thumb': return db\get('thumb', 'u_photo', $uidSub) ?: '';
+      case 'hasLogo': return file_exists(LOGO_DIR . '/' . $a->mainQid);
       case 'signedIn': return isset($mya); // use only in r\access
       case 'investor': return ($a->iclub or db\exists('r_stakes', $uidSub));
       case 'changes':
@@ -1471,26 +1472,34 @@ X;
     return is_numeric($bit = nni($acctRiskBits, $bitName)) ? $bit : $txRiskBits[$bitName];
   }
 
+  /**
+   * Set each admin bit listed in the given array of A_LIST bit numbers or names.
+   */
   public function setAdminBits($vs) {
-    $cans = 0; foreach ($vs ?: [] as $bit) $cans |= u\bit($bit);
+    $cans = 0; foreach ($vs ?: [] as $bit) $cans |= u\bit($bit, 'a');
     db\updateOrInsert('admins', ray('uid can', $this->id, $cans), 'uid');
   }
 
   /**
-   * Say whether the current agent has the specified admin permission.
+   * Say whether the current agent has the specified admin permission(s).
    * Permissions that require "very secure" data, are denied unless the admin has scanned a SuperAdmin card.
+   * @param string $bitName: a space-delimited string array of bit names to check (see A_LIST)
+   * @return <the agent for this account has all the listed permissions>
    */
   public function adminCan($bitName = NULL) {
     global $mya;
     $a = $this; $uid = $a->agentId;
 
     if (!$a->admin) return FALSE; // only admins have admin powers
+    if (strhas($bitName, ' ')) {
+      foreach (ray($bitName) as $k) if (!$a->adminCan($k)) return FALSE;
+      return TRUE;
+    }
     
-    $bitName = lcfirst($bitName);
+    $bitName = lcfirst($bitName); // in case this was a pseudo-property of the account object, now stripped of its "adm" prefix
     $cans = $a->agentA->adminCans;
-
     if ($uid == UID_SUPER) return TRUE; // uid 1 always has all powers (as a backup for one trusted admin -- not to be used otherwise)
-    if ($cans & r\adminCanBit($bitName) == 0) return FALSE; // this admin doesn't have that bit
+    if (!($cans & r\adminCanBit($bitName))) return FALSE; // this admin doesn't have that bit
     if (in($bitName, A_VLIST)) return ($a->admin and r\cook('vKeyPw')); // need admin and V permission for these
     return TRUE;
   }
@@ -1588,7 +1597,7 @@ X;
   public function can($bit = B_READ) {
     $a = $this;
     
-    if ($a->isCanonic and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return true;
+    if ($a->isCanonic and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return TRUE;
 
     if ($bit <= substr_count(B_LIST, ' ')) { // ordinary bits
       if ($bit == B_DEBT and $a->underage) return FALSE; // credit card regulations say no credit line if underage
@@ -1614,13 +1623,14 @@ X;
     if (in($bit, [B_SELL, B_BUY]) and !$a->ok) return FALSE; // inactive accounts can't transact
     if ($a->proSe) return TRUE;
 
-    $perm = $a->permission;
+    $perm = $a->permission; // get the permission level from the relations record
     $adminPerm = $aa->id == UID_SUPER ? B_MANAGE
     : (!$aa->admin ? 0
     : ((!($a->admRegion and R_ADMIN_CAN_MANAGE_CTTYS) and $a->community != $aa->community) ? 0
     : ($aa->admManageAccts ? B_MANAGE
     : ($aa->admPayFrom ? B_BUY
-    : ($aa->admChargeFrom ? B_SELL : 0) ))));
+    : ($aa->admChargeFrom ? B_SELL
+    : ($aa->admSeeAccts ? B_READ : 0) )))));
 
     if (!$perm and !$adminPerm) return FALSE;
     return (max($perm + B_RELATED, $adminPerm) >= $bit);

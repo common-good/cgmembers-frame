@@ -9,7 +9,7 @@ SO I can see how well the rCredits system is doing for myself, for my ctty, and 
 Setup:
   Given members:
   | uid  | fullName   | flags | jid   | minimum | floor | created   | activated |*
-  | .ZZA | Abe One    | ok    | 0     |       5 |     0 | %today-6m | %today-5m |
+  | .ZZA | Abe One    | ok,admin | 0     |       5 |     0 | %today-6m | %today-5m |
   | .ZZB | Bea Two    | ok    | .ZZD  |    1000 |   -20 | %today-5w | %today-4w |
   | .ZZC | Corner Pub | ok,co | 0     |    2000 |    10 | %today-4w | %today-3w |
   | .ZZD | Dee Four   | ok    | .ZZB  |    1000 |   -20 | %today-5w | %today-4w |

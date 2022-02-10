@@ -17,9 +17,8 @@ Setup:
   |state      | MA                          | MA         | MA          |
   | federalId | 001010001                   | 001010002  | 001010003   |
   And these "admins":
-  | uid  | vKeyE     | can     |*
-  | .ZZB | DEV_VKEYE | v,ten99 |
-  And member ".ZZB" scans admin card "%DEV_VKEYPW"
+  | uid  | vKeyE     | can           |*
+  | .ZZB | DEV_VKEYE | v,ten99,panel |
   And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -55,8 +54,10 @@ Setup:
   | .ZZA |    15727 |
   | .ZZB |    23023 |
   | .ZZC |    20700 |
-  
+ 
 Scenario: admin generates a 1099 report for the past 12 months
+  Given member ".ZZB" is signed in
+  And member ".ZZB" scans admin card "%DEV_VKEYPW"
   When member ".ZZB" runs a 1099 report type "K" with testing "0"
   Then we download "forms1099-K-Y<LY>.bin" with "1099" records:
   | type | who  | cnt | amounts                                     | seq |*

@@ -458,9 +458,9 @@ function getCompanyInfo() {
          | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
          | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
 
-    $can &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+    $can &= (($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK); // limit by agent perms
     $can <<= APP_CAN_BITS + 1; // shift to manager position (extra bit is for "manage" permission)
-    $can |= ($mya->coFlags >> APP_CANS) & APP_CAN_MASK; // add in cashier permissions
+    $can |= (($mya->coFlags >> APP_CANS) & APP_CAN_MASK); // add in cashier permissions
   } else { // personal account or trialco
     $can = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
          | ($mya->can(B_BUY) ? u\bit(CO_BUY) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)

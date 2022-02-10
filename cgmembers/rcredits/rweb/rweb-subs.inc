@@ -444,6 +444,7 @@ function formatField($k, $v) {
  */
 function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if (is_array($label)) list ($label, $help, $x, $options) = $label + ['', '', [], []];
+  if ($type == 'item' and nni($x, 'field_suffix')) $x['markup'] = '<div class="presuffix">' . $x['markup'] . '</div>';
   if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
 
   if ($type == 'int') u\setDft($x['step'], 1);
@@ -1115,7 +1116,7 @@ function imageButton($href, $title, $src) {
   global $rUrl;
   if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
   if (!strhas($src, 'http')) $src = "$rUrl/images/icons/$src";
-  return w\popHelp("<img src=\"$src\" />", $title, $href);
+  return w\popHelp(img($src), $title, $href);
 /*  return  <<<EOF
 <a href="$href" title="$title"><img src="$src" border="0" /></a>
 EOF; */
@@ -1392,7 +1393,8 @@ function ssnFld($req = REQ, $extra = []) {
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
-function logoFld($coA) {return item($coA->logo ? tr('<img src="%logo">', 'logo', PROTOCOL . "://$coA->logo?" . time()) : '');}
+function logoFld($a) {return $a->hasLogo ? item(logoHtml($a) . '?' . now()) : NULL;}
+function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid) : '';}
 
 /**
  * Standardize the "selling" field input.
@@ -2339,3 +2341,4 @@ function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu"
 function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}
 function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
+function img($src) {return "<img src=\"$src\" />";}

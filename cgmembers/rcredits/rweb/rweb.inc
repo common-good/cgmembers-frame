@@ -229,25 +229,35 @@ function formAccounts_submit($form, &$sta) {
 }
 
 /**
+ * Return the given account's logo in an HTTP stream (called from /account-logo).
+ */
+function logo($qid = '') {
+  if (!$qid or !$a = r\acct($qid) or !$a->hasLogo or !$content = \file_get_contents(LOGO_DIR . '/' . $a->mainQid)) return '';
+  header("Content-type: image/jpeg");
+  return exitJust($content);
+}
+
+/**
  * Change the current account.
  * @param string $zot: gets basename passed from URL
  */
 function changeWho($zot, $args = '', &$sta = '') {
   global $mya;
   extract(just('acct page', $args, NULL));
-  
+
   if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
   $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
 
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('/signin')));
   if (!$mya = r\acct($acct, $agt = $mya ? $mya->agentId : NULL)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya), pr($agt))); // tentative new account (agent is the same, so adminishness is the same)
+
   if (!$mya->can()) {
     if (!$mya->admin) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
-    if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+    if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.'));
   }
   r\setAcct($mya, $sta); // set new current account
-  return w\go($page);
+  return go($page);
 }
 
 /**

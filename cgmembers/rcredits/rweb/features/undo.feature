@@ -9,6 +9,7 @@ Setup:
   | .ZZA | Abe One  | -100  | personal    | ok,confirmed,roundup,debt,bankOk | %today-15m | hasBank | 0      |
   | .ZZB | Bea Two  | -200  | personal    | ok,confirmed,admin,debt          | %today-15m |         | .ZZA   |
   | .ZZC | Cor Pub  | -300  | corporation | ok,co                            | %today-15m |         | .ZZB   |
+  And member ".ZZB" has admin permissions: "seeAccts"
   And these "txs":
   | xid | amt | uid1 | uid2 | purpose |*
   |   2 | 123 | .ZZB | .ZZA | bread   |
@@ -95,8 +96,8 @@ Scenario: An administrator reverses a bank transfer in
   | txid | payee | amount | created | completed | deposit | xid |*
   |  -11 |  .ZZA |  -1000 | %now    | %now      | %now    |   4 |
   And these "txs":
-  | xid | created | amount | payer    | payee | purpose                  |*
-  |   4 | %now    |  -1000 | bank-out | .ZZA  | bank transfer adjustment |
+  | xid | created | amount | payer   | payee | purpose                  |*
+  |   4 | %now    |  -1000 | bank-in | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a bank transfer out
   Given these "txs2":
@@ -116,8 +117,8 @@ Scenario: An administrator reverses a bank transfer out
   | txid | payee | amount | created | completed | deposit | xid |*
   |  -11 |  .ZZA |   1000 | %now    | %now      | %now    |   4 |
   And these "txs":
-  | xid | created | amount | payer   | payee | purpose                  |*
-  |   4 | %now    |   1000 | bank-in | .ZZA  | bank transfer adjustment |
+  | xid | created | amount | payer    | payee | purpose                  |*
+  |   4 | %now    |   1000 | bank-out | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a non-member ACH in
   Given these "txs":

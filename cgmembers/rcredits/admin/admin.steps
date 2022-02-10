@@ -132,6 +132,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE ach Setup
  *     BOTH ach AdminDownloadsACHRequests
  *     MAKE activate Setup
+ *     MAKE changes Setup
  *     MAKE checks Setup
  *     BOTH checks AdminPrintsChecks
  *     MAKE deletion Setup
@@ -174,7 +175,7 @@ function membersHave($list) {return t\membersHave($list);}
 function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
   global $testOnly;
   require R_ROOT . '/cg-yearly.inc';
-  t\login($id);
+//  t\login($id);
   if ($ten99 != '1099') return t\out('ten99 must be 1099');
   r\Special\do1099s($type, $testing); 
   return TRUE;  
@@ -229,7 +230,9 @@ function weDeleteTableRecord($tnm, $record) {
 /**
  * member (ARG) is signed in
  *
- * in: MAKE super AnAdminPrintsChecks
+ * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
+ *     MAKE ach AdminDownloadsACHRequests
+ *     MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
 
@@ -252,11 +255,12 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 /**
  * member (ARG) scans admin card (ARG)
  *
- * in: MAKE 1099s Setup
+ * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
  *     MAKE aaOther Setup
- *     MAKE ach Setup
- *     MAKE activate Setup
- *     MAKE checks Setup
+ *     MAKE ach AdminDownloadsACHRequests
+ *     MAKE activate AdminActivatesAnAccount
+ *     MAKE activate AdminActivatesAnAccountUnconfirmed
+ *     MAKE checks AdminPrintsChecks
  *     MAKE super AnAdminPrintsChecks
  */
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}

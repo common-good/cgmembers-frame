@@ -2495,3 +2495,13 @@ function buttonCodeFor($var, $args) {  include_once R_ROOT . '/forms/code.inc';
   t\output(t('Button code is %code', 'code', $testVars[$var] = w\code($info)));
   return !strhas($testVars[$var], ' ');
 }
+
+/**
+ * member (ARG) has admin permissions: (ARG)
+ *
+ * in: MAKE changeaccount Setup
+ *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE queries Setup
+ *     MAKE undo Setup
+ */
+function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms);}

@@ -132,10 +132,10 @@ Scenario: Admin reverses a bank transfer
   | uid  | fullName  | flags              |*
   | .ZZD | Dee Admin | ok,confirmed,admin |
   And these "admins":
-  | uid  | vKeyE     | can           |*
-  | .ZZD | DEV_VKEYE | reverseBankTx |
+  | uid  | vKeyE     | can                    |*
+  | .ZZD | DEV_VKEYE | reverseBankTx,seeAccts |
   When member ".ZZD" scans admin card "%DEV_VKEYPW"
-  When member "A:D" visits page "history/transactions/period=5"
+  And member "A:D" visits page "history/transactions/period=5"
   And member "A:D" clicks X on transaction 1
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit | xid |*

@@ -129,7 +129,7 @@ Scenario: A company supplies company information
   | employees   | 3 |
   | gross       | $250,000 |
   | founded     | %mdY-9y |
-  | website     | Rpub.com |
+  | website     | example.com |
   | description | really good ale |
   | can         | 0=>0, 1=>2 |
   | staleNudge  | 8 |
@@ -142,7 +142,7 @@ Scenario: A company supplies company information
   | employees   | 3 |
   | gross       | 250000 |
   | founded     | %daystart-9y |
-  | website     | Rpub.com |
+  | website     | example.com |
   | description | really good ale |
   | staleNudge  | 8 |
   | coFlags     | private,tip,charge |

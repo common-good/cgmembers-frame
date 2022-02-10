@@ -1524,7 +1524,7 @@ function strRotate($s, $n) {
   $n = ($n % $blen) + ($n < 0 ? $blen : 0);
   $chars = phpversion() >= 7 ? intdiv($n,  8) : (int) ($n / 8);
   $s = substr($s, $chars) . substr($s, 0, $chars);
-  if (!$bits = $n & 7) return $s; // rotation fell on a character boundary
+  if (!$bits = ($n & 7)) return $s; // rotation fell on a character boundary
   
   $s .= substr($s, 0, 1);
   $res = '';
@@ -1620,10 +1620,23 @@ function vague($n, $prec = 1) {
  *   ray - return the array of bit numbers as an integer bit array (recursively)
  * @param string $prefix: a constant prefix to use instead of "b"
  */
-function bit($b, $prefix = 'b') {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << (is_numeric($b) ? $b : u\consta($prefix, $b)));}
-
+function bit($b, $prefix = 'b') {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << bitNum($b, $prefix));}
 function getBit($n, $b = NULL, $prefix = 'b') {return is_null($b) ? $n : (bool) (($n ?: 0) & u\bit($b, $prefix));}
 function setBit(&$n, $b, $on = TRUE, $prefix = 'b') {return $n = $on ? (nn($n, 0) | u\bit($b, $prefix)) : (nn($n, 0) & ~u\bit($b, $prefix));}
+
+/**
+ * Return the number value of a named bit (in a constant list like <prefix>_LIST or a named constant like <prefix>_<b>). Crash if the name does not exist.
+ * @param mixed $b: the bit name (camelcase) or number
+ * @param string $prefix: the constant or list prefix (case-insensitive)
+ */
+function bitNum($b, $prefix = 'b') {
+  if (is_numeric($b)) return $b;
+  if (!in($prefix, 'b co') and $list = u\consta($prefix, 'list')) {
+    $res = array_search($b, ray($list));
+    if ($res !== FALSE) return $res;
+  }
+  return u\consta($prefix, $b);
+}
 
 /**
  * Output an array as a collapsible tree.
@@ -1709,6 +1722,15 @@ function decryFile($path) {
   $s = u\decry('S', $s);
   $mimeType = u\mimeType($s, 'str');
   return [$s, $mimeType];
+}
+
+/**
+ * Copy the file or URL. Compensate for PHP's lack of proper error handling.
+ */
+function copyFile($from, $to) {
+  try {
+    return copy($from, $to, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));
+  } catch (\Exception $e) { }
 }
 
 /**
@@ -1846,3 +1868,4 @@ function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making S
 function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}
 function getContents($url) {return file_get_contents($url, FALSE, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));}
 function cryFile($path) {file_put_contents($path, u\cry('S', file_get_contents($path)));}
+function urlExists($url) {return ($hdrs = get_headers($url) and !strhas($hdrs[0], '404'));}

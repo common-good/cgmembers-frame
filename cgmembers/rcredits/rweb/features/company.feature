@@ -21,20 +21,20 @@ Scenario: A member visits the company info page
 Scenario: A member updates company info
   When member "C:A" confirms form "settings/company" with values:
   | private | selling | website     | description   | employees | gross | tips | staleNudge | founded |*
-  |         | stuff   | www.pub.com | we do vittles |         2 |   100 |    1 |          3 | %mdY-1y |
+  |         | stuff   | example.com | we do vittles |         2 |   100 |    1 |          3 | %mdY-1y |
   Then members:
   | uid  | selling | website     | description   | employees | gross | staleNudge | founded      |*
-  | .ZZC | stuff   | www.pub.com | we do vittles |         2 |   100 |          3 | %daystart-1y |
+  | .ZZC | stuff   | example.com | we do vittles |         2 |   100 |          3 | %daystart-1y |
   And we say "status": "info saved"
   
 Scenario: A member gives a bad employee count
   When member "C:A" confirms form "settings/company" with values:
   | selling | website     | description   | employees | gross |*
-  | stuff   | www.pub.com | we do vittles |        -2 |   100 |
+  | stuff   | example.com | we do vittles |        -2 |   100 |
   Then we say error in field "employees": "negative amount"
 
 Scenario: A member gives a bad gross
   When member "C:A" confirms form "settings/company" with values:
   | selling | website     | description   | employees | gross |*
-  | stuff   | www.pub.com | we do vittles |         2 |  junk |
+  | stuff   | example.com | we do vittles |         2 |  junk |
   Then we say error in field "gross": "bad amount"

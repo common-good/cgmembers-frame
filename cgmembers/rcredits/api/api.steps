@@ -75,7 +75,7 @@ function weRespondWith($args) {
       $got &= APP_CAN_MASK;
       $flags = 0;
       if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
-      $v = $flags & APP_CAN_MASK;
+      $v = ($flags & APP_CAN_MASK);
       if ($k == 'can') {
         if ($got & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
       }

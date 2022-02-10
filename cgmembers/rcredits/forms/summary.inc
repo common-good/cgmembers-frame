@@ -144,7 +144,7 @@ function formSummary_submit($form, &$sta) {
   global $mya;
   $op = op($sta);
 
-  if (!$mya->admManageAccts) return; // hack attempt
+  if (!$mya->admManageAccts) return hack('managing account without permission'); // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
   extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans', $sta['input'], NULL));

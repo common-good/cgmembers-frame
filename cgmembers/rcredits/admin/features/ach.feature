@@ -16,22 +16,23 @@ Setup:
   | .ZZB | Bea Two  | -500  | ok,confirmed,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |           |
   | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 | sponsored |
   And these "admins":
-  | uid  | vKeyE     | can |*
-  | .ZZA | DEV_VKEYE | ach |
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  | uid  | vKeyE     | can                     |*
+  | .ZZA | DEV_VKEYE | v,seeDeposits,ach,panel |
   And these "people":
   | pid | fullName |*
   |   6 | Flo Six  |
   
 Scenario: admin downloads ACH requests
   Given these "txs2":
-  | txid | payee | amount | created   | deposit      | completed | pid | bankAccount     |*
-  | 5001 | .ZZA  |    100 | %today-3w | %daystart-2w | %today-3w |     | USkk21187028101 |
-  | 5002 | .ZZA  |    400 | %today-2w |            0 | %today    |     | USkk21187028101 |
-  | 5003 | .ZZB  |   -100 | %today-1d |            0 | %today    |     | USkk21187028102 |
-  | 5004 | .ZZC  |    300 | %today    |            0 |         0 |     | USkk21187028103 |
-  | 5005 | .ZZC  |     60 | %today    |            0 |         0 |   6 | USkk21187028106 |
-  
+  | txid | payee | amount | created | deposit  | completed | pid | bankAccount     |*
+  | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |     | USkk21187028101 |
+  | 5002 | .ZZA  |    400 | %now-2w |        0 | %now      |     | USkk21187028101 |
+  | 5003 | .ZZB  |   -100 | %now-1d |        0 | %now      |     | USkk21187028102 |
+  | 5004 | .ZZC  |    300 | %now    |        0 |         0 |     | USkk21187028103 |
+  | 5005 | .ZZC  |     60 | %now    |        0 |         0 |   6 | USkk21187028106 |
+  And member ".ZZA" is signed in
+  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+
   When member ".ZZA" visits page "sadmin/deposits"
   Then we show "Bank Transfers" with:
   | New IN    | 3     | $760  |
@@ -61,9 +62,9 @@ Scenario: admin downloads ACH requests
   | 9,000001,000001,00000004,,760,100, |
   
   And these "txs2":
-  | txid | payee | amount | created   | deposit      | completed |*
-  | 5001 | .ZZA  |    100 | %today-3w | %daystart-2w | %today-3w |
-  | 5002 | .ZZA  |    400 | %today-2w | %daystart    | %today    |
-  | 5003 | .ZZB  |   -100 | %today-1d | %daystart    | %today    |  
-  | 5004 | .ZZC  |    300 | %today    | %daystart    |         0 |
-  | 5005 | .ZZC  |     60 | %today    | %daystart    |         0 |
+  | txid | payee | amount | created | deposit  | completed |*
+  | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |
+  | 5002 | .ZZA  |    400 | %now-2w | %now0    | %now      |
+  | 5003 | .ZZB  |   -100 | %now-1d | %now0    | %now      |  
+  | 5004 | .ZZC  |    300 | %now    | %now0    |         0 |
+  | 5005 | .ZZC  |     60 | %now    | %now0    |         0 |

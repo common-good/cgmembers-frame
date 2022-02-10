@@ -16,9 +16,8 @@ Setup:
   | .ZZB | Bea Two  | -500  | ok,confirmed,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
   | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
   And these "admins":
-  | uid  | vKeyE     | can         |*
-  | .ZZA | DEV_VKEYE | printChecks |
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  | uid  | vKeyE     | can                             |*
+  | .ZZA | DEV_VKEYE | v,seeDeposits,printChecks,panel |
   
 Scenario: admin prints checks
   Given these "txs2":
@@ -27,6 +26,7 @@ Scenario: admin prints checks
   | 5002 | .ZZA  |    400 | %today-2w |            0 | %today    |
   | 5003 | .ZZB  |    100 | %today-1d |            0 | %today    |  
   | 5004 | .ZZC  |    300 | %today    |            0 |         0 |
+  And member ".ZZA" scans admin card "%DEV_VKEYPW"
   When member ".ZZA" visits page "sadmin/deposits"
   Then we show "Bank Transfers" with:
   | New IN | 3 |

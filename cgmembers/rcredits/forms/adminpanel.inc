@@ -193,7 +193,7 @@ function superSignin($vKeyPw) {
     r\deleteCook('vKeyPw');
     return softErr(t('Your admin password is invalid.'));
   }
-  u\EXPECT($mya->admV, 'non admin scanned superAdmin card');
+  u\EXPECT($mya->admV, 'Non-admin scanned superAdmin card: ' . $mya->fullName);
   
   foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
     $a = r\acct($uid);

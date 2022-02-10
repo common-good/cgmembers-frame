@@ -200,6 +200,7 @@ function menu($submenu = '') {
     
     'account-photo' => ['call', 'Account Photo', 'AccountPhoto 0 1', ANY],
     'account-thumb' => ['call', 'Account Photo Thumbnail', 'AccountPhoto 0 1', ANY],
+    'account-logo' => ['call', 'Account Logo', '1', ANY, 'logo'],
     'help' => ['call', t('Help'), 'Help 1 2', ANY],
     'cgbiz' => ['call', t('Common Good Business'), 'CgBiz 1', ANY],
     'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],
@@ -310,6 +311,7 @@ function subMenuHtml($menu) {
   global $base_url;
 
   if (!is_array($menu)) $menu = menu($menu);
+
   $list = '';
   foreach ($menu as $k => $v) {
     list ($type, $head, $args, $perms, $func, $detail, $icon) = u\padRay($v, 7);
