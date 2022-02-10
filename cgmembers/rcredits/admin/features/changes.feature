@@ -14,7 +14,10 @@ Setup:
   | .ZZB | Bea Two  | 2 B St. | Bton | MA    | ok,debt  |     200 |     20 |          0 |   0.05 | %today-2y |             |
   | .ZZC | Cor Pub  | 3 C St. | Cton | CA    | ok,co    |     300 |     30 |          0 |   0.05 | %today-2y |             |
   | .ZZD | Dee Four | 4 D St. | Dton | DE    | ok,admin |     400 |     40 |          0 |   0.05 | %today-2y |             |
-
+  And these "admins":
+  | uid  | vKeyE     | can                 |*
+  | .ZZD |           | seeAccts,seeChanges |
+  
 Scenario: A member changes some settings
   Given member ".ZZA" completes form "settings/preferences" with values:
   | roundup | statements | secretBal |*

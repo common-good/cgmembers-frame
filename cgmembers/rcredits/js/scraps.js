@@ -30,6 +30,15 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'tests':
+    $('.compile').click(function () {
+      var input = $(this).find('input');
+//      input.attr('checked', input.is(':checked') ? '' : 'checked'); // allow label click
+      var v = input.is(':checked') ? {was:0, be:1} : {was:1, be:0};
+      $('.messages a').each(function (index) {$(this).attr('href', $(this).attr('href').replace('compile=' + v.was, 'compile=' + v.be));});
+    });
+    break;
+  
   case 'encrypted':
     $('.form-item-note a[download]').click(function () {$.alert(vs['msg'], 'Download');});
     break;

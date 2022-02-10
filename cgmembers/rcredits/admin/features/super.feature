@@ -12,8 +12,8 @@ Setup:
   
 Scenario: An admin prints checks
   Given these "admins":
-  | uid  | vKeyE     | can           |*
-  | .ZZA | DEV_VKEYE | v,printChecks |
+  | uid  | vKeyE     | can                             |*
+  | .ZZA | DEV_VKEYE | v,seeDeposits,printChecks,panel |
   And these "txs2":
   | xid  | payee | amount | deposit    |*
   | 3    | .ZZB  | 123    | %yesterday |
@@ -26,8 +26,8 @@ Scenario: An admin prints checks
   Then we show PDF with:
   | Bea Two | 123.00 | for %PROJECT credit |
 
-  When member ".ZZB" is signed in
-  And member ".ZZB" scans admin card "%DEV_VKEYPW"
+  Given member ".ZZB" is signed in
+  When member ".ZZB" scans admin card "%DEV_VKEYPW"
   Then we say "error": "no page permission" with:
   | page | Panel |**
 

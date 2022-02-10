@@ -277,10 +277,11 @@ EOF;
   
 function recur($template) {
   extract(just('id lastRecur period periods start end duration durations action from to purpose amount payerType payer', $template));
+
   $lastRecurWanted = u\lastRecur($start, $periods, $period);
   
   $shouldStart = $lastRecur < $lastRecurWanted ? $lastRecurWanted : u\dateIncr($lastRecurWanted, $periods, $period);
-  //: (empty($lastRecur) ? now() : u\dateIncr($lastRecur, $periods, $period));
+  
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template shouldStart'));
 
@@ -304,7 +305,7 @@ function recur($template) {
 
 // No longer needed  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
   $created = now();
-  if ($shouldStart >= now()) return; // don't pay or charge until the right date and time
+  if ($shouldStart > now()) return; // don't pay or charge until the right date and time
 
   if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);

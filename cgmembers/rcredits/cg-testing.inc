@@ -69,7 +69,7 @@ function strip($form) {
     }, $form);
   $form = preg_replace('/> *</sm', '> <', $form); // make sure there's exactly one space between things
   $form = preg_replace('/\s*$\s*/sm', PHP_EOL, strip_tags($form));
-  ///     if (strpos($form, '<html') !== FALSE) die($form);
+
   return $form;
 }
  
@@ -159,6 +159,17 @@ X
 //  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (array_key_exists($k, $info)) $info[$k] = nn($$k, NULL);
   return $info;
+}
+
+/**
+ * Say whether the given member has the given admin permissions. Or set them.
+ */
+function adminPerms($id, $perms) {
+  global $testOnly;
+  
+  $a = r\acct(t\uid($id));
+  if (!$testOnly) $a->setAdminBits(ray($perms));
+  return $a->adminCan($perms);
 }
 
 function cookieIs($nm, $v) {
@@ -707,7 +718,7 @@ function notice($notice, $id, $subs = []) {
  */
 function deCryVok() {
   global $mya, $sceneTest;
-  return (!isDEV or !test() or ($mya and $mya->admRegion) or $sceneTest->state == 'Given' or in($sceneTest->func, 'members membersHave these memberScansAdminCard'));
+  return (!isDEV or !test() or ($mya and $mya->admV) or $sceneTest->state == 'Given'); // or in($sceneTest->func, 'members membersHave these memberScansAdminCard'));
 }
 
 /**
@@ -812,7 +823,7 @@ function doBalances($info) {
   $uid = $uid0 = $info['uid'];
 
   if (!$a = r\acct($uid)) return t\output("account $uid0 does not exist");
-  $a->reread(TRUE); // otherwise db updates are invisible
+//  $a->reread(TRUE); // otherwise db updates are invisible
 
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
@@ -1369,6 +1380,7 @@ function pageForm($page) {
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
   } elseif (nn($lastGo) == $xlastGo and test()) {
+    u\EXPECT(!is_array($result), t('Page %page crashed (might be inadequate admin permissions).', compact('page')));
     if (!$result) list ($result, $formOut) = [$formOut, '']; // for example, for PDFs
     if ($formOut) t\output('TEST WARNING: formOut is not empty in t\pageForm(): ' . pr($formOut));
     setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
@@ -2042,3 +2054,4 @@ function getExitMsg() {
 }
 
 function fixTestVars(&$parm) {global $testVars; foreach (nn($testVars, []) as $k => $v) $parm = str_replace($k, $v, $parm);}
+function itsLater() {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = now() + 1);}

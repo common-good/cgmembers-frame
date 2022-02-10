@@ -1067,7 +1067,7 @@ function identify($who, $mya, $selfErr, $restrict) {
   $company = t('company');
   $anon = "IF(:IS_CO, '$individual', '$company')";
   $uidCrit = 'uid NOT :CANONIC';
-  if ($mya->admRegion) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
+  if ($mya->admActivate) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 

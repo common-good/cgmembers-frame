@@ -11,6 +11,7 @@ Setup:
   And these "txs":
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
+  And member ".ZZB" has admin permissions: "seeAccts"
 
 Scenario: A donation to CG is visible to admin
   Given these "tx_timed":
@@ -43,7 +44,8 @@ Scenario: A brand new recurring donation to CG can be completed
   And count "txs" is 2
   And count "txs2" is 0
   And count "tx_requests" is 0
-  When cron runs "recurs"
+  When it's later
+  And cron runs "recurs"
   Then count "txs" is 2
   And count "txs2" is 0
   And count "tx_requests" is 0

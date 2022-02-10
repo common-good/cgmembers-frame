@@ -83,7 +83,7 @@ X;
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit and $mark and $mya->admRegion) db\update('txs2', ray('deposit xid', today(), $xid), 'xid');
+    if (!$deposit and $mark and $mya->admAch) db\update('txs2', ray('deposit xid', today(), $xid), 'xid');
   }
   unset($DBTX);
   

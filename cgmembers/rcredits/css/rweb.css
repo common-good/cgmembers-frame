@@ -11,6 +11,8 @@
   #footer {border-top:1px solid #666666; padding-top:8px;}
 }
 
+.compile {font-size:30px;}
+.compile input {height:30px; width:30px;}
 .more {display:none;}
 .clear {clear:both;}
 .debug {margin-bottom:8px;}
@@ -29,7 +31,7 @@
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {-webkit-appearance:none; -moz-appearance:none; margin:0;}
 input[type=number] {-webkit-appearance:textfield; -moz-appearance:textfield;}
-input.short {width:100px; display:inline-block;}
+input.short {width:100px; display:inline-block; float:left;}
 input[type=date].short {width:150px;}
 #edit-title .btn.add,
 #edit-title .btn.list,
@@ -194,7 +196,8 @@ form {max-width:834px; margin:0 auto;}
 .form-type-item .control-label {padding-top:0;}
 .middle .control-label {padding-top:9px;} /* for when the item has a field in it */
 .form-horizontal .control-data {float:left; width:60%;}
-.suffix {display:inline-block; margin-left:5px; padding-top:9px; height:20px; vertical-align:top;}
+.presuffix {float:left;}
+.suffix {float:left; margin-left:5px; padding-top:9px; vertical-align:top;} /* was height:20px; */
 .form-item-honor .suffix,
 .form-item-periods .suffix,
 .form-item-actions .suffix,
@@ -931,7 +934,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-summary #left2.admin .scripts {width:100%; max-width:100%;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary #edit-notes .control-data {max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:105px; display:inline-block; margin-right:10px;}
+#frm-summary #edit-tickle {max-width:105px; margin-right:10px;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
@@ -1069,7 +1072,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-company #permissions table {width:auto;}
 #frm-company #permissions td {text-align:center;}
 #frm-company #permissions #perm-head td {background-color:white;}
-#frm-company #edit-showAdvanced {padding-left:0;}
+#frm-company #edit-showAdvanced {padding-left:0; display:inline; padding-bottom:10px;}
+#frm-company #edit-showAdvanced a {margin-bottom:15px;}
+#frm-company .form-item-advanced>.control-label {display:none;}
+#frm-company .form-item-advanced>.control-data {width:100%;}
+#frm-company .form-item-logo img {height:50px; margin:-15px 0 0 10px;}
+#frm-company #edit-logo {width:250px;}
 
 .filter-wrapper {
   /*margin:-15px auto 20px auto;*/

@@ -12,8 +12,9 @@ use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
 
-define('EOL', "\r\n"); // must be two characters long (make sure download doesn't change it)
-define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State filing
+const EOL = "\r\n"; // must be two characters long (make sure download doesn't change it)
+const STATE_CODE = '25'; // Massachusetts code, for combined Federal/State filing
+const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
 
 /**
  * Create 1099-B, K, NEC, or R reports for the IRS as a downloadable file to be uploaded to the IRS FIRE site.
@@ -49,6 +50,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
  
 function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
   global $err1099;
+  global $stateCode; $stateCode = $type == 'NEC' ? sp(2) : STATE_CODE; // combined state reporting is appropriate for everything but NEC
   u\setDft($year, date('Y') - 1);
   $testMode = $testMode ? 'T' : '';
 
@@ -95,13 +97,13 @@ function doPayer($type, $year, $sql, &$totals, $mod = '', $badNames = [], $badTI
 
   putRec(recA($type, $year));
   $bCount = 0; // IRS instructions pub 1220 call this "number of payees", but say it means "number of B records"
-  $total = array_fill(0, 16, 0);
+  $total = array_fill(0, AMT_COUNT, 0);
   
   if ($manual) { // MISC, NEC, or R
     $amtCodes = str_split(ray(TEN99AMTS)[$type]);
     foreach ($rows as $row) {
       extract(just('amount dt', $row, NULL));
-      $amtRay = array_fill(0, 16, 0);
+      $amtRay = array_fill(0, AMT_COUNT, 0);
       foreach ($amtCodes as $i) {
         $i -= 1; // because arrays start at 0
         $amtRay[$i] = $amount;
@@ -156,12 +158,13 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
       extract(just('gross noCard st txCount', $row));
       if (r\no1099k($gross, $txCount, $st)) continue;
       $created = $for = '';
-      $amount = [];
+      $amount = []; // initialize for each payee
       $amount[] = $gross;
       $amount[] = $noCard;
       $amount[] = 0; // unused
       $amount[] = 0; // withheld
-      for ($i = 1; $i <= 12; $i++) $amount[] = $row["amt$i"];
+      for ($i = 1; $i <= 12; $i++) $amount[] = $row["amt$i"]; // amount for each month
+      for ($i = count($amount); $i < AMT_COUNT; $i++) $amount[] = 0;
       foreach ($amount as $i => $v) $total[$i] = round($total[$i] + $v, 2);
     }
     
@@ -202,8 +205,11 @@ function recT($year, $testMode) {
  * @param int $year: year to report
  */
 function recA($type, $year) {
+  global $stateCode;
+
   $forCG = in($type, 'MISC NEC');
-  $combo = pad($type != 'NEC', 1); // combined Federal/State filing (for anything but NEC)
+  $combo = pad($stateCode == STATE_CODE, 1); // combined Federal/State filing (for anything but NEC)
+  
   $regionTIN = $forCG ? CGF_EIN : '461821792';
   $nameControl = sp(4);
   $lastEver = pad(FALSE, 1);
@@ -227,6 +233,8 @@ function recA($type, $year) {
  * @param string $mod: normally ''. C=show corrected info. G=show incorrect name and/or TIN (as submitted before)
  */
 function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $mod = '', $badName = '', $badTIN = '') {
+  global $stateCode;
+  
   extract(just('nm qid co addr ein txCount', $acctFields));
   $who = "$nm ($qid)";
   if (!$badName and !$badTIN) {
@@ -246,21 +254,20 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
   if ($st == 'ER' or !$zip or !$city) return err1099(t('Bad postalAddr for %who: %addr', compact(ray('who addr'))));
   $payeeAddr = pad($address, 40) . sp(40) . pad($city, 40) . pad($st, 2) . pad(u\digits($zip), 9);
 
-  if (count($amount) != 16) return err1099(t('There must be 16 amount fields.'));
+  if (count($amount) != AMT_COUNT) return err1099(t('There must be %amt amount fields. You have only %cnt.', 'amt cnt', AMT_COUNT, count($amount)));
   $amounts = ''; foreach ($amount as $amt) $amounts .= fmtAmt($amt, 12);
 
   $twoBadTINs = sp(1); // "2" if IRS griped twice within 3 calendar years that the payee provided a bad name and/or TIN. Otherwise blank.
-  $fatca = sp(1); // FATCA requirement (no): we do not have more than $50k in foreign assets and we are not an individual
   $withheld = u\lpad(0, 12) . u\lpad(0, 12); // state and local tax withheld (none)
   $date = pad($completed ? strftime('%Y%m%d', $completed) : '', 8);
 
-  if ($type == 'B') {
+  if ($type == 'B') { // might be out-of-date as of 2020
 //    $amt = fmtAmt($amount, 12);
 //    $amounts = u\lpad(0, 6 * 12) . $amt . u\lpad(0, 9 * 12);
         $desc = pad($for, 39);
     $qty = u\lpad(0, 13);
     $symbol = pad(0, 13);
-    $tail = sp(4) . $date . sp(13) . $desc . sp(8) . sp(1) . $qty . $symbol . sp(20) . sp(60) . $withheld . STATE_CODE . EOL;
+    $tail = sp(4) . $date . sp(13) . $desc . sp(8) . sp(1) . $qty . $symbol . sp(20) . sp(60) . $withheld . $stateCode . EOL;
   } elseif ($type == 'K') {
     $filerType = '1'; // 1=Payment Settlement Entity (PSE)
     $pmtType = '1'; // payment card (vs 2=network) -- NOTE: amount field #2 distinguishes when card is not present
@@ -269,25 +276,29 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
     $mcc = pad(0, 4); // merchant category code (not yet used)
     $special = sp(60);
     $withheld = u\lpad(0, 12) . u\lpad(0, 12);
-    $tail = $twoBadTINs . sp(2) . $filerType . $pmtType . $txCount . sp(3) . $otherPSE . $mcc . sp(54) . $special . $withheld . STATE_CODE . EOL;
+    $tail = $twoBadTINs . sp(2) . $filerType . $pmtType . $txCount . sp(3) . $otherPSE . $mcc . sp(54) . $special . $withheld . $stateCode . EOL;
   } elseif ($type == 'NEC') {
-    $tail = $twoBadTINs . sp(3) . $fatca . sp(174) . $withheld . STATE_CODE . EOL; // include state (not sp(2)) even though not accepted in MA
+    $directSales = sp(1);
+    $tail = $twoBadTINs . sp(2) . $directSales . sp(175) . $withheld . $stateCode . EOL;
   } elseif ($type == 'R') {
     $distCode = pad(7, 2);
     $totalDist = 1;
-    $tail = $twoBadTINs . $distCode . sp(2) . $totalDist . sp(2) . sp(4) . $fatca . $date . sp(98) . sp(60) . $withheld . STATE_CODE . EOL;
+    $fatca = sp(1); // FATCA requirement (no): we do not have more than $50k in foreign assets and we are not an individual
+    $tail = $twoBadTINs . $distCode . sp(2) . $totalDist . sp(2) . sp(4) . $fatca . $date . sp(98) . sp(60) . $withheld . $stateCode . EOL;
   } else u\FAIL('bad type: ' . $type); // MISC is NYI, but is similar to NEC)
   
-  return strtoupper('B' . $year . $corrected . $nameControl . $tinType . $payeeTIN . $accountNum . $payerOffice . sp(10) . $amounts . $foreignPayee . $payeeName . sp(40) . $payeeAddr .  sp(1) . seq() . sp(36) . $tail);
+  return strtoupper('B' . $year . $corrected . $nameControl . $tinType . $payeeTIN . $accountNum . $payerOffice . sp(10) . $amounts . sp(16) . $foreignPayee . $payeeName .  $payeeAddr .  sp(1) . seq() . sp(36) . $tail);
 }
 
 function recC($bCount, $totals) { 
-  return 'C' . u\lpad($bCount, 8) . sp(6) . $totals . sp(196) . seq() . sp(241) . EOL;
+  return 'C' . u\lpad($bCount, 8) . sp(6) . $totals . sp(160) . seq() . sp(241) . EOL;
 }
   
 function recK($type, $bCount, $totals) {
+  global $stateCode;
+
   $withheld = u\lpad(0, 18) . u\lpad(0, 18);
-  return 'K' . u\lpad($bCount, 8) . sp(6) . $totals . sp(196) . seq() . sp(199) . $withheld . sp(4) . STATE_CODE . EOL; // include state (not sp(2)) even for NEC, even though not accepted in MA (IRS rejects it otherwise)
+  return 'K' . u\lpad($bCount, 8) . sp(6) . $totals . sp(160) . seq() . sp(199) . $withheld . sp(4) . $stateCode . EOL; // include state (not sp(2)) even for NEC, even though not accepted in MA (IRS rejects it otherwise)
 }
 
 function recF($bCount, $aCount) {
@@ -331,6 +342,7 @@ function err1099($msg) {
   \drupal_set_message($msg);
   $err1099 = TRUE;
 /**/ echo  "\n\n********* ERROR *************\n\n"; // mark spot in file
+/**/ echo $msg;
   return '';
 }
 

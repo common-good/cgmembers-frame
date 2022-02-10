@@ -244,7 +244,7 @@ EOF
 //  'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'gift thanks' => t('<p>Thank you so much for your donation to %coName! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
   'purchase thanks' => t('<p>Your payment to %coName is complete!</p>'), // used in be\thanks()
-  'check it out' => t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
+  'check it out' => t('<p>If you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),
   'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
 //  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),

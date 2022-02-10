@@ -9,6 +9,7 @@ Setup:
   | .ZZA | Abe One    | -100  | personal    | ok,roundup,confirmed,bankOk | %today-15m | hasBank |
   | .ZZB | Bea Two    | -200  | personal    | ok,admin             | %today-15m |         |
   | .ZZC | Corner Pub | -300  | corporation | ok,co                | %today-15m |         |
+  And member ".ZZB" has admin permissions: "region"
   And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |

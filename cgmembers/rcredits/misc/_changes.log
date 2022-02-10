@@ -1,3 +1,21 @@
+2022-02-07 feature/logos
+. company logos are now stored automatically on the server
+. fixed bug that gave all admins all non-V permissions
+. created urlExists and crash-proof copyFile functions
+. updated 1099 reports to use IRS's latest format and requirements
+. fixed bug in ccpay that caused loop crash when signed in
+. added logo to ccpay
+. added kNot Theory and Truth Telling as the only non-sponsored companies that can use ccpay
+. fixed formatting of advanced options on company settings page
+. set QR scan to use front camera as an advanced option on dashboard
+. fixed bug that kept admSeeAccts from working
+. adjusted cron recurs so tests run and things still don't get run twice the first time
+. changed how suffix formatting is handled
+. fixed bugs in admin permissions handling and adjusted tests to handle them
+. added a "compile" checkbox to tests, so we can (very occasionally) uncheck it and edit test/ files for debugging
+. created an "it's later" function for testing
+. simplified handling of admin bits
+
 2022-02-01 feature/front-camera
 . added an advanced link on the dashboard to switch between front and back camera for the app
 . added some rWeb Undo tests and improved accuracy of description when reversing a failed bank transfer

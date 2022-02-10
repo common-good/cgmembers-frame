@@ -35,7 +35,7 @@ X
   $amount = numFld(t('Price/Amt:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
   $credit = numFld(t('Store Credit:'), [t('Amount of credit')]);
   $ccOk = $fbo ? NULL : boxFld('ccOk', NBSP, t('Also accept credit card payments'));
-  $ccOk = NULL; // disable for now
+  if (isPRODUCTION and !in($mya->mainQid, 'NYAAVV NYAAVU')) $ccOk = NULL; // disable for now, for everyone but Michael Lightsmith's company (beta test)
   $expires = dateFld(t('Expires:'), [t('Expiration date')]);
   $size = intFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + vmin(1) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
   $example = item(t('(Link will appear here)'), t('Link:'));

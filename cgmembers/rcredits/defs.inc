@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.59k'; // software version
+const R_VERSION = '3.59l'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -383,15 +383,17 @@ const RENEW_ADVANCE_DAYS = 7; // how many days in advance to ask people to renew
 const R_TEMPLATE_DIR = '/templates';
 const R_EMAIL_FRAME = 'email-frame';
 
-const R_PICTURE_DIR = SHARED_DIR . '/cgPhotoTemp/';
+const MSG_DIR = SHARED_DIR . '/msgs';
+const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
+define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 //const R_PROOF_DIR = '/proofs/'; UNUSED
+const R_PICTURE_DIR = SHARED_DIR . '/cgPhotoTemp/';
+const LOGO_DIR = R_PICTURE_DIR . 'logos';
+const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default profile picture
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
-const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
-define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
-const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
-const MSG_DIR = SHARED_DIR . '/msgs';
+
 const CC_FEE = 3; // percentage of transaction amount to charge for credit card processing
 define('METHOD_OPTS', t('email phone text')); // contact method options
 

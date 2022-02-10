@@ -56,6 +56,7 @@ Scenario: A non-member donates to a sponsored member
   Given members have:
   | uid  | flags    |*
   | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | cat | comment |*
   | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |         |

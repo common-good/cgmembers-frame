@@ -12,13 +12,15 @@ use CG\Db as db;
 function formCCPay($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
-  if ($mya = w\eLinkAcct($sta, $args, 'any')) return go(str_replace('/ccpay', '/cgpay', $_SERVER['REQUEST_URI']) . '?' . $_SERVER['QUERY_STRING']);
-  
+  $mya = w\eLinkAcct($sta, $args, 'any');
+
   jsx('cc');
   $op = nni($args, 'op');
 
   if ($op == 'done') return completeCCPayment($args);
   if ($op == 'cancel') return softErr(tr('no paypal cancel'));
+
+  if ($mya) return go(str_replace('ccpay/', 'cgpay/', $_SERVER['REQUEST_URI']) . '?' . $_SERVER['QUERY_STRING']);
 
   if ($code = nni($args, 'code')) {
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
@@ -26,10 +28,11 @@ function formCCPay($form, &$sta, $args = NULL) {
     extract(just('coA amount item s_amount', $ray, NULL));
   } else return softErr(t('That is not a valid payment link.'));
 
+  $logo = logoFld($coA);
   $title = t('Pay ') . $coA->bestName;
   $subtext = '';
   $payHow = hidFld(1); // always by CC
-  $form = payFlds(t('Pay'), $coA, $item, $amount, $s_amount, compact(ray('title subtext payHow')));
+  $form = payFlds(t('Pay'), $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow')));
   if (!nni($form, 'amount')) return $form; // error
   
   $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add comment'))));

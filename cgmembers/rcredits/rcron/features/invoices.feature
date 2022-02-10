@@ -59,6 +59,9 @@ Setup:
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
   | draw   | from   | $200   |        2 | to pay pending payment request #2 |
+  And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
+  | short | payeeName | nvid |*
+  | $50   | Our Pub   |    3 |
   
   When cron runs "pendingRequests"
   Then we message "stale invoice" to member ".ZZA" with subs:
@@ -70,7 +73,7 @@ Setup:
   And we do not message "stale invoice" to member ".ZZA" with subs:
   | purpose |*
   | five    |
-  Then balances:
+  And balances:
   | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -81,9 +84,6 @@ Setup:
 
   When cron runs "getFunds"
   Then usd transfer count is 1
-  And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
-  | short | payeeName | nvid |*
-  | $50   | Our Pub   |    3 |
   And these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    700 | %today  |         0 |       0 |

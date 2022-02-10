@@ -20,10 +20,10 @@ Scenario: A member clicks a CGPay button
   | .ZZC    | Cc3    | food | 23.50  |
   When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
-  | Pay        | 23.50 to Our Pub |
-  | For        | food |
-  | Account ID |  |
-  | Password   |  |
+  | Pay        | 23.50 | to Our Pub |
+  | For        | food  ||
+  | Account ID |  ||
+  | Password   |  ||
 
 Scenario: A member clicks an expired CGPay button
   Given button code "BUTTONCODE" for:
@@ -52,10 +52,10 @@ Scenario: A member clicks a CGPay button with variable amount
   | .ZZC    | Cc3    | food |
   When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
-  | Pay        | to Our Pub |
-  | For        | food |
-  | Account ID |  |
-  | Password   |  |
+  | Pay        | to   | Our Pub |
+  | For        | food ||
+  | Account ID |  ||
+  | Password   |  ||
 
 Scenario: A member submits a CGPay button payment with account ID and chosen amount
   Given button code "BUTTONCODE" for:
@@ -74,10 +74,10 @@ Scenario: A member clicks a button to buy 50% store credit
   | .ZZC    | Cc3    | credit50 | 23.50  |
   When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
-  | Pay        | 23.50 to Our Pub |
-  | For        | store credit |
-  | Account ID |  |
-  | Password   |  |
+  | Pay        | 23.50 | to Our Pub |
+  | For        | store credit ||
+  | Account ID |  ||
+  | Password   |  ||
   
 Scenario: A member clicks a button to buy store credit for a different amount
   Given button code "BUTTONCODE" for:
@@ -85,10 +85,10 @@ Scenario: A member clicks a button to buy store credit for a different amount
   | .ZZC    | Cc3    | credit | 23     | 30     |
   When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
-  | Pay        | 23.00 to Our Pub |
-  | For        | $30 store credit |
-  | Account ID |  |
-  | Password   |  |
+  | Pay        | 23.00 | to Our Pub |
+  | For        | $30 store credit ||
+  | Account ID |  ||
+  | Password   |  ||
   
   When member "?" confirms "cgpay?code=BUTTONCODE" with:
   | qid  | pass |*
@@ -172,11 +172,11 @@ Scenario: A member clicks a button to buy a gift of store credit
   | .ZZC    | Cc3    | credit | 23.50  | gift |
   When member "?" visits page "cgpay?code=BUTTONCODE"
   Then we show "Pay with %PROJECT" with:
-  | Pay          | 23.50 to Our Pub |
-  | For          | store credit |
-  | As a Gift to | |
-  | Account ID   | |
-  | Password     | |
+  | Pay          | 23.50 | to Our Pub |
+  | For          | store credit ||
+  | As a Gift to | ||
+  | Account ID   | ||
+  | Password     | ||
 
 Scenario: A member types account ID to buy a gift of store credit
   Given button code "BUTTONCODE" for:

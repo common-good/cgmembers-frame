@@ -9,6 +9,7 @@ Setup:
   | .ZZA | Abe One  | ok        |
   | .ZZB | Bea Two  | ok,admin  |
   | .ZZC | Our Pub  | co,ok     |
+  And member ".ZZB" has admin permissions: "seeAccts"
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | manage     |

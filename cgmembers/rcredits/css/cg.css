@@ -123,7 +123,7 @@ input[type="checkbox"], input[type="radio"] {transform: scale(1);}
 .caption {margin:0 auto 20px 0; text-align:center;}
 .center {text-align:center;}
 .control-label {padding:9px 0 0 10px; text-align:right; margin-left:0;}
-.help-block {font-size:85%;}
+.help-block {font-size:85%; clear:both;}
 .wellhole {padding:5px 10px 0 0;} /* for columns containing a well */
 .well {margin:5px 0; padding-right:13px;}
 .well > img, .well iframe {width:100%;}

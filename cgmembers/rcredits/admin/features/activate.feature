@@ -10,9 +10,8 @@ Setup:
   | .ZZB | Bea Two  | 2 B St. | Bton | MA    | 02000      | b@    | ok               |     200 | 222222222 | %now-30y |
   | .ZZD | Dee Four | 4 D St. | Dton | MA    | 04000      | d@    | member,confirmed |     400 | 444444444 | %now-19y |
   And these "admins":
-  | uid  | vKeyE     | can      |*
-  | .ZZA | DEV_VKEYE | activate |
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  | uid  | vKeyE     | can                                   |*
+  | .ZZA | DEV_VKEYE | v,seeAccts,manageAccts,activate,panel |
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZZD | .ZZA  |   1 | manage     |
@@ -20,6 +19,7 @@ Setup:
 
 Scenario: Admin activates an account
   Given member ".ZZD" has no photo ID recorded
+  And member ".ZZA" scans admin card "%DEV_VKEYPW"
   When member "D:A" completes form "sadmin/summary" with values:
   | mediaConx | active | helper  | federalId  | adminable        | tickle | dob      |*
   |         1 |      1 | Bea Two | %R_ON_FILE | member,confirmed |        | %mdy-19y |
@@ -32,6 +32,7 @@ Scenario: Admin activates an account
   
 Scenario: Admin activates an account unconfirmed
   Given member ".ZZD" has no photo ID recorded
+  And member ".ZZA" scans admin card "%DEV_VKEYPW"
   And members have:
   | uid  | flags  |*
   | .ZZD | member |
