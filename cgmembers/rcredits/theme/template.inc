@@ -381,12 +381,14 @@ function rcredits_radio($variables) {
 }
 
 function rcredits_submit($variables) {
-  $special = 'title class tickle tabindex disabled';
+  $special = 'title class tickle tabindex disabled field_suffix';
   extract(cgElement($variables, 'bare value id size style parents ' . $special));
   $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
   if (!nn($id) or $id == strtolower($id2)) $id = $id2;
   $extra = cgElement($variables, $special);
-  $variables['element']['#children'] = $res = spinLink('submit', $value, $id, nn($style), nn($size), $extra);
+  $res = spinLink('submit', $value, $id, nn($style), nn($size), $extra);
+  if (nni($extra, 'field_suffix')) $res = '<div class="presuffix">' . $res . '</div>';
+  $variables['element']['#children'] = $res;
   return nn($bare) ? $res : rcredits_form_element($variables);
 }
 
@@ -400,12 +402,13 @@ function rcredits_button($variables) {
 
 function rcredits_checkbox($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', 'value'));
-  extract(cgElement($variables, 'title attributes checked class default_value'));
+  extract(cgElement($variables, 'title attributes checked class default_value tabindex'));
 
   $type = 'checkbox';
   if (nn($checked) or nn($default_value)) $attributes['checked'] = 'checked';
   if (nn($class)) $attributes['class'] = $class;
   if (test() and nni($attributes, 'checked')) f('t.setChecked', $title);
+  if (isset($tabindex)) $attributes += compact('tabindex');
   $tribs = u\tribs(compact('type') + $attributes);
   return "<input $tribs />";
 }

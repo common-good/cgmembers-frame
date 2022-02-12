@@ -142,14 +142,14 @@ X
         )))))))),
         IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, 'Invited by Other')
       ) AS origin,
-      SUM(IF(:IS_OK, 1, 0)) AS member,
-      SUM(IF(:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
+      SUM(IF(u.:IS_OK, 1, 0)) AS member,
+      SUM(IF(u.:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
       SUM(IFNULL(tm.amount, 0) * perYear(tm.period, tm.periods))
-        / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
-      SUM(IF(:IS_ROUNDUP, 1, 0))
-        / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
+        / SUM(IF(u.:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
+      SUM(IF(u.:IS_ROUNDUP, 1, 0))
+        / SUM(IF(u.:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
       SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
-        / SUM(IF(:IS_OK, 1, 0)) AS eachInvited
+        / SUM(IF(u.:IS_OK, 1, 0)) AS eachInvited
     FROM users u
     LEFT JOIN tx_timed tm ON tm.from=u.uid AND tm.to=:CGID AND tm.end IS NULL
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)

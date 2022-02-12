@@ -276,7 +276,7 @@ EOF;
 }
   
 function recur($template) {
-  extract(just('id lastRecur period periods start end duration durations action from to purpose amount payerType payer', $template));
+  extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer', $template));
 
   $lastRecurWanted = u\lastRecur($start, $periods, $period);
   
@@ -292,7 +292,7 @@ function recur($template) {
 
   if ($action == 'surtx') {
     if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't but don't do it more than a week in advance
-    $rule = justNot(ray('id period periods duration durations start end lastRecur'), $template);
+    $rule = justNot(ray('id period periods duration durations start end lastRecur flags'), $template);
     $rule['template'] = $id;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
@@ -314,10 +314,11 @@ function recur($template) {
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
+    $type = w\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
     $info = compact(ray('amount purpose created')) + ray('explicit cat completed recursId deposit gift', FALSE, BCAT_GIFT, now(), $id, 0, TRUE);
     $xid = be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
-    be\thanks('fbo', FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
+    be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
     return;
 
   } else { // normal pay or charge
@@ -328,7 +329,8 @@ function recur($template) {
     }
 
     $data = compact('created');
-    if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
+    if ($flags) foreach (ray(TX_FLAGS) as $k) if (u\getBit($flags, $k)) $data[$k] = TRUE;
+    if ($action == 'pay' and $to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
   
     if ($action == 'pay') {
       if (is_null($amount)) { // sweep

@@ -521,6 +521,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-cgbutton #edit-size {width:200px; display:inline-block; margin-right:20px; vertical-align:top;}
 #frm-cgbutton #button {display:inline-block;}
 #frm-cgbutton .radio {display:inline-block;}
+#frm-cgbutton .form-item-size .suffix {padding-top:0;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}

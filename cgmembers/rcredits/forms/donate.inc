@@ -33,7 +33,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
   $recursId = $amtChoice = NULL;
   $isCG = ($coA->id == CGID);
-  $fbo = strhas($coA->fullName, t('%PROJECT FBO '));
+  $fbo = $coA->sponsored;
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
   
   if ($isCG and $mya) {
@@ -55,9 +55,11 @@ function formDonate($form, &$sta, $args = NULL) {
     $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
     jsx('amtChoice');
 
-  } else { // sponsored or not signed in
+  } else { // sponsored (or other member company accepting donations) or not signed in
     $options = btnOpt('', t('repeat'), 'btn-repeat') . $options;
-    $subtext = t('<p>Make a tax-deductible contribution of any amount to support %coName. For donations of stock, <%aStock>contact us</a>.</p>', '_aStock coName', atag($mya ? '/help' : r\promoLink('about-us/contact-us')), $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT)));
+    $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
+    $subtext = t('Make a tax-deductible contribution of any amount to support %coName.', compact('coName'));
+    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
   }
 
   $options = item($options);
@@ -101,15 +103,15 @@ function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   if ($mya) return submitCG($sta);
 
-  extract(just('amount fsFee payHow coverCCFee coverFSFee', $sta['input'], NULL));
+  extract(just('amount fsFee payHow coverCCFee coverFSFee coId', $sta['input'], NULL));
   $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? CC_FEE / 100 : 0));
   $sta['amount'] = round($amount + $feeCovered, 2);
 
-  return submitNonMemberPayment($sta, 'fbo', compact('feeCovered'));
+  return submitNonMemberPayment($sta, w\ccGiftType($coId), compact('feeCovered'));
 }
 
 /**
- * Handle submission of donation to CG itself.
+ * Handle submission of donation by a CG member, signed in.
  */
 function submitCG($sta) {
   $mya = w\eLinkAcct($sta); 
@@ -141,7 +143,7 @@ function submitCG($sta) {
 
     $nm = $mya->fullName;
     if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    be\thanks('fbo', TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
+    be\thanks(w\ccGiftType($coId), TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();

@@ -1393,8 +1393,8 @@ function ssnFld($req = REQ, $extra = []) {
 }
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
-function logoFld($a) {return $a->hasLogo ? item(logoHtml($a) . '?' . now()) : NULL;}
-function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid) : '';}
+function logoFld($a) {return $a->hasLogo ? item(logoHtml($a)) : NULL;}
+function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid . '?' . now()) : '';}
 
 /**
  * Standardize the "selling" field input.
@@ -2342,3 +2342,4 @@ function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('top
 function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
+function ccGiftType($coId) {return $coId == CGID ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}

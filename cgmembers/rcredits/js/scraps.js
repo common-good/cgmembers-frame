@@ -223,6 +223,7 @@ function doit(what, vs) {
       $('#dashboard').hide();
       $('.w-pay').toggle(pay);
       $('.w-charge').toggle(!pay);
+      $('.form-item-amount .suffix').toggle(pay);
       $('#edit-title h3').html(desc);
       $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
@@ -377,8 +378,13 @@ function doit(what, vs) {
     break;
     
   case 'cgbutton':
+    var forGift = 0;
+    var forStoreCredit = 2; // the radio button for buying credit
+    var forGiftCredit = 3;
+    var typeBtn = 2; // the radio button for "button"
     var cgPayCode;
     var ccOk = $('.form-item-ccOk input');
+    $('.form-item-ccOk').hide();
     ccOk.click(function () {cgbutton();});
 
     $('#edit-item').focus();
@@ -388,9 +394,11 @@ function doit(what, vs) {
     $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
-      var credit = (fer < 2);
+      var credit = (fer == forStoreCredit || fer == forGiftCredit);
+      $('.form-item-ccOk').toggle(vs['showCcOk'] == 1 && fer != forGift) // all gifts can be by CC, so don't show that option
+      ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
-      $('.form-item-credit').toggle(fer == 0); // show credit option only for credit (not for gift)
+      $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)
       $('.form-item-item').toggle(!credit);
       $(credit ? '#edit-size' : '#edit-item').focus();
       getCGPayCode();
@@ -418,16 +426,19 @@ function doit(what, vs) {
     }
     
     function cgbutton() {
+      var fer = $('.form-item-for input:checked').val();
       var type = $('.form-item-button input:checked').val();
-      if (type == undefined) type = 2;
-      var isButton = (type == 2);
+      if (type == undefined) type = typeBtn;
+      var isButton = (type == typeBtn);
       $('.form-item-size').toggle(isButton);
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/' + vs['page'];
-      if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
-      // to make this a cc donation to a non-sponsored member business, change /cgpay to /community/donate when the gift radio button is active
+      var url = baseUrl + '/cgpay';
+      if (fer == forGift) {
+        url = url.replace('/cgpay', '/donate');
+      } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
+      
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;

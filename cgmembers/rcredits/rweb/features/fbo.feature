@@ -324,8 +324,8 @@ Scenario: A member donates to a sponsored organization
 
 Scenario: A member pays a sponsored organization
   When member ".ZZA" submits "tx/pay" with:
-  | op  | who     | amount | purpose | period | periods |*
-  | pay | Our Pub | 123    | gift    | month  | 1       |
+  | op  | who     | amount | purpose | period | periods | isGift |*
+  | pay | Our Pub | 123    | gift    | month  | 1       | 1      |
   Then these "txs":
   | eid | xid | payer | payee | amount | purpose | type       |*
   | 1   | 1   | .ZZA  | .ZZC  | 123    | gift    | %E_PRIME   |
