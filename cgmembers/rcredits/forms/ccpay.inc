@@ -68,7 +68,7 @@ function formCCPay_submit($form, &$sta) {
 /**
  * Submit non-member payment from formCCPay_submit() and formDonate_submit().
  * @param assoc $sta: the status hash from the form submit function
- * @param string $type: fbo, gift, or purchase
+ * @param string $type: fbo, gift, cggift, or purchase
  * @param assoc $reportInfo: extra information to report to admin
  */
 function submitNonMemberPayment($sta, $type, $reportInfo = []) {
@@ -88,15 +88,16 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   $DBTX = \db_transaction();
   $pid = db\insert('people', $info, 'pid');
   
-  if ($payHow == 0) { // bank transfer (the default)
+  if ($payHow == 0) { // bank transfer (the default for cggift and fbo, else not allowed)
+    u\EXPECT(in($type, 'cggift fbo'), 'wrong type for ACH donation');
     $bankAccount = "USkk$routingNumber$bankAccount";
     $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
-    addToTxs2($amount, t('donation'), $coA, $period, $pid, $honorId, $bankAccount, $isSavings);
+    addToTxs2($amount, t('donation'), $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);
     r\tellAdmin($source, $reportInfo);
     unset($DBTX);
-    return be\thanks('fbo', FALSE, $pid, $item, $amount, $period, 1, $coA->id, TRUE);
+    return be\thanks($type, FALSE, $pid, $item, $amount, $period, 1, $coA->id, TRUE);
  
-  } else { // credit card donation
+  } else { // credit card donation or purchase
     $code = u\cryRay(compact(ray('type item pid period')) + ray('amount coId', number_format($amount, 2, '.', ''), $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests, but omit commas so it's still a number)
     $what = $type == 'purchase' ? t('your purchase of %item from %who', 'item who', $item, $coA->bestName)
     : ($coA->id == CGID ? t('general support') : $coA->bestName);
@@ -150,7 +151,7 @@ function completeCCPayment($args) {
   $fullName = db\get('fullName', 'people', compact('pid'));
   
   $DBTX = \db_transaction();
-  $xid = addToTxs2($amount, $item, $coA, $period, $pid, $honorId);
+  $xid = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
   be\txEntryPair($txes, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), NULL, E_USD_FEE);
   be\insertTxes($txes, $xid);
   unset($DBTX);
@@ -192,7 +193,7 @@ function getCGPayArgs($args) {
  * Add an "outer" record to txs2 for the credit card payment.
  * @return the outer transaction record ID (xid)
  */
-function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $bankAccount = NULL, $isSavings = NULL) {
+function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {
   $recursId = NULL;
   if ($period != PER_1) {
     if ($bankAccount) { // allow recurring payment only by ACH (not CC)
@@ -201,7 +202,7 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $bankAc
   }
   list ($purpose, $explicit, $cat, $completed, $gift) = [$desc, TRUE, BCAT_GIFT, now(), TRUE];
   $deposit = $bankAccount ? 0 : now();
-  $info = compact(ray('purpose pid completed deposit explicit cat bankAccount isSavings recursId'));
+  $info = compact(ray('purpose pid completed deposit explicit cat bankAccount isSavings recursId gift'));
   $xid = be\createUsdTransfer($coA, $amount, $info);
   if ($id = $honorId) db\update('r_honors', compact(ray('id xid')), 'id');
   return $xid;
@@ -209,7 +210,7 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $bankAc
 
 /**
  * Return most of the form fields for a CC or ACH payment.
- * @param assoc $extra: additional fields to include (for FBO)
+ * @param assoc $extra: additional fields to include
  */
 function payFlds($amtLabel, $coA, $item, $amount, $amtDft, $extra = []) {
   global $mya;
@@ -241,6 +242,6 @@ function payFlds($amtLabel, $coA, $item, $amount, $amtDft, $extra = []) {
   // Stuff to do AFTER extracting $extra
   if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin')));  
   
-  foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId') as $k) if (isset($$k)) $form[$k] = $$k;
+  foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
   return $form;
 }

@@ -459,7 +459,8 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'noask'
  *   'funding'
  *   'button': paid from a CGPay button on a company website
- *   'crumbs', 'gift': gift info
+ *   'crumbs'
+ *   'gift': payment is a gift
  *   'ruleId': the id of the rule associated with this transaction
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
@@ -612,10 +613,10 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   // Notify both parties by email about any completed transaction
   $res = sendNotifications($actorA, $type, $tx, $shortfall);
-  if ($type == 'payment' and $gainerA->sponsored) {
-    list ($period, $periods) = [PER_1, 0];
+  if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
+    list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks('fbo', TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+    be\thanks(w\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
   }
   
   foreach ([$actorA, $otherA] as $a) {
@@ -821,7 +822,7 @@ EOF;
 
 /**
  * Thank a donor to CG or a fiscally sponsored account and report to that organization.
- * @param string $type: gift (donation not to CG), fbo (donation to a sponsored organization), or purchase
+ * @param string $type: gift (donation not to CG), cggift, fbo (donation to a sponsored organization), or purchase
  * @param bool $member: <payer is a member>
  * @param int $id: account record ID or people record ID for the payer
  * @param string $item: item description
@@ -833,7 +834,7 @@ EOF;
  */
 function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
   $coA = r\acct($coId);
-  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase, gift, or fbo)
+  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
 
   if ($member) {
     $a = r\acct($id);

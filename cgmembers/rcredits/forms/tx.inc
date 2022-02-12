@@ -48,7 +48,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $email = emailFld(t('Email:'), [t('Email address')]);
   $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
-  $amount = numFld(REQ . t('Amount:'), [t('Transaction amount')], dft($amount) + vmin(.01));
+  $amount = numFld(REQ . t('Amount:'), [t('Tx amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
   $cat = $fbo ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
@@ -96,7 +96,7 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
 
   if (!$who) return fboTx($input);
@@ -124,6 +124,7 @@ function formTx_submit($form, &$sta) {
     
     if (!$start) $start = today(); // handle ''
     $info += compact(ray('action amount purpose period periods start end'));
+    if ($isGift) $info['flags'] = u\bit(B_GIFT);
     $recursId = db\insert('tx_timed', $info, 'id');
   }
   
@@ -134,8 +135,9 @@ function formTx_submit($form, &$sta) {
     $ok = TRUE;
   } else { // no delay, transact now
     $data = [];
-    if ($start and $start < today()) $data['created'] = $start; // superAdmin chose a date in the past
+    if ($start and $start < today()) $data['created'] = $start; // admin chose a date in the past
     if ($fbo) $data += compact('cat');
+    if ($isGift) $data['gift'] = TRUE;
 
     $z = $paying
     ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL)
@@ -165,7 +167,7 @@ function fboTx($input) {
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
-  $info = ray('purpose pid completed deposit cat', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat);
+  $info = ray('purpose pid completed deposit cat gift', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat, $isGift);
   $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($xid, 'outer transfer failed');
   say('info saved');

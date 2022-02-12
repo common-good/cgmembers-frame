@@ -173,7 +173,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'users') return say(a\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
   if ($op == 'txs') return say(a\showQuery('txs', 'xid DESC, type', 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init', 'uid1 uid2'));
 
-  if ($op == 'recurs') return say(a\showQuery('tx_timed t', 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
+  if ($op == 'recurs') return say(a\showQuery('tx_timed tm', 'id DESC', 'id,tm.start AS created,tm.from,tm.to,amount,purpose,period,tm.end', 'tm.from tm.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 'msgid DESC'));
   if ($op == 'admins') return say(a\showQuery('(SELECT uid,fullName,can FROM users LEFT JOIN admins USING (uid) WHERE :IS_ADMIN OR can) x', 'fullName', 'uid, fullName, IFNULL(can, 0) AS can'));

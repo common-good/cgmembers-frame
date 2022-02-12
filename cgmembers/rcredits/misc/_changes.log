@@ -1,3 +1,11 @@
+2022-02-11 feature/cc-gifts
+. member companies can all now accept CC and ACH donations from non-members
+. added a "this is a gift" checkbox to tx form
+. fixed deCryVOk() to return true except in a "When" test step
+. added flags to tx_timed (just to track gifts, so far)
+. fixed bug that thanked for donations to CG as though they were FBO
+. improved cgbutton button-maker form, including a new "gift" option
+
 2022-02-07 feature/logos
 . company logos are now stored automatically on the server
 . fixed bug that gave all admins all non-V permissions

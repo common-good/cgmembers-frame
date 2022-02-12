@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.59l'; // software version
+const R_VERSION = '3.59m'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -706,10 +706,6 @@ const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear 
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
-  'thanks-nonmember' => t('Thank you for your donation!'),
-  'thanks-member' => t('Thank you for your donation!'),
-  'fbo-thanks-nonmember' => t('Thank you for your donation!'),
-  'fbo-thanks-member' => t('Thank you for your donation!'),
   'gift-report' => t('You have a donation'),
   'purchase-report' => t('You received a guest payment'),
   'purchase-thanks-nonmember' => t('Your purchase is complete'),
@@ -734,6 +730,7 @@ $GLOBALS['emailSubjects'] = array(
   'post-message' => t('Response to your Offers & Needs post'),
   'post-notice' => t('recent Offers & Needs near you'),
 );
+foreach (ray(' gift- cggift- fbo-') as $k) foreach(ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
 
 $GLOBALS['topics'] = array( // topics for 'message' email
   'confirm invite' => t('Confirm invitation to %otherName'),
