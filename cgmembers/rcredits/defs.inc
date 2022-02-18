@@ -190,7 +190,7 @@ const R_SHARE_MAX = 50; // minimum sharing percentage
 const R_SHARE_DFT = 25; // default sharing percentage
 define('R_SHARING_MSG', t('sharing rewards with CGF'));
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
-const MAX_FILE_HOURS = 72; // maximum amount of time to store a file for a member (used in member-to-member messaging)
+const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 

@@ -90,7 +90,7 @@ X;
 function formTxDetail_validate($form, &$sta) {
   extract(just('created amt', $sta['input'], NULL));
 
-  if ($created and $err = u\badDate($created, today() - 3 * MONTH_SECS, tomorrow())) return say($err, 'created');
+  if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 12 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($amt and $err = u\badAmount($amt, '!=0')) return say($err, 'amt');
   u\preRay(compact(ray('created amt')), $sta['input']);
 }

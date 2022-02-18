@@ -37,7 +37,7 @@ function formOption($form, &$sta, $args = '') {
   if ($type == 'R') {
     $minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(nn($min)));
     $maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(nn($max)));
-  }
+  } else $minimum = $maximum = NULL;
   
   if ($mya->admManageVote) $submit = submit();
   
