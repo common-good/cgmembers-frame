@@ -1,3 +1,17 @@
+2022-02-20 feature/bank-tx-details
+. replaced deposit details PDF with standard form
+. fixed long-standing testing failure in findEmail function and corrected various feature tests
+. moved achify to achbatch.inc
+. created r\bankData function to return all parameters for a particular CG banking relationship
+. corrected thanks templates to use %amount not %gift
+. changed name of 1099 files to accommodate MA DOR website (.txt)
+. removed failed tracking image from notices
+
+2022-02-18 feature/tweaks
+. fixed minor bug in 1099 generator for IRS's latest format
+. increased max expiration time for encrypted messages to members
+. we now allow admin to change tx date to nearly a year ago
+
 2022-02-11 feature/cc-gifts
 . member companies can all now accept CC and ACH donations from non-members
 . added a "this is a gift" checkbox to tx form

@@ -55,7 +55,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   $testMode = $testMode ? 'T' : '';
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
-  u\beginDownload("forms1099-$type-Y$year$testMode.bin"); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload("Y$year$testMode-forms1099$type.txt"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);
@@ -72,7 +72,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   } else $bCount = doPayer($type, $year, $sql, $totals);
   
   $aCount = $uids ? 2 : 1;
-  putRec(recK($type, $bCount * $aCount, $totals));
+  if ($stateCode == STATE_CODE) putRec(recK($type, $bCount * $aCount, $totals)); // recK is for state totals, so omit if not reporting to the state
   putRec(recF($bCount * $aCount, $aCount));
   if (test()) return;
   flush();

@@ -59,7 +59,7 @@ Scenario: admin generates a 1099 report for the past 12 months
   Given member ".ZZB" is signed in
   And member ".ZZB" scans admin card "%DEV_VKEYPW"
   When member ".ZZB" runs a 1099 report type "K" with testing "0"
-  Then we download "forms1099-K-Y<LY>.bin" with "1099" records:
+  Then we download "Y<LY>-forms1099K.txt" with "1099" records:
   | type | who  | cnt | amounts                                     | seq |*
   | T    |      |     |                                             |   1 |  
   | A    | .AAB |     |                                             |   2 |

@@ -40,9 +40,3 @@ define('R_INFLATION_RATE', .05); // annual USD inflation rate (but never less th
 //define('R_ADMIN_QID', 'NEW.AAA'); // William's account code
 define('USDTX_DAYS', 5); // how many days it takes for a transfer to clear from bank to Common Good account
 define('USDTX_FAST', 200); // maximum amount a member can transfer overnight (instead of waiting USDTX days)
-
-define('BANK_NAME', 'Citizens Bank');
-define('BANK_ADDR', 'Greenfield Branch<br>89 French King Highway<br>Greenfield, MA 01301<br>+1 413 774 2135');
-define('ESCROW_ROUTING', '211070175'); // escrow account routing number
-define('ESCROW_IN', '1326532860'); // escrow account number for checks from bank to escrow
-define('ESCROW_OUT', '1326532739'); // escrow account number for outgoing checks (no longer used, since we do ACHs)

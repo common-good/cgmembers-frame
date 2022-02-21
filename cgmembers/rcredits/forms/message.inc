@@ -27,8 +27,8 @@ function formMessage($form, &$sta, $args = '') {
   $message = areaFld(t('Message:'), [t('Your message goes here.')]);
   $addSecret = item(lnk('', t('Add some encrypted data')));
   $secret = areaFld(t('Secret:'), [t('Secret information here'), t('Max %SECRET_MAXLEN chars.')], maxlen(SECRET_MAXLEN));
-  $file = fileFld(t('Secret File:'), t('Upload a file for secure download. Maximum size %MAX_UPLOAD_SIZE MB. Maximum expiration time %MAX_FILE_HOURS hours.'));
-  $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(48) + suffix(t(' hours')));
+  $file = fileFld(t('Secret File:'), t('Upload a file for secure download. Maximum size %MAX_UPLOAD_SIZE MB. Maximum expiration time %MAX_FILE_DAYS days.'));
+  $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(MAX_FILE_DAYS) + suffix(t(' days')));
   $secrets = fieldSet('secrets', compact(ray('secret file expires')), BARE);
   $submit = t('Send');
   $fromQid = hidFld($a->mainQid);
@@ -40,12 +40,10 @@ function formMessage($form, &$sta, $args = '') {
 function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message secret expires', $sta['input'], NULL));
   if (strhas($to, '@') and !strhas($to, ' @ ') and empty($secret) and !gotFile()) return say(t('If you know the member\'s email address, don\'t use this form unless you\'re including an encrypted message or file &mdash; just send them an email.'), 'to'); // !strhas is needed to accept results of autocomplete
-  if (strlen($secret) and $expires <= 0) return say(t('Expires must be greater than zero.'), 'expires');
-//  if (!$a = w\whois($to, 'to', $info, 'self-message')) return FALSE;
-//  u\preray(ray('uid', $a->id), $sta['input']);
+  if ($expires < 0 or $expires > MAX_FILE_DAYS or ((strlen($secret) or gotFile()) and $expires == 0)) return say(t('Expires must be greater than zero and less than %MAX_FILE_DAYS.'), 'expires');
 
   if (gotFile()) {
-    $flnm = microtime(TRUE) + HOUR_SECS * $expires;
+    $flnm = microtime(TRUE) + DAY_SECS * $expires;
     if (!is_dir(MSG_DIR)) mkdir(MSG_DIR, 0755) or u\FAIL('cannot create msgs directory'); 
     $path = MSG_DIR . '/' . $flnm;
     $fileData = uploadFile($path, NULL);

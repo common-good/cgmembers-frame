@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.59m'; // software version
+const R_VERSION = '3.59n'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -25,9 +25,10 @@ const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 60000',
-  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999', // debits only
+const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
+  'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 60000',
+  'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 
@@ -190,7 +191,7 @@ const R_SHARE_MAX = 50; // minimum sharing percentage
 const R_SHARE_DFT = 25; // default sharing percentage
 define('R_SHARING_MSG', t('sharing rewards with CGF'));
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
-const MAX_FILE_HOURS = 72; // maximum amount of time to store a file for a member (used in member-to-member messaging)
+const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 

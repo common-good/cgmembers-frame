@@ -64,8 +64,8 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   | partnerName | fullName | customer | processor    | email         | cgAccount | noFrame | extra |*
   | Coop Power  | Abe One  | E123456  | Standard ACH | a@example.com | (none)    | 1       | You will need to delete the %PROJECT account ID in your database. |
   And we email "partner-end" to member "a@" with subs:
-  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
-  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       |
+  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra | links |*
+  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       | ?     |
 
 Scenario: A newbie visits the registration page sent by a partner and chooses Common Good
   When someone posts to page "partner" with:
@@ -132,8 +132,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
   | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       1 |       |
   And we email "partner-end" to member "a@" with subs:
-  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
-  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? |
+  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra | links |*
+  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? | ?     |
 
 Scenario: A member visits the registration page sent by a partner
   Given members:
@@ -194,8 +194,8 @@ Scenario: A member visits the registration page sent by a partner
   | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
   | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       1 |       |
   And we email "partner-end" to member "a@" with subs:
-  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
-  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       |
+  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra | links |*
+  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       | ?     |
 
 Scenario: A company visits the registration page sent by a partner
   Given next random code is "WHATEVER"
@@ -264,8 +264,8 @@ Scenario: A company visits the registration page sent by a partner
   | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
   | Coop Power  | Go Co    | E123456  | %PROJECT  | g@example.com | NEWAAA    |       1 |     ? |
   And we email "partner-end" to member "g@" with subs:
-  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
-  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? |
+  | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra | links |*
+  | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? | ?     |
 
 # later, when company wants to accept payments
 #  Then we show "Open a Trial Company Account"

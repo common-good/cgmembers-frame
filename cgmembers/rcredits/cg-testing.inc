@@ -135,7 +135,7 @@ X
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
-  if (nn($email)) $info['email'] = t\fixEmail($email);
+  if (nn($email)) $info['email'] = $email = t\fixEmail($email);
 
   if (!empty($phone)) {
     if (strlen(nn($phone)) == 1) u\prefix('+1413772000', $phone); else $phone = u\fmtPhone($phone, 'internal');
@@ -148,17 +148,24 @@ X
   if (!empty($boxId) and !is_numeric($code = $boxId)) $boxId = db\get('id', 'r_boxes', compact('code'));
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (strhas($v, '@')) {
-      $info[$k] = t\fixEmail($v); // sometimes an email identifies an account ($$k not $v)
-    } elseif (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
-      $fields .= ' ' . $k;
-      $$k = t\uid($v);
-      if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
-    }
+    $$k = fixIdFld($v);
+    if ($k == 'qid') $$k = r\qid($$k); // convert back to qid for qid field
+    if ($$k != $v) $fields .= ' ' . $k;
   }
 //  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (array_key_exists($k, $info)) $info[$k] = nn($$k, NULL);
   return $info;
+}
+
+/**
+ * Return an account record ID for the given shorthand id field value.
+ * @param string $v: shorthand field value
+ * @return: interpreted field value
+ */
+function fixIdFld($v) {
+  if (strhas($v, '@')) return r\acct(t\fixEmail($v))->id; // sometimes an email identifies an account ($$k not $v)
+  if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) return t\uid($v);
+  return $v;
 }
 
 /**
@@ -229,8 +236,8 @@ function fixFlags($flags) {
 /**
  * Allow abbreviated email address like "a@" meaning a@example.com. Also avoid weird characters.
  */
-function fixEmail(&$email) {
-  if (substr(nn($email), -1, 1) == '@') $email .= EMAILX;
+function fixEmail($email) {
+  if (substr(nn($email), -1, 1) == '@') return $email . EMAILX;
   return $email = plain($email);
 }
 
@@ -547,12 +554,12 @@ function got1099($flnm, $rows) {
  */
 function gotACH($flnm, $rows) {
   global $testRecs;
-  $bankInfo = explode(', ', BANK_DATA[BANK]);
+  $b = r\bankData();
   $map = [
     'DATETIME' => strftime('%y%m%d%H%M'),
-    'BANK' => $bankInfo[0],
-    'BANKROUTE' => $bankInfo[1], // our bank's routing #
-    'BANKROUT' => substr($bankInfo[1], 0, 8),
+    'BANK' => $b->name,
+    'BANKROUTE' => $b->routing,
+    'BANKROUT' => substr($b->routing, 0, 8),
     'WHEN' => strftime('%b%d'),
     'EFFECTIVE' => strftime('%y%m%d', tomorrow()), // entryDate
   ];
@@ -1029,26 +1036,32 @@ function findEmail($index, $email, $subs) {
   $subs = is_array(nni($subs, 0)) ? $subs[0] : nn($subs);
   extract(just('subject body noFrame', $subs, NULL));
 
-  t\fixEmail($email);
+  if (strhas($email, '@')) {
+    $email = t\fixEmail($email);
+    $a = r\acct($email);
+  } elseif ($uid = t\uid($email) and $a = r\acct($uid)) $email = $a->email;
+
   t\fixData($subs);
+  if (nn($a)) {
+    foreach (ray('qid fullName emailCoded') as $k) if (!isset($subs[$k])) $subs[$k] = $a->$k; // no need to specify these
+  } else $subs['emailCoded'] = '?';
 
   $esubs = [];
   foreach ($subs as $k => $v) {
-    if ($k == 'nudge') $subs[$k] = $v = t($v);
-    $esubs['{' . $k . '}'] = $v;
+    if ($k == 'nudge') $subs[$k] = $v = tr($v);
+    $esubs["%$k"] = $v;
   }
   $message = $index ? ($noFrame ? r\emailTemplate($index) : r\emailBody($index)) : $body;
   $message = str_replace("\r\n", '', $message);
   $messageDpy = strtr(t\showSubs($message, $esubs), ray('href= style= src=', 'hrref=', 'styyle=', 'srrc='));
-  $esubs['{companies}'] = ''; // don't test this
   $message = strtr($message, $esubs);
   u\setDft($subject, nni($GLOBALS['emailSubjects'], $index));
   $subjectDpy = t\showSubs($subject, $esubs);
   $subject = strtr($subject, $esubs);
 
-  $pattern = '/\{[A-Z]+[A-Z0-9]*\}/i';
-  if (preg_match($pattern, $message . $subject)) {
-    t\output("message or subject contains unhandled subs in email \"$index\"");
+  $pattern = '/%[A-Z]+[A-Z0-9]*/i';
+  if (preg_match($pattern, tr($message . $subject), $m)) {
+    t\output("message or subject contains unhandled subs in email \"$index\": " . pr($m));
   } else {
     $map = ["\n"=>'', R_BULLET=>'*', '&nbsp;'=>' '];
 
@@ -1065,6 +1078,8 @@ function findEmail($index, $email, $subs) {
     foreach ($testEmails as $one) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
       if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
+      $t_toEmail = fixEmail($t_toEmail);
+///     debug(compact(ray('t_index index t_toEmail email')));
       if ($t_index == $index and $t_toEmail == $email) {
         foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = tr(strtr(strip_tags($v), $map));
         if (isset($t_subs['site'])) {
@@ -1679,7 +1694,7 @@ function weSayWithSubs($type, $index, $subs) {
   if (!in($type, $choices = 'status warning error')) return output(t('"%type" is not a proper type (%choices)', compact(ray('type choices'))));
 
   $subs = nn($subs[0]) ?: array();
-  if (isset($subs['email'])) t\fixEmail($subs['email']);
+  if (isset($subs['email'])) $subs['email'] = t\fixEmail($subs['email']);
   foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
   $msg0 = tr($index);
   foreach ($subs as $key => $value) {

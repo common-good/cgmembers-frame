@@ -157,6 +157,7 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  *
  * in: TEST aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     TEST aaSeldomNotices ItsTimeToRenewBacking
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST notices AMemberGetsSomeNotices
  *     TEST notices AMemberGetsSomeWeeklyNotices
  *     TEST notices AMemberGetsPostNotices

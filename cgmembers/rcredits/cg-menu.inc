@@ -161,7 +161,7 @@ function menu($submenu = '') {
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin'],
     'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'admExport'],
     'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'admExport'],
-    'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits 2', 'admSeeDeposits'],
+    'sadmin/deposits' => ['sub', t('Bank Transfers'), 'Deposits 2', 'admSeeDeposits'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'admHelpSignup'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'admMakeCtty'],
     'sadmin/groups' => ['sub', t('Groups'), 'Groups 2', 'admMakeRules'],
@@ -174,7 +174,7 @@ function menu($submenu = '') {
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
 
     'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admSeeTxInfo'],
-    'sadmin/deposit-details' => ['call', t('Deposit Details'), '2', 'admSeeDeposits', 'depositDetails'],
+    'sadmin/deposit-details' => ['call', t('Deposit Details'), 'DepositDetails 2', 'admSeeDeposits'],
     'sadmin/checks' => ['call', t('Checks'), '2', 'admPrintChecks', 'printChecks'],
     'sadmin/achs' => ['call', t('ACHs'), '2', 'admAch', 'achBatch'],
     'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'admSeeChanges'],
