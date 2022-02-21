@@ -1507,3 +1507,4 @@ function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
 function budgetCats($type = 'Income') {return db\keyed("id, CONCAT(MID(type, 1, 1), ' ', category)", 'budget_cats', "id NOT IN (3,7,9,10,11,16,28,32) ORDER BY type<>:type, category", compact('type'));}
 function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
+function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data

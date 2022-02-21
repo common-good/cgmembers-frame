@@ -65,16 +65,16 @@ Scenario: A non-member pays a member company by credit card
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
   | item         | apples          |
-  And we email "purchase-report" to member "c@" with subs:
+  | noFrame      | 1               |
+  And we email "purchase-report" to member ".ZZC" with subs:
   | item         | apples               |**
   | amount       | $123                 |
   | date         | %mdY                 |
-  | donor        | Zee Zot              |
-  | donorAddress | Greenfield, MA 01301 |
-  | donorPhone   | +1 262 626 2626      |
-  | donorEmail   | z@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Zee Zot              |
+  | fromAddress  | Greenfield, MA 01301 |
+  | fromPhone    | +1 262 626 2626      |
+  | fromEmail    | z@example.com        |
+  | note         | awesome!             |
   And we say "status": "purchase thanks|check it out" with subs:
   | coName | Our Pub |**
 
@@ -105,16 +105,15 @@ Scenario: A non-member pays a member company by ACH
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | gift         | $123            |
-  And we email "purchase-report" to member "c@" with subs:
+  And we email "purchase-report" to member "" with subs:
   | item         | apples               |**
   | amount       | $123                 |
   | date         | %mdY                 |
-  | donor        | Zee Zot              |
-  | donorAddress | Greenfield, MA 01301 |
-  | donorPhone   | +1 262 626 2626      |
-  | donorEmail   | z@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Zee Zot              |
+  | fromAddress  | Greenfield, MA 01301 |
+  | fromPhone    | +1 262 626 2626      |
+  | fromEmail    | z@example.com        |
+  | note         |                      |
   And we say "status": "purchase thanks|check it out" with subs:
   | coName | Our Pub |**
 Resume

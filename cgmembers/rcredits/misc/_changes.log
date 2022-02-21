@@ -1,3 +1,12 @@
+2022-02-20 feature/bank-tx-details
+. replaced deposit details PDF with standard form
+. fixed long-standing testing failure in findEmail function and corrected various feature tests
+. moved achify to achbatch.inc
+. created r\bankData function to return all parameters for a particular CG banking relationship
+. corrected thanks templates to use %amount not %gift
+. changed name of 1099 files to accommodate MA DOR website (.txt)
+. removed failed tracking image from notices
+
 2022-02-18 feature/tweaks
 . fixed minor bug in 1099 generator for IRS's latest format
 . increased max expiration time for encrypted messages to members

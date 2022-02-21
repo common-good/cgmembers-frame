@@ -846,7 +846,7 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
     $postalAddr = u\unite($address, "$city, $st $zip", ', ');
   }
   
-  $note = u\starts($notes, u\fmtDate(now())) ? strstr(strstr($notes, ': ') . "\n", "\n", TRUE) : '';
+  $note = (!$member and u\starts($notes, u\fmtDate(now()))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
   
   $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
   $subs0 += ray('date item amount', u\fmtDate(now(), TRUE), $item, $amtDpy);
@@ -1040,7 +1040,7 @@ function identify($who, $mya, $selfErr, $restrict) {
         $err = tr('unfound', 'who where', $who, t('in that city'));
       }
     }
-  } elseif ($mya->admin and is_numeric($who) and mb_strlen($who) > 10) {
+  } elseif (($mya->admin or test()) and is_numeric($who) and mb_strlen($who) > 10) { // test() needed because account ID fields (like customer) get converted to uids
     list ($where, $subs) = ['uid=:who', compact('who')];
     $err = tr('unfound', 'who where', t('anyone'), t('with that record ID'));
   } elseif ($phone = u\fmtPhone($who, '+n')) { // phone

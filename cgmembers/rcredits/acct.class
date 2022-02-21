@@ -246,6 +246,7 @@ class Acct {
       case 'hasLogo': return file_exists(LOGO_DIR . '/' . $a->mainQid);
       case 'signedIn': return isset($mya); // use only in r\access
       case 'investor': return ($a->iclub or db\exists('r_stakes', $uidSub));
+      case 'emailCoded': return urlencode(u\cry('P', $a->email));
       case 'changes':
         $chFlds = 'oldValue,newValue';
         foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {

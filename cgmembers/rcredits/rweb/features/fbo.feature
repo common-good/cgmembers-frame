@@ -88,15 +88,15 @@ Scenario: A non-member donates to a sponsored member
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $100            |
-  And we email "gift-report" to member "c@" with subs:
-  | amount       | $100                 |**
-  | date         | %mdY                 |
-  | donor        | Dee Forn             |
-  | donorAddress | 4 Fr St, Fton, MA 01004 |
-  | donorPhone   |                      |
-  | donorEmail   | d@example.com        |
-  | fullName     | Our Pub              |
-  | note         |                      |
+  | noFrame      | 1               |
+  And we email "gift-report" to member ".ZZC" with subs:
+  | amount      | $100                 |**
+  | date        | %mdY                 |
+  | fromName    | Dee Forn             |
+  | fromAddress | 4 Fr St, Fton, MA 01004 |
+  | fromPhone   |                      |
+  | fromEmail   | d@example.com        |
+  | note        |                      |
 
 Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
@@ -238,15 +238,15 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
-  And we email "gift-report" to member "c@" with subs:
+  | noFrame      | 1               |
+  And we email "gift-report" to member ".ZZC" with subs:
   | amount       | $123                 |**
   | date         | %mdY                 |
-  | donor        | Zee Zot              |
-  | donorAddress | Greenfield, MA 01301 |
-  | donorPhone   | +1 262 626 2626      |
-  | donorEmail   | z@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Zee Zot              |
+  | fromAddress  | Greenfield, MA 01301 |
+  | fromPhone    | +1 262 626 2626      |
+  | fromEmail    | z@example.com        |
+  | note         | awesome!             |
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
@@ -276,15 +276,15 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
-  And we email "gift-report" to member "c@" with subs:
+  | noFrame      | 1               |
+  And we email "gift-report" to member ".ZZC" with subs:
   | amount       | $123                 |**
   | date         | %mdY                 |
-  | donor        | Zee Zot              |
-  | donorAddress | Greenfield, MA 01301 |
-  | donorPhone   | +1 262 626 2626      |
-  | donorEmail   | z@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Zee Zot              |
+  | fromAddress  | Greenfield, MA 01301 |
+  | fromPhone    | +1 262 626 2626      |
+  | fromEmail    | z@example.com        |
+  | note         | awesome!             |
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
@@ -310,15 +310,14 @@ Scenario: A member donates to a sponsored organization
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
-  And we email "gift-report" to member "c@" with subs:
+  And we email "gift-report" to member ".ZZC" with subs:
   | amount       | $123 monthly         |**
   | date         | %mdY                 |
-  | donor        | Abe One              |
-  | donorAddress | 1 A, A, AK           |
-  | donorPhone   | +1 301 301 3001      |
-  | donorEmail   | a@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Abe One              |
+  | fromAddress  | 1 A, A, AK           |
+  | fromPhone    | +1 301 301 3001      |
+  | fromEmail    | a@example.com        |
+  | note         |                      |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
 
@@ -341,14 +340,13 @@ Scenario: A member pays a sponsored organization
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
-  And we email "gift-report" to member "c@" with subs:
+  And we email "gift-report" to member ".ZZC" with subs:
   | amount       | $123 monthly         |**
   | date         | %mdY                 |
-  | donor        | Abe One              |
-  | donorAddress | 1 A, A, AK           |
-  | donorPhone   | +1 301 301 3001      |
-  | donorEmail   | a@example.com        |
-  | fullName     | Our Pub              |
-  | qid          | .ZZC                 |
+  | fromName     | Abe One              |
+  | fromAddress  | 1 A, A, AK           |
+  | fromPhone    | +1 301 301 3001      |
+  | fromEmail    | a@example.com        |
+  | note         |                      |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**

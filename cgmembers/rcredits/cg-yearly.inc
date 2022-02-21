@@ -55,7 +55,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   $testMode = $testMode ? 'T' : '';
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
-  u\beginDownload("Y$year$testMode-forms1099$type.bin"); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload("Y$year$testMode-forms1099$type.txt"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);

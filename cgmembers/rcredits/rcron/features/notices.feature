@@ -32,14 +32,17 @@ Scenario: a member gets some notices
   | .ZZA | %today  |    0 | You rock.  | out  |
   | .ZZA | %today  |    0 | You stone. | out  |
   When cron runs "notices"
-  Then we email "notices" to member "a@" with subs:
+  Then we email "notices" to member ".ZZA" with subs:
   | fullName   | Abe One |**
   | range      | Transfers OUT (%mdY-1d) |
   | region     | new     |
   | messages   | *You rock.<br>*You stone. |
   | balance    | $0 |
-  | ourEmail   | %whatever@cg.org |
   | code       | ? |
+  | todayDesc  | 02/20/2022 |
+  | shout      | ? |
+  | creditLine | ? |
+  | zip3       | 01 |
   And these "r_notices":
   | uid  | created | sent   | message    |*
   | .ZZA | %today  | %today | You rock.  |
@@ -52,7 +55,7 @@ Scenario: a member gets some weekly notices
   | .ZZB | %today  |    0 | You stone. | out  |
   And it's time for "weekly"
   When cron runs "notices"
-  Then we email "notices" to member "b@" with subs:
+  Then we email "notices" to member ".ZZB" with subs:
   | fullName   | Bea Two |**
   | range      | Transfers IN (week of %mdY-1w) and Transfers OUT (%mdY-1d) |
   | region     | new     |
@@ -60,6 +63,10 @@ Scenario: a member gets some weekly notices
   | balance    | $0 |
   | ourEmail   | %whatever@cg.org |
   | code       | ? |
+  | todayDesc  | 02/20/2022 |
+  | shout      | ? |
+  | creditLine | ? |
+  | zip3       | 01 |
   And these "r_notices":
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You rock.  |

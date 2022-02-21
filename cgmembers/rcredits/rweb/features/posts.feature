@@ -110,8 +110,8 @@ Scenario: Someone enters personal data after posting an offer
   | method      | text         |
   | confirmed   | 0            |
   And we email "confirm-post" to member "b@c.d" with subs:
-  | fullName | item | date | thing | code | noFrame |*
-  | Bea Two  | fish | %mdY | post  |    ? |       1 |
+  | fullName | item | date | thing | code | noFrame | what     |*
+  | Bea Two  | fish | %mdY | post  |    ? |       1 | an offer |
   And we say "status": "confirm by email" with subs:
   | thing | post |**
 
@@ -149,8 +149,8 @@ Scenario: A member enters data after posting an offer
   | method      | text         |
   | confirmed   | 0            |
   And we email "confirm-post" to member "e@" with subs:
-  | fullName | item | date | thing | code | noFrame |*
-  | Eve Five | fish | %mdY | post  |    ? |       1 |
+  | fullName | item | date | thing | code | noFrame | what     |*
+  | Eve Five | fish | %mdY | post  |    ? |       1 | an offer |
   And we say "status": "confirm by email" with subs:
   | thing | post |**
 
@@ -305,8 +305,8 @@ Scenario: Someone enters personal data after replying to an offer
   | id | created | location                      |*
   | 1  | %now    | Greenfield, MA 01301 (0.2 mi) |
   Then we email "post-message" to member "a@b.c" with subs:
-  | fullName | item | date | thing | message      | fromLocation                  | noFrame |*
-  | Abe One  | fish | %mdY | post  | Hello there! | Greenfield, MA 01301 (0.2 mi) |      1 |
+  | fullName | item | date | thing | message      | fromLocation                  | noFrame | fromName | type  | code |*
+  | Abe One  | fish | %mdY | post  | Hello there! | Greenfield, MA 01301 (0.2 mi) |       1 | Bea      | offer | ?    |
   And we say "status": "message sent"
 
 Scenario: Someone confirmed sends a message and posts again

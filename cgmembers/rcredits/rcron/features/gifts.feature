@@ -5,9 +5,9 @@ SO I can enjoy the rCredit system's rapid growth and be a part of that.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,admin  |             |  -200 |
+  | uid  | fullName | address | city  | state | zip   | country | phone      | postalAddr | flags               | bankAccount | floor |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 4132530001 | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
+  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 4132530002 | 2 B, B, BC | ok,confirmed,admin  |             |  -200 |
   And these "txs":
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
@@ -27,7 +27,7 @@ Scenario: A brand new recurring donation to CG can be completed
   |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose| flags | recursId |*
+  | xid | created | amount | payer | payee | purpose | flags | recursId |*
   |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift |        7 |
   And we notice "paid you linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
@@ -41,6 +41,17 @@ Scenario: A brand new recurring donation to CG can be completed
   | amount | when    | purpose | payee    |*
   |    $10 | monthly | gift!   | %PROJECT |
   # and many other fields
+  And we email "cggift-thanks-member" to member ".ZZA" with subs:
+  | amount | $10 monthly |**
+  | date   | %mdY |
+  And we email "gift-report" to member "cgf" with subs:
+  | amount      | $10 monthly |**
+  | date        | %mdY |
+  | fromName    | Abe One |
+  | fromAddress | 1 A, A, AK |
+  | fromEmail   | a@example.com |
+  | fromPhone   | +1 413 253 0001 |
+  | note        | |
   And count "txs" is 2
   And count "txs2" is 0
   And count "tx_requests" is 0

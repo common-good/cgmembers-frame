@@ -1194,6 +1194,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-deposits .newout {margin-left:50px;}
 #edit-deposits .control-label {width:50px;}
 #frm-deposits a.undo {float:right; color:red;}
+#frm-depositdetails tr td:last-child {text-align:right;}
 
 /* Change Password / Reset / Verify (first time or resetting password) (beginning with stuff from user.css) */
 #edit-pw {background:lawngreen url(images/1x1white.png) no-repeat right center / 100%;}

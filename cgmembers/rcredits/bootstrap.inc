@@ -1296,7 +1296,7 @@ function g($k, $v = NULL) {
 function btxid($bankTxId = '') {
   $dt = DAY_SECS * substr($bankTxId, 0, 5);
   $dt = date('Ymd', $dt + DAY_SECS); // add a day for U.S. timezones
-  $acct = substr(ESCROW_IN, 0, 6) . substr($bankTxId, 5, 5);
+  $acct = substr(r\bankData()->acctIn, 0, 6) . substr($bankTxId, 5, 5);
   $txid = substr($bankTxId, -7);
   return $acct . $dt . $txid;
 ///  debug(date('m/d/Y H:i:s a', $dt));
