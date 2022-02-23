@@ -338,7 +338,7 @@ function showActivity($a) {
  * Return a list of the account's relations.
  */
 function showRelations($a) {
-  global $base_url;
+  global $mya, $base_url;
   $uid = $a->id;
   $jid = $a->jid ?: 0;
   $ret = '';
@@ -359,7 +359,7 @@ EOF;
       if ($draw) $role .= $uid == $main ? t(' and drawn on by') : t(' and draws on');
     } elseif ($uid == $main) {
       $qo = r\qo($main, $them);
-      $extra = '<small> (' . r\qid($them) . ' / ' . a\cardLink("$main/$them") . ')</small>';
+      if ($mya->admManageAccts) $extra = '<small> (' . r\qid($them) . ' / ' . a\cardLink("$main/$them") . ')</small>';
       $role = $owner ? t('owned by')
         : ($draw ? t('drawn on by')
            : ($permission >= B_MANAGE ? t('managed by')

@@ -1523,7 +1523,7 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function eLinkAcct(&$sta, $eLink = '', $allow = 'individual') {
   global $formSta;
-  if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
+  if (!$eLink) extract(just('eLink', nn($sta, []))); // verifying or submitting; get stored eLink args
   extract(just('qid ecode', $eLink, ''));
   extract(just('allow', $eLink)); // don't overwrite, if none
   

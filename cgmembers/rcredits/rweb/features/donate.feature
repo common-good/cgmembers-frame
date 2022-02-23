@@ -36,7 +36,7 @@ Scenario: A member donates
   Then these "txs":
   | xid | created | amount | payer | payee | purpose      |*
   |   1 | %today  |     10 | .ZZA  | cgf  | donation |
-  And we say "status": "gift thanks" with subs:
+  And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And these "r_honors":
   | created | uid  | honor  | honored |*
@@ -66,7 +66,7 @@ Scenario: A member makes a recurring donation
   And these "txs":
   | xid | created | amount | payer | payee | purpose  | recursId |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
-  And we say "status": "gift thanks" with subs:
+  And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And these "r_honors":
   | created | uid  | honor  | honored |*
@@ -91,7 +91,7 @@ Scenario: A member makes a new recurring donation
   | xid | created | amount | payer | payee | purpose  | recursId |*
   |   1 | %today  |     10 | .ZZA  | cgf   | donation | 2        |
   And we say "status": "prev gift canned"
-  And we say "status": "gift thanks" with subs:
+  And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And these "tx_timed":
   | id | start     | from | to  | amount | period | end  |*
@@ -124,14 +124,14 @@ Scenario: A company makes a recurring donation
   Then these "txs":
   | xid | created | amount | payer | payee | purpose  |*
   |   1 | %today  |     10 | .ZZC  | cgf   | donation |
-  And we say "status": "gift thanks" with subs:
+  And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |    200 | once   | memory | Jane Do |
-  Then we say "status": "gift thanks" with subs:
+  Then we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And we say "status": "gift transfer later"
   And these "tx_requests":

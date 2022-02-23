@@ -9,8 +9,8 @@ Setup:
   | .ZZB | Bea Two  | 2 B St. | Bton | MA    | 02000      | b@    | ok,admin         |     200 | 222222222 |
   | .ZZD | Dee Four | 4 D St. | Dton | MA    | 04000      | d@    | member,confirmed |     400 | 444444444 |
   And these "admins":
-  | uid  | vKeyE     | can        |*
-  | .ZZB | DEV_VKEYE | deleteAcct |
+  | uid  | vKeyE     | can                 |*
+  | .ZZB | DEV_VKEYE | seeAccts,deleteAcct |
   And member ".ZZB" scans admin card "%DEV_VKEYPW"
   
 # This scene assures that field changes made to users in migrations get made also to x_users

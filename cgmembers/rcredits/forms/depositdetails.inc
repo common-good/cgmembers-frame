@@ -33,7 +33,7 @@ EOF;
   $totIn = $totOut = $cntIn = $cntOut = 0;
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    if ($pid) $name = db\get('fullName', 'people', compact('pid')) . ($uid == CGID ? t(' FBO ') . PROJECT : str_replace(PROJECT, '', $name));
+    if ($pid) $name = db\get('fullName', 'people', compact('pid')) . t(' FBO ') . ($uid == CGID ? PROJECT : str_replace(PROJECT, '', $name));
     if ($only and ($amount > 0 xor $in)) continue;
     if ($amount < 0) {
       $totOut += -$amount;

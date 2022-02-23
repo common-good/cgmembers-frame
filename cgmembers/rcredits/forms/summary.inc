@@ -18,18 +18,21 @@ function formSummary($form, &$sta) {
   global $mya; $myid = $mya->id;
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
+  if ($mya->proSe) return go('dashboard');
 
-  $form = adminSummary();
-  foreach (ray('legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
-    $$k = $form[$k];
-    unset($form[$k]);
+  list ($left, $right) = adminSummary();
+  foreach (ray('legalName shortName community') as $k) if (nni($left, $k)) { // move these up (see return line)
+    $$k = $left[$k];
+    unset($left[$k]);
   }
 
-  $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
-  if (!$mya->isCtty and $mya->admin) {
-    if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
-    $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
-  }
+  if ($mya->admManageAccts) {
+    $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
+    if (!$mya->isCtty) {
+      if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
+      $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
+    }
+  } else $buttons = NULL;
 
   if (!$stepUrl = $mya->nextStepUrl('', $msg)) {
     if (nn($msg)) say(t('New member is told: ') . t($msg));
@@ -49,7 +52,7 @@ function formSummary($form, &$sta) {
     . u\fmtPhone($mya->phone) . ($mya->email ?
         "<br><span id=\"acctEmail\">$mya->email</span> "
       . btn('', 'c', 'default', '', clas('copyEmail'))
-      . btn('', 'x', 'danger', '', clas('zapEmail'))
+      . ($mya->admManageAccts ? btn('', 'x', 'danger', '', clas('zapEmail')) : '')
     : t('BAD EMAIL')), t('Contact:'))
   : NULL;
   $balance = u\fmtAmt($mya->balance);
@@ -86,14 +89,12 @@ function formSummary($form, &$sta) {
   $photoid = item('<iframe width="100%" height="600"></iframe>');
 
   $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine photoid';
-//  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
-//  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
   if ($mya->admin and !$mya->proSe) {
     $class = ['class' => ['admin']];
-    $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
-    $left = w\fieldSet('left2', $fields, '', '', $class);
+    $right = w\fieldSet('right2', $right, '', '', $class); // the admin part
+    $left = w\fieldSet('left2', $fields + $left, '', '', $class);
     $form = compact('left', 'right');
     $form['none'] = submit('none'); // force _submit despite lack of submit button    
   } else $form = $fields;
@@ -282,14 +283,16 @@ function adminSummary() {
     include __DIR__ . '/../rweb/bit-descs.inc';
     include __DIR__ . '/../rweb/can-descs.inc';
 
-    $legalName = textFld(t('Legal Name:'), '', required($mya->legalName));    
-    $shortName = textFld(t('Short Name:'), t('Shortest usable version of full name.'), dft($mya->shortName));
+    if ($mya->admManageAccts) {
+      $legalName = textFld(REQ . t('Legal Name:'), '', dft($mya->legalName));    
+      $shortName = textFld(t('Short Name:'), t('Shortest usable version of full name.'), dft($mya->shortName));
+    } else $legalName = item($mya->legalName, t('Legal Name:'));
     
     $active = ($mya->admActivate or ($mya->admClose and $mya->ok)) // allowing all admins to activate causes a mess
     ? boolFld(t('Active?'), t('Is account approved to use %PROJECT?'), $mya->ok)
     : item($mya->ok ? t('Yes') : t('No'), t('Active:'));
 
-    if ($mya->member and !$mya->co and $mya->admSeeSsn) $ssnShow = item(a\ssnShow($mya));
+    $ssnShow = ($mya->member and !$mya->co and $mya->admSeeSsn) ? item(a\ssnShow($mya)) : NULL;
 
     // Risk bits
     $acctRisks = ray(K_ACCT_RISKS);
@@ -298,7 +301,7 @@ function adminSummary() {
 
     foreach ($riskBits as $k) {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
-      if (!isset($risksEditable[$k])) $class .= ' noEdit';
+      if (!isset($risksEditable[$k]) or !$mya->admManageAccts) $class .= ' noEdit';
       $dpy = w\popHelp($k, nni($riskHelp, $k), '#', '', 'click');
       $aliases[$k] = "<div class=\"$class\">$dpy</div>";
     }
@@ -310,7 +313,7 @@ function adminSummary() {
 
     foreach (ray($mya->isCtty ? B_CTTY_BITS : B_LIST) as $k) if (!preg_match('/u[0-9]+/', $k)) { // ignore undefined bits
       $blist[] = $k0 = $k;
-      $class = in($k, $adminable) ? '' : 'noEdit';
+      $class = (in($k, $adminable) and $mya->admManageAccts) ? '' : 'noEdit';
       if ($mya->isCtty) $k = strtr($k, ray(B_ADMIN_BITS));
       $dpy = w\popHelp($k, $flagHelp[$k0], '#', '', 'click');
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
@@ -349,38 +352,43 @@ function adminSummary() {
 //    $mediaConx = textFld(t('Media Conx:'), t('(How many 1st or 2nd-degree connections do you have with this person on FaceBook or LinkedIn?)'), dft($mya->mediaConx ?: 0));
   }
 
+  $dob = $altSt = $altId = $tickle = NULL;
+
   if (!$mya->proSe) {
-    list ($tickleType, $zot) = $mya->nextTickle();
-    $details = item(callDetails($tickleType, $mya->tickle));
-//    $preNote = item($tip);
+    if ($mya->admFollowup) {
+      list ($tickleType, $zot) = $mya->nextTickle();
+      $details = item(callDetails($tickleType, $mya->tickle));
+  //    $preNote = item($tip);
 
-    if ($mya->admEditNotes) {
-      $notes = areaFld(t('Notes:'), '', dft(unplain($mya->notes))); // only needed for default in areaFld
-    } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
+      if ($mya->admEditNotes) {
+        $notes = areaFld(t('Notes:'), '', dft(unplain($mya->notes))); // only needed for default in areaFld
+      } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
-    $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $dob = $altSt = $altId = NULL;
+      $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
 
-    if (!$mya->co) {
-      if ($mya->admV or !$mya->hasId) {
-        $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
-        $dob = rendA('dob', $dob);
-      }
-      if ($mya->hasFid) {
-        if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
-      } elseif ($mya->admV) { // altId is V-encrypted
-        $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
-        $label = t('Alt ID / DOB:');
-        if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) {
-          $photoIdSrc = "$base_url/show-doc/code=" . u\cryRay(ray('path admin', PHOTOID_DIR . "/$mya->mainQid", 'admin'));
-          $label = "<a>$label</a>";
+      if (!$mya->co) {
+        if ($mya->admV or !$mya->hasId) {
+          $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
+          $dob = rendA('dob', $dob);
         }
-        $altId = textFld($label, [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+        if ($mya->hasFid) {
+          if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
+        } elseif ($mya->admV) { // altId is V-encrypted
+          $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+          $label = t('Alt ID / DOB:');
+          if (file_exists(PHOTOID_DIR . "/$mya->mainQid")) {
+            $photoIdSrc = "$base_url/show-doc/code=" . u\cryRay(ray('path admin', PHOTOID_DIR . "/$mya->mainQid", 'admin'));
+            $label = "<a>$label</a>";
+          }
+          $altId = textFld($label, [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+        }
       }
-    }
-    
-    $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
+      
+      $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
+      $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
+
+    } else $details = $notes = $note = NULL;
+
     $source = item($mya->source, t('Source:'));
   }
 
@@ -389,9 +397,9 @@ function adminSummary() {
   $uid = hidFld($uid); // must postcede js (which uses uid)
   w\jsx('adminSummary', 'photoIdSrc', nn($photoIdSrc));
   
-  $bigFields = $mya->ok ? 'adminable risks adminCans ssnShow' : 'ssnShow adminable risks';
-  $info = []; foreach (ray("noEnter details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
-  return $info;
+  $bigFields = 'details notes note altId tickle ' . ($mya->ok ? 'adminable risks adminCans ssnShow' : 'ssnShow adminable risks');
+  $info = []; foreach (ray('noEnter legalName shortName balance active community minimum achMin risk trust mediaConx count back calling donations cgfDonations helper invited invitedBy source tenure moves activity relations signupCo tasks steps proxies proxyFor uid submit') as $k) if (isset($$k)) $info[$k] = $$k;
+  return [$info, compact(ray($bigFields))];
 }
 
 /**

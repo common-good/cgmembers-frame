@@ -100,6 +100,8 @@ function addLine($info, $classes, $url, $person = FALSE) {
       $button .= strstr($url, '=');
     }
   }
+  
+  if (!$mya->admManageAccts and !$mya->proSe) $button = '';
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

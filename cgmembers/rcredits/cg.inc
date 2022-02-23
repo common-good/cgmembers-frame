@@ -19,18 +19,25 @@ use CG\Testing as t;
 
 /**
  * Return TRUE if the current account has all the required permissions.
+ * @see also: w\subMenu()
  */
 function access($perms = NULL) {
   global $mya;
+  
+  if ($perms == ANY) return TRUE;
+  $pRay = ray($perms);
+  if (!$a = $mya and in('linkable', $pRay)) { // allow limited access to the account without signing in
+    if ($args = u\_GET() ?: $_POST) $a = w\eLinkAcct($zot, $args, ANY);
+  }
 
-  foreach (ray($perms) as $perm) {
+  foreach ($pRay as $perm) if ($perm != 'linkable') {
     if ($not = (substr($perm, 0, 1) == '-')) $perm = substr($perm, 1);
 
-    $pass =
-      $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
-    : ($perm == 'dev' ? isDEV
-    : (!$mya ? FALSE
-    : (in($perm, B_PERMISSIONS) ? $mya->can(u\consta('b', $perm)) : $mya->$perm) ));
+    $pass = $perm == 'dev' ? isDEV
+    : ($perm == 'okManageIfIn' ? ($a ? ($a->ok and $a->can(B_MANAGE)) : TRUE)
+    : ($perm == 'manageIfIn' ? ($a ? $a->can(B_MANAGE) : TRUE)
+    : (!$a ? FALSE
+    : (in($perm, B_PERMISSIONS) ? $a->can(u\consta('b', $perm)) : $a->$perm) )));
 
     if ($not ? $pass : !$pass) return FALSE;
   }

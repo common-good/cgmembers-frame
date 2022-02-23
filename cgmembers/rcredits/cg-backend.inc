@@ -835,32 +835,35 @@ EOF;
 function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
   $coA = r\acct($coId);
   list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
+  if ($coId == CGID) $thxMsg .= '|cggift thanks';
 
-  if ($member) {
-    $a = r\acct($id);
-    foreach (ray('fullName email phone postalAddr notes') as $k) $subs0[$k] = $$k = $a->$k;
-  } else { // non-member
-    if (!$subs0 = db\get('fullName,email,phone,address,city,state,zip,notes', 'people', ray('pid', $id))) u\FAIL('missing pid in thanks');
-    extract($subs0);
-    $st = r\realState($state);
-    $postalAddr = u\unite($address, "$city, $st $zip", ', ');
+  if ($coA->co) { // no special emails for individual gifts
+    if ($member) {
+      $a = r\acct($id);
+      foreach (ray('fullName email phone postalAddr notes') as $k) $subs0[$k] = $$k = $a->$k;
+    } else { // non-member
+      if (!$subs0 = db\get('fullName,email,phone,address,city,state,zip,notes', 'people', ray('pid', $id))) u\FAIL('missing pid in thanks');
+      extract($subs0);
+      $st = r\realState($state);
+      $postalAddr = u\unite($address, "$city, $st $zip", ', ');
+    }
+
+    $note = (!$member and u\starts($notes, u\fmtDate(now()))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
+    
+    $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
+    $subs0 += ray('date item amount', u\fmtDate(now(), TRUE), $item, $amtDpy);
+
+    $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
+    unset($subs['fullName']); // salutation to co name, not payer name
+    $coA->tellIn($report, $subs);
+
+    $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
+    if ($member) {
+      $a->tellOut("$type-thanks-member", $subs);
+    } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
   }
   
-  $note = (!$member and u\starts($notes, u\fmtDate(now()))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
-  
-  $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
-  $subs0 += ray('date item amount', u\fmtDate(now(), TRUE), $item, $amtDpy);
-
-  $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
-  unset($subs['fullName']); // salutation to co name, not payer name
-  $coA->tellIn($report, $subs);
-
-  $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-  $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
-  if ($member) {
-    $a->tellOut("$type-thanks-member", $subs);
-  } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
-
   $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
   return $redirect ? w\sayEmpty($msg) : w\say($msg);
 }
