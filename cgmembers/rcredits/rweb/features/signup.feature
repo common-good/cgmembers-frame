@@ -201,7 +201,7 @@ Scenario: A member donates
   | amtChoice | period | honor | honored |*
   |        50 | month  |     - |         |
   Then we show "Proxies"
-  And we say "status": "gift thanks" with subs:
+  And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And we say "status": "gift transfer later"
   And we say "status": "step completed"

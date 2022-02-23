@@ -242,7 +242,8 @@ EOF
   'want a card' => t('Want a free %PROJECT card for local purchases?'),
   'finish get card' => t('<p>To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Get Card". Then complete the remaining steps one by one as they appear.</p>'),
 //  'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
-  'gift thanks' => t('<p>Thank you so much for your donation to %coName! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
+  'gift thanks' => t('<p>Thank you so much for your donation to %coName!</p>'),
+  'cggift thanks' => t('<p>We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
   'purchase thanks' => t('<p>Your payment to %coName is complete!</p>'), // used in be\thanks()
   'check it out' => t('<p>If you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),

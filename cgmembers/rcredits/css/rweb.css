@@ -405,7 +405,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #simple select {padding:4px 6px; width:130px;}
 #advanced input {padding:4px 0 4px 6px; width:130px; max-width:initial !important;}
 #simple .control-label, #advanced .control-label {width:110px; min-width:110px;}
-#edit-show, #edit-download, #showSimple, #showAdvanced {margin:0 0 0 5px;}
+#edit-show, #edit-download, #showSimple, #showAdvanced {margin:0 5px 0 0;}
 .form-item-period {display:inline-block; clear:none; margin-right:0;}
 #actionsSimple,
 #actionsAdvanced {display:inline-block;}
@@ -926,7 +926,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-summary #intros div {text-align:left;}
 #frm-summary #email-details {background-color:lightyellow; padding:10px; margin:5px 0;}
 #frm-summary .admin label {min-width:100px;}
-#frm-summary .admin .control-data {width:auto; max-width:initial;}
+#frm-summary .admin .control-data {width:100%; max-width:initial;}
 #frm-summary #left2.admin .control-data,
 #frm-summary #right2.admin .control-data {width:80%; max-width:500px;}
 /* #frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}

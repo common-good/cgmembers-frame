@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.59n'; // software version
+const R_VERSION = '3.59o'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -700,7 +700,7 @@ const DUR_1 = 'once';
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto editNotes editTx export generalInvite helpSignup makeCtty makeRules makeAdmin makeVAdmin manageAccts manageVote mutualAid nonmemberTx panel payFrom printCards printChecks recheckSsn reconcile region reverseBankTx seeAccts seeCanonic seeChanges seeDeposits seeSecure seeSsn seeTxInfo setCredit setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
+const A_LIST = 'ach activate changeUid chargeFrom close code deleteAcct deletePhoto editNotes editTx export followup generalInvite helpSignup makeCtty makeRules makeAdmin makeVAdmin manageAccts manageVote mutualAid nonmemberTx panel payFrom printCards printChecks recheckSsn reconcile region reverseBankTx seeAccts seeCanonic seeChanges seeDeposits seeSecure seeSsn seeTxInfo setCredit setStepDone showVotes stopCtty stopServer ten99 v verifyId whileDown'; // admin permissions
 const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations/permissions that require access to very secure data
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page

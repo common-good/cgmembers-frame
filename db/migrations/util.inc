@@ -59,8 +59,8 @@ function just($these, $info, $ordered = FALSE) {
 }
 
 function cgpr($s) {
-/**/ echo "$s\n";
-  file_put_contents(__DIR__ . '/migrate.log', print_r($s, 1) . "\n", FILE_APPEND);
+/**/ echo $s = print_r($s, 1) . "\n";
+  file_put_contents(__DIR__ . '/migrate.log', $s, FILE_APPEND);
 }
 
 function allSoFar($w) {return '(' . join(') OR (', $w) . ')';}
@@ -73,4 +73,39 @@ function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
   }
   $subs = compact(ray('_view _where1 _where2'));
   $m->doSql(strtr($z['sql'], $subs));
+}
+
+/**
+ * Move bits around in a bit array (integer) and/or delete and/or add bits.
+ * @param phinx $ph: the phinx object
+ * @param string $table: name of the table that has the bit array field
+ * @param string $field: name of the bit array field
+ * @param string $old: the old bit list (space-delimited array)
+ * @param string $new: the new bit list
+ */
+function fixFlags($ph, $table, $field, $old0, $new0) {
+  $bmask = '((1<<%b)-1)'; // mask all bits lower than this new position
+  $pmask = '((1<<%p)-1)'; // mask all bits lower than this old position
+  $delBit = "(((%field>>1)&~$pmask)|(%field&$pmask))"; // outer parens required
+  $insBit = "((%field&~$bmask)<<1)|(%field&$bmask)";
+  $moveBit = str_replace('%field', $delBit, $insBit) . '|(((%field>>%p)&1)<<%b)';
+  $sql0 = "UPDATE $table SET $field=";
+  
+  $new = ray($new0);
+  $old = ray($old0);
+  
+  for ($p = count($old)-1; $p >= 0; $p--) if (array_search($old[$p], $new) === FALSE) {
+    $ph->execute($sql0 . strtr($delBit, ray('%field %p', $field, $p)));
+    unset($old[$p]);
+  }
+  $old = array_values($old); // renumber, closing the gaps
+  
+  foreach ($new as $b => $flag) {
+    $p = array_search($flag, $old);
+    if ($p === $b) continue; // bit is already in the right place
+    $ph->execute($sql0 . strtr(isset($p) ? $moveBit : $insBit, ray('%field %b %p', $field, $b, $p)));
+    $out = isset($p) ? array_splice($old, $p, 1) : $flag;
+    array_splice($old, $b, 0, $out);
+  }
+    
 }

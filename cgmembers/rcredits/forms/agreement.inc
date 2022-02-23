@@ -24,7 +24,7 @@ function formAgreement($form, &$sta) {
   } elseif (!$mya->co) {
     $signedBy = NULL;
     $setupFoot = w\setupFoot(t('I agree'));
-  } elseif (!$mya->trialco) {
+  } elseif ($mya->can(B_MANAGE) and !$mya->trialco) {
     $signedBy = w\signedBy();
     $setupFoot = w\setupFoot(t('I agree'));
   } else $signedBy = NULL;

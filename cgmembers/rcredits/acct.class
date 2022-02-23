@@ -1603,7 +1603,7 @@ X;
     if ($bit <= substr_count(B_LIST, ' ')) { // ordinary bits
       if ($bit == B_DEBT and $a->underage) return FALSE; // credit card regulations say no credit line if underage
       if ($bit == B_ADMIN) {
-        if ($a->agentId == UID_SUPER) return TRUE; // this didn't use to be necessary (9/20/2017)
+        if ($a->agentId == UID_SUPER) return TRUE;
         if (!$a->proSe) return ($aa = $a->agentA and $aa->can($bit)); // admin permissions are for agent instead (in tests, agent sometimes doesn't exist)
       }
       return (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.

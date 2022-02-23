@@ -45,8 +45,10 @@ function formHelp_validate($form, &$sta) {
 
 function formHelp_submit($form, &$sta) {
   global $mya; 
-  $uid = $mya->id;
-  $who = "$mya->fullName ($mya->mainQid)";
+
+  $a = $mya->admManageAccts ? $mya : $mya->agentA;
+  $uid = $a->id;
+  $who = "$a->fullName ($a->mainQid)";
   extract(just('message file', $sta['input']));
   $time = now();
   $msg = 'msg to admin';
@@ -54,7 +56,7 @@ function formHelp_submit($form, &$sta) {
   if (nn($_FILES)) foreach (nni($_FILES, 'files', []) as $k => $v) $file[$k] = $v['file'];
   if (nn($file) and $tmp = nni($file, 'tmp_name')) { // got an attachment
     $msg .= '|secure attach';
-    $filename = UPLOAD_DIR . "/$mya->id-$time";
+    $filename = UPLOAD_DIR . "/$a->id-$time";
     extract(just('name type size', $file));
     $link = '/help/' . u\urlify("type=$type&filename=$filename");
     $aAttach = atag($link);

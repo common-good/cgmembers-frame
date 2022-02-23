@@ -1,3 +1,16 @@
+2022-02-23 feature/minimal-admin
+. admins now have almost no permissions except the ones they have for explicit admin "can" bits
+. improved layout of summary page (for admins)
+. modified r\access() to accept eLinkAcct-type authentication
+. added permissions manageIfIn and okManageIfIn, to require ok and manage permissions if user is signed in (otherwise no permissions required)
+. suppressed various buttons when insufficient permission
+. fixed bug that treated all gifts as gifts to CG FBO
+. gifts to individuals are no longer treated like charitable contributions
+. added admFollowup permission to show or suppress the member-followup page for admins
+. fixed bad formatting of input-less left panel of summary page
+. created a migration tool for adding, removing, and moving bits in an integer bit field
+. fixed bug in cgbutton creator that got the donate link wrong
+
 2022-02-20 feature/bank-tx-details
 . replaced deposit details PDF with standard form
 . fixed long-standing testing failure in findEmail function and corrected various feature tests

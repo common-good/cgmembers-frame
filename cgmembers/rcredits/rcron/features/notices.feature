@@ -39,7 +39,7 @@ Scenario: a member gets some notices
   | messages   | *You rock.<br>*You stone. |
   | balance    | $0 |
   | code       | ? |
-  | todayDesc  | 02/20/2022 |
+  | todayDesc  | %mdY |
   | shout      | ? |
   | creditLine | ? |
   | zip3       | 01 |
@@ -63,7 +63,7 @@ Scenario: a member gets some weekly notices
   | balance    | $0 |
   | ourEmail   | %whatever@cg.org |
   | code       | ? |
-  | todayDesc  | 02/20/2022 |
+  | todayDesc  | %mdY |
   | shout      | ? |
   | creditLine | ? |
   | zip3       | 01 |

@@ -16,6 +16,7 @@ $cansHelp = array(
   'editNotes' => t('Edit account notes.'),
   'editTx' => t('Edit a transaction.'),
   'export' => t('Export a list of members.'),
+  'followup' => t('Manage routine communicatins with members.'),
   'generalInvite' => t('Print a general invitation to join %PROJECT.'),
   'helpSignup' => t('Can help a new member open an account.'),
   'makeCtty' => t('Create a community account.'),

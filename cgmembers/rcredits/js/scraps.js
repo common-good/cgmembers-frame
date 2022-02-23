@@ -436,7 +436,7 @@ function doit(what, vs) {
       
       var url = baseUrl + '/cgpay';
       if (fer == forGift) {
-        url = url.replace('/cgpay', '/donate');
+        url = url.replace('/cgpay', '/community/donate');
       } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
       
       var text = htmlEntities($('#edit-text').val());

@@ -48,12 +48,12 @@ function deleteAccount($uid) {
   if (is_object($a = $uid)) $uid = $a->id;
   if ($uid == 'this') {
     $uid = $mya->id;
-  } elseif (!is_numeric($uid)) { $uid = r\acct(strtoupper($uid))->id; } // qid
+  } elseif (!is_numeric($qid = $uid) and $a = r\acct(strtoupper($qid))) $uid = $a->id;
   
   if (!$uid) return w\softErr(t('You must not delete account zero.'));
   if ($uid == $mya->id) r\setAcct($mya->agentId); // don't leave us on a deleted account (switch to agent)
   a\deleteUid($uid);
-  return w\go('/sadmin/followup');
+  return w\go($mya->admPanel ? '/sadmin/panel' : '');
 }
 
 /**
