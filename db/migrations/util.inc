@@ -103,7 +103,7 @@ function fixFlags($ph, $table, $field, $old0, $new0) {
   foreach ($new as $b => $flag) {
     $p = array_search($flag, $old);
     if ($p === $b) continue; // bit is already in the right place
-    $ph->execute($sql0 . strtr(isset($p) ? $moveBit : $insBit, ray('%field %b %p', $field, $b, $p)));
+    $ph->execute($sql0 . strtr($p === FALSE ? $insBit : $moveBit, ray('%field %b %p', $field, $b, $p)));
     $out = isset($p) ? array_splice($old, $p, 1) : $flag;
     array_splice($old, $b, 0, $out);
   }
