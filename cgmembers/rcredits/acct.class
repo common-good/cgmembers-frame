@@ -1209,7 +1209,7 @@ o;
     if ($a->hasBank) {
       $waiting = $a->waitingFromBank($combinable, $txid);
       if (round($amount - $waiting, 2) <= 0) return 0;
-      $amtDone = $a->bank($amount, $why, FALSE, $report);
+      list ($xid, $amtDone, $report) = $a->bank($amount, $why);
       $amount -= $waiting + $amtDone;
       $msg = $amount > 0 ? 'automatic when funded' : $report;
       $subs = [];
@@ -1228,13 +1228,19 @@ o;
    * Transfer funds to or from a connected bank account.
    * @param numeric $amount: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
-   * @param bool $explicit: user requested this transfer explicitly
-   * @param string $report: (RETURNED) actual message to say to account-owner about the transfer (but not by email because we do that herein)
-   * @return numeric: the amount transferred
+   * @param assoc $info: other parameters, including:
+   *   explicit: <user requested this transfer explicitly>
+   *   recursId: the tx_timed ID if this transfer is recurring
+   *
+   * @return [xid, amtDone, report] where:
+   *   xid: the transfer transaction ID
+   *   amtDone: the amount transferred
+   *   report: actual message to say to account-owner about the transfer (but not by email because we do that herein)
    */
-  public function bank($amount, $why = '', $explicit = FALSE, &$report = '') {
+  public function bank($amount, $why, $info = []) {
     $a = $this;
     u\EXPECT($a->hasBank, 'banking with no bank');
+    extract(just('explicit recursId', $info, [FALSE, NULL]));
     
     $report = '';
     if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
@@ -1269,7 +1275,7 @@ o;
     if (!$combined) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
-      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created')));
+      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created recursId')));
       if ($fuMsg = be\usdTxFollowup($xid, FALSE)) $fuMsg = '|' . $fuMsg; // fuMsg is not needed here (use 'available now' instead)
       u\EXPECT($xid, 'saving usd record');
     }
@@ -1283,7 +1289,7 @@ o;
     $a->tellInOut($amount > 0, $msg, $subs);
     $report = tr($msg, $subs); // for return
 
-    return $amount;
+    return [nn($xid), $amount, $report];
   }
   
   /**
@@ -1304,15 +1310,16 @@ o;
 
   /**
    * Automatically cashout accounts that choose to, leaving average weekly gross (over past 6 months) in the account. Weekly gross is figured as -6/26th of the floor (because there are 26 weeks in 6 months and floor is based on 1/6 of 6 months' gross).
+   * @param string $when: weekly or monthly
    */
-  public function cashout() {
+  public function cashout($when) {
     $a = $this;
     
     if (!$a->hasBank) return;
     if ($a->waitingFromBank($combinable) > 0) return; // no cashout if waiting to bring some in
     $cashout = round($a->balance - -$a->floor * 6 / 26 - 4.99, -1); // round average weekly activity down to nearest $10
     if ($cashout < R_ACHMIN) return;
-    $a->bank(-$cashout);
+    $a->bank(-$cashout, t('(your %when automatic bank transfer)', compact('when')));
   }
   
   /**

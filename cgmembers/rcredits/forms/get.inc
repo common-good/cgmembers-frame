@@ -96,8 +96,8 @@ function formGet_submit($form, &$sta) {
 
   extract(just('amount', $sta['input']));
 
-  $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('at your request'), TRUE, $why);
-  say($why); // expanded message
+  list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit', TRUE));
+  say($report); // expanded message
 }
 
 /**

@@ -71,5 +71,5 @@ Scenario: A member cashes out automatically
 #  | action  | tofrom  | amount | checkNum |*
 #  | deposit | to      | $670   |        1 |
   And we notice "banked" to member ".ZZB" with subs:
-  | action  | tofrom  | amount | why |*
-  | deposit | to      | $670   |     |
+  | action  | tofrom  | amount | why                                   |*
+  | deposit | to      | $670   | (your weekly automatic bank transfer) |

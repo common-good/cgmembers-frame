@@ -1,3 +1,9 @@
+2022-02-26 feature/recur-to-bank
+. fixed bug that submitted recurring bank transfers every day forever
+. improved messaging for bank transfers
+. outgoing recurring bank transfers now fail if there are insufficient funds
+. outgoing bank transfers now show up red on depositDetails page
+
 2022-02-23 feature/minimal-admin
 . admins now have almost no permissions except the ones they have for explicit admin "can" bits
 . improved layout of summary page (for admins)
