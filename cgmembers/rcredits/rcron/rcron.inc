@@ -333,14 +333,19 @@ function recur($template) {
     if ($action == 'pay' and $to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
   
     if ($action == 'pay') {
-      if (is_null($amount)) { // sweep
+      if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
       }
-      if ($to == UID_BANK_OUT) { // transfer to bank account
-        $fromA->bank(-$amount, tr('auto bank transfer', compact('when')));
-      } elseif ($from == UID_BANK_IN) { // transfer from bank account
-        $toA->bank($amount, tr('auto bank transfer', compact('when')));
-      } else {
+      
+      if (in($to, [UID_BANK_IN, UID_BANK_OUT])) { // bank transfer
+        $info = ray('recursId', $id);
+        $why = tr('auto transfer', compact('when'));
+        if ($to == UID_BANK_OUT) { // transfer to bank account
+          $avail = $fromA->avail(FOR_USD);
+          if ($avail < $amount) return $fromA->tell('auto bankout nsf', ray('when avail amount', $when, u\fmtAmt($avail), u\fmtAmt($amount)));
+          $fromA->bank(-$amount, $why, $info);
+        } else $toA->bank($amount, $why, $info); // transfer from bank account
+      } else { // payment/transfer to another account
         $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
         if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
         $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
@@ -467,13 +472,13 @@ function activeMonthly($item) {
   // DISABLED FOR now() if (!$a->slave) $a->tellMisc($msg, compact('limit'));
   }
   
-  if ($a->cashoutM) $a->cashout();
+  if ($a->cashoutM) $a->cashout(t('monthly'));
 }
 
 function activeWeekly($item) {
   extract(just('uid', $item));
   $a = r\acct($uid);
-  if ($a->cashoutW) $a->cashout();
+  if ($a->cashoutW) $a->cashout(t('weekly'));
 }
 
 /**

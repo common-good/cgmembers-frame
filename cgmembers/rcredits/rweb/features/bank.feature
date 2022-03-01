@@ -45,13 +45,13 @@ Scenario: a member moves credit to the bank
   |  .ZZA |    -86 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:
   | action  | tofrom  | amount | why             |*
-  | deposit | to      | $86    | at your request |
+  | deposit | to      | $86    | as soon as possible |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
   And we notice "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why             |*
-  | deposit | to     | $86    | at your request |
+  | deposit | to     | $86    | as soon as possible |
   
 Scenario: a member draws credit from the bank with zero floor
   When member ".ZZB" completes form "get" with values:
@@ -68,7 +68,7 @@ Scenario: a member draws credit from the bank with zero floor
   | .ZZA |      86 |
   And we say "status": "banked|bank tx number" with subs:
   | action | tofrom  | amount     | checkNum | why             |*
-  | draw   | from    | $%R_ACHMIN |        8 | at your request |
+  | draw   | from    | $%R_ACHMIN |        8 | as soon as possible |
 
 Scenario: a member draws credit from the bank with adequate floor
   When member "C:B" completes form "get" with values:
@@ -82,10 +82,10 @@ Scenario: a member draws credit from the bank with adequate floor
   | .ZZC | 40      |
   And we say "status": "banked|bank tx number|available now" with subs:
   | action | tofrom  | amount | checkNum | why             |*
-  | draw   | from    |    $10 |        8 | at your request |
+  | draw   | from    |    $10 |        8 | as soon as possible |
   And we notice "banked|bank tx number|available now" to member ".ZZC" with subs:
   | action | tofrom | amount | checkNum | why             |*
-  | draw   | from   | $10    |        8 | at your request |
+  | draw   | from   | $10    |        8 | as soon as possible |
 Scenario: a member moves too little to the bank
   When member ".ZZA" completes form "get" with values:
   | op  | amount           |*
@@ -186,7 +186,7 @@ Scenario: a slave member requests a transfer
   |  .ZZE |    -16 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:
   | action  | tofrom  | amount | why             |*
-  | deposit | to      | $16    | at your request |
+  | deposit | to      | $16    | as soon as possible |
   And balances:
   | uid  | balance |*
   | .ZZD |     124 |

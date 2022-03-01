@@ -707,6 +707,7 @@ function notice($notice, $id, $subs = []) {
   $info = ray('uid sent', $uid, nn($subs['sent']) ?: 0);
   $msgs = db\q($sql, $info)->fetchCol();
   $cnt = 0;
+
   foreach ($msgs as $msg) {
     t\output("GOT notice to $id: $msg");
     if (strtr(strip_tags($msg), $map) == $message) {

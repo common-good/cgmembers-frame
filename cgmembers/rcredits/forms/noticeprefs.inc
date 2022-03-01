@@ -37,7 +37,7 @@ function formNoticePrefs($form, &$sta, $args = '') {
   foreach ($types as $k => $type) {
     $isPost = in($k, POST_TYPES);
     if ($isPid and !$isPost) break;
-    $freq = dropdown("freq", $prefs[$k], $isPost ? $postOftens : $oftens, $k);
+    $freq = dropdown("freq", nni($prefs, $k), $isPost ? $postOftens : $oftens, $k);
     $lines[] = u\tableRow(compact(ray('type freq')));
   }
   $list = "<table>\n" . join('', $lines) . "</table>\n";
