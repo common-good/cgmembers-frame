@@ -127,6 +127,7 @@ function poAddress($address) {
  *
  * @param float $amount
  * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
+ *  '' = number_format(amount, 2), after ignoring $ and commas
  *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
  *   $ = include initial dollar sign
@@ -533,28 +534,33 @@ function randomInt($len = NULL) {
 }
 
 /**
- * Translate constant parameters in a string.
- * For example, SUBS("SELECT * FROM table WHERE zot IN (:R_THIS, :R_THAT)") fills in the constants.
- * Constants of the form "IS_WHATEVER" are a special case. They are taken to mean the corresponding
- *   bit number B_WHATEVER in a field called $flagField. Identifiers of the form x.:IS_WHATEVER are permitted.
- *   NOTE to developer: this could be expanded later to handle a second flag field named {$flagField}2
- *     by changing the expression to "IF(:B_$1<32,$flagField&(1<<:B_$1)<>0,{$flagField}2&(1<<(:B_$1-32))<>0)".
+ * Translate constant parameters in a string, especially in SQL.
+ * - :ABCD_E2 gets replaced by constant('ABCD_E2')
+ * - :01/02/2003 gets replaced by strtotime('01/02/2003') -- for ad hoc queries
+ * - Constants of the form "IS_WHATEVER" are a special case. They are taken to mean the corresponding
+ *     bit number B_WHATEVER in a field called $flagField. Identifiers of the form x.:IS_WHATEVER are permitted.
+ *     NOTE to developer: this could be expanded later to handle a second flag field named {$flagField}2
+ *       by changing the expression to "IF(:B_$1<32,$flagField&(1<<:B_$1)<>0,{$flagField}2&(1<<(:B_$1-32))<>0)".
  * @param string $string: the string to fix
  * @param string $flagField: name of the flags field for bit constants
  * @return string: the string with constant names replaced by their values
  */
 function SUBS($string, $prefix = ':', $flagField = 'flags') {
-  if ($prefix == ':') $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
+  if ($prefix == ':') { // only for queries
+    $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string);
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
-  $subs = constantSubs($string, $prefix);
-  if ($prefix == ':') foreach ($subs as $k => $v) if (!is_numeric($v)) {
-    if (is_array($v)) {
-      $subs[$k] = is_numeric(nni($v, 0)) ? ('(' . join(',', $v) . ')') : ("('" . join("','", $v) . "')");
-    } elseif (!strhas($v, ' ') and !strhas($v, '(')) {
-      $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+    $string = preg_replace_callback('~:(\\d\\d?/\\d\\d?/\\d{4})~', function($m) {return strtotime($m[1]);}, $string); // interpret dates
+    $subs = constantSubs($string, $prefix);
+    foreach ($subs as $k => $v) if (!is_numeric($v)) {
+      if (is_array($v)) {
+        $subs[$k] = is_numeric(nni($v, 0)) ? ('(' . join(',', $v) . ')') : ("('" . join("','", $v) . "')");
+      } elseif (!strhas($v, ' ') and !strhas($v, '(')) {
+        $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+      }
     }
-  }
-  $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
+    $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
+  } else $subs = constantSubs($string, $prefix);
+
   return strtr($string, $subs);
 }
 

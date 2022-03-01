@@ -892,6 +892,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
   $flags = 0;
+  unset($extra['reversesXid']);
 
   foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);

@@ -45,12 +45,12 @@ EOF;
       $class = '';
     }
     $qid = r\Qo::uid2($uid);
-    $lines[] = tr('<tr><td>%xid</td><td><%a>%name</a></td><td%class>%amt</td></tr>', 'xid _a name amt class', $xid, atag("/change-account/acct=$qid"), $name, number_format($amount, 2), $class);
+    $lines[] = tr('<tr><td>%xid</td><td><%a>%name</a></td><td%class>%amt</td></tr>', 'xid _a name amt _class', $xid, atag("/change-account/acct=$qid"), $name, number_format($amount, 2), $class);
   }
   
-  $lines[] = t('<tr><td></td><td><b>TOTAL</b> (%count)</td><td>%total</td></tr>', 'count total', $count, number_format($total, 2));
-  $lines[] = t('<tr><td></td><td><b>IN</b> (%cntIn)</td><td>%totIn</td></tr>', 'cntIn totIn', $cntIn, number_format($totIn, 2));
-  $lines[] = t('<tr><td></td><td><b>OUT</b> (%cntOut)</td><td>%totOut</td></tr>', 'cntOut totOut', $cntIn, number_format($totOut, 2));
+  $lines[] = t('<tr><td></td><td><b>NET</b> (%count)</td><td>%total</td></tr>', 'count total', $count, u\fmtAmt($total, ''));
+  $lines[] = t('<tr><td></td><td><b>IN</b> (%cntIn)</td><td>%totIn</td></tr>', 'cntIn totIn', $cntIn, u\fmtAmt($totIn, ''));
+  $lines[] = t('<tr><td></td><td><b>OUT</b> (%cntOut)</td><td>%totOut</td></tr>', 'cntOut totOut', $cntIn, u\fmtAmt($totOut, ''));
   $lines = join("\n", $lines);
   
   $hdrs = t('<tr><th>Tx #</th><th>Name</th><th>Amount</th></tr>');
