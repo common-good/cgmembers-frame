@@ -328,8 +328,8 @@ function showActivity($a) {
   $count = $a->co ? db\count('txs_prime','uid2=:uid AND created>:when', compact('uid', 'when'))
   : db\count('txs', 'uid1=:uid AND uid2<>:CGID AND created>:when', compact(ray('uid when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
-  foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
-  $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
+  foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? fmtDt($a->$k) : t('NO');
+  $subs['use'] = fmtDt($a->ok ? $a->access : $a->login);
   $ret .= t(' in the past 3 months (created %created, signed %signed, activated %activated, last use/signin %use)', $subs);
   return $ret;
 }
@@ -393,7 +393,7 @@ function formatField($k, $v, $flagsField = B_LIST) {
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
   if ($v and in($k, R_DATE_FLDS)) {
-    $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
+    $v = '<div class="date-field">' . fmtDt($v, 'ddMMM') . '<span class="year-field">\'' . fmtDt($v, 'yy') . '<br>' . fmtTime($v) . '</span></div>';
   } elseif (in($k, 'flags can')) {
     $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
     $v = "<div class=\"format-flags\">$flags</div>";
@@ -449,9 +449,9 @@ function ssnShow($a) {
   $d = nni($ssnData, 'searchResults') ?: []; // [] for admin without vKeyE
   if ($err = nni($ssnData, SSN_ERR_INDEX)) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");
-  $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), $a->location(TRUE), '', ''); // is_numeric check for admin without vKeyE
+  $rows[] = array(t('Data Given'), $name, fmtDt(is_numeric($a->dob) ? $a->dob: 0), $a->location(TRUE), '', ''); // is_numeric check for admin without vKeyE
   $name = u\ssnName($one = (object) nn($d['ssnnames']['ssnname']));
-  $dob = nn($one->dob) ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
+  $dob = nn($one->dob) ? fmtDt(strtotime($one->dob)) : ''; // arrives as an empty array if none
   $rows[] = array(t('Found'), $name, $dob, nni($d, 'deathsearchresults') ? '<h1 color="red">DEAD</h1>' : '', '', '');
   
   $counties = [];
@@ -459,7 +459,7 @@ function ssnShow($a) {
   if (nni($addresses, 'lastname')) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
+    $rows[] = array($rec->datereported ? fmtDt(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? fmtDt(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
     if (now() - strtotime(pr($rec->datereported)) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
   }
   if (!$a->moves) $a->update('moves', max(0, count($counties) - 1));

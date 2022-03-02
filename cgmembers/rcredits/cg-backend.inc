@@ -248,7 +248,7 @@ function posUndo($mya, $xid, $force = FALSE, $where = 1) {
   }
   
   $z = be\undoTx($mya, $xid, $where, [], $force);
-  if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", u\fmtDate($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
+  if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", fmtDt($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
   return $z;
 }
 
@@ -520,7 +520,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($zErr = r\txPermErr($actorA, $otherA, $taking, $amount < 0)) { // Check permissions
     if ($force) {
       $msg = 'forced without perm';
-      $erInfo += ['date' => u\fmtDate($created)];
+      $erInfo += ['date' => fmtDt($created)];
       foreach (['agent1'=>$actorA, 'agent2'=>$otherA] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
       foreach ([$actorA, $otherA] as $a) if (!$a->proSe) $a->tell($msg, $erInfo);
       r\tellAdmin($msg . ' ' . tr($zErr->msg, $zErr->subs), $erInfo + $zErr->subs);
@@ -849,10 +849,10 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
       $postalAddr = u\unite($address, "$city, $st $zip", ', ');
     }
 
-    $note = (!$member and u\starts($notes, u\fmtDate(now()))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
+    $note = (!$member and u\starts($notes, fmtDt(now(), 'dmY'))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
     
     $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
-    $subs0 += ray('date item amount', u\fmtDate(now(), TRUE), $item, $amtDpy);
+    $subs0 += ray('date item amount', fmtDt(now()), $item, $amtDpy);
 
     $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
     unset($subs['fullName']); // salutation to co name, not payer name
@@ -902,7 +902,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, u\fmtDate($created));
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
   if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
   if (r\dupTx($payee, $payer, -$amount)) return txErr(t('duplicate transaction'), $subs);
@@ -1151,7 +1151,7 @@ EOF;
   
   $resultKeys = 'in out balance fromBank toBank pendingBank uids';
   $result = compact(ray($resultKeys));
-///    $asof = u\fmtDate($asof); debug(compact(ray('asof sums in out fromBank toBank balance result')));
+///    $asof = fmtDt($asof); debug(compact(ray('asof sums in out fromBank toBank balance result')));
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);
 
   return $result;

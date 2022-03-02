@@ -32,8 +32,8 @@ function formTxs($form, &$sta, $args = '') {
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
   if (nn($download)) {
     global $mya;
-    $dt1 = strftime('%Y%m%d', $starting);
-    $dt2 = strftime('%Y%m%d', $ending);
+    $dt1 = fmtDt($starting, 'Ymd');
+    $dt2 = fmtDt($ending, 'Ymd');
     u\csvStart(($mya->admin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
     require_once __DIR__ . '/txhistorydownload.class';
     $processor = new TxHistoryDownload($uids, "$url");
@@ -167,8 +167,8 @@ function txSummary($starting, $ending, &$endBalance = '') {
 
   /* foreach ($values as $key => $value) $$key = number_format($value, 2); */
 
-  $starting = u\fmtDate($starting);
-  $ending = u\fmtDate($ending);
+  $starting = fmtDt($starting, 'dmY');
+  $ending = fmtDt($ending, 'dmY');
   
   $classes = u\prefixValues('txsum-', ray('label sign1 amount sign2 savings other'));
   

@@ -22,7 +22,7 @@ function formDepositDetails($form, $sta, $args) {
   $escrow = $in ? $b->acctIn : $b->acctOut;
 
   $title = t('Bank Transfer Details');
-  $subtext = $date == 1 ? t('(Historical)') : u\fmtDate($date ?: now());
+  $subtext = $date == 1 ? t('(Historical)') : fmtDt($date ?: now());
 
   $sql = <<<EOF
     SELECT amount, xid, uid, u.fullName AS name, pid FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 

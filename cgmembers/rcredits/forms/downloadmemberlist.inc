@@ -125,17 +125,17 @@ function export($params) {
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
       $code = $a->doCode(); 
-      $asof = $modified = u\fmtDate(now());
+      $asof = $modified = fmtDt(now());
       $manages = db\get('fullName', 'u_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;
-      $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);
+      $lastTx = empty($tx) ? '' : fmtDt($tx->created, TRUE);
       $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';
       $snap = $a->snap ? t('SNAP') : '';
       $special = '';
 // (BROKEN)      $special = $a->special;
     }
     $community = r\cttyName($a->community, TRUE);
-    $created = u\fmtDate($a->created);
+    $created = fmtDt($a->created);
 //    if (is_numeric($zip) and !@$chimp) $zip .= " "; // prevent interpretation as a number (fails for MailChimp, so don't)
 //    if (!@$chimp) foreach ($fields as $k) $$k = '"' . $$k . '"'; // keeps some imports from getting confused
     u\csv(array_values(compact($fields)), $delimiter);

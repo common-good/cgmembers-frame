@@ -437,7 +437,7 @@ function badTx($args, $account, $msg, $subs = []) {
   if ($force) {
     global $mya;
     $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
-    $subs += ray('account amount created by', $account, u\fmtAmt($amount), u\fmtDate($created), $by);
+    $subs += ray('account amount created by', $account, u\fmtAmt($amount), fmtDt($created), $by);
     $mya->tell("bad forced tx|$msg", $subs);
   }
   

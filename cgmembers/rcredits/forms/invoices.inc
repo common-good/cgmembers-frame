@@ -84,7 +84,7 @@ EOF;
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
     if (!$download) $amount = number_format($amount, 2);
-    $row = array($nvid, strftime($download ? '%Y-%m-%d' : '%m/%d/%Y', $created), $other, $purpose, $amount);
+    $row = array($nvid, fmtDt($created, $download ? 'YYYY-MM-dd' : DATE_FMT), $other, $purpose, $amount);
     
     $do = "$url&nvid=$nvid&do";
 

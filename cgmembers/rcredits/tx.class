@@ -282,7 +282,7 @@ EOF;
     $balance = ($getMyBal and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
     
     return ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
-               $tx->created, u\fmtDate($tx->created), $tx->xid, $role, $why, $e1->description,
+               $tx->created, fmtDt($tx->created), $tx->xid, $role, $why, $e1->description,
                $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $otherA->id, $me->fullName,
                $otherA->fullName, u\fmtAmt($shortfall), TRUE);
   }

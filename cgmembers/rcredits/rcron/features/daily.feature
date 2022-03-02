@@ -29,5 +29,5 @@ Scenario: A member has a big day
   |   2 | %yesterday |    600 | .ZZA  | .ZZB  | stuff   |
   |   3 | %today     |   2000 | .ZZB  | .ZZA  | stuff   |
   When cron runs "biggies"
-  Then we tell admin "Big Transfers on %dmy" with ray:
+  Then we tell admin "Big Transfers on %mdY" with ray:
   | Bea Two | 1100 |

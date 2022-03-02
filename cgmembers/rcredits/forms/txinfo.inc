@@ -20,7 +20,7 @@ function formTxInfo($form, &$sta, $xid = '') {
 //  extract(just('xfee force undoes undoneBy', $x->data));
   
   $title = item(t('Transaction #') . $xid);
-  $when = item(u\fmtDate($x->created) . t(' at ') . u\fmtTime($x->created) . ($x->is('offline') ? t(' (created offline)') : ''), t('Date/Time:'));
+  $when = item(fmtDt($x->created) . t(' at ') . fmtTime($x->created) . ($x->is('offline') ? t(' (created offline)') : ''), t('Date/Time:'));
   $amountDesc = item(u\fmtAmt($e1->amount), t('Amount:'));
   $from = item(txInfoParty($x->payerId, $e1->agentUid), t('From:'));
   $to = item(txInfoParty($x->payeeId, $e2->agentUid), t('To:'));

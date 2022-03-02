@@ -19,7 +19,7 @@ function formFlags($form, &$sta, $args = '') {
   extract(just('dateRange url starting ending', dateRange($args, 'community/flags', [], '', FALSE)));
   $url = hidFld($url);
   
-  $title = t('Suspicious Activity Report'); //  . strftime('%A, %m/%d/%y')
+  $title = t('Suspicious Activity Report');
   $subtext = t('<p>Any potentially suspicious accounts, transactions, and bank transfers (ACHs) are listed here, so all members can keep an eye on things. System administrators will investigate any transaction with a suspiciousness score of %K_RED or more (shown in red). If you don\'t see any red, that means nothing even remotely suspicious happened. But for the sake of transparency, we show the %K_LINES top scores in each category anyway.</p><p>Green risks are "good" (they mitigate other risk factors). Hover over any risk for a brief description or click it for details. To see a company\'s name, hover over its account ID.</p>');
 
   $achHeader = $txHeader = $acctHeader = '';
@@ -130,7 +130,7 @@ function riskLine($q, $descs, &$red = '') {
 
   if (isset($amount)) $row['amount'] = number_format($amount, 2);
   if ($extra and isset($xid)) $row['xid'] = "<a href=\"$base_url/sadmin/tx-info/$xid\">$xid</a>";
-  if (isset($created)) $row['created'] = strftime(nn($uid) ? '%d-%b-%Y' : '%d-%b', $created);
+  if (isset($created)) $row['created'] = fmtDt($created, nn($uid) ? DATE_FMT : 'MM/dd');
   if (isset($description)) foreach ($abridgable as $k) if (u\starts($description, $k)) $row['description'] = $k;
 
   $row['risks'] = r\riskList($risks, $descs);

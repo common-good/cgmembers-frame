@@ -146,7 +146,7 @@ Scenario: A member denies an invoice
   |    1 | %today  | %TX_DENIED |    100 | .ZZB | .ZZA | labor |
   And we message "invoice denied" to member ".ZZA" with subs:
   | payerName | created | amount | purpose | reason |*
-  | Bea Two   | %dmy    |   $100 | labor   | broke  |
+  | Bea Two   | %mdY    |   $100 | labor   | broke  |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |

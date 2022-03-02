@@ -236,14 +236,14 @@ X
   $member = $ok ? t(' - member') : t(' - non-member');
   
   // set up display-only fields that are the same for user's own post and someone else's post
-  $created = item(u\fmtDate($created, TRUE), t('Posted:'));
+  $created = item(fmtDt($created), t('Posted:'));
   $mi = fmtDist($dist, $zip);
   if ($mi) $mi = " ($mi mi)";
   $state = r\realState($state);
   $location = "$city, $state$mi<br>";
 
   if ($admin) {
-    list ($userSince, $phone) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone)];
+    list ($userSince, $phone) = [fmtDt($userSince), u\fmtPhone($phone)];
     if ($personOk) $personOk = t(' (confirmed)');
     if ($ok and $mya) $member = ' # ' . r\changeAcctLink($uid, r\qid($uid));
     
@@ -335,7 +335,7 @@ function getWho($args) {
     $city = textFld(REQ . t('City:'), [t('City where you live')], dft($city));
     $state = stateFld($state ?: R_STATE_ID); // can't use required() here
     $zip = zipFld($zip);
-    $phone = phoneFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method. We have only ever needed to contact one person so far (as of %date), but it helped a lot to have their phone number.', 'date', u\fmtDate(NOW - DAY_SECS, TRUE))]);
+    $phone = phoneFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method. We have only ever needed to contact one person so far (as of %date), but it helped a lot to have their phone number.', 'date', fmtDt(NOW - DAY_SECS))]);
   }
   
   $frm = hidFld('who');
@@ -546,7 +546,7 @@ function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];
-  $date = u\fmtDate($created, TRUE);
+  $date = fmtDt($created);
   $what = ray(t(POST_TYPES_A))[typeNum($type)];
   $noFrame = TRUE;
   r\rMail($index, $to, compact(ray('fullName date code what item noFrame')));
@@ -578,7 +578,7 @@ function oldEmailLink($pid) {
 function postMsg($message, $fromName, $fromEmail, $fromLocation, $postid) {
   extract(db\get('type,item,s.created,fullName,email', 'posts s JOIN people p USING (pid)', compact('postid')));
   $to = [$email => $fullName];
-  $date = u\fmtDate($created, TRUE);
+  $date = fmtDt($created);
   $code = w\getEmailCode(compact('postid')); // code for recipient to cancel post
   $noFrame = TRUE;
   r\rMail('post-message', $to, compact(ray('fullName fromName fromLocation type item date message code noFrame')), $fromEmail);

@@ -17,7 +17,7 @@ function formStats($form, &$sta, $args = '') {
   extract(just('start end', $args, [strtotime('January 1'), strtotime('December 31') + DAY_SECS - 1]));
 
   $title = t('Statistics');
-  $subtext = t('System-wide from %start to %end', 'start end', u\fmtDate($start, TRUE), u\fmtDate($end, TRUE));
+  $subtext = t('System-wide from %start to %end', 'start end', fmtDt($start), fmtDt($end));
 
   $when = "BETWEEN :start AND :end";
   $timeSubs = compact(ray('start end'));

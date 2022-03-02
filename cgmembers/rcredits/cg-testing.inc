@@ -557,12 +557,12 @@ function gotACH($flnm, $rows) {
   global $testRecs;
   $b = r\bankData();
   $map = [
-    'DATETIME' => strftime('%y%m%d%H%M'),
+    'DATETIME' => fmtDt(now(), 'YYMMddHHmm'),
     'BANK' => $b->name,
     'BANKROUTE' => $b->routing,
     'BANKROUT' => substr($b->routing, 0, 8),
-    'WHEN' => strftime('%b%d'),
-    'EFFECTIVE' => strftime('%y%m%d', tomorrow()), // entryDate
+    'WHEN' => fmtDt(now(), 'MMMdd'),
+    'EFFECTIVE' => fmtDt(tomorrow(), 'Ymd'), // entryDate
   ];
   foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);
     
@@ -941,7 +941,7 @@ function cronRuns($op) {
   //  setV('last_cron_end', ray($periods, $now, $now, $now)); // normally don't run periodics
 
   //  if ($op == 'ALL') { //  or strpos(DAILY_TASKS, " $op ")
-  ///  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
+  ///  if (fmtDt(now(), 'H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
   //    db\q('TRUNCATE queue');
   //    setV('last_cron_end', ray('day week month', $now - DAY_SECS, 0, 0));
   //  } elseif ($op)

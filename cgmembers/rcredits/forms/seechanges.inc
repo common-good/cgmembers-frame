@@ -24,7 +24,7 @@ function formSeeChanges($form, &$sta, $qid = '') {
   $q = db\q($sql, ray('id', $a->id));
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    $date = u\fmtDate($created);
+    $date = fmtDt($created);
     foreach (ray('oldValue newValue') as $k) {
       $type = u\crypted($$k);
       $$k = a\formatField($field, $type ? decryChange($type, $$k) : $$k);

@@ -16,7 +16,7 @@ function formAgreement($form, &$sta) {
   if (!$mya) {
     $signedBy = NULL;
   } elseif ($date = $mya->signed) {
-    $date = u\fmtDate($date);
+    $date = fmtDt($date);
     say('signed agreement', compact('date'));
     $signedBy = item("Signed by <b>$mya->signedBy</b>, $date");
   } elseif (!$mya->co and !$mya->proSe and !$mya->admHelpSignup) { // can't sign for someone else!

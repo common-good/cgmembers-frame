@@ -37,7 +37,7 @@ X
   $amtChoice = selectFld(t('Amount:'), '', required($dft) + suffix($minDesc), $choices);
   $amount = numFld(t('Amount:'), [t('Amount to back')], suffix($minDesc));
 //  $signedBy = w\signedBy();
-  $date = item(u\fmtDate(now(), TRUE), t('Date:'));
+  $date = item(fmtDt(now()), t('Date:'));
   $posttext = item(t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.'), BARE);
 
   jsx('amtChoice');
@@ -62,7 +62,7 @@ function formBacking_submit($form, &$sta) {
 
   if ($amount < $mya->backing and now() < $earliestRenew) {
     $mya->update('backingNext', $amount);
-    say('backing in effect', ray('renewDate', u\fmtDate($renewDate, TRUE)));
+    say('backing in effect', ray('renewDate', fmtDt($renewDate)));
   } else { $mya->update('backing backingDate', $amount, today()); }
   
   if ($amount > 1) say(t('Thank you for backing your %PROJECT community!'));

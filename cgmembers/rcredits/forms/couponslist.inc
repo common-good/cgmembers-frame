@@ -51,7 +51,7 @@ X;
 
     if ($gift) {
       $args = "type=gift&amount=$amount";
-      $end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
+      $end = empty($end) ? t('indefinite') : fmtDt($end);
       
     } else {
       if ($credit) {
@@ -62,7 +62,7 @@ X;
       $args = http_build_query(compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
-      $end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
+      $end = empty($end) ? t('indefinite') : fmtDt($end);
 //      $on = $on ? w\popHelp(t(' on'), $on) : '';
     }
     $rows[] = u\tableRow(compact($fields));
@@ -89,7 +89,7 @@ function showDiscounts() {
   $myid = $mya->id;
 
   $title = t('Discounts in Your Region');
-  $subtext = t('as of %today', 'today', u\fmtDate(NOW));
+  $subtext = t('as of %today', 'today', fmtDt(NOW));
   $fields = ray('company amount on end for left amtLeft');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));
   $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
@@ -115,7 +115,7 @@ X;
     extract($row);
     $a = r\acct($uid);
     $company = $a->bestName;
-     $end = $end ? u\fmtDate($end, TRUE) : '--';
+     $end = $end ? fmtDt($end) : '--';
     $left = $useMax > 0 ? t('%left of %useMax', 'left useMax', $useMax - $used, $useMax) : t('no limit');
     $for = $payerType == REF_GROUP ? t('you+') : ($payerType == REF_ACCOUNT ? t('you') : t('anyone'));
     if ($amount != 0) {

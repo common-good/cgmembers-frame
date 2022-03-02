@@ -103,7 +103,7 @@ EOF;
     if ($mya->admDeleteAcct and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
     if (in($color, $whities)) $color .= ' fu-whitey';
     $type = "<span class=\"fu-$color\">$type</span>";
-    $call = u\fmtDate($tickle ?: $created);
+    $call = fmtDt($tickle ?: $created);
     $name = w\lnk("$base_url/change-account/acct=$uid", $fullName ?: $uid);
     if ($co) $name = "<span class=\"co\">$name</span>";
     $phone = u\fmtPhone(u\decry('P', $phone), '-');

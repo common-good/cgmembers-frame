@@ -58,8 +58,7 @@ X;
   list ($wayYou, $wayMe) = u\order($toMe xor $amt < 0, t('From:'), t('To:'));
 ///    debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));
   $title = t('Transaction #%xid Detail', compact('xid'));
-  $tm = u\fmtTime($created);
-  $created = editIf($mya->admEditTx, 'date', t('Date:'), $created, u\fmtDate($created, TRUE) . ' ' . $tm, suffix($tm));
+  $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
   $you = item($fullName, $wayYou);
   $me = item($meA->fullName, $wayMe);
   
@@ -90,11 +89,12 @@ X;
 }
 
 function formTxDetail_validate($form, &$sta) {
-  extract(just('created amt', $sta['input'], NULL));
+  extract(just($fields = 'created amt recursId reversesXid', $sta['input'])); // no default!! (see next line)
+  foreach (ray('recursId reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
 
   if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 12 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($amt and $err = u\badAmount($amt, '!=0')) return say($err, 'amt');
-  u\preRay(compact(ray('created amt')), $sta['input']);
+  tweakSta($sta, compact(ray($fields)));
 }
 
 function formTxDetail_submit($form, &$sta) {

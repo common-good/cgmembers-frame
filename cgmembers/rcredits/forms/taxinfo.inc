@@ -40,7 +40,7 @@ function formTaxInfo($form, &$sta, $ending = '') {
         continue;
       }
       x\addCat($cats, strtr($for, $map), $amount, $dups);
-      $date = strftime('%d-%b', $created);
+      $date = fmtDt($created, 'dd-MMM');
       $total += $amount;
       $amount = str_replace('-', '- ', number_format($amount, 2));
       $a = r\acct($payer);

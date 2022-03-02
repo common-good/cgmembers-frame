@@ -142,8 +142,7 @@ X;
       } else list ($zot, $address) = r\pContactInfo($id);
       
       if ($phone != '*') $phone = u\fmtPhone($phone, '-');
-      $since = strftime('%m/%d/%Y', $since);
-      $res[] = [$name, $phone, $email, $address, $member, number_format($total, 2), number_format($count), $since];
+      $res[] = [$name, $phone, $email, $address, $member, number_format($total, 2), number_format($count), fmtDt($since)];
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, ''));
     

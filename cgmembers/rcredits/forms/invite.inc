@@ -20,7 +20,7 @@ function formInvite($form, &$sta, $args = '') {
 
   $fullName = $mya->fullName;
   $phone = $mya->phoneDash;
-  $signed = u\fmtDate($mya->signed, TRUE);
+  $signed = fmtDt($mya->signed);
   $code = $mya->iCardCode(IBY_EMAIL); // this code is different from the one emailed in form
   $info = compact(ray('fullName quote phone signed'));
 

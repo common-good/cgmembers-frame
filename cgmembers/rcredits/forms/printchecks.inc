@@ -46,7 +46,7 @@ function printChecks($args) {
     printCheck($ck, $pos, $tx, $mark);
     $count++;
   }
-  $date = strftime('%Y-%m-%d', $date);
+  $date = fmtDt($date, 'YYYY-MM-dd');
 
   if (test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
   //  say($count . t(' checks printed'));
@@ -113,7 +113,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $ck->say("<b>$xid</b>", -$W / 4, '', -$W / 4 - $m, '', '', 'R');
 
   $ck->say('DATE:', 6.7, $y += .4, '', .25, '8');
-  $ck->say(u\fmtDate($deposit ?: now()), 7.1, '', '', .25);
+  $ck->say(fmtDt($deposit ?: now()), 7.1, '', '', .25);
 
   $ck->say('Pay to the<br>Order of', $m, $y += .4, '', 2 * $lineH, '8;CAPS');
   $ck->say("  $toName", $m + .7, $y + $lineH, 5.9, $lineH, '', '', 'BR');

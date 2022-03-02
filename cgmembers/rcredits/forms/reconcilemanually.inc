@@ -23,7 +23,7 @@ function formReconcileManually($form, &$sta, $args = '') {
   
   foreach ($txs as $t => $tx) {
     extract(just(OFX_TX_FLDS, $tx)); // trnType dtPosted trnAmt fitId name memo
-    $dtPosted = u\fmtDate(strtotime($dtPosted), TRUE);
+    $dtPosted = fmtDt(strtotime($dtPosted));
     $amt = ' ' . u\fmtAmt($trnAmt, ''); // negative numbers disappear without the leading space (bug?)
     $id = 'tx-' . $t;
     $fitId = strhas($fitId, $cgBank->acctOut) ? t('OUT') : t('IN');
@@ -38,7 +38,7 @@ function formReconcileManually($form, &$sta, $args = '') {
     $list = db\lst('amount', 'r_usd', "deposit=:batDt AND bankTxId=0 AND txid$txidSign AND amount$amtSign", compact('batDt'));
     $list = str_replace('.00', '', $list); // visually confusing otherwise
     $id = 'bt-' . $batch;
-    $batDt = u\fmtDate($batDt, TRUE);
+    $batDt = fmtDt($batDt);
     $type = $batch[0] == 'B' ? t('BAD') : ($batAmt < 0 ? t('OUT') : t('IN'));
     $form[$id] = boxFld($id, u\fmtAmt($batAmt), "<b>$type</b> $batDt: $list", 0);
   }

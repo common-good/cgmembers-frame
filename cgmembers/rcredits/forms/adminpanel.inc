@@ -124,7 +124,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? fmtDt($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
   } elseif ($op == 'resetSSN' and $a) {

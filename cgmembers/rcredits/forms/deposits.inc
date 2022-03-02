@@ -46,7 +46,7 @@ EOF;
   if ($mya->admAch) {
     $btns = btn("$base_url/sadmin/achs/date=0&mark=1", t('Download ACH File'));
     $last = db\max('deposit', 'txs2', 'deposit<>0');
-    if ($last >= today()) $btns .= ' ' . lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', u\fmtDate($last, TRUE)), clas('undo'));
+    if ($last >= today()) $btns .= ' ' . lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', fmtDt($last)), clas('undo'));
     $go = item($btns);
   } else $go = NULL;
   
@@ -83,8 +83,7 @@ EOF;
       if (!$count) continue;
       if ($firstline) {
         if ($way == 'Net' and in($amtNet, [$amtIn, $amtOut, $amtBad])) continue; // use first line for Net only if there's more than one way
-        $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
-        $date = strftime('%Y%m%d', $deposit ?: today());
+        $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? fmtDt($deposit) : t('<b>TODAY</b>'));
         $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum", t('details'));
         if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers

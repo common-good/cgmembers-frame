@@ -130,7 +130,7 @@ function formTx_submit($form, &$sta) {
   
   if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
     $msg = 'thing scheduled';
-    $subs = ray('thing who start', $thing, $a->fullName, u\fmtDate($start, TRUE));
+    $subs = ray('thing who start', $thing, $a->fullName, fmtDt($start));
     $a->tell($msg, $subs, '', $paying ? SEND_OUT : SEND_IN);
     $ok = TRUE;
   } else { // no delay, transact now

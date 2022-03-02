@@ -67,7 +67,7 @@ function formEvents($form, &$sta, $args = '') {
   if ($event0) {
     extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
 
-    $end = u\fmtDate($end, TRUE);
+    $end = fmtDt($end);
     $begun = ($start <= now()); // event has begun
 
     if (strpos(' VG', $type) and $begun) {
@@ -82,7 +82,7 @@ function formEvents($form, &$sta, $args = '') {
       $voting = $do ? NULL : ($type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink)); // end is displayable end date
     }
 
-    $start = $start <= now() ? t('NOW') : u\fmtDate($start, TRUE);
+    $start = $start <= now() ? t('NOW') : fmtDt($start);
     $status0 = t('<b>Status:</b> %event from %start to %end', compact(ray('event start end')));
     if ($details) $status0 .= u\lf2br("\n\n$details");
   } else $status0 = t('There are no upcoming %PROJECT events scheduled in your community at this time.');
@@ -128,7 +128,7 @@ EOF;
         $buttons .= ' &nbsp; ' . tr($btn, 'text noprox', t('Results'), '');
 //        if ($cAdmin) $buttons .= ' ' . tr($btn, 'text noprox', t('Without Proxies'), '&noProxies=1');
       }
-      $e_end = u\fmtDate($e_end);
+      $e_end = fmtDt($e_end);
       $list .= <<<EOF
 <tr><td>$e_end</td><td>$e_event</td><td>$buttons</td></tr>
 EOF;

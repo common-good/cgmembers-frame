@@ -33,7 +33,7 @@ function depositDetails($args) {
   //  list ($activity, $where) = $in ? [t('DEPOSIT'), '(NOT (amount<0 XOR txid<0))'] : [t('CASHOUT'), '(amount<0 XOR txid<0)'];
   $activity = t('Bank Transfer');
   $where = 1;
-  $today = $date == 1 ? t('(Historical)') : u\fmtDate($date ?: now());
+  $today = $date == 1 ? t('(Historical)') : fmtDt($date ?: now());
   $b = r\bankData();
   $escrow = $in ? $b->acctIn : $b->acctOut;
   $bankName = $b->name;
@@ -105,7 +105,7 @@ EOF;
   $pdf->setX($x + $colW);
   $pdf->Cell(($pdf->pageW - $x) - $colW, 0, t('TOTAL'), '', 1);
 
-  $date = strftime('%Y%m%d', $date);
+  $date = fmtDt($date, 'Ymd');
   if (test()) $pdf->Close(); else 
     //  $pdf->Output(PROJECT . "-deposit-$way-$date.pdf", 'I'); //Close and output
     $pdf->Output(PROJECT . "-deposit-$date.pdf", 'I'); //Close and output

@@ -35,7 +35,7 @@ function formMemberList($form, &$sta) {
     $email = $a->email ?: t('BAD EMAIL');
     $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid\">$fullName</a>";
     $steps = a\showSteps($a);
-    $date = u\fmtDate($a->ok ? $access : $login);
+    $date = fmtDt($a->ok ? $access : $login);
 
     $bits = []; foreach (ray('member ok hasBank') as $k) if ($a->$k) $bits[] = $k;
     $bits = $bits ? ('<span class="memberlist-bits"> ' . join(' ', $bits) . "</span><br>\n") : '';
