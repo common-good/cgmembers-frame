@@ -390,7 +390,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
-  extract(just('payer payee purpose recursId', $inv, NULL));
+  extract(just('payer payee purpose recursId reversesXid', $inv, NULL));
   extract(just('amount goods data flags', $inv, [0.0, FOR_GOODS, '', 0]));
 
   u\setDft($payAmount, $amount);
@@ -401,6 +401,7 @@ function payInvoice($nvid, $payAmount = NULL) {
 
   $DBTX = \db_transaction();
   $extra = ray('inv', $nvid) + just('api for cat', $data, NULL);
+  if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
@@ -480,7 +481,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId ruleId cat', $data, [now(), 0, NULL, NULL, NULL, NULL]));
+  extract(just('created force boxId ruleId cat reversesXid', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -534,7 +535,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $DBTX = \db_transaction();
 
   // Create the transaction
-  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
+  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId reversesXid'));
   
   $tx = new r\Tx($info);
   if (!$tx) {
@@ -892,6 +893,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
   $flags = 0;
+  unset($extra['reversesXid']);
 
   foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);

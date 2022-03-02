@@ -26,7 +26,7 @@ function formSummary($form, &$sta) {
     unset($left[$k]);
   }
 
-  if ($mya->admManageAccts) {
+  if ($mya->can(B_MANAGE)) { // includes $mya->admManageAccts as well as admin's own company
     $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
     if (!$mya->isCtty) {
       if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);

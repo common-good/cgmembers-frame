@@ -11,7 +11,7 @@ use CG\Db as db;
  */
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  extract(just('qName sql q d isco', $args, NULL));
+  extract(just('code qName sql q d isco', $args, NULL));
   u\setDft($isco, $isco0 == 'co');
   require queryFile($isco);
   
@@ -27,10 +27,10 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
   $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
-  if ($mya->admRegion and $sql0) {
+  if ($mya->admRegion and $code and $info = u\decryRay($code) and $sql = nni($info, 'sql')) {
     $title = t('MySQL Query');
     try {
-      $q = db\adminQ($sql0);
+      $q = db\adminQ($sql);
       if ($q and $rows = $q->fetchAll()) {
         $hdrs = array_keys((array) $rows[0]);
         foreach ($rows as $i => $row) $rows[$i] = array_values((array) $row);
@@ -72,7 +72,7 @@ function formData_validate($form, &$sta) {
 function formData_submit($form, &$sta) {
   extract(just('sql', $sta['input'], NULL));
 
-  if ($sql) return w\go('/community/data/sql=' . urlencode($sql));
+  if ($sql) return w\go('/community/data/code=' . u\cryRay(compact('sql')));
 }
 
 function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/rweb/queries.inc');}

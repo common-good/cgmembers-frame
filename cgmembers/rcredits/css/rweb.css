@@ -1558,6 +1558,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .blockish {display:block;}
 
 .outgoing {color:red;}
+.neg {color:red;}
 
 .abc {list-style-type:lower-alpha;}
 .roman {list-style-type:lower-roman;}
