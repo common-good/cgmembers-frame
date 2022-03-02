@@ -43,7 +43,7 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
   if (!$rec = db\get('payer,payee,amount,created,goods', 'r_txs', 'xid=:xid', compact('xid'))) return say(t('No such transaction.'), 'ERR');
   extract($rec);
   if ($amount != $oldAmt) return say(t('The existing amount of that transaction is different.'), 'ERR');
-  if (u\fmtDate($created) != u\fmtDate(now())) return say(t('That transaction is not from today.'), 'ERR');
+  if (fmtDt($created) != fmtDt(now())) return say(t('That transaction is not from today.'), 'ERR');
   if ($goods) return say(t('That transaction has rewards.'), 'ERR');
   if (!$amount = round($newAmt, 2)) return say(t('Bad new amount.'), 'ERR');
 

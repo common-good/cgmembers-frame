@@ -70,7 +70,7 @@ function inviteExample() {
   global $mya;
   $s = file_get_contents("$rUrl/templates/invite.html");
   $note = str_replace("\n", '', t('invite default', 'name', ''));
-  return exitJust(tr($s, '_personalNote signed fullName phone CODE', $note, u\fmtDate($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), ''));
+  return exitJust(tr($s, '_personalNote signed fullName phone CODE', $note, fmtDt($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), ''));
 }
 
 function formVideos($form, &$sta) {
@@ -351,7 +351,7 @@ function authcode($args = '', $exit = TRUE) {
  */
 function formCgBiz($form, &$sta, $id) {
   if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\softErr(t('That is not a %PROJECT Business.'));
-  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
+  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, fmtDt($a->activated), atag(r\promoLink(''))));
 }
 
 /**
@@ -375,7 +375,7 @@ EOF;
   $list = "<table id='invitelist'>\n<tr><th>Invited</th><th>Whom</th><th>Status</th></tr>\n";
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    $invited = u\fmtDate($invited);
+    $invited = fmtDt($invited);
     if (!$started = mb_strpos($who, ' ') and u\starts($who, CRYPT_FLAG . 'P')) $who = u\decry('P', $who); // decrypt email
     $status = ($member or $ok) ? t('is a Member!') : ($started ? t('account Not Complete') : ($expired ? t('expired') : '(no response yet)'));
     $color = $member ? 'member' : ($started ? 'incomplete' : ($expired ? 'expired' : 'other'));

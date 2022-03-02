@@ -33,7 +33,7 @@ X
   
   $submit = submit(t('Create'), '', '', suffix(' ' . skipButton())); // allow user to skip this step forever
   
-  $start = hidFld(u\fmtDate(now(), TRUE));
+  $start = hidFld(fmtDt(now()));
   $automatic = hidFld(TRUE);
   $type = hidFld('discount');
   

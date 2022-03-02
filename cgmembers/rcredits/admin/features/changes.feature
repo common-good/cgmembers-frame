@@ -28,16 +28,16 @@ Scenario: A member changes some settings
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
   When member ".ZZD" visits page "sadmin/changes/NEWZZA"
   Then we show "Account Changes for Abe One" with:
-  | %dmy | flags       | ok ided       | ok ided              | abeone     |
+  | %mdY | flags       | ok ided       | ok ided              | abeone     |
   And with:
-  | %dmy | flags       | ok ided       | ok ided paper        | abeone     |
+  | %mdY | flags       | ok ided       | ok ided paper        | abeone     |
   And with:
-  | %dmy | flags       | ok ided paper | ok ided refill paper | abeone     |
+  | %mdY | flags       | ok ided paper | ok ided refill paper | abeone     |
   And with:
-  | %dmy | achMin      |            10 |                   11 | abeone     |
+  | %mdY | achMin      |            10 |                   11 | abeone     |
   And with:
-  | %dmy | bankAccount |               | (secret)             | abeone     |
+  | %mdY | bankAccount |               | (secret)             | abeone     |
 # sometimes this happens out of order (dunno why)
 
-#  | %dmy | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)
-#  | %dmy | flags   | member ok bona | member ok bona weekly debt |
+#  | %mdY | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)
+#  | %mdY | flags   | member ok bona | member ok bona weekly debt |

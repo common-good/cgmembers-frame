@@ -158,7 +158,7 @@ EOF;
     t('Purpose:') => $purpose,
     t('Systemic Change:') => $systemic,
     t('Where:') => $where,
-    t('When:') => t('From %start to %end.', 'start end', u\fmtDate($when, TRUE), u\fmtDate($until, TRUE)),
+    t('When:') => t('From %start to %end.', 'start end', fmtDt($when), fmtDt($until)),
     t('Implementation Plan:') => $how,
     t('Amount Requested:') => u\fmtAmt($amount),
     t('Recovery of Funds:') => join("\n", nn($ways) ?: []),
@@ -268,7 +268,7 @@ EOF;
 </div>
 EOF;
     
-//    $until = u\fmtDate($until);
+//    $until = fmtDt($until);
 ///    debug(compact(ray('categories project who amount budgetTotal until suitable doable mgmt eval cope sponsor local goodtype goodType goodTime1 goodTime2 rightAmt rightPct grade')));
   }
   krsort($list); // highest rated proposals first

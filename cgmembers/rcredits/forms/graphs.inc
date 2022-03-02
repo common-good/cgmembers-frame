@@ -16,14 +16,14 @@ function formGraphs($form, &$sta, $args) {
   u\setDft($ctty, $a ? $a->community : 0);
 
   if ($download) { // download a spreadsheet with the chart data
-    $dt = strftime('%Y%m%d');
+    $dt = fmtDt(now(), 'Ymd');
     u\setDft($chart, 'success');
     $cttyName = $ctty ? r\acct($ctty)->name : t('region');
     u\csvStart("$chart-$cttyName-$dt.csv");
     $header[] = ''; // column for data descriptor
     for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
       $dt = strtotime("-$ago months", today());
-      $header[] = strftime('%d%h%Y', $dt);
+      $header[] = fmtDt($dt, 'ddMMMYYYY');
     }
     u\csv($header);
     $chartData = w\showCharts($ctty, 'months', 'download');

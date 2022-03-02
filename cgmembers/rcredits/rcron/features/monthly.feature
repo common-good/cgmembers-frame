@@ -114,7 +114,7 @@ Scenario: Crumb and roundup donations are made
   | 12  | %(%daystart-1) |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
   | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations                            | gift        |
   | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations                              | gift        |
-  # Note that tests simulate the previous month as the previous 30 days (created field is mdt1-1 when not testing)
+  # Note that tests simulate the previous month as the previous 30 days (created field is monthDt1-1 when not testing)
   And count "tx_hdrs" is 14
   And count "tx_requests" is 0
 

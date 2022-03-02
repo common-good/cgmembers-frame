@@ -67,7 +67,7 @@ function formMessage_submit($form, &$sta) {
     if ($fileData) $ray += just('path name type size', $fileData);
 
     $message .= t('<p>Secret: <%a>click here</a>.<sup>*</sup></p>', '_a', atag(MSG_URL0 . u\cryRay($ray)));
-    $message .= t('<p>Encrypted data expires at %tm on %dt.</p><p class="smallish">* The encrypted message can be viewed only by you, on a device you have used (sometime in the past) to sign in to your %PROJECT account.', 'tm dt', u\tm($at), u\fmtDate($at));
+    $message .= t('<p>Encrypted data expires at %tm on %weekday, %dt.</p><p class="smallish">* The encrypted message can be viewed only by you, on a device you have used (sometime in the past) to sign in to your %PROJECT account.', 'tm weekday dt', fmtTime($at), weekday($at), fmtDt($at));
   }
 
   $fromA = r\acct($fromQid);
@@ -94,7 +94,7 @@ function codeResult($code) {
 
   if ($download or $secret) {
     $msg = $download ? 'crypt file received' : 'crypt msg received';
-    $fromA->tell($msg, ray('who time', $intendedA->fullName, ucwords(strtolower(strftime('%I:%M:%S%p %A %m/%d/%Y')))), t('encrypted message received'));
+    $fromA->tell($msg, ray('who time', $intendedA->fullName, fmtDt(now(), 'h:mm:ssa EEEE ' . DATE_FMT)), t('encrypted message received'));
   }
 
   if ($download) {

@@ -24,10 +24,10 @@ function couponsPrint($args = '') {
 
   if ($start == today()) $start = '';
   if ($end) {
-    $end = u\fmtDate($end, TRUE);
-    $dates = $start ? u\fmtDate($start, TRUE) . t(' to ') . $end : (t('expires ') . $end);
+    $end = fmtDt($end);
+    $dates = $start ? fmtDt($start) . t(' to ') . $end : (t('expires ') . $end);
   } else {
-    $dates = $start ? t('beginning ') . u\fmtDate($start, TRUE) : '';
+    $dates = $start ? t('beginning ') . fmtDt($start) : '';
     $dates .= t(' (does not expire)');
   }
   if ($useMax) $dates .= t(' &mdash; %useMax %uses per member', 'useMax uses', $useMax, $useMax > 1 ? t('uses') : t('use'));

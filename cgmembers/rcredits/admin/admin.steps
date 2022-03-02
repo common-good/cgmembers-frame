@@ -190,8 +190,8 @@ function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
 function weDownloadWithRecords($flnm, $fileType, $rows) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testDownloadFlnm, $testRecs;
-  $flnm = str_replace('<NOW>', strftime('%Y%m%d%H%M'), $flnm);
-  $flnm = str_replace('<LY>', strftime('%Y', strtotime('1 year ago')), $flnm);
+  $flnm = str_replace('<NOW>', fmtDt(now(), 'YYYYMMddHHmm'), $flnm);
+  $flnm = str_replace('<LY>', fmtDt(strtotime('1 year ago'), 'YYYY'), $flnm);
   if (!t\eq(t('download filename'), $flnm, $testDownloadFlnm)) return FALSE;
   if (!t\eq(t('number of records'), count($rows), count($testRecs ?: []))) return FALSE;
 

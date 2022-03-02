@@ -169,7 +169,7 @@ X
 
 // when people signed up recently
 eachA(function ($a) {
-  $dt = u\fmtDate($a->created, TRUE);
+  $dt = fmtDt($a->created);
   $status = $a->ok ? '' : ' (in process)';
 ///  echo "$dt $a->fullName$status\n";
 }, 'created > :NOW - 3 * :MONTH_SECS ORDER BY created DESC');

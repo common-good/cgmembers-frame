@@ -30,7 +30,7 @@ function formProposal($form, &$sta, $args = '') {
   }
   
   extract($res);
-  $end = strftime('%B %e, %G', $end); // Month d, YYYY
+  $end = fmtDt($end, 'MMMM d, YYYY');
   $max = preg_replace('/[^0-9]/', '', $event);
   list ($idealAmt, $max) = [u\fmtAmt(round($max/10)), u\fmtAmt($max)];
   $options = ray(t('Sustainability / Renewable Energy, Small Business / Economic Development, Social and Economic Justice, Food Systems, Arts & Culture'));

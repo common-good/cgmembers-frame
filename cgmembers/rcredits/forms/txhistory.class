@@ -78,7 +78,7 @@ EOF;
   public function txnHdr($info, $extraClass = '') {
     global $mya;
     
-    $this->dateValue = strftime('%m/%d/%y', $info['created']);
+    $this->dateValue = fmtDt($info['created'], 'MM/dd/yy');
     $this->runBalance = u\fmtAmt($info['balance'], '');
 
     $class = "row txRow ";

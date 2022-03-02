@@ -115,7 +115,7 @@ function formCoupons_validate($form, &$sta) {
       $amount = 0;
     } else $portion = 0;
     
-    if (!$start) $start = u\fmtDate(NOW);
+    if (!$start) $start = fmtDt(NOW);
     foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, today())) return w\sayFieldErr($err, $k);
     if ($end and $end < $start) return w\sayFieldErr(t('Ending date cannot be before starting date.'), 'end');
     foreach (ray('useMax end') as $k) $$k = (int) $$k;

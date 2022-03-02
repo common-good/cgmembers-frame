@@ -34,7 +34,7 @@ X;
   $q = db\q($sql);
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    $dt = u\fmtDate($dt, TRUE);
+    $dt = fmtDt($dt);
     if ($cnt) $what .= ": $cnt";
     if ($what == 'T') $what = t('transfer');
     if ($what == 'S') $what = $amt < 0 ? t('fee') : t('interest');
@@ -56,7 +56,7 @@ X;
 X;
   $title = t('Reconciled Dollar Pool Transactions');
   $txid = db\min('txid', 'txs2', 'bankTxId=0 AND amount<>0') ?: 999999999;
-  $asof = u\fmtDate(db\max('deposit', 'txs2', 'txid<:txid', compact('txid')) ?: now(), TRUE);
+  $asof = fmtDt(db\max('deposit', 'txs2', 'txid<:txid', compact('txid')) ?: now());
   $subtext = t('These Dollar Pool transactions have been matched one-to-one with the bank\'s records, for all transfers dated on or before %asof.', compact('asof'));
   $list = item($list);
   return cgForm(compact(ray('title subtext list')));

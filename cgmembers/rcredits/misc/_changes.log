@@ -1,3 +1,11 @@
+2022-03-02 feature/datetime
+. change all u\fmtDate, u\tm, and strftime to a new fmtDate function
+. added a weekday function
+. fixed bugs in u\nextBusDay function
+. added w\tweakSta function to make it easier for validation functions to update submitted parameters
+. made time editable in txDetails
+. added a datetime field function
+
 2022-03-01 feature/pending-reversal
 . include reversesXid when completing a pending invoice
 . recursId and reversesXid can now be edited on txDetail page
@@ -318,7 +326,7 @@ eachA(function ($a) {
     w\say("$a->fullName has bank");
   }
   if ($a->hasPhoto and !$a->stepIsDone('photo')) {$a->stepDone('photo'); w\say("$a->fullName has photo");}
-  if ($dt = $a->backingDate and !$a->stepIsDone('backing')) {$a->stepDone('backing'); w\say("$a->fullName has backing as of " . u\fmtDate($dt));}
+  if ($dt = $a->backingDate and !$a->stepIsDone('backing')) {$a->stepDone('backing'); w\say("$a->fullName has backing as of " . fmtDt($dt));}
   if (!$dt = $a->backing+0 and $a->stepIsDone('backing')) {$a->stepDone('backing', FALSE); w\say("$a->fullName has NO backing");}
 });
 
@@ -2773,7 +2781,7 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = a($uid);
-    $created = u\fmtDate($giftDate);
+    $created = fmtDt($giftDate);
     $gift = u\fmtAmt($amt0 = $amount) . ($often == 'M' ? ' Monthly' : ($often == 'Q' ? ' Quarterly' : ($often == 'Y' ? ' Yearly' : '')));
     if ($honored) $gift .= '[i] in ' . ($honor == 'memory' ? $honor : 'honor') . " of $honored [/i]";
     $s .= "$fullName &lt;$a->email&gt;: [p]Dear $fullName,[/p][p]Due to a glitch in our Common Good donation system, your chosen contribution of $gift was never transferred from your bank account. We have fixed that problem, but I wanted to give you a heads-up before the transfer request takes effect.[/p][p]If for any reason this completion of your intended donation is problematic this week, please just let us know before Friday 8/10.[/p][p]With many thanks again for your support,[br]William[/p][br]\r\n\r\n";

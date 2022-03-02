@@ -125,7 +125,7 @@ X;
 
 function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
-  if (strftime('%H') + 0 == (R_DAILY_HOUR + 6) % 24) {
+  if (fmtDt(now(), 'HH') + 0 == (R_DAILY_HOUR + 6) % 24) {
     $lastCron = getV('last_cron_end', []);
     if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
@@ -227,7 +227,7 @@ function oneAcct($item) {
   } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
     $s = strtr($a->source, ['self() '=>'', 'knows: '=>'']);
     if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
-      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, u\fmtDate($a->created)));
+      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
 //        f('a.deleteUid', $a->id);
     }
   }
@@ -510,7 +510,7 @@ function warnAnnual1($item) {
   $a = r\acct($uid);
   $atag = w\atag("/do/do$func~" . $a->doCode());
   $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
-  $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
+  $subs = ray('amount when atag track', u\fmtAmt($amount), fmtDt(strtotime($target)), $atag, $track);
   $a->tellMisc($tpls[$func], $subs);
 }
 
@@ -552,7 +552,7 @@ function often($period, $chosen = '') {
   
   $function = 'CG\\Cron\\every' . ucwords($period);
   $topic = t('cron period', compact('period'));
-  $time = strftime('%I:%M%P', now());
+  $time = fmtTime();
   $msg = t('Running cron for the %period, at %time', compact('period', 'time'));
   if ($period != 'hour') r\tellAdmin($msg, compact('topic'));
 
@@ -609,7 +609,7 @@ X;
 function whatsup($item) {
   extract(just('uid lastTx co', $item));
   $msg = 'whats up' . ($co ? '|co promo' : '');
-  r\acct($uid)->tellMisc($msg, ray('lastTx', u\fmtDate($lastTx)));
+  r\acct($uid)->tellMisc($msg, ray('lastTx', fmtDt($lastTx)));
 }
 
 /**
@@ -689,7 +689,7 @@ function cgc($item) {
   $kickBack = round($in / 2 - $out - R_DEPOSIT_RETURN_FEE * $bounces, 2);
   if ($kickBack > 0) {
     list ($a, $cgA) = [r\acct($ctty), r\cgA()];
-    $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
+    $desc = t('50% share of local donations through %dt', 'dt', fmtDt($end));
     if ($a->ok) {
       $z = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
       if (!$z->ok) r\tellAdmin(t('Failed sharing 50% with community ') . "$a->fullName: $z->msg");
@@ -866,7 +866,7 @@ function biggies() {
     ORDER BY total DESC
 X;
 
-  if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . u\fmtDate(), compact(ray('admin list')));
+  if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . fmtDt(), compact(ray('admin list')));
   queueNext();
 }
 
@@ -976,7 +976,7 @@ o;
 
   if ($a->balance < 0) {
     if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
-    if ($debtTimeout) $why = tr('debt timeout', 'signed', u\fmtDate($a->signed, TRUE)) . "|$why";
+    if ($debtTimeout) $why = tr('debt timeout', 'signed', fmtDt($a->signed)) . "|$why";
   }
 
   if ($pending > 0 and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
@@ -1036,7 +1036,7 @@ function pendingRequest($item) {
   $daysAgo = max(1, round((now() - $created) / DAY_SECS));
   $nudge = $a2->staleNudge;
   if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
-    $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $a2->fullName, $a2->email, $a2->phone);
+    $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, fmtDt($created), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $a2->fullName, $a2->email, $a2->phone);
     $a1->tellMisc('stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
     $a2->tellMisc('stale invoice report', $subs); // tell the payee we're following up on it
   }
@@ -1049,8 +1049,8 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []); // base timeForW and timeForM on cron start day, not current day (?!)
-  $timeForW = (int) (strftime('%w', nni($lastStart, 'day', now())) == R_WEEKLY_DAY);
-  $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
+  $timeForW = (int) (fmtDt(nni($lastStart, 'day', now()), 'e') == R_WEEKLY_DAY);
+  $timeForM = (int) (fmtDt(nni($lastStart, 'day', now()), 'd') == R_MONTHLY_DAY);
   if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
   $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent AND NOT (:CLOSED)";
@@ -1117,12 +1117,10 @@ function postNotices1($item) {
   foreach (ray($notices) as $type => $freq) {
 //    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
     if (!in($type, 'offer need tip')) continue;
-    if (u\fmtDate(now()) != '15Sep2020') // one-time only, email all past posts
     if ($freq != 'd' and !($freq == 'w' and $timeForW) and !($freq == 'm' and $timeForM)) continue;
 
     $unit = ray('d:day,w:week,m:month')[$freq];
     $since = strtotime("-1 $unit", now());
-    if (u\fmtDate(now()) == '15Sep2020') $since = 1;
 
     $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since, FALSE);
     if (!$q->rowCount()) continue;
@@ -1177,7 +1175,7 @@ function END() {
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);
   $elapsed = now() - nni($lastCron, 'day', 0);
-  $time = strftime('%I:%M%P');
+  $time = fmtTime();
   $msg = t('At %time, after %elapsed secs, daily cron ended successfully.', compact(ray('time elapsed')));
   $topic = t('cron end');
   r\tellAdmin($msg, compact('topic'));

@@ -59,7 +59,7 @@ X;
     if($endDate < 0) $endDate = now() - $endDate; // correct for reverse sorting of closed votes (negative means number of days ago)
 
     if($phase == 'V') $voting = ($voting and $endDate) ? min($voting, $endDate) : $endDate; // report soonest closing date
-    $endDatedpy = $endDate ? u\fmtDate($endDate) : '?';
+    $endDatedpy = $endDate ? fmtDt($endDate) : '?';
 
     $budget = $budget ? (' (total budget: ' . ($units ? '' : '$') . number_format($budget, 0) . ($units ? " $units)" : ')')) : '';
     $phaselist = phaseDpy($id, $phase, $repeats, $repeatedBy, $linkDiscussion);
@@ -110,7 +110,7 @@ $list
 $qdivs
 EOF;
 
-  return array($list, nn($phase), u\fmtDate(nn($endDate, 0)));
+  return array($list, nn($phase), fmtDt(nn($endDate, 0)));
 }
 
 /**

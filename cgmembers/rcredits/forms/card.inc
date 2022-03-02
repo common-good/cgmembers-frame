@@ -208,7 +208,7 @@ function cardDone($z) {
       if (!$actorA->coCan(CO_TIP) or tipAmt($tx)) $tip = '';
       $buttons = "$undo<br>$buttons<br>$tip$receipt";
     }
-    $msg = t('Reverse your %amt charge to %who (%dt)?', 'amt who dt', u\fmtAmt($tx->amt2), $tx->a1->fullName, u\fmtDate($tx->created));
+    $msg = t('Reverse your %amt charge to %who (%dt)?', 'amt who dt', u\fmtAmt($tx->amt2), $tx->a1->fullName, fmtDt($tx->created));
     jsx('cardDone', compact(ray('msg')));
   }
 
@@ -222,7 +222,7 @@ function receipt($tx) {
   $bizA = $tx->actorA;
   $logo = logoFld($bizA->logo ? $bizA : r\acct(CGID)); // use CG logo if company has none
   $title = t('Purchase Receipt');
-  $dt = item(u\fmtDate($tx->created, TRUE), t('Date:'));
+  $dt = item(fmtDt($tx->created), t('Date:'));
   $nm = item($tx->a1->fullName, t('From:'));
   $acct = item($tx->a1->mainQid, t('Account:'));
   $to = item($bizA->fullName, t('Paid To:'));

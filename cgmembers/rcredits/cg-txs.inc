@@ -25,8 +25,8 @@ define('TX_OPT_PEXCHANGES', 5);
 
 function setupDownload($starting, $ending, $fileId = PROJECT_ID) {
   global $mya;
-  $dt1 = strftime('%Y%m%d', $starting);
-  $dt2 = strftime('%Y%m%d', $ending);
+  $dt1 = fmtDt($starting, 'Ymd');
+  $dt2 = fmtDt($ending, 'Ymd');
   u\csvStart($fileId . "$dt1-$dt2.csv");
 }
 

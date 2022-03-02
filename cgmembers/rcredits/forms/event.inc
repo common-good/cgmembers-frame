@@ -30,7 +30,7 @@ function formEvent($form, &$sta, $args='') {
     $fields = 'type,event,details,start,end';
     if (is_numeric($eid) and $event0 = v\event($fields, $eid)) {
       extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
-      $subtitle = item(t('for vote ending ') . u\fmtDate($end));
+      $subtitle = item(t('for vote ending ') . fmtDt($end));
     }
   }
 

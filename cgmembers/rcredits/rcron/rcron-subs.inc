@@ -48,19 +48,20 @@ function queueNext($task = NULL) {
  * @param int $chosen: at which point should we do the function ('' means now)
  * @return <it's now a different period than when the function was last run AND we're at or past the chosen point>
  */
-define('TIME_CODES', 'year:Ym,month:md,week:Ua,day:dH,hour:HM');
+//define('TIME_CODES', 'year:Ym,month:md,week:Ua,day:dH,hour:HM');
+const TIME_CODES = 'year:YM,month:Md,week:We,day:dH,hour:Hm';
 
 function timeFor($time, $period, $chosen) {
   global $timeFor; if (test() and isset($timefor)) return nni($timefor, $period);
 
   $lastStart = getV('last_cron_start', []);
   if ($lastStart and now() - nni($lastStart, $period, 0) < HOUR_SECS) return FALSE;
-  $lastCron = \variable_get('last_cron_end') ?: [];
+  $lastCron = getV('last_cron_end') ?: [];
   $lastTime = nni($lastCron, $period, 0);
   list ($periodCode, $withinCode) = str_split(ray(TIME_CODES)[$period]);
-  $point = strftime("%$withinCode", $time);
+  $point = fmtDt($time, $withinCode); // where are we within the period
   if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
-  list ($periodNum, $lastPeriodNum) = [strftime("%$periodCode", $time), strftime("%$periodCode", $lastTime)];
+  list ($periodNum, $lastPeriodNum) = [fmtDt($time, $periodCode), fmtDt($lastTime, $periodCode)];
   return (!nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen)));
 }
 

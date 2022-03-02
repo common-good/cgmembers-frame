@@ -113,7 +113,7 @@ function stampNote($note) {
       $rep = mb_strtolower(($first ? $first[0] : '') . $last);
     }
   } else { $rep = 'self'; }
-  $date = u\fmtDate();
+  $date = fmtDt(NOW, 'dmY');
   return "$date  $rep: $note\n";
 }
 
@@ -788,13 +788,13 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   $q = db\q("SELECT message, created, sent, $nType AS nType, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
 
   while ($row = $q->fetch()) {
-    $date = ($weekly or $monthly) ? strftime(' %b&nbsp;%d', $row->created) : R_BULLET;
+    $date = ($weekly or $monthly) ? str_replace(' ', '&nbsp;', fmtDt($row->created, ' MMM dd')) : R_BULLET;
     $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; min-width:50px; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
   }
   if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
   
   $unit = $monthly ? 'month' : ($weekly ? 'week' : 'day');
-  $ranges = ray('m w d',  t('month of ') . strftime('%B %Y', $mDate), t('week of ') . u\fmtDate($wDate, TRUE), u\fmtDate($dDate, TRUE));
+  $ranges = ray('m w d',  t('month of ') . fmtDt($mDate, 'MMMM YYYY'), t('week of ') . fmtDt($wDate), fmtDt($dDate));
   foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
     $freq = $notices[$k];
     if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : !in($freq, 'i n'))) {

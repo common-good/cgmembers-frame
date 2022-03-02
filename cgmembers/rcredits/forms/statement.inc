@@ -111,7 +111,7 @@ function statement($period = '') {
       if (in_array($entry['uid'], $uids)) continue;
       extract(just('xid created name description amount banking', $entry));
       if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
-      $date = strftime('%b %d', $created); // reformat for single month
+      $date = fmtDt($created, 'MMM dd'); // reformat for single month
       if (mb_strlen($description) > $purposeLenMax + 3) $description = mb_substr($description, 0, $purposeLenMax) . '...';
       
       foreach ($fields as $field) {
@@ -155,7 +155,7 @@ function statement($period = '') {
     }
   }
   
-  $pdf->finish(str_replace(' ', '', PROJECT) . '-' . strftime('%Y-%m', $start) . '.pdf'); //Close and output PDF document
+  $pdf->finish(str_replace(' ', '', PROJECT) . '-' . fmtDt($start, 'YYYY-MM') . '.pdf'); //Close and output PDF document
 }
 
 /**
@@ -182,7 +182,7 @@ function statementMonth($period, $fiscalYearEnd = '6/30') {
     $start = strtotime("1$period");
     if (!$start) { return w\softErr(t('That is not a recognizable month.')); }
     $start = u\monthDay1($start);
-    list ($end, $recurDesc) = [u\plusMonths(1, $start), strftime('%B %Y', $start)];
+    list ($end, $recurDesc) = [u\plusMonths(1, $start), fmtDt($start, 'MMM YYYY')];
   }
   return [$start, $end, $recurDesc];
 }

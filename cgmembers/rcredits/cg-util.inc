@@ -1413,12 +1413,14 @@ function where($ray) {
 
 /**
  * Return the name of the next business day. (for testing, all days are business days)
- * @param int $start: how many days from now to start counting.
+ * @param int $plus: how many days from now to start counting (0 to 5).
  * @return the common speech term for the next business day starting then.
  */
-function nextBusDay($start = 0) {
-  return (strftime('%u', now() + $start) > 5 and !test()) ? t('Monday')
-  : ($start == 0 ? t('today') : ($start == 1 ? t('tomorrow') : strftime('%A', now() + $start)));
+function nextBusDay($plus = 0) {
+  $plus = $plus % 7;
+  $start = strtotime("+$plus days", now());
+  return (in(fmtDt($start, 'e'), '1 7') and !test()) ? t('Monday')
+  : ($plus == 0 ? t('today') : ($plus == 1 ? t('tomorrow') : weekday($start)));
 }
 
 define('ENGLISH_ONES', t(' One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen'));
@@ -1780,7 +1782,7 @@ function nextBizDay($dt = NOW) {
 function nextBizTm() {$bizDay = u\nextBizDay(yesterday()); return $bizDay == today() ? now() : $bizDay;} // next second that's a business day
 
 
-function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return strftime('%Y%m%d', date('l', $h) == 'Saturday' ? yesterday($h) : (date('l', $h) == 'Sunday' ? tomorrow($h) : today($h)));}
+function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return fmtDt(weekday($h) == 'Saturday' ? yesterday($h) : (weekday($h) == 'Sunday' ? tomorrow($h) : today($h)), 'Ymd');}
 
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
@@ -1807,12 +1809,9 @@ function isName($value) {return preg_match('/^[ \\x{00c0}-\\x{01ff}a-zA-Z0-9\,\.
 function isAcct($acct) {return (is_object($acct) and get_class($acct) == 'CG\\Acct');}
 function hug($s, $arms = '()') {return mb_substr($arms, 0, 1) . $s . mb_substr($arms, -1, 1);} // deprecated
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
-function fmtDate($time = NOW, $numeric = FALSE) {return $time === '' ? '' : strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', $time);}
-function fmtTime($time = NOW) {return strtolower(strftime('%I:%M%p', $time, ));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', nn($n));}
-function monthDay1($time = NOW) {return strtotime(strftime('1%b%Y', $time));}
-function mdt1($time = NOW) {return monthDay1($time);}
+function monthDay1($time = NOW) {return strtotime(fmtDt($time, 'MMMYYYY'));} // was mdt1
 function qtrDt($time = NOW) {return mktime(0, 0, 0, floor((date('n', $time) - 1) / 3) * 3 + 1, 1, date('Y', $time));}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}
@@ -1867,7 +1866,6 @@ function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray
 function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
-function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists

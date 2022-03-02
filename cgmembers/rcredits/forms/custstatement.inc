@@ -66,7 +66,7 @@ function custStatement($args = []) {
   foreach ($rows as $row) {
     if (!nn($classes)) $classes = array_keys($row);
     extract(just('tid created description invoiced paid', $row, NULL));
-    $date = nn($created) ? u\fmtDate($created, TRUE) : '';
+    $date = nn($created) ? fmtDt($created) : '';
     if ($row != $row0) $bal += (float) $invoiced - (float) $paid; // nn($invoiced, 0) + nn($paid, 0) fails (PHP bug)
     $balance = $bal;
     $x = $pdf->GetX();
@@ -107,7 +107,7 @@ function custStatement($args = []) {
 
   $pdf->SetFillColorArray([255, 255, 0]); // yellow
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
-  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', now()))); //Close and output PDF document
+  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, fmtDt(now(), 'MM-dd-YYYY'))); //Close and output PDF document
 }
 
 /**

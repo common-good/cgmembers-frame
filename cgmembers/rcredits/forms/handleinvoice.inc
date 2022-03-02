@@ -36,7 +36,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');
   }
 
-  $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
+  $subs = ray('amount what date', u\fmtAmt($amount), $purpose, fmtDt($created));
   $toMe = ($mya and $mya->id == $payee); // toMe means payment is to me
 
   if ($toMe) { // cancel or reverse a payment request TO me (reversing currently has no effect, because already-paid invoices just get an error message)
@@ -102,7 +102,7 @@ function formHandleInvoice_submit($form, &$sta) {
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $payeeName = $toA->fullName;
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, fmtDt($created), $purpose, $whyNot);
 
   $op = op($sta);
   $ok = TRUE; // messages default to status, rather than error

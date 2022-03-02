@@ -40,8 +40,8 @@ function formBoxes($form, &$sta) {
       : ($channel == TX_WEB ? (t('Computer/Browser #') . $boxnum)
       : ($channel == TX_SMS ? u\fmtPhone($code)
       : 'ERROR')));
-//    $list["x$boxid"] = array($boxid, $boxName, $restricted ? 'Yes' : 'No', u\fmtDate($access));
-    $list["x$boxnum"] = array($boxnum, $type, $boxName, u\fmtDate($access, TRUE));
+//    $list["x$boxid"] = array($boxid, $boxName, $restricted ? 'Yes' : 'No', fmtDt($access));
+    $list["x$boxnum"] = array($boxnum, $type, $boxName, fmtDt($access));
   }
 
   unset($sta['input']['new']); // don't show number just added

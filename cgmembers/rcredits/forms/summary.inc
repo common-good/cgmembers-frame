@@ -368,7 +368,7 @@ function adminSummary() {
 
       if (!$mya->co) {
         if ($mya->admV or !$mya->hasId) {
-          $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
+          $dob = $mya->hasDob ? item(fmtDt($mya->dob), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
           $dob = rendA('dob', $dob);
         }
         if ($mya->hasFid) {

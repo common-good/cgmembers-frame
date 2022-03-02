@@ -417,8 +417,6 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flags = B_LIST
  */
 function formatField($k, $v) {
   $v = $v . ''; // convert to string
-//  if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
-//  if ($v and in_array($k, ray(R_DATE_FLDS))) $v = '<div style="line-height:65%;">' . strftime('%d%b', $v) . '<span style="font-size:50%;">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
 
   if (u\crypted('P', $v)) $v = u\decry('P', $v); // decrypt phone and email
   if ($k == 'phone') $v = u\fmtPhone($v);
@@ -448,8 +446,8 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
 
   if ($type == 'int') u\setDft($x['step'], 1);
-  $type = strtr($type0 = $type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
-  if (in($subtype = $type, 'number tel date email range password')) {
+  $type = strtr($type0 = $type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel, datetime:datetime-local'));
+  if (in($subtype = $type, 'number tel date datetime-local email range password')) {
     $dft = nni($x, 'default_value', NULL);
     if ($type == 'tel') {
       if ($dft) $x['default_value'] = u\fmtPhone($dft);
@@ -462,9 +460,10 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         r\tellAdmin("bad char in $type0 fld dft", compact(ray('type0 dft label help x options')));
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
-    } elseif ($type == 'date') {
-      if ($dft) $x['default_value'] = date('Y-m-d', $dft);
+    } elseif (in($type, 'date datetime-local')) {
+      if ($dft) $x['default_value'] = fmtDt($dft, 'YYYY-MM-dd') . 'T' . fmtDt($dft, 'HH:mm');
     }
+
     $x += compact('subtype');
     $type = 'textfield';
   }
@@ -491,6 +490,7 @@ function numFld() {return fld('num', func_get_args());}
 function intFld() {return fld('int', func_get_args());}
 function phoneFld() {return fld('phone', func_get_args());}
 function dateFld() {return fld('date', func_get_args());}
+function dateTimeFld() {return fld('datetime-local', func_get_args());}
 function emailFld() {return fld('email', func_get_args());}
 function rangeFld() {return fld('range', func_get_args());}
 function radiosFld() {return fld('radios', func_get_args());}
@@ -1384,7 +1384,7 @@ function stateFld($dft = NULL, $req = REQ) {return selectFld($req . t('State:'),
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + r\budgetCats('Income'));}
-function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
+function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
@@ -1981,7 +1981,7 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
     for ($month = strtotime('1/1/' . $year); 
          $month <= $end and date('Y', $month) == $year; 
          $month = u\plusMonths(1, $month)) {
-      $mon = strftime('%b', $month);
+      $mon = fmtDt($month, 'MMM');
       $list[$year] .= $month < $start ? '.<br>' : "<a href=\"$base_url/history/$things/$mon$year\" target=\"$target\">$mon</a><br>\n";
     }
   }
@@ -2343,3 +2343,4 @@ function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press t
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
 function ccGiftType($coId) {return $coId == CGID ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
+function tweakSta(&$sta, $info) {$sta['input'] = array_filter($info + $sta['input'], function ($x) {return isset($x);});} // ignores null values, updates input

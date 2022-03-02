@@ -259,7 +259,7 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
 
   $twoBadTINs = sp(1); // "2" if IRS griped twice within 3 calendar years that the payee provided a bad name and/or TIN. Otherwise blank.
   $withheld = u\lpad(0, 12) . u\lpad(0, 12); // state and local tax withheld (none)
-  $date = pad($completed ? strftime('%Y%m%d', $completed) : '', 8);
+  $date = pad($completed ? fmtDt($completed, 'Ymd') : '', 8);
 
   if ($type == 'B') { // might be out-of-date as of 2020
 //    $amt = fmtAmt($amount, 12);

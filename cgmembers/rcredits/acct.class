@@ -832,7 +832,7 @@ EOF;
     $subs['uid'] = $uid = $a->id;
     u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
     $subs['otherName'] = nni($subs, 'myName', NULL); // notifying someone else about US, if anyone
-    $subs['todayDesc'] = u\fmtDate(now(), TRUE);
+    $subs['todayDesc'] = fmtDt(now());
     $topic = $topic ?: (nni($subs, 'topic') ?: (nni($GLOBALS['topics'], $index) ?: $index)); // index should never be used literally (wrong language) but more importantly never fail
     $subs['topic'] = tr($topic, $subs);
     $testMessages[] = compact(ray('uid index subs topic type'));
@@ -910,7 +910,7 @@ EOF;
     $this->setBit(B_OK, FALSE); // suspend the account
     if ($why) {
       $this->tell('account suspended', compact('why'));
-      $notes = u\fmtDate() . ': ' . t('account suspended') . " $why\n" . nn($this->notes);
+      $notes = r\stampNote(t('account suspended') . " $why") . nn($this->notes);
       $this->update(compact('notes'));
       r\tellAdmin('account suspended', ray('uid fullName why', $this->id, $this->fullName, $why));
     }      
@@ -1423,7 +1423,7 @@ X;
 X;
     if ($res = db\q($sql, $subs)->fetchAssoc()) {
       extract($res);
-      $last = t('Last: %lastGift (%lastGiftDate)', 'lastGift lastGiftDate', u\fmtAmt($lastGift), u\fmtDate($lastGiftDate, TRUE));
+      $last = t('Last: %lastGift (%lastGiftDate)', 'lastGift lastGiftDate', u\fmtAmt($lastGift), fmtDt($lastGiftDate));
     }
     
     $roundups = $a->roundup ? t('Roundups') : '';
@@ -1903,7 +1903,7 @@ X;
   public function o($k) {return $this->{'o_' . $k};}
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
   public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
-  public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
+  public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', fmtDt($tx->created)) : '';}
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->email => $this->fullName];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}

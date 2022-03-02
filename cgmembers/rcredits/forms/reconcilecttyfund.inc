@@ -145,7 +145,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
   
   foreach ($batches as $batch => $batAmt) {
     $batDt = substr($batch, 1) + 0; // unix date of batch
-    $errs[] = t('USD transfer batch does not appear in OFX file: %amt (%date)', 'amt date', u\fmtAmt($batAmt), u\fmtDate($batDt, TRUE));
+    $errs[] = t('USD transfer batch does not appear in OFX file: %amt (%date)', 'amt date', u\fmtAmt($batAmt), fmtDt($batDt));
     $batOnly += $batAmt;
   }
   
@@ -159,7 +159,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
   $bal = db\sum('amount', 'txs2', $where);
   $bal += db\sum('amount', 'r_usd2', str_replace('deposit', 'completed', $where));
   w\say(t('<p>Reconciled Community Fund balance as of today is %bal.</p>', 'bal', u\fmtAmt($bal)));
-  w\say(t('<p>Bank reports a balance of %ofxBal as of %asOf.</p>', 'ofxBal asOf', u\fmtAmt($balAmt), u\fmtDate($asOf, TRUE)));
+  w\say(t('<p>Bank reports a balance of %ofxBal as of %asOf.</p>', 'ofxBal asOf', u\fmtAmt($balAmt), fmtDt($asOf)));
   w\say(t('ofxOnly=%ofxOnly batOnly=%batOnly', compact(ray('tot ofxOnly batOnly'))));
   if ($batches or $txs) w\go("/sadmin/reconcile-ctty-fund/manually/asOf=$asOf");
 }
@@ -197,7 +197,7 @@ function offerOffsetTransfer($asOf) {
   $btidTomorrow = floor($asOf / DAY_SECS) + 1;
   $btidTomorrow = 0 + ($btidTomorrow . str_repeat('0', isDEV ? 5 : 12));
   $dpBal = $offsets + db\sum('amount', 'txs2', 'bankTxId<>0 AND bankTxId<:btidTomorrow', compact('btidTomorrow'));
-  say(t('Total Dollar Pool balance as of %dt is %amt', 'dt amt', u\fmtDate($asOf, TRUE), u\fmtAmt($dpBal)));
+  say(t('Total Dollar Pool balance as of %dt is %amt', 'dt amt', fmtDt($asOf), u\fmtAmt($dpBal)));
   jsx('dollar-pool-offset', 'amount', nn($offsets));
  
   return nn($button);
