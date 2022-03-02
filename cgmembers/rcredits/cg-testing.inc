@@ -254,6 +254,7 @@ function doRecords($list, $thing) {
   $func0 = 'CG\\Testing\\do';
   $func = $func0 . ucfirst(substr($thing, (strpos($thing, '_') ?: -1) + 1));
   if (!function_exists($func) or u\starts($thing, 'x_')) $func = $func0 . 'Thing';
+
   foreach ($list as $one) {
     fixData($one, TRUE);
     if (!$func($one, $thing)) return FALSE;
@@ -471,7 +472,7 @@ function doRequests($info) {
   case 'pending': $invInfo['status'] = TX_PENDING; break;
   case 'approved': $invInfo['status'] = TX_APPROVED; break;
   }
-  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId', $info));  // extract directly, and might not be present
+  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId reversesXid', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];

@@ -1,3 +1,10 @@
+2022-03-01 feature/pending-reversal
+. include reversesXid when completing a pending invoice
+. recursId and reversesXid can now be edited on txDetail page
+
+2022-03-01 feature/date-constants
+. added :mm/dd/yyyy dates as unix date constants to SQL
+
 2022-02-26 feature/recur-to-bank
 . fixed bug that submitted recurring bank transfers every day forever
 . improved messaging for bank transfers

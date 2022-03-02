@@ -37,7 +37,7 @@ function formTxDetail($form, &$sta, $args = '') {
   $forFld = $toMe ? 'for2' : 'for1';
 
   $sql = <<< X
-    SELECT t.created, t.amt, t2.pid, t.type, t.$forFld AS purpose, t.cat, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid
+    SELECT t.created, t.amt, t2.pid, t.type, t.$forFld AS purpose, t.cat, c.category, uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=IF($toMe, t.uid2, t.uid1)
     LEFT JOIN users uYou ON uYou.uid=IF($toMe, t.uid1, t.uid2)
@@ -74,17 +74,19 @@ X;
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
     $type = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
+    $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
+    $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid));
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id", ray(E_TYPES)[$etyp]);
     $submit = submit(t('Update'), '', '', suffix(join(' ', $eids)));
     
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
-  } else $phone = $type = $submit = $toMe = $xid = $eid = NULL;
+  } else $phone = $type = $submit = $toMe = $xid = $eid = $recursId = $reversesXid = NULL;
 
   $back = item(w\backButton());
 
-  return cgform(compact(ray('title created amt you me addr email phone for cat agt chan type submit back toMe xid eid')));
+  return cgform(compact(ray('title created amt you me addr email phone for cat agt chan recursId reversesXid type submit back toMe xid eid')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -101,7 +103,8 @@ function formTxDetail_submit($form, &$sta) {
   $myEid = $toMe ? $eid : -$eid;
   
   $DBTX = \db_transaction();
-  if ($info = just('xid created', $input)) db\update('tx_hdrs_all', $info, 'xid');
+  if ($info = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $info, 'xid');
+
   if ($info = just('xid eid type amt cat', $input)) {
     if (!$info['cat']) $info['cat'] = NULL;
     db\q('UPDATE tx_entries_all SET entryType=:type, amount=IF(id<0, -:amt, :amt), cat=:cat WHERE xid=:xid AND ABS(id)=:eid', $info);

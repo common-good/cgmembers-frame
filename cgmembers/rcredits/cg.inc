@@ -136,7 +136,7 @@ function stampNote($note) {
  * @return the error message (FALSE if no error)
  */
 function badUnpaidInv($nvid, &$inv = '') {
-  $fields = 'nvid,status,amount,payer,payee,goods,purpose,cat,flags,data,recursId,created,deleted';
+  $fields = 'nvid,status,amount,payer,payee,goods,purpose,cat,flags,data,recursId,reversesXid,created,deleted';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'tx_requests_all', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['deleted']) return 'inv is canceled';

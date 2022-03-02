@@ -22,12 +22,12 @@ Setup:
   | uid  | floor | balance |*
   | .ZZA |     0 |     100 |
   And these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for   |*
-  |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZC | one   |
-  |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   |
-  |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |
-  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |
-  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA | .ZZC | five  |
+  | nvid | created   | status       | amount | payer | payee | for   | reversesXid |*
+  |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |          37 |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |        %NUL |
+  |    3 | %today    | %TX_APPROVED |    300 | .ZZB  | .ZZC  | three |        %NUL |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |        %NUL |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |        %NUL |
   Then balances:
   | uid  | balance |*
   | .ZZA |     100 |
@@ -36,9 +36,9 @@ Setup:
   
   When cron runs "getFunds"
   Then these "txs": 
-  | xid | created | amount | payer   | payee | purpose   | taking | type  |*
-  |   1 | %today  |    100 | .ZZA    | .ZZC  | one       |        | prime |
-  |   2 | %today  |      0 | bank-in | .ZZA  | from bank |      1 | bank  |
+  | xid | created | amount | payer   | payee | purpose   | taking | type  | reversesXid |*
+  |   1 | %today  |    100 | .ZZA    | .ZZC  | one       |        | prime |          37 |
+  |   2 | %today  |      0 | bank-in | .ZZA  | from bank |      1 | bank  |             |
   And count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 5
