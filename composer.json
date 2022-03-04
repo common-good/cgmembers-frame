@@ -5,9 +5,7 @@
   "homepage": "https://commongood.earth",
   "type": "project",
   "license": "Common Good",
-  "authors": [
-    {"name": "William Spademan", "email": "info@commongood.earth"}
-  ],
+  "authors": [{"name": "Common Good®", "email": "info@commongood.earth"}],
   "require": {
     "php": "^7.4||^8.0",
     "endroid/qr-code": "*",
