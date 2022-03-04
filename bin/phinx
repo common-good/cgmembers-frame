@@ -1,0 +1,4 @@
+#!/usr/bin/env /bin/bash
+cmd="$1"
+shift
+vendor/robmorgan/phinx/bin/phinx "$cmd" -c config/phinx.json "$@"
