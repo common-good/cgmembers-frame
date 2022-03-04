@@ -20,7 +20,7 @@ use QuickBooksOnline\API\Core\OAuth\OAuth2;
 use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
 // https://help.developer.intuit.com/s/error-resolver
 
-require_once R_ROOT . '/../vendor/autoload.php';
+require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 
 /**
  * Do whatever.

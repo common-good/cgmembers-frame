@@ -1,3 +1,12 @@
+2022-03-03 feature/upgrade
+. updated to PHP 7.4
+. consolidated all vendors in cgmembers-frame/vendors
+. TCPDF, parsedown, and swiftmailer are now composer components, not modules
+. upgraded various components
+. switched from swiftmailer to symfony/mailer, as recommended
+. moved gherkin out of vendor folder in rcredits and removed that vendor folder
+. added a function c() to return a single character of a string (since $x[0] can get misinterpreted as treating an integer as an array in PHP 7.4)
+
 2022-03-02 feature/datetime
 . change all u\fmtDate, u\tm, and strftime to a new fmtDate function
 . added a weekday function

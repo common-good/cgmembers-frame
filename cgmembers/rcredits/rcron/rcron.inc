@@ -125,7 +125,7 @@ X;
 
 function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
-  if (fmtDt(now(), 'HH') + 0 == (R_DAILY_HOUR + 6) % 24) {
+  if (fmtDt(now(), 'H') + 0 == (R_DAILY_HOUR + 10) % 24) { // if not successfully completed after 10 hours, report to admin
     $lastCron = getV('last_cron_end', []);
     if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }

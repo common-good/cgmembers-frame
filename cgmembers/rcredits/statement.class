@@ -9,8 +9,7 @@ use CG\Util as u;
  * Extends the TCPDF class -- especially for custom headers and footer.
  */
 
-require_once DRUPAL_ROOT . '/vendor/tcpdf/config/tcpdf_config.php'; // lang/eng.php';
-require_once DRUPAL_ROOT . '/vendor/tcpdf/tcpdf.php';
+require DRUPAL_ROOT . '/../vendor/autoload.php';
 
 class Statement extends \TCPDF {
   public $regionName; // name of region

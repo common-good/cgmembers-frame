@@ -1103,10 +1103,10 @@ function t($s = '', $subs0 = []) {
     $subs = constantSubs($s);
     foreach ($subs0 as $k => $v) {
       if (is_array($v)) $v = pr($v);
-      if ($k[0] == '!' or $k[0] == '@') { // old Drupal-style arg
+      if (c($k, 0) == '!' or c($k, 0) == '@') { // old Drupal-style arg
         $subs[$k] = $v;
       } else {
-        if ($k[0] == '_') $k = substr($k, 1); else $v = plain($v);
+        if (c($k, 0) == '_') $k = substr($k, 1); else $v = plain($v);
         $subs['%' . $k] = $v;
       }
     }
@@ -3158,3 +3158,5 @@ function drupal_check_memory_limit($required, $memory_limit = NULL) {
   // - The memory limit is greater than the memory required for the operation.
   return ((!$memory_limit) || ($memory_limit == -1) || (parse_size($memory_limit) >= parse_size($required)));
 }
+
+function c($s, $i) {return mb_substr($s, $i, 1);} // use this instead of $s[$i] with PHP 7.4 (or risk getting errors on $x[0] if $x is an integer)
