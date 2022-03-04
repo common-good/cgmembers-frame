@@ -1573,7 +1573,7 @@ function noSecrets($ray) {
  * Return formatted parsedown text.
  */
 function parseUp($s) {
-  require_once DRUPAL_ROOT . '/vendor/parsedown/Parsedown.php'; // normally only once per form
+  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 
   $pd = new \Parsedown();
   $pd->setSafeMode(TRUE);

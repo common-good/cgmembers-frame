@@ -46,7 +46,7 @@ function formShowQr($form, &$sta, $args = '') {
 function qrHtml($data, $logo, $text) {return tr('<img src="%data" />', '_data', genQr($data, $logo, $text));}
 
 function genQr($data, $logo, $text) {
-  require_once DRUPAL_ROOT . '/vendor/autoload.php';
+  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 
   $qr = Builder::create()
     ->writer(new PngWriter())

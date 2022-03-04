@@ -17,6 +17,17 @@ use CG\Backend as be;
 use CG\Web as w; // use sparingly
 use CG\Testing as t;
 
+/*use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+*/
+use Symfony\Component\Mailer\Mailer; 
+use Symfony\Component\Mailer\Transport\SendmailTransport; 
+use Symfony\Component\Mime\Crypto\DkimSigner;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+
 /**
  * Return TRUE if the current account has all the required permissions.
  * @see also: w\subMenu()
@@ -318,10 +329,40 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     t\output('Actual (in rMail) ' . pr($erInfo), 'email'); // output whether or not testing
     if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE; // allow emails to admin from non-production servers
   }
-  
-  try { // catch SwiftMailer errors
-    require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-    /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); */
+
+  $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
+
+  try { // catch Mailer errors
+    require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+
+    $m = (new Email())
+      ->from(eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]))
+      ->to(eAddr($to))
+      ->subject($subject)
+      ->text(strip_tags($body))
+      ->html($body);
+
+    if (nn($cc)) $m->cc(eAddr($cc));
+    //->bcc('bcc@example.com')
+    //->priority(Email::PRIORITY_HIGH)
+    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) $m->attachFromPath($flnm);
+    if ($reply) $m->replyTo(eAddr($reply));
+//    if (nn($sms)) $m->subject('')->to($sms); // send as text message
+    
+    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
+    $m = $signer->sign($m);
+
+    $transport = Transport::fromDsn('gmail+smtp://info@CommonGood.earth:zot@default');
+    $mailer = new Mailer($transport); 
+    $mailer->send($m);
+    
+    if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
+      $m->to(eAddr([$jA->email => $jA->fullName]));
+      $m->subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
+      $mailer->send($m);
+    }
+    
+    /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); 
     $transport = \Swift_SmtpTransport::newInstance()
       ->setHost(CG_SMTP_SERVER)
       ->setPort(CG_SMTP_PORT)
@@ -363,12 +404,14 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
       $mailer->send($m);
     }
   } catch (\Swift_RfcComplianceException | \Exception $e) {
+    */
+  } catch (\TransportExceptionInterface  | \Exception $e) {
     $exErr = $e->getMessage() . "<br>\n" . trace();
     if (!isPRODUCTION) {
       if (!isDEV) u\loga('FATAL', $exErr);
 /**/  if ($channel == TX_WEB) die($exErr);
     }
-//    u\EXPECT($toEmailSimple != R_ADMIN_EMAIL, 'cannot send admin email');
+
     if ($toEmailSimple != R_ADMIN_EMAIL) r\tellAdmin(t('cannot send email'), compact(ray('erInfo exErr')));
     return FALSE;
   }
@@ -1515,3 +1558,4 @@ function budgetCats($type = 'Income') {return db\keyed("id, CONCAT(MID(type, 1, 
 function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
 function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data
+function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}

@@ -9,9 +9,7 @@ use CG\Util as u;
  * Extends the TCPDF class -- for printing checks, statements, deposit details, etc.
  */
 
-require_once DRUPAL_ROOT . '/vendor/tcpdf/config/tcpdf_config.php'; // lang/eng.php';
-require_once DRUPAL_ROOT . '/vendor/tcpdf/tcpdf.php';
-//require_once(__DIR__ . '/../fpdi/fpdi.php');
+require DRUPAL_ROOT . '/../vendor/autoload.php';
 
 define('PDF_FONT_SIZE', 12); // points
 define('CHECK_HEIGHT', 3.5); // inch height of checks

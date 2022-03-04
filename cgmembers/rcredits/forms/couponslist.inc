@@ -69,7 +69,7 @@ X;
   }
 
   if (nn($rows)) {
-    $rows = join($rows, "\n");
+    $rows = join("\n", $rows);
     $list = <<< X
     <table id="coupons">
     $hdrs
@@ -134,7 +134,7 @@ X;
   }
 
   if (nn($rows)) {
-    $rows = join($rows, "\n");
+    $rows = join("\n", $rows);
     $list = <<< X
     <table id="coupons">
     $hdrs
