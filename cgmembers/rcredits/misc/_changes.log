@@ -1,3 +1,6 @@
+2022-03-04 feature/vendors
+. finished separating and gitignoring vendors/
+
 2022-03-03 feature/upgrade
 . updated to PHP 7.4
 . consolidated all vendors in cgmembers-frame/vendors
