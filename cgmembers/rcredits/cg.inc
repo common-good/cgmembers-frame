@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 */
 use Symfony\Component\Mailer\Mailer; 
+use Symfony\Component\Mailer\Transport; 
 use Symfony\Component\Mailer\Transport\SendmailTransport; 
 use Symfony\Component\Mime\Crypto\DkimSigner;
 use Symfony\Component\Mime\Email;
