@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 */
 use Symfony\Component\Mailer\Mailer; 
+use Symfony\Component\Mailer\Transport; 
 use Symfony\Component\Mailer\Transport\SendmailTransport; 
 use Symfony\Component\Mime\Crypto\DkimSigner;
 use Symfony\Component\Mime\Email;
@@ -352,7 +353,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
     $m = $signer->sign($m);
 
-    $transport = Transport::fromDsn('gmail+smtp://info@CommonGood.earth:zot@default');
+    $transport = Transport::fromDsn(tr('gmail+smtp://%user:%pw@default', 'user pw', CG_SMTP_USER, CG_SMTP_PASS));
     $mailer = new Mailer($transport); 
     $mailer->send($m);
     

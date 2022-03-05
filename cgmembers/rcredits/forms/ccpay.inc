@@ -90,7 +90,7 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   
   if ($payHow == 0) { // bank transfer (the default for cggift and fbo, else not allowed)
     u\EXPECT(in($type, 'cggift fbo'), 'wrong type for ACH donation');
-    $bankAccount = "USkk$routingNumber$bankAccount";
+    $bankAccount = u\cry('V', "USkk$routingNumber$bankAccount");
     $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
     addToTxs2($amount, t('donation'), $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);
     r\tellAdmin($source, $reportInfo);
@@ -191,6 +191,7 @@ function getCGPayArgs($args) {
 
 /**
  * Add an "outer" record to txs2 for the credit card payment.
+ * @param string $bankAccount: the bankAccount, V-encrypted
  * @return the outer transaction record ID (xid)
  */
 function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {

@@ -1,3 +1,7 @@
+2022-03-04 feature/achbatch
+. fixed bug in achbatch that included outer non-ACH payments in ACH files
+. fixed typo in r\rMail
+
 2022-03-04 feature/vendors
 . finished separating and gitignoring vendors/
 
