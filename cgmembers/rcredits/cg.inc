@@ -353,7 +353,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
     $m = $signer->sign($m);
 
-    $transport = Transport::fromDsn('gmail+smtp://info@CommonGood.earth:zot@default');
+    $transport = Transport::fromDsn(tr('gmail+smtp://%user:%pw@default', 'user pw', CG_SMTP_USER, CG_SMTP_PASS));
     $mailer = new Mailer($transport); 
     $mailer->send($m);
     
