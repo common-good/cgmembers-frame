@@ -21,16 +21,10 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     w\go("$url/qName=" . urlencode($q));
   }
   
-  $sql0 = urldecode(nn($sql));
-  $qName0 = nn($qName);
-
-  $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
-  $submit = $mya->admRegion ? submit(t('Go')) : NULL;
-
-  if ($mya->admRegion and $code and $info = u\decryRay($code) and $sql = nni($info, 'sql')) {
+  if ($mya->admRegion and $code and $info = u\decryRay($code) and $sql2 = nni($info, 'sql')) {
     $title = t('MySQL Query');
     try {
-      $q = db\adminQ($sql);
+      $q = db\adminQ($sql2);
       if ($q and $rows = $q->fetchAll()) {
         $hdrs = array_keys((array) $rows[0]);
         foreach ($rows as $i => $row) $rows[$i] = array_values((array) $row);
@@ -38,20 +32,22 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
       } else $list = t('Zero matching rows found.');
       $form = compact(ray('title list'));
     } catch (\Exception $e) {
-      say($e->getMessage(), 'sql');
-      $form = compact(ray('title sql'));
+      err($e->getMessage());
+      return go('/community/data/sql=' . urlencode($sql2));
     }
-  } elseif (!empty($qName0)) {
-    $sql = nn($queries[$qName0]);
-    if (!empty($sql)) {
+  } elseif ($qName) {
+    $sql2 = nn($queries[$qName]);
+    if (!empty($sql2)) {
       $title = t('Query Results');
-      $subtext = '<h4>' . w\queryPermitted($qName0, $sql, $subtext) . "</h4><p>$subtext</p>"; // alters $sql
-      $report = strhas($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
+      $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
+      $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
       $form = compact(ray('title subtext report'));
     }
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
+    $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft(urldecode(nn($sql))) + maxlen(4096)) : NULL;
+    $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
     foreach ($queries as $k0 => $v) {
       if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0&isco=$isco", $k);

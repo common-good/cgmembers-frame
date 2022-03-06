@@ -214,16 +214,6 @@ function nextDOCodeIs($code) {
 }
 
 /**
- * member (ARG) trades $(ARG) USD to member (ARG) for rCredits
- *
- * in: 
- */
-function memberTradesUSDToMemberForRCredits($id1, $amount, $id2) {
-  global $testOnly; if ($testOnly) return FALSE;
-  return (bool) r\tradeR($amount, $id2, $id1);
-}
-
-/**
  * we message member (ARG) with topic (ARG) and subs: (ARG)
  *
  * in: 

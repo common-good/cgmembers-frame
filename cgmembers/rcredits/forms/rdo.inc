@@ -50,16 +50,8 @@ function rdo($code) {
     }
   } else { // normal email link
     if (!$info = u\decryRay($code)) return doErr(t('That link is archaic.'));
-    if ($once = is_numeric($doid = nni($info, 'op'))) { // deprecated reference to a record in r_do (remove after 10/1/2020)
-      if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doErr(t('That link is no longer valid.')); // already used OR deleted because it expired
-      extract($row);
-      $info = unserialize($data) + $row; // get new op, etc.
-      $a = r\acct($uid);
-      extract(just('op v mo sql subs', $info, '')); // mo has no effect here
-    } else {
-      extract(just('op qid expire v sql subs', $info, NULL));
-      $a = $qid ? r\acct($qid) : NULL;
-    }
+    extract(just('op qid expire v sql subs', $info, NULL));
+    $a = $qid ? r\acct($qid) : NULL;
     if (in($op, 'nosecret debtok rsv sql addr inv confirmInvite vote yesno join') and !$a) return doErr(t('That link does not correspond to a %PROJECT account.'));
   }
   
