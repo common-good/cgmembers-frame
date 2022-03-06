@@ -110,11 +110,14 @@ X;
 function txDesc($entry) {
   extract(just('type reversesXid reversedBy description period periods stepup portion nvid part', $entry, NULL));
 
-  if (in($type, [E_PRIME, E_BANK])) {
-    if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
-    if ($nvid) $description .= t(' (CG inv#%nvid%part)', compact(ray('nvid part')));
-    if ($reversesXid) $description = t('(reverses tx #%reversesXid)', compact('reversesXid'));
-    if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
+  if (in($type, E_PRIMES)) {
+    if ($reversesXid) {
+      $description .= t(' (reverses tx #%reversesXid)', compact('reversesXid'));
+    } else {
+      if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+      if ($nvid) $description .= t(' (CG inv#%nvid%part)', compact(ray('nvid part')));
+      if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
+    }
   } else {
     if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
   }

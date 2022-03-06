@@ -32,7 +32,7 @@ function formCCPay($form, &$sta, $args = NULL) {
   $title = t('Pay ') . $coA->bestName;
   $subtext = '';
   $payHow = hidFld(1); // always by CC
-  $form = payFlds(t('Pay'), $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow')));
+  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow')));
   if (!nni($form, 'amount')) return $form; // error
   
   $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add comment'))));
@@ -211,13 +211,13 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
 
 /**
  * Return most of the form fields for a CC or ACH payment.
+ * @param acct $a: payer account, if any (not $mya, so this can be called from a no-signin link)
  * @param assoc $extra: additional fields to include
  */
-function payFlds($amtLabel, $coA, $item, $amount, $amtDft, $extra = []) {
-  global $mya;
+function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
 
   $comment = areaFld(t('Comment:'));
-  list ($cq, $ca) = $mya ? [NULL, NULL] : w\captcha();
+  list ($cq, $ca) = $a ? [NULL, NULL] : w\captcha();
   $coId = hidFld($coA->id);
   u\setDft($period, hidFld(PER_1));
 
@@ -231,7 +231,7 @@ function payFlds($amtLabel, $coA, $item, $amount, $amtDft, $extra = []) {
   }
   $item = $item ? hidFld($item) : textFld(REQ . t('For:'), [t('What your payment is for')]);
 
-  if (!$mya) {
+  if (!$a) {
     $fullName = textFld(REQ . t('Name:'), [t('Your full name'), t('Your full name, properly capitalized')]);
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
     $email = emailFld(REQ . t('Email:'), [t('Email')]);
@@ -241,7 +241,7 @@ function payFlds($amtLabel, $coA, $item, $amount, $amtDft, $extra = []) {
   extract($extra);
   
   // Stuff to do AFTER extracting $extra
-  if (!$mya) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin')));  
+  if (!$a) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin')));  
   
   foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
   return $form;

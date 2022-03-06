@@ -266,6 +266,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invoice Setup
  *     MAKE joint Setup
  *     MAKE message Setup
+ *     MAKE nosignin Setup
  *     MAKE pale Setup
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -602,6 +603,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
@@ -701,6 +703,7 @@ function with($content) {return weShow($content);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
+ *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
@@ -873,6 +876,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE nosignin AMemberDonatesFromAnEmailLink
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -2442,6 +2446,7 @@ function returnURL($url) {
  *
  * in: MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
+ *     MAKE nosignin AMemberDonatesFromAnEmailLink
  */
 function varEncrypts($var, $ray) {
   global $testOnly, $testVars;
@@ -2505,3 +2510,14 @@ function buttonCodeFor($var, $args) {  include_once R_ROOT . '/forms/code.inc';
  *     MAKE undo Setup
  */
 function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms);}
+
+/**
+ * member is signed out
+ *
+ * in: MAKE nosignin AMemberDonatesFromAnEmailLink
+ */
+function memberIsSignedOut() {
+  global $testOnly, $mya;
+  if (!$testOnly) w\signout(TRUE);
+  return !$mya;
+}

@@ -350,62 +350,19 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     if ($reply) $m->replyTo(eAddr($reply));
 //    if (nn($sms)) $m->subject('')->to($sms); // send as text message
     
-    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
-    $m = $signer->sign($m);
-
     $transport = Transport::fromDsn(tr('gmail+smtp://%user:%pw@default', 'user pw', CG_SMTP_USER, CG_SMTP_PASS));
     $mailer = new Mailer($transport); 
-    $mailer->send($m);
+    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
+    $mSigned = $signer->sign($m);
+    $mailer->send($mSigned);
     
     if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
       $m->to(eAddr([$jA->email => $jA->fullName]));
       $m->subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
-      $mailer->send($m);
+      $mSigned = $signer->sign($m);
+      $mailer->send($mSigned);
     }
     
-    /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); 
-    $transport = \Swift_SmtpTransport::newInstance()
-      ->setHost(CG_SMTP_SERVER)
-      ->setPort(CG_SMTP_PORT)
-      ->setEncryption(CG_SMTP_TLS)
-      ->setUsername(CG_SMTP_USER)
-      ->setPassword(CG_SMTP_PASS);
-    $mailer = \Swift_Mailer::newInstance($transport);
-
-    $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
-    $signer = new \Swift_Signers_DKIMSigner($privateKey, EMAIL_DOMAIN, 'system');
-    
-    $m = \Swift_SignedMessage::newInstance()
-      ->attachSigner($signer)
-      ->setSubject($subject)
-      ->setFrom([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')])
-      ->setTo($to)
-      ->setReturnPath(BOUNCE_EMAIL)
-      ->setBody($body, 'text/html')
-      ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
-
-    if (nn($cc)) $m->setCc($cc);
-    
-    if ($attachment) {
-      if (!is_array($attachment)) $attachment = [$attachment];
-      foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-        $attach = \Swift_Attachment::fromPath($flnm);
-        $attach->setFilename(basename($flnm));
-        $m->attach($attach);
-      }
-    }
-    
-    if ($reply) $m->setReplyTo($reply);
-    if (nn($sms)) $m->setSubject('')->setTo($toEmail); // send as text message
-
-    $mailer->send($m);
-    if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
-      $m->setTo([$jA->email => $jA->fullName]);
-      $m->setSubject($subject . t(' (for %acct)', 'acct', $jA->fullName));
-      $mailer->send($m);
-    }
-  } catch (\Swift_RfcComplianceException | \Exception $e) {
-    */
   } catch (\TransportExceptionInterface  | \Exception $e) {
     $exErr = $e->getMessage() . "<br>\n" . trace();
     if (!isPRODUCTION) {

@@ -1,3 +1,9 @@
+2022-03-06 feature/bugs
+. mails are now sent properly to other partner in joint accounts
+. reversed outer transactions now display properly
+. fixed bug in annual donation reminder (was asking for name, etc.)
+. errors in admin custom SQL query are now handled well
+
 2022-03-04 feature/achbatch
 . fixed bug in achbatch that included outer non-ACH payments in ACH files
 . fixed typo in r\rMail
