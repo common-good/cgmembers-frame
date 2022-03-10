@@ -1675,7 +1675,7 @@ function dateIncr($start, $number, $units) {
  */
 function lastRecur($start, $number, $units) {
   $next = $start;
-  while ($next < now()) {
+  while ($next and $next < now()) {
     $start = $next;
     $next = dateIncr($start, $number, $units);
   }

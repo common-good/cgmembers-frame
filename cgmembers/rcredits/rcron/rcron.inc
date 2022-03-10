@@ -1170,7 +1170,8 @@ X;
  */
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
-  if ($cnt = db\count('queue')) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
+
+  if ($cnt = db\count('queue') and $cnt > 1) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);

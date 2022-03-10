@@ -174,7 +174,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // r_banks
     'r_boxes:uid:D',
     'r_changes:uid:D',
-    'r_changes:changedBy',
+    'r_changes:changedBy:D',
     'u_company:uid:D', // this gets tracked
     // r_countries
     'r_criteria:ctty:D',

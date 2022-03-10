@@ -1,3 +1,7 @@
+2022-03-10 feature/tinybugs
+. fixed cron hang
+. fixed proxy page grouping
+
 2022-03-06 feature/bugs
 . mails are now sent properly to other partner in joint accounts
 . reversed outer transactions now display properly
