@@ -44,12 +44,12 @@ Setup:
   | .ZZB |    2280 |
   | .ZZC |    3050 |
 
-Scenario: A member downloads transactions for the past year
+Scenario: A member downloads transactions for the past year as CSV
   Given members have:
   | uid  | fullName |*
   | ctty | ZZrCred  |
-  When member ".ZZA" visits page "history/transactions/period=365&download=1"
-  Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:
+  When member ".ZZA" visits page "history/transactions/period=365&download=CSV"
+  Then we download "cg%todayn-12m-%todayn.csv" with:
   # For example commongood20120525-20130524.csv
   | Tx# | Date    | Name          | Purpose            | From You | To You | Balance |*
   | 28  | %ymd-5d | Our Pub       | cash CJ            |          |    100 |    670 |
@@ -62,9 +62,27 @@ Scenario: A member downloads transactions for the past year
   | 24  | %ymd-6m | Bea Two       | cash E             |          |     10 |     10 |
   |     |         | TOTALS        |                    |      540 |   1210 |        |
 
+Scenario: A member downloads transactions for the past year as QBO
+  Given members have:
+  | uid  | fullName |*
+  | ctty | ZZrCred  |
+  When member ".ZZA" visits page "history/transactions/period=365&download=QBO"
+  Then we download "cg%todayn-12m-%todayn.qbo" with:
+  # For example commongood20120525-20130524.qbo
+  | CHECKING| NEWZZA  | %todayn-12m | %todayn | | |
+  | DEP   | %todayn-5d |  100.00 | 28 | Our Pub | cash CJ            |
+  | DEBIT | %todayn-5d |  -80.00 | 13 | Our Pub | this CF (CG inv#3) |
+  | DEBIT | %todayn-6d | -100.00 | 27 | Bea Two | cash V             |
+  | DEBIT | %todayn-1w | -120.00 | 12 | Our Pub | this Q (CG inv#2)  |
+  | DEBIT | %todayn-3m | -240.00 | 11 | Bea Two | what G (CG inv#1)  |
+  | DEP   | %todayn-4m |  100.00 | 25 | Our Pub | usd F              |
+  | XFER  | %todayn-5m | 1000.00 |  1 | --      | from bank          |
+  | DEP   | %todayn-6m |   10.00 | 24 | Bea Two | cash E             |
+  | 10.00 | %todayn | | | | |
+
 Scenario: A member downloads incoming invoices for the past year
   When member ".ZZA" visits page "history/pending-from/period=365&download=1"
-  Then we download "cgPendingFrom%todayn-12m-%todayn.csv" with:
+  Then we download "cgPendingFromMe%todayn-12m-%todayn.csv" with:
   # For example cgInvoicesFrom20120525-20130524.csv
   | Inv# | Date    | Name    | Purpose | Amount | Status       |*
   |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |

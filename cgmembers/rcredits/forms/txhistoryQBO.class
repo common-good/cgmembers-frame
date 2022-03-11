@@ -1,0 +1,164 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+require_once __DIR__ . '/txprocessor.interface';
+
+/**
+ * @file
+ * Class to generate transaction history QBO download.
+ *
+ */
+
+class TxHistoryQBO implements TxProcessor {
+  private $body = '';
+  private $uids = [];
+  private $count = 0;
+  private $runBalance = 0;
+  private $baseUrl = NULL;
+  private $totals = [];
+  private $start = NULL;
+  private $end = NULL;
+  
+  public function __construct($uids, $baseUrl, $start, $end) {
+    global $mya;
+    foreach (ray('uids baseUrl start end') as $k) $this->$k = $$k;
+    u\startDown(fmtDt($start, 'Ymd') . '-' . fmtDt($end, 'Ymd'), 'qbo');
+  }
+  
+  /**
+   * Called before the first transaction.
+   */
+  public function hdr() {
+    global $testDownload;
+    $a = r\acct($this->uids[0])->masterA;
+    $dtServer = fmtDt(today(), 'YYYYMMddhhmmss');
+    foreach (ray('start end') as $k) $$k = fmtDt($this->$k, 'YYYYMMddhhmmss');
+    
+    u\putDown( <<< X
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+	<SIGNONMSGSRSV1>
+		<SONRS>
+			<STATUS>
+				<CODE>0
+				<SEVERITY>INFO
+			</STATUS>
+			<DTSERVER>$dtServer
+			<LANGUAGE>ENG
+			<INTU.USERID>$a->mainQid
+		</SONRS>
+	</SIGNONMSGSRSV1>
+	<BANKMSGSRSV1>
+		<STMTTRNRS>
+			<TRNUID>0
+			<STATUS>
+				<CODE>0
+				<SEVERITY>INFO
+			</STATUS>
+
+			<STMTRS>
+				<CURDEF>USD
+
+        <BANKACCTFROM>
+          <BANKID>COMMONGOOD
+          <ACCTID>$a->mainQid
+          <ACCTTYPE>CHECKING
+        </BANKACCTFROM>
+	
+				<BANKTRANLIST>
+					<DTSTART>$start
+					<DTEND>$end\n\n
+X
+    );
+ }
+
+  /**
+   * Called before each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnHdr($info, $extraClass = '') {
+  }
+
+  /**
+   * Called for each entry of a transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function processEntry($info, $parity = NULL) {
+    global $testDownload;
+    if (in_array($info['uid'], $this->uids)) return;
+    extract(just('xid created name description amount balance agt banking', $info, null));
+    $created = fmtDt($created, 'YYYYMMddhhmmss');
+    $amount = u\fmtAmt($amount, 'b');
+    $this->runBalance = $balance;
+    $type = $banking ? 'XFER' : ($amount < 0 ? 'DEBIT' : 'DEP');
+    
+    u\putDown( <<< X
+      <STMTTRN>
+        <TRNTYPE>$type
+        <DTPOSTED>$created
+        <TRNAMT>$amount
+        <FITID>$xid
+        <NAME>$name
+        <MEMO>$description
+      </STMTTRN>\n\n
+X
+    );
+  }
+
+  /**
+   * Called after each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnFtr($info) {
+  }
+
+  /**
+   * Called after the last transaction.
+   */
+  public function ftr() {
+    $asof = fmtDt($this->end, 'YYYYMMddhhmmss');
+    $bal = u\fmtAmt($this->runBalance, 'b');
+
+    u\putDown( <<< X
+				</BANKTRANLIST>
+
+				<LEDGERBAL>
+					<BALAMT>$bal
+					<DTASOF>$asof
+				</LEDGERBAL>
+
+				<AVAILBAL>
+					<BALAMT>$bal
+					<DTASOF>$asof
+				</AVAILBAL>
+
+			</STMTRS>
+		</STMTTRNRS>
+	</BANKMSGSRSV1>
+
+</OFX>
+X
+    );
+
+/*
+    $s = ob_get_clean();
+    header("Content-Length: " . strlen($s));
+    header("Connection: close");
+/** /    echo $s;
+    */
+  }
+}

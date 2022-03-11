@@ -113,13 +113,13 @@ EOF;
   while ($row = $q->fetchAssoc()) { // show choices in reverse order, so inviter(s) are at top
     extract($row);
     if (!$current = in($uid, $dfts)) $choiceList[] = $uid;
-    $state = ($state == $a->state or !$state) ? '' : (', ' . $a->st);
+    $state = ($state == $a->state or !$state) ? '' : (', ' . r\realState($state));
 /*    if ($weight < PHP_INT_MAX / 2) { // show city and maybe state
       $state = $state == $a->state ? '' : (', ' . r\realState($state));
     } else list ($city, $state) = [t('Top Suggestions'), '']; */
-    if ($city <> $cityX) {
+    if (strtolower($city) != strtolower($cityX)) {
       if ($cityX) $res .= "</td></tr>\n"; // finish previous line
-      $res .= "<tr><th>$city$state</th><td>";
+      $res .= str_replace(' ', '&nbsp;', "<tr><th>$city$state</th><td>");
       $cityX = $city;
     }
     $style = $weight < PHP_INT_MAX / 4 ? 'default'

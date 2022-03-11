@@ -128,6 +128,7 @@ function poAddress($address) {
  * @param float $amount
  * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
  *  '' = number_format(amount, 2), after ignoring $ and commas
+ *   b = like '', but without the commas
  *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
  *   $ = include initial dollar sign
@@ -147,6 +148,7 @@ function fmtAmt($amount, $opt = 's$') {
 
   $amount = number_format(floatval($amount), $decimals);
   if ($amount == '-0.00') $amount = strhas($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
+  if (strhas($opt, 'b')) $amount = str_replace(',', '', $amount);
   if (strhas($opt, '$')) $amount = '$' . $amount;
   if (strhas($opt, 's') and strhas($amount, '.')) $amount = preg_replace($pct ? '/\\.?0+$/' : '/\\.00/', '', $amount);
   if (strhas($opt, 'r')) $amount .= 'cg';
@@ -974,19 +976,23 @@ function crypt($data, $how, $key, $iv, $decrypt = FALSE) {
 } 
 
 /**
- * Initiate CSV download.
- * @param string $filename: pathname of the file that will download itself upon exit()
+ * Initiate a download.
+ * @param string $flnm: pathname of the file that will download itself upon exit()
+ * @param string $ext: extension (which is also the type of file)
  */
-function csvStart($filename) {
-  global $csvFile;
-  global $testCSVname; $testCSVname = $filename;
-  global $testCSV; $testCSV = [];
+function startDown($flnm, $ext = 'csv') {
+  global $mya;
+  global $downloadFile;
+  global $testDownload; $testDownload = [];
+  global$testDownloadFlnm;
+  $testDownloadFlnm = $flnm = ($mya->admin ? $mya->mainQid : 'cg') . "$flnm.$ext";
   
-  if (test()) return;  
-  header('Content-Type: text/plain; charset=utf-8');
-  header("Content-Disposition: attachment; filename=\"$filename\";");
-  header('Content-Type: application/csv; charset=UTF-8'); // tell the browser it's going to be a csv file
-  $csvFile = fopen('php://output', 'w');
+  if (test()) return;
+  $mimes = ray('csv:application/csv, qbo:application/vnd.intu.qbo, ofx:application/x-ofx');
+  $mimeType = nni($mimes, $ext, 'text/plain');
+  header("Content-Disposition: attachment; filename=\"$flnm\";");
+  header("Content-Type: $mimeType; charset=UTF-8;");
+  $downloadFile = fopen('php://output', 'w');
 }
 
 /**
@@ -995,13 +1001,13 @@ function csvStart($filename) {
  * Note we use fputs to work around PHP's inability to omit enclosure for fputcsv.
  */
 function csv($line, $delimiter = ',') {
-  global $csvFile, $testCSV;
-///  echo join($delimiter, $line) . "\n"; return; // debug(
-  if (test()) {$testCSV[] = $line; return;}
-//  fputcsv($csvFile, $line, $delimiter); 
+  global $downloadFile, $testDownload;
+  if (test()) {$testDownload[] = $line; return;}
   // No need to surround values with quotes when delim is not a comma (the quotes confuse MailChimp)
-  if ($delimiter == ',') fputcsv($csvFile, $line, $delimiter); else fputs($csvFile, join($delimiter, $line) . "\n");
+  if ($delimiter == ',') fputcsv($downloadFile, $line, $delimiter); else fputs($downloadFile, ($delimiter ? join($delimiter, $line) : $line) . "\n");
 }
+
+function putDown($line) {csv($line, '');}
 
 /**
  * Return a random ascii string (good for mcrypt key).
@@ -1675,7 +1681,7 @@ function dateIncr($start, $number, $units) {
  */
 function lastRecur($start, $number, $units) {
   $next = $start;
-  while ($next < now()) {
+  while ($next and $next < now()) {
     $start = $next;
     $next = dateIncr($start, $number, $units);
   }

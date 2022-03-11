@@ -206,6 +206,35 @@ function pdfHas($list) {
   return TRUE;
 }
 
+/**
+ * See whether a file has been downloaded, as required.
+ * @param string $flnm: downloaded filename wanted
+ * @param array[array] $wantRecs: records the file should containing (either an associative or flat array)
+ * @return <downloaded file has the right name and contents>
+ */
+function download($flnm, $wantRecs) {
+  global $testOnly;
+  global $testDownload,$testDownloadFlnm;
+
+  $csv = (mb_substr($flnm, -4) == '.csv');
+  if (nn($testDownloadFlnm) != $flnm) return t\output("$testDownloadFlnm <> $flnm");
+  if (!is_array($testDownload) or empty($testDownload)) return t\output('testDownload is empty');
+  if (sizeof($testDownload) != sizeof($wantRecs) + ($csv ? 1 : 0)) return t\output(t('Wrong number of rows in download (wanted %want, got %got)', 'want got', sizeof($wantRecs), sizeof($testDownload)));
+  if ($csv) $headers = array_values(array_shift($testDownload));
+  
+  foreach ($wantRecs as $rowNum => $wantRow) {
+    if (!$gotRow = array_shift($testDownload)) return t\output('missing record in download: ' . pr($wantRow));
+    if ($csv) $gotRow = array_combine($headers, $gotRow); // add keys
+
+    foreach ($wantRow as $k => $v) {
+      if (mb_strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
+      $ok = $csv ? t\eq($k, nni($gotRow, $k), $v) : (empty($v) or strhas($gotRow, $v));
+      if (!$ok) return t\output(t('Missing value #%k: %v, in row #%rowNum: %gotRow', 'k v rowNum gotRow', $k, $v, $rowNum, pr($gotRow)));
+    }
+  }
+  return TRUE;
+}
+
 function isSignedIn($id) {
   global $testOnly, $mya;
   return $testOnly ? ($mya and $mya = r\acct() and t\uid($id) == $mya->id) : t\login($id);

@@ -16,59 +16,27 @@ function formTxs($form, &$sta, $args = '') {
   global $mya;
   global $testPeriod;
   global $agtViaBoxHelp, $base_url;
-
-  w\downloadCheck('history/transactions');
   
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
 
-  extract(just('options period starting ending undo download downloaded', $args)); 
+  extract(just('period undo download', $args, NULL)); 
   
-  global $testPeriod; $testPeriod = nn($period) ?: TX_DEFAULT_PERIOD; // remember for tests
-  if (nn($undo)) if ($result = reverseTx($undo, $sta, $args)) return $result;
+  global $testPeriod; $testPeriod = $period ?: TX_DEFAULT_PERIOD; // remember for tests
+  if ($undo) if ($result = reverseTx($undo, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
-  $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
-  
-  $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
-  if (nn($download)) {
-    global $mya;
-    $dt1 = fmtDt($starting, 'Ymd');
-    $dt2 = fmtDt($ending, 'Ymd');
-    u\csvStart(($mya->admin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
-    require_once __DIR__ . '/txhistorydownload.class';
-    $processor = new TxHistoryDownload($uids, "$url");
-  } else {
-    require_once __DIR__ . '/txhistory.class';
-    $processor = new TxHistory($uids, "$url");
-  }
-
+  $uids = $mya->jid ? [$mya->id, $mya->jid] : [$mya->id];
+  if (!in($download, ' CSV QBO')) return err(t('That is not an allowable download format.'));
+  require_once __DIR__ . "/txhistory$download.class"; // choose the right TxHistory class
+  $class = "CG\\Web\\TxHistory$download";
+  $processor = new $class($uids, $url, $starting, $ending);
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 
-  if (test() and nn($download)) return;
-  if (nn($download)) exit();
+  if (test() and $download) return;
+  if ($download) exit();
   
+  $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending)));
   $pgFactor = MIN_TX_ROWS / NORMAL_TX_ROWS;
-
-  $links = <<<EOF
-<div id="txs-links" class="row">
-  <div class="showMore col-xs-3">
-    <a title="Show more transactions per page"><span class="glyphicon glyphicon-plus"></span>Show more</a>
-  </div>
-  <div class="dates col-xs-2">
-    <a title="Select dates to show"><span class="glyphicon glyphicon-calendar"></span>Dates</a>
-  </div>
-  <div class="download col-xs-3">
-    <a title="Select dates and download as CSV file"><span class="glyphicon glyphicon-download-alt"></span>Download</a>
-  </div>
-  <div class="totals col-xs-2">
-    <a data-toggle="modal" data-target="#txs-totals" title="Show totals for the selected period"><span class="glyphicon glyphicon-usd"></span>Totals</a>
-  </div>
-  <div class="nav col-xs-1">
-    <a class="prevPage" title="Previous Page"><span class="glyphicon glyphicon-triangle-left"></span></a>
-    <a class="nextPage" title="Next Page"><span class="glyphicon glyphicon-triangle-right"></span></a>
-  </div>
-</div>
-EOF;
 
   $transactions = $processor->getBody();
 

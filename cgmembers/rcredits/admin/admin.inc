@@ -174,7 +174,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // r_banks
     'r_boxes:uid:D',
     'r_changes:uid:D',
-    'r_changes:changedBy',
+    'r_changes:changedBy:D',
     'u_company:uid:D', // this gets tracked
     // r_countries
     'r_criteria:ctty:D',
@@ -846,7 +846,7 @@ function toSMT() {
     $out = compact(ray('smtid pid project fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
 ///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
-      u\csvStart('solar1-export-' . date('Y-m-d') . '.csv');
+      u\startDown('solar1-export-' . date('Y-m-d'));
       u\csv(array_keys($out), "\t");
       $hdrDone = TRUE;
     }

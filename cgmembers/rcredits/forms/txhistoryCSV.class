@@ -10,11 +10,10 @@ require_once __DIR__ . '/txprocessor.interface';
 
 /**
  * @file
- * Class to generate transaction history reports; extends 
+ * Class to generate transaction history CSV download.
  *
  */
-
-class TxHistoryDownload implements TxProcessor {
+class TxHistoryCSV implements TxProcessor {
   private $body = '';
   private $uids = [];
   private $dateValue = '';
@@ -23,9 +22,11 @@ class TxHistoryDownload implements TxProcessor {
   private $baseUrl = null;
   private $totals = [];
   
-  public function __construct($uids, $baseUrl) {
+  public function __construct($uids, $baseUrl, $start, $end) {
+    global $mya;
     $this->uids = $uids;
     $this->baseUrl = $baseUrl;
+    u\startDown(fmtDt($start, 'Ymd') . '-' . fmtDt($end, 'Ymd'));
   }
   
   /**

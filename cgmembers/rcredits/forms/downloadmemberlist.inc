@@ -73,9 +73,8 @@ function export($params) {
 
   $filename = ($allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
   . ($status == 0 ? t('-active') : ($status == 1 ? t('-notyet') : ''))
-  . ($types == 0 ? t('-members') : ($types == 1 ? t('-orgs') : t('-accounts')))
-  . '.csv';
-  u\csvStart($filename);
+  . ($types == 0 ? t('-members') : ($types == 1 ? t('-orgs') : t('-accounts')));
+  u\startDown($filename);
   $delimiter = $chimp ? "\t" : ',';
   
   $fields = $anonymous ?

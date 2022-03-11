@@ -59,7 +59,7 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
 
   $maxRows = $download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
   if ($download) {
-    $csv = x\setupDownload($starting, $ending, 'cgPending' . ($toMe ? t('To') : t('From')));
+    $csv = x\setupDownload($starting, $ending, 'Pending' . ($toMe ? t('ToMe') : t('FromMe')));
     u\csv($downloadHeader);
   } else $csv = FALSE;
 

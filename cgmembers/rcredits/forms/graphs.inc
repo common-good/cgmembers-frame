@@ -19,7 +19,7 @@ function formGraphs($form, &$sta, $args) {
     $dt = fmtDt(now(), 'Ymd');
     u\setDft($chart, 'success');
     $cttyName = $ctty ? r\acct($ctty)->name : t('region');
-    u\csvStart("$chart-$cttyName-$dt.csv");
+    u\startDown("$chart-$cttyName-$dt");
     $header[] = ''; // column for data descriptor
     for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
       $dt = strtotime("-$ago months", today());

@@ -33,7 +33,7 @@ function formSignin($form, &$sta, $arg = '') {
   $subtext = t('<p>Not yet a member? <%aCheck>Check it out</a> or just <%aSignup>Sign up</a>!</p><p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>', '_aCheck _aSignup', atag(r\promoLink('')), atag('/signup'));
 
   $_a = atag('/settings/password/' . $qid, tabindex(3)); // uses $qid, so must precede $qid = 
-  $passDesc = t('<%a>Forgot password?</a>', compact('_a'));
+  $passDesc = t('<%a>Reset password</a>', compact('_a'));
   list ($qid, $pass) = w\signinFlds($qid, t('Your account ID or email address'), $passDesc);
   $pw2 = hidFld(nn($pw2) ?: ''); // extra password for admins
   $vKeyE = hidFld(nn($vKeyE) ?: ''); // extra password for admins

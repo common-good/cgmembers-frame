@@ -1,3 +1,13 @@
+2022-03-10 feature/qbo-download
+. transactions can now be downloaded as a QBO file (by any member!)
+. refactored txHistory class to accommodate multiple download formats
+. refactored CSV downloads and download testing to handle multiple formats
+. added 'b' format to u\fmtAmt, for bank-format numbers (no commas)
+
+2022-03-10 feature/tinybugs
+. fixed cron hang
+. fixed proxy page grouping
+
 2022-03-06 feature/bugs
 . mails are now sent properly to other partner in joint accounts
 . reversed outer transactions now display properly
