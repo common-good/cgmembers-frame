@@ -23,11 +23,11 @@ define('TX_OPT_BOXES', 3);
 define('TX_OPT_EXCHANGES', 4);
 define('TX_OPT_PEXCHANGES', 5);
 
-function setupDownload($starting, $ending, $fileId = PROJECT_ID) {
+function setupDownload($starting, $ending, $fileId = '') {
   global $mya;
   $dt1 = fmtDt($starting, 'Ymd');
   $dt2 = fmtDt($ending, 'Ymd');
-  u\csvStart($fileId . "$dt1-$dt2.csv");
+  u\startDown($fileId . "$dt1-$dt2");
 }
 
 function txColoredState($disputed) {

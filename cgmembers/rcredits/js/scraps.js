@@ -331,9 +331,9 @@ function doit(what, vs) {
     $('#txlist #txs-links .dates a').click(function () {
       $('#dateRange, #edit-submitPeriod, #edit-submitDates').show(); $('#edit-downloadPeriod, #edit-downloadDates, #edit-downloadMsg').hide();
     });
-    $('#txlist #txs-links .download a').click(function () {
+/*    $('#txlist #txs-links .download a').click(function () {
       $('#dateRange, #edit-downloadPeriod, #edit-downloadDates, #edit-downloadMsg').show(); $('#edit-submitPeriod, #edit-submitDates').hide();
-    });
+    }); */
     $('#txlist #txs-links a.prevPage').click(function () {showPage(-1);});
     $('#txlist #txs-links a.nextPage').click(function () {showPage(+1);});
     page = 0;

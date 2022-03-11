@@ -854,7 +854,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE donate AMemberDonates
  *     MAKE donate AMemberMakesANewRecurringDonation
  *     MAKE donate AMemberMakesANewRecurringDonationOfZero
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE investinterest AMemberExpressesInterest
  *     MAKE investinterest ANonmemberExpressesInterest
@@ -1090,29 +1091,11 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
 /**
  * we download (ARG) with: (ARG)
  *
- * in: TEST download AMemberDownloadsTransactionsForThePastYear
+ * in: TEST download AMemberDownloadsTransactionsForThePastYearAsCSV
+ *     TEST download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
  */
-function weDownloadWith($name, $rows) {
-  global $testOnly;
-  global $testCSV, $testCSVname;
-
-  if (nn($testCSVname) != $name) return t\output("$testCSVname <> $name");
-  if (!is_array($testCSV) or empty($testCSV)) return t\output('testCSV empty');
-  $csv2 = $testCSV; // don't change this
-  $headers = array_values(array_shift($csv2));
-
-  foreach ($rows as $row) {
-    if (!$csvRow = array_shift($csv2)) return t\output('missing row in CSV: ' . pr($row));
-    $csvRow = array_combine($headers, $csvRow); // add keys
-    foreach ($row as $k => $v) {
-      if (mb_strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
-      if (!t\eq($k, nni($csvRow, $k), $v)) return FALSE;
-    }
-  }
-  if (count($testCSV) != count($rows) + 1) return t\output('There are extra rows in testCSV: '. pr($testCSV) . ' rows: ' . pr($rows));
-  return TRUE;
-}
+function weDownloadWith($flnm, $rows) {return t\download($flnm, $rows);}
 
 /**
  * with download columns: (ARG)
@@ -1121,10 +1104,10 @@ function weDownloadWith($name, $rows) {
  */
 function withDownloadColumns($columns) {
   global $testOnly;
-  global $testCSV, $testCSVname;
+  global $testDownload,$testDownloadFlnm;
 
-  if (!is_array($testCSV) or empty($testCSV)) return FALSE;
-  $csv2 = $testCSV; // don't alter this (just in case)
+  if (!is_array($testDownload) or empty($testDownload)) return FALSE;
+  $csv2 = $testDownload; // don't alter this (just in case)
   $headers = array_values(array_shift($csv2));
 ///   debug(compact('headers','testCSV','columns'));
   foreach ($columns as $one) if (array_search($one['column'], $headers) === FALSE) return FALSE;
@@ -1212,7 +1195,8 @@ function statisticsGetSet($time) {
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE dashboard Setup
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE invest Setup
  *     MAKE invoice AMemberApprovesInvoicesForevermore

@@ -1261,6 +1261,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-txs .txs-buttons div:first-child +div input {color:red; font-weight:bold;}
 #frm-txs .form-item-opts-4,
 #frm-txs .form-item-opts-5 {display:none;}
+#frm-txs .buttino {margin:0 0 4px 5px;}
 
 #frm-txs .tx-selector {width:1em;}
 /* for IE; text-align in <col> should have no effect according to CSS 2.1 */ 

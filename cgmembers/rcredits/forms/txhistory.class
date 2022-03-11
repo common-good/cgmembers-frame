@@ -10,7 +10,7 @@ require_once __DIR__ . '/txprocessor.interface';
 
 /**
  * @file
- * Class to generate transaction history reports; extends 
+ * Class to generate transaction history reports.
  *
  */
 
@@ -43,7 +43,8 @@ class TxHistory implements TxProcessor {
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
     $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons);
-    
+    $downBtns = ''; foreach (ray('CSV QBO') as $k) $downBtns .= buttino("$this->baseUrl&download=$k", $k);
+
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
   <div id="txs-links" class="row">
@@ -54,7 +55,7 @@ class TxHistory implements TxProcessor {
       <a title="Select dates to show"><span class="glyphicon glyphicon-calendar"></span>Dates</a>
     </div>
     <div class="download col-xs-3">
-      <a title="Select dates and download as CSV file"><span class="glyphicon glyphicon-download-alt"></span>Download</a>
+      <span class="glyphicon glyphicon-download-alt"></span>Download<span title="Download these transactions">$downBtns</span>
     </div>
     <div class="totals col-xs-2">
       <a data-toggle="modal" data-target="#txs-totals" title="Show totals for the selected period"><span class="glyphicon glyphicon-usd"></span>Totals</a>
