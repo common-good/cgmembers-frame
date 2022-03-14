@@ -21,7 +21,7 @@ class TxHistory implements TxProcessor {
   private $dateValue = '';
   private $count = 0;
   private $runBalance = 0;
-  private $baseUrl = null;
+  private $baseUrl = NULL;
   
   public function __construct($uids, $baseUrl) {
     $this->uids = $uids;
@@ -132,7 +132,8 @@ EOF;
   private function guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
     foreach(ray('xid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
 
-    if (is_numeric($xid)) $xid = w\lnk(BASE_URL . "/history/transaction/xid=$xid", $xid, ['title' => t('Details')]);
+    $return = u\pry($this->baseUrl);
+    if (is_numeric($xid)) $xid = w\lnk(BASE_URL . "/history/transaction/xid=$xid&return=$return", $xid, ['title' => t('Details')]);
 
     return <<< X
   <div class="xid-date col-xs-2">

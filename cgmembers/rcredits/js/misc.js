@@ -180,7 +180,7 @@ function who(form, fid, question, amount, selfErr, restrict, allowNonmember) {
         yesSubmit = true; jForm.submit();
       }, noSubmit);
     } else {
-      noSubmit(); $.alert(j.message);
+      noSubmit(); $.alert('', j.message);
     }
   });
   return false;

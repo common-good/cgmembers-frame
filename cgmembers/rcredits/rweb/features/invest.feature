@@ -2,6 +2,8 @@ Feature: Invest
 AS a member
 I WANT to join the Investment Club and invest
 SO I can support local initiatives and get a return on my savings.
+
+# Note: These tests fail within 3 days after switching to or from Daylight Time
  
 Setup:
   Given members:

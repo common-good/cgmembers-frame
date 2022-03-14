@@ -28,21 +28,27 @@ require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 function formQBO($form, &$sta, $args = '') {
   global $mya;
 
-  if (!$dataService = qboConfig($args)) return;
+//  delV('qboRefresh'); // temporary
+  extract(just('realmId', $_GET, NULL));
+  if ($realmId) {
+//    die(pr($_GET));
+  } elseif (!$mya->admCode) return softErr(t('You do not have permission for this page.'));
+  
+  if (!$dataService = qboConfig($_GET)) return softErr(t('No dataService for that realm.'));
 
+  debug(getIEAccounts());
+  
   $title = t('QBO Test');
   $subtext = t('Details.');
 
-  $choices = ray('this that theOther');
-  $radio = radiosFld(REQ . t('Radios:'), t('Details here'), dft(-1), $choices); // no default
-  $select = selectFld(REQ . t('Selection:'), t('Details here'), dft(2), $choices);
-  $tnm = textFld(t('Table to List:'), [t('Object Name'), t('')], dft('Customer'));
+  $tnm = textFld(t('Table:'), [t(''), t('For example: Account, Customer, Vendor')], dft('Account'));
+  $flds = textFld(t('Fields:'), t('For example: Id, FullyQualifiedName, Classification'));
 //  jsx('model', compact('choices'));
 
   $args = hidFld($args);
   $submit = t('Go');
   
-  return cgform(compact(ray('title tnm submit')));
+  return cgform(compact(ray('title tnm flds submit')));
 }
 
 function formQBO_validate($form, &$sta) {
@@ -57,14 +63,30 @@ function formQBO_validate($form, &$sta) {
 
 function formQBO_submit($form, &$sta) {
   global $mya;
-  extract(just('tnm', $sta['input']));
+  extract(just('tnm flds', $sta['input']));
 
-  getQboData($tnm);
+  getQboData($tnm, $flds);
 
-  return go('/sadmin/qbo');
+  return go('/qbo');
 }
 
-function getQboData($tnm) {
+function getIEAccounts() {
+  $dataService = qboConfig();
+
+  $info = $dataService->query('SELECT * FROM Account', 1, 250);
+
+  foreach ($info as $acct) {
+    extract(just('Id FullyQualifiedName Classification Active', $acct));
+
+    $type = strtr($Classification[0], ['R' => 'I']);
+    if (in($type, 'A L') or !$Active or strhas($FullyQualifiedName, 'UNUSED')) continue;
+    $res[$Id] =  "$type $FullyQualifiedName";
+  }
+  sort($res);
+  return $res;
+}
+
+function getQboData($tnm, $flds = '', $startIndex = 1) {
   $dataService = qboConfig();
 
   // reports
@@ -81,8 +103,10 @@ function getQboData($tnm) {
   
   // data
   if (!$cnt = $dataService->query("SELECT COUNT(*) FROM $tnm")) return debug("Table $tnm is empty.");
+  debug(compact('cnt'));
   
-  $res = $dataService->query("SELECT * FROM $tnm", 1, 10); // or , 1, 100
+  $res = $dataService->query("SELECT * FROM $tnm", $startIndex, 250); // or , 1, 100
+
 //  $res = $dataService->getCompanyInfo();
   debug($res);
 }
@@ -98,7 +122,7 @@ function qboConfig($args = '') {
     'auth_mode' => 'oauth2',
     'ClientID' => $clientId,
     'ClientSecret' => $secret,
-    'RedirectURI' => isPRODUCTION ? BASE_URL . '/sadmin/qbo' : 'https://cg4.us/qbo.php',
+    'RedirectURI' => isPRODUCTION ? BASE_URL . '/qbo' : 'https://cg4.us/qbo.php',
     'scope' => 'com.intuit.quickbooks.accounting', // com.intuit.quickbooks.accounting or com.intuit.quickbooks.payment
 //    'baseUrl' => (isPRODUCTION or isSTAGE) ? 'Production' : 'Development',
     'baseUrl' => 'Production',

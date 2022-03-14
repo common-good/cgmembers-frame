@@ -11,8 +11,8 @@ for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
   function fform(fid) {return $(fid).parents('form:first');}
-  function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');}
-  function reportErr(j) {if (!j.ok) $.alert(j.message, 'Error');}
+  function report(j, callback) {$.alert(j.ok ? 'Success' : 'Error', j.message, callback);}
+  function reportErr(j, callback) {if (!j.ok) $.alert('Error', j.message, callback);}
   function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
   function debtOk() {$('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report); $(this).parent().hide();});}
 
@@ -30,6 +30,14 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'txdetail':
+    $('.form-item-reversesXid .suffix a').click(function () {
+      post('delPair', {xid:vs['xid']}, function (j) {
+        report(j, function () {if (j.ok) location.href = vs['url'];});
+      });
+    });
+    break;
+    
   case 'tests':
     $('.compile').click(function () {
       var input = $(this).find('input');
@@ -40,7 +48,7 @@ function doit(what, vs) {
     break;
   
   case 'encrypted':
-    $('.form-item-note a[download]').click(function () {$.alert(vs['msg'], 'Download');});
+    $('.form-item-note a[download]').click(function () {$.alert('Download', vs['msg']);});
     break;
 
   case 'company':
@@ -362,9 +370,9 @@ function doit(what, vs) {
       var that = $(this);
       post('relations', data, function (j) {
         if (j.ok) {
-          if (j.message) $.alert(j.message, 'Success');
+          if (j.message) $.alert('Success', j.message);
         } else {
-          $.alert(j.message, 'Error');
+          $.alert('Error', j.message);
           that.val(j.v0);
         }
       });
