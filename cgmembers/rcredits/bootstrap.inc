@@ -1526,7 +1526,7 @@ function format_string($string, array $args = array()) {
  * @see drupal_validate_utf8()
  * @ingroup sanitization
  */
-function plain($text) {return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
+function plain($text) {return is_array($text) ? (array_walk($text, function (&$s) {$s = plain($s);}) ? $text : NULL) : htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
 function check_plain($text) {return plain($text);}
 function unplain($text) {return htmlspecialchars_decode($text, ENT_QUOTES);} // reverse \check_plain
 

@@ -16,7 +16,7 @@ function formTxDetail($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
   global $channel;
   
-  extract(just('xid eid', $args, NULL));
+  extract(just('xid eid return', $args, NULL));
 
   list ($eidCrit, $eidV) = $eid ? ['ABS(t.eid)=:eidV', $eid] : ['t.type IN (:eidV)', E_PRIMES];
   $where = "xid=:xid AND $eidCrit";
@@ -74,18 +74,21 @@ X;
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
     $type = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
     $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
-    $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid));
+    if ($reversesXid) jsx('txdetail', ray('xid url', $xid, u\dePry($return)));
+    $suffix = $reversesXid ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
+    $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid) + $suffix);
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
-    foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id", ray(E_TYPES)[$etyp]);
+    foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);
     $submit = submit(t('Update'), '', '', suffix(join(' ', $eids)));
     
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
   } else $phone = $type = $submit = $toMe = $xid = $eid = $recursId = $reversesXid = NULL;
 
+  $return = hidFld($return);
   $back = item(w\backButton());
 
-  return cgform(compact(ray('title created amt you me addr email phone for cat agt chan recursId reversesXid type submit back toMe xid eid')));
+  return cgform(compact(ray('title created amt you me addr email phone for cat agt chan recursId reversesXid type submit back toMe xid eid return')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -99,7 +102,7 @@ function formTxDetail_validate($form, &$sta) {
 
 function formTxDetail_submit($form, &$sta) {
   $input = $sta['input'];
-  extract(just('toMe for xid eid', $input));
+  extract(just('toMe for xid eid return', $input));
   $myEid = $toMe ? $eid : -$eid;
   
   $DBTX = \db_transaction();
@@ -115,5 +118,5 @@ function formTxDetail_submit($form, &$sta) {
   }
   unset($DBTX);
 
-  return w\go('history/transactions');
+  return w\go($return ? u\dePry($return) : 'history/transactions');
 }

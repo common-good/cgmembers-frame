@@ -189,7 +189,6 @@ function menu($submenu = '') {
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin'],
-    'sadmin/qbo' => ['call', t('QBO'), 'QBO 2', 'admCode'],
     'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'admPrintCards'],
     'sadmin/stats' => ['call', t('Stats'), 'Stats 2', 'admRegion'],
 
@@ -198,6 +197,7 @@ function menu($submenu = '') {
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
+    'qbo' => ['call', t('QBO'), 'QBO 1', 'co ok manage'],
     'account-photo' => ['call', 'Account Photo', 'AccountPhoto 0 1', ANY],
     'account-thumb' => ['call', 'Account Photo Thumbnail', 'AccountPhoto 0 1', ANY],
     'account-logo' => ['call', 'Account Logo', '1', ANY, 'logo'],

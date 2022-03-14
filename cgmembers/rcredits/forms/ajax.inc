@@ -11,6 +11,7 @@ use CG\Db as db;
  * GET parameters:
  * @param string op: what to do
  * @param string sid: session id
+ * NOTE: to test for syntax errors, paste "include R_ROOT . '/forms/ajax.inc';" into the PHP window.
  * @todo: maybe all zero uid for some ops (by looking up two fields in sessions?)
  */
 
@@ -33,6 +34,15 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'delPair': // delete a transaction and its reversal
+      extract(just('xid', $data));
+      if (!$xid0 = db\get('reversesXid', 'tx_hdrs', compact('xid'))) return ajaxErr(t('This transaction does not reverse anything.'));
+      $tnm = db\exists('txs2', compact('xid')) ? 'txs2' : 'txs';
+      $DBTX = \db_transaction();
+      db\del($tnm, 'xid IN (:xid, :xid0)', compact(ray('xid xid0')));
+      unset($DBTX);
+      return ajaxMsg(t('Done!'));
+      
     case 'qBtn': // question mark help button
       include_once R_ROOT . '/help-scraps.inc';
       return ajaxRet(helpScrap($data['topic']));

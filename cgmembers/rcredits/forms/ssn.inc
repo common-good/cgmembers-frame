@@ -12,7 +12,7 @@ use CG\Db as db;
 function formSsn($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args, 'acct');
   
-  if ($mya->stepIsDone('ssn') and !$mya->admRecheckSsn) w\go('dashboard'); // don't allow DIY redo after SSN is verified
+  if ($mya->stepIsDone('ssn') and $mya->hasFid and !$mya->admRecheckSsn) w\go('dashboard'); // don't allow DIY redo after SSN is verified
 
   $federalId = ssnFld(REQ);
   $dob = dobFld(REQ);

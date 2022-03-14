@@ -23,6 +23,7 @@ class TxHistoryQBO implements TxProcessor {
   private $totals = [];
   private $start = NULL;
   private $end = NULL;
+  private $eid0 = NULL; // entry record ID of first entry in transaction
   
   public function __construct($uids, $baseUrl, $start, $end) {
     global $mya;
@@ -91,6 +92,7 @@ X
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function txnHdr($info, $extraClass = '') {
+    $this->eid0 = $info['eid'];
   }
 
   /**
@@ -100,20 +102,27 @@ X
   public function processEntry($info, $parity = NULL) {
     global $testDownload;
     if (in_array($info['uid'], $this->uids)) return;
-    extract(just('xid created name description amount balance agt banking', $info, null));
+    extract(just('uid pid xid eid created name description amount balance agt banking', $info, null));
+    $id = $pid ?: r\acct($uid)->mainQid;
     $created = fmtDt($created, 'YYYYMMddhhmmss');
     $amount = u\fmtAmt($amount, 'b');
     $this->runBalance = $balance;
     $type = $banking ? 'XFER' : ($amount < 0 ? 'DEBIT' : 'DEP');
+    $name = str_replace(' (non-member)', '', $name); // QBO ignores PAYEEID, PAYEE, TRNTYPE, and CHECKNUM
+    $entryNum = $eid - $this->eid0;
+    $ckn = 1000 * $xid + $entryNum; // maybe QBO will accept this some day
     
     u\putDown( <<< X
       <STMTTRN>
         <TRNTYPE>$type
         <DTPOSTED>$created
         <TRNAMT>$amount
-        <FITID>$xid
-        <NAME>$name
-        <MEMO>$description
+        <FITID>$xid-$entryNum
+        <CHECKNUM>$ckn
+        <PAYEEID>$id
+        <PAYEE>$name
+        <NAME>$description
+        <MEMO>$name (#$xid)
       </STMTTRN>\n\n
 X
     );

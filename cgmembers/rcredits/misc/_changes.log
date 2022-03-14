@@ -1,3 +1,12 @@
+2022-03-13 feature del-reversed
+. added a button to txdetail page to delete a reversed transaction and its original
+. plain() can now handle an array
+. added u\pry() and u\dePry() as shortcuts for P-type u\dery()
+. txdetail now returns to txs page with the right parameters on update
+. made QBO export work better (Intuit still ignores several important fields)
+. fixed obscure infinite loop in verifyId
+. changed $.alert to take an optional callback
+
 2022-03-10 feature/qbo-download
 . transactions can now be downloaded as a QBO file (by any member!)
 . refactored txHistory class to accommodate multiple download formats
