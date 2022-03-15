@@ -49,7 +49,7 @@ Scenario: A member downloads transactions for the past year as CSV
   | uid  | fullName |*
   | ctty | ZZrCred  |
   When member ".ZZA" visits page "history/transactions/period=365&download=CSV"
-  Then we download "cg%todayn-12m-%todayn.csv" with:
+  Then we download "cgNEWZZA%todayn-12m-%todayn.csv" with:
   # For example commongood20120525-20130524.csv
   | Tx# | Date    | Name          | Purpose            | From You | To You | Balance |*
   | 28  | %ymd-5d | Our Pub       | cash CJ            |          |    100 |    670 |
@@ -67,7 +67,7 @@ Scenario: A member downloads transactions for the past year as QBO
   | uid  | fullName |*
   | ctty | ZZrCred  |
   When member ".ZZA" visits page "history/transactions/period=365&download=QBO"
-  Then we download "cg%todayn-12m-%todayn.qbo" with:
+  Then we download "cgNEWZZA%todayn-12m-%todayn.qbo" with:
   # For example commongood20120525-20130524.qbo
   | CHECKING| NEWZZA  | %todayn-12m | %todayn | | |
   | DEP   | %todayn-5d |  100.00 | 28 | Our Pub | cash CJ            |
@@ -82,7 +82,7 @@ Scenario: A member downloads transactions for the past year as QBO
 
 Scenario: A member downloads incoming invoices for the past year
   When member ".ZZA" visits page "history/pending-from/period=365&download=1"
-  Then we download "cgPendingFromMe%todayn-12m-%todayn.csv" with:
+  Then we download "cgPendingFromNEWZZA%todayn-12m-%todayn.csv" with:
   # For example cgInvoicesFrom20120525-20130524.csv
   | Inv# | Date    | Name    | Purpose | Amount | Status       |*
   |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |

@@ -8,7 +8,7 @@ use CG\DB as db;
 use CG\Admin as a;
 use CG\Web as w;
 
-require_once R_ROOT . '/pdf.class';
+require_once R_ROOT . '/classes/pdf.class';
 require_once R_ROOT . '/forms/showqr.inc'; // for qrUrl()
 
 /**

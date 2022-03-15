@@ -981,11 +981,10 @@ function crypt($data, $how, $key, $iv, $decrypt = FALSE) {
  * @param string $ext: extension (which is also the type of file)
  */
 function startDown($flnm, $ext = 'csv') {
-  global $mya;
   global $downloadFile;
   global $testDownload; $testDownload = [];
   global$testDownloadFlnm;
-  $testDownloadFlnm = $flnm = ($mya->admin ? $mya->mainQid : 'cg') . "$flnm.$ext";
+  $testDownloadFlnm = $flnm = "cg$flnm.$ext";
   
   if (test()) return;
   $mimes = ray('csv:application/csv, qbo:application/vnd.intu.qbo, ofx:application/x-ofx');

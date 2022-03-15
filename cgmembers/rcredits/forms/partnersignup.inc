@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 require_once R_ROOT . '/forms/signup.inc'; // for validation
-require_once R_ROOT . '/pdf.class';
+require_once R_ROOT . '/classes/pdf.class';
 
 const SF_URL = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
 const CRM_URL = 'SMT solar customer management URL';

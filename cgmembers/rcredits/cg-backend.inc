@@ -11,11 +11,11 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
-require_once __DIR__ . '/tx.class';
-require_once __DIR__ . '/txentry.class';
+require_once R_ROOT . '/classes/tx.class';
+require_once R_ROOT . '/classes/txentry.class';
 
 /**
- * Generates an array of transactions, with added data.
+ * Return an array of transactions, with added data.
  * @param mixed $uids: the uid or uids whose transactions we're going to process
  *        if $uids is an array it is the set of uids;
  *        if $uids is an integer it is the only uid

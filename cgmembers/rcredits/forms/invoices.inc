@@ -47,7 +47,7 @@ function formInvoices_submit($form, &$sta) {
  * @return string table-based HTML listing the relevant requests
  */
 function pendingList($toMe, $starting, $ending, $states, $url, $download) {
-
+  global $mya;
   $headHelp = t('Invoice number,Date created,Who is to be paid,What is the payment for,Total amount,Click a row to change the status of the request');
   $classes = ray('nvid date name purpose amount buttons');
   $headers = t('Inv#,Date,Name,Purpose,Amount,Status');
@@ -59,7 +59,8 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
 
   $maxRows = $download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
   if ($download) {
-    $csv = x\setupDownload($starting, $ending, 'Pending' . ($toMe ? t('ToMe') : t('FromMe')));
+    $way = $toMe ? t('To') : t('From');
+    $csv = u\startDown(t('Pending') . "$way$mya->mainQid" . fmtDtRange($starting, $ending));
     u\csv($downloadHeader);
   } else $csv = FALSE;
 

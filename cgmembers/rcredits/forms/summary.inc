@@ -56,24 +56,17 @@ function formSummary($form, &$sta) {
     : t('BAD EMAIL')), t('Contact:'))
   : NULL;
   $balance = u\fmtAmt($mya->balance);
-//    $totalDesc = u\fmtAmt($mya->r);
-//    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
-//    $balanceDesc = '';
   $balanceDesc = $mya->activated ? t(' (see <%a>History</a>)', '_a', atag('/history')) : '';
   $balance = item($balance . $balanceDesc, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account
     $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
-//    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
-//    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
-//    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? t('(disabled)') : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
 
     $creditLine = $mya->admSetCredit
-    ? numFld(t('Credit Line:'), $desc, dft(-$mya->floor) + suffix($suffix))
-    : ($mya->underage ? NULL : item($credit, t('Credit Line:'), $desc, w\suffix($suffix)));
+    ? numFld(t('Credit Line:'), $desc, dft(-$mya->floor) + creditLineSuffix())
+    : ($mya->underage ? NULL : item($credit, t('Credit Line:'), $desc, creditLineSuffix()));
 
   } else $acctType = t('community account');
 
