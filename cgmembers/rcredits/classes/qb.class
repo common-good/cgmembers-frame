@@ -1,0 +1,144 @@
+<?php
+use CG as r;
+use CG\Util as u;
+
+use QuickBooksOnline\API\Core\ServiceContext;
+use QuickBooksOnline\API\DataService\DataService;
+use QuickBooksOnline\API\PlatformService\PlatformService;
+use QuickBooksOnline\API\Core\Http\Serialization\XmlObjectSerializer;
+use QuickBooksOnline\API\Facades\Purchase;
+use QuickBooksOnline\API\Data\IPPPurchase;
+use QuickBooksOnline\API\QueryFilter\QueryMessage;
+use QuickBooksOnline\API\ReportService\ReportService;
+use QuickBooksOnline\API\ReportService\ReportName;
+
+use QuickBooksOnline\API\Core\OAuth\OAuth2;
+use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
+// https://help.developer.intuit.com/s/error-resolver
+
+/**
+ * @file
+ * Common Good QB class
+ * Extends the TCPDF class -- for printing checks, statements, deposit details, etc.
+ */
+
+require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+
+class QB {
+  private $ds = NULL;
+  private $intent = NULL;
+  
+  /**
+   * Return a new QB object.
+   * @param string $creds: the company's credentials for QBO
+   * @param string/assoc $args: authorization parameters OR intended op and other parameters
+   */
+  public function __construct($creds, $args) {
+    list ($clientId, $secret) = ray($creds);
+    
+    $ds = $this->ds = DataService::Configure([
+      'auth_mode' => 'oauth2',
+      'ClientID' => $clientId,
+      'ClientSecret' => $secret,
+      'RedirectURI' => isPRODUCTION ? BASE_URL . '/qbo' : 'https://cg4.us/qbo.php',
+      'scope' => 'com.intuit.quickbooks.accounting', // com.intuit.quickbooks.accounting or com.intuit.quickbooks.payment
+  //    'baseUrl' => (isPRODUCTION or isSTAGE) ? 'Production' : 'Development',
+      'baseUrl' => 'Production',
+    ]);
+
+    $ds->throwExceptionOnError(TRUE);
+    $helper = $ds->getOAuth2LoginHelper();
+    extract(just('code realmId', $args, NULL));
+
+    if ($code) {
+      $token = $helper->exchangeAuthorizationCodeForToken($code, $realmId);
+      $this->intent = r\cook('qboParameters');
+    } elseif ($refresh = unserialize(r\cook('qboRefresh')) and $refresh[1] > time() + 60) { // at least a minute left to refresh
+      $token = $helper->refreshAccessTokenWithRefreshToken($refresh[0]);
+      $token->setRealmId($realmId = $refresh[2]); // required (stupid though that is)
+      $ds->updateOAuth2Token($token);
+      $this->intent = $args;
+    } else { // out of time to refresh (or first time), so reauthorize
+      r\setCook('qboParameters', $args);
+      return go($helper->getAuthorizationCodeURL());
+    }
+
+    $ray = [$token->getRefreshToken(), strtotime($token->getRefreshTokenExpiresAt()), $realmId];
+    r\setCook('qboRefresh', serialize($ray)); // store refreshToken so we don't have to re-authorize each time.
+  }
+
+  /**
+   * Return a list of active Income and Expense accounts, keyed by id.
+   */   
+  public function getIEAccounts() {
+//    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm")) return debug("Table $tnm is empty.");
+    $ray = $this->ds->query("SELECT * FROM Account WHERE Classification IN ('Expense', 'Revenue') Where Active ORDERBY Classification DESC, FullyQualifiedName", 1, 250);
+
+    foreach ($ray as $acct) {
+      extract(just('Id FullyQualifiedName Classification', $acct));
+      $type = strtr($Classification[0], ['R' => 'I']);
+      if (!strhas($FullyQualifiedName, 'UNUSED')) $res[$Id] =  "$type $FullyQualifiedName";
+    }
+
+    return nn($res);
+  }
+  
+  /**
+   * Send an account's latest transactions to QBO.
+   * @param int $uid: ID of account to process.
+   */
+  public function sendTxs($uid) {
+    $a = r\acct($uid);
+    $lastEid = $a->lastQBEid ?: 0;
+    $lastXid = $lastEid ? db\get('xid', 'tx_entries', 'id>=:lastEid', compact('lastEid')) : 0;
+    $start = db\min('created', 'tx_hdrs', 'xid>=:lastXid', compact('lastXid')); // get date of last tx even if it was deleted (catches txs whose date got changed)
+
+    $txs = $start ? be\getTxs($uid, $start, now()) : [];
+    foreach ($txs as $entries) foreach ($entries as $ei => $tx) {
+      extract(just('xid eid', $tx));
+      if ($xid < $lastXid or ($xid == $lastXid and $eid <= $lastEid)) continue;
+      $this->addTx(just('xid created description myAmount name cat banking', $tx) + compact('ei'));
+      $a->update('lastQBEid', $eid);
+    }
+    list ($xid1, $xid9) = $txs ? [$txs[0]['xid'], $tx['xid']] : ['', ''];
+    r\tellAdmin(t('QBO export of %qid complete', 'qid', $a->mainQid), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+  }
+
+  /**
+   * Add a transaction to QBO.
+   */
+  public function addTx($tx) {
+    debug($tx);
+//    debug(getRow(''));
+  }
+  
+  /**
+   * Return a field value from one QB record.
+   */
+  public function get($fld, $tnm, $where) {
+    $record = $this->getRow($tnm, $where);
+    return $record ? just($fld, $record) : NULL;
+  }
+  
+  /**
+   * Return one record array from QB.
+   */
+  public function getRow($tnm, $where) {
+    if (!$rows = $this->getRows($tnm, $where, 1)) return NULL;
+    return (array) $rows[0];
+  }
+  
+  /**
+   * Return an array of QB record objects.
+   */
+  public function getRows($tnm, $where, $max = 999999) {
+    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm WHERE $where")) return NULL;
+    $rows = [];
+    for ($i = 1; $i <= $cnt; $i += QB_CHUNK) {
+      $rows += $this->ds->query("SELECT * FROM $tnm WHERE $where", $i, QB_CHUNK);
+    }
+    return $rows;
+  }
+
+  public intent() {return $this->intent;}     
+}

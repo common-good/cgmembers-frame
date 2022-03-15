@@ -12,7 +12,7 @@ use CG\Db as db;
  */
 function couponsPrint($args = '') {
   global $mya;
-  require_once __DIR__ . '/../pdf.class';
+  require_once R_ROOT . '/classes/pdf.class';
   
   if (strpos($args, 'type=') === FALSE) $args = u\deurlify($args);
   extract(just('type amount portion minimum useMax count automatic start end purpose', $args, NULL));

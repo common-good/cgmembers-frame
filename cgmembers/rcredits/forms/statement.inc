@@ -7,8 +7,8 @@ use CG\Util as u;
 use CG\Db as db;
 use CG\Txs as x;
 
-include_once __DIR__ . '/../cg-txs.inc';
-include_once __DIR__ . '/../statement.class';
+include_once R_ROOT . '/cg-txs.inc';
+include_once R_ROOT . '/classes/statement.class';
 
 /**
  * Generate an account statement for the given month or year.

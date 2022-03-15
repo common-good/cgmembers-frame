@@ -27,7 +27,7 @@ function formTxs($form, &$sta, $args = '') {
 
   $uids = $mya->jid ? [$mya->id, $mya->jid] : [$mya->id];
   if (!in($download, ' CSV QBO')) return err(t('That is not an allowable download format.'));
-  require_once __DIR__ . "/txhistory$download.class"; // choose the right TxHistory class
+  require_once R_ROOT . "/classes/txhistory$download.class"; // choose the right TxHistory class
   $class = "CG\\Web\\TxHistory$download";
   $processor = new $class($uids, $url, $starting, $ending);
   be\processTxs($processor, $uids, $starting, $ending, TRUE);

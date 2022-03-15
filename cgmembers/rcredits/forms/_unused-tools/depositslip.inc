@@ -16,7 +16,7 @@ define('BANK_ADDR', 'Greenfield Branch<br>89 French King Highway<br>Greenfield, 
  */
 function depositDetails($args) {
   extract(just('way date total count only', $args, NULL));
-  include_once R_ROOT . '/pdf.class';
+  include_once R_ROOT . '/classes/pdf.class';
   $pdf = new r\Pdf();
 
   if (!$in = (!isset($way) or strtoupper($way) == 'IN')) $total = str_replace('-', '', $total);

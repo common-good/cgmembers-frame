@@ -2183,6 +2183,15 @@ function signupCoDisplay($info, &$company = '') {
 }
 
 /**
+ * Return an appropriate suffix for the creditLine field on summary and dashboard.
+ */
+function creditLineSuffix() {
+  global $mya;
+  return (!$mya->debt or $mya->depends or !$mya->refill) ? suffix(t('(disabled)')) 
+  : ($mya->debt ? [] : suffix(t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"')));
+}
+    
+/**
  * Return fields with a simple arithmetical expression and twice its small integer answer.
  */
 function captcha() {

@@ -26,7 +26,7 @@ class TxHistoryCSV implements TxProcessor {
     global $mya;
     $this->uids = $uids;
     $this->baseUrl = $baseUrl;
-    u\startDown(fmtDt($start, 'Ymd') . '-' . fmtDt($end, 'Ymd'));
+    u\startDown($mya->mainQid . fmtDtRange($start, $end));
   }
   
   /**

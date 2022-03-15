@@ -71,7 +71,7 @@ function export($params) {
   $cttyA = r\acct($mya->community);
   $solarUid = db\get('uid', 'users', "name='cooppower'");
 
-  $filename = ($allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
+  $filename = ($allCttys ? '' : trim(str_replace(PROJECT, '', str_replace('.', '', $cttyA->name))))
   . ($status == 0 ? t('-active') : ($status == 1 ? t('-notyet') : ''))
   . ($types == 0 ? t('-members') : ($types == 1 ? t('-orgs') : t('-accounts')));
   u\startDown($filename);

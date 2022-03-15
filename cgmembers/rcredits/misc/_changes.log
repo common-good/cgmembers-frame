@@ -1,4 +1,9 @@
-2022-03-13 feature del-reversed
+2022-03-14 feature/classes
+. moved all classes to their own folder
+. standardized download names
+. factored out w\creditLineSuffix()
+
+2022-03-13 feature/del-reversed
 . added a button to txdetail page to delete a reversed transaction and its original
 . plain() can now handle an array
 . added u\pry() and u\dePry() as shortcuts for P-type u\dery()

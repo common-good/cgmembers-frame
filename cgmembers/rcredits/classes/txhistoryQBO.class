@@ -28,7 +28,7 @@ class TxHistoryQBO implements TxProcessor {
   public function __construct($uids, $baseUrl, $start, $end) {
     global $mya;
     foreach (ray('uids baseUrl start end') as $k) $this->$k = $$k;
-    u\startDown(fmtDt($start, 'Ymd') . '-' . fmtDt($end, 'Ymd'), 'qbo');
+    u\startDown($mya->mainQid . fmtDtRange($start, $end), 'qbo');
   }
   
   /**

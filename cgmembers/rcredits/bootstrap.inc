@@ -1291,6 +1291,7 @@ function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   return strtr($dtFormatter->format($dt), ray('AM PM', 'am', 'pm'));
 }
 function fmtTime($dt = NOW) {return fmtDt(TIME_FMT);}
+function fmtDtRange($start, $end, $fmt = 'Ymd') {return fmtDt($start, $fmt) . '-' . fmtDt($end, $fmt);}
 
 /**
  * Set or return a global variable.
@@ -2043,8 +2044,8 @@ function drupal_bootstrap() {
   _drupal_bootstrap_variables();
   require_once R_ROOT . '/cg-strings.inc';
   require_once R_ROOT . '/cg-db.inc'; // must be after _drupal_bootstrap_variables
-  require_once R_ROOT . '/acct.class';
-  require_once R_ROOT . '/qo.class';
+  require_once R_ROOT . '/classes/acct.class';
+  require_once R_ROOT . '/classes/qo.class';
   require_once R_ROOT . '/cg.inc';
   require_once R_ROOT . '/cg-testing.inc'; // 
 

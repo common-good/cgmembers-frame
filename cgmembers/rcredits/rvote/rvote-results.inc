@@ -205,7 +205,7 @@ function result_midM($toti, $i) {
 // cgv site can fetch that list with id#s, to provide a proxy-selection form and at vote end to count proxies
 
 function tallyResults($voters, $qtype, $qbudget, $qminveto, $opts, $skipoptid='') {
-  include_once __DIR__ . '/opttotals.class';
+  include_once R_ROOT . '/classes/opttotals.class';
 
   if($skipoptid) {$i = array_search($skipoptid, $opts); unset($opts[$i]);}
   $tot = array();  

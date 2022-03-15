@@ -5,7 +5,7 @@ use CG\DB as db;
 use CG\Backend as be;
 use CG\Util as u;
 
-require_once __DIR__ . '/txentry.class';
+require_once R_ROOT . '/classes/txentry.class';
 
 /**
  * @file

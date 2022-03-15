@@ -11,7 +11,7 @@ use CG\Db as db;
  * @param array $accts: the accounts for which to print invitation cards (defaults to current account)
  */
 function printInvite($accts = '') {
-  require_once __DIR__ . '/../pdf.class';
+  require_once R_ROOT . '/classes/pdf.class';
   $pdf = new r\Pdf();
 //  $pdf->addTTFfont(__DIR__ . '/../../tcpdf/fonts/verdana.ttf'); // do just once on DEV, then upload font
   $pdf->setPrintHeader(FALSE);
@@ -32,7 +32,7 @@ function printInvite($accts = '') {
  */
 function printInvite1($a, &$pdf) {
   $forCG = ($a->id == CGID and $a->admGeneralInvite);
-  require_once __DIR__ . '/../pdf.class';
+  require_once R_ROOT . '/classes/pdf.class';
   $slogans = ray(SLOGANS);
   $cardi = 0;
 

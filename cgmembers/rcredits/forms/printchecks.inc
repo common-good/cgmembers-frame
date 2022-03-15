@@ -23,7 +23,7 @@ function printChecks($args) {
   extract(just('way date mark limit', $args, NULL));
   if (!$way or is_null($date)) return w\softErr('You cannot print checks without specifying the "deposit" date and way (In, Out, or Bad).');
   
-  include_once R_ROOT . '/pdf.class';
+  include_once R_ROOT . '/classes/pdf.class';
   $ck = new r\Pdf();
   $ck->setPrintHeader(FALSE);
   $ck->setPrintFooter(FALSE);

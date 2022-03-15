@@ -846,7 +846,7 @@ function toSMT() {
     $out = compact(ray('smtid pid project fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
 ///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
-      u\startDown('solar1-export-' . date('Y-m-d'));
+      u\startDown('solar1-export-' . fmtDt(now(), 'Ymd'));
       u\csv(array_keys($out), "\t");
       $hdrDone = TRUE;
     }

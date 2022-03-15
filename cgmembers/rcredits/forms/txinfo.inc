@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-require_once R_ROOT . '/tx.class';
+require_once R_ROOT . '/classes/tx.class';
 
 /**
  * Show information about a specific transaction and its risks.
