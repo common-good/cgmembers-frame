@@ -268,6 +268,7 @@ function signout($continue = FALSE) {
   global $mya;
   
   $from = basename(nni($_SERVER, 'HTTP_REFERER'));
+  r\deleteCook('qboRefresh');
   
   if ($from == 'app' and $continue == 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
   

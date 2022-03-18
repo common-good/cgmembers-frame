@@ -32,11 +32,20 @@ require_once R_ROOT . '/classes/qb.class';
 function formQBO($form, &$sta, $args = '') {
   global $mya;
 
-  $qb = new QB(QBO_CREDS, $args ?: $_GET);
-  extract(just('op', $qb->intent(), NULL));
+  $qb = new \QB(QBO_CREDS, $args ?: $_GET);
+  extract(just('op tnm', $qb->intent(), NULL));
 
-  if ($op == 'accounts') {
-    debug($qb->getIEAccounts());
+  switch ($op) {
+    case 'accounts':
+      $id = 0;
+      foreach ($qb->getAccounts() as $externalId => $info) {
+        if (!$info['Description']) unset($info['Description']);
+        $id += 100;
+        db\updateOrInsert('budget_cats', $info + compact(ray('id externalId')), 'externalId');
+      }
+      break;
+    
+    case 'table': debug($qb->getObj($tnm)); break;
   }
   
   $title = t('QBO Test');
