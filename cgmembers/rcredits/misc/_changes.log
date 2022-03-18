@@ -1,3 +1,10 @@
+2022-03-18 feature/qb-accounts
+. added fields to budget_cats to accommodate integration with QBO
+. created CRUD for budget_cats
+. built skeleton of QB method to add transactions to QBO
+. added op=table to QBO form, to investigate various QB data structures
+. QBRefresh cookie is now deleted on signout, to prevent connection failures
+
 2022-03-14 feature/classes
 . moved all classes to their own folder
 . standardized download names

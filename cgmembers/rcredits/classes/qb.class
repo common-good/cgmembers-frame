@@ -1,6 +1,7 @@
 <?php
 use CG as r;
 use CG\Util as u;
+use CG\Web as w;
 
 use QuickBooksOnline\API\Core\ServiceContext;
 use QuickBooksOnline\API\DataService\DataService;
@@ -23,6 +24,7 @@ use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
  */
 
 require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+const QB_CHUNK = 500; // how many records to read at once
 
 class QB {
   private $ds = NULL;
@@ -59,28 +61,31 @@ class QB {
       $ds->updateOAuth2Token($token);
       $this->intent = $args;
     } else { // out of time to refresh (or first time), so reauthorize
-      r\setCook('qboParameters', $args);
-      return go($helper->getAuthorizationCodeURL());
+      r\setCook('qboParameters', $args, 0);
+      return w\go($helper->getAuthorizationCodeURL());
     }
 
     $ray = [$token->getRefreshToken(), strtotime($token->getRefreshTokenExpiresAt()), $realmId];
-    r\setCook('qboRefresh', serialize($ray)); // store refreshToken so we don't have to re-authorize each time.
+    r\setCook('qboRefresh', serialize($ray), 0); // store refreshToken so we don't have to re-authorize each time (must expire with session).
   }
 
   /**
    * Return a list of active Income and Expense accounts, keyed by id.
    */   
-  public function getIEAccounts() {
+  public function getAccounts() {
 //    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm")) return debug("Table $tnm is empty.");
-    $ray = $this->ds->query("SELECT * FROM Account WHERE Classification IN ('Expense', 'Revenue') Where Active ORDERBY Classification DESC, FullyQualifiedName", 1, 250);
+    $ray = $this->ds->query("SELECT * FROM Account WHERE Active ORDERBY FullyQualifiedName", 1, 1000);
 
+    $res = [];
     foreach ($ray as $acct) {
-      extract(just('Id FullyQualifiedName Classification', $acct));
-      $type = strtr($Classification[0], ['R' => 'I']);
-      if (!strhas($FullyQualifiedName, 'UNUSED')) $res[$Id] =  "$type $FullyQualifiedName";
+      extract(just('Id FullyQualifiedName Description Classification', $acct));
+      $type = strtr($Classification[0], ray('R E A L', 0,1,2,3));
+      if (!strhas($FullyQualifiedName, 'UNUSED')) $res[$Id] =  "$type: " . str_replace(':', ': ', $FullyQualifiedName) . "\t$Description";
     }
 
-    return nn($res);
+    asort($res); // NOTE: Intuit won't sort by account type ("Classification")
+    foreach ($res as $k => $v) $res[$k] = 'IEAL'[$v[0]] . substr($v, 1);
+    return $res;
   }
   
   /**
@@ -89,16 +94,20 @@ class QB {
    */
   public function sendTxs($uid) {
     $a = r\acct($uid);
-    $lastEid = $a->lastQBEid ?: 0;
-    $lastXid = $lastEid ? db\get('xid', 'tx_entries', 'id>=:lastEid', compact('lastEid')) : 0;
+    $lastXid = $a->lastQBXid ?: 0;
+//    $lastXid = $lastEid ? db\get('xid', 'tx_entries', 'id>=:lastEid', compact('lastEid')) : 0;
     $start = db\min('created', 'tx_hdrs', 'xid>=:lastXid', compact('lastXid')); // get date of last tx even if it was deleted (catches txs whose date got changed)
 
     $txs = $start ? be\getTxs($uid, $start, now()) : [];
-    foreach ($txs as $entries) foreach ($entries as $ei => $tx) {
-      extract(just('xid eid', $tx));
-      if ($xid < $lastXid or ($xid == $lastXid and $eid <= $lastEid)) continue;
-      $this->addTx(just('xid created description myAmount name cat banking', $tx) + compact('ei'));
-      $a->update('lastQBEid', $eid);
+    foreach ($txs as $entries) {
+      foreach ($entries as $ei => $tx) {
+        extract(just('xid eid created', $tx));
+        if ($xid <= $lastXid) continue; // skip already-handled transactions on the start date (or later)
+        if ($ei == 0) $qbTx = new \IPPTransaction(['TxnDate' => fmtDt($created, 'Ymd')]);
+        $this->addTxLine($qbTx, just('xid description myAmount name cat banking', $tx) + compact('ei'));
+      }
+//      $this->ds->Add($qbTx);
+//      $a->update('lastQBXid', $xid);
     }
     list ($xid1, $xid9) = $txs ? [$txs[0]['xid'], $tx['xid']] : ['', ''];
     r\tellAdmin(t('QBO export of %qid complete', 'qid', $a->mainQid), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
@@ -107,15 +116,16 @@ class QB {
   /**
    * Add a transaction to QBO.
    */
-  public function addTx($tx) {
+  public function addTxLine($qbTx, $tx) {
     debug($tx);
+    extract($tx);
 //    debug(getRow(''));
   }
   
   /**
    * Return a field value from one QB record.
    */
-  public function get($fld, $tnm, $where) {
+  public function get($fld, $tnm, $where = '') {
     $record = $this->getRow($tnm, $where);
     return $record ? just($fld, $record) : NULL;
   }
@@ -123,7 +133,7 @@ class QB {
   /**
    * Return one record array from QB.
    */
-  public function getRow($tnm, $where) {
+  public function getRow($tnm, $where = '') {
     if (!$rows = $this->getRows($tnm, $where, 1)) return NULL;
     return (array) $rows[0];
   }
@@ -131,14 +141,16 @@ class QB {
   /**
    * Return an array of QB record objects.
    */
-  public function getRows($tnm, $where, $max = 999999) {
-    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm WHERE $where")) return NULL;
+  public function getRows($tnm, $where = '', $max = 999999) {
+    $where = ($where and $where != TRUE) ? "WHERE $where" : '';
+    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm $where")) return NULL;
     $rows = [];
-    for ($i = 1; $i <= $cnt; $i += QB_CHUNK) {
-      $rows += $this->ds->query("SELECT * FROM $tnm WHERE $where", $i, QB_CHUNK);
+    for ($i = 1; $i <= min($max, $cnt); $i += QB_CHUNK) {
+      $rows += $this->ds->query("SELECT * FROM $tnm $where", $i, min(QB_CHUNK, $max - sizeOf($rows)));
     }
     return $rows;
   }
 
-  public intent() {return $this->intent;}     
+  public function intent() {return $this->intent;}
+  public function getObj($tnm) {return $this->getRow($tnm);} // not allowed: 0, -1, TRUE, > 
 }

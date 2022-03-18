@@ -104,6 +104,7 @@ function menu($submenu = '') {
     'co/reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
     'co/settings' => ['sub', t('Company Settings'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
     'co/sponsor' => ['call', t('Fiscal Sponsorship'), 'Sponsor', ANY],
+    'co/budget-cats' => ['call', t('Accounting Categories'), 'BudgetCats', 'co manage'],
     
     'settings' => ['norm', t('Settings'), 'Settings', 'manage -closed -depends'],
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
