@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 include_once __DIR__ . '/signin.inc';
-include_once __DIR__ . '/donate.inc'; // for getCGPayArgs() function
+include_once __DIR__ . '/ccpay.inc'; // for getCGPayArgs() function
 
 /**
  * Pay with Common Good, arriving from some other site. The payment form, if any, 
@@ -76,7 +76,7 @@ function formCGPay($form, &$sta, $args = '') {
     $subtext = t('Hello %s_name!', compact('s_name'));
   } else {
     $subtext = t('Pay with %PROJECT');
-    if (!$mya) $option = t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup')) . nn($option2);
+    if (!$mya) $option = t('or <big><%a>Sign up!</a></big>', '_a', atag('/signup')) . nn($option2);
   }
   
   $subtext = "<h4>$subtext</h4>";

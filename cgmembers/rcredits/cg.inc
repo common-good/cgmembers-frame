@@ -637,10 +637,10 @@ function cttyName($uid, $omit = FALSE) {
 /**
  * Return a suggested transaction description, based on this account, the other account, and transaction type (paying or not).
  */
-function suggestDesc($myid, $otherId, $paying) {
+function suggestDesc($myid, $otherId, $paying, $minScore = 100000) {
   $channel = TX_WEB;
   list($me, $you) = u\order($paying, 1, 2);
-  extract(ray('myid:100, otherId:100, paying:1000, channel:15'), EXTR_PREFIX_ALL, 'match');
+  extract(ray('myid:100, otherId:100, paying:100000, channel:15'), EXTR_PREFIX_ALL, 'match');
 
   $score = <<< X
     IF(uid2=:myid xor $paying, $match_paying, 0)
@@ -649,7 +649,7 @@ function suggestDesc($myid, $otherId, $paying) {
   + IF(channel=:channel, $match_channel, 0)
 X;
 
-  $tnm = "(SELECT for$me, $score AS score, COUNT(*) AS cnt FROM txs WHERE type=:E_PRIME GROUP BY for$me, score ORDER BY score DESC, cnt DESC) x";
+  $tnm = "(SELECT for$me, $score AS score, COUNT(*) AS cnt FROM txs WHERE type=:E_PRIME GROUP BY for$me, score HAVING score>=$minScore ORDER BY score DESC, cnt DESC) x";
 
   return db\get("for$me", $tnm, 1, compact(ray('myid otherId channel'))) ?: '';
 }
@@ -658,7 +658,7 @@ X;
  * Return a suggested category (budget_cats record ID) for the given hash of transaction fields, including:
  *    myid, otherId, recursId, desc, type, amt (to me), channel, flags, mainCat, paying
  */
-function bestCat($tx) {
+function bestCat($tx, $minScore = 100000) {
   extract(just('myid type paying mainCat', $tx, NULL));
   u\EXPECT(r\isCGs($myid), 'Do not suggest a category for non-CG transactions.');
   list($me, $you) = u\order($paying, 1, 2);
@@ -683,7 +683,7 @@ X;
     $score .= " + IF(mainCat=$mainCat, $match_mainCat, 0)"; // $mainCat, not %mainCat, avoids having to add it to subs
     $tnm0 = '(SELECT t.*,t2.cat AS mainCat FROM txs t JOIN txs t2 USING(xid) WHERE t2.type IN :E_PRIMES AND t2.eid!=t.eid AND t2.cat IS NOT NULL';
   }
-  $tnm = "(SELECT cat, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE cat IS NOT NULL GROUP BY cat, score ORDER BY score DESC, cnt DESC) x";
+  $tnm = "(SELECT cat, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE cat IS NOT NULL GROUP BY cat, score HAVING score>=$minScore ORDER BY score DESC, cnt DESC) x";
 
   return db\get('cat', $tnm, 1, $tx) ?: '';
 }
