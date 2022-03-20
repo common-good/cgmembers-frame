@@ -160,37 +160,37 @@ function yesSubmit() {}
  * Find out what account the user means (see w\whoFldSubmit).
  * Create a hidden whoId field to store the record Id.
  */
-function who(form, fid, question, amount, selfErr, restrict, allowNonmember) {
+function who(form, fid, question0, amount, selfErr, restrict, allowNonmember) {
   jForm = $(form);
-  var who = $(fid).val();
+  var nm = $(fid).val();
   if (yesSubmit) return true;
-  get('who', {who:who, question:question, amount:amount, selfErr:selfErr, restrict:restrict}, function(j) {
+
+  var question = question0.replace('%amount', '$' + fmtAmt(amount)).replace('%name', nm);
+  if (has(question, '@ ')) question = question.replace('@ ', '(').replace('?', ')?');
+  var whoId = $('.whoId', jForm);
+
+  if (whoId.length > 0 && whoId.val() != '') {
+    yesno(question, function () {yesSubmit = true; jForm.submit();}, noSubmit);
+  } else get('who', {who:nm, question:question0, amount:amount, selfErr:selfErr, restrict:restrict}, function(j) {
     if (j.ok) {
       if (j.who) {
-        setWhoId(j.who, jForm);
-        
         if (j.confirm != '') {
-          yesno(j.confirm, function() {
-            yesSubmit = true; jForm.submit();
-          }, noSubmit);
-        } else {yesSubmit = true; jForm.submit();}
+          yesno(j.confirm, function() {setWhoId(j.who, jForm); yesSubmit = true; jForm.submit();}, noSubmit);
+        } else {setWhoId(j.who, jForm); yesSubmit = true; jForm.submit();}
       } else which(jForm, fid, j.title, j.which);
-    } else if (allowNonmember == 1 && who.includes('@') && fid != '#edit-newacct') {
-      yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). ' + question.replace('?', '').replace('%amount', fmtAmt(amount)).replace('%name', who) + ' anyway, with an invitation to join?', function() {
-        yesSubmit = true; jForm.submit();
-      }, noSubmit);
-    } else {
-      noSubmit(); $.alert('', j.message);
-    }
+    } else if (allowNonmember == 1 && who.includes('@') && !who.includes(' @') && fid != '#edit-newacct') {
+      var msg = 'The email address (' + who + ') is for a non-member (or for a member with a non-public email address). ' + question.replace('?', '') + ' anyway, with an invitation to join?';
+      yesno(msg, function () {yesSubmit = true; jForm.submit();}, noSubmit);
+    } else {noSubmit(); $.alert('', j.message);}
   });
   return false;
 }
 
 function setWhoId(id, frm) {
-  var whoId = $('input[name="whoId"]', frm);
+  var whoId = $('.whoId', frm);
   if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
     whoId.val(id);
-  } else frm.append('<input type="hidden" name="whoId" value="' + id + '" />');
+  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '" />');
 }
 
 function which(jForm, fid, title, body) {
@@ -228,18 +228,32 @@ function clickWhich(fid, id, text, frm) {
  */
 function suggestWho(sel, restrict) {
   var members = new Bloodhound({
-  //  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    identify: function(obj) { return obj.uid; },
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('nm'),
+//    datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     prefetch: {
       url: ajaxUrl + '?op=suggestWho&data={"restrict":"' + restrict + '"}&sid=' + ajaxSid,
       cache: false
     }
   });
+
+  $(sel).change(function () {setWhoId('', $(sel).parents('form:first'))});
+  $(sel).on('typeahead:select typeahead:autocomplete', function(ev, result) {
+    setWhoId(result.uid, $(sel).parents('form:first'));
+  });
   $(sel).wrap('<div></div>').typeahead(
-    {minLength: 3, highlight: true},
-    {name: 'cgMembers', source: members} //    display: 'value',
+    {
+      minLength: 3, 
+      highlight: true,
+    },
+    {
+      name: 'cgMembers',
+      source: members,
+      display: 'nm'
+    }
   );
+
 }
     
 var signoutWarning = 'You still there? (otherwise we\'ll sign you out, to protect your account)';

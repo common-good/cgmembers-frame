@@ -526,7 +526,7 @@ function iCardAcct($code0, &$iCode = NULL) {
  */
 function setCook($key, $value, $expires = NULL, $raw = FALSE) {
   u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
-  $_COOKIE[$key] = $value; // make it available also before going to a new page
+  if (isset($value)) $_COOKIE[$key] = $value; else unset($_COOKIE[$key]); // make it available also before going to a new page
   if (test()) return $value;
 
   u\setDft($expires, COOK_NO_EXPIRE);
@@ -632,6 +632,60 @@ function cttyName($uid, $omit = FALSE) {
   if (!$cttyA = r\acct($uid)) return '';
   $name = $cttyA->isRegion ? t('%PROJECT Seedpack') : $cttyA->fullName;
   return $omit ? trim(str_replace(PROJECT, '', $name)) : $name;
+}
+
+/**
+ * Return a suggested transaction description, based on this account, the other account, and transaction type (paying or not).
+ */
+function suggestDesc($myid, $otherId, $paying) {
+  $channel = TX_WEB;
+  list($me, $you) = u\order($paying, 1, 2);
+  extract(ray('myid:100, otherId:100, paying:1000, channel:15'), EXTR_PREFIX_ALL, 'match');
+
+  $score = <<< X
+    IF(uid2=:myid xor $paying, $match_paying, 0)
+  + IF(uid$me=:myid, $match_myid, 0)
+  + IF(uid$you=:otherId, $match_otherId, 0)
+  + IF(channel=:channel, $match_channel, 0)
+X;
+
+  $tnm = "(SELECT for$me, $score AS score, COUNT(*) AS cnt FROM txs WHERE type=:E_PRIME GROUP BY for$me, score ORDER BY score DESC, cnt DESC) x";
+
+  return db\get("for$me", $tnm, 1, compact(ray('myid otherId channel'))) ?: '';
+}
+  
+/**
+ * Return a suggested category (budget_cats record ID) for the given hash of transaction fields, including:
+ *    myid, otherId, recursId, desc, type, amt (to me), channel, flags, mainCat, paying
+ */
+function bestCat($tx) {
+  extract(just('myid type paying mainCat', $tx, NULL));
+  u\EXPECT(r\isCGs($myid), 'Do not suggest a category for non-CG transactions.');
+  list($me, $you) = u\order($paying, 1, 2);
+  foreach (ray('otherId type recursId amt channel flags mainCat') as $k) if (empty($tx[$k])) $tx[$k] = 0;
+  extract(ray('paying:100000, myid:100, otherId:100, type:10, recursId:10000, desc:1000, desc7:300, amt:20, channel:10, flags:20'), EXTR_PREFIX_ALL, 'match');
+
+  $score = <<< X
+    IF(uid2=:myid xor $paying, $match_paying, 0)
+  + IF(uid$me=:myid, $match_myid, 0)
+  + IF(uid$you=:otherId, $match_otherId, 0)
+  + IF(type=:type, $match_type, 0)
+  + IF(recursId IS NOT NULL AND recursId=:recursId, $match_recursId, 0)
+  + IF(for$me=:desc, $match_desc, 
+      IF(LEFT(for$me, 7)=LEFT(:desc, 7), $match_desc7, 0) )
+  + IF(amt=:amt, $match_amt, 0)
+  + IF(channel=:channel, $match_channel, 0)
+  + IF(flags!=0 AND flags=:flags, $match_flags, 0)
+X;
+
+  $tnm0 = 'txs';
+  if (FALSE and !in($type, E_PRIMES) and $mainCat) {
+    $score .= " + IF(mainCat=$mainCat, $match_mainCat, 0)"; // $mainCat, not %mainCat, avoids having to add it to subs
+    $tnm0 = '(SELECT t.*,t2.cat AS mainCat FROM txs t JOIN txs t2 USING(xid) WHERE t2.type IN :E_PRIMES AND t2.eid!=t.eid AND t2.cat IS NOT NULL';
+  }
+  $tnm = "(SELECT cat, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE cat IS NOT NULL GROUP BY cat, score ORDER BY score DESC, cnt DESC) x";
+
+  return db\get('cat', $tnm, 1, $tx) ?: '';
 }
 
 /**
@@ -1512,7 +1566,6 @@ function countryList() {return db\keyed('id,name', 'r_countries', "name in ('Uni
 const CREDIT_RULE_ROW = [ACT_SURTX, MATCH_PAYEE, MATCH_PAYER, 0.00, 1.00, REF_ACCOUNT, REF_ACCOUNT, 0.00];
 function isCreditRule($row) {return (array_values(just('action from to amount portion payerType payeeType minimum', $row)) == CREDIT_RULE_ROW);}
 function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
-function budgetCats($type = 'Income') {return db\keyed("id, CONCAT(MID(type, 1, 1), ' ', category)", 'budget_cats', "id NOT IN (3,7,9,10,11,16,28,32) ORDER BY type<>:type, category", compact('type'));}
 function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
 function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data

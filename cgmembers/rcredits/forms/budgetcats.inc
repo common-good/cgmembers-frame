@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 const BUDGETCAT_FLDS = 'id category description externalId show'; // just the fields we handle here (and omitting pid)
-const BUDGETCAT_URL = 'budget-cats/id';
+const BUDGETCAT_URL = 'co/budget-cats/id';
 
 /**
  * Edit Budget Categories (for interface with QuickBooks, 990, etc.)
@@ -15,7 +15,7 @@ const BUDGETCAT_URL = 'budget-cats/id';
 function formBudgetCats($form, &$sta, $args = '') {
   
   if (!db\exists('budget_cats')) return goFirst('qbo/op=accounts');
-  extract(crud('budget_cats', $args, BUDGETCAT_URL, BUDGETCAT_FLDS)); // get ret or [title, orig, id, and BUDGETCAT_FLDS]
+  extract(crud('budget_cats', $args, BUDGETCAT_URL, BUDGETCAT_FLDS, 'ASC')); // get ret or [title, orig, id, and BUDGETCAT_FLDS]
   if (nn($ret)) return $ret;
   
   $title = t('Accounting Categories');
@@ -39,10 +39,10 @@ function formBudgetCats_validate($form, &$sta) {
 }
 
 function formBudgetCats_submit($form, &$sta) {
-  extract($info = just('id id0', $sta['input'], NULL));
+  extract(just('id id0', $input = $sta['input'], NULL));
   if ($id != $id0) db\q('UPDATE budget_cats SET id=:id WHERE id=:id0', compact(ray('id id0')));
 
-  db\updateOrInsert('budget_cats', just(BUDGETCAT_FLDS, $info), 'id');
+  db\updateOrInsert('budget_cats', just(BUDGETCAT_FLDS, $input), 'id');
 
-  return go('dashboard');
+  return go('/co/budget-cats');
 }

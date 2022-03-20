@@ -179,8 +179,7 @@ function balanceAsOf($uids, $date=NULL) {
  */
 function memberRay($myid, $aid, $restrict = '') {
   if (!$a = r\acct($myid, $aid)) return []; // no choices if not signed in
-  $res = identify('', $a, '', $restrict);
-  return is_array($res) ? $res : (is_object($res) ? [$res->id => $res->fullName] : []);
+  return identify('', $a, '', $restrict, TRUE);
 }
 
 /**
@@ -1008,12 +1007,14 @@ function deleteCell($number) {
  * @param int $mya: current user's account
  * @param string $selfErr: index to error message for identifying oneself
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
+ * @param bool $returnObj: <return an array of objects> (else return a keyed array of strings)
  * @return one of the following:
  *   the other trader's acct
  *   error message index
  *   array of possible fullNames with city and state, indexed by uid
+ *     OR an array of hashes: {uid, nm}
  */
-function identify($who, $mya, $selfErr, $restrict) {
+function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   if (!$mya) return 'search forbidden';
   $myid = $mya->id;
   $who = $who0 = trim($who);
@@ -1076,7 +1077,8 @@ function identify($who, $mya, $selfErr, $restrict) {
   $company = t('company');
   $anon = "IF(:IS_CO, '$individual', '$company')";
   $uidCrit = 'uid NOT :CANONIC';
-  if ($mya->admActivate) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
+  if ($mya->admActivate) $uidCrit = "($uidCrit OR uid=:UID_SUPER)"; // needed for helper when activating
+  if ($returnObj) $uidCrit .= " AND uid NOT IN ($myid, :UID_SUPER)";
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 
@@ -1088,7 +1090,11 @@ function identify($who, $mya, $selfErr, $restrict) {
 EOF;
 
   $subs['ctty'] = test() ? $mya->community : ($mya->seedpacker ? -1 : $mya->community);
-  $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
+  $q = db\q($sql, $subs);
+  
+  if ($returnObj) return $q->fetchAll();
+
+  $result = $q->fetchAllKeyed(0, 1);
   
   if (count($result) == 1 and key($result) == $myid) return $selfErr;
   unset($result[$myid]); // if self is one of many results, ignore it

@@ -150,8 +150,9 @@ X
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
     $$k = fixIdFld($v);
     if ($k == 'qid') $$k = r\qid($$k); // convert back to qid for qid field
-    if ($$k != $v) $fields .= ' ' . $k;
+    $info[$k] = $$k;
   }
+
 //  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (array_key_exists($k, $info)) $info[$k] = nn($$k, NULL);
   return $info;
@@ -164,7 +165,7 @@ X
  */
 function fixIdFld($v) {
   if (strhas($v, '@')) return r\acct(t\fixEmail($v))->id; // sometimes an email identifies an account ($$k not $v)
-  if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) return t\uid($v);
+  if (preg_match('/^!?(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) return t\uid($v);
   return $v;
 }
 

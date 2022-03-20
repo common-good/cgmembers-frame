@@ -50,7 +50,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $cat = $fbo ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
+  $cat = r\isCGs($mya->uid) ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -136,7 +136,7 @@ function formTx_submit($form, &$sta) {
   } else { // no delay, transact now
     $data = [];
     if ($start and $start < today()) $data['created'] = $start; // admin chose a date in the past
-    if ($fbo) $data += compact('cat');
+    if (r\isCGs($mya->uid)) $data += compact('cat');
     if ($isGift) $data['gift'] = TRUE;
 
     $z = $paying

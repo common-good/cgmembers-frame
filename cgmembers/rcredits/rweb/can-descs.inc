@@ -3,7 +3,7 @@
  * @file
  * Descriptions of administrative permission bits.
  */
-$cansHelp = array(
+$cansHelp = [
   'ach' => t('Create an ACH batch file.'),
   'activate' => t('Activate an account.'),
   'changeUid' => t('Change an account\'s record ID.'),
@@ -51,4 +51,4 @@ $cansHelp = array(
   'v' => t('View very secret information in member accounts.'),
   'verifyId' => t('Confirm a member\'s identity, given their uploaded photo ID.'),
   'whileDown' => t('Use the %PROJECT server while it is stopped for everyone else.'),
-);
+];

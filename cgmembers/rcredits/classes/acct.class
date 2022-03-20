@@ -1555,6 +1555,22 @@ X;
   } 
 
   /**
+   * Set all appropriate bits in the company flags field (called from formSummary for community admins)
+   * @param array $values: numeric array of bit values (eg [3 => 3, 5 => 5])
+   */
+  public function setCoFlags($values) {
+    $a = $this;
+    u\setDft($values, []); // fails in arg list (dunno why)
+    $coFlags = $a->coFlags;
+    foreach (ray(CO_FLAGS) as $bit => $bitName) { // set all these on or off
+      if (!$bitName) continue;
+      $on = isset($values[$bit]); // isset because bit 0 is 0 when checked
+      u\setBit($coFlags, $bit, $on);
+    }
+    $a->update(compact('coFlags'));
+  } 
+
+  /**
    * Say whether another active account has the same address
    */
   public function dupAddr() {

@@ -1172,7 +1172,7 @@ function ray($s = '', $value1 = NULL) {
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
-  if (!preg_match('/[\,\|]/', $pattern) or !mb_strpos($s, ':')) return $simple; // no subargs
+  if (!preg_match('/[\,\|]|^$/', $pattern) or !mb_strpos($s, ':')) return $simple; // no subargs
 
   $ray = [];
   foreach ($simple as $one) {

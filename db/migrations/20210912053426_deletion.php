@@ -7,12 +7,12 @@ require_once __DIR__ . '/util.inc';
 
 class Deletion extends AbstractMigration {
   public function change() {
-    $this->table('r_photos')->rename('u_photo');
-    $this->table('x_photos')->rename('x_photo');
-    $this->table('u_shouters')->rename('u_shout');
-    $this->table('r_relations')->rename('u_relations');
-    $this->table('x_invoices')->rename('legacy_x_invoices');
-    $this->table('x_txs')->rename('legacy_x_txs');
+    $this->table('r_photos')->rename('u_photo')->update();
+    $this->table('x_photos')->rename('x_photo')->update();
+    $this->table('u_shouters')->rename('u_shout')->update();
+    $this->table('r_relations')->rename('u_relations')->update();
+    $this->table('x_invoices')->rename('legacy_x_invoices')->update();
+    $this->table('x_txs')->rename('legacy_x_txs')->update();
     
     foreach (ray('shout company') as $k) {
       if ($this->isMigratingUp()) {
