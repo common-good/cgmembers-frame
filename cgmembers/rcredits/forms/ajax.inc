@@ -34,6 +34,12 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'suggestTxDesc': // suggest a description and/or category for a transaction being entered
+      extract(just('otherId purpose paying', $data));
+      $purpose = $purpose ?: r\suggestDesc($myid, $otherId, $paying);
+      $cat = r\bestCat(ray('myid otherId desc type channel paying', $myid, $otherId, $purpose, E_PRIME, TX_WEB, $paying));
+      return ajaxRet(compact(ray('purpose cat')));
+
     case 'delPair': // delete a transaction and its reversal
       extract(just('xid', $data));
       if (!$xid0 = db\get('reversesXid', 'tx_hdrs', compact('xid'))) return ajaxErr(t('This transaction does not reverse anything.'));

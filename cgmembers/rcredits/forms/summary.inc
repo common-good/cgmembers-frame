@@ -141,7 +141,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admManageAccts) return hack('managing account without permission'); // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans', $sta['input'], NULL));
+  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans coFlags', $sta['input'], NULL));
   if (!$mya->admManageAccts) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
@@ -160,8 +160,11 @@ function formSummary_submit($form, &$sta) {
     $mya->stepDone('verifyid');
   }
 
-  if ($mya->admManageAccts) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
-  if ($mya->admMakeAdmin) $mya->setAdminBits(nn($adminCans));
+  if ($mya->admManageAccts) {
+    setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
+    if ($mya->co) $mya->setCoFlags($coFlags);
+    if ($mya->admMakeAdmin) $mya->setAdminBits(nn($adminCans));
+  }
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
@@ -200,7 +203,7 @@ function setRisksAndFlags($a, $risks, $adminable) {
   $risks0 = $a->risks;
   $a->setRisks($risks); // set or unset the adminable risk bits
   if ($a->risks != $risks0) { // if anything changed, refigure ALL risks (some affect others)
-    include_once __DIR__ . '/../cg-risk.inc';
+    include_once R_ROOT . '/cg-risk.inc';
     k\acctRisk1($a->id, getv('riskThresholds', [0,0,0,0]));
   }
   $a->setBits(nn($adminable));
@@ -211,7 +214,7 @@ function setRisksAndFlags($a, $risks, $adminable) {
  */
 function adminSummary() {
   global $mya, $base_url;
-  include_once __DIR__ . '/../admin/admin.inc';  
+  include_once R_ROOT . '/admin/admin.inc';  
 
   $uid = $mya->id;
   if ($mya->proSe and !$mya->admin) return []; // nothing special on admin's own account
@@ -272,9 +275,10 @@ function adminSummary() {
   }
   
   if ($mya->admin and !$mya->proSe) { // either a community or regular account (but not the cAdmin's own account)
-    include __DIR__ . '/../rweb/risk-descs.inc';
-    include __DIR__ . '/../rweb/bit-descs.inc';
-    include __DIR__ . '/../rweb/can-descs.inc';
+    include R_ROOT . '/rweb/risk-descs.inc';
+    include R_ROOT . '/rweb/bit-descs.inc';
+    include R_ROOT . '/rweb/can-descs.inc';
+    include R_ROOT . '/rweb/coflag-descs.inc';
 
     if ($mya->admManageAccts) {
       $legalName = textFld(REQ . t('Legal Name:'), '', dft($mya->legalName));    
@@ -287,20 +291,8 @@ function adminSummary() {
 
     $ssnShow = ($mya->member and !$mya->co and $mya->admSeeSsn) ? item(a\ssnShow($mya)) : NULL;
 
-    // Risk bits
-    $acctRisks = ray(K_ACCT_RISKS);
-    $riskBits = array_keys($acctRisks);
-    $risksEditable = array_flip(ray(K_ACCT_RISKS_EDITABLE));
-
-    foreach ($riskBits as $k) {
-      $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
-      if (!isset($risksEditable[$k]) or !$mya->admManageAccts) $class .= ' noEdit';
-      $dpy = w\popHelp($k, nni($riskHelp, $k), '#', '', 'click');
-      $aliases[$k] = "<div class=\"$class\">$dpy</div>";
-    }
-    $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
-
     // Flag bits
+    $aliases = [];
     $adminable = $mya->adminables();
     if ($mya->isCtty) $flagHelp = just(B_CTTY_BITS, $flagHelp);
 
@@ -312,8 +304,34 @@ function adminSummary() {
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
     }
     $adminable = bitsFld(t('Bits:'), $mya->flags, 'b', join(' ', $blist), $aliases);
+
+    // Company Flag bits
+    if ($mya->co) {
+      $aliases = [];
+      foreach (ray(CO_FLAGS) as $k) if ($k) {
+        $coList[] = $k;
+        $dpy = popHelp($k, nni($coHelp, $k), '#', '', 'click');
+        $aliases[$k] = "<div class=\"$class\">$dpy</div>";
+      }
+      $coFlags = bitsFld(t('Co Flags:'), $mya->coFlags, '', join(' ', $coList), $aliases);
+    } else $coFlags = NULL;
     
+    // Risk bits
+    $acctRisks = ray(K_ACCT_RISKS);
+    $riskBits = array_keys($acctRisks);
+    $risksEditable = array_flip(ray(K_ACCT_RISKS_EDITABLE));
+    $aliases = [];
+
+    foreach ($riskBits as $k) {
+      $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
+      if (!isset($risksEditable[$k]) or !$mya->admManageAccts) $class .= ' noEdit';
+      $dpy = w\popHelp($k, nni($riskHelp, $k), '#', '', 'click');
+      $aliases[$k] = "<div class=\"$class\">$dpy</div>";
+    }
+    $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
+
     // Admin can bits
+    $aliases = [];
     foreach (ray(A_LIST) as $k) if (!preg_match('/^u\\d+$/', $k)) { // ignore undefined bits
       $adminCans[] = $k0 = $k;
       $class = $mya->admMakeVAdmin ? '' : ((in($k, A_VLIST) or !$mya->admMakeAdmin) ? 'noEdit' : '');
@@ -322,7 +340,7 @@ function adminSummary() {
     }
 
     $adminCans = bitsFld(t('Admin Can:'), $mya->adminCans, '', join(' ', $adminCans), $aliases);
-
+    
     $calling = item($mya->calling, t('Calling:'));
     $tenure = item($mya->tenure . t(' month(s)'), t('Tenure:'), t('How long had this person or company been at this address before opening a %PROJECT Account?'));
 
@@ -390,7 +408,7 @@ function adminSummary() {
   $uid = hidFld($uid); // must postcede js (which uses uid)
   w\jsx('adminSummary', 'photoIdSrc', nn($photoIdSrc));
   
-  $bigFields = 'details notes note altId tickle ' . ($mya->ok ? 'adminable risks adminCans ssnShow' : 'ssnShow adminable risks');
+  $bigFields = 'details notes note altId tickle ' . ($mya->ok ? 'adminable coFlags risks adminCans ssnShow' : 'ssnShow adminable coFlags risks');
   $info = []; foreach (ray('noEnter legalName shortName balance active community minimum achMin risk trust mediaConx count back calling donations cgfDonations helper invited invitedBy source tenure moves activity relations signupCo tasks steps proxies proxyFor uid submit') as $k) if (isset($$k)) $info[$k] = $$k;
   return [$info, compact(ray($bigFields))];
 }

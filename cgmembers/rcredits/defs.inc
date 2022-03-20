@@ -415,11 +415,14 @@ const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
-const CO_SPONSORED = 2; // fiscally sponsored by CG (name should always start with "Common Good FBO ", should have CG's EIN, and CO_PRIVATE)
+const CO_SPONSORED = 2; // fiscally sponsored by CG (name should start with "Common Good" or "Common Good FBO ", should have CG's EIN, and maybe CO_PRIVATE)
 
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
-const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,,private,atm';
+
+const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
+const CO_TIP = 30; // ask customer what percent tip to add
+const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,,private,atm,,,,,,,,,,,,,,,fast,tip';
 
 const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21
 const CO_CHARGE = 0;
@@ -433,9 +436,6 @@ const CO_MANAGE = 7; // this bit is not actually stored here, but pass B_MANAGE 
 const APP_CAN_BITS = 7; // number of bits for permissions (each: signed in and out)
 const APP_AGENT_CANS = APP_CANS + APP_CAN_BITS; // company permission bits when signed IN (to be limited by agent perms)
 const APP_CAN_MASK = (1 << (APP_CAN_BITS + 1)) - 1; // the CANS bits -- signed-IN permission bits are 22-28
-
-const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
-const CO_TIP = 30; // ask customer what percent tip to add
 
 const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD only if chosen in signupco.inc)
 

@@ -946,8 +946,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
 
 #frm-summary .form-type-item {margin-bottom:5px;}
-#frm-summary .form-item-risks .control-data,
 #frm-summary .form-item-adminable .control-data,
+#frm-summary .form-item-coFlags .control-data,
+#frm-summary .form-item-risks .control-data,
 #frm-summary .form-item-adminCans .control-data {margin-top:8px;}
 #frm-summary .checkbox {width:110px; font-size:85%; margin-bottom:5px;}
 #frm-summary .checkbox div {margin-top:2px;}

@@ -68,7 +68,7 @@ class QB {
     $ray = [$token->getRefreshToken(), strtotime($token->getRefreshTokenExpiresAt()), $realmId];
     r\setCook('qboRefresh', serialize($ray), 0); // store refreshToken so we don't have to re-authorize each time (must expire with session).
   }
-
+  
   /**
    * Return a list of active Income and Expense accounts, keyed by id.
    */   

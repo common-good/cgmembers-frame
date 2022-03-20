@@ -1,3 +1,13 @@
+2022-03-19 feature/suggest-tx-desc
+. fixed deletion migration, which failed under latest version of phinx
+. w\crud() now allows sorting Ascending
+. QBO op=accounts now works
+. renamed budgetcats form file without dash (required)
+. created functions to suggest a transaction description and category
+. ray() and obj() can now use colon format to create a one-element array or object
+. added coFlags to summary page
+. cat field is now shown for any account owned by CG
+
 2022-03-18 feature/qb-accounts
 . added fields to budget_cats to accommodate integration with QBO
 . created CRUD for budget_cats

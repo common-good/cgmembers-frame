@@ -38,10 +38,11 @@ function formQBO($form, &$sta, $args = '') {
   switch ($op) {
     case 'accounts':
       $id = 0;
-      foreach ($qb->getAccounts() as $externalId => $info) {
-        if (!$info['Description']) unset($info['Description']);
+      foreach ($qb->getAccounts() as $externalId => $category) {
+        list ($category, $description) = explode("\t", $category);
         $id += 100;
-        db\updateOrInsert('budget_cats', $info + compact(ray('id externalId')), 'externalId');
+        $info = compact(ray('id externalId category' . ($description ? ' description' : '')));
+        db\updateOrInsert('budget_cats', $info, 'externalId');
       }
       break;
     

@@ -225,6 +225,8 @@ function doit(what, vs) {
     
   case 'tx':
     var pay;
+    var purpose = $('#edit-purpose');
+    var cat = $('#edit-cat');
     $('.btn-pay, .btn-charge').click(function () {
       pay = has($(this).attr('class'), 'btn-pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
@@ -244,6 +246,17 @@ function doit(what, vs) {
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
       mem0Click(true);
+    });
+    $('#edit-who').change(function () {
+      var otherId = $('.whoId', $(this).parents('form:first'));
+      if (purpose.val() == '' || cat.val() == '') post('suggestTxDesc', {
+        otherId: otherId.val(),
+        purpose: purpose.val(),
+        paying:pay ? 1 : 0
+      }, function (j) {
+        if (j.ok && purpose.val() == '') purpose.val(j.purpose).select();
+        if (j.ok && cat.val() == '' && !cat.is(':focus')) cat.val(j.cat);
+      });
     });
     $('.btn-delay').click(function () {
       $(this).hide();
@@ -276,8 +289,6 @@ function doit(what, vs) {
       reqQ($('.form-item-period, .form-item-periods, .form-item-duration, .form-item-durations'), timed);
       $('.form-item-template, .form-item-code').toggle(!timed);
     }
-    break;
-
     break;
     
   case 'invest':
