@@ -20,7 +20,8 @@ function formCCPay($form, &$sta, $args = NULL) {
   if ($op == 'done') return completeCCPayment($args);
   if ($op == 'cancel') return softErr(tr('no paypal cancel'));
 
-  if ($mya) return go(str_replace('ccpay/', 'cgpay/', $_SERVER['REQUEST_URI']) . '?' . $_SERVER['QUERY_STRING']);
+  $cgPayLink = '/' . str_replace('ccpay/', 'cgpay/', $_SERVER['REQUEST_URI']) . '?' . $_SERVER['QUERY_STRING'];
+  if ($mya) return go($cgPayLink);
 
   if ($code = nni($args, 'code')) {
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
@@ -32,7 +33,7 @@ function formCCPay($form, &$sta, $args = NULL) {
   $title = t('Pay ') . $coA->bestName;
   $subtext = '';
   $payHow = hidFld(1); // always by CC
-  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow')));
+  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow cgPayLink')));
   if (!nni($form, 'amount')) return $form; // error
   
   $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add comment'))));
@@ -241,7 +242,7 @@ function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
   extract($extra);
   
   // Stuff to do AFTER extracting $extra
-  if (!$a) $subtext .= t('<p>%PROJECT members <%aMember>sign in here</a> first.</p>', '_aMember', atag(first('/signin')));  
+  if (!$a) $subtext .= t('<p>%PROJECT members save time: <%aMember>go here instead</a>.</p>', '_aMember', atag($cgPayLink));  
   
   foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
   return $form;

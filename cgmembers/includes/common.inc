@@ -7572,7 +7572,7 @@ function _drupal_flush_css_js() {
   $file = basename($file);
   $map = ray('r\\Web r\Util r\DB r\Testing r\Backend r\Admin', 'w', 'u', 'db', 't', 'be', 'a');
   foreach (ray('object class function') as $k) {
-    $$k = str_replace('CG', 'r', pr(nn($$k)));
+    $$k = str_replace('CG\\', 'r\\', pr(nn($$k)));
     $$k = strtr($$k, $map);
   }
   if ($class) $function = "$class::$function";

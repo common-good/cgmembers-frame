@@ -1,3 +1,7 @@
+2022-03-20 feature/ccpay-fix
+. blank amount on cc purchase now works for both members and non-members
+. functions for suggested transaction description and category can now heed a minimum score
+
 2022-03-19 feature/suggest-tx-desc
 . fixed deletion migration, which failed under latest version of phinx
 . w\crud() now allows sorting Ascending

@@ -62,7 +62,7 @@ function ajax($args = NULL) {
     case 'cgPayCode': // get cgPay code
       include_once R_ROOT . '/forms/code.inc';
       extract(just('fer expires', $data));
-      $data['for'] = nni(ray('credit,gift,,donate'), $fer); // fer=2 (other) is ignored
+      $data['for'] = nni(ray('donate,,credit,gift'), $fer); // fer=2 (other) is ignored
       unset($data['fer']);
       if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
       foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
