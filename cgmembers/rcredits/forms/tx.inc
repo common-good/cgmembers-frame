@@ -15,7 +15,8 @@ function formTx($form, &$sta, $type, $args = '') {
   global $mya;
 
   $fbo = $mya->sponsored;
-  
+  $isCGs = r\isCGs($mya->uid) ?: 0;
+
   $pay = in($type, 'pay both');
   $charge = (in($type, 'charge both') and (!$fbo or $mya->admNonmemberTx)); // don't show charge button for sponsored org, except to authorized admin
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
@@ -50,7 +51,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $cat = r\isCGs($mya->uid) ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
+  $cat = $isCGs ? catFld() : NULL; // can't have different budgetCats, so start with Income (it's short)
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -64,7 +65,7 @@ function formTx($form, &$sta, $type, $args = '') {
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
   $admin = $mya->admNonmemberTx;
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin')));
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin isCGs')));
   
   $paying = hidFld($pay);
   $fbo = hidFld($fbo);
