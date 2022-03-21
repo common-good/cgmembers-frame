@@ -1,3 +1,6 @@
+2022-03-20 feature/nonCGs-bug
+. fixed crash of any web transaction for an account not owned by CG
+
 2022-03-20 feature/ccpay-fix
 . blank amount on cc purchase now works for both members and non-members
 . functions for suggested transaction description and category can now heed a minimum score
