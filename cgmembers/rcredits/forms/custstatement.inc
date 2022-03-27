@@ -107,7 +107,7 @@ function custStatement($args = []) {
 
   $pdf->SetFillColorArray([255, 255, 0]); // yellow
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
-  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, fmtDt(now(), 'MM-dd-YYYY'))); //Close and output PDF document
+  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, fmtDt(now(), 'MM-dd-yyyy'))); //Close and output PDF document
 }
 
 /**

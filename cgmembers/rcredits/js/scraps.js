@@ -247,7 +247,7 @@ function doit(what, vs) {
       suggestWhoScrap();
       mem0Click(true);
     });
-    if (vs['isCGs']) $('#edit-who').change(function () {
+    if (vs['isCGs'] == 1) $('#edit-who').change(function () {
       var otherId = $('.whoId', $(this).parents('form:first'));
       if (purpose.val() == '' || cat.val() == '') post('suggestTxDesc', {
         otherId: otherId.val(),

@@ -26,7 +26,7 @@ function notice($month = '') {
   if ($noticeArgs = r\noticeArgs($mya->id, "created BETWEEN $start AND $end", FALSE, TRUE)) {
     extract(just('messages', $noticeArgs));
   } else $messages = '';
-  $title = t('Notices for ') . fmtDt($start, 'MMM YYYY');
+  $title = t('Notices for ') . fmtDt($start, 'MMM yyyy');
   $list = item("<table>$messages</table>");
   return cgform(compact('title', 'list'), 'wide nolabs');
 }

@@ -87,7 +87,8 @@ function formDonate($form, &$sta, $args = NULL) {
 
   $fsFee = hidFld($fsFee);
 
-  $form = compact(ray('logo title subtext amtChoice options period honor coverFSFee payHow coverCCFee ach fsFee recursId'));
+  $cgPayLink = '/' . first('signin');
+  $form = compact(ray('logo title subtext amtChoice options period honor coverFSFee payHow coverCCFee ach fsFee recursId cgPayLink'));
   $form = payFlds(t('Donation'), $mya, $coA, t('donation'), '', nn($s_amount), $form);
   if (!nni($form, 'amount')) return $form; // error
   

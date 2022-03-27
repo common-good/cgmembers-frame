@@ -44,7 +44,8 @@ function showResult($ctty, $qi, $question, $noProxies, $withheader = TRUE) {
     
     $opts = optList($question);
 
-    $voters = getVoters($ctty, $question, $noProxies); // create proxy ballots, get voters and their weights
+    createBlankProxyBallots($ctty, $question, $noProxies);
+    $voters = getVoters($question, $noProxies); // get voters and their weights
 
   //  global $proxiesForThisVoter; if(ISDEMO) if($thisvoter) $voters[$thisvoter] = $proxiesForThisVoter;
     $votesDirect = count($voters);
@@ -77,7 +78,7 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
 //  $separateOptTexts = TRUE; // FAILS otherwise
   
   $prefHeads[1] = [
-  'M' => "<th class='resultOption'></th><th colspan='$optCount'>Preferred Over:</th><th class='resultAverage'>Average</th><th></th>",
+  'M' => "<th class='resultOption'></th><th colspan='$optCount'>Preferred Over:</th><th class='resultAverage'>Average</th><th>Median</th><th></th>",
   'B' => "<th class='resultOption'></th><th></th><th></th><th>Percent</th><th colspan='2'>Budget</th><th class='resultAverage'>Average</th><th></th>",
   'R' => "<th colspan='2'>Range</th><th></th><th></th><th>Average</th><th>Average</th><th colspan='2'>Vetoed by 5%</th>",
   'E' => "",
@@ -105,7 +106,7 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
       $showComments = w\btnShowDiv("comments$qi-$inum", t('comments'), 'warning');
       $comments = u\ul($comments);
       $comments = "<div id=\"comments$qi-$inum\" class=\"comment collapse\">$comments</div>";
-    } else $showComments = '';
+    } else $showComments = $comments = '';
     if ($detail = $toti->optdetail) {
       $showDetail = w\btnShowDiv("detail$qi-$inum", t('detail'), 'success');
       $detail = "<div id=\"detail$qi-$inum\" class=\"detail collapse\">$detail</div>";
@@ -151,7 +152,7 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
     }
   }
   
-  if ($quType == 'M') $prefHead[2] .= "<th class='resultVote'>Vote</th><th>Vetos</th>";
+  if ($quType == 'M') $prefHead[2] .= "<th class='resultVote'>Vote</th><th>Vote</th><th>Vetos</th>";
 
   $optTexts = $optTexts ? "<blockquote>$optTexts</blockquote>" : '<br>';
 
@@ -188,19 +189,14 @@ function result_midM($toti, $i) {
     $eachpref .= "<td>$prefij</td>";
   }
 
-  $grade = ($toti->grade == 0) ? '- &nbsp; &nbsp; &nbsp;' : letterGrade($toti->grade/3);
+  foreach (ray('grade mj') as $k) {
+    $$k = ($toti->$k == 0) ? '- &nbsp; &nbsp; &nbsp;' : letterGrade($toti->$k/3);
+  }
 
-  return "$eachpref<td>$grade</td>";
+  return "$eachpref<td>$grade</td><td>$mj</td>";
 }
 
 // for each question (voter may complete only some of the questions)
-/* first figure out who the proxy is for each non-voter (skip in demo) like this:
-    start with voter records (and proxy records) for all authorized voters
-    for each proxy level 0-999 (until no more levels or no more nonvoters)
-    select nonvoters whose proxy has voted: create a ballot for them using their proxy's proxy (now they have voted)
-    when done, all proxy fields will show who actually cast the vote
-*/
-
 // list of names is public within each community (private from others)
 // cgv site can fetch that list with id#s, to provide a proxy-selection form and at vote end to count proxies
 
@@ -216,7 +212,11 @@ function tallyResults($voters, $qtype, $qbudget, $qminveto, $opts, $skipoptid=''
   foreach($voters as $voter=>$weight) { // foreach voter
     tallyVoter($tot, $voter, $qtype, $optlist, $weight); // tally this voter's ballot on this question
   }
+    
   $score = score($tot, $qtype, $qbudget, $qminveto);
+  if ($qtype == 'M') { // score for multiple choice is Condorcet. Also figure Majority Judgement (highest median score)
+    foreach ($tot as $i => $toti) $tot[$i]->mj = db\med('grade', 'r_votes', 'option=:opt', ray('opt', $i)); // $i is options record ID
+  }
   $newtot = array();
 
   $newI = 0;
@@ -376,17 +376,19 @@ function scoreB(&$toti, $budget, $minveto, $optCount, $totalGrades) {
 }
 
 /**
- * Create proxy ballots. Return an array of voter weights indexed by voter record ID.
+ * Create or recreate blank ballots for all nonvoters whose proxy has voted.
+ * Record who voted on their behalf (first level proxy first, if both proxies have voted).
+ * Algorithm: First figure out who the proxy is for each non-voter like this:
+ * - start with voter records (and proxy records) for all authorized voters
+ * - for each proxy level 0-999 (until no more levels or no more nonvoters)
+ * - select nonvoters whose proxy has voted: create a ballot for them using their proxy's proxy (now they have voted)
+ * - when done, all proxy fields will show who actually cast the vote
  */
-function getVoters($ctty, $question, $noProxies = FALSE) {
-  global $proxiesForThisVoter, $thisvoter;
-
-  // clear any proxies and blank votes
+function createBlankProxyBallots($ctty, $question, $noProxies = FALSE) {
   db\q('DELETE FROM r_ballots WHERE proxy<>voter AND question=:question', compact('question')); // remove proxy votes
   db\q("DELETE r_votes FROM r_votes LEFT JOIN r_ballots ON ballot=r_ballots.id WHERE grade=:BLANKGRADE AND (text='' OR text IS NULL) AND question=:question", compact('question')); // remove blank votes
   db\q('DELETE b FROM r_ballots b LEFT JOIN r_votes v ON v.ballot=b.id WHERE b.proxy=b.voter AND question=:question AND v.id IS NULL', compact('question')); // remove unused ballots
-  
-  // Create ballots for all nonvoters whose proxy has voted (first level proxy first, if both proxies have voted)
+
   $proxiesTable = <<<EOF
     SELECT p2.person, p2.proxy, u.community FROM r_proxies p2 
     INNER JOIN users u ON u.uid=p2.person 
@@ -414,12 +416,16 @@ EOF;
 ///    debug(compact('sql', 'subs', 'failsInARow', 'question'));
 ///    debug($q->rowCount());
   } while ($failsInARow < 2);
-  
+}
+
+/** 
+ * Return an array of voter weights indexed by voter record ID.
+ */
+function getVoters($question, $noProxies = FALSE) {
   $fld = $noProxies ? 'voter' : 'proxy';
   $q = db\q("SELECT $fld AS voter, COUNT(id) AS weight FROM r_ballots WHERE question=:question GROUP BY $fld", compact('question'));
   while($row = $q->fetchAssoc()) { // for each voter
     extract($row); 
-//    if(ISDEMO) $weight = $voter == $thisvoter ? $proxiesForThisVoter : rand(1, 20);
     $voters[$voter] = $weight;
   }
   return nn($voters, []);
@@ -450,12 +456,15 @@ EOF;
  */
 function tallyVote(&$tot, $quType, $info, $weight, $vetoWeight, &$voterGrades) {
   extract(just('option grade gradeMax text isVeto', $info));
+  
   if(($quType == 'B') or ($grade != BLANKGRADE)) { // don't count ungraded opts; but blank B option means 0%, so count it
     $tot[$option]->weight += $weight;
     if (nn($isVeto)) $tot[$option]->vetos += $vetoWeight; else $tot[$option]->grade += $weight * $grade;
   }
-  if($quType == 'M') foreach($voterGrades as $otheropt => $othergrade) { // for each other option already tallied
-    if($othergrade != $grade) {
+  
+  // Pairwise comparisons for multiple choice (Condorcet)
+  if($quType == 'M') {
+    foreach($voterGrades as $otheropt => $othergrade) if($othergrade != $grade) { // for each other option already tallied
       list ($i, $j) = u\order($grade < $othergrade, $otheropt, $option); // i is preferred to j
       if ($grade != BLANKGRADE and $othergrade != BLANKGRADE) { // ignore blanks
         $tot[$i]->prefs[$j] = nni($tot[$i]->prefs, $j, 0) + $weight;
@@ -463,7 +472,9 @@ function tallyVote(&$tot, $quType, $info, $weight, $vetoWeight, &$voterGrades) {
     }
   }
   $voterGrades[$option] = $grade;
+
   if ($quType == 'R') $voterGrades['max'] = $gradeMax;
+
   if(nn($text)) {
     if(nn($isVeto)) $tot[$option]->veto_texts[] = $text; else $tot[$option]->canceled_vetotexts[] = $text;
   }

@@ -36,5 +36,5 @@ const R_INFLATION_RATE = .05; // annual USD inflation rate (but never less than 
 //const R_ADMIN_QID = 'NEW.AAA'; // William's account code
 const USDTX_DAYS = 5; // how many days it takes for a transfer to clear from bank to Common Good account
 const USDTX_FAST = 200; // maximum amount a member can transfer overnight (instead of waiting USDTX days)
-const DATE_FMT = 'MM/dd/YYYY'; // default date/time format (eg 06/15/2034)
+const DATE_FMT = 'MM/dd/yyyy'; // default date/time format (eg 06/15/2034)
 const TIME_FMT = 'h:mma'; // default time format (eg 3:45pm)

@@ -48,7 +48,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 
   list ($recType, $priority, $recSize, $blocking, $format) = [1, 1, 94, 10, 1];
   $fileIdModifier = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9); never send two files on the same day, so this can be static
-  $datetime = fmtDt(now(), 'YYMMddHHmm');
+  $datetime = fmtDt(now(), 'yyMMddHHmm');
   list ($originNum, $originName, $ref) = [CGF_EIN, PROJECT, ''];
   
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEHDR))), $ray);
@@ -56,7 +56,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
-  $entryDate = fmtDt(u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'YYMMdd');
+  $entryDate = fmtDt(u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'yyMMdd');
   
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), fmtDt(now(), 'MMMdd')];

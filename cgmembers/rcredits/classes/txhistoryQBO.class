@@ -37,8 +37,8 @@ class TxHistoryQBO implements TxProcessor {
   public function hdr() {
     global $testDownload;
     $a = r\acct($this->uids[0])->masterA;
-    $dtServer = fmtDt(today(), 'YYYYMMddhhmmss');
-    foreach (ray('start end') as $k) $$k = fmtDt($this->$k, 'YYYYMMddhhmmss');
+    $dtServer = fmtDt(today(), 'yyyyMMddhhmmss');
+    foreach (ray('start end') as $k) $$k = fmtDt($this->$k, 'yyyyMMddhhmmss');
     
     u\putDown( <<< X
 OFXHEADER:100
@@ -104,7 +104,7 @@ X
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('uid pid xid eid created name description amount balance agt banking', $info, null));
     $id = $pid ?: r\acct($uid)->mainQid;
-    $created = fmtDt($created, 'YYYYMMddhhmmss');
+    $created = fmtDt($created, 'yyyyMMddhhmmss');
     $amount = u\fmtAmt($amount, 'b');
     $this->runBalance = $balance;
     $type = $banking ? 'XFER' : ($amount < 0 ? 'DEBIT' : 'DEP');
@@ -139,7 +139,7 @@ X
    * Called after the last transaction.
    */
   public function ftr() {
-    $asof = fmtDt($this->end, 'YYYYMMddhhmmss');
+    $asof = fmtDt($this->end, 'yyyyMMddhhmmss');
     $bal = u\fmtAmt($this->runBalance, 'b');
 
     u\putDown( <<< X

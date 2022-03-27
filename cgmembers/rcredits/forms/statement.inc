@@ -155,7 +155,7 @@ function statement($period = '') {
     }
   }
   
-  $pdf->finish(str_replace(' ', '', PROJECT) . '-' . fmtDt($start, 'YYYY-MM') . '.pdf'); //Close and output PDF document
+  $pdf->finish(str_replace(' ', '', PROJECT) . '-' . fmtDt($start, 'yyyy-MM') . '.pdf'); //Close and output PDF document
 }
 
 /**
@@ -182,7 +182,7 @@ function statementMonth($period, $fiscalYearEnd = '6/30') {
     $start = strtotime("1$period");
     if (!$start) { return w\softErr(t('That is not a recognizable month.')); }
     $start = u\monthDay1($start);
-    list ($end, $recurDesc) = [u\plusMonths(1, $start), fmtDt($start, 'MMM YYYY')];
+    list ($end, $recurDesc) = [u\plusMonths(1, $start), fmtDt($start, 'MMM yyyy')];
   }
   return [$start, $end, $recurDesc];
 }

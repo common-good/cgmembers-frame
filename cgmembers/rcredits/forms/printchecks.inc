@@ -46,7 +46,7 @@ function printChecks($args) {
     printCheck($ck, $pos, $tx, $mark);
     $count++;
   }
-  $date = fmtDt($date, 'YYYY-MM-dd');
+  $date = fmtDt($date, 'yyyy-MM-dd');
 
   if (test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
   //  say($count . t(' checks printed'));

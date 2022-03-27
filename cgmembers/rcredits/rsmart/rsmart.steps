@@ -281,7 +281,6 @@ function withUndo($subs) {
   
   if (is_array($subs)) {
     if ($got) $subs = $subs[0]; else return !$subs;
-//    $subs['created'] = t\lastMinuteSubs($subs['created']);
     $undo = t('confirm undo app', $subs);
   } else $undo = $subs;
 
