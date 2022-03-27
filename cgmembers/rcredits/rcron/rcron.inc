@@ -233,7 +233,7 @@ function oneAcct($item) {
   }
   
   if ($a->jid) {
-    if (!db\exists('users', 'uid=:jid1 AND jid<>:uid1', ray('jid1 uid1', $a->uid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
+    if (!db\exists('users', 'uid=:jid1 AND jid<>:uid1', ray('jid1 uid1', $a->jid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
     if (r\relation('permission', $a->uid, $a->jid) != r\perm(B_JOINT)
         or r\relation('permission', $a->jid, $a->uid) != r\perm(B_JOINT)) r\tellAdmin('bad relation', $item);
 

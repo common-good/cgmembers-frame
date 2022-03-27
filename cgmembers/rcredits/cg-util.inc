@@ -1816,7 +1816,7 @@ function hug($s, $arms = '()') {return mb_substr($arms, 0, 1) . $s . mb_substr($
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', nn($n));}
-function monthDay1($time = NOW) {return strtotime(fmtDt($time, 'MMMYYYY'));} // was mdt1
+function monthDay1($time = NOW) {return strtotime(fmtDt($time, 'MMMyyyy'));} // was mdt1
 function qtrDt($time = NOW) {return mktime(0, 0, 0, floor((date('n', $time) - 1) / 3) * 3 + 1, 1, date('Y', $time));}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}

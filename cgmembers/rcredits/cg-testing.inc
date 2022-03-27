@@ -56,6 +56,8 @@ function strip($form) {
   $form = str_replace('&nbsp;', ' ', $form);
   $form = preg_replace('~<fieldset id="help".*?</fieldset>~sm', '', $form); // remove help div
   $form = preg_replace('~<div[^>]*class="gone.*?</div>~sm', '', $form); // remove hidden divs (not nested)
+  $form = preg_replace('~<div[^>]*class="g([A-E])".*?</div>~sm', '$1 ', $form); // change multiple choice options to letters
+  
   $form = preg_replace('~<option value="[^"]*">.*?</option>~sm', '', $form); // remove unselected options (fails for dropdowns created on the fly, eg state and country)
   $form = preg_replace('~<input type="hidden".*?/>~sm', '', $form); // remove hidden inputs
   $form = preg_replace('/<input[^>]* value=" *(.*?) *".*?>/sm', '$1', $form); // show button labels
@@ -68,7 +70,8 @@ function strip($form) {
       return '[' . strtr($s, ray('arrow-left arrow-right', 'L', 'R')) . ']';
     }, $form);
   $form = preg_replace('/> *</sm', '> <', $form); // make sure there's exactly one space between things
-  $form = preg_replace('/\s*$\s*/sm', PHP_EOL, strip_tags($form));
+
+  $form = preg_replace('/\s*$\s*/sm', PHP_EOL, strip_tags($form)); // zap every tag that's left
 
   return $form;
 }
@@ -228,8 +231,7 @@ function download($flnm, $wantRecs) {
     if ($csv) $gotRow = array_combine($headers, $gotRow); // add keys
 
     foreach ($wantRow as $k => $v) {
-      if (mb_strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
-      $ok = $csv ? t\eq($k, nni($gotRow, $k), $v) : (empty($v) or strhas($gotRow, $v));
+      $ok = $csv ? t\eq($k, $v, nni($gotRow, $k)) : (empty($v) or strhas($gotRow, $v));
       if (!$ok) return t\output(t('Missing value #%k: %v, in row #%rowNum: %gotRow', 'k v rowNum gotRow', $k, $v, $rowNum, pr($gotRow)));
     }
   }
@@ -587,7 +589,7 @@ function gotACH($flnm, $rows) {
   global $testRecs;
   $b = r\bankData();
   $map = [
-    'DATETIME' => fmtDt(now(), 'YYMMddHHmm'),
+    'DATETIME' => fmtDt(now(), 'yyMMddHHmm'),
     'BANK' => $b->name,
     'BANKROUTE' => $b->routing,
     'BANKROUT' => substr($b->routing, 0, 8),
@@ -1779,7 +1781,6 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   $xi = $i = 0;
   foreach ($ray as $one) {
     if ($one === '' or mb_substr($one, 0, 1) == '~') continue; // ignore ~labels
-    //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
@@ -2101,4 +2102,5 @@ function getExitMsg() {
 }
 
 function fixTestVars(&$parm) {global $testVars; foreach (nn($testVars, []) as $k => $v) $parm = str_replace($k, $v, $parm);}
-function itsLater() {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = now() + 1);}
+function itsLater() {return timeIs(now() + 1);}
+function timeIs($tm) {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = $tm);}

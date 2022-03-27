@@ -206,6 +206,7 @@ form {max-width:834px; margin:0 auto;}
 .form-item-bankAccount .suffix,
 .form-item-altId .suffix,
 .form-item-amtDpy .suffix,
+.form-item-prev .suffix,
 .form-item-acct .suffix {padding-top:0;}
 
 .frm-wider .control-label {float:left; width:10%;}

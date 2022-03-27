@@ -22,6 +22,7 @@ define('RECOVERY_OPTS',
 /* Note that vetoing costs the voter a proportionate share of their votes. 
 For example, if there are 10 items to choose from, vetoing any one of them reduces the voter's say in the other 9 by 10%
 A comment explaining the rationale for the veto is required. Each voter gets only one veto per question, but the veto may be split among more than one option. For example, if the voter vetoes 3 options, then each veto counts as 1/3 veto.
+Multiple choice options are presented in ascending order (most negative on the left) because that gives more accurate data -- see this article: https://www.td.org/insights/evidence-based-survey-design-strongly-agree-on-the-left-or-right-side-of-the-likert-scale
 */
 
 // Election can be verified with a list of voters (without ballot number) and a list of ballots (without voter id).
@@ -388,6 +389,11 @@ function setupVote(&$extras, $voter, $question, $optOrder, &$ballot) {
   }
 }
 
+/** 
+ * Decide in what order to display the options this time, given the optOrder style.
+ * @param $int $question: question record ID
+ * @param char $optOrder: N=numeric order S=shuffle Z=reverse
+ */
 function setupOptions($question, $optOrder='') {
   if ($question < 0) {
     $q = db\q('SELECT -id AS `option`, displayOrder FROM r_criteria WHERE auto=0 AND ctty=0');

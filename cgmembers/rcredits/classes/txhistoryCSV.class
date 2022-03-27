@@ -57,7 +57,7 @@ class TxHistoryCSV implements TxProcessor {
     $toyou = round($amount > 0 ? $amount : 0, 2);
     $balance = round($balance, 2);
 //    $net = round($amount, 2);
-    u\csv([$xid, fmtDt($created, 'YYYY-MM-dd'), $name, $description, $fromyou, $toyou, $balance, r\qid($agt)]);
+    u\csv([$xid, fmtDt($created, 'yyyy-MM-dd'), $name, $description, $fromyou, $toyou, $balance, r\qid($agt)]);
     foreach (ray('fromyou toyou') as $k => $fld) $this->totals[$fld] += $$fld;
   }
 

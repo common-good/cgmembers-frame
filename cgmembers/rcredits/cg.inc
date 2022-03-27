@@ -849,7 +849,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
   
   $unit = $monthly ? 'month' : ($weekly ? 'week' : 'day');
-  $ranges = ray('m w d',  t('month of ') . fmtDt($mDate, 'MMMM YYYY'), t('week of ') . fmtDt($wDate), fmtDt($dDate));
+  $ranges = ray('m w d',  t('month of ') . fmtDt($mDate, 'MMMM yyyy'), t('week of ') . fmtDt($wDate), fmtDt($dDate));
   foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
     $freq = $notices[$k];
     if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : !in($freq, 'i n'))) {

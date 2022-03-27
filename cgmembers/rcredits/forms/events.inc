@@ -67,18 +67,18 @@ function formEvents($form, &$sta, $args = '') {
   if ($event0) {
     extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
 
-    $end = fmtDt($end);
+    $end = fmtDt($end0 = $end);
     $begun = ($start <= now()); // event has begun
 
-    if (strpos(' VG', $type) and $begun) {
-      if (!$mya->proSe or $mya->co) { // "or" is necessary if a voting link is accidentally sent to a company
+    if (strhas('VG', $type) and $begun) {
+      if (now() > $end0 and (!$mya->proSe or $mya->co)) { // "or" is necessary if a voting link is accidentally sent to a company
         $switch = r\changeAcctLink($mya->agentId, t('Switch to your personal account'));
         $msg = $mya->co ? t('Companies cannot vote.') : t('You cannot vote on behalf of someone else.');
-        w\sayErr("$msg|$switch.");
+        w\err("$msg|$switch.");
         return compact('title');
       }
 
-    $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
+      $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
       $voting = $do ? NULL : ($type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink)); // end is displayable end date
     }
 
@@ -95,8 +95,8 @@ function formEvents($form, &$sta, $args = '') {
   } elseif ($do == 'proposals') {
     
   } elseif ($do == 'results') {
-//    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : v\showResults($eid, $noProxies);
-    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
+    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : v\showResults($eid, $noProxies);
+//    $middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
   } elseif ($do == 'options') { // UNUSED
     list($middle, $phase, $endDate) = v\questionList($eid, $question, $do);
   } elseif ($do == 'ballot') {

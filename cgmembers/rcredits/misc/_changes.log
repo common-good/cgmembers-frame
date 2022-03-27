@@ -1,3 +1,8 @@
+2022-03-26 feature/mj
+. added median to voting results (for Majority Judgment decisions)
+. added a test function timeIs() to simulate it being some specific time
+. fixed bug: YYYY in date formats should have been yyyy
+
 2022-03-20 feature/nonCGs-bug
 . fixed crash of any web transaction for an account not owned by CG
 

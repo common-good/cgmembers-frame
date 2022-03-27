@@ -44,6 +44,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  * members: (ARG)
  *
  * in: MAKE grading Setup
+ *     MAKE multiplechoice Setup
  */
 function members($list) {return t\members($list);}
 
@@ -52,6 +53,9 @@ function members($list) {return t\members($list);}
  *
  * in: MAKE grading Setup
  *     TEST grading AMemberGradesAProposal
+ *     MAKE multiplechoice Setup
+ *     TEST multiplechoice AMemberVotes
+ *     MAKE multiplechoice AMemberViewsVoteResults
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -59,6 +63,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE grading AMemberGradesAProposal
+ *     MAKE multiplechoice AMemberVotes
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -66,6 +71,8 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * we show (ARG) with: (ARG)
  *
  * in: TEST grading AMemberGradesAProposal
+ *     TEST multiplechoice AMemberVotes
+ *     TEST multiplechoice AMemberViewsVoteResults
  */
 function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
 
@@ -73,6 +80,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  * member (ARG) completes form (ARG) with values: (ARG)
  *
  * in: MAKE grading AMemberGradesAProposal
+ *     MAKE multiplechoice AMemberVotes
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -80,5 +88,29 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE grading AMemberGradesAProposal
+ *     MAKE multiplechoice Setup
+ *     MAKE multiplechoice AMemberViewsVoteResults
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
+
+/**
+ * with: (ARG)
+ *
+ * in: TEST multiplechoice AMemberVotes
+ *     TEST multiplechoice AMemberViewsVoteResults
+ */
+function with($content) {return t\weShow($content);}
+
+/**
+ * the time now is (ARG)
+ *
+ * in: MAKE multiplechoice AMemberViewsVoteResults
+ */
+function theTimeNowIs($tm) {return t\timeIs($tm);}
+
+/**
+ * member (ARG) visits (ARG)
+ *
+ * in: MAKE multiplechoice AMemberViewsVoteResults
+ */
+function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}

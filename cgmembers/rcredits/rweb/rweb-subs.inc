@@ -461,7 +461,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
     } elseif (in($type, 'date datetime-local')) {
-      if ($dft) $x['default_value'] = fmtDt($dft, 'YYYY-MM-dd') . 'T' . fmtDt($dft, 'HH:mm');
+      if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . 'T' . fmtDt($dft, 'HH:mm');
     }
 
     $x += compact('subtype');
@@ -2295,6 +2295,7 @@ function first($first, $then = NULL) {
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
+
   return "$first/then=$then";
 }
 function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
