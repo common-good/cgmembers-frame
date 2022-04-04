@@ -45,7 +45,7 @@ function formQBO($form, &$sta, $args = '') {
       }
       break;
     
-    case 'table': say($qb->getRows($flds, $tnm)); break;
+    case 'table': say(pr($qb->getRows($flds, $tnm))); break;
   }
   
   $title = t('QBO Test');

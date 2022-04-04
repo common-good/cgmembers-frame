@@ -88,9 +88,9 @@ class QB {
 
     if ($this->refreshed) return;
     extract(just('rToken rExpires realmId lastRefresh', getv('qboRefresh') ?: [], NULL));
-    if (now() < $lastRefresh + HOUR_SECS / 2) return; // no need to refresh if done within the past half hour
+// FAILS   if (now() < $lastRefresh + HOUR_SECS / 2) return; // no need to refresh if done within the past half hour
     
-    if (rExpires > time() + 60) { // at least a minute left to refresh
+    if ($rExpires > time() + 60) { // at least a minute left to refresh
       $token = $this->helper->refreshAccessTokenWithRefreshToken($rToken);
       $token->setRealmId($realmId); // required (stupid though that is)
       $this->ds->updateOAuth2Token($token);
