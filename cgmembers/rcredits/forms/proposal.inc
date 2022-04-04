@@ -18,8 +18,9 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
  */
 function formProposal($form, &$sta, $args = '') {
   global $base_url, $mya;
-  
+
   extract(just('ctty', $args, NULL));
+
   if (!$ctty or !$cttyA = r\acct($ctty)) return w\go('dashboard'); // don't even bother with an error message if no ctty
   list ($ctty, $cttyName) = [$cttyA->id, $cttyA->fullName];
   list ($cttyEmail, $cttyPhone) = [$cttyA->email, u\fmtPhone($cttyA->phone)];
@@ -31,7 +32,7 @@ function formProposal($form, &$sta, $args = '') {
   
   extract($res);
   $end = fmtDt($end, 'MMMM d, yyyy');
-  $max = preg_replace('/[^0-9]/', '', $event);
+  $max = preg_replace('/[^0-9]/', '', $event) ?: 10000;
   list ($idealAmt, $max) = [u\fmtAmt(round($max/10)), u\fmtAmt($max)];
   $options = ray(t('Sustainability / Renewable Energy, Small Business / Economic Development, Social and Economic Justice, Food Systems, Arts & Culture'));
   $optionKeys = ray(t('energy business justice food arts'));
@@ -77,17 +78,17 @@ function formProposal($form, &$sta, $args = '') {
   $critPop = item(w\modal('criteria', t('Evaluation Criteria for Community Investment Proposals'), '', $crit, 'X'));
   jsx('funding-criteria');
 
-  $title = t('Application/Proposal for Community Investment');
+  $title = t('Proposal for Community Investment');
   $event = hidFld($eid);
   $_aInfo = w\atag(PROMO_URL);
   $_aCrit = 'a class="critLink"'; //  href="javascript:;
   
   $subtext = t(<<< EOF
-<p>Complete this form by %end, to submit a proposal for funding from %cttyName. 
+<p>Complete this form by %end, to submit an application or proposal for funding from %cttyName. 
 Requests can be made for up to %max (smaller requests are more likely to be funded). *</p>
 
 <p>Please keep your responses concise -- 5 short paragraphs at most. If you can answer a question in a single sentence, even better! Proposals will be evaluated following <%aCrit>these criteria</a>.</p>
-<p><%aInfo>Click here for more information about %PROJECT</a> &mdash; the payment card for community power. Amazingly, the %PROJECT system generates funding for local community projects without cost to any participant.</p>
+<p><%aInfo>Click here for more information about %PROJECT</a>. Amazingly, the %PROJECT system generates funding for local community projects without cost to any participant.</p>
 
 <p>Questions? Email %cttyEmail or call %cttyPhone.</p>
 
@@ -129,6 +130,8 @@ EOF;
   $phone = phoneFld(REQ . t('Phone:'), [t('Contact Telephone Number')]);
   $email = emailFld(REQ . t('Email:'), [t('Contact Email Address')]);
   $sponsor = textFld(REQ . t('Sponsor:'), [t('%PROJECT Member(s) Sponsoring this Funding Proposal'), t('Name(s) of %PROJECT member(s) sponsoring this funding proposal, if any (or "self" if you are a member)')]);
+  $ctty = hidFld($ctty);
+  
   $submitProposal = submit(t('Submit Proposal'));
   return cgform(compact(ray('title subtext project overview categories purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor submitProposal critPop event')));
 } 
@@ -146,7 +149,7 @@ function formProposal_validate($form, &$sta) {
 
 function formProposal_submit($form, &$sta) {
   $input = $sta['input'];
-  $dbFields = 'event project categories overview purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor';
+  $dbFields = 'event project categories overview purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor ctty';
   $input['categories'] = join(' ', array_keys($input['cats']));
   
   foreach (nni($input, 'recovery') ?: [] as $k => $v) u\setBit($recs, $k);

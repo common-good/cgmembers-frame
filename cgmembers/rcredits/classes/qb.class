@@ -20,7 +20,33 @@ use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
 /**
  * @file
  * Common Good QB class
- * Extends the TCPDF class -- for printing checks, statements, deposit details, etc.
+ *
+ * Manage our API at https://developer.intuit.com (sign in)
+ 
+ Refer the steps below for regular Oauth integration steps for SAAS apps.For a desktop app either you need to have a web component or a receiver configured for Oauth callback handling or use hard coded tokens.Refer bold section below.Steps for integration with QBO-Please use sandbox QBO accounts ondeveloper.intuit.comfor testing or development.Please refer the following blog post for integrating with QBO API:
+ https://developer.intuit.com/blog/2015/04/16/a-3-step-guide-to-getting-started-with-intuit-developer
+ https://developer.intuit.com/hub/blog/2016/04/25/quick-start-to-quickbooks-online-rest-api-with-oauth1-0Status 
+ 
+ page for APIs: https://intuitdevelopergroup.statuspage.io/
+ 
+ Go to https://developer.intuit.com/. Create an app on our IDG platform for the QBO v3 apis.You will get a set of consumer key, consumer secret and app token.Set the above keys in the config of your code. Then implement Connect to Quickbooks button:
+ https://developer.intuit.com/docs/0100_quickbooks_online/0100_essentials/0001_develop_quickbooks_apps/0004_authentication_and_authorization/connect_from_within_your_app
+ 
+ Then run the code. Your client who has the QBO company can then authorize your code/website to access his QBO company data using Connect to Quickbooks button.Or if you have a sandbox company, then you authorize the code to access your sandbox company.NOTE: For sandbox testing, you need to use dev app keys and sandbox base url.For live/prod qbo company testing, use prod app keys and prod base url after doing a private publish as mentioned below.Go to your app-Prod tab- enter all urls and save. Then get the prod keys from Keys tab under Prod tab of the app. Please refer to:
+ https://developer.intuit.com/v2/blog/2014/10/20/changes-to-ipp-app-tokenshttps://developer.intuit.com/blog/2014/10/24/intuit-developer-now-offers-quickbooks-sandboxes
+ 
+ OR if you to connect to your own file, you can generate the oauth tokens from playground. Go to your app-Click Test Connect to Oauth-Intuit Anywhere tab-Set time duration in seconds for 180 days and get the access token and secret for your app and company by right clicking on the page and doing a view source.You will then set of access token and access token secret and realmid/companyid to make api calls for their QBO company which is valid for 180 days.To 'renew tokens', you can call reconnect api after 150 days or do Connect to Quickbooks after 180 days to get new tokens.https://developer.intuit.com/docs/0100_quickbooks_online/0100_essentials/0085_develop_quickbooks_apps/0004_authentication_and_authorization/oauth_management_apiNOTE for desktop apps/automated service type apps-
+ 
+ There is no way to bypass the Oauth process. You will have to do it at least once to make api calls using the Oauth tokens. So, if you have a desktop app/service then you can use Postman or any sample apps we have, add the app keys and then get the Oauth tokens. These are valid for 180 days. Then use app keys and oauth tokens them in your code.
+
+
+@Dany Yacoub:​ anyway you need to authorize via UI at least one time, then you can refresh an access token in a background. https://developer.intuit.com/docs/00_quickbooks_online/2_build/10_authentication_and_authorization/10_oauth_2.0
+
+According to https://help.developer.intuit.com/s/article/Validity-of-Refresh-Token:
+Refresh Token life: 100 days, but may die within "about a day".
+Access Token life: 1 hour.
+So we get a new refresh token in the background every 4 hours.
+ 
  */
 
 require_once DRUPAL_ROOT . '/../vendor/autoload.php';
@@ -28,14 +54,15 @@ const QB_CHUNK = 500; // how many records to read at once
 
 class QB {
   private $ds = NULL;
-  private $intent = NULL;
+  private $helper = NULL;
+  private $refreshed = FALSE;
   
   /**
    * Return a new QB object.
    * @param string $creds: the company's credentials for QBO
-   * @param string/assoc $args: authorization parameters OR intended op and other parameters
+   * @param bool $refresh: automatically refresh the access token when creating
    */
-  public function __construct($creds, $args) {
+  public function __construct($creds, $refresh = TRUE) {
     list ($clientId, $secret) = ray($creds);
     
     $ds = $this->ds = DataService::Configure([
@@ -49,24 +76,54 @@ class QB {
     ]);
 
     $ds->throwExceptionOnError(TRUE);
-    $helper = $ds->getOAuth2LoginHelper();
-    extract(just('code realmId', $args, NULL));
+    $this->helper = $ds->getOAuth2LoginHelper();
+    if ($refresh) $this->refresh();
+  }
+  
+  /**
+   * Refresh the Access Token -- unless it was refreshed very recently.
+   */
+  public function refresh() {
+    global $channel;
 
-    if ($code) {
-      $token = $helper->exchangeAuthorizationCodeForToken($code, $realmId);
-      $this->intent = r\cook('qboParameters');
-    } elseif ($refresh = unserialize(r\cook('qboRefresh')) and $refresh[1] > time() + 60) { // at least a minute left to refresh
-      $token = $helper->refreshAccessTokenWithRefreshToken($refresh[0]);
-      $token->setRealmId($realmId = $refresh[2]); // required (stupid though that is)
-      $ds->updateOAuth2Token($token);
-      $this->intent = $args;
-    } else { // out of time to refresh (or first time), so reauthorize
-      r\setCook('qboParameters', $args, 0);
-      return w\go($helper->getAuthorizationCodeURL());
-    }
+    if ($this->refreshed) return;
+    extract(just('rToken rExpires realmId lastRefresh', getv('qboRefresh') ?: [], NULL));
+    if (now() < $lastRefresh + HOUR_SECS / 2) return; // no need to refresh if done within the past half hour
+    
+    if (rExpires > time() + 60) { // at least a minute left to refresh
+      $token = $this->helper->refreshAccessTokenWithRefreshToken($rToken);
+      $token->setRealmId($realmId); // required (stupid though that is)
+      $this->ds->updateOAuth2Token($token);
+      $this->setRefreshToken($token, $realmId);
+    } elseif ($channel == TX_WEB) { // out of time to refresh (or first time), so reauthorize
+      return softErr('qbo lost');
+    } else return r\tellAdmin(t('Connection lost to QBO'), ray(t('Alert'), tr('qbo lost')));
+  }
 
-    $ray = [$token->getRefreshToken(), strtotime($token->getRefreshTokenExpiresAt()), $realmId];
-    r\setCook('qboRefresh', serialize($ray), 0); // store refreshToken so we don't have to re-authorize each time (must expire with session).
+  /**
+   * Get a new refresh token from the given token and realmId, and remember it.
+   */
+  private function setRefreshToken($token, $realmId) {
+    $ray = ray('rToken rExpires realmId lastRefresh', $token->getRefreshToken(), strtotime($token->getRefreshTokenExpiresAt()), $realmId, now());
+    setv('qboRefresh', $ray); // store refreshToken so we don't have to re-authorize each time
+    $this->refreshed = TRUE;
+  }
+  
+  /**
+   * Reauthorize (foreground only)
+   *   If called with no GET parameters, provide a link to get a refresh token from scratch.
+   *   Otherwise set the refresh token, given the authorization parameters in $_GET
+   * @param $_GET: authorization parameters OR nothing (to redirect and get authorization parameters)
+   */
+  public function auth() {
+    extract(just('code realmId', $_GET, NULL));
+
+    if (!$code) return w\say(t('Click <%a>here</a> to set QBO Refresh Token.', '_a', w\atag($this->helper->getAuthorizationCodeURL())));
+
+    $rToken = $this->helper->exchangeAuthorizationCodeForToken($code, $realmId);
+    delv('qboRefresh'); // force refresh even if it just happened
+    $this->setRefreshToken($rToken, $realmId);
+    return w\say('QBO Refresh Token has been set.');
   }
   
   /**
@@ -74,7 +131,9 @@ class QB {
    */   
   public function getAccounts() {
 //    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm")) return debug("Table $tnm is empty.");
-    $ray = $this->ds->query("SELECT * FROM Account WHERE Active ORDERBY FullyQualifiedName", 1, 1000);
+    $this->refresh();
+    $ray = $this->getRows('*', 'Account', 'Active ORDERBY FullyQualifiedName'); // '*' so we don't loop through records twice
+    //ds->query("SELECT * FROM Account WHERE Active ORDERBY FullyQualifiedName", 1, 1000);
 
     $res = [];
     foreach ($ray as $acct) {
@@ -93,6 +152,7 @@ class QB {
    * @param int $uid: ID of account to process.
    */
   public function sendTxs($uid) {
+    $this->refresh();
     $a = r\acct($uid);
     $lastXid = $a->lastQBXid ?: 0;
 //    $lastXid = $lastEid ? db\get('xid', 'tx_entries', 'id>=:lastEid', compact('lastEid')) : 0;
@@ -126,31 +186,32 @@ class QB {
    * Return a field value from one QB record.
    */
   public function get($fld, $tnm, $where = '') {
-    $record = $this->getRow($tnm, $where);
-    return $record ? just($fld, $record) : NULL;
+    $res = $this->getRow($fld, $tnm, $where);
+    return ($res ? $res[$fld] : NULL);
   }
   
   /**
    * Return one record array from QB.
    */
-  public function getRow($tnm, $where = '') {
-    if (!$rows = $this->getRows($tnm, $where, 1)) return NULL;
+  public function getRow($flds, $tnm, $where = '') {
+    if (!$rows = $this->getRows($flds, $tnm, $where, 1)) return NULL;
     return (array) $rows[0];
   }
   
   /**
    * Return an array of QB record objects.
+   * Not allowed in $where: 0, -1, TRUE, >
    */
-  public function getRows($tnm, $where = '', $max = 999999) {
+  public function getRows($flds, $tnm, $where = '', $max = 999999) {
+    $this->refresh();
     $where = ($where and $where != TRUE) ? "WHERE $where" : '';
     if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm $where")) return NULL;
     $rows = [];
     for ($i = 1; $i <= min($max, $cnt); $i += QB_CHUNK) {
       $rows += $this->ds->query("SELECT * FROM $tnm $where", $i, min(QB_CHUNK, $max - sizeOf($rows)));
     }
+    if ($flds != '*') foreach ($rows as $i => $row) $rows[$i] = just($flds, $row); // QBO API doesn't handle field list
     return $rows;
   }
 
-  public function intent() {return $this->intent;}
-  public function getObj($tnm) {return $this->getRow($tnm);} // not allowed: 0, -1, TRUE, > 
 }

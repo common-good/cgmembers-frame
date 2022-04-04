@@ -35,6 +35,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   $lnkScanQr = item(lnk('/scan-qr', t('Scan SuperAdmin QR')));
 
   $toSMT = submi(t('To SMT'));
+  $reAuthQBO = submi(t('ReAuthorize QBO'));
   $inviteeStatus = submi(t('Invitee Status'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
@@ -72,7 +73,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
+  $ks = ray('toSMT reAuthQBO inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -151,6 +152,8 @@ function formAdminPanel_submit($form, &$sta) {
     w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'toSMT') {
     a\toSMT();
+  } elseif ($op == 'reAuthQBO') {
+    w\go('qbo');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {

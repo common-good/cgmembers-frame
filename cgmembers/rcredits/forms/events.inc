@@ -59,7 +59,7 @@ function formEvents($form, &$sta, $args = '') {
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
-  $voting = NULL; // default
+  $voting = $type = NULL; // default
   
   $event0 = $eid 
   ? db\get('id AS eid, type, event, details, start, end', 'r_events', 'id=:eid AND ctty=:ctty', ray('eid ctty', $eid, $cttyA->id))
@@ -71,7 +71,7 @@ function formEvents($form, &$sta, $args = '') {
     $begun = ($start <= now()); // event has begun
 
     if (strhas('VG', $type) and $begun) {
-      if (now() > $end0 and (!$mya->proSe or $mya->co)) { // "or" is necessary if a voting link is accidentally sent to a company
+      if (now() < $end0 and (!$mya->proSe or $mya->co)) { // "or" is necessary if a voting link is accidentally sent to a company
         $switch = r\changeAcctLink($mya->agentId, t('Switch to your personal account'));
         $msg = $mya->co ? t('Companies cannot vote.') : t('You cannot vote on behalf of someone else.');
         w\err("$msg|$switch.");

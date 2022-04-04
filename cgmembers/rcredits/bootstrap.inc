@@ -1282,6 +1282,8 @@ function weekday($dt = NOW) {return fmtDt($dt, 'EEEE');}
 
 /**
  * Return a formatted date or date/time.
+ * See format options here: https://help.scribesoft.com/scribeinsight/en/Subsystems/Insight/create_dts_files/manageconnections/textadapternew/date_time_formats.htm
+ * except am/pm is "a"
  */
 function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   global $dtFormatter; if (!$dtFormatter) $dtFormatter = new IntlDateFormatter('en_US', IntlDateFormatter::LONG, IntlDateFormatter::NONE);
@@ -1290,7 +1292,7 @@ function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   datefmt_set_pattern($dtFormatter, $fmt ?: DATE_FMT);
   return strtr($dtFormatter->format($dt), ray('AM PM', 'am', 'pm'));
 }
-function fmtTime($dt = NOW) {return fmtDt(TIME_FMT);}
+function fmtTime($dt = NOW) {return fmtDt($dt, TIME_FMT);}
 function fmtDtRange($start, $end, $fmt = 'Ymd') {return fmtDt($start, $fmt) . '-' . fmtDt($end, $fmt);}
 
 /**

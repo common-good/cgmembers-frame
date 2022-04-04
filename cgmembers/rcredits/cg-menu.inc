@@ -198,7 +198,7 @@ function menu($submenu = '') {
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
-    'qbo' => ['call', t('QBO'), 'QBO 1', 'co ok manage'],
+    'qbo' => ['call', t('QBO'), 'QBO 1', 'admCode'],
     'account-photo' => ['call', 'Account Photo', 'AccountPhoto 0 1', ANY],
     'account-thumb' => ['call', 'Account Photo Thumbnail', 'AccountPhoto 0 1', ANY],
     'account-logo' => ['call', 'Account Logo', '1', ANY, 'logo'],

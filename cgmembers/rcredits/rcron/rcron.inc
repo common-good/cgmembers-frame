@@ -125,11 +125,17 @@ X;
 
 function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
-  if (fmtDt(now(), 'H') + 0 == (R_DAILY_HOUR + 10) % 24) { // if not successfully completed after 10 hours, report to admin
+  $hourNum = fmtDt(now(), 'H') + 0;
+  if ($hourNum == (R_DAILY_HOUR + 10) % 24) { // if not successfully completed after 10 hours, report to admin
     $lastCron = getV('last_cron_end', []);
     if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
-  
+
+  if ($hourNum % 6 == 0) { // refresh the QBO Refresh Token every 6 hours (at least)
+    require_once R_ROOT . '/classes/qb.class';
+    new \QB(QBO_CREDS);
+  }
+
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
   
   // discard expired encrypted files
@@ -233,7 +239,7 @@ function oneAcct($item) {
   }
   
   if ($a->jid) {
-    if (!db\exists('users', 'uid=:jid1 AND jid<>:uid1', ray('jid1 uid1', $a->jid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
+    if (!db\exists('users', 'uid=:jid1 AND jid=:uid1', ray('jid1 uid1', $a->jid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
     if (r\relation('permission', $a->uid, $a->jid) != r\perm(B_JOINT)
         or r\relation('permission', $a->jid, $a->uid) != r\perm(B_JOINT)) r\tellAdmin('bad relation', $item);
 

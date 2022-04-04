@@ -20,22 +20,21 @@ use QuickBooksOnline\API\Core\OAuth\OAuth2;
 use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
 // https://help.developer.intuit.com/s/error-resolver
 
-require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 require_once R_ROOT . '/classes/qb.class';
 
 /**
- * Do some operation in QuickBooks.
+ * Do some operation in QuickBooks. Especially authorization (QBO API needs a url for OAuth2 callback -- this is it).
  * Call with parameters:
- *   op and other: (POSTed) intended operation and parameters to pass to new QB()
- *   code, state, and realmId: (GET) authorization to connect with Quickbooks and retry new QB()
+ *   op and other: (POSTed) intended operation and parameters (empty op means get QBO API authorization)
+ *   code, state, and realmId: (GET) authorization to connect with Quickbooks API
  */
 function formQBO($form, &$sta, $args = '') {
-  global $mya;
-
-  $qb = new \QB(QBO_CREDS, $args ?: $_GET);
-  extract(just('op tnm', $qb->intent(), NULL));
+  $qb = new \QB(QBO_CREDS, FALSE);
+  extract(just('op tnm flds', $args, ''));
 
   switch ($op) {
+    case '': $qb->auth(); break;
+    
     case 'accounts':
       $id = 0;
       foreach ($qb->getAccounts() as $externalId => $category) {
@@ -46,7 +45,7 @@ function formQBO($form, &$sta, $args = '') {
       }
       break;
     
-    case 'table': debug($qb->getObj($tnm)); break;
+    case 'table': say($qb->getRows($flds, $tnm)); break;
   }
   
   $title = t('QBO Test');
@@ -63,20 +62,10 @@ function formQBO($form, &$sta, $args = '') {
 }
 
 function formQBO_validate($form, &$sta) {
-  global $mya;
-
-/*  extract(just('text', $sta['input']));
-
-  if ($err = u\badAmount($text)) return say($err, 'text');
-  u\preRay(compact('text'), $sta['input']);
-  */
 }
 
 function formQBO_submit($form, &$sta) {
-  global $mya;
   extract(just('tnm flds', $sta['input']));
 
-  getQboData($tnm, $flds);
-
-  return go('/qbo');
+  return go("/qbo/op=table&tnm=$tnm&flds=$flds");
 }

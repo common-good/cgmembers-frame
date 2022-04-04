@@ -461,7 +461,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
     } elseif (in($type, 'date datetime-local')) {
-      if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . 'T' . fmtDt($dft, 'HH:mm');
+      if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . ($type == 'date' ? '' : 'T' . fmtDt($dft, 'HH:mm'));
     }
 
     $x += compact('subtype');
