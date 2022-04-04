@@ -1,3 +1,13 @@
+2022-04-04 feature/qbo-cron
+. QBO refresh token is now refreshed in cron every 6 hours
+. refactored QB class functions to be more useful and to accommodate cron token refresh
+. fixed fmtTime() function (failed for all times but now)
+. added reAuth QBO to admin panel
+. fixed bug in events so results can now be seen after a vote is over
+. fixed bug in proposals: community wasn't getting recorded in proposal records
+. fixed bug in cron orphaned joint account warnings (was given false positives)
+. fixed bug in dateFld(): default was failing
+
 2022-03-26 feature/mj
 . added median to voting results (for Majority Judgment decisions)
 . added a test function timeIs() to simulate it being some specific time

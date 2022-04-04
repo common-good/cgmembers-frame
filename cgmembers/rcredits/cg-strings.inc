@@ -308,6 +308,7 @@ EOF
   'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
   
   // error messages
+  'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
   'no paypal cancel' => t('We apologize. this form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
   'auto bankout nsf' => t('Your %when transfer of %amount to your bank account failed because you have an available balance of only %avail. The system will try again tomorrow.'),
   'button expired' => t('That button has expired.'),
