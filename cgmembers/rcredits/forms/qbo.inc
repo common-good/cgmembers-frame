@@ -33,7 +33,7 @@ function formQBO($form, &$sta, $args = '') {
   extract(just('op tnm flds', $args, ''));
 
   switch ($op) {
-    case '': $qb->auth(); break;
+    case '': $qb->auth(); break; // may not return
     
     case 'accounts':
       $id = 0;

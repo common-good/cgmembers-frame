@@ -1282,8 +1282,7 @@ function weekday($dt = NOW) {return fmtDt($dt, 'EEEE');}
 
 /**
  * Return a formatted date or date/time.
- * See format options here: https://help.scribesoft.com/scribeinsight/en/Subsystems/Insight/create_dts_files/manageconnections/textadapternew/date_time_formats.htm
- * except am/pm is "a"
+ * See format options here: http://framework.zend.com/manual/1.12/en/zend.date.constants.html#zend.date.constants.selfdefinedformats
  */
 function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   global $dtFormatter; if (!$dtFormatter) $dtFormatter = new IntlDateFormatter('en_US', IntlDateFormatter::LONG, IntlDateFormatter::NONE);

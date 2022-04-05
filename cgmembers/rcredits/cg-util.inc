@@ -1844,7 +1844,6 @@ function xorBits($b1, $b2) {$res = ''; for ($i = 0; $i < strlen($b1); $i++) $res
 function a2b($s) {$b = ''; for ($i = 0; $i < strlen($s); $i++) $b .= lpad(decbin(ord($s[$i])), 8); return $b;}
 function randomFloat($min = 0, $max = 1) {return $min + mt_rand() / mt_getrandmax() * ($max - $min);}
 function hash($s) {return \hash('sha256', $s, false);}
-function day2n($day) {return array_search($day, ray('Sun Mon Tue Wed Thu Fri Sat'));} // workaround %u and %w failure
 function lf2br($s) {return strtr($s, ["\r" => '', "\n" => '<br>']);}
 function sqlSerialValue($s, $n) {return "SUBSTRING_INDEX(SUBSTRING_INDEX($s, '\\\"', $n * 2), '\\\"', -1)";}
 function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s2, $pct) > $chars and $pct > $pct0);}

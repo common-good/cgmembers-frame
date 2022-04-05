@@ -38,7 +38,7 @@ YEARLY
 const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
 const LOGLESS_OPS = 'acctHourly oneAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
-include_once __DIR__ . '/rcron-subs.inc';
+include_once R_ROOT . '/rcron/rcron-subs.inc';
 
 /**
  * Execute a cron run when called.
@@ -131,7 +131,7 @@ function everyHour() { // stuff to do every hour
     if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
 
-  if ($hourNum % 6 == 0 and now() < getv('qboRefresh')['lastRefresh'] + 5 * HOUR_SECS) { // refresh the QBO Refresh Token every 6 hours (at least)
+  if ($hourNum % 6 == 0 and now() > nni(getv('qboRefresh') ?: [], 'lastRefresh') + 5 * HOUR_SECS) { // refresh the QBO Refresh Token every 6 hours (at least)
     require_once R_ROOT . '/classes/qb.class';
     new \QB(QBO_CREDS);
   }
