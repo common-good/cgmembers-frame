@@ -59,10 +59,9 @@ function timeFor($time, $period, $chosen) {
   $lastCron = getV('last_cron_end') ?: [];
   $lastTime = nni($lastCron, $period, 0);
   list ($periodCode, $withinCode) = str_split(ray(TIME_CODES)[$period]);
-  $point = fmtDt($time, $withinCode); // where are we within the period
-  if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
-  list ($periodNum, $lastPeriodNum) = [fmtDt($time, $periodCode), fmtDt($lastTime, $periodCode)];
-  return (!nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen)));
+  $point = fmtDt($time, $withinCode) + 0; // where are we within the period
+  list ($periodNum, $lastPeriodNum) = [fmtDt($time, $periodCode) + 0, fmtDt($lastTime, $periodCode) + 0];
+  return (!nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen + 0)));
 }
 
 /**

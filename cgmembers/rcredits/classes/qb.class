@@ -120,20 +120,18 @@ class QB {
 
     if (!$code) return w\say(t('Click <%a>here</a> to set QBO Refresh Token.', '_a', w\atag($this->helper->getAuthorizationCodeURL())));
 
-    $rToken = $this->helper->exchangeAuthorizationCodeForToken($code, $realmId);
-    delv('qboRefresh'); // force refresh even if it just happened
-    $this->setRefreshToken($rToken, $realmId);
-    return w\say('QBO Refresh Token has been set.');
+    $token = $this->helper->exchangeAuthorizationCodeForToken($code, $realmId);
+//    delv('qboRefresh'); // force refresh even if it just happened
+    $this->setRefreshToken($token, $realmId);
+    return w\sayEmpty('QBO Refresh Token has been set.');
   }
   
   /**
    * Return a list of active Income and Expense accounts, keyed by id.
    */   
   public function getAccounts() {
-//    if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm")) return debug("Table $tnm is empty.");
     $this->refresh();
     $ray = $this->getRows('*', 'Account', 'Active ORDERBY FullyQualifiedName'); // '*' so we don't loop through records twice
-    //ds->query("SELECT * FROM Account WHERE Active ORDERBY FullyQualifiedName", 1, 1000);
 
     $res = [];
     foreach ($ray as $acct) {
