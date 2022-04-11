@@ -97,7 +97,7 @@ function fixData(&$info, $direct = FALSE) {
   
   if (nn($code) == 'TESTCODE') $code = $testCode;
   if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
-  if (isset($cat) and nni($info, 'item')) $cat = db\get('id', 'post_cats', compact('cat')); // for post_cats, not for budget_cats
+  if (isset($cat) and nni($info, 'item')) $cat = db\get('id', 'post_cats', compact('cat')); // for post_cats, not for tx_cats
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
@@ -947,7 +947,8 @@ function doTxs2($tx) {
   if (nni($tx, 'xid')) { // specifying an xid means the test will list the txs explicitly
     $txid = db\insert('txs2', $tx, 'txid');
   } else {
-    if (!$xid = be\createUsdTransfer($a, $amount, $options)) return t\output('failure creating usd record: ' . pr($tx));
+    if (!$btx = be\createUsdTransfer($a, $amount, $options)) return t\output('failure creating usd record: ' . pr($tx));
+    $xid = $btx->xid;
     if ($info = just('txid deposit', $tx)) db\update('txs2', $info + compact('xid'), 'xid');
   }
   return TRUE;

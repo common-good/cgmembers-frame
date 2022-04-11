@@ -1275,7 +1275,7 @@ o;
     if (!$combined) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
-      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created recursId')));
+      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created recursId')))->xid;
       if ($fuMsg = be\usdTxFollowup($xid, FALSE)) $fuMsg = '|' . $fuMsg; // fuMsg is not needed here (use 'available now' instead)
       u\EXPECT($xid, 'saving usd record');
     }

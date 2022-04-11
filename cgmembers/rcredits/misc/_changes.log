@@ -1,3 +1,10 @@
+2022-04-09 feature/cg2qb
+. renamed budget_cats more appropriately to tx_cats
+. changed cat in txs to cat1 and cat2
+. added regional account to r\isCGs()
+. cat is set automatically for most transactions with CG-owned accounts
+. created be\setCat() which can be used to set cat retroactively for FY2021 and FY2022 to date
+
 2022-04-04 feature/qbo-cron
 . QBO refresh token is now refreshed in cron every 6 hours
 . refactored QB class functions to be more useful and to accommodate cron token refresh
@@ -31,8 +38,8 @@
 . cat field is now shown for any account owned by CG
 
 2022-03-18 feature/qb-accounts
-. added fields to budget_cats to accommodate integration with QBO
-. created CRUD for budget_cats
+. added fields to tx_cats to accommodate integration with QBO
+. created CRUD for tx_cats
 . built skeleton of QB method to add transactions to QBO
 . added op=table to QBO form, to investigate various QB data structures
 . QBRefresh cookie is now deleted on signout, to prevent connection failures
@@ -693,7 +700,7 @@ eachA(function ($a) {
 2021-05-31 feature/sponsor
 . renamed r_company to u_company and added fields to it for fiscal sponsorship
 . created an application form for fiscal sponsorship
-. created budget_cats table and added budget categories to it, with references to form 990
+. created tx_cats table and added budget categories to it, with references to form 990
 . updated achify to date the transfers on the next business day (not just the next weekday)
 . refixed cust-statement test (changes got lost) and improved the fix
 . fixed bug in account update that made update of a single auxiliary field (such as a company field) fail

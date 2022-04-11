@@ -99,6 +99,7 @@ function formTx_submit($form, &$sta) {
 
   extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
+  if (r\isCGs($mya->uid) and $cat) $input['cat'] = $cat = ray('cat', $paying ? [$cat, NULL] : [NULL, $cat]);
 
   if (!$who) return fboTx($input);
 
@@ -137,7 +138,7 @@ function formTx_submit($form, &$sta) {
   } else { // no delay, transact now
     $data = [];
     if ($start and $start < today()) $data['created'] = $start; // admin chose a date in the past
-    if (r\isCGs($mya->uid)) $data += compact('cat');
+    if ($cat) $data += $cat;
     if ($isGift) $data['gift'] = TRUE;
 
     $z = $paying
@@ -169,8 +170,8 @@ function fboTx($input) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
   $info = ray('purpose pid completed deposit cat gift', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat, $isGift);
-  $xid = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
-  u\EXPECT($xid, 'outer transfer failed');
+  $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
+  u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
   $res = $paying ? go('dashboard') : be\thanks('fbo', FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
   unset($DBTX);

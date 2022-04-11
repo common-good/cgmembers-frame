@@ -10,9 +10,8 @@ use CG\Cron as cr;
  */
 define('DRUPAL_ROOT', __DIR__ . '/../..');
 require_once __DIR__ . '/../bootstrap.inc';
-require_once __DIR__ . '/rcron.inc';
-
-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL); // boot before including rcron.inc
+require_once R_ROOT . '/rcron/rcron.inc';
 
 if (variable_get('cron_key', 'drupal') != nni($_GET, 'cron_key')) {
   u\log(t('Cron could not run because an invalid key was used.'));
