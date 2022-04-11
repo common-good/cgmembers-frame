@@ -104,7 +104,6 @@ function menu($submenu = '') {
     'co/reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
     'co/settings' => ['sub', t('Company Settings'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
     'co/sponsor' => ['call', t('Fiscal Sponsorship'), 'Sponsor', ANY],
-    'co/budget-cats' => ['call', t('Accounting Categories'), 'BudgetCats', 'co manage'],
     
     'settings' => ['norm', t('Settings'), 'Settings', 'manage -closed -depends'],
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
@@ -165,6 +164,7 @@ function menu($submenu = '') {
     'sadmin/deposits' => ['sub', t('Bank Transfers'), 'Deposits 2', 'admSeeDeposits'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'admHelpSignup'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'admMakeCtty'],
+    'sadmin/cats' => ['call', t('Accounting Categories'), 'Cats', 'admCode'],
     'sadmin/groups' => ['sub', t('Groups'), 'Groups 2', 'admMakeRules'],
     'sadmin/rules' => ['sub', t('Rules'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/timed' => ['sub', t('Timed'), 'Rules 1 2', 'admMakeRules'],

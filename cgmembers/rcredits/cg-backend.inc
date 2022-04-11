@@ -80,7 +80,7 @@ EOF;
     foreach ($entries as $j => $entry) {
       if ($j == 0) {
         if ($banking) $entry['name'] = '--';
-        if ($pid) $entry['name'] = db\get('fullName', 'people', compact('pid')) . t(' (non-member)');
+        if ($pid and $type == E_OUTER) $entry['name'] = db\get('fullName', 'people', compact('pid')) . t(' (non-member)');
       }
       $description = txDesc($entry);
       $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
@@ -392,7 +392,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
-  extract(just('payer payee purpose recursId reversesXid', $inv, NULL));
+  extract(just('payer payee purpose recursId reversesXid cat', $inv, NULL));
   extract(just('amount goods data flags', $inv, [0.0, FOR_GOODS, '', 0]));
 
   u\setDft($payAmount, $amount);
@@ -402,7 +402,8 @@ function payInvoice($nvid, $payAmount = NULL) {
   extract(just('api request shid for', $data, NULL));
 
   $DBTX = \db_transaction();
-  $extra = ray('inv', $nvid) + just('api for cat', $data, NULL);
+  $extra = ray('inv', $nvid) + just('api for', $data, NULL);
+  if ($cat) $extra += ray('cat', r\isCGs($payer) ? [$cat, NULL] : [NULL, $cat]);
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
@@ -464,10 +465,10 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'button': paid from a CGPay button on a company website
  *   'crumbs'
  *   'gift': payment is a gift
- *   'ruleId': the id of the rule associated with this transaction
+ *   'rule': the id of the rule associated with this transaction
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
- *   'cat': transaction category
+ *   'cat': transaction categories (record IDs in tx_cats) -- [payerCat, payeeCat] or NULL (payerCat and payeeCat can also be NULL)
  * @param int $recursId: record ID of related record in tx_timed (or NULL)
  * @return a txRet object
  *
@@ -483,7 +484,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId ruleId cat reversesXid', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
+  extract(just('created force boxId rule cat reversesXid', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -532,31 +533,29 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($error = u\badAmount($amount)) return txErr($error, $erInfo);
   $flags = 0; foreach (ray(TX_FLAGS) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], $cat, E_PRIME, $ruleId, $inv);
-  
   $DBTX = \db_transaction();
 
   // Create the transaction
-  $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId reversesXid'));
+  $tx0 = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId reversesXid'));
   
-  $tx = new r\Tx($info);
-  if (!$tx) {
+  if (!$tx = new r\Tx($tx0)) {
     $DBTX->rollback();
     return txErr(t('tx create err'), $erInfo);
   }
 
+  txEntryPair($entries, $tx, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, compact(ray('rule inv cat')));
   $needed = abs($amount);
 
   if ($goods != FOR_USD) {
     // Apply rules
     if ($amount > 0) {
-      $needed += handleSurTx($entries, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
+      $needed += handleSurTx($entries, $tx, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
     }
 
     // Apply any roundup
     if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recursId and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
       if ($cents = fmod($needed, 1.0)) {
-        txEntryPair($entries, 1 - $cents, [$loserId, UID_ROUNDUPS], t('roundup donation'), BCAT_GIFT, E_AUX);
+        txEntryPair($entries, $tx, 1 - $cents, [$loserId, UID_ROUNDUPS], t('roundup donation'), E_AUX);
         $needed = ceil($needed); // == 1-$cents
       }
     }
@@ -595,7 +594,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($ruid = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount)) { // purchase/gift of store credit
-    u\EXPECT(!$ruleId, 'credit purchase already has a rule!');
+    u\EXPECT(!$rule, 'credit purchase already has a rule!');
     for ($i = 0; $i < 2; $i++) $entries[$i]->rule = $ruid; // point the main entry pair at the rule (in case of reversal)
   }
     
@@ -642,22 +641,82 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
  * Add a pair of related entries to the transaction: one losing, one gaining.
  * Any ...0 parameter but $amount0 can be a 2-element array (one element for each party)
  * @param $txes array: flat array of entry objects to which to add 2 entries
+ * @param Tx $tx: the transaction header data
  * @param numeric $amount0: the amount paid/received (amount to add to the first party's balance)
  * @param mixed $a0: account object(s) and/or uid(s)
  * @param string $description0: transaction purpose(s)
- * @param int $cat: budget category (record ID in budget_cats), if any
  * @param int $entryType0: entry type(s)
- * @param int $rule: relevant record ID in tx_rules table
- * @param int $inv: related invoice ID
+ * @param assoc $other: optional parameters
+ * - array $cat: budget category for each entry in the pair (record ID in tx_cats), if any
+ * - int $rule: relevant record ID in tx_rules table
+ * - int $inv: related invoice ID
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $cat, $entryType0, $rule = NULL, $inv = NULL) {
+function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $other = []) {
+  extract(just('cat rule inv', $other, NULL));
+  $cat0 = $cat ?: [NULL, NULL];
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
-    foreach (ray('a description entryType') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
+    foreach (ray('a description entryType cat') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
     list ($relType, $relatedId) = $inv ? ['I', $inv] : [NULL, NULL];
     $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description cat rule relType relatedId')));
   }
+  $i9 = count($txes) - 1;
+  foreach ([1, 0] as $i) if (!$cat0[$i]) be\setCat($txes, $tx, $i9 + $i - 1);
+}
+
+/**
+ * Set the transaction account category if the account is owned by Common Good.
+ * @param ray(assoc) $txes: (MODIFIED) the transaction entries
+ * @param Tx $tx: the transaction header data
+ * @param int $i: index into $txes of the entry to examine (expects the account to be owned by CG)
+ */
+function setCat(&$txes, $tx, $i) {
+  if (!r\isCGs($txes[$i]->uid)) return;
+
+  $j = $i + (($i & 1) ? -1 : 1); // point to the other entry in the pair
+//  foreach ([$i, $j] as $k) extract(just('uid entryType description rule relType relatedId', $txes[$k]), EXTR_PREFIX_ALL, $k == $i ? 'i' : 'j');
+  extract(just('uid amount entryType description rule relType relatedId', $txes[$i]), EXTR_PREFIX_ALL, 'i');
+  $for = $i_description; // shorthand
+  $gift = u\getBit($tx->flags, 'gift');
+  $iA = r\acct($i_uid);
+  $qid = $iA->mainQid;
+  $in = ($i < $j); $out = !$in;
+  $inv = ($i_relType == 'I');
+  $recurs = $tx->recursId;
+
+  // get a regular expression for the proper category
+  if (r\isCGs($txes[$j]->uid)) { // transfer from one CG-owned account to another
+    $qid3 = substr($qid, -3);
+    $pat = "\\.\\.$qid3$"; // CG-owned account category names end with ".." and the abbreviated account QID (for example ..AAB)
+  } elseif ($in and $i_entryType == E_USD_FEE) {
+    $pat = 'Reimbursement of Transaction Fees$';
+  } elseif ($in and $i_entryType == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
+    $pat = 'Fiscal Sponsorship Fees$';
+  } elseif ($in and $i_entryType == E_AUX and strhas($for, t('donation'))) {
+    $pat = 'Stepup Donation$';
+  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift 
+            and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : abs($i_amount)) >= SUBSTANTIAL_GIFT)) {
+    $pat = 'Substantial Contributions';
+  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift and $recurs) {
+    $pat = 'Regular Donations$';
+  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift and !$recurs) {
+    $pat = 'One-time Donations$';
+  } elseif ($in and $gift and $for == t('crumbs donations')) {
+    $pat = 'Crumbs Donations$';
+  } elseif ($in and $gift and $for == t('roundup donations')) {
+    $pat = 'Roundup Donations$';
+  } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('donation')) or strhas($for, t('grant')) or $gift)) {
+    $pat = '^E: Grants$';
+  } elseif ($out and !$relType and u\starts($for, t('labor'))) {
+    $pat = 'To Be Paid In CG Credits$';
+  } elseif ($out and in($qid, 'CAAAAO') and $inv) {// and strhas($for, t('labor')
+    $pat = 'Staff Consultants$';
+  } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
+    $pat = 'Information Services$';
+  } else $pat = 'NO SUCH ACCOUNT'; // causes the cat to be set to NULL
+  
+  $txes[$i]->cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
 }
 
 /**
@@ -757,6 +816,7 @@ function sendNotifications($mya, $type, $tx, $shortfall) {
 /**
  * Generate tentative transaction entries for a coupon
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
+ * @param Tx $tx: the transaction header data
  * @param acct $buyer:
  * @param acct $seller:
  * @param number $price: pre-discount, pre-stepup amount
@@ -765,7 +825,7 @@ function sendNotifications($mya, $type, $tx, $shortfall) {
  * @return the net increase in overall transaction amount
  */
 
-function handleSurTx(&$entries, $buyer, $seller, $price, $forCredit) {
+function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
   
   $payerCo = $buyer->co ? 1 : 0;
@@ -777,17 +837,17 @@ function handleSurTx(&$entries, $buyer, $seller, $price, $forCredit) {
   $forCreditCheck = $forCredit ? '`from`<>:MATCH_PAYEE' : '1'; // no buying credit with credit or discount
   
   $sql = <<<EOF
-    SELECT ru.id AS ruleId, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
+    SELECT ru.id AS rule, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
       ru.amtMax, ru.payerType,
-    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `amtUsed`,
-    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `timesUsed`
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=rule AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=rule AND e.uid=:buyer AND e.entryType=:E_REBATE) AS `timesUsed`
     FROM tx_rules ru
     WHERE $payerCheck AND $payeeCheck
     AND $forCreditCheck
     AND (ru.action = :ACT_SURTX)
     AND (ru.start <= :now AND IFNULL(:now < ru.end, TRUE))
     AND (:price >= minimum)
-    GROUP BY ruleId
+    GROUP BY rule
     HAVING :price >= IFNULL(minimum, 0)
     AND timesUsed < IFNULL(useMax, timesUsed+1)
     AND amtUsed < IFNULL(amtMax, amtUsed+1)
@@ -808,15 +868,14 @@ EOF;
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
     list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_AUX, $purpose]; // any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
-    $cat = ($type == E_AUX and r\isCGs($to) and !r\isCGs($from)) ? BCAT_GIFT : NULL;
     if ($to == $buyer->id) $value = min($price - $rebate, $value); // don't refund more than is being spent (food fund especially)
 
     if ($value <= 0) continue;
     $rebate += $value;
     
-    txEntryPair($entries, $value, [$from, $to], $desc, $cat, $type, $ruleId);
+    txEntryPair($entries, $tx, $value, [$from, $to], $desc, $type, compact('rule'));
     if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
-      if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // rule is just for payer
+      if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $rule, now()), 'id'); // rule is just for payer
     }
   }
 
@@ -894,8 +953,9 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
+  if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
   $flags = 0;
-  unset($extra['reversesXid']);
+  foreach (ray('cat reversesXid') as $k) unset($extra[$k]);
 
   foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
@@ -1231,13 +1291,13 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  *   int $created: the UNIX time at which the transfer is deemed to be created (defaults to now)
  *   int $completed: mark the transaction complete on this date
  *   int $pid: record ID of associated people record (NULL if none)
- *   int $cat: record ID in budget_cats of transaction category
+ *   int $cat: record ID in tx_cats of transaction category (or NULL)
  *   string $bankAccount: the non-member bank account, if any (for ACH donations (or payments, NYI))
  *   string $purpose: transaction description
  *   int $deposit: date deposited
  *   int $recursId: related tx_timed record ID
  *   int $flags: transaction flags
- * @return the transaction ID associated with the transfer request
+ * @return the transaction object for the requested transfer
  */
 function createUsdTransfer($a, $amount, $options = []) {
   u\EXPECT(compact(ray('a amount options')), 'acct int|float assoc');
@@ -1254,10 +1314,12 @@ function createUsdTransfer($a, $amount, $options = []) {
   : [E_BANK, 0, $amount >= 0 ? UID_BANK_IN : UID_BANK_OUT, nni($a->vsecure, 'bankAccount', NULL)];
   u\EXPECT($bankAccount or $deposit or ($pid and $amount < 0), 'bad bank account in bank transfer request: ' . pr($options + compact('payee')));
 
-  $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId));
-  txEntryPair($txes, 0, [$bankId, $payee], $purpose, $cat, $eType); // tentative amount is 0
+  $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
+  $tx = new r\Tx($tx0);
+  $extra = $cat ? ray('cat', [NULL, $cat]) : []; // set cat only for "payee" in txs2 -- other account is bank or outer
+  txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
-  if ($amount) handleSurTx($txes, $buyer, $seller, abs($amount), FALSE);
+  if ($amount) handleSurTx($txes, $tx, $buyer, $seller, abs($amount), FALSE);
   $tx->addEntries($txes);
   
   $DBTX = \db_transaction();
@@ -1271,7 +1333,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   
   unset($DBTX);
   
-  return $xid;
+  return $tx;
 }
 
 /**

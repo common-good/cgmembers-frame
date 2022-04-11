@@ -152,9 +152,9 @@ function completeCCPayment($args) {
   $fullName = db\get('fullName', 'people', compact('pid'));
   
   $DBTX = \db_transaction();
-  $xid = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
-  be\txEntryPair($txes, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), NULL, E_USD_FEE);
-  be\insertTxes($txes, $xid);
+  $tx = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
+  be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_USD_FEE);
+  be\insertTxes($txes, $tx->xid);
   unset($DBTX);
   
   r\tellAdmin(t('CC payment complete (to %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
@@ -193,7 +193,7 @@ function getCGPayArgs($args) {
 /**
  * Add an "outer" record to txs2 for the credit card payment.
  * @param string $bankAccount: the bankAccount, V-encrypted
- * @return the outer transaction record ID (xid)
+ * @return a Tx object for the outer transaction record
  */
 function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {
   $recursId = NULL;
@@ -202,12 +202,12 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
       $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
     } else w\say('no cc recur');
   }
-  list ($purpose, $explicit, $cat, $completed, $gift) = [$desc, TRUE, BCAT_GIFT, now(), TRUE];
+  list ($purpose, $explicit, $completed, $gift) = [$desc, TRUE, now(), TRUE];
   $deposit = $bankAccount ? 0 : now();
-  $info = compact(ray('purpose pid completed deposit explicit cat bankAccount isSavings recursId gift'));
-  $xid = be\createUsdTransfer($coA, $amount, $info);
-  if ($id = $honorId) db\update('r_honors', compact(ray('id xid')), 'id');
-  return $xid;
+  $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId gift'));
+  $tx = be\createUsdTransfer($coA, $amount, $info);
+  if ($id = $honorId) db\update('r_honors', ray('id xid', $id, $tx->xid), 'id');
+  return $tx;
 }
 
 /**

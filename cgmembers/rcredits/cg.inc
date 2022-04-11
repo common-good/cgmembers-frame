@@ -655,7 +655,7 @@ X;
 }
   
 /**
- * Return a suggested category (budget_cats record ID) for the given hash of transaction fields, including:
+ * Return a suggested category (tx_cats record ID) for the given hash of transaction fields, including:
  *    myid, otherId, recursId, desc, type, amt (to me), channel, flags, mainCat, paying
  */
 function bestCat($tx, $minScore = 100000) {
@@ -1479,11 +1479,13 @@ function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 
 /**
  * Say whether the given account is owned by Common Good.
+ * @param int $uid: account record ID
  */
 function isCGs($uid) {
-  if (in($uid, [CGID, UID_ROUNDUPS, UID_CRUMBS])) return TRUE;
+  if (in($uid, [CGID, UID_ROUNDUPS, UID_CRUMBS, r\serverUid()])) return TRUE;
   if ($uid <= UID_CANON9) return FALSE;
-  if ($a = r\acct($uid) and $a->sponsored) return TRUE;
+  $a = r\acct($uid);
+  if ($a->sponsored) return TRUE;
   return FALSE;
 }
 

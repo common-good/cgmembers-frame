@@ -41,7 +41,7 @@ function formQBO($form, &$sta, $args = '') {
         list ($category, $description) = explode("\t", $category);
         $id += 100;
         $info = compact(ray('id externalId category' . ($description ? ' description' : '')));
-        db\updateOrInsert('budget_cats', $info, 'externalId');
+        db\updateOrInsert('tx_cats', $info, 'externalId');
       }
       break;
     

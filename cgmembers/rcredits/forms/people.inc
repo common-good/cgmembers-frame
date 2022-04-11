@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const PEOPLE_FLDS = 'displayName fullName email phone address city state zip method source notes'; // just the fields we handle here (and omitting pid)
+const PEOPLE_FLDS = 'displayName fullName email phone address city state zip method source latitude longitude notes'; // just the fields we handle here (and omitting pid)
 const PEOPLE_URL = 'sadmin/people/pid';
 
 /**
@@ -29,6 +29,8 @@ function formPeople($form, &$sta, $args = '') {
 
   $method = w\radiosFld(t('Preferred Contact:'), '', dft($method), ray(METHOD_OPTS));
   $source = textFld(t('Source:'), '', dft($source));
+  $latitude = numFld(t('Latitude:'), '', dft($latitude ?: 0));
+  $longitude = numFld(t('longitude:'), '', dft($longitude ?: 0));
   $notes = areaFld(t('Notes:'), '', dft($notes));
   
   $submit = submit();

@@ -6,19 +6,8 @@
  */
 
 use CG as r;
-//use CG\Cron as cr;
 
 function rcredits_menu() {
   include_once __DIR__ . '/cg-menu.inc';
   return r\menu();
 }
-/*
-function rcredits_cron() {//f('cr.periodic');} FAILS as f()! I don't know why
-  require_once __DIR__ . '/rcron/rcron.inc';
-  cr\periodic();
-}
-
-function rcredits_cron_queue_info() { // make sure cron run finishes before the next period
-  return ['q' => ray('worker callback,time', 'CG\\Cron\\doTask', R_CRON_PERIOD - R_MAX_TASK_TIME)];
-}
-*/

@@ -264,7 +264,7 @@ function tip($tx, $tip) {
     } else $desc = t('tip');
     if ($tip = round($tip, 2)) {
       if (tipAmt($tx)) return cardDone(ray('ok msg xid', FALSE, t('You already have a tip connected with this purchase.'), $tx->xid));
-      be\txEntryPair($entries, $tip, [$tx->uid1, $tx->uid2], $desc, NULL, E_AUX);
+      be\txEntryPair($entries, $tx, $tip, [$tx->uid1, $tx->uid2], $desc, E_AUX);
       be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
     }
     return cardDone(ray('ok msg xid', TRUE, t('Thank you for your purchase!'), $tx->xid));

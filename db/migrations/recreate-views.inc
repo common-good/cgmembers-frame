@@ -16,16 +16,14 @@ const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer'; // these c
 const BANK_IDS = ['outer' => 255, 'bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
 const TX_EXCLUDE_FLDS = 'deleted';
 const TXE_EXCLUDE_FLDS = 'deleted';
-const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt';
-const TXS_MAP = 'entryType:type, cat:cat, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
   
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
  * @param object $m: phinx AbstractMigration object
- * @param int $stopAt: migration date
+ * @param int $migDt: migration date (yyyymmdd)
  */
-function createViews($m, $stopAt) {
-  if (!$m->isMigratingUp()) $stopAt -= 1; // when rolling back, don't do the latest changes
+function createViews($m, $migDt) {
+  if (!$m->isMigratingUp()) $migDt -= 1; // when rolling back, don't do the latest changes
   
   cgpr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
@@ -71,14 +69,21 @@ function createViews($m, $stopAt) {
   $m->doSql('CREATE VIEW tx_disputes AS SELECT * FROM tx_disputes_all WHERE deleted IS NULL');
 
   // individual views for each type of transaction
+  $TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt, cat AS cat'; // one of each of these for each entry in a pair (eg uid1 and uid2)
+  $TXS_MAP = 'entryType:type, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
+
+  if ($migDt < 20220408) {
+    $TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt';
+    $TXS_MAP = 'entryType:type, cat:cat, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
+  }
 
   $txFlds0 = 't.' . join(', t.', $tx_flds);
-  foreach (ray(TXS_MAP) as $fld => $as) {
-    if ($stopAt < 20210706 and $fld == 'cat') continue;
+  foreach (ray($TXS_MAP) as $fld => $as) {
+    if ($migDt < 20210706 and $fld == 'cat') continue;
     if (in_array($fld, $txe_flds)) $txFlds0 .= ", e2.$fld AS $as";
   }
 
-  $txeFlds0 = explode(', ', TXES_FLDS);
+  $txeFlds0 = explode(', ', $TXES_FLDS);
 
   $txFlds1 = 'e1.' . join('1, e1.', $txeFlds0) . '1';
   $txFlds2 = 'e2.' . join('2, e2.', $txeFlds0) . '2';
@@ -119,7 +124,7 @@ X;
   $m->doSql('CREATE VIEW tx_entries_o AS SELECT * FROM tx_entries ORDER BY ABS(id), id'); // for debugging 
   
   $m->doSql('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL');
-  if ($stopAt < 20210702) return;
+  if ($migDt < 20210702) return;
 
   $m->doSql('CREATE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
   $m->doSql('CREATE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');

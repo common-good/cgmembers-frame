@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60h'; // software version
+const R_VERSION = '3.60i'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -585,6 +585,7 @@ const U_FOODY = '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=
 const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MySQL involving txs VIEW, meaning "payee is FOODY"
 const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)
 const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feature)
+const SUBSTANTIAL_GIFT = 5000; // annual gifts of this much are classified as "unusual" by the IRS
 
 define('SHOUT_TEXT', t('"%PROJECT could have a huge positive impact on our region, if a lot of people and businesses sign up and participate."'));
 define('ORG_DISCLAIMER', t(' Organizational affiliations are for identification purposes only and do not necessarily reflect the views of the organization.'));
@@ -687,8 +688,6 @@ const ACT_PAY = 'pay';
 const ACT_CHARGE = 'charge';
 const ACT_SURTX = 'surtx';
 const ACT_REDEEM = 'redeem';
-
-const BCAT_GIFT = 1; // record ID of donations in budget_cats
 
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));

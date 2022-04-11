@@ -6,16 +6,16 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const BUDGETCAT_FLDS = 'id category description externalId show'; // just the fields we handle here (and omitting pid)
-const BUDGETCAT_URL = 'co/budget-cats/id';
+const CAT_FLDS = 'id category description externalId show'; // just the fields we handle here (and omitting pid)
+const CAT_URL = 'co/budget-cats/id';
 
 /**
  * Edit Budget Categories (for interface with QuickBooks, 990, etc.)
  */
-function formBudgetCats($form, &$sta, $args = '') {
+function formCats($form, &$sta, $args = '') {
   
-  if (!db\exists('budget_cats')) return goFirst('qbo/op=accounts');
-  extract(crud('budget_cats', $args, BUDGETCAT_URL, BUDGETCAT_FLDS, 'ASC')); // get ret or [title, orig, id, and BUDGETCAT_FLDS]
+  if (!db\exists('tx_cats')) return goFirst('qbo/op=accounts');
+  extract(crud('tx_cats', $args, CAT_URL, CAT_FLDS, 'ASC')); // get ret or [title, orig, id, and CAT_FLDS]
   if (nn($ret)) return $ret;
   
   $title = t('Accounting Categories');
@@ -32,17 +32,17 @@ function formBudgetCats($form, &$sta, $args = '') {
   return cgform(compact(ray('title id category description externalId show submit id0')));
 }
 
-function formBudgetCats_validate($form, &$sta) {
+function formCats_validate($form, &$sta) {
   extract(just('id id0', $sta['input'], NULL));
 
-  if ($id != $id0 and db\exists('budget_cats', compact('id'))) return err(t('That order ID is already used'), 'id');
+  if ($id != $id0 and db\exists('tx_cats', compact('id'))) return err(t('That order ID is already used'), 'id');
 }
 
-function formBudgetCats_submit($form, &$sta) {
+function formCats_submit($form, &$sta) {
   extract(just('id id0', $input = $sta['input'], NULL));
-  if ($id != $id0) db\q('UPDATE budget_cats SET id=:id WHERE id=:id0', compact(ray('id id0')));
+  if ($id != $id0) db\q('UPDATE tx_cats SET id=:id WHERE id=:id0', compact(ray('id id0')));
 
-  db\updateOrInsert('budget_cats', just(BUDGETCAT_FLDS, $input), 'id');
+  db\updateOrInsert('tx_cats', just(CAT_FLDS, $input), 'id');
 
-  return go('/co/budget-cats');
+  return go('/sadmin/cats');
 }
