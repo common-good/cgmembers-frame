@@ -202,9 +202,10 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
       $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
     } else w\say('no cc recur');
   }
-  list ($purpose, $explicit, $completed, $gift) = [$desc, TRUE, now(), TRUE];
+  list ($purpose, $explicit, $completed) = [$desc, TRUE, now()];
   $deposit = $bankAccount ? 0 : now();
-  $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId gift'));
+  $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId'));
+  if ($gift) $info['flags'] = u\bit(B_GIFT);
   $tx = be\createUsdTransfer($coA, $amount, $info);
   if ($id = $honorId) db\update('r_honors', ray('id xid', $id, $tx->xid), 'id');
   return $tx;

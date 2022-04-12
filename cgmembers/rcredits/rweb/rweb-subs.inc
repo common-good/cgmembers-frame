@@ -382,11 +382,12 @@ define('FMT_INT', 'trust count');
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @return: the formatted output
  */
-function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flags = B_LIST, $url = '') {
+function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
   global $base_url;
 
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
 
+  u\setDft($formatFunc, 'CG\\Web\\formatField');
   $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
   $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
@@ -1010,13 +1011,18 @@ function sessionVars($sid) {
  *   svar($name, $value);
  *   $value = svar($name);
  * @param string $name: name of variable
- * @return: current value of the named session variable
+ * @param string $value: value of variable (serialized if array or object)
+ * @return: current value of the named session variable (unserialized if array or object)
  */
+
 function svar($name) {
   $name = SVAR_HEADER . $name;
   $args = func_get_args();
-  if (count($args) > 1) $_SESSION[$name] = $args[1];
-  return isset($_SESSION) ? nni($_SESSION, $name) : ''; // current value
+  if (count($args) > 1) {
+    $value = $args[1];
+    $_SESSION[$name] = serialize($value);
+    return $value;
+  } else return isset($_SESSION) ? unserialize(nni($_SESSION, $name)) : '';
 }
 
 /**

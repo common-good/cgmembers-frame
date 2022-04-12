@@ -1,3 +1,12 @@
+2022-04-12 feature/setcats
+. created setcats form
+. inserted QBO account records into tx_cats (for testing)
+. roundups and crumbs accounts are no longer considered CG's except for balance sheets on the server (not QBO)
+. fixed many bugs in be\setCat() function
+. fixed bug that kept non-member txs from getting flagged as gifts
+. fixed bugs in txDetail form
+. changed svar() function to serialize everything
+
 2022-04-09 feature/cg2qb
 . renamed budget_cats more appropriately to tx_cats
 . changed cat in txs to cat1 and cat2

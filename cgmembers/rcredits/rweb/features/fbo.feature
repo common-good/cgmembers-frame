@@ -59,7 +59,7 @@ Scenario: A non-member donates to a sponsored member
   And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | cat | comment |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |   2 |         |
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   | 300 |         |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -67,8 +67,8 @@ Scenario: A non-member donates to a sponsored member
   And we say "status": "info saved"
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose | cat | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant   | 2   | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant   |     | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 300 | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -113,7 +113,7 @@ Scenario: A sponsored member pays a nonmember
   
   When member "C:A" submits "tx/pay" with:
   | op  | fbo | fullName | address | city | state | zip   | amount | purpose  | cat |*
-  | pay | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | printing |   3 |
+  | pay | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | printing | 300 |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -121,7 +121,7 @@ Scenario: A sponsored member pays a nonmember
   And we say "status": "info saved"
   And these "txs":
   | xid | payer      | payee | amount | purpose  | cat | type     |*
-  | 1   | %UID_OUTER | .ZZC  | -100   | printing | 3   | %E_OUTER |
+  | 1   | %UID_OUTER | .ZZC  | -100   | printing | 300 | %E_OUTER |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | -100   | %now      |       0 | 1   |
@@ -137,7 +137,7 @@ Scenario: A sponsored member pays a nonmember
 Scenario: A sponsored member charges a member
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | who  | amount | purpose | cat |*
-  | charge |   1 | .ZZB |    100 | grant   |   2 |
+  | charge |   1 | .ZZB |    100 | grant   | 300 |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -149,7 +149,7 @@ Scenario: A sponsored member charges a member
   | Our Pub   | $100   | grant   |
   And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   | cat |*
-  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant |   2 |
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant | 300 |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -161,13 +161,13 @@ Scenario: A sponsored member charges a member
   | pay  |     |    1 |       100 | .ZZB  | .ZZC  | grant   | %today  |
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat |*
-  |   1 | %today  |    100 | .ZZB | .ZZC   | grant   | 0      | I       | 1   |   2 |
+  |   1 | %today  |    100 | .ZZB | .ZZC   | grant   | 0      | I       | 1   | 300 |
 
 Scenario: A sponsored member views their transaction history
   Given these "txs":
   | xid | payer      | payee | amount | purpose  | cat | type     | payeeAgent |*
-  | 1   | %UID_OUTER | .ZZC  | 100    | grant    | 2   | %E_OUTER | .ZZB       |
-  | 2   | %UID_OUTER | .ZZC  | -200   | printing | 21  | %E_OUTER | .ZZB       |
+  | 1   | %UID_OUTER | .ZZC  | 100    | grant    | 300 | %E_OUTER | .ZZB       |
+  | 2   | %UID_OUTER | .ZZC  | -200   | printing | 400 | %E_OUTER | .ZZB       |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      |       0 | 4   |
@@ -185,11 +185,11 @@ Scenario: A sponsored member views their transaction history
   When member "C:A" visits "history/transaction/xid=1"
   Then we show "Transaction #1 Detail" with:
   | Date        | %mdY |
-  | Amount      | $100 |
+  | Amount      | 100.00 |
   | From        | Dee Forn (non-member) |
   | Postal Addr | 4 D St, Dton, MA 01004 |
   | For         | grant |
-  | Category    | Government grants |
+  | Category    | I: Donations |
   | Our Agent   | Bea Two |
   | Channel     | Web |
 

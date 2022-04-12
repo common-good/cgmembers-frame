@@ -164,7 +164,7 @@ function menu($submenu = '') {
     'sadmin/deposits' => ['sub', t('Bank Transfers'), 'Deposits 2', 'admSeeDeposits'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'admHelpSignup'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'admMakeCtty'],
-    'sadmin/cats' => ['call', t('Accounting Categories'), 'Cats', 'admCode'],
+    'sadmin/cats' => ['sub', t('Accounting Categories'), 'Cats', 'admCode'],
     'sadmin/groups' => ['sub', t('Groups'), 'Groups 2', 'admMakeRules'],
     'sadmin/rules' => ['sub', t('Rules'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/timed' => ['sub', t('Timed'), 'Rules 1 2', 'admMakeRules'],
@@ -174,6 +174,7 @@ function menu($submenu = '') {
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
 
+    'sadmin/set-cats' => ['call', t('Set Accounting Categories'), 'SetCats', 'admEditTx'],
     'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admSeeTxInfo'],
     'sadmin/deposit-details' => ['call', t('Deposit Details'), 'DepositDetails 2', 'admSeeDeposits'],
     'sadmin/checks' => ['call', t('Checks'), '2', 'admPrintChecks', 'printChecks'],

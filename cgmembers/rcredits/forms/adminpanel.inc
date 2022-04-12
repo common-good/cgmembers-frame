@@ -55,6 +55,7 @@ function formAdminPanel($form, &$sta, $args = '') {
     $special = submi(t('Special'));
     $askForAppData = submi(t('Ask for App Data'));
     $seeAppData = submi(t('See App Data'));
+    $setCats = submi(t('Set Cats'));
   }
   if ($mya->admRecheckSsn) $ssnLink = submi(t('SSN Link'));
   if ($mya->admSeeSecure) $seeSecure = submi(t('See Secure'));
@@ -73,7 +74,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
+  $ks = ray('toSMT reAuthQBO setCats inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -153,7 +154,9 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'toSMT') {
     a\toSMT();
   } elseif ($op == 'reAuthQBO') {
-    w\go('qbo');
+    return w\go('qbo');
+  } elseif ($op == 'setCats') {
+    return w\go('sadmin/set-cats');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {

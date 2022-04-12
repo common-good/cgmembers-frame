@@ -668,7 +668,7 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
 /**
  * Set the transaction account category if the account is owned by Common Good.
  * @param ray(assoc) $txes: (MODIFIED) the transaction entries
- * @param Tx $tx: the transaction header data
+ * @param Tx $tx: the transaction header data (only flags and recursId are used)
  * @param int $i: index into $txes of the entry to examine (expects the account to be owned by CG)
  */
 function setCat(&$txes, $tx, $i) {
@@ -677,30 +677,32 @@ function setCat(&$txes, $tx, $i) {
   $j = $i + (($i & 1) ? -1 : 1); // point to the other entry in the pair
 //  foreach ([$i, $j] as $k) extract(just('uid entryType description rule relType relatedId', $txes[$k]), EXTR_PREFIX_ALL, $k == $i ? 'i' : 'j');
   extract(just('uid amount entryType description rule relType relatedId', $txes[$i]), EXTR_PREFIX_ALL, 'i');
-  $for = $i_description; // shorthand
-  $gift = u\getBit($tx->flags, 'gift');
+  $j_uid = $txes[$j]->uid;
+  list ($for, $type) = [$i_description, $i_entryType]; // shorthand
+  $stepup = ($type == E_AUX and $i_rule and $for == t('donation'));
+  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $stepup);
   $iA = r\acct($i_uid);
-  $qid = $iA->mainQid;
-  $in = ($i < $j); $out = !$in;
+  $in = ($i > $j); $out = !$in;
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
-
+  
   // get a regular expression for the proper category
-  if (r\isCGs($txes[$j]->uid)) { // transfer from one CG-owned account to another
-    $qid3 = substr($qid, -3);
+  if (r\isCGs($j_uid)) { // transfer from one CG-owned account to another
+    $qid3 = substr($iA->mainQid, -3);
     $pat = "\\.\\.$qid3$"; // CG-owned account category names end with ".." and the abbreviated account QID (for example ..AAB)
-  } elseif ($in and $i_entryType == E_USD_FEE) {
+  } elseif ($in and ($type == E_USD_FEE or $for == t('wire transfer fee'))) {
     $pat = 'Reimbursement of Transaction Fees$';
-  } elseif ($in and $i_entryType == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
+  } elseif ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
     $pat = 'Fiscal Sponsorship Fees$';
-  } elseif ($in and $i_entryType == E_AUX and strhas($for, t('donation'))) {
-    $pat = 'Stepup Donation$';
-  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift 
-            and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : abs($i_amount)) >= SUBSTANTIAL_GIFT)) {
-    $pat = 'Substantial Contributions';
-  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift and $recurs) {
+  } elseif ($in and $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : abs($i_amount)) >= SUBSTANTIAL_GIFT)) {
+    $pat = 'Substantial Contributions \\(\\$' . SUBSTANTIAL_GIFT . '\\+\\)$'; // tr() fails here
+  } elseif ($in and $iA->sponsored and $gift) {
+    $pat = 'Sponsored Donations$';
+  } elseif ($in and $type == E_AUX and ($gift or u\starts($for, t('tip')))) {
+    $pat = 'Stepup Donations and Tips$';
+  } elseif ($in and $gift and $recurs) {
     $pat = 'Regular Donations$';
-  } elseif ($in and in($i_entryType, [E_PRIME, E_OUTER]) and $gift and !$recurs) {
+  } elseif ($in and $gift and !$recurs) {
     $pat = 'One-time Donations$';
   } elseif ($in and $gift and $for == t('crumbs donations')) {
     $pat = 'Crumbs Donations$';
@@ -708,15 +710,16 @@ function setCat(&$txes, $tx, $i) {
     $pat = 'Roundup Donations$';
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('donation')) or strhas($for, t('grant')) or $gift)) {
     $pat = '^E: Grants$';
-  } elseif ($out and !$relType and u\starts($for, t('labor'))) {
-    $pat = 'To Be Paid In CG Credits$';
-  } elseif ($out and in($qid, 'CAAAAO') and $inv) {// and strhas($for, t('labor')
+  } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
+    $pat = 'To Be Paid In CG Credit$';
+  } elseif ($out and $inv and in(r\acct($j_uid)->mainQid, 'CAAAAO')) {// and strhas($for, t('labor')
     $pat = 'Staff Consultants$';
   } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
     $pat = 'Information Services$';
   } else $pat = 'NO SUCH ACCOUNT'; // causes the cat to be set to NULL
   
-  $txes[$i]->cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
+  $pat = str_replace('\\', '\\\\', $pat);
+  $txes[$i]->cat = $cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
 }
 
 /**

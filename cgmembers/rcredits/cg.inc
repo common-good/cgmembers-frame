@@ -1479,11 +1479,13 @@ function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 
 /**
  * Say whether the given account is owned by Common Good.
+ * But not the roundups and crumbs collection accounts which conceptually stand in for donors
+ *  -- those belong to CG only on ctty's and CG's Balance Sheets.
  * @param int $uid: account record ID
  */
 function isCGs($uid) {
-  if (in($uid, [CGID, UID_ROUNDUPS, UID_CRUMBS, r\serverUid()])) return TRUE;
   if ($uid <= UID_CANON9) return FALSE;
+  if (in($uid, [CGID, r\serverUid()])) return TRUE;
   $a = r\acct($uid);
   if ($a->sponsored) return TRUE;
   return FALSE;
