@@ -76,11 +76,11 @@ Scenario: A member's rules come into play
   | op  | who     | amount | goods      | purpose |*
   | pay | Cor Pub | 100    | %FOR_GOODS | labor   |
   Then these "txs":
-  | eid | xid | created | amount | payer | payee | purpose      | rule | type        |*
-  |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
-  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | donation     | 1    | %E_AUX |
-  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_AUX |
-  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | donation     | 3    | %E_AUX |
+  | eid | xid | created | amount | payer | payee | purpose  | rule | type     |*
+  |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor    |      | %E_PRIME |
+  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | donation | 1    | %E_AUX   |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation | 2    | %E_AUX   |
+  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | donation | 3    | %E_AUX   |
   # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
   
   When member ".ZZB" visits page "history/transactions/period=365"

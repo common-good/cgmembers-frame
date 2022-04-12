@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 const CAT_FLDS = 'id category description externalId show'; // just the fields we handle here (and omitting pid)
-const CAT_URL = 'co/budget-cats/id';
+const CAT_URL = 'sadmin/cats/id';
 
 /**
  * Edit Budget Categories (for interface with QuickBooks, 990, etc.)

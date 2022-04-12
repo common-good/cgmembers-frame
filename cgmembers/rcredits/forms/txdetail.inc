@@ -11,6 +11,7 @@ use CG\Db as db;
  * @param string $args: URL parameter list:
  *   int xid: transaction ID
  *   int eid: entry pair ID (defaults to E_PRIME, E_BANK, or E_OUTER -- whichever exists)
+ *   string return: u\pry'd url to return to
  */
 function formTxDetail($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
@@ -29,8 +30,10 @@ function formTxDetail($form, &$sta, $args = '') {
     $uid = $uid1 == $myid ? $uid2 : $uid1; // set $uid to other account
   } else {
     if (!$mya->admRegion) return softErr(t('That transaction is not one of yours.'));
-    $uid = $uid1 == UID_OUTER ? $uid1 
-    : (($uid1 <= UID_CANON9 or $uid1 == CGID or ($uid2 != CGID and r\isCGs($uid1))) ? $uid2 : $uid1);
+    $uid = r\isCGs($uid1) ? $uid2
+         : (r\isCGs($uid2) ? $uid1
+         : ($uid1 == UID_OUTER ? $uid1 
+         : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
   }
   $a = r\acct($uid); // not "in" either account, so choose me and you however is easy
   $toMe = $uid == $uid1 ? 1 : 0;
@@ -61,20 +64,20 @@ X;
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
   $you = item($fullName, $wayYou);
-  $me = item($meA->fullName, $wayMe);
   
-  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt), vmin(-999999));
+  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($toMe ? $amt : -$amt, 'b'), vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
-  $cat = $mya->admEditTx ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
+  $cat = ($mya->admEditTx and r\isCGs(${"uid$me"})) ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));
   $chan = item(ray(TX_CHANNELS)[$channel], t('Channel:'));
+  $me = item($meA->fullName, $wayMe);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
-    $type = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
+    $entryType = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
     $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
     if ($reversesXid) jsx('txdetail', ray('xid url', $xid, u\dePry($return)));
     $suffix = $reversesXid ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
@@ -85,12 +88,12 @@ X;
     $submit = submit(t('Update'), '', '', suffix(join(' ', $eids)));
     
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
-  } else $phone = $type = $submit = $toMe = $xid = $eid = $recursId = $reversesXid = NULL;
+  } else $phone = $entryType = $submit = $toMe = $xid = $eid = $recursId = $reversesXid = NULL;
 
   $return = hidFld($return);
   $back = item(w\backButton());
 
-  return cgform(compact(ray('title created amount you me addr email phone description forSame cat agt chan recursId reversesXid type submit back toMe xid eid return')));
+  return cgform(compact(ray('title created amount you me addr email phone description forSame cat agt chan recursId reversesXid entryType submit back toMe xid eid return')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -104,13 +107,13 @@ function formTxDetail_validate($form, &$sta) {
 
 function formTxDetail_submit($form, &$sta) {
   $input = $sta['input'];
-  extract(just('toMe forSame xid eid return', $input));
+  extract(just('amount toMe forSame eid return', $input));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
   
   $DBTX = \db_transaction();
-  if ($info = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $info, 'xid');
+  if ($hInfo = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
 
-  $info = just('type amount description cat', $input, NULL);
+  $info = just('entryType amount description cat', $input, NULL);
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
 
@@ -121,6 +124,11 @@ function formTxDetail_submit($form, &$sta) {
   db\update('tx_entries_all', $info, 'id');
 
   unset($DBTX);
+  
+  if ($rows = svar('catsList')) { // called from formSetCats
+    unset($rows[$eid]);
+    svar('catsList', $rows);
+  }
 
   return w\go($return ? u\dePry($return) : 'history/transactions');
 }
