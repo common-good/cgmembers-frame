@@ -1198,7 +1198,7 @@ function just($these, $info, $default = NULL) {
   if (!is_array($these)) $these = ray($these);
   $res = array_intersect_key($ray, array_flip($these));
   if (func_num_args() > 2) foreach ($these as $i => $k) {
-    if (!array_key_exists($k, $res)) $res[$k] = (is_array($default) ? $default[$i] : $default);
+    if (!array_key_exists($k, $res)) $res[$k] = (is_array($default) and !empty($default)) ? $default[$i] : $default; // allow [] as the default for multiple args
   }
   return $res;
 }

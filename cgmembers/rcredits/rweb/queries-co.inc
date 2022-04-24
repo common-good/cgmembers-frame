@@ -11,6 +11,7 @@ use CG\Util as u;
  *  :ctty  the current account's community ID
  *  :myid  the current account's record ID
  * Note: query names cannot contain any of the following characters: /&? (because they confuse the url).
+ * For queries with no SQL show here, see the getReport() function in forms/data.inc
  */
 
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query

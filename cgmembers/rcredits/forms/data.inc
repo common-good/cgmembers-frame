@@ -55,7 +55,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $links = item(u\ul($links), NBSP);
     $form = compact(ray('title subtext sql submit links'));
   }
-  return cgform($form, $args ? 'wide nolabs' : '');
+  return cgform($form, $args ? 'wider nolabs' : '');
 }
 
 function formData_validate($form, &$sta) {
@@ -86,22 +86,30 @@ function getReport($nm) {
     $colClasses = ray(',,,,alignR');
     list ($us, $them, $invUs, $invThem) = $nm == 'customers' ? [2, 1, 'payee', 'payer'] : [1, 2, 'payer', 'payee'];
     $whereInv = "$invUs=:myid AND amount<>0 GROUP BY $invThem";
-    $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
+//    $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
+    $whereTx = "uid$us=:myid AND amt<>0 AND type IN (:E_PRIME, :E_OUTER) GROUP BY uid$them, pid";
+
     $sql = <<< X
-      SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
-        SELECT uid$them AS uid, SUM(amt) AS net0, 0 AS invs0
-        FROM txs_prime WHERE $whereTx
-        UNION SELECT $invThem AS uid,0 AS net0, SUM(amount) AS invs0
+      SELECT u.uid,p.pid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
+        SELECT uid$them AS uid, pid, SUM(amt) AS net0, 0 AS invs0
+        FROM txs LEFT JOIN txs2 USING (xid) WHERE $whereTx
+        UNION SELECT $invThem AS uid,NULL AS pid,0 AS net0, SUM(amount) AS invs0
         FROM tx_requests WHERE $whereInv AND status<:TX_PAID
-      ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
+      ) x LEFT JOIN users u ON u.uid=x.uid LEFT JOIN people p ON p.pid=x.pid GROUP BY u.uid,p.pid ORDER BY IF(p.pid, p.fullName, u.fullName)
 X;
     $q = db\q($sql, compact('myid'));
     while ($row = $q->fetchAssoc()) {
       extract($row);
-      $a = r\acct($uid);
-      $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
-      list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email ?: t('BAD EMAIL'), u\fmtPhone($a->phone, '-')];
-      $res[] = [$qid, $a->fullName, $phone, $email, number_format($net, 2)];
+      if ($pid) {
+        $vs = db\get('pid AS qid, fullName, phone, email', 'people', compact('pid'));
+        extract($vs);
+      } else {
+        $a = r\acct($uid);
+        $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
+        list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email ?: t('BAD EMAIL'), u\fmtPhone($a->phone, '-')];
+        $fullName = $a->fullName;
+      }
+      $res[] = [$qid, $fullName, $phone, $email, number_format($net, 2)];
       $classes[] = $invs ? 'hiRow' : '';
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, nn($rowClasses)));

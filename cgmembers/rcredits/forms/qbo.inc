@@ -36,12 +36,35 @@ function formQBO($form, &$sta, $args = '') {
     case '': $qb->auth(); break; // may not return
     
     case 'accounts':
-      $id = 0;
-      foreach ($qb->getAccounts() as $externalId => $category) {
+      $qbAccts = $qb->getAccounts();
+      $id = 0; // tracks each record as we insert or update it
+      $redo = !db\exists('tx_cats');
+      if (!$redo and $diff = array_diff(db\col('externalId', 'tx_cats', '`show`'), array_keys($qbAccts))) { // if we deleted accounts in QBO, unshow them here
+        db\q('UPDATE tx_cats SET `show`=0 WHERE externalId IN (:diff)', compact('diff'));
+        err(t('These cats have been deleted in QBO, so they have been hidden here too: ') . join(', ', $diff));
+      }
+        
+      foreach ($qbAccts as $externalId => $category) {
         list ($category, $description) = explode("\t", $category);
-        $id += 100;
-        $info = compact(ray('id externalId category' . ($description ? ' description' : '')));
-        db\updateOrInsert('tx_cats', $info, 'externalId');
+        $info = compact(ray('externalId category' . ($description ? ' description' : '')));
+        if ($redo) { // building tx_cats from scratch (don't do this on production db!!)
+          $id += 100;
+          db\insert('tx_cats', $info + compact('id'), 'id');
+        } else { // updating tx_cats from QBO
+          if ($id0 = db\get('id', 'tx_cats', compact('externalId'))) { // category alread exists here, so just update it
+            $id = $id0;
+            db\update('tx_cats', $info + compact('id'), 'id');
+          } else { // category doesn't exists here yet, so choose an id for it (ideally alphabetical) and insert
+            if ($nextId = db\min('id', 'tx_cats', 'id>:id', compact('id'))) {
+              $id = round(($id + $nextId) / 2, 0);
+              if (db\exists('tx_cats', compact('id'))) {
+                $id = db\max('id', 'tx_cats') + 1;
+                say(t('Maybe change id (order) of new category "%category" (temporary id %id) to be roughly alphabetical before using it.', compact(ray('id category'))));
+              }
+            } else $id = round($id + 100, -2);
+            db\insert('tx_cats', $info + compact('id'), 'id');
+          }
+        }
       }
       break;
     

@@ -11,13 +11,31 @@ use CG\Util as u;
  *  :ctty  the current account's community ID
  *  :myid  the current account's record ID
  * Note: query names cannot contain any of the following characters: /&? (because they confuse the url).
+ * For queries with no SQL show here, see the getReport() function in forms/data.inc
  */
+
+global $mya;
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = r\annualAmt();
-$source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
-$queries = [
+if ($mya->admin) {
+  $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
+  $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
+  $fy0 = strtotime('-1 year', $fy9) + 1;
+  $cgUids = join(',', r\cgUids());
+  
+  $queries = [
+  1 . t('Gifts From "Disqualified Persons"') => 
+    "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
+      SUM(IF(amt>=1000 AND t.:IS_GIFT, amt, 0)) AS over999,
+      SUM(IF(t.:IS_GIFT, 0, amt)) AS otherWithCG, u.:IS_INFLUENCER AS marked, p.pid IS NULL AS member
+      FROM txs t LEFT JOIN txs2 t2 USING (xid) LEFT JOIN users u ON u.uid=t.uid1 LEFT JOIN people p ON p.pid=t2.pid
+      WHERE t.created BETWEEN $fy0 AND $fy9 AND t.uid2 IN ($cgUids)
+      HAVING over999>=:SUBSTANTIAL_GIFT OR marked
+    ". t('~<p>Total gifts in %PROJECT\'s most recently ended fiscal year (July to June) from Influencers or that exceed $5,000 &mdash; ignoring separate gifts of less than $1,000 as allowed for IRS Form 990 Schedule B: "Include all separate and independent gifts that are $1,000 or more Gifts that are less than $1,000 may be disregarded."</p><p>"marked" means the person is marked in the database as an influencer &mdash; that is, someone who might have significant influence over the affairs of the organization because of their position (including being a board member, former board member, key employee, or relative of such a person). Otherwise the person\'s "influence" is because they donated a lot of money.'),
+    // in advance: $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : amt) >= SUBSTANTIAL_GIFT)
+    
   1 . t('Food Fund Contributions') =>
     "SELECT COUNT(uid) AS participants, SUM(amt) AS monthly FROM (
       SELECT uid, SUM(food*amt) AS amt, IF(SUM(amt)=0, 0, 1) AS active  
@@ -65,8 +83,10 @@ X
     JOIN users u USING(uid)
     WHERE NOT u.:IS_CO ORDER BY lastTx DESC
 X
-  ,
+  ];
+}
 
+$queries = array_merge($queries, [
   t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,
             t0.sales AS `sales $`, t0.payments AS `payments $`, t0.cnt AS `count`,
@@ -159,7 +179,7 @@ X
 X
   . '~For each origin, members = the number of members that came from there; stuck = the number of people who started to join but stopped; avgRoundup = the average number who chose roundups; eachInvited = the average number of people members from that origin have invited. Origins in quotes are what the member told us in the "Referred by" field.',
   
-];
+]);
 
 //    IFNULL(u.fullName, REPLACE(SUBSTRING(r.data, 27, LOCATE('\"', SUBSTRING(r.data, 28))), '\"', '')) AS name,
 //    SUBSTRING_INDEX(SUBSTRING_INDEX(r.data, '\"', 12), '\"', -1) AS phone,

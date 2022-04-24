@@ -379,7 +379,7 @@ define('FMT_INT', 'trust count');
  * @param assoc $ray: the key/value pairs
  * @param string $formatFunc: the function used to format the field data
  * @param string $flagsField: a list of bit names, defined as B_ constants
- * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @param string $url: page for editing, followed by /$idFld or &$idFld where $idFld is the name of a clickable id field (for editing)
  * @return: the formatted output
  */
 function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
@@ -388,7 +388,7 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
 
   u\setDft($formatFunc, 'CG\\Web\\formatField');
-  $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
+  $idFld = ($url and $urlRay = preg_split('~[/&]~', $url)) ? $urlRay[count($urlRay) - 1] : '';
   $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
   foreach ($ray as $row) {

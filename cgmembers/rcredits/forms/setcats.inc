@@ -38,7 +38,13 @@ function formSetCats($form, &$sta, $args = '') {
 
   $return = u\pry('/sadmin/set-cats/reshow=1');
   $list = item(showRecords(nn($rows, []), NULL, NULL, "/history/transaction/return=$return&xid"));
-  return cgForm(compact(ray('title list')));
+  return cgForm(compact(ray('title list')), 'wider');
+}
+
+function formSetCats_validate($form, &$sta) {
+  extract(just('start', $sta['input'], NULL));
+  u\badDate($start);
+  u\preray(compact('start'), $sta['input']);
 }
 
 function formSetCats_submit($form, &$sta) {
@@ -49,7 +55,7 @@ function formSetCats_submit($form, &$sta) {
 function setMostCats($start, $overwrite) {
   $uids = array_merge(db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'), [CGID, r\serverUid()]);
   $catCrit = $overwrite ? '1' : 'cat IS NULL';
-  $q = db\q("SELECT DISTINCT xid,flags,recursId FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid IN (:uids) AND $catCrit AND created>=:start ORDER BY created,xid", compact(ray('uids start')));
+  $q = db\q("SELECT DISTINCT xid,flags,recursId FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid IN (:uids) AND $catCrit AND created>=:start ORDER BY created DESC,xid DESC", compact(ray('uids start')));
 
   $flds = ray('xid type me you purpose');
   while ($tx = $q->fetch()) {

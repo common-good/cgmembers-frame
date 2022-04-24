@@ -73,17 +73,21 @@ function formDonate($form, &$sta, $args = NULL) {
 
   $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
   $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
+  $coverCCFee = boxFld('coverCCFee', NBSP, t('Check here to cover the credit card processing fees also.'), 0);
   
-  if (!$mya) {
+  if ($mya) { // member: no need to ask for payment method
+    $payHow = $coverCCFee = $ach = NULL;
+  } elseif ($fbo) { // nonmember & sponsored: guest can choose ACH or CC
     $payHow = radiosFld(REQ . t('Pay By:'), '', dft(-1), [t('ACH (easier and saves us 3% in CC fees)'), t('Credit Card <span>(cannot automatically repeat)</span>')]);
-    $coverCCFee = boxFld('coverCCFee', NBSP, t('Check here to cover the credit card processing fees also.'), 0);
-    
     $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
     $routingNumber = routingFld(FALSE);
     $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
     $isSavings = radiosFld(t('Type:'), '', dft(-1), [t('Checking'), t('Savings')]);
     $ach = fieldSet('ach', compact(ray('checkHint routingNumber bankAccount isSavings')), BARE);
-  } else $payHow = $coverCCFee = $ach = NULL;
+  } else { // nonmember & not sponsored: CC only
+    $payHow = hidFld(1);
+    $ach = NULL;
+  }
 
   $fsFee = hidFld($fsFee);
 
