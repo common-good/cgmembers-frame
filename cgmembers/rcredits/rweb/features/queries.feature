@@ -67,13 +67,13 @@ Scenario: An admin visits the Community Data page
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
+  | Where Do Our Members Hear About Common Good |
   | Company Income and Payments - 30 day totals |
   | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
   | Actual Donations to Common Good and Community |
   | Expected Member Donations to CG and Community |
   | Expected Company Donations to CG and Community |
-  | Where Do Our Members Hear About Common Good |
   
 Scenario: An admin runs a query about Food Fund
   When member ".ZZB" runs query "Food Fund Contributions"

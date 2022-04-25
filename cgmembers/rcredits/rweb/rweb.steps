@@ -317,7 +317,6 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
- *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
@@ -1913,9 +1912,11 @@ function countIs($what, $count) {return t\count($what, $count);}
  */
 function memberRunsQuery($id, $query) {
   global $testOnly; if ($testOnly) return FALSE;
+
+  t\logIn($id); // otherwise queries.inc doesn't know what to do
   require R_ROOT . '/rweb/queries.inc';
-  foreach ($queries as $k => $zot) if (substr($k, 1) == $query) $query = $k; // get leading digit
-  return t\memberVisitsPage($id, "community/data/qName=$query");
+  foreach ($queries as $k => $zot) if (substr($k, 1) == $query) {$query = $k; break;} // make sure it exists
+  return t\memberVisitsPage($id, 'community/data/code=' . u\cryRay(ray('qName', $query)));
 }
 
 /**

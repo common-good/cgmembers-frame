@@ -11,17 +11,18 @@ use CG\Db as db;
  */
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  extract(just('code qName sql q d isco', $args, NULL));
+  extract(just('code', $args, ''));
   u\setDft($isco, $isco0 == 'co');
   require queryFile($isco);
   
-  if ($q) {
-    $d = substr($q, 0, 1);
-    $url = $isco ? '/history/company-reports' : '/community/data';
-    w\go("$url/qName=" . urlencode($q));
-  }
+  extract(just('qName sql q isco', u\decryRay($code), NULL));
   
-  if ($mya->admRegion and $code and $info = u\decryRay($code) and $sql2 = nni($info, 'sql')) {
+  if ($q) {
+    $url = $isco ? '/history/company-reports' : '/community/data';
+    w\go("$url/code=" . u\cryRay(ray('qName', $q)));
+  }
+
+  if ($mya->admRegion and $sql2 = $sql) {
     $title = t('MySQL Query');
     try {
       $q = db\adminQ($sql2);
@@ -33,16 +34,14 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
       $form = compact(ray('title list'));
     } catch (\Exception $e) {
       err($e->getMessage());
-      return go('/community/data/sql=' . urlencode($sql2));
+      return go('/community/data/code=' . u\cryRay(ray('sql', $sql2)));
     }
-  } elseif ($qName) {
-    $sql2 = nn($queries[$qName]);
-    if (!empty($sql2)) {
-      $title = t('Query Results');
-      $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
-      $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
-      $form = compact(ray('title subtext report'));
-    }
+  } elseif ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr($qName, 1))) {
+    if (substr($sql2, 0, 1) == '/') return go($sql2);
+    $title = t('Query Results');
+    $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
+    $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
+    $form = compact(ray('title subtext report'));
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
@@ -50,7 +49,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
     foreach ($queries as $k0 => $v) {
-      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0&isco=$isco", $k);
+      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk('/community/data/code=' . u\cryRay(ray('q isco', $k0, $isco)), $k);
     }
     $links = item(u\ul($links), NBSP);
     $form = compact(ray('title subtext sql submit links'));

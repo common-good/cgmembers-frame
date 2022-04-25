@@ -1,3 +1,9 @@
+2022-04-25 feature/iereport
+. added an Income & Expense report
+. reworked queries so reports that require parameters can be forms
+. fixed bug in bank transfer tests ("get") that failed to refresh page
+. made queries more efficient for non-admins
+
 2022-04-24 feature/cat-tweaks
 . added admin function ccFees to calculate CC fees saved for participating businesses (ever)
 . just() function now allows arguments to default to an empty array

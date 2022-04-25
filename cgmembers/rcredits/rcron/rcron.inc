@@ -131,7 +131,7 @@ function everyHour() { // stuff to do every hour
     if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
 
-  if ($hourNum % 6 == 0 and now() > nni(getv('qboRefresh') ?: [], 'lastRefresh') + 5 * HOUR_SECS) { // refresh the QBO Refresh Token every 6 hours (at least)
+  if ($hourNum % 6 == 0 and now() > nni(getv('qboRefresh') ?: [], 'lastRefresh', 0) + 5 * HOUR_SECS) { // refresh the QBO Refresh Token every 6 hours (at least)
     require_once R_ROOT . '/classes/qb.class';
     new \QB(QBO_CREDS);
   }

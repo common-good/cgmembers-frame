@@ -95,6 +95,7 @@ function formGet_submit($form, &$sta) {
 
   list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit', TRUE));
   say($report); // expanded message
+  return go('get'); // required for testing
 }
 
 /**

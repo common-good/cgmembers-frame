@@ -445,6 +445,20 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-printcards .form-item-list>div div {display:table-cell; padding:10px 20px; min-width:130px;}
 #frm-printcards .form-item-list>div div.card-btn {width:350px;}
 
+/* IEReport */
+#frm-iereport .indent {display:inline-block; width:20px;}
+#frm-iereport .form-item-title,
+#frm-iereport .form-item-subtext {text-align:center; max-width:500px;}
+#frm-iereport .form-item-list table {border-collapse:separate;}
+#frm-iereport .form-item-list tr td {text-align:right;}
+#frm-iereport .form-item-list tr td:first-child {padding-right:40px; text-align:left;}
+#frm-iereport .form-item-list tr td:last-child {padding-left:40px;}
+#frm-iereport .hdr td {padding-top:30px; font-size:130%; font-weight:bold;}
+#frm-iereport .tot td {font-size:130%; font-weight:bold;}
+#frm-iereport .subtotal td:first-child +td,
+#frm-iereport .subtotal td:last-child {margin-top:10px; border-top:1px solid silver;}
+#frm-iereport .tot td:first-child +td {border:1px solid silver;}
+
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 

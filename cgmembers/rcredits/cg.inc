@@ -1493,12 +1493,13 @@ function isCGs($uid) {
 
 /**
  * Return an array of record IDs of all accounts owned by CG.
- * Called in queries.inc.
+ * @param bool $all: <include all of them> (otherwise omit roundups, crumbs, and 457 retirement account, which we don't categorize)
+ * Called in queries.inc, forms/setcats.inc, and forms/iereport (for example)
  */
-function cgUids() {
-  $res = db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'); // get the fiscally sponsored account IDs
-  foreach ([CGID, r\serverUid(), UID_ROUNDUPS, UID_CRUMBS, r\qo('NEWAIN')->id] as $uid) $res[] = $uid; // NEWAIN is 457 retirement account
-  return $res;
+function cgUids($all = TRUE) {
+  $ray = db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'); // get the fiscally sponsored account IDs
+  foreach ([CGID, r\serverUid(), UID_ROUNDUPS, UID_CRUMBS, r\qo('NEWAIN')->id] as $uid) $ray[] = $uid; // NEWAIN is 457 retirement account
+  return $all ? $ray : array_slice($ray, 0, count($ray) - 3);
 }
 
 /**

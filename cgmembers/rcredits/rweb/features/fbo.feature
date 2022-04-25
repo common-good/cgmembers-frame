@@ -185,7 +185,7 @@ Scenario: A sponsored member views their transaction history
   When member "C:A" visits "history/transaction/xid=1"
   Then we show "Transaction #1 Detail" with:
   | Date        | %mdY |
-  | Amount      | 100.00 |
+  | Amount      | 100 |
   | From        | Dee Forn (non-member) |
   | Postal Addr | 4 D St, Dton, MA 01004 |
   | For         | grant |

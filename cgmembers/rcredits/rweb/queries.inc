@@ -19,13 +19,15 @@ global $mya;
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = r\annualAmt();
 
-if ($mya->admin) {
+if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
   $cgUids = join(',', r\cgUids());
   
   $queries = [
+  1 . t('Income & Expense Report') => '/sadmin/iereport',
+  
   1 . t('Gifts From "Disqualified Persons"') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
       SUM(IF(amt>=1000 AND t.:IS_GIFT, amt, 0)) AS over999,
@@ -83,10 +85,43 @@ X
     JOIN users u USING(uid)
     WHERE NOT u.:IS_CO ORDER BY lastTx DESC
 X
+  ,
+  
+  2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
+    SELECT 
+      IF(helper in (0,1), 
+        IF(source LIKE '%presentation%' OR source LIKE '%talk%', '"Presentation"',
+        IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '"Web"',
+        IF(source LIKE '%friend%' OR source LIKE '%mouth%', '"Word of Mouth"',
+        IF(source LIKE '%facebook%', '"Facebook"',
+        IF(source LIKE '%twitter%', '"Twitter"',
+        IF(source LIKE '%ujima%', '"Ujima Project"',
+        IF(source LIKE '%various%' OR source LIKE '%multiple%', '"Various"',
+        IF(source LIKE '%article%' OR source LIKE '%gazette%' OR source LIKE '%recorder%' OR source LIKE '%news%', '"News"',
+        IF(1, '"(Other)"', LEFT($source, LOCATE(' ', CONCAT($source, ' ')) - 1))
+        )))))))),
+        IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, 'Invited by Other')
+      ) AS origin,
+      SUM(IF(u.:IS_OK, 1, 0)) AS member,
+      SUM(IF(u.:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
+      SUM(IFNULL(tm.amount, 0) * perYear(tm.period, tm.periods))
+        / SUM(IF(u.:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
+      SUM(IF(u.:IS_ROUNDUP, 1, 0))
+        / SUM(IF(u.:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
+      SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
+        / SUM(IF(u.:IS_OK, 1, 0)) AS eachInvited
+    FROM users u
+    LEFT JOIN tx_timed tm ON tm.from=u.uid AND tm.to=:CGID AND tm.end IS NULL
+    LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
+    WHERE u.uid>0 AND u.uid NOT :CANONIC
+    GROUP BY origin
+    ORDER BY member
+X
+  . '~For each origin, members = the number of members that came from there; stuck = the number of people who started to join but stopped; avgRoundup = the average number who chose roundups; eachInvited = the average number of people members from that origin have invited. Origins in quotes are what the member told us in the "Referred by" field.',
   ];
 }
 
-$queries = array_merge($queries, [
+$queries = array_merge(nn($queries, []), [
   t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,
             t0.sales AS `sales $`, t0.payments AS `payments $`, t0.cnt AS `count`,
@@ -146,38 +181,6 @@ $queries = array_merge($queries, [
 
   t('Expected Company Donations to CG and Community') =>
     strtr($mGifts, ['AS members' => 'AS companies', 'NOT u.:IS_CO' => 'u.:IS_CO']),
-    
-  2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
-    SELECT 
-      IF(helper in (0,1), 
-        IF(source LIKE '%presentation%' OR source LIKE '%talk%', '"Presentation"',
-        IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '"Web"',
-        IF(source LIKE '%friend%' OR source LIKE '%mouth%', '"Word of Mouth"',
-        IF(source LIKE '%facebook%', '"Facebook"',
-        IF(source LIKE '%twitter%', '"Twitter"',
-        IF(source LIKE '%ujima%', '"Ujima Project"',
-        IF(source LIKE '%various%' OR source LIKE '%multiple%', '"Various"',
-        IF(source LIKE '%article%' OR source LIKE '%gazette%' OR source LIKE '%recorder%' OR source LIKE '%news%', '"News"',
-        IF(1, '"(Other)"', LEFT($source, LOCATE(' ', CONCAT($source, ' ')) - 1))
-        )))))))),
-        IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, 'Invited by Other')
-      ) AS origin,
-      SUM(IF(u.:IS_OK, 1, 0)) AS member,
-      SUM(IF(u.:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
-      SUM(IFNULL(tm.amount, 0) * perYear(tm.period, tm.periods))
-        / SUM(IF(u.:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
-      SUM(IF(u.:IS_ROUNDUP, 1, 0))
-        / SUM(IF(u.:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
-      SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
-        / SUM(IF(u.:IS_OK, 1, 0)) AS eachInvited
-    FROM users u
-    LEFT JOIN tx_timed tm ON tm.from=u.uid AND tm.to=:CGID AND tm.end IS NULL
-    LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
-    WHERE u.uid>0 AND u.uid NOT :CANONIC
-    GROUP BY origin
-    ORDER BY member
-X
-  . '~For each origin, members = the number of members that came from there; stuck = the number of people who started to join but stopped; avgRoundup = the average number who chose roundups; eachInvited = the average number of people members from that origin have invited. Origins in quotes are what the member told us in the "Referred by" field.',
   
 ]);
 
