@@ -89,8 +89,8 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   $DBTX = \db_transaction();
   $pid = db\insert('people', $info, 'pid');
   
-  if ($payHow == 0) { // bank transfer (the default for cggift and fbo, else not allowed)
-    u\EXPECT(in($type, 'cggift fbo'), 'wrong type for ACH donation');
+  if ($payHow == 0) { // bank transfer (suggested for gift/fbo, else not allowed)
+    u\EXPECT(in($type, 'gift fbo'), 'wrong type for ACH donation');
     $bankAccount = u\cry('V', "USkk$routingNumber$bankAccount");
     $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
     addToTxs2($amount, t('donation'), $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);

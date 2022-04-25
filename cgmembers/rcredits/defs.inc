@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60j'; // software version
+const R_VERSION = '3.60k'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -497,12 +497,12 @@ const B_ICLUBQ = 25; // interested in investment club
 const B_u26 = 26; // can moderate the Offers/Needs/Tips board in a community
 const B_u27 = 27; // 
 const B_u28 = 28; // 
-const B_u29 = 29; // is a community administrator
+const B_INFLUENCER = 29; // is a disqualified person (has significant influence over CG or is a family member of such)
 const B_ADMIN = 30; // is an administrator (has a record in the admins table)
 
 const B_MAX = 62; // maximum bit number
-const B_ADMINABLE = 'member confirmed carded nonudge partner iclubq cgc invites rewardy noneg'; // for admin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 u29 admin';
+const B_ADMINABLE = 'member confirmed carded nonudge partner iclubq influencer cgc invites rewardy noneg'; // for admin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags

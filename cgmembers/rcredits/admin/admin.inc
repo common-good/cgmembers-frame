@@ -883,6 +883,19 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
   db\q('UPDATE u_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
 }
   
+/**
+ * Calculate how much the CG system has saved local businesses in credit card fees, to date.
+ * Call in code window with: d('a.ccFees');
+ */
+function ccFees() {
+  $totals = <<< X
+    SELECT SUM(IF(t.type=:E_PRIME, 1, 0)) AS cnt, SUM(t.amt) AS total 
+    FROM txs t JOIN users u ON u.uid=t.uid2
+    WHERE t.type IN (:E_PRIME, :E_AUX) AND u.:IS_CO
+X;
+  return u\fmtAmt(db\get('.1 * cnt + .02 * total', "($totals) xx"));
+}
+
 /*
   to find orphaned customers
 

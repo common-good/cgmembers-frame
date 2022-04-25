@@ -26,7 +26,7 @@ function ajax($args = NULL) {
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
   if (!in($op, 'setNotice')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
-    if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
+    if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }
 
   if ($data) $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
@@ -164,7 +164,8 @@ function ajax($args = NULL) {
       return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
     
     case 'bumpShout':
-      return db\q('UPDATE u_shout SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
+      db\q('UPDATE u_shout SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
+      return ajaxMsg(t('Success!'));
     
     default: return ajaxErr(t('Invalid op'));
   }

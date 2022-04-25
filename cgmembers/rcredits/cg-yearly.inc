@@ -21,22 +21,18 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  * Log in at fire.irs.gov (or fire.test.irs.gov)
  * @param string $type: 1099 type (B, K, MISC, etc)
  * @param mixed $testMode: TRUE if testing, otherwise FALSE
+ * @param assoc $extra: miscellaneous parameters
+ *   string $ein, $nm, $addr, $phone: payer information (defaults to CG's)
+ *   int $year: tax year (defaults to most recently completed calendar year)
+ *   assoc $badNames: names reported incorrectly, indexed by uid (1099-B only)
+ *   assoc $badTINs: EINs (no punctuation) reported incorrectly, indexed by uid (1099-B only)
  * @param array $rows: payee data for 1099-NEC, FALSE for 1099-B
  *    each element of $rows is an assoc: [nm ein co addr qid amount],
  *    where addr is postal address, and qid='' if the payee is not on the server
- * @param assoc $badNames: names reported incorrectly, indexed by uid (1099-B only)
- * @param assoc $badTINs: EINs (no punctuation) reported incorrectly, indexed by uid (1099-B only)
- * @param int $year: reporting year (defaults to most recent completed calendar year) (1099-B only)
- * example for corrections: f('y.do1099bs', FALSE, [23947972 => 'Miss Pelled'], [29274902 => '292039482'], 2015);
  *
- * Example for 1099-NEC and 1099-R (paste in the PHP box on a DEV machine to generate):
- 
-    include R_ROOT . '/cg-yearly.inc';
-    $keys = 'nm ein co addr qid amount dt';
-    $rows = [
-      (get these from production server -- see below)
-    ];
-    r\Special\do1099s('NEC', TRUE, $rows); // TRUE means <test>
+ * Example for corrections: f('y.do1099bs', FALSE, ray('year badNames badTINs', 2015, [23947972 => 'Miss Pelled'], [29274902 => '292039482']));
+ *
+ * Example for 1099-NEC and 1099-R (get amounts from QBO and/or CG)
  *
  * Get lines on production server with:
      foreach (ray('aka nevabj etc') as $qid) { // these can also be numeric account IDs
@@ -44,18 +40,28 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
        e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
      }
      
-  * For 1099-NEC edit just AMT. For 1099-R edit AMT, 0 (amount and date)
-  
+ * For 1099-NEC edit just AMT. For 1099-R edit AMT, 0 (amount and date)
+ * Paste in the PHP box on a DEV machine to generate file to upload to fire.irs.gov:
+ 
+     include R_ROOT . '/cg-yearly.inc';
+     $extra = ray('ein nm addr phone', '043125436', 'Creative Thought and Action Inc', 'PO Box 305, Ashfield, MA 01330', '4136281957');
+     $keys = 'nm ein co addr qid amount dt';
+     $rows = [
+       ray($keys, nm, ein, co, addr, acct, amount, dt), // (for CG get these lines from the production server -- see above)
+     ];
+     r\Special\do1099s('NEC', TRUE, $extra, $rows); // TRUE means <test>
  */
  
-function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
+function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
   global $err1099;
   global $stateCode; $stateCode = $type == 'NEC' ? sp(2) : STATE_CODE; // combined state reporting is appropriate for everything but NEC
-  u\setDft($year, date('Y') - 1);
+  
+  extract(just('ein year badNames badTINs', $extra, [NULL, date('Y') - 1, [], []]));
   $testMode = $testMode ? 'T' : '';
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
-  u\beginDownload("Y$year$testMode-forms1099$type.txt"); // binary file extension: discourage automatic changes during FTP
+  $flnm = ($ein ? t('guest-') : '') . "Y$year$testMode-forms1099$type.txt";
+  u\beginDownload($flnm); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);
@@ -67,9 +73,9 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   $sql = $rows ?: "SELECT uid FROM users WHERE $where ORDER BY uid";
 
   if ($uids) { // show bad old data first if correcting
-    doPayer($type, $year, $sql, $totals, 'G', $badNames, $badTINs);
-    $bCount = doPayer($type, $year, $sql, $totals, 'C'); // corrected data
-  } else $bCount = doPayer($type, $year, $sql, $totals);
+    doPayer($type, $year, $sql, $totals, 'G', $extra);
+    $bCount = doPayer($type, $year, $sql, $totals, 'C', $extra); // corrected data
+  } else $bCount = doPayer($type, $year, $sql, $totals, '', $extra);
   
   $aCount = $uids ? 2 : 1;
   if ($stateCode == STATE_CODE) putRec(recK($type, $bCount * $aCount, $totals)); // recK is for state totals, so omit if not reporting to the state
@@ -84,10 +90,14 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
  * @param string $type: 1099 type
  * @param int $year: year to report
  * @param mixed $sql: selection SQL for 1099-B payee records OR array of rows for 1099-MISC
+ * @param array $totals: (MODIFIED) totals
+ * @param char $mod: G=original data, C=corrected data, ''=first time (not correcting anything)
  * @return the number of payee ("B") records.
  */
-function doPayer($type, $year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []) {
+function doPayer($type, $year, $sql, &$totals, $mod, $extra) {
   global $seq1099;
+  
+  extract(just('badNames badTINs', $extra, []));
   
   $manual = in($type, 'MISC NEC R'); // data for these is collected manually
   if (is_array($rows = $sql) xor $manual) {
@@ -95,7 +105,7 @@ function doPayer($type, $year, $sql, &$totals, $mod = '', $badNames = [], $badTI
     return 0;
   }
 
-  putRec(recA($type, $year));
+  putRec(recA($type, $year, $extra));
   $bCount = 0; // IRS instructions pub 1220 call this "number of payees", but say it means "number of B records"
   $total = array_fill(0, AMT_COUNT, 0);
   
@@ -203,14 +213,17 @@ function recT($year, $testMode) {
  * Create the payer record.
  * @param string $type: 1099 type (MISC and NEC are currently for CG itself, B and K are for the region)
  * @param int $year: year to report
+ * @param assoc $extra: payer parameters (defaults to CG's) -- ein, nm, addr, phone
  */
-function recA($type, $year) {
+function recA($type, $year, $extra = []) {
   global $stateCode;
+  
+  extract(just('ein nm addr phone', $extra, [CGF_EIN, CGF_LEGALNAME, CGF_POSTALADDR, CGF_PHONE]));
 
   $forCG = in($type, 'MISC NEC');
   $combo = pad($stateCode == STATE_CODE, 1); // combined Federal/State filing (for anything but NEC)
   
-  $regionTIN = $forCG ? CGF_EIN : '461821792';
+  $regionTIN = $forCG ? $ein : '461821792';
   $nameControl = sp(4);
   $lastEver = pad(FALSE, 1);
   
@@ -218,12 +231,12 @@ function recA($type, $year) {
   $typeCode = pad(ray(TEN99TYPES)[$type], 2);
   
   $foreign = pad(FALSE, 1); // 1 for foreign
-  $payerName = pad($forCG ? CGF_LEGALNAME : r\regionfield('legalName'), 80);
+  $payerName = pad($forCG ? $nm : r\regionfield('legalName'), 80);
   $isAgent = u\lpad(0, 1); // 1 if second half of payerName is transfer agent, else 0
 
-  list ($addr, $city, $st, $zip) = u\parseAddr($forCG ? CGF_POSTALADDR : 'c/o Common Good, PO Box 21, Ashfield, MA 013300021');
-  $payerAddr = pad($addr, 40) . pad($city, 40) . $st . pad(nodash($zip), 9);
-  $payerPhone = pad($forCG ? u\fmtPhone(CGF_PHONE, 'n') : '4136281723', 15); // was 4133765021 (maybe again someday)
+  list ($addrLine, $city, $st, $zip) = u\parseAddr($forCG ? $addr : 'c/o Common Good, PO Box 21, Ashfield, MA 013300021');
+  $payerAddr = pad($addrLine, 40) . pad($city, 40) . $st . pad(nodash($zip), 9);
+  $payerPhone = pad($forCG ? u\fmtPhone($phone, 'n') : '4136281723', 15); // was 4133765021 (maybe again someday)
   
   return 'A' . $year . $combo . sp(5) . $regionTIN . $nameControl . $lastEver . $typeCode . $amountCodes . sp(8) . $foreign . $payerName . $isAgent . $payerAddr . $payerPhone . sp(260) . seq() . sp(241) . EOL;
 }

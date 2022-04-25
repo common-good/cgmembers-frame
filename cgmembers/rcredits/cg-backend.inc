@@ -685,41 +685,53 @@ function setCat(&$txes, $tx, $i) {
   $in = ($i > $j); $out = !$in;
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
+  $pat = '(cat cannot be chosen automatically)'; // causes the cat to be set to NULL
   
   // get a regular expression for the proper category
-  if (r\isCGs($j_uid)) { // transfer from one CG-owned account to another
+  if (r\isCGs($j_uid)) { // transfer from one CG-owned CG account to another
     $qid3 = substr($iA->mainQid, -3);
     $pat = "\\.\\.$qid3$"; // CG-owned account category names end with ".." and the abbreviated account QID (for example ..AAB)
+  } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
+    $pat = $tx->created < strtotime('7/1/2021') ? '^A: Old Checking ..2275$' : '^A: Operations \\.\\.....';
   } elseif ($in and ($type == E_USD_FEE or $for == t('wire transfer fee'))) {
     $pat = 'Reimbursement of Transaction Fees$';
   } elseif ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
     $pat = 'Fiscal Sponsorship Fees$';
-  } elseif ($in and $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : abs($i_amount)) >= SUBSTANTIAL_GIFT)) {
-    $pat = 'Substantial Contributions \\(\\$' . SUBSTANTIAL_GIFT . '\\+\\)$'; // tr() fails here
-  } elseif ($in and $iA->sponsored and $gift) {
-    $pat = 'Sponsored Donations$';
-  } elseif ($in and $type == E_AUX and ($gift or u\starts($for, t('tip')))) {
-    $pat = 'Stepup Donations and Tips$';
-  } elseif ($in and $gift and $recurs) {
-    $pat = 'Regular Donations$';
-  } elseif ($in and $gift and !$recurs) {
-    $pat = 'One-time Donations$';
-  } elseif ($in and $gift and $for == t('crumbs donations')) {
-    $pat = 'Crumbs Donations$';
-  } elseif ($in and $gift and $for == t('roundup donations')) {
-    $pat = 'Roundup Donations$';
+  } elseif ($in and $gift) {
+    if ($iA->sponsored) {
+      $pat = 'Sponsored Donations$';
+    } elseif ($type == E_AUX) {
+      $pat = 'Stepup Donations and Tips$';
+    } elseif ($recurs) {
+      $pat = 'Regular Donations$';
+    } elseif (strhas($for, t('crumbs donations')) or strhas($for, t('percentage of past month receipts'))) {
+      $pat = 'Crumbs Donations$';
+    } elseif ($for == t('roundup donations')) {
+      $pat = 'Roundup Donations$';
+    } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
+      $pat = 'Company Donations$';
+    } else $pat = 'One-time Donations$';
+  } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
+    $pat = 'Grants and Direct Support to Idividuals$';
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('donation')) or strhas($for, t('grant')) or $gift)) {
     $pat = '^E: Grants$';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $pat = 'To Be Paid In CG Credit$';
-  } elseif ($out and $inv and in(r\acct($j_uid)->mainQid, 'CAAAAO')) {// and strhas($for, t('labor')
-    $pat = 'Staff Consultants$';
+  } elseif ($out and $inv and $type != E_OUTER) {
+    $toQid = r\acct($j_uid)->mainQid;
+    if (in($toQid, 'CAAAAO NEWAZS MIWAAA NYAAIV')) {
+      $pat = 'Staff Consultants$';
+    } elseif (in($toQid, 'MIWAAB')) {
+      $pat = 'Computer Services$';
+    } elseif (in($toQid, 'NEVABJ')) {
+      $pat = 'Accounting Services$';
+    } 
   } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
     $pat = 'Information Services$';
-  } else $pat = 'NO SUCH ACCOUNT'; // causes the cat to be set to NULL
-  
+  }
+
   $pat = str_replace('\\', '\\\\', $pat);
-  $txes[$i]->cat = $cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
+  $txes[$i]->cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
 }
 
 /**
@@ -1536,6 +1548,7 @@ function balChange($info) {
  * @param assoc $info: object or array with the desired value in its member indexed by $field
  */
 function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $info) {
+  if (empty($info)) return sanityErr("$prefix $ref record is empty!");
   $keyVal = ((array) $info)[$field];
   if (!empty($keyVal) and !db\exists($table, [$keyFld=>$keyVal])) {
     sanityErr("$prefix $ref $field refers to non-existent $table record $keyVal");

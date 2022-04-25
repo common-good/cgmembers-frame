@@ -28,14 +28,11 @@ function formGet($form, &$sta, $args = '') {
   $subtext = t('<p>When you transfer funds FROM your bank account, you are buying Common Good credit. That credit is backed partly by Dollars in your Common Good Community\'s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>].</p>
   <p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund'));
 
-  $toBank24 = db\get('-amount', 'txs2_bank', 'payee IN (:uids) AND amount<0 AND created>:dayAgo', ray('uids dayAgo', $mya->uids, strtotime('-1 day')));
-  if (empty($toBank24)) { // limit to one withdrawal request per 24 hours
-    $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
-    foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
-      $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
-      $avail = min($avail, $limit - $sofar);
-    }
-  } else { $avail = 0; }
+  $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
+  foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
+    $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
+    $avail = min($avail, $limit - $sofar);
+  }
 
   $subs = ray('uids', $mya->uids);
   foreach (ray('in out other') as $k) {
@@ -98,6 +95,7 @@ function formGet_submit($form, &$sta) {
 
   list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit', TRUE));
   say($report); // expanded message
+  return go('get'); // required for testing
 }
 
 /**

@@ -96,7 +96,7 @@ class QB {
       $this->ds->updateOAuth2Token($token);
       $this->setRefreshToken($token, $realmId);
     } elseif ($channel == TX_WEB) { // out of time to refresh (or first time), so reauthorize
-      return softErr('qbo lost');
+      return w\softErr('qbo lost');
     } else return r\tellAdmin(t('Connection lost to QBO'), ray(t('Alert'), tr('qbo lost')));
   }
 

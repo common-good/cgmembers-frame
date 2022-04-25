@@ -184,5 +184,5 @@ function statementMonth($period, $fiscalYearEnd = '6/30') {
     $start = u\monthDay1($start);
     list ($end, $recurDesc) = [u\plusMonths(1, $start), fmtDt($start, 'MMM yyyy')];
   }
-  return [$start, $end, $recurDesc];
+  return [$start, $end - 1, $recurDesc];
 }

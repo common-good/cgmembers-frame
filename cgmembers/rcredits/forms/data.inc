@@ -11,17 +11,18 @@ use CG\Db as db;
  */
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  extract(just('code qName sql q d isco', $args, NULL));
+  extract(just('code', $args, ''));
   u\setDft($isco, $isco0 == 'co');
   require queryFile($isco);
   
-  if ($q) {
-    $d = substr($q, 0, 1);
-    $url = $isco ? '/history/company-reports' : '/community/data';
-    w\go("$url/qName=" . urlencode($q));
-  }
+  extract(just('qName sql q isco', u\decryRay($code), NULL));
   
-  if ($mya->admRegion and $code and $info = u\decryRay($code) and $sql2 = nni($info, 'sql')) {
+  if ($q) {
+    $url = $isco ? '/history/company-reports' : '/community/data';
+    w\go("$url/code=" . u\cryRay(ray('qName', $q)));
+  }
+
+  if ($mya->admRegion and $sql2 = $sql) {
     $title = t('MySQL Query');
     try {
       $q = db\adminQ($sql2);
@@ -33,16 +34,14 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
       $form = compact(ray('title list'));
     } catch (\Exception $e) {
       err($e->getMessage());
-      return go('/community/data/sql=' . urlencode($sql2));
+      return go('/community/data/code=' . u\cryRay(ray('sql', $sql2)));
     }
-  } elseif ($qName) {
-    $sql2 = nn($queries[$qName]);
-    if (!empty($sql2)) {
-      $title = t('Query Results');
-      $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
-      $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
-      $form = compact(ray('title subtext report'));
-    }
+  } elseif ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr($qName, 1))) {
+    if (substr($sql2, 0, 1) == '/') return go($sql2);
+    $title = t('Query Results');
+    $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
+    $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
+    $form = compact(ray('title subtext report'));
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
@@ -50,12 +49,12 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
     foreach ($queries as $k0 => $v) {
-      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0&isco=$isco", $k);
+      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk('/community/data/code=' . u\cryRay(ray('q isco', $k0, $isco)), $k);
     }
     $links = item(u\ul($links), NBSP);
     $form = compact(ray('title subtext sql submit links'));
   }
-  return cgform($form, $args ? 'wide nolabs' : '');
+  return cgform($form, $args ? 'wider nolabs' : '');
 }
 
 function formData_validate($form, &$sta) {
@@ -86,22 +85,30 @@ function getReport($nm) {
     $colClasses = ray(',,,,alignR');
     list ($us, $them, $invUs, $invThem) = $nm == 'customers' ? [2, 1, 'payee', 'payer'] : [1, 2, 'payer', 'payee'];
     $whereInv = "$invUs=:myid AND amount<>0 GROUP BY $invThem";
-    $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
+//    $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
+    $whereTx = "uid$us=:myid AND amt<>0 AND type IN (:E_PRIME, :E_OUTER) GROUP BY uid$them, pid";
+
     $sql = <<< X
-      SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
-        SELECT uid$them AS uid, SUM(amt) AS net0, 0 AS invs0
-        FROM txs_prime WHERE $whereTx
-        UNION SELECT $invThem AS uid,0 AS net0, SUM(amount) AS invs0
+      SELECT u.uid,p.pid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
+        SELECT uid$them AS uid, pid, SUM(amt) AS net0, 0 AS invs0
+        FROM txs LEFT JOIN txs2 USING (xid) WHERE $whereTx
+        UNION SELECT $invThem AS uid,NULL AS pid,0 AS net0, SUM(amount) AS invs0
         FROM tx_requests WHERE $whereInv AND status<:TX_PAID
-      ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
+      ) x LEFT JOIN users u ON u.uid=x.uid LEFT JOIN people p ON p.pid=x.pid GROUP BY u.uid,p.pid ORDER BY IF(p.pid, p.fullName, u.fullName)
 X;
     $q = db\q($sql, compact('myid'));
     while ($row = $q->fetchAssoc()) {
       extract($row);
-      $a = r\acct($uid);
-      $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
-      list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email ?: t('BAD EMAIL'), u\fmtPhone($a->phone, '-')];
-      $res[] = [$qid, $a->fullName, $phone, $email, number_format($net, 2)];
+      if ($pid) {
+        $vs = db\get('pid AS qid, fullName, phone, email', 'people', compact('pid'));
+        extract($vs);
+      } else {
+        $a = r\acct($uid);
+        $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
+        list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email ?: t('BAD EMAIL'), u\fmtPhone($a->phone, '-')];
+        $fullName = $a->fullName;
+      }
+      $res[] = [$qid, $fullName, $phone, $email, number_format($net, 2)];
       $classes[] = $invs ? 'hiRow' : '';
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, nn($rowClasses)));

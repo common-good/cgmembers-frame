@@ -1480,15 +1480,26 @@ function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 /**
  * Say whether the given account is owned by Common Good.
  * But not the roundups and crumbs collection accounts which conceptually stand in for donors
- *  -- those belong to CG only on ctty's and CG's Balance Sheets.
+ *  -- those are conceptually part of CG's main account and appear only on ctty's and CG's Balance Sheets.
  * @param int $uid: account record ID
  */
 function isCGs($uid) {
   if ($uid <= UID_CANON9) return FALSE;
   if (in($uid, [CGID, r\serverUid()])) return TRUE;
   $a = r\acct($uid);
-  if ($a->sponsored) return TRUE;
+  if ($a->sponsored or $a->mainQid == 'NEWAIN') return TRUE; // NEWAIN is 457 retirement account
   return FALSE;
+}
+
+/**
+ * Return an array of record IDs of all accounts owned by CG.
+ * @param bool $all: <include all of them> (otherwise omit roundups, crumbs, and 457 retirement account, which we don't categorize)
+ * Called in queries.inc, forms/setcats.inc, and forms/iereport (for example)
+ */
+function cgUids($all = TRUE) {
+  $ray = db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'); // get the fiscally sponsored account IDs
+  foreach ([CGID, r\serverUid(), UID_ROUNDUPS, UID_CRUMBS, r\qo('NEWAIN')->id] as $uid) $ray[] = $uid; // NEWAIN is 457 retirement account
+  return $all ? $ray : array_slice($ray, 0, count($ray) - 3);
 }
 
 /**

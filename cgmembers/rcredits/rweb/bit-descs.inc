@@ -34,13 +34,13 @@ $flagHelp = array(
 // u26
 // u27
 // u28
-// u29
+  'influencer' => t('The person has significant influence over %PROJECT (board member, former board member, or Executive Director) or is a family member of such a person.'),
 //  'icAdmin' => t('The account is an Investment Club administrator.'),
 //  'oAdmin' => t('The account is an administrator of the Offers, Needs, & Tips board in a community.'),
 //  'admin2' => t('The account is an overall assistant administrator or bank partner or government regulator (the Admin2 has read-only permission on all accounts, except with permission to add notes).'),
 //  'cAdmin2' => t('The account is a community sub-administrator (the cAdmin2 has read-only permission on all accounts, except with permission to add notes).'),
 //  'cAdmin' => t('The account is a community administrator.'),
-  'admin' => t('The account is a system administrator -- can manage the server and autorize community administrators, but cannot manage communities or individual accounts (except temporarily while we\'re getting started).'),
+  'admin' => t('The account is a system administrator -- specific permissions are set separately.'),
   
   'cgc' => t('Account is an effectively autonomous Common Good Community.'),
   'up' => t('Community is operational (up).'),

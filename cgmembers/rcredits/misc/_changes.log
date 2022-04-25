@@ -1,3 +1,25 @@
+2022-04-25 feature/iereport
+. added an Income & Expense report
+. reworked queries so reports that require parameters can be forms
+. fixed bug in bank transfer tests ("get") that failed to refresh page
+. made queries more efficient for non-admins
+
+2022-04-24 feature/cat-tweaks
+. added admin function ccFees to calculate CC fees saved for participating businesses (ever)
+. just() function now allows arguments to default to an empty array
+. added retirement account to isCGs(), to identify (cat) contributions and withdrawals to and from that account
+. improved categorization of transactions
+. expanded y\do1099s() to better handle 1099-NEC reporting for other organizations
+. added B_INFLUENCER bit to track transactions with disqualified individuals and made query to report gifts from them
+. fixed bug that allowed ACH gifts from nonmembers, then crashed
+. expanded Customers report to include nonmembers, but it needs separation of people from accounts to be complete
+. removed one-bank-transfer-a-day limit
+. improved QBO accounts import so it updates intelligently
+. fixed bug in form setCats date range input
+. fixed off-by-one bug in statement date range
+. fixed bug in tx detail update that sometimes negated the amount!
+. added a function r\cgUids() to return IDs of all accounts owned by CG
+
 2022-04-12 feature/setcats
 . created setcats form
 . inserted QBO account records into tx_cats (for testing)

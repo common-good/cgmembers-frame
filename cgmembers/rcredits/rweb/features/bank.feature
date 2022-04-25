@@ -124,10 +124,7 @@ Scenario: a member asks to do two transfers out in one day
   | put |     10 |
   Then we show "Transfer Funds" with:
   | Pending  | |
-  | You have | $6 from %PROJECT to your bank account. |
-  And we say "error": "short put" with subs:
-  | max |*
-  | $0  |
+  | You have | $16 from %PROJECT to your bank account. |
 
 Scenario: a member draws credit from the bank then cancels
   When member "C:B" completes form "get" with values:
