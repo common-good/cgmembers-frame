@@ -716,7 +716,7 @@ function setCat(&$txes, $tx, $i) {
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('donation')) or strhas($for, t('grant')) or $gift)) {
     $pat = '^E: Grants$';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
-    $pat = 'To Be Paid In CG Credit$';
+    $pat = 'To Be Paid Through CG$';
   } elseif ($out and $inv and $type != E_OUTER) {
     $toQid = r\acct($j_uid)->mainQid;
     if (in($toQid, 'CAAAAO NEWAZS MIWAAA NYAAIV')) {
