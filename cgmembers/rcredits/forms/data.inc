@@ -32,6 +32,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
         $list = w\makeTable($rows, $hdrs);
       } else $list = t('Zero matching rows found.');
       $form = compact(ray('title list'));
+      jsx('query');
     } catch (\Exception $e) {
       err($e->getMessage());
       return go('/community/data/code=' . u\cryRay(ray('sql', $sql2)));

@@ -1,3 +1,6 @@
+2022-04-26 feature/iereport2
+. added transaction list and detail editing to iereport
+
 2022-04-25 feature/iereport
 . added an Income & Expense report
 . reworked queries so reports that require parameters can be forms

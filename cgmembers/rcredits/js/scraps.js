@@ -30,6 +30,10 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'query':
+    $('.form-item-list a.xid').click(function () {location.href = baseUrl + '/history/transaction/xid=' + $(this).text();});
+    break;
+    
   case 'txdetail':
     $('.form-item-reversesXid .suffix a').click(function () {
       post('delPair', {xid:vs['xid']}, function (j) {
