@@ -60,6 +60,7 @@ function extraSetup($feature) {
  *     MAKE recurs Setup
  *     MAKE risk Setup
  *     MAKE rules Setup
+ *     MAKE sweep Setup
  *     MAKE tickle Setup
  *     MAKE trust Setup
  *     MAKE weekly Setup
@@ -91,6 +92,7 @@ function members($list) {return t\members($list);}
  *     TEST monthly Setup
  *     TEST recurs Setup
  *     TEST rules AnEndedTemplateHasNoEffect
+ *     TEST sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     BOTH weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
  *     TEST weekly AMemberBuildsUpSavings
@@ -257,7 +259,7 @@ function membersHave($list) {return t\membersHave($list);}
 /**
  * that (ARG) has link results: (ARG)
  *
- * in: TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ * in: 
  */
 function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $info);}
 
@@ -437,6 +439,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE rules Setup
  *     TEST rules RulesGetInstantiated
  *     MAKE rules AnEndedTemplateHasNoEffect
+ *     BOTH sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
@@ -455,6 +458,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     TEST bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     TEST gifts ASecondRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
@@ -567,6 +571,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE risk WeCalculateRisks
  *     MAKE rules RulesGetInstantiated
  *     MAKE rules AnEndedTemplateHasNoEffect
+ *     MAKE sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
@@ -635,6 +640,7 @@ function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms
  * it's later
  *
  * in: MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE recurs ARecurringBankTransferCanBeCompleted
  */
 function itsLater() {return t\itsLater();}

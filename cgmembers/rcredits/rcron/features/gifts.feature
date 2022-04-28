@@ -22,14 +22,16 @@ Scenario: A donation to CG is visible to admin
   | Donations: | $10 Weekly |
 
 Scenario: A brand new recurring donation to CG can be completed
-  Given these "tx_timed":
-  | id | start      | from | to  | amount | period | purpose |*
-  |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
+  Given members:
+  | .ZZC | Cor Pub  | 3 C St. | Ctown | CA    | 01003 | US      | 4132530003 | 3 C, C, CA | ok,confirmed,co    |             |  -200 |
+  And these "tx_timed":
+  | id | start      | from | to   | amount | period | purpose |*
+  |  7 | %yesterday | .ZZA | .ZZC |     10 | month  | gift!   |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose | flags | recursId |*
-  |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift |        7 |
-  And we notice "paid you linked" to member "cgf" with subs:
+  | xid | created | amount | payer | payee    | purpose | flags | recursId |*
+  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
+  And we notice "paid you linked" to member ".ZZC" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | gift!        | ?        |
   And that "notice" has link results:
@@ -44,7 +46,7 @@ Scenario: A brand new recurring donation to CG can be completed
   And we email "cggift-thanks-member" to member ".ZZA" with subs:
   | amount | $10 monthly |**
   | date   | %mdY |
-  And we email "gift-report" to member "cgf" with subs:
+  And we email "gift-report" to member ".ZZC" with subs:
   | amount      | $10 monthly |**
   | date        | %mdY |
   | fromName    | Abe One |
@@ -61,17 +63,47 @@ Scenario: A brand new recurring donation to CG can be completed
   And count "txs2" is 0
   And count "tx_requests" is 0
 
-Scenario: A second recurring donation to CG can be completed
+Scenario: A brand new recurring donation to CG can be completed
   Given these "tx_timed":
-  | start     | from | to  | amount | period | purpose |*
-  | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
-  And these "txs":
-  | xid | created    | amount | payer | payee | purpose | flags |*
-  |   1 | %today-32d |     10 | .ZZA  | cgf   | gift!   | gift  |
+  | id | start      | from | to  | amount | period | purpose |*
+  |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose | flags |*
-  |   2 | %today  |     10 | .ZZA  | cgf   | gift!   | gift  |
+  | xid | created | amount | payer | payee    | purpose | flags | recursId |*
+  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
+  And we notice "recur pay" to member ".ZZA" with subs:
+  | amount | when    | purpose | payee    |*
+  |    $10 | monthly | gift!   | %PROJECT |
+  # and many other fields
+  And we email "cggift-thanks-member" to member ".ZZA" with subs:
+  | amount | $10 monthly |**
+  | date   | %mdY |
+  And count "txs" is 2
+  And count "txs2" is 0
+  And count "tx_requests" is 0
+  When it's later
+  And cron runs "recurs"
+  Then count "txs" is 2
+  And count "txs2" is 0
+  And count "tx_requests" is 0
+  And count "r_notices" is 2
+
+Scenario: A second recurring donation to CG can be completed
+  Given these "tx_timed":
+  | id | start     | from | to  | amount | period | purpose |*
+  | 1  | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
+  And these "txs":
+  | xid | created    | amount | payer | payee    | purpose | flags | recursId |*
+  |   2 | %today-32d |     10 | .ZZA  | regulars | gift!   | gift  | 1        |
+  When cron runs "recurs"
+  Then these "txs":
+  | xid | created | amount | payer | payee    | purpose | flags |*
+  |   3 | %today  |     10 | .ZZA  | regulars | gift!   | gift  |
+  And count "txs" is 3
+
+  Given it's later
+  When cron runs "recurs"
+  Then count "txs" is 3
 
 Scenario: A donation invoice (to CG) can be completed
 # even if the member has never yet made a cgCard purchase
@@ -84,8 +116,8 @@ Scenario: A donation invoice (to CG) can be completed
   And member ".ZZA" has no photo ID recorded
   When cron runs "getFunds"
   Then these "txs": 
-  | xid | created | amount | payer | payee | purpose  | flags | recursId |*
-  |   2 | %today  |     50 | .ZZA  | cgf   | donation | gift  |        8 |
+  | xid | created | amount | payer | payee    | purpose  | flags | recursId |*
+  |   2 | %today  |     50 | .ZZA  | regulars | donation | gift  |        8 |
   And these "tx_requests":
   | nvid | created   | status | purpose  |*
   |    2 | %today    | 2      | donation |

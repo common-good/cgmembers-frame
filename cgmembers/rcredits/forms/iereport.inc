@@ -55,18 +55,18 @@ function iereport($start, $end) {
   $catIds = db\keyed('category,id', 'tx_cats', "category RLIKE '^[IE]' AND `show` ORDER BY id");
   $cats = array_fill_keys(array_keys($catIds), 0);
   
-  $uids = r\cgUids(FALSE);
+  $uids = join(', ', r\cgUids(FALSE));
 
   $sql = <<< X
     SELECT cat, e.id > 0 AS toMe, SUM(amount) AS amount, COUNT(e.id) AS cnt,
     IFNULL(category, IF(e.id > 0, 'I: Uncategorized Income', 'E: Uncategorized Expense')) AS catName
     FROM tx_entries e JOIN tx_hdrs h USING(xid) LEFT JOIN tx_cats c ON c.id=e.cat
-    WHERE uid IN (:uids) AND created BETWEEN :start AND :end 
+    WHERE uid IN ($uids) AND created BETWEEN :start AND :end 
     AND ((category IS NULL AND entryType<>:E_BANK) OR LEFT(category, 1) IN ('I', 'E'))
     GROUP BY category
     ORDER BY e.id < 0, category
 X;
-  $q = db\q($sql, compact(ray('uids start end')));
+  $q = db\q($sql, compact(ray('start end')));
   while ($row = $q->fetchAssoc()) {
     extract($row); // cat, catName, amount, cnt
     $cats[$catName] = $amount;
@@ -82,6 +82,7 @@ X;
   $income = TRUE;
   foreach ($cats as $catName => $amount) {
     $cat = $catIds[$catName] ?: 'NULL';
+    if (strhas($catName, 'Uncategorized')) $cat = 'NULL';
     if (!$income) $amount = -$amount;
     $parts = explode(':', $catName);
     $pCnt = count($parts);
@@ -97,8 +98,8 @@ X;
       $prevParts = $parts;
     }
 
-    $sql = tr("SELECT CONCAT('<a class=\"xid\">', h.xid, '</a>') AS xid, u.fullName, e.amount, e.description FROM tx_entries e JOIN tx_hdrs h USING(xid) JOIN tx_entries e2 ON e2.id=-e.id LEFT JOIN users u ON u.uid=e2.uid WHERE e.cat=%cat ORDER BY h.created,h.xid,e.id", compact('cat'));
-    $sql = str_replace('=NULL', ' IS NULL', $sql);
+    $sql = tr("SELECT CONCAT('<a class=\"xid\">', h.xid, '</a>') AS xid, u1.fullName AS `from`, u2.fullName AS `to`, e1.amount, e1.description, e1.rule, h.recursId, h.reversesXid FROM tx_entries e1 JOIN tx_hdrs h USING(xid) JOIN tx_entries e2 ON e2.id=-e1.id LEFT JOIN users u1 ON u1.uid=e1.uid LEFT JOIN users u2 ON u2.uid=e2.uid WHERE e1.cat=%cat AND h.created BETWEEN %start AND %end ORDER BY h.created,h.xid,e1.id", compact(ray('start end cat')));
+    $sql = str_replace('=NULL', " IS NULL AND e1.uid IN ($uids)", $sql);
     $lnk = '/community/data/code=' . u\cryRay(compact('sql'));
     $catName = trim($parts[$pCnt - 1]);
     $catName = str_repeat($indent, $pCnt - 1) . $catName;

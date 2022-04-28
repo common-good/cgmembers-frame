@@ -64,8 +64,8 @@ Scenario: A member makes a recurring donation
   | id | start  | from | to  | amount | period | purpose  |*
   |  1 | %today | .ZZA | cgf |     10 | month  | donation |
   And these "txs":
-  | xid | created | amount | payer | payee | purpose  | recursId |*
-  |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
+  | xid | created | amount | payer | payee    | purpose  | recursId |*
+  |   1 | %today  |     10 | .ZZA  | regulars | donation |        1 |
   And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And these "r_honors":
@@ -88,8 +88,8 @@ Scenario: A member makes a new recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose  | recursId |*
-  |   1 | %today  |     10 | .ZZA  | cgf   | donation | 2        |
+  | xid | created | amount | payer | payee    | purpose  | recursId |*
+  |   1 | %today  |     10 | .ZZA  | regulars | donation | 2        |
   And we say "status": "prev gift canned"
   And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
@@ -122,8 +122,8 @@ Scenario: A company makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose  |*
-  |   1 | %today  |     10 | .ZZC  | cgf   | donation |
+  | xid | created | amount | payer | payee    | purpose  |*
+  |   1 | %today  |     10 | .ZZC  | regulars | donation |
   And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   
