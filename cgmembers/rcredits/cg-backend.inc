@@ -503,6 +503,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   list ($loserA, $gainerA) = u\order($reallyTaking, $otherA, $actorA);
   list ($e1A, $e2A) = u\order($taking, $otherA, $actorA);
+  if ($e2A->id == CGID and $gift and $recursId) $e2A = r\acct(UID_REGULARS); // bring just the total of the month's regular donations into CG's account
   
   $ptrs = ray('actor other loser gainer e1 e2'); // set up sets of variable names
   foreach ($ptrs as $k) {
@@ -686,26 +687,27 @@ function setCat(&$txes, $tx, $i) {
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
   $pat = '(cat cannot be chosen automatically)'; // causes the cat to be set to NULL
+  $refund = (($in xor $i_amount < 0) and !in($type, [E_BANK, E_OUTER]));
   
   // get a regular expression for the proper category
-  if (r\isCGs($j_uid)) { // transfer from one CG-owned CG account to another
+  if ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
+    $pat = 'Fiscal Sponsorship Fees$';
+  } elseif ($in and $type == E_USD_FEE) {
+    $pat = 'Reimbursement of Transaction Fees$';
+  } elseif (r\isCGs($j_uid)) { // transfer from one CG-owned CG account to another
     $qid3 = substr($iA->mainQid, -3);
     $pat = "\\.\\.$qid3$"; // CG-owned account category names end with ".." and the abbreviated account QID (for example ..AAB)
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
     $pat = $tx->created < strtotime('7/1/2021') ? '^A: Old Checking ..2275$' : '^A: Operations \\.\\.....';
-  } elseif ($in and ($type == E_USD_FEE or $for == t('wire transfer fee'))) {
-    $pat = 'Reimbursement of Transaction Fees$';
-  } elseif ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
-    $pat = 'Fiscal Sponsorship Fees$';
   } elseif ($in and $gift) {
     if ($iA->sponsored) {
       $pat = 'Sponsored Donations$';
-    } elseif ($type == E_AUX) {
+    } elseif ($type == E_AUX and $rule > 0) {
       $pat = 'Stepup Donations and Tips$';
+    } elseif (strhas($for, t('crumb donations')) or strhas($for, t('percentage of past month receipts'))) {
+      $pat = 'Crumb Donations$';
     } elseif ($recurs) {
       $pat = 'Regular Donations$';
-    } elseif (strhas($for, t('crumbs donations')) or strhas($for, t('percentage of past month receipts'))) {
-      $pat = 'Crumbs Donations$';
     } elseif ($for == t('roundup donations')) {
       $pat = 'Roundup Donations$';
     } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
@@ -713,15 +715,15 @@ function setCat(&$txes, $tx, $i) {
     } else $pat = 'One-time Donations$';
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
     $pat = 'Grants and Direct Support to Idividuals$';
-  } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('donation')) or strhas($for, t('grant')) or $gift)) {
+  } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
     $pat = '^E: Grants$';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $pat = 'To Be Paid Through CG$';
   } elseif ($out and $inv and $type != E_OUTER) {
     $toQid = r\acct($j_uid)->mainQid;
-    if (in($toQid, 'CAAAAO NEWAZS MIWAAA NYAAIV')) {
+    if (in($toQid, 'CAAAAO NEWAZS NYAAIV')) {
       $pat = 'Staff Consultants$';
-    } elseif (in($toQid, 'MIWAAB')) {
+    } elseif (in($toQid, 'MIWAAA MIWAAB')) {
       $pat = 'Computer Services$';
     } elseif (in($toQid, 'NEVABJ')) {
       $pat = 'Accounting Services$';
@@ -809,6 +811,7 @@ function sendNotifications($mya, $type, $tx, $shortfall) {
     $notice = $notices[$i - 1];
     list ($a, $otherA, $tell) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i ? 'tellIn' : 'tellOut'];
     $args = $tx->reportArgs($otherA, TRUE, $shortfall);
+
     if ($notice == 'paid you' and $a->co) {
       $notice = 'paid you linked';
       $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
@@ -845,7 +848,7 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit) {
   
   $payerCo = $buyer->co ? 1 : 0;
   $payeeCo = $seller->co ? 1 : 0;
-
+  
   // Get a list of applicable rules
   $payerCheck = u\genRuleSQL('payer', ':buyer'); // rule applies to this buyer
   $payeeCheck = u\genRuleSQL('payee', ':seller'); // rule applies to this seller
@@ -888,6 +891,7 @@ EOF;
     if ($value <= 0) continue;
     $rebate += $value;
     
+    if ($to == CGID and $purpose == STEPUP_PURPOSE) $to = UID_STEPUPS; // bring just the total of the month's stepup donations into CG's account
     txEntryPair($entries, $tx, $value, [$from, $to], $desc, $type, compact('rule'));
     if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
       if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $rule, now()), 'id'); // rule is just for payer

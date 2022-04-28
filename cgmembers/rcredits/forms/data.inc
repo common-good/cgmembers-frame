@@ -12,10 +12,11 @@ use CG\Db as db;
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
   extract(just('code', $args, ''));
-  u\setDft($isco, $isco0 == 'co');
-  require queryFile($isco);
+
+  require queryFile($isco0 == 'co');
   
   extract(just('qName sql q isco', u\decryRay($code), NULL));
+  u\setDft($isco, $isco0 == 'co');
   
   if ($q) {
     $url = $isco ? '/history/company-reports' : '/community/data';
@@ -120,7 +121,7 @@ X;
   } elseif ($nm == 'donations') {
     $heads = ray(t('Name,Phone,Email,Address,Member,Total,Count,Since'));
     $colClasses = ray(',,,,alignC,alignR,alignR,');
-    $where = "uid2=:myid AND (cat IN :DONATION_CATS OR for2 RLIKE '.*\{donation|gift|grant\}.*')";
+    $where = "uid2=:myid AND (x.:IS_GIFT OR for2 RLIKE '.*\{donation|gift|grant\}.*')";
     $sql = <<< X
       (SELECT uid AS id, fullName AS `name`, phone, email, 'yes' AS member, SUM(x.amt) AS total, SUM(1) AS count, MIN(x.created) AS since
       FROM txs x LEFT JOIN users u ON u.uid=x.uid1

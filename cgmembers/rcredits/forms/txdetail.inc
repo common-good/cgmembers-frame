@@ -101,7 +101,7 @@ function formTxDetail_validate($form, &$sta) {
   extract(just($fields = 'created amount recursId reversesXid', $sta['input'])); // no default!! (see next line)
   foreach (ray('recursId reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
 
-  if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 12 * MONTH_SECS, tomorrow())) return say($err, 'created');
+  if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 48 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($amount and $err = u\badAmount($amount, '!=0')) return say($err, 'amount');
   tweakSta($sta, compact(ray($fields)));
 }

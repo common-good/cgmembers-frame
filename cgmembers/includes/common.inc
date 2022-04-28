@@ -7573,7 +7573,7 @@ function _drupal_flush_css_js() {
   $map = ray('r\\Web r\Util r\DB r\Testing r\Backend r\Admin', 'w', 'u', 'db', 't', 'be', 'a');
   foreach (ray('object class function') as $k) {
     $$k = str_replace('CG\\', 'r\\', pr(nn($$k)));
-    $$k = strtr($$k, $map);
+    $$k = substr(strtr($$k, $map), 0, 50); // some objects are too long
   }
   if ($class) $function = "$class::$function";
   $string = "<div class=\"debug\">{$string}&nbsp; at line $line in $function ($file) $object</div>\n";

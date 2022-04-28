@@ -2,12 +2,15 @@
 use CG as r;
 use CG\Util as u;
 use CG\Web as w;
+use CG\DB as db;
+use CG\Backend as be;
 
 use QuickBooksOnline\API\Core\ServiceContext;
 use QuickBooksOnline\API\DataService\DataService;
 use QuickBooksOnline\API\PlatformService\PlatformService;
 use QuickBooksOnline\API\Core\Http\Serialization\XmlObjectSerializer;
 use QuickBooksOnline\API\Facades\Purchase;
+use QuickBooksOnline\API\Data\Transaction;
 use QuickBooksOnline\API\Data\IPPPurchase;
 use QuickBooksOnline\API\QueryFilter\QueryMessage;
 use QuickBooksOnline\API\ReportService\ReportService;
@@ -146,29 +149,32 @@ class QB {
   }
   
   /**
-   * Send an account's latest transactions to QBO.
-   * @param int $uid: ID of account to process.
+   * Send the latest transactions in CG's various accounts to QBO.
    */
-  public function sendTxs($uid) {
+  public function sendTxs() {
     $this->refresh();
-    $a = r\acct($uid);
-    $lastXid = $a->lastQBXid ?: 0;
-//    $lastXid = $lastEid ? db\get('xid', 'tx_entries', 'id>=:lastEid', compact('lastEid')) : 0;
+    $lastXid = getv('lastQBXid') ?: setv('lastQBXid', db\min('xid', 'tx_hdrs', 'created>=' . strtotime('1/1/2021')) - 1); 
+    
     $start = db\min('created', 'tx_hdrs', 'xid>=:lastXid', compact('lastXid')); // get date of last tx even if it was deleted (catches txs whose date got changed)
+    $start = max($start, strtotime('1/1/2021'));
+    $cnt = 0;
 
-    $txs = $start ? be\getTxs($uid, $start, now()) : [];
+//    $txs = $start ? be\getTxs(r\cgUids(FALSE), $start, now()) : [];
+    $txs = $start ? be\getTxs(r\cgUids(FALSE), $start, $start + MONTH_SECS) : [];
+
     foreach ($txs as $entries) {
       foreach ($entries as $ei => $tx) {
         extract(just('xid eid created', $tx));
         if ($xid <= $lastXid) continue; // skip already-handled transactions on the start date (or later)
-        if ($ei == 0) $qbTx = new \IPPTransaction(['TxnDate' => fmtDt($created, 'Ymd')]);
+        if ($ei == 0) $qbTx = new QuickBooksOnline\API\Data\IPPTransaction(['TxnDate' => fmtDt($created, 'Ymd')]);
         $this->addTxLine($qbTx, just('xid description myAmount name cat banking', $tx) + compact('ei'));
       }
+      $cnt++; if ($cnt > 50) break; // debug(
 //      $this->ds->Add($qbTx);
-//      $a->update('lastQBXid', $xid);
+//      setv('lastQBXid', $xid);
     }
     list ($xid1, $xid9) = $txs ? [$txs[0]['xid'], $tx['xid']] : ['', ''];
-    r\tellAdmin(t('QBO export of %qid complete', 'qid', $a->mainQid), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
   }
 
   /**

@@ -165,6 +165,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersAgain
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup ASurtxAmountRoundsToZero
+ *     MAKE stepup CommonGoodGetsAStepupDonation
  *     MAKE tx AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
@@ -1763,6 +1764,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
  *     BOTH stepup ASurtxAmountRoundsToZero
+ *     BOTH stepup CommonGoodGetsAStepupDonation
  *     MAKE tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     BOTH tx AMemberConfirmsRequestToPayAnotherMember

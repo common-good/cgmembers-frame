@@ -176,7 +176,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut founded'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce lastQBXid'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
@@ -220,11 +220,13 @@ define('R_ON_FILE', t('(on file)'));
 const DOLLAR_POOL = 1; // uid of dollar pool account
 const AGGREGATE_MIN = 1; // minimum number of members to show aggregate data
 
-const UID_SUPER = 1;  // uid of superAdmin account
-const UID_PLACEHOLDER1 = 2;  // uid of first placeholder
-const UID_PLACEHOLDER2 = 3;  // uid of second placeholder
-const UID_ROUNDUPS = 129;  // Donations start at 128 (128 used for general donations)
-const UID_CRUMBS = 130;  //
+const UID_SUPER = 1; // uid of superAdmin account
+const UID_PLACEHOLDER1 = 2; // uid of first placeholder
+const UID_PLACEHOLDER2 = 3; // uid of second placeholder
+const UID_REGULARS = 128; // Recurring Donations
+const UID_ROUNDUPS = 129; // Donations of spare change on each purchase
+const UID_CRUMBS = 130; // Donations of a percentage of payments received
+const UID_STEPUPS = 131; // Donations of a percentage of payments made (donated to CG itself)
 const UID_BANK_FEES = 192;
 const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
 const UID_BANK1 = 256;
@@ -233,6 +235,7 @@ const UID_BANK_OUT = 257;  //
 const UID_BANK9 = 511;
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
+define('STEPUP_PURPOSE', t('donation'));
 
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos

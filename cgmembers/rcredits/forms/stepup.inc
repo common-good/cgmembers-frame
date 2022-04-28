@@ -150,7 +150,7 @@ function formStepUp_submit($form, &$sta) {
     $pct = strhas($period, 'pct');
     $matchFlds = 'amount,portion,amtMax'; // fields user can adjust from time to time
     $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
-    $purpose = t('donation'); // description gets elaborated in be\getTxs()
+    $purpose = STEPUP_PURPOSE; // description gets elaborated in be\getTxs()
     
     if ($xly = in($period, PERIODS)) { // periodic donation
       $tnm = 'tx_timed';

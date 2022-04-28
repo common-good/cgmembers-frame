@@ -297,7 +297,7 @@ function recur($template) {
   } else { $when = t('one-time'); }
 
   if ($action == 'surtx') {
-    if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't but don't do it more than a week in advance
+    if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't do it more than a week in advance
     $rule = justNot(ray('id period periods duration durations start end lastRecur flags'), $template);
     $rule['template'] = $id;
     $rule['start'] = $shouldStart;
@@ -671,13 +671,13 @@ function crumbs($item) {
 }
 
 /**
- * Sweep roundups and crumbs contributions into Common Good's account.
+ * Sweep roundups, crumbs, stepups, and regular contributions into Common Good's account.
  */
-function sweep($item) {
-  extract(just('end', $item));
+function sweep($item = ['end' => NOW]) {
+  extract(just('end', $item ?: [], NOW)); // default is for testing
   
   $cgA = r\acct(CGID);
-  foreach (ray('roundup crumb', UID_ROUNDUPS, UID_CRUMBS) as $type => $uid) {
+  foreach (ray(t('regular roundup crumb step-up'), UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS) as $type => $uid) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {

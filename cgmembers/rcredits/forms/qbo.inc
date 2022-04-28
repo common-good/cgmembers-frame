@@ -67,6 +67,8 @@ function formQBO($form, &$sta, $args = '') {
         }
       }
       break;
+
+    case 'txs': $qb->sendTxs(); break;
     
     case 'table': say(pr($qb->getRows($flds, $tnm))); break;
   }

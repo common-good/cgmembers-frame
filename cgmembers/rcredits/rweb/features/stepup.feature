@@ -157,3 +157,32 @@ Scenario: A surtx amount rounds to zero
   |   3 |   1 | %today  | .05    | .ZZB  | .ZZF  | donation     | 1    | %E_AUX |
   |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_AUX |
   And count "txs" is 3
+
+Scenario: Common Good gets a stepup donation
+  Given these "tx_rules":
+  | id        | 1         |**
+  | payer     | .ZZB      |
+  | payerType | account   |
+  | payee     |           |
+  | payeeType | anyCo     |
+  | from      | .ZZB      |
+  | to        | .AAB      |
+  | action    | surtx     |
+  | amount    | 0         |
+  | portion   | .05       |
+  | purpose   | %STEPUP_PURPOSE |
+  | minimum   | 0         |
+  | useMax    |           |
+  | amtMax    | 10        |
+  | template  |           |
+  | start     | %now      |
+  | end       |           |
+  | code      |           |
+  When member ".ZZB" confirms form "tx/pay" with values:
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Cor Pub | 100    | %FOR_GOODS | labor   |
+  Then these "txs":
+  | eid | xid | created | amount | payer | payee   | purpose         | rule | type     |*
+  |   1 |   1 | %today  | 100    | .ZZB  | .ZZC    | labor           |      | %E_PRIME |
+  |   3 |   1 | %today  | 5      | .ZZB  | stepups | %STEPUP_PURPOSE | 1    | %E_AUX   |
+  

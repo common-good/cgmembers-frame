@@ -1,3 +1,9 @@
+2022-04-27 feature/sweep
+. added sweep accounts for regular donations and stepup donations
+. limited length of debug call details
+. further improved be\setCat()
+. improved iereport drilldown
+
 2022-04-26 feature/iereport2
 . added transaction list and detail editing to iereport
 
