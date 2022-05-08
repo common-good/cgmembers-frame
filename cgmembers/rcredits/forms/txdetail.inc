@@ -30,8 +30,8 @@ function formTxDetail($form, &$sta, $args = '') {
     $uid = $uid1 == $myid ? $uid2 : $uid1; // set $uid to other account
   } else {
     if (!$mya->admRegion) return softErr(t('That transaction is not one of yours.'));
-    $uid = r\isCGs($uid1) ? $uid2
-         : (r\isCGs($uid2) ? $uid1
+    $uid = r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
+         : (r\hasCats($uid2) ? $uid1
          : ($uid1 == UID_OUTER ? $uid1 
          : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
   }
@@ -69,7 +69,7 @@ X;
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
-  $cat = ($mya->admEditTx and r\isCGs(${"uid$me"})) ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
+  $cat = ($mya->admEditTx and r\hasCats(${"uid$me"})) ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));

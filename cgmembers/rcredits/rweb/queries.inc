@@ -23,7 +23,8 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
-  $cgUids = join(',', r\cgUids());
+  $cgUids = join(',', r\catUids());
+  $qtrDt1 = u\qtrDt($qtrDt2 = u\qtrDt() - 1);
   
   $queries = [
   1 . t('Income & Expense Report') => '/sadmin/iereport',
@@ -45,7 +46,17 @@ if ($mya and $mya->admin) {
       LEFT JOIN (SELECT uid1 AS uid, amt FROM txs_noreverse WHERE :T_FOODY AND created>:NOW-:MONTH_SECS) t USING(uid)
       GROUP BY uid
     ) x",
+    
+  1 . t('New States Last Quarter (for bank)') =>
+    "SELECT DISTINCT s.abbreviation FROM users u JOIN r_states s ON u.state=s.id
+      WHERE activated BETWEEN $qtrDt1 AND $qtrDt2
+      AND state NOT IN (SELECT DISTINCT state FROM users WHERE activated AND activated<$qtrDt1)",
   
+  1 . t('New Members Last Quarter (for bank)') =>
+    "SELECT SUM(IF(:IS_CO, 0, 1)) AS members,
+            SUM(IF(:IS_CO, 1, 0)) AS companies
+      FROM users u WHERE activated BETWEEN $qtrDt1 AND $qtrDt2",
+      
   2 . t('Most Trusted Members') => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC, fullName",
     

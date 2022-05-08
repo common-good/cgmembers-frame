@@ -1,3 +1,15 @@
+2022-05-07 feature/qb-txs
+. creation of QB transactions to export to QBO
+. added nick field to tx_cats, for use in be\setCat()
+. adjusted be\setCat() to set cats up the way Qb::sendTxs() requires
+. refactored r\isCGs() to be in line with how its variants are actually used
+. clarified code in be\getTxs() and made exclusion of txs between partners optional
+. added u\word9() function to peal off last element of a delimited string list
+. added hooks for testing export to QBO
+. improved iereport form and its drilldown/edit capabilities
+. updated Co-op Power admin in partnersignup form
+. added two new queries for admin quarterly reporting to the bank
+
 2022-04-27 feature/sweep
 . added sweep accounts for regular donations and stepup donations
 . limited length of debug call details

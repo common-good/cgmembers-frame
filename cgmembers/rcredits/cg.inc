@@ -660,7 +660,7 @@ X;
  */
 function bestCat($tx, $minScore = 100000) {
   extract(just('myid type paying mainCat', $tx, NULL));
-  u\EXPECT(r\isCGs($myid), 'Do not suggest a category for non-CG transactions.');
+  u\EXPECT(r\hasCats($myid), 'Do not suggest a category for non-CG transactions.');
   list($me, $you) = u\order($paying, 1, 2);
   foreach (ray('otherId type recursId amt channel flags mainCat') as $k) if (empty($tx[$k])) $tx[$k] = 0;
   extract(ray('paying:100000, myid:100, otherId:100, type:10, recursId:10000, desc:1000, desc7:300, amt:20, channel:10, flags:20'), EXTR_PREFIX_ALL, 'match');
@@ -1478,30 +1478,23 @@ function recurRay($keepOne = FALSE, $text = PERIODLY) {
 function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
 
 /**
- * Say whether the given account is owned by Common Good.
- * But not the roundups and crumbs collection accounts which conceptually stand in for donors
+ * Say whether the given account is owned by Common Good and its transactions get categorized.
+ * Omit the various donation collection accounts (UID_CRUMBS etc) which conceptually stand in for donors
  *  -- those are conceptually part of CG's main account and appear only on ctty's and CG's Balance Sheets.
  * @param int $uid: account record ID
  */
-function isCGs($uid) {
-  if ($uid <= UID_CANON9) return FALSE;
-  if (in($uid, [CGID, r\serverUid()])) return TRUE;
-  $a = r\acct($uid);
-  if ($a->sponsored or $a->mainQid == 'NEWAIN') return TRUE; // NEWAIN is 457 retirement account
-  return FALSE;
-}
+function hasCats($uid) {return in($uid, catUids(FALSE));}
 
 /**
- * Return an array of record IDs of all accounts owned by CG.
- * @param bool $all: <include all of them> (otherwise omit regulars, roundups, crumbs, stepups, and 457 retirement account, which we don't categorize)
- * Called in queries.inc, forms/setcats.inc, and forms/iereport (for example)
+ * Return an array of record IDs of all accounts owned by CG whose transactions get categorized.
  */
-function cgUids($all = TRUE) {
+function catUids() {
   $ray = db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'); // get the fiscally sponsored account IDs
-  foreach ([CGID, r\serverUid()] as $uid) $ray[] = $uid;
-  if ($all) foreach ([UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS, r\qo('NEWAIN')->id] as $uid) $ray[] = $uid; // NEWAIN is 457 retirement account
-  return $ray;
+  $ray = array_merge($ray, [CGID, r\serverUid(), r\qo('NEWAIN')->id]); // NEWAIN is 457 retirement account
+  return $ray; // cache this someday?
 }
+
+function cgUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of all accounts owned by CG (called in queries.inc)
 
 /**
  * Return the appropriate exchange fee for the given transaction description and amount.

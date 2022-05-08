@@ -233,7 +233,9 @@ const UID_BANK1 = 256;
 const UID_BANK_IN = 256;  // Bank accounts start at 256
 const UID_BANK_OUT = 257;  //
 const UID_BANK9 = 511;
+
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
+const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
 

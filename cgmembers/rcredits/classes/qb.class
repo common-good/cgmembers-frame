@@ -89,7 +89,7 @@ class QB {
   public function refresh() {
     global $channel;
 
-    if ($this->refreshed) return;
+    if ($this->refreshed or test()) return;
     extract(just('rToken rExpires realmId lastRefresh', getv('qboRefresh') ?: [], NULL));
 // FAILS   if (now() < $lastRefresh + HOUR_SECS / 2) return; // no need to refresh if done within the past half hour
     
@@ -152,6 +152,7 @@ class QB {
    * Send the latest transactions in CG's various accounts to QBO.
    */
   public function sendTxs() {
+    global $testQbTxs;
     $this->refresh();
     $lastXid = getv('lastQBXid') ?: setv('lastQBXid', db\min('xid', 'tx_hdrs', 'created>=' . strtotime('1/1/2021')) - 1); 
     
@@ -159,31 +160,55 @@ class QB {
     $start = max($start, strtotime('1/1/2021'));
     $cnt = 0;
 
-//    $txs = $start ? be\getTxs(r\cgUids(FALSE), $start, now()) : [];
-    $txs = $start ? be\getTxs(r\cgUids(FALSE), $start, $start + MONTH_SECS) : [];
+//    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, now()) : [];
+    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, $start + MONTH_SECS) : [];
 
     foreach ($txs as $entries) {
       foreach ($entries as $ei => $tx) {
-        extract(just('xid eid created', $tx));
+        extract(just('xid description created banking cat2 uid2 name', $tx));
         if ($xid <= $lastXid) continue; // skip already-handled transactions on the start date (or later)
-        if ($ei == 0) $qbTx = new QuickBooksOnline\API\Data\IPPTransaction(['TxnDate' => fmtDt($created, 'Ymd')]);
-        $this->addTxLine($qbTx, just('xid description myAmount name cat banking', $tx) + compact('ei'));
+        if ($ei == 0) {
+          if ($banking) {
+            if (r\acct($uid2)->sponsored) $description = strtolower(u\word9(db\get('category', 'tx_cats', ray('cat', $cat2)), ': '));
+          } else $description .= " [$name]";
+          $info = ray('DocNumber PrivateNote TxnDate', $xid, $description, fmtDt($created, 'Ymd'));
+          $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry($info);
+          debug($qbTx);
+        }
+        $this->addTxLine($qbTx, compact('description') + $tx);
       }
-      $cnt++; if ($cnt > 50) break; // debug(
+      $cnt++; if ($cnt > 5) break; // debug(
+//      if (test()) $testQbTxs[] = $qbTx; else
 //      $this->ds->Add($qbTx);
 //      setv('lastQBXid', $xid);
     }
-    list ($xid1, $xid9) = $txs ? [$txs[0]['xid'], $tx['xid']] : ['', ''];
+    list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $tx['xid']] : ['', ''];
     r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
   }
 
   /**
-   * Add a transaction to QBO.
+   * Add a transaction entry (pair) to a QBO Journal Entry Transaction.
    */
   public function addTxLine($qbTx, $tx) {
     debug($tx);
-    extract($tx);
-//    debug(getRow(''));
+    extract(just('description', $tx));
+    
+    for ([1, 2] as $i) {
+      foreach (ray('uid cat amt') as $k) $$k = $tx["$k$i"];
+      $a = r\acct($uid);
+      $this->addJLine($qbTx, 'Debit', db\get('id', 'tx_cats', $a->mainQid), $amt, $description);
+      $this->addJLine($qbTx, 'Credit', $cat, $amt, $description);
+    }
+  }
+
+  /**
+   * Add a Journal Entry Line to the Journal Entry Transaction.
+   */
+  private function addJLine(&$qbTx, $PostingType, AccountRef, $Amount, $Description) {
+    $DetailType = 'JournalEntryLineDetail';
+    $$DetailType = (object) compact(ray('PostingType AccountRef'));
+    $line = compact(ray("Description Amount DetailType $DetailType"));
+    $qbTx->Line[] = new QuickBooksOnline\API\Data\IPPLine($line);
   }
   
   /**
