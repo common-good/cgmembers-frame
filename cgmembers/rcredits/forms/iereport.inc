@@ -29,7 +29,7 @@ function formIEReport($form, &$sta, $args = '') {
     return cgForm(compact(ray('title subtext list')), 'nolabs');
   } else {
     $start = dateFld(REQ . t('Starting Date:'));
-    $end = dateFld(REQ . t('Ending Date:'));
+    $end = dateFld(REQ . t('Ending Date:'), '', dft(NOW));
     $submit = t('Go');
     return cgForm(compact(ray('title start end submit')));
   }
@@ -52,21 +52,21 @@ function formIEReport_submit($form, &$sta) {
  * @param date $start, $end: start and end dates
  */
 function iereport($start, $end) {
-  $catIds = db\keyed('category,id', 'tx_cats', "category RLIKE '^[IE]' AND `show` ORDER BY id");
+  $catIds = db\keyed('category,id', 'tx_cats', "(category RLIKE '^[IE]' OR category LIKE '%To Be Paid Through CG%') AND `show` ORDER BY id");
   $cats = array_fill_keys(array_keys($catIds), 0);
   
-  $uids = join(', ', r\cgUids(FALSE));
+  $uids = join(', ', r\catUids(FALSE));
 
   $sql = <<< X
     SELECT cat, e.id > 0 AS toMe, SUM(amount) AS amount, COUNT(e.id) AS cnt,
     IFNULL(category, IF(e.id > 0, 'I: Uncategorized Income', 'E: Uncategorized Expense')) AS catName
     FROM tx_entries e JOIN tx_hdrs h USING(xid) LEFT JOIN tx_cats c ON c.id=e.cat
     WHERE uid IN ($uids) AND created BETWEEN :start AND :end 
-    AND ((category IS NULL AND entryType<>:E_BANK) OR LEFT(category, 1) IN ('I', 'E'))
+    AND ((category IS NULL AND entryType<>:E_BANK) OR LEFT(category, 1) IN ('I', 'E') OR category LIKE '%To Be Paid Through CG%')
     GROUP BY category
     ORDER BY e.id < 0, category
 X;
-  $q = db\q($sql, compact(ray('start end')));
+  $q = db\q($sql, compact(ray('start end'))); // 14900 is payroll ("To Be Paid Through CG"
   while ($row = $q->fetchAssoc()) {
     extract($row); // cat, catName, amount, cnt
     $cats[$catName] = $amount;
@@ -98,8 +98,17 @@ X;
       $prevParts = $parts;
     }
 
-    $sql = tr("SELECT CONCAT('<a class=\"xid\">', h.xid, '</a>') AS xid, u1.fullName AS `from`, u2.fullName AS `to`, e1.amount, e1.description, e1.rule, h.recursId, h.reversesXid FROM tx_entries e1 JOIN tx_hdrs h USING(xid) JOIN tx_entries e2 ON e2.id=-e1.id LEFT JOIN users u1 ON u1.uid=e1.uid LEFT JOIN users u2 ON u2.uid=e2.uid WHERE e1.cat=%cat AND h.created BETWEEN %start AND %end ORDER BY h.created,h.xid,e1.id", compact(ray('start end cat')));
-    $sql = str_replace('=NULL', " IS NULL AND e1.uid IN ($uids)", $sql);
+    $sql = <<< X
+      SELECT CONCAT('<a class="xid">', h.xid, '</a>') AS xid, u1.fullName AS `from`, u2.fullName AS `to`, e1.amount, e1.description, e1.rule, h.recursId, h.reversesXid
+      FROM tx_entries e1 JOIN tx_hdrs h USING(xid) JOIN tx_entries e2 ON e2.id=-e1.id
+      LEFT JOIN users u1 ON u1.uid=e1.uid LEFT JOIN users u2 ON u2.uid=e2.uid
+      WHERE e1.cat=%cat AND h.created BETWEEN %start AND %end
+      AND e1.uid IN ($uids)
+      ORDER BY h.created,h.xid,e1.id
+X;
+    $sql = tr(trim($sql), compact(ray('start end cat'))); // oddly this fails without trim()
+    $sql = str_replace('=NULL', ' IS NULL', $sql);
+
     $lnk = '/community/data/code=' . u\cryRay(compact('sql'));
     $catName = trim($parts[$pCnt - 1]);
     $catName = str_repeat($indent, $pCnt - 1) . $catName;

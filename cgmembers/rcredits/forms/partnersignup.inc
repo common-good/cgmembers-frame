@@ -631,10 +631,10 @@ function fillContract($project, $data, $map, $sign = FALSE) {
         $sellerX = 5.2;
         $pdf->say($name, $sigX, 8.3, 5, 1.75, $font, 'L');
         $pdf->say($signer, $sigX, $sigNameY, 5, 1.75, $font, 'L');
-        $pdf->say('Mark Skinder, Dir. of Energy Services', $sellerX, $sigNameY, 5, 1.75, $font, 'L');
+        $pdf->say('Sara MacKay, Subscription Solar Program', $sellerX, $sigNameY, 5, 1.75, $font, 'L');
         $pdf->say(fmtDt(now()), $sellerX, $dateY, 5, 1.75, $font, 'L');
         $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
-        $pdf->say('Mark Skinder', $sellerX, $sigY, 5, 1.75, '22;B;DSGabriele', 'L');
+        $pdf->say('Sara MacKay', $sellerX, $sigY, 5, 1.75, '22;B;DSGabriele', 'L');
       } elseif ($project == 'nyccec') {
         
       }

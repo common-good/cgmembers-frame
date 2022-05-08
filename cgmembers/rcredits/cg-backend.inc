@@ -21,22 +21,25 @@ require_once R_ROOT . '/classes/txentry.class';
  *        if $uids is an integer it is the only uid
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
+ * @param bool $includeSelfTxs: <include transactions between the various $uids>
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
-function getTxs($uids, $starting=NULL, $ending=NULL) {
+function getTxs($uids, $starting=NULL, $ending=NULL, $includeSelfTxs = FALSE) {
   if (is_integer($uids)) { $uids = [ $uids ]; }
 
-  $where = '';
-  if (!is_null($starting)) { $where .= " AND t.created>=$starting"; }
-  if (!is_null($ending)) { $where .= " AND t.created<=$ending"; }
   $fromMe = 't.uid1 IN (:uids)';
   $toMe = 't.uid2 IN (:uids)';
+  $where = tr("($fromMe %or $toMe)", 'or', $includeSelfTxs ? 'OR' : 'XOR');
+  $where .= ' AND !(t.amt=0 AND t.type=:E_BANK)'; // hides bank account verifications
+  if (is_integer($starting)) $where .= " AND t.created>=$starting";
+  if (is_integer($ending)) $where .= " AND t.created<=$ending";
   $special = be\specialTxFlds();
   // tReversed and eReversed refer to the transaction that this transaction reverses.
-  // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
-  // !(t.amt=0 AND t.type=:E_BANK) hides bank account verifications
+  // tReversedBy and eReversedBy refer to the transaction that reverses this transaction. 
+  //       IF($toMe, cat2, cat1) AS catMe, IF($toMe, cat1, cat2) AS catYou,
+  //       IF($toMe, amt, -amt) AS amtMe, IF($toMe, -amt, amt) AS amtYou,
   $sql = <<< EOF
-    SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe,
+    SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
@@ -46,8 +49,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
     LEFT JOIN tx_timed tm ON tm.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
-    WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
-    ORDER BY t.created, t.xid, t.eid, name
+    WHERE $where ORDER BY t.created, t.xid, t.eid, name
 EOF;
   /// showq($sql, ray('uids', $uids[0]));
   $q = db\q($sql, compact('uids'));
@@ -403,7 +405,7 @@ function payInvoice($nvid, $payAmount = NULL) {
 
   $DBTX = \db_transaction();
   $extra = ray('inv', $nvid) + just('api for', $data, NULL);
-  if ($cat) $extra += ray('cat', r\isCGs($payer) ? [$cat, NULL] : [NULL, $cat]);
+  if ($cat) $extra += ray('cat', r\hasCats($payer) ? [$cat, NULL] : [NULL, $cat]);
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
@@ -672,68 +674,68 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
  * @param Tx $tx: the transaction header data (only flags and recursId are used)
  * @param int $i: index into $txes of the entry to examine (expects the account to be owned by CG)
  */
-function setCat(&$txes, $tx, $i) {
-  if (!r\isCGs($txes[$i]->uid)) return;
+function setCat(&$txes, $tx, $i) { 
+  if (!r\hasCats($txes[$i]->uid)) return $txes[$i]->cat = NULL;
 
   $j = $i + (($i & 1) ? -1 : 1); // point to the other entry in the pair
 //  foreach ([$i, $j] as $k) extract(just('uid entryType description rule relType relatedId', $txes[$k]), EXTR_PREFIX_ALL, $k == $i ? 'i' : 'j');
   extract(just('uid amount entryType description rule relType relatedId', $txes[$i]), EXTR_PREFIX_ALL, 'i');
   $j_uid = $txes[$j]->uid;
   list ($for, $type) = [$i_description, $i_entryType]; // shorthand
-  $stepup = ($type == E_AUX and $i_rule and $for == t('donation'));
-  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $stepup);
+  $fboStepup = ($type == E_AUX and $i_rule and $for == t('donation'));
+  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $fboStepup);
   $iA = r\acct($i_uid);
   $in = ($i > $j); $out = !$in;
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
-  $pat = '(cat cannot be chosen automatically)'; // causes the cat to be set to NULL
   $refund = (($in xor $i_amount < 0) and !in($type, [E_BANK, E_OUTER]));
   
-  // get a regular expression for the proper category
+  $nick = NULL;
+
   if ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
-    $pat = 'Fiscal Sponsorship Fees$';
+    $txes[$j]->cat = db\get('id', 'tx_cats', ray('nick', 'D-SPONSORED'));
+    $nick = 'FS-FEE';
   } elseif ($in and $type == E_USD_FEE) {
-    $pat = 'Reimbursement of Transaction Fees$';
-  } elseif (r\isCGs($j_uid)) { // transfer from one CG-owned CG account to another
-    $qid3 = substr($iA->mainQid, -3);
-    $pat = "\\.\\.$qid3$"; // CG-owned account category names end with ".." and the abbreviated account QID (for example ..AAB)
+    $txes[$j]->cat = db\get('id', 'tx_cats', ray('nick', 'D-SPONSORED'));
+    $nick = 'TX-FEE-BACK';
+  } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
+    $nick = $iA->mainQid;
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
-    $pat = $tx->created < strtotime('7/1/2021') ? '^A: Old Checking ..2275$' : '^A: Operations \\.\\.....';
+    $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
   } elseif ($in and $gift) {
     if ($iA->sponsored) {
-      $pat = 'Sponsored Donations$';
-    } elseif ($type == E_AUX and $rule > 0) {
-      $pat = 'Stepup Donations and Tips$';
-    } elseif (strhas($for, t('crumb donations')) or strhas($for, t('percentage of past month receipts'))) {
-      $pat = 'Crumb Donations$';
-    } elseif ($recurs) {
-      $pat = 'Regular Donations$';
-    } elseif ($for == t('roundup donations')) {
-      $pat = 'Roundup Donations$';
+      $nick = 'D-SPONSORED';
+    } elseif ($j_uid == UID_STEPUPS) {
+      $nick = 'D-STEPUP';
+    } elseif ($j_uid == UID_CRUMBS) {
+      $nick = 'D-CRUMB';
+    } elseif ($j_uid == UID_REGULARS) {
+      $nick = 'D-REGULAR';
+    } elseif ($j_uid == UID_ROUNDUPS) {
+      $nick = 'D-ROUNDUP';
     } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
-      $pat = 'Company Donations$';
-    } else $pat = 'One-time Donations$';
+      $nick = 'D-COMPANY';
+    } else $nick = 'D-ONCE';
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
-    $pat = 'Grants and Direct Support to Idividuals$';
+    $nick = 'TO-PERSON';
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
-    $pat = '^E: Grants$';
+    $nick = 'TO-ORG';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
-    $pat = 'To Be Paid Through CG$';
+    $nick = 'LABOR';
   } elseif ($out and $inv and $type != E_OUTER) {
     $toQid = r\acct($j_uid)->mainQid;
     if (in($toQid, 'CAAAAO NEWAZS NYAAIV')) {
-      $pat = 'Staff Consultants$';
+      $nick = 'CONTRACTOR';
     } elseif (in($toQid, 'MIWAAA MIWAAB')) {
-      $pat = 'Computer Services$';
+      $nick = 'COMPUTER';
     } elseif (in($toQid, 'NEVABJ')) {
-      $pat = 'Accounting Services$';
+      $nick = 'ACCOUNTING';
     } 
   } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
-    $pat = 'Information Services$';
+    $nick = 'INFO-SVC';
   }
 
-  $pat = str_replace('\\', '\\\\', $pat);
-  $txes[$i]->cat = db\get('id', 'tx_cats', "category RLIKE '.*$pat'") ?: NULL; // must use RLIKE not LIKE
+  $txes[$i]->cat = $nick ? (db\get('id', 'tx_cats', compact('nick')) ?: NULL) : NULL; // inner ?: is for dev machine where sponsored account has no QBO account
 }
 
 /**

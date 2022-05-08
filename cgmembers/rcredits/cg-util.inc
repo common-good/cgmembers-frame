@@ -1879,3 +1879,4 @@ function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) lis
 function getContents($url) {return file_get_contents($url, FALSE, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));}
 function cryFile($path) {file_put_contents($path, u\cry('S', file_get_contents($path)));}
 function urlExists($url) {return ($hdrs = get_headers($url) and !strhas($hdrs[0], '404'));}
+function word9($s, $m = ' ') {return ($ray = explode($m, $s)) ? $ray[count($ray) - 1] : $s;}

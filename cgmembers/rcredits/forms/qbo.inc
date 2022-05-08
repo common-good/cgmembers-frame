@@ -70,7 +70,13 @@ function formQBO($form, &$sta, $args = '') {
 
     case 'txs': $qb->sendTxs(); break;
     
-    case 'table': say(pr($qb->getRows($flds, $tnm))); break;
+    case 'table': say(pr($qb->getRows($flds ?: 'Id', $tnm, '', 10))); break;
+    case 'special': 
+//      debug(pr($qb->getRow('*', 'Purchase', 'Id=9293')));
+//      debug(pr($qb->getRows('*', 'Deposit', '', 3)));
+//      debug(pr($qb->getRows('*', 'Transfer', '', 3)));
+      debug(pr($qb->getRows('*', 'JournalEntry', '', 3)));
+      break;
   }
   
   $title = t('QBO Test');

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60m'; // software version
+const R_VERSION = '3.60n'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -233,7 +233,9 @@ const UID_BANK1 = 256;
 const UID_BANK_IN = 256;  // Bank accounts start at 256
 const UID_BANK_OUT = 257;  //
 const UID_BANK9 = 511;
+
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
+const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
 
