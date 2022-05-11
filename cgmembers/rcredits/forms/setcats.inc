@@ -62,13 +62,13 @@ function setMostCats($start, $overwrite) {
     $e = db\rows('*', 'tx_entries', 'xid=:xid ORDER BY ABS(id), id>0', just('xid', $tx));
     for ($i = 0; $i < count($e); $i++) {
       $ei = $e[$i];
-      if (!r\hasCats($ei->uid)) continue;
-      be\setCat($e, $tx, $i);
+      $ej = $e[be\i2j($i)];
+      if (!r\hasCats($ei->uid)) continue; // ignore entries that don't deserve a cat
+      be\setCat($e, $tx, $i); // everything else gets a cat -- automatically or manually
+
       if ($ei->cat) {
         db\update('tx_entries', just('id cat', (array) $ei));
       } else {
-        $j = $i + (($i & 1) ? -1 : 1); // point to the other entry in the pair
-        $ej = $e[$j];
         $iA = r\acct($ei->uid);
         $jA = r\acct($ej->uid);
         $xid = $tx->xid;

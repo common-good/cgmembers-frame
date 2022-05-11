@@ -613,7 +613,7 @@ const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-a
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_u7 = 7; // 
 const B_u8 = 8; // 
-const B_u9 = 9; // UNUSED (was recurring transaction; may be still set in txs)
+const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)
 const B_INVESTMENT = 12; // community investment (UNUSED?) or investment club investment
@@ -624,7 +624,7 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 u9 gift loan investment stake fine noask funding food partial button';
+const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 qbok gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)

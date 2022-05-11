@@ -487,7 +487,7 @@ function doTxs($info, $thing) {
  */
 function doRequests($info) {
   global $testOnly, $channel;
-  ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
+///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
   u\setDft($info['purpose'], nn($info['for'], 'this or that'));
   unset($info['for']);
 
@@ -1522,9 +1522,9 @@ function selected($form) {
 
   //  $pat = '~ select>([^,]+)</option~';
   $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
-  ///  debug("~<select [^>]*>\\s*($opt)+</select>~");
+///  debug("~<select [^>]*>\\s*($opt)+</select>~");
   if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
-  ///  debug($m);
+///  debug($m);
   
 }
 

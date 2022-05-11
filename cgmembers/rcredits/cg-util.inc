@@ -1661,7 +1661,7 @@ function bitNum($b, $prefix = 'b') {
  *         </div>
  */
 function ptree($ray) {
-    $out = preg_replace('/([ \t]*)(\[[^\]]+\][ \t]*\=\>[ \t]*[a-z0-9 \t_]+)\n[ \t]*\(/iU', "'\\1<a class=\"ptree\">\\2</a><div>'", print_r($ray, TRUE));
+    $out = preg_replace('/([ \t]*)(\[[^\]]+\][ \t]*\=\>[ \t]*[a-z0-9 \t_]+)\n[ \t]*\(/iU', "'\\1<a class=\"ptree\">\\2</a><div>'", pr($ray));
     return preg_replace('/^\s*\)\s*$/m', '</div>', $out); // replace ')' on its own on a new line (surrounded by whitespace is ok) with '</div>
 }
 

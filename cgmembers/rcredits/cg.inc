@@ -1188,7 +1188,7 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  * Return the average balance, average credit reserve, and minimum balance for the given account (possibly joint) and period.
  * @param int $uid: account record ID (can be a community or region too)
  * @param int $start: starting date (should be 0 hours) -- first full day to include in the period
- * @param int $end: ending date (should be 0 hours) -- last full day to include in the period
+ * @param int $end: ending date (should be 0 hours) -- just past end of period
  * @param bool $noj: ignore any joined account
  * @return array: [balance, min, rewards, days]
  *    balance: the average end-of-day balance for that period (possibly with fractional cents)
@@ -1198,8 +1198,8 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  */
 function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   $uids = is_array($uid) ? $uid : [$uid];
-  if (is_null($end)) { $end = now(); }
-  $days = round(($end + 1 - $start) / DAY_SECS);
+  u\setDft($end, now());
+  $days = round(($end - $start) / DAY_SECS);
   if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo($uids, $start);
   $min = $bal = $info['balance'];

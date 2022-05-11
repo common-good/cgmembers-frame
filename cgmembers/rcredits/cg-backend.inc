@@ -21,11 +21,14 @@ require_once R_ROOT . '/classes/txentry.class';
  *        if $uids is an integer it is the only uid
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
- * @param bool $includeSelfTxs: <include transactions between the various $uids>
+ * @param assoc $extra: extra parameters
+ *   includeSelfTxs: <include transactions between the various $uids>
+ *   catsOnly: <include only transactions that have cat1 or cat2 set AND B_QBOK flag off>
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
-function getTxs($uids, $starting=NULL, $ending=NULL, $includeSelfTxs = FALSE) {
+function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($uids)) { $uids = [ $uids ]; }
+  extract(just('includeSelfTxs catsOnly', $extra, FALSE));
 
   $fromMe = 't.uid1 IN (:uids)';
   $toMe = 't.uid2 IN (:uids)';
@@ -33,11 +36,13 @@ function getTxs($uids, $starting=NULL, $ending=NULL, $includeSelfTxs = FALSE) {
   $where .= ' AND !(t.amt=0 AND t.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND t.created>=$starting";
   if (is_integer($ending)) $where .= " AND t.created<=$ending";
+  if ($catsOnly) $where .= " AND (t.cat1 IS NOT NULL OR t.cat2 IS NOT NULL) AND NOT t.:IS_QBOK";
   $special = be\specialTxFlds();
+  $order = 't.created, t.xid, t.eid, name';
+
   // tReversed and eReversed refer to the transaction that this transaction reverses.
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction. 
-  //       IF($toMe, cat2, cat1) AS catMe, IF($toMe, cat1, cat2) AS catYou,
-  //       IF($toMe, amt, -amt) AS amtMe, IF($toMe, -amt, amt) AS amtYou,
+
   $sql = <<< EOF
     SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
@@ -49,7 +54,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL, $includeSelfTxs = FALSE) {
     LEFT JOIN tx_timed tm ON tm.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
-    WHERE $where ORDER BY t.created, t.xid, t.eid, name
+    WHERE $where ORDER BY $order
 EOF;
   /// showq($sql, ray('uids', $uids[0]));
   $q = db\q($sql, compact('uids'));
@@ -677,15 +682,14 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
 function setCat(&$txes, $tx, $i) { 
   if (!r\hasCats($txes[$i]->uid)) return $txes[$i]->cat = NULL;
 
-  $j = $i + (($i & 1) ? -1 : 1); // point to the other entry in the pair
-//  foreach ([$i, $j] as $k) extract(just('uid entryType description rule relType relatedId', $txes[$k]), EXTR_PREFIX_ALL, $k == $i ? 'i' : 'j');
   extract(just('uid amount entryType description rule relType relatedId', $txes[$i]), EXTR_PREFIX_ALL, 'i');
-  $j_uid = $txes[$j]->uid;
   list ($for, $type) = [$i_description, $i_entryType]; // shorthand
-  $fboStepup = ($type == E_AUX and $i_rule and $for == t('donation'));
-  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $fboStepup);
   $iA = r\acct($i_uid);
+  $j = be\i2j($i); // point to the other entry in the pair
+  $j_uid = $txes[$j]->uid;
   $in = ($i > $j); $out = !$in;
+
+  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $for == t('donation'));
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
   $refund = (($in xor $i_amount < 0) and !in($type, [E_BANK, E_OUTER]));
@@ -693,10 +697,8 @@ function setCat(&$txes, $tx, $i) {
   $nick = NULL;
 
   if ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
-    $txes[$j]->cat = db\get('id', 'tx_cats', ray('nick', 'D-SPONSORED'));
     $nick = 'FS-FEE';
   } elseif ($in and $type == E_USD_FEE) {
-    $txes[$j]->cat = db\get('id', 'tx_cats', ray('nick', 'D-SPONSORED'));
     $nick = 'TX-FEE-BACK';
   } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
     $nick = $iA->mainQid;
@@ -737,6 +739,8 @@ function setCat(&$txes, $tx, $i) {
 
   $txes[$i]->cat = $nick ? (db\get('id', 'tx_cats', compact('nick')) ?: NULL) : NULL; // inner ?: is for dev machine where sponsored account has no QBO account
 }
+
+function i2j($i) {return $i + (($i & 1) ? -1 : 1);} // pointer to paired entry index in an array of tx entries
 
 /**
  * Insert entries for an existing transaction.
@@ -1200,13 +1204,13 @@ function exception_error_handler($severity, $message, $file, $line) {
 
 /**
  * Return financial information about the given account on this server
- * @param array uids: array of uids for the account to return information for
+ * @param mixed uids: a uid or an array of uids for the account to return information for
  * @param integer asof: one second past last time to include (defaults to 24 hours from now, meaning unrestricted)
  * @return an assoc of results (see $resultKeys, below)
  */
 function creditInfo($uids, $asof = null) {
 ///     debug("creditInfo(" . print_r($uids, true) . ", $asof)");
-  u\EXPECT(is_array($uids), 'bad call to creditInfo');
+  if (!is_array($uids)) $uids = [$uids];
   global $mya;
   
   u\setDft($asof, now() + DAY_SECS);
@@ -1251,11 +1255,11 @@ EOF;
  * Returns the roundup donations made by the specified users in the specified period.
  * @param array $uids -- the uids of the users, generally the main user or the main and joint users
  * @param unixtime $start -- the start of the period
- * @param unixtime $end -- the end of the period
+ * @param unixtime $end -- past end of the period
  * @return the total roundup donations
  */
 function roundupDonations($uids, $start, $end) {
-  $where = 'uid1 IN (:uids) AND uid2=:UID_ROUNDUPS AND created BETWEEN :start AND :end';
+  $where = 'uid1 IN (:uids) AND uid2=:UID_ROUNDUPS AND created BETWEEN :start AND :end-1';
   return db\sum('amt', 'txs_aux', $where, compact(ray('uids start end')));
 }
 

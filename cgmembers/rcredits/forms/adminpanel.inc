@@ -50,6 +50,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
   if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   $byState = submi('Accts By State');
+  $ieReport = $mya->admRegion ? submi('IE Report') : NULL;
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -74,7 +75,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
+  $ks = ray('toSMT reAuthQBO setCats ieReport inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -157,6 +158,8 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('qbo');
   } elseif ($op == 'setCats') {
     return w\go('sadmin/set-cats');
+  } elseif ($op == 'ieReport') {
+    return w\go('/sadmin/iereport');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {
