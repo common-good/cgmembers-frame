@@ -135,6 +135,7 @@ class SetCats extends AbstractMigration {
       [10900,'A: Investments: Equity Trust Investment','',274],
       [11000,'A: Investments: NH Community Loan Fund','',269],
       [11100,'A: Investments: Northeast Biodiesel Investment','',268],
+      [11150,'A: Investments: Other Loans','',329],
       [11200,'A: Investments: PVGrows Investment','',275],
       [11300,'A: Investments: x Loan Loss Reserve - CG Western MA','',313],
       [11400,'A: Investments: x Loan Loss Reserve - Community Funds (5%)','',288],

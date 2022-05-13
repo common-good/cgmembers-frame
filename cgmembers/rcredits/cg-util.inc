@@ -1332,7 +1332,7 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
   $heads = $values = $lines = '';
   foreach ($ray as $k => $v) {
     if (is_array($v) and $recurse) $v = rayTable($v, !$across, TRUE);
-    $v = plain($v);
+    $v = plain(pr($v));
     if ($across) {
       $heads .= "<th>$k</th>";
       $values .= "<td>$v</td>";
@@ -1661,7 +1661,7 @@ function bitNum($b, $prefix = 'b') {
  *         </div>
  */
 function ptree($ray) {
-    $out = preg_replace('/([ \t]*)(\[[^\]]+\][ \t]*\=\>[ \t]*[a-z0-9 \t_]+)\n[ \t]*\(/iU', "'\\1<a class=\"ptree\">\\2</a><div>'", print_r($ray, TRUE));
+    $out = preg_replace('/([ \t]*)(\[[^\]]+\][ \t]*\=\>[ \t]*[a-z0-9 \t_]+)\n[ \t]*\(/iU', "'\\1<a class=\"ptree\">\\2</a><div>'", pr($ray));
     return preg_replace('/^\s*\)\s*$/m', '</div>', $out); // replace ')' on its own on a new line (surrounded by whitespace is ok) with '</div>
 }
 
@@ -1784,8 +1784,7 @@ function nextBizDay($dt = NOW) {
   return $dt;
 }
 
-function nextBizTm() {$bizDay = u\nextBizDay(yesterday()); return $bizDay == today() ? now() : $bizDay;} // next second that's a business day
-
+function nextBizTm($now = NOW) {$bizDay = u\nextBizDay(yesterday($now)); return $bizDay == today($now) ? $now : $bizDay;} // next second that's a business day
 
 function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return fmtDt(weekday($h) == 'Saturday' ? yesterday($h) : (weekday($h) == 'Sunday' ? tomorrow($h) : today($h)), 'Ymd');}
 

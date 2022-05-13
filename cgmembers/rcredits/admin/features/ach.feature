@@ -64,7 +64,7 @@ Scenario: admin downloads ACH requests
   And these "txs2":
   | txid | payee | amount | created | deposit  | completed |*
   | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |
-  | 5002 | .ZZA  |    400 | %now-2w | %now0    | %now      |
-  | 5003 | .ZZB  |   -100 | %now-1d | %now0    | %now      |  
-  | 5004 | .ZZC  |    300 | %now    | %now0    |         0 |
-  | 5005 | .ZZC  |     60 | %now    | %now0    |         0 |
+  | 5002 | .ZZA  |    400 | %now-2w | %now     | %now      |
+  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now      |  
+  | 5004 | .ZZC  |    300 | %now    | %now     |         0 |
+  | 5005 | .ZZC  |     60 | %now    | %now     |         0 |

@@ -42,7 +42,7 @@ function statement($period = '') {
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);
 
-  $txs = be\getTxs($uids, $start, $end);
+  $txs = be\getTxs($uids, $start, $end - 1);
 
   $pdf = new r\Statement($mya, $period);
 
@@ -184,5 +184,5 @@ function statementMonth($period, $fiscalYearEnd = '6/30') {
     $start = u\monthDay1($start);
     list ($end, $recurDesc) = [u\plusMonths(1, $start), fmtDt($start, 'MMM yyyy')];
   }
-  return [$start, $end - 1, $recurDesc];
+  return [$start, $end, $recurDesc];
 }

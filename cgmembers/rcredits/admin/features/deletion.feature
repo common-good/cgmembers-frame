@@ -13,9 +13,9 @@ Setup:
   # including CG and ctty
   
   Given these "txs":
-  | xid | uid1         | uid2 | amt | eid | for       | type     |*
-  | 1   | %UID_BANK_IN | .ZZA | 200 | 1   | from bank | %E_BANK  |
-  | 2   | .ZZA         | .ZZC | 10  | 3   | food      | %E_PRIME |
+  | xid | uid1 | uid2 | amt | eid | for       | type     |*
+  | 1   | bank | .ZZA | 200 | 1   | from bank | %E_BANK  |
+  | 2   | .ZZA | .ZZC | 10  | 3   | food      | %E_PRIME |
   And these "txs2":
   | txid | xid | payee | amount |*
   | 4    | 1   | .ZZA  | 200    |
@@ -50,8 +50,8 @@ Setup:
 Scenario: A deleted-by-view record is deleted
   When we delete table "txs" record "xid:2"
   Then these "txs":
-  | xid | uid1         | uid2 | amt | eid | for       | type    |*
-  | 1   | %UID_BANK_IN | .ZZA | 200 | 1   | from bank | %E_BANK |
+  | xid | uid1 | uid2 | amt | eid | for       | type    |*
+  | 1   | bank | .ZZA | 200 | 1   | from bank | %E_BANK |
   And count "txs" is 1
   And these "tx_hdrs_all":
   | deleted | xid |*

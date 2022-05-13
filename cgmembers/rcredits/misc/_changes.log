@@ -1,3 +1,25 @@
+2022-05-11 feature/qb-cttyfund
+. added a sendBankTxs() function to qb class to handle ACH batches
+. removed the distinction between bank-in and bank-out (now it's just UID_BANK)
+. extended u\nextBizTm() to handle next business time after a given date/time (not just now)
+. added special constants to represent incoming and outgoing bank transfers in tx_timed
+. changed achbatch function to choose a unique date/time to identify the batch
+. and to include the xid as part of the account identifier for each ACH
+. and to record the expected last four digits of the Community Fund bank account and the date/time of the expected bank date (all in bankTxId)
+NOTE: change Emi's rule' "to" field to 256 (to bank)
+NOTE: change 257 to 256 in all entry UIDs
+
+2022-05-09 feature/fy2021
+. in W:\cgmembers-frame\vendor\quickbooks\v3-php-sdk\src\XSD2PHP\src\com\mikebevz\xsd2php\Php2Xml.php: comment out line 268 -- // CGF undefined index (and unused) $namespace = $classDocs['xmlNamespace'];
+. revised be\getTxs to handle better what qb class needs
+. fixed bug in setCats (deleted 2 lines) and refactored a little for simplicity
+. fixed off-by-one bug in be\creditInfo / statement
+. fixed bugs in qb class and refactored / simplified
+. added a hook for customer lookup in qb class (not needed after all)
+. changed Qb::sendTxs() function to flag CG transactions as sent (B_QBOK) rather than tracking last xid sent
+. added iereport to admin panel
+. added nick field to cats form
+
 2022-05-07 feature/qb-txs
 . creation of QB transactions to export to QBO
 . added nick field to tx_cats, for use in be\setCat()

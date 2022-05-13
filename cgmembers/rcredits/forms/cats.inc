@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const CAT_FLDS = 'id category description externalId show'; // just the fields we handle here (and omitting pid)
+const CAT_FLDS = 'id category description externalId nick show'; // just the fields we handle here (and omitting pid)
 const CAT_URL = 'sadmin/cats/id';
 
 /**
@@ -25,11 +25,12 @@ function formCats($form, &$sta, $args = '') {
   $category = textFld(REQ . t('Category:'), [t('Name of category')], dft($category));
   $description = textFld(t('Description:'), [t('Description of category')], dft($description));
   $externalId = intFld(REQ . t('External ID:'), [t('ID in QB or whatever')], dft($externalId));
+  $nick = textFld(t('Nickname:'), [t('Category Nickname')], dft($nick));
   $show = boolFld(t('Show?'), '', dft($show));
 
   $submit = t('Save');
   
-  return cgform(compact(ray('title id category description externalId show submit id0')));
+  return cgform(compact(ray('title id category description externalId nick show submit id0')));
 }
 
 function formCats_validate($form, &$sta) {

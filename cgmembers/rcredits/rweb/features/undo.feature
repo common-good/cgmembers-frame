@@ -85,7 +85,7 @@ Scenario: An administrator reverses a bank transfer in
   |   11 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
   Then these "txs": 
   | xid | created    | amount | payer   | payee | purpose   |*
-  |   3 | %today-13m |   1000 | bank-in | .ZZA  | from bank |
+  |   3 | %today-13m |   1000 | bank | .ZZA  | from bank |
   When member "A:1" visits "history/transactions/period=365&undo=3"
   Then we say "status": "reversed bank tx" with subs:
   | amount | who     |*
@@ -97,15 +97,15 @@ Scenario: An administrator reverses a bank transfer in
   |  -11 |  .ZZA |  -1000 | %now    | %now      | %now    |   4 |
   And these "txs":
   | xid | created | amount | payer   | payee | purpose                  |*
-  |   4 | %now    |  -1000 | bank-in | .ZZA  | bank transfer adjustment |
+  |   4 | %now    |  -1000 | bank | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a bank transfer out
   Given these "txs2":
   | txid | payee | amount | created    | completed  | deposit    |*
   |   11 |  .ZZA |  -1000 | %today-13m | %today-13m | %today-13m |
   Then these "txs": 
-  | xid | created    | amount | payer    | payee | purpose |*
-  |   3 | %today-13m |  -1000 | bank-out | .ZZA  | to bank |
+  | xid | created    | amount | payer | payee | purpose |*
+  |   3 | %today-13m |  -1000 | bank  | .ZZA  | to bank |
   When member "A:1" visits "history/transactions/period=365&undo=3"
   Then we say "status": "reversed bank tx" with subs:
   | amount  | who     |*
@@ -117,8 +117,8 @@ Scenario: An administrator reverses a bank transfer out
   | txid | payee | amount | created | completed | deposit | xid |*
   |  -11 |  .ZZA |   1000 | %now    | %now      | %now    |   4 |
   And these "txs":
-  | xid | created | amount | payer    | payee | purpose                  |*
-  |   4 | %now    |   1000 | bank-out | .ZZA  | bank transfer adjustment |
+  | xid | created | amount | payer | payee | purpose                  |*
+  |   4 | %now    |   1000 | bank  | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a non-member ACH in
   Given these "txs":

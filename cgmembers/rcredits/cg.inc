@@ -1017,7 +1017,7 @@ X;
     SUM(IF(amount<0, amount, 0)) AS usdOut,
     SUM(IF(amount>0, 1, 0)) AS usdInCount,
     SUM(IF(amount<0, 1, 0)) AS usdOutCount
-    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN :UID_BANK1 AND :UID_BANK9 AND uid<>:UID_OUTER)
+    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT IN (:UID_BANK, :UID_OUTER))
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
@@ -1188,7 +1188,7 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  * Return the average balance, average credit reserve, and minimum balance for the given account (possibly joint) and period.
  * @param int $uid: account record ID (can be a community or region too)
  * @param int $start: starting date (should be 0 hours) -- first full day to include in the period
- * @param int $end: ending date (should be 0 hours) -- last full day to include in the period
+ * @param int $end: ending date (should be 0 hours) -- just past end of period
  * @param bool $noj: ignore any joined account
  * @return array: [balance, min, rewards, days]
  *    balance: the average end-of-day balance for that period (possibly with fractional cents)
@@ -1198,8 +1198,8 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  */
 function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   $uids = is_array($uid) ? $uid : [$uid];
-  if (is_null($end)) { $end = now(); }
-  $days = round(($end + 1 - $start) / DAY_SECS);
+  u\setDft($end, now());
+  $days = round(($end - $start) / DAY_SECS);
   if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo($uids, $start);
   $min = $bal = $info['balance'];
@@ -1567,7 +1567,7 @@ function signedIn() {return r\acct() ? TRUE : FALSE;}
 function iCodeDesc($iCode) {$iCodeDescs = ray(IBYS); return $iCodeDescs[min($iCode, IBY_ICARD) - IBY0];}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
-function isBank($uid) {return ($uid == UID_BANK_IN or $uid == UID_BANK_OUT);}
+function isBank($uid) {return ($uid == UID_BANK);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
 function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}
 function countryList() {return db\keyed('id,name', 'r_countries', "name in ('United States', 'Canada')");}

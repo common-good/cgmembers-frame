@@ -163,7 +163,7 @@ $queries = array_merge(nn($queries, []), [
             SUM(IF(u.:IS_CO, -u.floor, 0)) AS coCredit, 
             SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBals
      FROM users u LEFT JOIN users c ON c.uid=u.community
-     WHERE IFNULL(u.jid,0)=0 AND c.uid<0 GROUP BY c.fullName",
+     WHERE IFNULL(u.jid,0)=0 AND c.uid<0 AND u.uid NOT :CANONIC GROUP BY c.fullName",
 
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.recursId,0,amount)) AS `payments to CG`
   t('Actual Donations to Common Good and Community') =>

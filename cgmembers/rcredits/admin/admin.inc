@@ -85,9 +85,8 @@ function setupBasicAccounts() {
   new r\Acct(ray($canKeys, UID_ROUNDUPS, t('roundups'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_CRUMBS, t('crumbs'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_STEPUPS, t('stepups'), PROJECT, $cgf->community, $flagsCo));
-  new r\Acct(ray($canKeys, UID_BANK_FEES, t('service-charges'), t('Service Charges'), $cgf->community, $flagsCo));
-  new r\Acct(ray($canKeys, UID_BANK_IN, t('bank-in'), t('Bank'), 0, $flagsCo));
-  new r\Acct(ray($canKeys, UID_BANK_OUT, t('bank-out'), t('Bank'), 0, $flagsCo));
+  new r\Acct(ray($canKeys, UID_BANK_FEES, t('service-charges'), t('Service Charges'), r\serverUid(), $flagsCo));
+  new r\Acct(ray($canKeys, UID_BANK, t('cttyfund'), t('Bank'), r\serverUid(), $flagsCo));
   new r\Acct(ray($canKeys, UID_OUTER, t('txs-outer'), t('Txs Outer'), r\serverUid(), $flagsCo));
 }
 

@@ -16,7 +16,7 @@ use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId';
-const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank-in bank-out';
+const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
@@ -487,7 +487,7 @@ function doTxs($info, $thing) {
  */
 function doRequests($info) {
   global $testOnly, $channel;
-  ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
+///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
   u\setDft($info['purpose'], nn($info['for'], 'this or that'));
   unset($info['for']);
 
@@ -1007,8 +1007,8 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
 function uid($id, $field = '') {
   u\EXPECT(!$field, 'nonempty field');
   if (is_numeric($id) or empty($id)) { return $id; }
-  $map = ray('ctty cgf bank-in bank-out regulars crumb round stepups',
-             r\serverUid(), CGID, UID_BANK_IN, UID_BANK_OUT, UID_REGULARS, UID_CRUMBS, UID_ROUNDUPS, UID_STEPUPS);
+  $map = ray('ctty cgf bank regulars crumb round stepups',
+             r\serverUid(), CGID, UID_BANK, UID_REGULARS, UID_CRUMBS, UID_ROUNDUPS, UID_STEPUPS);
   if ($res = nni($map, $id)) return $res;
 
   $qo = r\qo(fullQid2($id));
@@ -1522,9 +1522,9 @@ function selected($form) {
 
   //  $pat = '~ select>([^,]+)</option~';
   $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
-  ///  debug("~<select [^>]*>\\s*($opt)+</select>~");
+///  debug("~<select [^>]*>\\s*($opt)+</select>~");
   if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
-  ///  debug($m);
+///  debug($m);
   
 }
 

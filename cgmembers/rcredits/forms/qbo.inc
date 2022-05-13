@@ -75,7 +75,7 @@ function formQBO($form, &$sta, $args = '') {
 //      debug(pr($qb->getRow('*', 'Purchase', 'Id=9293')));
 //      debug(pr($qb->getRows('*', 'Deposit', '', 3)));
 //      debug(pr($qb->getRows('*', 'Transfer', '', 3)));
-      debug(pr($qb->getRows('*', 'JournalEntry', '', 3)));
+//      debug(pr($qb->getRows('*', 'JournalEntry', '', 3)));
       break;
   }
   

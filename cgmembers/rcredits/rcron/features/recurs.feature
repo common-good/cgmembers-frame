@@ -41,30 +41,30 @@ Scenario: A brand new recurring payment can be completed
 
 Scenario: A recurring sweep can be completed
   Given these "tx_timed":
-  | id | action | start      | from | to       | amount | period | purpose |*
-  |  7 | pay    | %yesterday | .ZZA | bank-out |   %NUL | week   | pmt     |
+  | id | action | start      | from | to   | amount | period | purpose |*
+  |  7 | pay    | %yesterday | .ZZA | bank |   %NUL | week   | pmt     |
   When cron runs "recurs"
   Then these "txs2":
   | xid | created | amount | payee | completed | deposit |*
   |   2 | %now    |   -100 | .ZZA  |      %now |       0 |
   And these "txs":
-  | xid | created | amount | payer    | payee | recursId | for2 |*
-  |   2 | %now    |   -100 | bank-out | .ZZA  |        7 | pmt  |
+  | xid | created | amount | payer | payee | recursId | for2 |*
+  |   2 | %now    |   -100 | bank  | .ZZA  |        7 | pmt  |
   And we notice "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why                              |*
   | deposit | to     | $100   | (your automatic weekly transfer) |
 
 Scenario: A recurring bank transfer can be completed
   Given these "tx_timed":
-  | id | action | start      | from | to       | amount | period | purpose |*
-  |  7 | pay    | %yesterday | .ZZA | bank-out |     50 | day    | to bank |
+  | id | action | start      | from | to   | amount | period | purpose |*
+  |  7 | pay    | %yesterday | .ZZA | bank |     50 | day    | to bank |
   When cron runs "recurs"
   Then these "txs2":
   | xid | created | amount | payee | completed | deposit |*
   |   2 | %now    |    -50 | .ZZA  |      %now |       0 |
   And these "txs":
-  | xid | created | amount | payer    | payee | recursId | for2    |*
-  |   2 | %now    |    -50 | bank-out | .ZZA  |        7 | to bank |
+  | xid | created | amount | payer | payee | recursId | for2    |*
+  |   2 | %now    |    -50 | bank  | .ZZA  |        7 | to bank |
   And count "txs" is 2
   And we notice "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why                             |*
@@ -76,8 +76,8 @@ Scenario: A recurring bank transfer can be completed
   
 Scenario: A recurring bank transfer fails for insufficient funds
   Given these "tx_timed":
-  | id | action | start      | from | to       | amount | period | purpose |*
-  |  7 | pay    | %yesterday | .ZZA | bank-out |    200 | day    | to bank |
+  | id | action | start      | from | to   | amount | period | purpose |*
+  |  7 | pay    | %yesterday | .ZZA | bank |    200 | day    | to bank |
   When cron runs "recurs"
   Then we message "auto bankout nsf" to member ".ZZA" with subs:
   | when  | avail | amount |*

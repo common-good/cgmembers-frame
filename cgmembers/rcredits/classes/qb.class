@@ -18,6 +18,9 @@ use QuickBooksOnline\API\ReportService\ReportName;
 
 use QuickBooksOnline\API\Core\OAuth\OAuth2;
 use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
+
+const LOAN_CAT = 11150; // cat of "Other Loans" asset category
+
 // https://help.developer.intuit.com/s/error-resolver
 
 /**
@@ -153,62 +156,117 @@ class QB {
    */
   public function sendTxs() {
     global $testQbTxs;
-    $this->refresh();
-    $lastXid = getv('lastQBXid') ?: setv('lastQBXid', db\min('xid', 'tx_hdrs', 'created>=' . strtotime('1/1/2021')) - 1); 
     
-    $start = db\min('created', 'tx_hdrs', 'xid>=:lastXid', compact('lastXid')); // get date of last tx even if it was deleted (catches txs whose date got changed)
-    $start = max($start, strtotime('1/1/2021'));
+    $start = strtotime('1/1/2021');
+    $this->refresh();
     $cnt = 0;
 
-//    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, now()) : [];
-    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, $start + MONTH_SECS) : [];
+    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, now(), ray('includeSelfTxs catsOnly', TRUE, TRUE)) : [];
 
     foreach ($txs as $entries) {
-      foreach ($entries as $ei => $tx) {
-        extract(just('xid description created banking cat2 uid2 name', $tx));
-        if ($xid <= $lastXid) continue; // skip already-handled transactions on the start date (or later)
-        if ($ei == 0) {
-          if ($banking) {
-            if (r\acct($uid2)->sponsored) $description = strtolower(u\word9(db\get('category', 'tx_cats', ray('cat', $cat2)), ': '));
-          } else $description .= " [$name]";
-          $info = ray('DocNumber PrivateNote TxnDate', $xid, $description, fmtDt($created, 'Ymd'));
-          $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry($info);
-          debug($qbTx);
-        }
-        $this->addTxLine($qbTx, compact('description') + $tx);
-      }
-      $cnt++; if ($cnt > 5) break; // debug(
-//      if (test()) $testQbTxs[] = $qbTx; else
-//      $this->ds->Add($qbTx);
-//      setv('lastQBXid', $xid);
+      extract(just('xid description created banking cat2 uid2 name', $entries[0]));
+      if ($banking) {
+        if (r\acct($uid2)->sponsored) $description = strtolower(u\word9(db\get('category', 'tx_cats', ray('cat', $cat2)), ': '));
+      } else $description .= " [$name]";
+      $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'YYYY-MM-dd'));
+      $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry($info);
+
+      foreach ($entries as $tx) $this->addTxLine($qbTx, $tx, $description);
+      
+      if (test()) $testQbTxs[] = $qbTx; else
+      $this->ds->Add($qbTx);
+      db\setFlag('tx_hdrs', $xid, B_QBOK);
+//      debug($qbTx);
+      $cnt++; if ($cnt > 50) break; // debug(
     }
-    list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $tx['xid']] : ['', ''];
-    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+    list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $xid] : ['', ''];
+//    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+    w\say(t('QBO export complete: ') . pr(ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9)));
   }
 
   /**
-   * Add a transaction entry (pair) to a QBO Journal Entry Transaction.
+   * Send the latest batches of CG bank transfers QBO.
    */
-  public function addTxLine($qbTx, $tx) {
-    debug($tx);
-    extract(just('description', $tx));
+  public function sendBankTxs() {
+    global $testQbTxs;
     
-    for ([1, 2] as $i) {
-      foreach (ray('uid cat amt') as $k) $$k = $tx["$k$i"];
+    $start = strtotime('4/19/2021');
+    $this->refresh();
+    $tx0 = ray('uid1 cat1 uid2 cat2', '', '', UID_BANK, db\get('id', 'tx_cats', "nick='POOL'")); // same asset and liability categories for all entries
+    $cnt = 0;
+
+    $sql = <<< X
+      SELECT deposit, bankTxId, (MIN(txid)<0 AND SUM(1)=1) AS reversal, SUM(amount) AS amt, SUM(1) AS txCnt,
+      SUM(IF(amount<0, 0, amount)) AS amtIn, SUM(IF(amount<0, 0, 1)) AS cntIn,
+      SUM(IF(amount<0, amount, 0)) AS amtOut, SUM(IF(amount<0, 1, 0)) AS cntOut
+      FROM txs2 
+      WHERE deposit>=:start AND qbok IS NULL AND bankAccount IS NOT NULL
+      GROUP BY deposit, bankTxId
+X;
+///  AND bankTxId<>0 (add this soon)
+    $q = db\q($sql, compact('start'));
+
+    while ($row = $q->fetchAssoc()) {
+      extract($row));
+      $DocNumber = "cgFund#$deposit";
+      $PrivateNote = $desc = $reversal ? t('reversal') : ($txCnt > 1 ? t('ACH batch') : t('single bank transfer'));
+      if (!$reversal) $PrivateNote .= ': ' . t('IN %in (%cntIn), OUT %out (%cntOut)');
+      $effectiveDt = $bankTxId ? substr($bankTxId, 8) : u\nextBizDay(u\nextBizTm($deposit)); // at some point all relevant bankTxIds will be set and this will be simpler
+      $TxnDate = fmtDt($effectiveDt, 'YYYY-MM-dd');
+      $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate'));
+
+      u\EXPECT($cntIn + $cntOut > 0, 'empty deposit');
+      if ($cntIn > 0) $this->addTxLine($qbTx, $tx0 + ray('amt', $amtIn), $desc);
+      if ($cntOut > 0) $this->addTxLine($qbTx, $tx0 + ray('amt', $amtOut), $desc);
+      
+      if (test()) $testQbTxs[] = $qbTx; else
+//      $this->ds->Add($qbTx);
+//      db\q('UPDATE txs2 SET qbok=:NOW WHERE deposit=:deposit', compact('deposit'));
+      debug($qbTx);
+      $cnt++; if ($cnt > 0) break; // debug(
+    }
+    list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $xid] : ['', ''];
+//    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+    w\say(t('QBO export complete: ') . pr(ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9)));
+  }
+  
+  /**
+   * Add a transaction entry (pair) to a QBO Journal Entry Transaction (or possibly two pairs).
+   */
+  public function addTxLine($qbTx, $tx, $desc) {
+    extract(just('amt', $tx));
+    $AMT = abs($amt); // QBO handles only positive amounts
+    
+    foreach ([1, 2] as $i) if ($tx["cat$i"]) {
+      list ($typeA, $typeB) = u\order($i == 2 xor $amt < 0, 'Debit', 'Credit');
+      foreach (ray('uid cat') as $k) $$k = $tx["$k$i"];
       $a = r\acct($uid);
-      $this->addJLine($qbTx, 'Debit', db\get('id', 'tx_cats', $a->mainQid), $amt, $description);
-      $this->addJLine($qbTx, 'Credit', $cat, $amt, $description);
+      $this->addJLine($qbTx, $typeA, db\get('id', 'tx_cats', ray('nick', $a->mainQid)), $AMT, $desc);
+      $this->addJLine($qbTx, $typeB, $cat, $AMT, $desc);
     }
   }
 
   /**
    * Add a Journal Entry Line to the Journal Entry Transaction.
+   * @param IPPJournalEntry $qbTx: (MODIFIED) the QB JournalEntry object to add lines to
+   * @param string $PostingType: Debit or Credit
+   * @param int $id: CG's internal accounting category ID (record ID in tx_cats)
+   * @param numeric $Amount: the transaction amount for the recipient
+   * @param string $Description: transaction description
    */
-  private function addJLine(&$qbTx, $PostingType, AccountRef, $Amount, $Description) {
+  private function addJLine(&$qbTx, $PostingType, $id, $Amount, $Description) {
+    $AccountRef = db\get('externalId', 'tx_cats', compact('id'));
+    u\EXPECT(!empty($AccountRef), t('empty AccountRef for cat=%cat in tx %txid', 'cat txid', $id, $qbTx->DocNumber));
     $DetailType = 'JournalEntryLineDetail';
-    $$DetailType = (object) compact(ray('PostingType AccountRef'));
+    $$DetailType = new QuickBooksOnline\API\Data\IPPJournalEntryLineDetail(compact(ray('PostingType AccountRef')));
+//    if ($id == LOAN_CAT) $$DetailType->Entity = $this->getEntity($Description);
     $line = compact(ray("Description Amount DetailType $DetailType"));
     $qbTx->Line[] = new QuickBooksOnline\API\Data\IPPLine($line);
+  }
+  
+  private function getEntity($desc) {
+    $nm = strtr(strstr($desc, '['), ray('[ ]', '', ''));
+    return $this->get('Id', 'Customer', tr("DisplayName='%nm'", compact('nm')));
   }
   
   /**
@@ -233,7 +291,7 @@ class QB {
    */
   public function getRows($flds, $tnm, $where = '', $max = 999999) {
     $this->refresh();
-    $where = ($where and $where != TRUE) ? "WHERE $where" : '';
+    $where = ($where and $where !== TRUE) ? "WHERE $where" : '';
     if (!$cnt = $this->ds->query("SELECT COUNT(*) FROM $tnm $where")) return NULL;
     $rows = [];
     for ($i = 1; $i <= min($max, $cnt); $i += QB_CHUNK) {

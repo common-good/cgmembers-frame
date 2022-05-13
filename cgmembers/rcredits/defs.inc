@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60n'; // software version
+const R_VERSION = '3.60o'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -30,7 +30,7 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
   'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 60000',
   'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
 ];
-const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
+const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 
 $base_url = config('baseUrl');
 define('GEOCODE_KEY', config('geocodeKey'));
@@ -229,10 +229,7 @@ const UID_CRUMBS = 130; // Donations of a percentage of payments received
 const UID_STEPUPS = 131; // Donations of a percentage of payments made (donated to CG itself)
 const UID_BANK_FEES = 192;
 const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
-const UID_BANK1 = 256;
-const UID_BANK_IN = 256;  // Bank accounts start at 256
-const UID_BANK_OUT = 257;  //
-const UID_BANK9 = 511;
+const UID_BANK = 256; // current Community Fund bank account
 
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
 const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
@@ -613,7 +610,7 @@ const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-a
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_u7 = 7; // 
 const B_u8 = 8; // 
-const B_u9 = 9; // UNUSED (was recurring transaction; may be still set in txs)
+const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)
 const B_INVESTMENT = 12; // community investment (UNUSED?) or investment club investment
@@ -624,7 +621,7 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 u9 gift loan investment stake fine noask funding food partial button';
+const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 qbok gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)

@@ -36,9 +36,9 @@ Setup:
   
   When cron runs "getFunds"
   Then these "txs": 
-  | xid | created | amount | payer   | payee | purpose   | taking | type  | reversesXid |*
-  |   1 | %today  |    100 | .ZZA    | .ZZC  | one       |        | prime |          37 |
-  |   2 | %today  |      0 | bank-in | .ZZA  | from bank |      1 | bank  |             |
+  | xid | created | amount | payer | payee | purpose   | taking | type  | reversesXid |*
+  |   1 | %today  |    100 | .ZZA  | .ZZC  | one       |        | prime |          37 |
+  |   2 | %today  |      0 | bank  | .ZZA  | from bank |      1 | bank  |             |
   And count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 5
@@ -115,8 +115,8 @@ Scenario: Second invoice gets funded too for a non-refilling account
   | uid  | flags               | floor | risks |*
   | .ZZA | ok,confirmed,bankOk | 0     | hasBank |
   And these "txs":
-  | xid | created   | amount | payer   | payee | purpose   | taking |*
-  |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
+  | xid | created   | amount | payer | payee | purpose   | taking |*
+  |   2 | %today-1d |      0 | bank  | .ZZA | from bank |      1 |
   And these "txs2":
   | txid | payee | amount | created   | completed | deposit | xid |*
   |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
@@ -183,8 +183,8 @@ Scenario: An invoice gets handled for an account that rounds up
   |    1 | %today    | %TX_APPROVED |  99.60 | .ZZA | .ZZC | one   |
   When cron runs "getFunds"
   Then these "txs": 
-  | xid | created | amount | payer   | payee | purpose              | taking | type  |*
-  |   1 | %today  |    100 | bank-in | .ZZA | from bank            |      1 | bank  |
+  | xid | created | amount | payer | payee | purpose  | taking | type  |*
+  |   1 | %today  |    100 | bank  | .ZZA | from bank |      1 | bank  |
   And these "txs2":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    100 | %today  |    %today |       0 |  
