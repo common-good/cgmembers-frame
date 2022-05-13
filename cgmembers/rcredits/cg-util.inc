@@ -1332,7 +1332,7 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
   $heads = $values = $lines = '';
   foreach ($ray as $k => $v) {
     if (is_array($v) and $recurse) $v = rayTable($v, !$across, TRUE);
-    $v = plain($v);
+    $v = plain(pr($v));
     if ($across) {
       $heads .= "<th>$k</th>";
       $values .= "<td>$v</td>";
@@ -1784,8 +1784,7 @@ function nextBizDay($dt = NOW) {
   return $dt;
 }
 
-function nextBizTm() {$bizDay = u\nextBizDay(yesterday()); return $bizDay == today() ? now() : $bizDay;} // next second that's a business day
-
+function nextBizTm($now = NOW) {$bizDay = u\nextBizDay(yesterday($now)); return $bizDay == today($now) ? $now : $bizDay;} // next second that's a business day
 
 function holiwiggle($h, $dt) {$h = strtotime($h, $dt); return fmtDt(weekday($h) == 'Saturday' ? yesterday($h) : (weekday($h) == 'Sunday' ? tomorrow($h) : today($h)), 'Ymd');}
 

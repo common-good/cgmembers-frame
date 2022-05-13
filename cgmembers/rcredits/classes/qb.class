@@ -158,12 +158,10 @@ class QB {
     global $testQbTxs;
     
     $start = strtotime('1/1/2021');
-    $catCrit = '(cat1 IS NOT NULL OR cat2 IS NOT NULL)';
     $this->refresh();
     $cnt = 0;
 
-//    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, now(), ray('includeSelfTxs catsOnly', TRUE, TRUE)) : [];
-    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, $start + MONTH_SECS, ray('includeSelfTxs catsOnly', TRUE, TRUE)) : [];
+    $txs = $start ? be\getTxs(r\catUids(FALSE), $start, now(), ray('includeSelfTxs catsOnly', TRUE, TRUE)) : [];
 
     foreach ($txs as $entries) {
       extract(just('xid description created banking cat2 uid2 name', $entries[0]));
@@ -173,7 +171,7 @@ class QB {
       $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'YYYY-MM-dd'));
       $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry($info);
 
-      foreach ($entries as $tx) $this->addTxLine($qbTx, compact('description') + $tx);
+      foreach ($entries as $tx) $this->addTxLine($qbTx, $tx, $description);
       
       if (test()) $testQbTxs[] = $qbTx; else
       $this->ds->Add($qbTx);
@@ -187,18 +185,64 @@ class QB {
   }
 
   /**
+   * Send the latest batches of CG bank transfers QBO.
+   */
+  public function sendBankTxs() {
+    global $testQbTxs;
+    
+    $start = strtotime('4/19/2021');
+    $this->refresh();
+    $tx0 = ray('uid1 cat1 uid2 cat2', '', '', UID_BANK, db\get('id', 'tx_cats', "nick='POOL'")); // same asset and liability categories for all entries
+    $cnt = 0;
+
+    $sql = <<< X
+      SELECT deposit, bankTxId, (MIN(txid)<0 AND SUM(1)=1) AS reversal, SUM(amount) AS amt, SUM(1) AS txCnt,
+      SUM(IF(amount<0, 0, amount)) AS amtIn, SUM(IF(amount<0, 0, 1)) AS cntIn,
+      SUM(IF(amount<0, amount, 0)) AS amtOut, SUM(IF(amount<0, 1, 0)) AS cntOut
+      FROM txs2 
+      WHERE deposit>=:start AND qbok IS NULL AND bankAccount IS NOT NULL
+      GROUP BY deposit, bankTxId
+X;
+///  AND bankTxId<>0 (add this soon)
+    $q = db\q($sql, compact('start'));
+
+    while ($row = $q->fetchAssoc()) {
+      extract($row));
+      $DocNumber = "cgFund#$deposit";
+      $PrivateNote = $desc = $reversal ? t('reversal') : ($txCnt > 1 ? t('ACH batch') : t('single bank transfer'));
+      if (!$reversal) $PrivateNote .= ': ' . t('IN %in (%cntIn), OUT %out (%cntOut)');
+      $effectiveDt = $bankTxId ? substr($bankTxId, 8) : u\nextBizDay(u\nextBizTm($deposit)); // at some point all relevant bankTxIds will be set and this will be simpler
+      $TxnDate = fmtDt($effectiveDt, 'YYYY-MM-dd');
+      $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate'));
+
+      u\EXPECT($cntIn + $cntOut > 0, 'empty deposit');
+      if ($cntIn > 0) $this->addTxLine($qbTx, $tx0 + ray('amt', $amtIn), $desc);
+      if ($cntOut > 0) $this->addTxLine($qbTx, $tx0 + ray('amt', $amtOut), $desc);
+      
+      if (test()) $testQbTxs[] = $qbTx; else
+//      $this->ds->Add($qbTx);
+//      db\q('UPDATE txs2 SET qbok=:NOW WHERE deposit=:deposit', compact('deposit'));
+      debug($qbTx);
+      $cnt++; if ($cnt > 0) break; // debug(
+    }
+    list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $xid] : ['', ''];
+//    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
+    w\say(t('QBO export complete: ') . pr(ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9)));
+  }
+  
+  /**
    * Add a transaction entry (pair) to a QBO Journal Entry Transaction (or possibly two pairs).
    */
-  public function addTxLine($qbTx, $tx) {
-    extract(just('description amt', $tx));
+  public function addTxLine($qbTx, $tx, $desc) {
+    extract(just('amt', $tx));
     $AMT = abs($amt); // QBO handles only positive amounts
     
     foreach ([1, 2] as $i) if ($tx["cat$i"]) {
       list ($typeA, $typeB) = u\order($i == 2 xor $amt < 0, 'Debit', 'Credit');
       foreach (ray('uid cat') as $k) $$k = $tx["$k$i"];
       $a = r\acct($uid);
-      $this->addJLine($qbTx, $typeA, db\get('id', 'tx_cats', ray('nick', $a->mainQid)), $AMT, $description);
-      $this->addJLine($qbTx, $typeB, $cat, $AMT, $description);
+      $this->addJLine($qbTx, $typeA, db\get('id', 'tx_cats', ray('nick', $a->mainQid)), $AMT, $desc);
+      $this->addJLine($qbTx, $typeB, $cat, $AMT, $desc);
     }
   }
 

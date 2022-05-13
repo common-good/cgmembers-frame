@@ -30,7 +30,7 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
   'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 60000',
   'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
 ];
-const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
+const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 
 $base_url = config('baseUrl');
 define('GEOCODE_KEY', config('geocodeKey'));
@@ -229,10 +229,7 @@ const UID_CRUMBS = 130; // Donations of a percentage of payments received
 const UID_STEPUPS = 131; // Donations of a percentage of payments made (donated to CG itself)
 const UID_BANK_FEES = 192;
 const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
-const UID_BANK1 = 256;
-const UID_BANK_IN = 256;  // Bank accounts start at 256
-const UID_BANK_OUT = 257;  //
-const UID_BANK9 = 511;
+const UID_BANK = 256; // current Community Fund bank account
 
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
 const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];

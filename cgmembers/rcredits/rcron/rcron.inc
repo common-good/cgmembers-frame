@@ -336,21 +336,21 @@ function recur($template) {
 
     $data = compact('created');
     if ($flags) foreach (ray(TX_FLAGS) as $k) if (u\getBit($flags, $k)) $data[$k] = TRUE;
-    if ($action == 'pay' and $to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
-  
+
     if ($action == 'pay') {
+      if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
-        if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
+        if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
       }
       
-      if (in($to, [UID_BANK_IN, UID_BANK_OUT])) { // bank transfer
+      if (in(UID_BANK, [$from, $to])) { // bank transfer (NULL amount means sweep to bank)
         $info = ray('recursId', $id);
         $why = tr('auto transfer', compact('when'));
-        if ($to == UID_BANK_OUT) { // transfer to bank account
+        if ($to == UID_BANK) { // transfer from CG account to bank
           $avail = $fromA->avail(FOR_USD);
           if ($avail < $amount) return $fromA->tell('auto bankout nsf', ray('when avail amount', $when, u\fmtAmt($avail), u\fmtAmt($amount)));
           $fromA->bank(-$amount, $why, $info);
-        } else $toA->bank($amount, $why, $info); // transfer from bank account
+        } else $toA->bank($amount, $why, $info); // transfer to CG account from bank
       } else { // payment/transfer to another account
         $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
         if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);

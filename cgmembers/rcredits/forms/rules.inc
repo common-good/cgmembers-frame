@@ -43,8 +43,8 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $payerType = radiosFld(REQ . t('Payer Type:'), '', dft($payerType), ray(REF_LIST));
   $payee = textFld(t('Pays Payee:'), $payeDesc, dft($payee));
   $payeeType = radiosFld(REQ . t('Payee Type:'), '', dft($payeeType), ray(REF_LIST));
-  $from = textFld(REQ . t('Then From:'), $fromToDesc, dft($from));
-  $to = textFld(REQ . t('To:'), $fromToDesc . t(', %UID_BANK_OUT = bank'), dft($to));
+  $from = textFld(REQ . t('Then From:'), $fromToDesc . t(', %UID_BANK = bank'), dft($from));
+  $to = textFld(REQ . t('To:'), $fromToDesc . t(', %UID_BANK = bank'), dft($to));
   $action = radiosFld(REQ . t('Action:'), '', dft($action), ray(ACT_LIST));
   $amount = numFld(t('Amount:'), '', dft($amount > 0 ? $amount : '') + vmin(.01));
   $portion = numFld(t('Portion:'), '', dft($portion > 0 ? $portion : '') + vmin(.001) + step('.001'));
@@ -74,7 +74,7 @@ function formRules_validate($form, &$sta) {
 
   foreach (ray(ZERO_FLDS) as $k) if (isset($$k) and !$$k) $$k = 0;
   
-  foreach (ray('from to') as $k) if (!in($v0 = $$k, [MATCH_PAYER, MATCH_PAYEE, UID_BANK_OUT])) {
+  foreach (ray('from to') as $k) if (!in($v0 = $$k, [MATCH_PAYER, MATCH_PAYEE, UID_BANK])) {
     if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $v0, $k);
   }
   foreach (ray('payer payee') as $k) if ($v0 = $$k and !is_numeric($$k)) {
@@ -88,6 +88,7 @@ function formRules_validate($form, &$sta) {
   if (!$start) $start = now();
 
   foreach (ray('amount portion minimum useMax amtMax') as $k) if ($$k and $err = u\badAmount($$k, '>=0', $k == 'useMax' ? 0 : 2)) return say("$err ($k)", $k);
+  if (in(UID_BANK, [$from, $to]) and $amount < 0) return say(t('Bank transfer amount must be positive (or NULL for sweep to bank).'), 'amount');
 
   if ($id and !db\exists($tnm, compact('id'))) return say(t('To insert a record, leave the id empty.'), 'id');
   

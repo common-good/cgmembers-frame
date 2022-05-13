@@ -1017,7 +1017,7 @@ X;
     SUM(IF(amount<0, amount, 0)) AS usdOut,
     SUM(IF(amount>0, 1, 0)) AS usdInCount,
     SUM(IF(amount<0, 1, 0)) AS usdOutCount
-    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN :UID_BANK1 AND :UID_BANK9 AND uid<>:UID_OUTER)
+    FROM txs2 t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT IN (:UID_BANK, :UID_OUTER))
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
@@ -1567,7 +1567,7 @@ function signedIn() {return r\acct() ? TRUE : FALSE;}
 function iCodeDesc($iCode) {$iCodeDescs = ray(IBYS); return $iCodeDescs[min($iCode, IBY_ICARD) - IBY0];}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
-function isBank($uid) {return ($uid == UID_BANK_IN or $uid == UID_BANK_OUT);}
+function isBank($uid) {return ($uid == UID_BANK);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
 function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}
 function countryList() {return db\keyed('id,name', 'r_countries', "name in ('United States', 'Canada')");}

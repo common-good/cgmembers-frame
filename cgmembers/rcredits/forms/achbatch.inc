@@ -56,7 +56,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
-  $entryDate = fmtDt(u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'yyMMdd');
+  $entryDate = fmtDt($entryDate0 = u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'yyMMdd');
   
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), fmtDt(now(), 'MMMdd')];
@@ -69,6 +69,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $tot = 0;
+  $depositDt = now(); // a single unique time for each batch
 
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
@@ -85,6 +86,7 @@ X;
       $name = u\asciiOnly($a->legalName);
       $id = $a->mainQid;
     }
+    $id .= '-' . $xid;
 
     $name = u\asciiOnly($name);
     list ($recType, $addendaFlag) = [6, 0];
@@ -105,7 +107,7 @@ X;
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit and $mark and $mya->admAch) db\update('txs2', ray('deposit xid', today(), $xid), 'xid');
+    if (!$deposit and $mark and $mya->admAch) db\update('txs2', ray('deposit xid', $depositDt, $xid), 'xid');
   }
   unset($DBTX);
   
@@ -119,6 +121,8 @@ X;
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
+  
+  db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', substr(r\bankData()->acctIn, -4) . "000$entryDate0", $depositDt));
 
   u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
   if (test()) return $testRecs = $recs;

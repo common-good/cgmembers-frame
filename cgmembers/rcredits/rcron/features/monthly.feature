@@ -136,9 +136,9 @@ Scenario: Crumbs are invoiced
   | xid | payee | amount | completed | deposit |*
   | 13  | .ZZC  | 502.40 |         0 |       0 |
   And these "txs":
-  | xid | created        | amount | payer   | payee | purpose           | flags |*
-  | 13  | %now           |      0 | bank-in | .ZZC  | from bank         |       |
-  | 14  | %(%daystart-1) |   1.00 | round   | cgf   | roundup donations | gift  |
+  | xid | created        | amount | payer | payee | purpose           | flags |*
+  | 13  | %now           |      0 | bank  | .ZZC  | from bank         |       |
+  | 14  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations | gift  |
   And count "tx_hdrs" is 14
   And count "tx_requests" is 1
 

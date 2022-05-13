@@ -203,9 +203,9 @@ Scenario: a member account needs more funding while not yet verified and somethi
   | txid | payee | amount | created | completed | deposit | xid |*
   |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
   And these "txs":
-  | xid | amount | payer   | payee | for       | taking |*
-  |   1 |      0 | bank-in | .ZZA  | ?         |     1 |
-  |   2 |      0 | bank-in | .ZZA  | from bank |     1 |
+  | xid | amount | payer | payee | for       | taking |*
+  |   1 |      0 | bank  | .ZZA  | ?         |     1 |
+  |   2 |      0 | bank  | .ZZA  | from bank |     1 |
   And count "txs2" is 2
   And count "txs" is 2
   
@@ -245,5 +245,5 @@ Scenario: member's bank account has not been verified
   |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
   |    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
   And these "txs":
-  | xid | amount | payer   | payee | taking |*
-  |   1 |      0 | bank-in | .ZZA |      1 |
+  | xid | amount | payer | payee | taking |*
+  |   1 |      0 | bank  | .ZZA |      1 |

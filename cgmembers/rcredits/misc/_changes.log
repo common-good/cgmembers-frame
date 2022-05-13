@@ -1,3 +1,14 @@
+2022-05-11 feature/qb-cttyfund
+. added a sendBankTxs() function to qb class to handle ACH batches
+. removed the distinction between bank-in and bank-out (now it's just UID_BANK)
+. extended u\nextBizTm() to handle next business time after a given date/time (not just now)
+. added special constants to represent incoming and outgoing bank transfers in tx_timed
+. changed achbatch function to choose a unique date/time to identify the batch
+. and to include the xid as part of the account identifier for each ACH
+. and to record the expected last four digits of the Community Fund bank account and the date/time of the expected bank date (all in bankTxId)
+NOTE: change Emi's rule' "to" field to 256 (to bank)
+NOTE: change 257 to 256 in all entry UIDs
+
 2022-05-09 feature/fy2021
 . in W:\cgmembers-frame\vendor\quickbooks\v3-php-sdk\src\XSD2PHP\src\com\mikebevz\xsd2php\Php2Xml.php: comment out line 268 -- // CGF undefined index (and unused) $namespace = $classDocs['xmlNamespace'];
 . revised be\getTxs to handle better what qb class needs

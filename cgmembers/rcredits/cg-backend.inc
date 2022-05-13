@@ -351,11 +351,7 @@ function reverse($xid, $mya) {
     $newTx->entries[] = $newE;
   }
   
-  if (in($newTx->uid1, [UID_BANK_IN, UID_BANK_OUT])) {
-// NO! this is for things that didn't happen, so use the same account.    $newTx->entries[1]->uid = $newTx->entries[1]->uid == UID_BANK_IN ? UID_BANK_OUT : UID_BANK_IN;
-    $newTx->entries[0]->description = t('bank transfer adjustment');
-    $newTx->entries[1]->description = t('bank transfer adjustment');
-  }
+  if (r\isBank($newTx->uid1)) foreach ([0, 1] as $i) $newTx->entries[$i]->description = t('bank transfer adjustment');
 
   $xid = $newTx->insert();
   
@@ -1336,7 +1332,7 @@ function createUsdTransfer($a, $amount, $options = []) {
 
   list ($eType, $deposit, $bankId, $bankAccount) = $pid
   ? [E_OUTER, $deposit ?: 0, UID_OUTER, $bankAccount] // transfer to or from a non-member (with no CG account)
-  : [E_BANK, 0, $amount >= 0 ? UID_BANK_IN : UID_BANK_OUT, nni($a->vsecure, 'bankAccount', NULL)];
+  : [E_BANK, 0, $amount >= 0 ? UID_BANK : UID_BANK, nni($a->vsecure, 'bankAccount', NULL)];
   u\EXPECT($bankAccount or $deposit or ($pid and $amount < 0), 'bad bank account in bank transfer request: ' . pr($options + compact('payee')));
 
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
