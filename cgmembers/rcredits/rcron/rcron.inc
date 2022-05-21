@@ -681,7 +681,7 @@ function sweep($item = ['end' => NOW]) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {
-      $z = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+      $z = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations: ') . fmtDt($end, 'MMM YYYY'), FOR_GOODS, ray('created gift', $end, TRUE));
       if (!$z->ok) r\tellAdmin($type . t(' sweep failed: ') . $z->msg);
     }
   }

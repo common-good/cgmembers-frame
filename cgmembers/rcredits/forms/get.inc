@@ -20,7 +20,7 @@ function formGet($form, &$sta, $args = '') {
   if ($cancel and $mya) return cancelTx($cancel);
   if ($expedite and $mya and $mya->admRegion) {
     be\completeUsdTx($expedite);
-    be\usdTxFollowup($xid);
+    be\usdTxFollowup($expedite);
     return sayEmpty(t('Bank transfer successfully expedited.'));
   }
   

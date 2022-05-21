@@ -56,7 +56,7 @@ function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), 
  * @param $trace: Stack trace (only when called from handleException)
  */
 function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
-  global $channel;
+  global $channel, $mya;
   list($severity_msg, $severity) = nni(drupal_error_levels(), $level, ['unknown error', WATCHDOG_ERROR]);
 
   if ($level == E_WARNING) {
@@ -94,7 +94,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   if (!function_exists('filter_xss_admin')) require_once DRUPAL_ROOT . '/includes/common.inc';
   $traceMsg = \filter_xss_admin($msg . join("<br>\n", $traceMsg));
   
-  if (isPRODUCTION) {
+  if (isPRODUCTION and (!$mya or !$mya->admCode)) {
     $msg = strtr($msg . $traceMsg, ['&nbsp;' => '', '<br>' => '', '&gt;' => '>']);
     mail(R_ADMIN_EMAIL, t('%PROJECT ' . $title), $msg);
     if (!$nasty) return;

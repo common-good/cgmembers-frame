@@ -237,7 +237,7 @@ function doit(what, vs) {
       $('#dashboard').hide();
       $('.w-pay').toggle(pay);
       $('.w-charge').toggle(!pay);
-      $('.form-item-amount .suffix').toggle(pay);
+      $('.form-item-amount .suffix').toggle(pay); // for isGift
       $('#edit-title h3').html(desc);
       $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
@@ -282,6 +282,8 @@ function doit(what, vs) {
     function mem0Click(member) {
       reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member, vs['admin'] == 1);
       reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
+      $('.form-item-amount .suffix').toggle(member ? pay : !pay); // logic for isGift option is reversed for non-members (received can be a gift, but not payments)
+      if (!member && !pay) $('.form-item-isGift input').prop('checked', true); // non-member 
     }
     break;
 

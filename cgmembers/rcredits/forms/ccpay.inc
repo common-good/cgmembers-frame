@@ -153,8 +153,10 @@ function completeCCPayment($args) {
   
   $DBTX = \db_transaction();
   $tx = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
-  be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_USD_FEE);
-  be\insertTxes($txes, $tx->xid);
+  if ($coA->id != CGID) {
+    be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_USD_FEE);
+    be\insertTxes($txes, $tx->xid);
+  }
   unset($DBTX);
   
   r\tellAdmin(t('CC payment complete (to %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
@@ -205,7 +207,7 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
   list ($purpose, $explicit, $completed) = [$desc, TRUE, now()];
   $deposit = $bankAccount ? 0 : now();
   $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId'));
-  if ($gift) $info['flags'] = u\bit(B_GIFT);
+  $info['flags'] = ($gift ? u\bit(B_GIFT) : 0) | ($bankAccount ? 0 : u\bit(B_CC));
   $tx = be\createUsdTransfer($coA, $amount, $info);
   if ($id = $honorId) db\update('r_honors', ray('id xid', $id, $tx->xid), 'id');
   return $tx;

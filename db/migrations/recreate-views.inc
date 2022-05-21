@@ -88,7 +88,7 @@ function createViews($m, $migDt) {
   $txFlds1 = 'e1.' . join('1, e1.', $txeFlds0) . '1';
   $txFlds2 = 'e2.' . join('2, e2.', $txeFlds0) . '2';
   
-  $select0 = 'SELECT e.* FROM tx_entries_all e JOIN tx_entries_all e2 USING(xid)'; // e2 mostly helps identify related prime records)
+  $select0 = 'SELECT e.* FROM tx_entries e JOIN tx_entries e2 USING (xid)'; // e2 mostly helps identify related prime records)
   $sql = <<< X
     CREATE VIEW _view AS 
     SELECT DISTINCT $txFlds0, $txFlds2, $txFlds1

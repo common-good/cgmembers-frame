@@ -226,7 +226,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users_txs tx_requests tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users_txs tx_requests tx_hdrs tx_timed', 'uid', 'nvid', 'xid', 'id');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));

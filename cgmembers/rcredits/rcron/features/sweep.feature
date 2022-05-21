@@ -32,11 +32,11 @@ Scenario: Cron sweeps CG's batch donation accounts into its main account
 
   When cron runs "sweep"
   Then these "txs":
-  | xid | amount | payer    | payee | purpose           |*
-  | 13  | 4      | regulars | cgf   | regular donations |
-  | 14  | 1      | round    | cgf   | roundup donations |
-  | 15  | 2      | crumb    | cgf   | crumb donations   |
-  | 16  | 3      | stepups  | cgf   | step-up donations |
+  | xid | amount | payer    | payee | purpose                |*
+  | 13  | 4      | regulars | cgf   | regular donations: %mY |
+  | 14  | 1      | round    | cgf   | roundup donations: %mY |
+  | 15  | 2      | crumb    | cgf   | crumb donations: %mY   |
+  | 16  | 3      | stepups  | cgf   | step-up donations: %mY |
   And balances:
   | uid      | balance |*
   | cgf      | 10      |

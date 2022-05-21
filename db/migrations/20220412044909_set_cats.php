@@ -125,6 +125,7 @@ class SetCats extends AbstractMigration {
       [9900,'A: 457 Escrow Asset: 457 Investments','money is in shared capital cooperative',302],
       [10000,'A: Accounts Receivable','',152],
       [10100,'A: CC Processor','credit card processor, like PayPal',150],
+      [10150,'A: CG 457 Escrow','',223],
       [10200,'A: CG Account ..AAB','Common Good\'s own Common Good Credits Account',195],
       [10300,'A: Inventory Asset','',264],
       [10400,'A: Investments','',211],
@@ -147,6 +148,8 @@ class SetCats extends AbstractMigration {
       [12000,'A: Petty Cash','',151],
       [12100,'A: Sponsored','Projects sponsored by CG',319],
       [12200,'A: Sponsored: CG Western MA Region ..AAA','The server\'s "regional" account',310],
+      [12250,'A: Sponsored: Dollar Pool','',330],
+      [12275,'A: Sponsored: Dollar Pool: CC Processor Sponsored','part of CC account that is part of the Dollar Pool',205],
       [12300,'A: Sponsored: Dollar Pool ..8598','Brattleboro S&L account #500718598',306],
       [12400,'A: Sponsored: Dollar Pool ..8598: MSB Escrow for Dollar Pool','BS&L asked to hold $50k in escrow',327],
       [12500,'A: Sponsored: Food Fund ..AZV','Common Good\'s fund for food subsidies',309],
@@ -175,7 +178,7 @@ class SetCats extends AbstractMigration {
       [14800,'L: Payroll Liabilities: State Withholding Tax Liability','',217],
       [14900,'L: Payroll Liabilities: To Be Paid In CG Credits','',215],
     ];
-    foreach ($rows as $row) $data[] = array_combine($flds, $row);
+    foreach ($rows as $row) {echo '.'.$row[0].'.'; $data[] = array_combine($flds, $row);}
     return $data;
   }
 }

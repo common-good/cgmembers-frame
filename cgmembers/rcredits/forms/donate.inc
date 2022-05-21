@@ -110,7 +110,7 @@ function formDonate_submit($form, &$sta) {
 
   extract(just('amount fsFee payHow coverCCFee coverFSFee coId', $sta['input'], NULL));
   $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? CC_FEE / 100 : 0));
-  $sta['amount'] = round($amount + $feeCovered, 2);
+  $sta['input']['amount'] = round($amount + $feeCovered, 2);
 
   return submitNonMemberPayment($sta, w\ccGiftType($coId), compact('feeCovered'));
 }

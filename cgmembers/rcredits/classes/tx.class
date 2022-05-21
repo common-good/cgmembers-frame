@@ -203,7 +203,6 @@ class Tx {
       WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE $users)) $restrict
       ORDER BY e.xid, e.entryType<>:E_PRIME, e.entryType<>:E_BANK, e.entryType<>:E_OUTER, e.entryType, ABS(e.id), (e.id < 0)
 EOF;
-
     $result = db\q($sql, []);
 
     u\EXPECT($result, "Failure reading transactions for user(s) " . pr($uids));
