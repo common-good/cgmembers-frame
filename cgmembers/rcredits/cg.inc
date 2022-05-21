@@ -684,6 +684,8 @@ X;
     $tnm0 = '(SELECT t.*,t2.cat AS mainCat FROM txs t JOIN txs t2 USING(xid) WHERE t2.type IN :E_PRIMES AND t2.eid!=t.eid AND t2.cat IS NOT NULL';
   }
   $tnm = "(SELECT cat, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE cat IS NOT NULL GROUP BY cat, score HAVING score>=$minScore ORDER BY score DESC, cnt DESC) x";
+  
+///  global $mya; if ($mya and $mya->admin) debug(compact(ray('tx minScore me you score tnm')));
 
   return db\get('cat', $tnm, 1, $tx) ?: '';
 }
@@ -1579,3 +1581,4 @@ function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === 
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
 function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data
 function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}
+function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60o'; // software version
+const R_VERSION = '3.60p'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -609,7 +609,7 @@ const B_u4 = 4; //
 const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_u7 = 7; // 
-const B_u8 = 8; // 
+const B_CC = 8; // transaction by credit card
 const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)

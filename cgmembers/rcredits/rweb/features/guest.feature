@@ -9,6 +9,9 @@ Setup:
   | .ZZA | Abe One  | +13013013001 | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
   | .ZZB | Bea Two  |              | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |           |
   | .ZZC | Our Pub  | +13333333333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    |           | Cc3       |
+  And members have:
+  | uid  | emailCode |*
+  | cgf  | CgF       |
   And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -78,6 +81,63 @@ Scenario: A non-member pays a member company by credit card
   And we say "status": "purchase thanks|check it out" with subs:
   | coName | Our Pub |**
 
+Scenario: A non-member pays Common Good by credit card
+  Given button code "BUTTONCODE" for:
+  | account | item   | secret |*
+  | cgf     | apples | CgF    |
+  When member "?" visits "ccpay/code=BUTTONCODE"
+  Then we show "Pay Common Good" with:
+  | Pay         |
+  | Name        |
+  | Phone       |
+  | Email       |
+  | Country     |
+  | Postal Code |
+  | Pay         |
+
+  Given next captcha is "37"
+  And var "CODE" encrypts:
+  | type     | item     | pid | period | amount | coId   |*
+  | purchase | apples   | 1   | once   | 123.00 | NEWAAB |
+  When member "?" completes "ccpay/code=BUTTONCODE" with:
+  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
+  Then these "people":
+  | pid | fullName | phone        | email | zip   | state |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+
+  And we redirect to "https://www.paypal.com/cgi-bin/webscr"
+  And return URL "/ccpay/op=done&code=CODE"
+  
+  When member "?" visits "ccpay/op=done&code=CODE"
+  Then these "txs2":
+  | xid | payee | amount | completed | deposit | pid |*
+  | 1   | cgf   | 123    | %now      |    %now | 1   |
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose  | type       |*
+  | 1   | 1   | %UID_OUTER | cgf   | 123    | apples   | %E_OUTER   |
+  And count "tx_entries" is 2
+  And we email "purchase-thanks-nonmember" to member "z@" with subs:
+  | fullName     | Zee Zot         |**
+  | date         | %mdY            |
+  | coName       | %PROJECT        |
+  | coPostalAddr | %CGF_POSTALADDR |
+  | coPhone      | %CGF_PHONE      |
+  | amount       | $123            |
+  | item         | apples          |
+  | noFrame      | 1               |
+  And we email "purchase-report" to member "cgf" with subs:
+  | item         | apples               |**
+  | amount       | $123                 |
+  | date         | %mdY                 |
+  | fromName     | Zee Zot              |
+  | fromAddress  | Greenfield, MA 01301 |
+  | fromPhone    | +1 262 626 2626      |
+  | fromEmail    | z@example.com        |
+  | note         | awesome!             |
+  And we say "status": "purchase thanks|check it out" with subs:
+  | coName | %PROJECT |**
+  
 Skip Don't allow ACH for guests (for regulatory reasons: the bank wants us to KYC)
 # This includes donations to member organizations we don't sponsor, because we don't trust the member organization like we do ourselves.
 Scenario: A non-member pays a member company by ACH

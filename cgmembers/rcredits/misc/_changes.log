@@ -1,3 +1,24 @@
+2022-05-21 feature/qbo3
+. production site now shows useful error info for coders (admCode permission)
+. created nick2cat() function to get category ID from nickname
+. fixed bug in expediting bank transfers
+. fixed bug: outer donations now can be marked as gifts and get marked as gifts by default
+. added missing 2nd pairs of journal entry lines for FS fees and CC fees
+. fixed bug in donate that was failing to add FS fee and CC fee to amount when donor chose that option
+. other bugs and tweaks in qb class
+. added tx_timed to db\setFlag()
+. fixed bug in basic account setup (zip and postalAddr were switched for CG)
+. B_CC is now set during credit card payment
+. fixed a couple bugs in be\setCats()
+. added check to QBO export to make sure we don't duplicate anything
+. added Qb::sendCCTx() to handle increases in CC Processor account separately, so it will be easy to reconcile
+. added debugging flags to Qb class
+. donations to CG no longer generate fiscal sponsorship charges (from CG to CG)
+. setCats now reports the number of cats set
+. cron now records month in monthly transactions for batched donations
+. added a test for CG credit card payments by button
+. fixed bug in txs and its variants (they all included deleted entries, if any)
+
 2022-05-11 feature/qb-cttyfund
 . added a sendBankTxs() function to qb class to handle ACH batches
 . removed the distinction between bank-in and bank-out (now it's just UID_BANK)

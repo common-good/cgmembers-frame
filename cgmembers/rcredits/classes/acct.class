@@ -51,8 +51,8 @@ class Acct {
     $a = $this;
     extract($info);
 
-    extract(just('fullName flags state zip created number uid region', $info,
-      [NULL, 0, 0, NULL, now(), NULL, NULL, NULL]));
+    extract(just('fullName flags state zip created number uid region postalAddr', $info,
+      [NULL, 0, 0, NULL, now(), NULL, NULL, NULL, NULL]));
     u\setDft($legalName, $fullName);
     u\setDft($email, mb_strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
     u\setDft($community, r\communityId($zip));

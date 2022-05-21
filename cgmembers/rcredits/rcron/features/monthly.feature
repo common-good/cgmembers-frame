@@ -112,8 +112,8 @@ Scenario: Crumb and roundup donations are made
   Then these "txs": 
   | xid | created        | amount | payer | payee | purpose                                      | flags       |*
   | 12  | %(%daystart-1) |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
-  | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations                            | gift        |
-  | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations                              | gift        |
+  | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations: %mY                       | gift        |
+  | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations: %mY                         | gift        |
   # Note that tests simulate the previous month as the previous 30 days (created field is monthDt1-1 when not testing)
   And count "tx_hdrs" is 14
   And count "tx_requests" is 0
@@ -136,9 +136,9 @@ Scenario: Crumbs are invoiced
   | xid | payee | amount | completed | deposit |*
   | 13  | .ZZC  | 502.40 |         0 |       0 |
   And these "txs":
-  | xid | created        | amount | payer | payee | purpose           | flags |*
-  | 13  | %now           |      0 | bank  | .ZZC  | from bank         |       |
-  | 14  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations | gift  |
+  | xid | created        | amount | payer | payee | purpose                | flags |*
+  | 13  | %now           |      0 | bank  | .ZZC  | from bank              |       |
+  | 14  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations: %mY | gift  |
   And count "tx_hdrs" is 14
   And count "tx_requests" is 1
 

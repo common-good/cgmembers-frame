@@ -73,7 +73,7 @@ function setupBasicAccounts() {
   $info = array_combine($keys, $values);
   $logoUrl = preg_replace('~https?://~', '', BASE_URL . '/rcredits/images/logo80.png');
   $info += ray('legalName phone address city state postalAddr zip helper logo',
-    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1, $logoUrl);
+    CGF_LEGALNAME, u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR, CGF_ZIP, 1, $logoUrl);
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);

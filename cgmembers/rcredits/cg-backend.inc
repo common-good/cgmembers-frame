@@ -44,7 +44,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction. 
 
   $sql = <<< EOF
-    SELECT t.*, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
+    SELECT t.*, t2.txid, (t2.bankAccount IS NULL) AS noBank, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
@@ -674,6 +674,7 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
  * @param ray(assoc) $txes: (MODIFIED) the transaction entries
  * @param Tx $tx: the transaction header data (only flags and recursId are used)
  * @param int $i: index into $txes of the entry to examine (expects the account to be owned by CG)
+ * $i is assumed to be the payee, if even.
  */
 function setCat(&$txes, $tx, $i) { 
   if (!r\hasCats($txes[$i]->uid)) return $txes[$i]->cat = NULL;
@@ -683,7 +684,7 @@ function setCat(&$txes, $tx, $i) {
   $iA = r\acct($i_uid);
   $j = be\i2j($i); // point to the other entry in the pair
   $j_uid = $txes[$j]->uid;
-  $in = ($i > $j); $out = !$in;
+  $in = ($i < $j); $out = !$in;
 
   $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $for == t('donation'));
   $inv = ($i_relType == 'I');
@@ -696,8 +697,6 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'FS-FEE';
   } elseif ($in and $type == E_USD_FEE) {
     $nick = 'TX-FEE-BACK';
-  } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
-    $nick = $iA->mainQid;
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
     $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
   } elseif ($in and $gift) {
@@ -714,6 +713,11 @@ function setCat(&$txes, $tx, $i) {
     } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
       $nick = 'D-COMPANY';
     } else $nick = 'D-ONCE';
+
+  } elseif ($out and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
+    $nick = 'D-SPONSORED'; // subtract from this when adding to FS-FEE
+  } elseif ($out and $iA->sponsored and $type == E_USD_FEE) {
+    $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
     $nick = 'TO-PERSON';
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
@@ -731,9 +735,11 @@ function setCat(&$txes, $tx, $i) {
     } 
   } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
     $nick = 'INFO-SVC';
+  } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
+    $nick = $iA->mainQid;
   }
 
-  $txes[$i]->cat = $nick ? (db\get('id', 'tx_cats', compact('nick')) ?: NULL) : NULL; // inner ?: is for dev machine where sponsored account has no QBO account
+  $txes[$i]->cat = $nick ? (r\nick2cat($nick) ?: NULL) : NULL; // inner ?: is for dev machine where sponsored account has no QBO account
 }
 
 function i2j($i) {return $i + (($i & 1) ? -1 : 1);} // pointer to paired entry index in an array of tx entries
@@ -1337,7 +1343,9 @@ function createUsdTransfer($a, $amount, $options = []) {
 
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
   $tx = new r\Tx($tx0);
-  $extra = $cat ? ray('cat', [NULL, $cat]) : []; // set cat only for "payee" in txs2 -- other account is bank or outer
+  $cat1 = u\getBit($flags, B_CC) ? r\nick2cat(r\acct(UID_BANK)->mainQid) : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
+  $cat2 = $cat ?: NULL;
+  $extra = ($cat1 or $cat2) ? ray('cat', [$cat1, $cat2]) : [];
   txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
   if ($amount) handleSurTx($txes, $tx, $buyer, $seller, abs($amount), FALSE);
