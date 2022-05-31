@@ -1582,3 +1582,5 @@ function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period=
 function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data
 function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}
 function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}
+function qbCat($id) {return db\get('externalId', 'tx_cats', ray(is_numeric($id) ? 'id' : 'nick', $id));}
+function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, $set);}

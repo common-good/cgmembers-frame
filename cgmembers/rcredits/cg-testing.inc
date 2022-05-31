@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -85,7 +85,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
@@ -97,7 +97,9 @@ function fixData(&$info, $direct = FALSE) {
   
   if (nn($code) == 'TESTCODE') $code = $testCode;
   if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
-  if (isset($cat) and nni($info, 'item')) $cat = db\get('id', 'post_cats', compact('cat')); // for post_cats, not for tx_cats
+  if (nni($info, 'item')) {
+    if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat')); // fix cat for post_cats
+  } else foreach (ray('cat cat1 cat2') as $k) if (isset($$k)) $$k = r\nick2cat($$k); // fix cat for tx_cats
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
@@ -178,7 +180,7 @@ function fixIdFld($v) {
 function adminPerms($id, $perms) {
   global $testOnly;
   
-  $a = r\acct(t\uid($id));
+  if (!$a = r\acct(t\uid($id))) return t\output(t('Member %id does not exist and so does not have permissions %perms.', compact(ray('id perms'))));
   if (!$testOnly) $a->setAdminBits(ray($perms));
   return $a->adminCan($perms);
 }
@@ -410,68 +412,68 @@ function doAccounts($info = []) {
 /**
  * Fabricate transactions OR test them.
  * @param assoc $info: transaction data to create or test
- *   Minimum parameters: amount, from, to
+ *   Minimum parameters: amount, payer, payee
  * @return:
  *   if $testOnly return TRUE if the data is as expected
  *   otherwise return the xid of the created transaction(s) (treated as TRUE in test steps)
+ * Note: for $testOnly TRUE, if there are multiple entry pairs for one transaction, put the eid field first so verifyRecord() can distinguish them.
  */
 function doTxs($info, $thing) {
   global $testOnly;
 
-  $filter = function ($ray) {return array_filter($ray, function ($v) {return ($v !== FALSE and !is_null($v));});}; // bypass array_filter's conversion of 0 to boolean
-  $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
+  $map = 'amount:amt, payer:uid1, payee:uid2, purpose:for';
+  foreach (ray($map) as $k => $k2) if (rayhas($info, $k)) {$$k2 = $info[$k2] = $info[$k];}
+  extract(just('uid1 uid2 taking type', $info, NULL));
 
-  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
-  $entryFlds = 'xid entryType amount uid agentUid description cat relType relatedId rule';
-  $uidFlds = 'payer payee payerAgent payeeAgent';
-  $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
-  $map = 'amt:amount, uid1:payer, uid2:payee';
-  //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup gift loan investment stake fine noask funding'; // These are flags that might appear
-  
-  foreach (ray($map) as $k => $k2) if (isset($info[$k])) {
-    $info[$k2] = $info[$k];
-    unset($info[$k]);
+  if ($type and !is_numeric($type)) $info['type'] = u\consta('E', $type) ?: -1;
+  if (isset($for)) {
+    unset($info['for']);
+    if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
+    if ($for) list ($for1, $for2) = is_array($for) ? $for : [$for, $for];
+    $info += compact(ray('for1 for2'));
+    if (u\starts($for2, 'undoes:')) $info['reversesXid'] = substr($for2, mb_strpos($for2, ':') + 1);
   }
 
-  extract(just($hdrFlds . ' ' . $testFlds, $info, NULL));
-  extract(just('cat rel rule', $info, 0));
-
-  if (!$reversesXid) $reversesXid = NULL;
-  $for = $for ?: $purpose;
-  if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
-  if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
-  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, mb_strpos($payeeFor, ':') + 1);
-
-  $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
-  if ($type or !$testOnly) $type = $type ? (is_numeric($type) ? $type : (u\consta('E', $type) ?: -1)) : E_PRIME;
-  foreach (ray($uidFlds) as $k) if (isset($$k)) $$k = t\uid($$k);
-  u\setDft($actorId, $taking ? $payee : $payer);
-  if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
-
-  if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
-    if (!isset($info['goods'])) $goods = strhas($payeeFor, 'cash') ? FOR_USD : FOR_GOODS;
-    u\setDft($actorAgentId, ($taking ? $payeeAgent : $payerAgent) ?: $actorId);
-    $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
-                now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
-    foreach ($dfts as $k => $v) if (!isset($$k)) $$k = $v;
-    foreach (ray('payerAgent payeeAgent', $payer, $payee) as $k => $v) if (!$$k) $$k = $v;
-  }
-
-  $hdr = $filter(compact(ray($hdrFlds)));
-  $type = $type ?: ((r\isBank($payer) or r\isBank($payee)) ? E_BANK : E_PRIME);
+  foreach (ray('amount payer payee purpose for taking') as $k) unset($info[$k]);
+  foreach ($info as $k => $v) if (!$v) $info[$k] = (in($k, 'flags risks goods channel amt id') ? 0 : NULL); // interpret empty fields
 
   if ($testOnly) {
-    //    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
-    $e1 = $filter(ray('for1 uid1 agt1', $payerFor, $payer, $payerAgent));
-    $e2 = $filter(ray('for2 uid2 agt2', $payeeFor, $payee, $payeeAgent));
-    u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, $relType, $rel)) + $e1 + $e2;
-    if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
-    return verifyRecord('txs', $ray);
-  } else {
-    foreach (ray('relType rel cat') as $k) if (!nn($$k)) $$k = NULL;
-    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $cat, $relType, $rel, $rule));
-    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $cat, $relType, $rel, $rule));
+    return verifyRecord('txs', $info);
+ 
+  } else { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
+    global $channel;
+
+    $info['amount'] = $amt = nni($info, 'amt');
+    $actorId = $taking ? $uid2 : $uid1;
+    $info += ray('created flags for1 for2 channel actorId actorAgentId recursId', // defaults
+                now(), 0, t('for1'), t('for2'), $channel ?: TX_SYS, $actorId, $actorId, NULL);
+
+    extract(just('type risks flags goods cat1 cat2 eid agt1 agt2 rel for1 for2', $info, NULL));
+    if ($rel) $info['relatedId'] = $rel;
+    if (!$goods) $info['goods'] = strhas($for2, 'cash') ? FOR_USD : FOR_GOODS;
+    foreach (ray('agt1 agt2', $uid1, $uid2) as $k => $v) if (!$$k) $$k = $v;
+
+    $info['entryType'] = $type ?: ((r\isBank($uid1) or r\isBank($uid2)) ? E_BANK : E_PRIME);
+    $info['risks'] = $risks ? getRisks($risks, K_TX_RISKS) : 0;
+    if ($flags and !is_numeric($flags)) $info['flags'] = u\bit($flags); // works for '' and arrays too
+
+    list ($hFlds, $eFlds) = [r\Tx::TX_FIELDS, r\TxEntry::E_FIELDS];
+    foreach (ray('for1 for2 eid type amt uid1 uid2 rel cat1 cat2 agt1 agt2') as $k) unset($info[$k]);
+    if ($extra = justNOT("$hFlds $eFlds", $info)) u\FAIL('Bad fields in transaction: ' . join(',', array_keys($extra)));
+   
+    $sharedFlds = 'xid entryType rule relType relatedId';
+    $otherFlds = 'amount uid agentUid description cat';
+    u\EXPECT(strlen("id $sharedFlds $otherFlds") == strlen($eFlds), 'txEntry fields mismatch');
+    
+    $e1 = $e2 = just($sharedFlds, $info); // shared in an entry pair
+    $e1 += ray($otherFlds, -$amt, $uid1, $agt1, $for1, $cat1);
+    $e2 += ray($otherFlds,  $amt, $uid2, $agt2, $for2, $cat2);
+    if ($eid) {
+      u\preray(ray('id', -$eid), $e1);
+      u\preray(ray('id',  $eid), $e2);
+    }
+
+    $hdr = just($hFlds, $info);
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
@@ -937,7 +939,7 @@ function doTxs2($tx) {
 
   if ($testOnly) return verifyRecord('txs2', $tx);
 
-  u\setDft($tx['bankAccount'], $a->bankAccount);
+  if (!rayhas($tx, 'bankAccount')) $tx['bankAccount'] = $a->bankAccount; // sometimes we specify %NUL
   u\setDft($tx['channel'], $channel0);
   $options = just('pid created completed txid explicit bankAccount isSavings', $tx);
 
@@ -1782,7 +1784,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   $xi = $i = 0;
   foreach ($ray as $one) {
     if ($one === '' or mb_substr($one, 0, 1) == '~') continue; // ignore ~labels
-    $one = t($one); // translate constants in member
+    if (strhas($one, '%')) $one = tr($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
 ///    debug("one=$one i=$i xi=$xi");
@@ -1986,33 +1988,6 @@ function execWithTimeout($cmd, $timeout) {
   return $buffer;
 }
 
-/*
-  function fixStateAndCountry(&$state, &$country) {
-  global $testOnly;
-  if (!$testOnly) {
-  fixCountry($country);
-  if ($country == US_COUNTRY_ID) u\setDft($state, 'MA');
-  }
-
-  if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
-  }
-
-  function fixCountry(&$country) {
-  global $testOnly;
-  if (!$testOnly) u\setDft($country, R_COUNTRY_ID);
-  if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
-  }
-
-*/
-function log($msg) {if (test()) u\log($msg, 'debug');}
-function that($thing) {global $thatThing; return nni($thatThing, $thing, FALSE);}
-function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
-function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
-function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);}
-function rewarding() {return a('aab')->cttyA->cttyRewardy;}
-function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
-function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
-
 function hitAPI($op, $userId, $password, $requests) {
   global $testOnly; if ($testOnly) return FALSE;
   global $rAPIResult;
@@ -2105,3 +2080,11 @@ function getExitMsg() {
 function fixTestVars(&$parm) {global $testVars; foreach (nn($testVars, []) as $k => $v) $parm = str_replace($k, $v, $parm);}
 function itsLater() {return timeIs(now() + 1);}
 function timeIs($tm) {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = $tm);}
+function log($msg) {if (test()) u\log($msg, 'debug');}
+function that($thing) {global $thatThing; return nni($thatThing, $thing, FALSE);}
+function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
+function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
+function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);}
+function rewarding() {return a('aab')->cttyA->cttyRewardy;}
+function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
+function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

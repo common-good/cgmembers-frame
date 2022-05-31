@@ -93,8 +93,8 @@ Scenario: An administrator reverses a bank transfer in
   And we notice "bank tx canceled" to member ".ZZA" with subs:
   | xid | 4 |**
   And these "txs2":
-  | txid | payee | amount | created | completed | deposit | xid |*
-  |  -11 |  .ZZA |  -1000 | %now    | %now      | %now    |   4 |
+  | txid | payee | amount | created | completed  | deposit           | xid |*
+  |  -11 |  .ZZA |  -1000 | %now    | %today-13m | %(%today-13m + 1) |   4 |
   And these "txs":
   | xid | created | amount | payer   | payee | purpose                  |*
   |   4 | %now    |  -1000 | bank | .ZZA  | bank transfer adjustment |
@@ -114,17 +114,17 @@ Scenario: An administrator reverses a bank transfer out
   | xid | 4 |**
 #  This should be an immediate notice
   And these "txs2":
-  | txid | payee | amount | created | completed | deposit | xid |*
-  |  -11 |  .ZZA |   1000 | %now    | %now      | %now    |   4 |
+  | txid | payee | amount | created | completed  | deposit           | xid |*
+  |  -11 |  .ZZA |   1000 | %now    | %today-13m | %(%today-13m + 1) |   4 |
   And these "txs":
   | xid | created | amount | payer | payee | purpose                  |*
   |   4 | %now    |   1000 | bank  | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a non-member ACH in
   Given these "txs":
-  | eid | xid | payer      | payee | amount | purpose | cat | type     |*
-  |   3 | 3   | %UID_OUTER | .ZZC  | 100    | grant   | 2   | %E_OUTER |
-  |   4 | 3   | .ZZC       | cgf   | 5      | sponsor | 2   | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose | cat1        | cat2        | type     |*
+  |   3 | 3   | %UID_OUTER | .ZZC  | 100    | grant   |             | D-SPONSORED | %E_OUTER |
+  |   4 | 3   | .ZZC       | cgf   | 5      | sponsor | D-SPONSORED | FS-FEE      | %E_AUX   |
   And these "txs2":
   | txid | xid | payee | amount | completed | deposit | pid |*
   |   11 | 3   | .ZZC  | 100    | %now      | %now    | 2   |
@@ -140,6 +140,6 @@ Scenario: An administrator reverses a non-member ACH in
   | txid | xid | payee | amount | created | completed | deposit | pid |*
   |  -11 | 4   | .ZZC  | -100   | %now    | %now      | %now    | 2   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | cat | type     |*
-  |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    | 2   | %E_OUTER |
-  |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | 2   | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
+  |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    |             | D-SPONSORED | %E_OUTER |
+  |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | D-SPONSORED | FS-FEE      | %E_AUX   |

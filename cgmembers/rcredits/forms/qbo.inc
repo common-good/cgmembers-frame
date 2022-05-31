@@ -68,7 +68,7 @@ function formQBO($form, &$sta, $args = '') {
       }
       break;
 
-    case 'txs': $qb->sendTxs(); break;
+    case 'txs': $qb->sendBankTxs(); return go('sadmin/panel');
     
     case 'table': say(pr($qb->getRows($flds ?: 'Id', $tnm, '', 10))); break;
     case 'special': 

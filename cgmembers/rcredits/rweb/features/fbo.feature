@@ -26,7 +26,7 @@ Setup:
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
-  | purpose   | sponsor      |
+  | purpose   | %FS_NOTE |
   | minimum   | 0            |
   | useMax    |              |
   | amtMax    |              |
@@ -58,17 +58,17 @@ Scenario: A non-member donates to a sponsored member
   | .ZZA | ok,admin |
   And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | cat | comment |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   | 300 |         |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-SPONSORED |
   Then we scrip "tx" with subs:
-  | field | question            | selfErr | payDesc | chargeDesc |*
-  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose | cat | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant   |     | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | sponsor | 300 | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose            | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant              |             | D-SPONSORED | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-SPONSORED | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -112,16 +112,16 @@ Scenario: A sponsored member pays a nonmember
   | Category    | |
   
   When member "C:A" submits "tx/pay" with:
-  | op  | fbo | fullName | address | city | state | zip   | amount | purpose  | cat |*
-  | pay | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | printing | 300 |
+  | op  | fbo | fullName | address | city | state | zip   | amount | purpose | cat       |*
+  | pay | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 | 100    | labor   | FBO-LABOR |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
   And these "txs":
-  | xid | payer      | payee | amount | purpose  | cat | type     |*
-  | 1   | %UID_OUTER | .ZZC  | -100   | printing | 300 | %E_OUTER |
+  | xid | payer      | payee | amount | purpose | cat2      | type     |*
+  | 1   | %UID_OUTER | .ZZC  | -100   | labor   | FBO-LABOR | %E_OUTER |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | -100   | %now      |       0 | 1   |
@@ -136,8 +136,8 @@ Scenario: A sponsored member pays a nonmember
 
 Scenario: A sponsored member charges a member
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | who  | amount | purpose | cat |*
-  | charge |   1 | .ZZB |    100 | grant   | 300 |
+  | op     | fbo | who  | amount | purpose | cat         |*
+  | charge |   1 | .ZZB |    100 | grant   | D-SPONSORED |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -148,8 +148,8 @@ Scenario: A sponsored member charges a member
   | otherName | amount | purpose |*
   | Our Pub   | $100   | grant   |
   And these "tx_requests":
-  | nvid | created | status      | amount | payer | payee | for   | cat |*
-  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant | 300 |
+  | nvid | created | status      | amount | payer | payee | for   | cat         |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant | D-SPONSORED |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -160,14 +160,14 @@ Scenario: A sponsored member charges a member
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |       100 | .ZZB  | .ZZC  | grant   | %today  |
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat |*
-  |   1 | %today  |    100 | .ZZB | .ZZC   | grant   | 0      | I       | 1   | 300 |
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat2        |*
+  |   1 | %today  |    100 | .ZZB  | .ZZC  | grant   | 0      | I       | 1   | D-SPONSORED |
 
 Scenario: A sponsored member views their transaction history
   Given these "txs":
-  | xid | payer      | payee | amount | purpose  | cat | type     | payeeAgent |*
-  | 1   | %UID_OUTER | .ZZC  | 100    | grant    | 300 | %E_OUTER | .ZZB       |
-  | 2   | %UID_OUTER | .ZZC  | -200   | printing | 400 | %E_OUTER | .ZZB       |
+  | xid | payer      | payee | amount | purpose | cat2        | type     | agt2 |*
+  | 1   | %UID_OUTER | .ZZC  | 100    | grant   | D-SPONSORED | %E_OUTER | .ZZB |
+  | 2   | %UID_OUTER | .ZZC  | -200   | labor   | FBO-LABOR   | %E_OUTER | .ZZB |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      |       0 | 4   |
@@ -178,9 +178,9 @@ Scenario: A sponsored member views their transaction history
   | 5   | Eva Fivn | 5 E St  | Eton | CA    | 01005 |
   When member "C:A" visits "history/transactions"
   Then we show "Transaction History" with:
-  | Tx | Date | Name                  | Purpose  | Amount  | Balance |
-  | 2  | %mdy | Eva Fivn (non-member) | printing | -200.00 | -100.00 |
-  | 1  | %mdy | Dee Forn (non-member) | grant    |  100.00 |  100.00 |
+  | Tx | Date | Name                  | Purpose | Amount  | Balance |
+  | 2  | %mdy | Eva Fivn (non-member) | labor   | -200.00 | -100.00 |
+  | 1  | %mdy | Dee Forn (non-member) | grant   |  100.00 |  100.00 |
 
   When member "C:A" visits "history/transaction/xid=1"
   Then we show "Transaction #1 Detail" with:
@@ -229,8 +229,8 @@ Scenario: A non-member donates to a sponsored organization by credit card
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | type       |*
   | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor  | %E_AUX     |
-  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_USD_FEE |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
+  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_XFEE    |
   And we email "fbo-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
@@ -265,9 +265,9 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |       0 | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose    | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation   | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | sponsor    | %E_AUX     |
+  | eid | xid | payer      | payee | amount | purpose            | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation           | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
   And count "tx_entries" is 4
   And we email "fbo-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
@@ -296,9 +296,9 @@ Scenario: A member donates to a sponsored organization
   | amount | comment  | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose    | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation   | %E_PRIME   |
-  | 3   | 1   | .ZZC  | cgf   | 6.15   | sponsor    | %E_AUX     |
+  | eid | xid | payer | payee | amount | purpose            | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation           | %E_PRIME   |
+  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
   | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
@@ -326,9 +326,9 @@ Scenario: A member pays a sponsored organization
   | op  | who     | amount | purpose | period | periods | isGift |*
   | pay | Our Pub | 123    | gift    | month  | 1       | 1      |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift    | %E_PRIME   |
-  | 3   | 1   | .ZZC  | cgf   | 6.15   | sponsor | %E_AUX     |
+  | eid | xid | payer | payee | amount | purpose            | type       | cat1        | cat2        |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift               | %E_PRIME   |             | D-SPONSORED |
+  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     | D-SPONSORED | FS-FEE      |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose | payerType    | payeeType    | period | periods |*
   | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | gift    | %REF_ANYBODY | %REF_ANYBODY | month  | 1       |

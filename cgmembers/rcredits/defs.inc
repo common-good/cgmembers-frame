@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60p'; // software version
+const R_VERSION = '3.60q'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -373,6 +373,7 @@ const R_CODE_LEN = 32; // length of most random identifiers
 const R_DUPTX_MINS = 4; // number of minutes before a duplicate transaction is allowed
 const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
+define('FS_NOTE', t('fiscal sponsorship fee')); // standard message for this in tx_timed / aux transactions
 const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
 //const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
 const CREDIT_WITH_SSN = 200; // amount of initial creditline when SSN is verified
@@ -670,11 +671,11 @@ const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
 const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, tip, or rule-based donation) triggered by another transaction
                   // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
-const E_USD_FEE = 4; // fee from customer to merchant for credit card or check transaction
+const E_XFEE = 4; // fee from customer to merchant for credit card or check transaction
 const E_BANK = 5; // CG account transfers to or from the member's bank (replaces E_PRIME)
-const E_XFEE = 6; // transfer fee to merchant (UNUSED)
+const E_u6 = 6; // UNUSED
 const E_OUTER = 7; // CG account transfers to or from a non-member (replaces E_PRIME)
-const E_TYPES = 'bank_only prime aux rebate usd_fee bank rule outer';
+const E_TYPES = 'bank_only prime aux rebate xfee bank u6 outer';
 const E_PRIMES = [E_PRIME, E_BANK, E_OUTER]; // these types can be the main transaction, potentially having auxiliary transactions
 
 const REF_LIST = 'anybody account anyCo industry group person'; // values for payerType and payeeType in tx_rules

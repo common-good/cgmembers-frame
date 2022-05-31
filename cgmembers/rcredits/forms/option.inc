@@ -28,6 +28,7 @@ function formOption($form, &$sta, $args = '') {
   } else {
     if (empty($qid)) return w\softErr(t('Missing question id.'));
     $type = db\get('type', 'r_questions', 'id=:qid', compact('qid'));
+    $id = NULL;
   }
 
   $title = item($add ? t('Add Option') : t('Edit Option'));

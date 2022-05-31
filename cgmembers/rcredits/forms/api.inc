@@ -142,11 +142,8 @@ function generateInvoice($request) {
 }
 
 function makePayments($userId, $requests) {
-  $responses = [];
-  foreach($requests as $request) {
-    $responses[] = makePayment($request);
-  }
-  return okResponse('make-payments', $userId, $responses);
+  foreach($requests as $request) $responses[] = makePayment($request);
+  return okResponse('make-payments', $userId, nn($responses));
 }
 
 function makePayment($request) {

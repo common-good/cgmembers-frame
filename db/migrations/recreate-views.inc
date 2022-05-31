@@ -28,7 +28,6 @@ function createViews($m, $migDt) {
   cgpr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) {
-/**/ echo "view: $table\n";
     $m->doSql('  DROP VIEW IF EXISTS ' . $table);
   }
   
@@ -128,4 +127,5 @@ X;
 
   $m->doSql('CREATE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
   $m->doSql('CREATE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');
+  cgpr('done recreating views!');
 }

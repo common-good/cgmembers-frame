@@ -82,10 +82,13 @@ function reverseTx($xid, &$sta, $args) {
     $DBTX = \db_transaction();
     $z = be\reverse($xid, $mya); // create an offsetting tx
     if (!$z->ok) return go($url, $msg, 'err');
-    $tx['deposit'] = $tx['created'] = $tx['completed'] = now();
+    $deposit = $tx['deposit'] = !$deposit ? now() // list reversals distinctly, for easy reconciliation
+    : ($deposit + 1 + db\count('txs2', 'txid<0 AND deposit BETWEEN :deposit+1 AND :deposit+:DAY_SECS/4', compact('deposit')));
+    if (!$completed) $completed = $tx['completed'] = $deposit;
+    $tx['created'] = now(); // bankTxId (effective date) can be the same as originally (0 if the original never went to bank)
     $tx['xid'] = $z->subs['xid'];
     db\insert('txs2', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
-    if (!$deposit) db\update('txs2', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
+    if (!$deposit) db\update('txs2', ray('deposit completed txid', $tx['deposit'], $completed, -$txid), 'txid'); // mark original as done too (from bank's view)
     $mya->update('lastBounce floor', now(), max(0, $mya->floor));
     unset($DBTX);
     
