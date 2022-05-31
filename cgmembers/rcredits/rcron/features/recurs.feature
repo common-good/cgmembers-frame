@@ -48,8 +48,8 @@ Scenario: A recurring sweep can be completed
   | xid | created | amount | payee | completed | deposit |*
   |   2 | %now    |   -100 | .ZZA  |      %now |       0 |
   And these "txs":
-  | xid | created | amount | payer | payee | recursId | for2 |*
-  |   2 | %now    |   -100 | bank  | .ZZA  |        7 | pmt  |
+  | xid | created | amount | payer | payee | recursId | for2    |*
+  |   2 | %now    |   -100 | bank  | .ZZA  |        7 | to bank |
   And we notice "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why                              |*
   | deposit | to     | $100   | (your automatic weekly transfer) |

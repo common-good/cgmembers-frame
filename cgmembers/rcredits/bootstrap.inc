@@ -1261,6 +1261,7 @@ function strhas($string, $what, $insensitive = FALSE) {
   return ($func($string, $what) !== FALSE);
 }
 function strihas($string, $what) {return strhas($string, $what, TRUE);}
+function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots easier to type, and parallel to strhas
 
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
@@ -1308,7 +1309,7 @@ function g($k, $v = NULL) {
  */
 /**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
 /**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : now()); return $result;} // convert and display unixtime or string time
-function btxid($bankTxId = '') {
+function btxid($bankTxId = '') { // unused
   $dt = DAY_SECS * substr($bankTxId, 0, 5);
   $dt = date('Ymd', $dt + DAY_SECS); // add a day for U.S. timezones
   $acct = substr(r\bankData()->acctIn, 0, 6) . substr($bankTxId, 5, 5);
@@ -1316,7 +1317,7 @@ function btxid($bankTxId = '') {
   return $acct . $dt . $txid;
 ///  debug(date('m/d/Y H:i:s a', $dt));
 }
-function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in txs2 and r_usd2)
+function bankTxId($btxid) { // unused (was for reconcilecttyfund.inc - short form of bank's txid in txs2 and r_usd2)
   list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
   list ($txidLen, $acctLen) = isDEV ? [1, 4] : [7, 5];
   $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);

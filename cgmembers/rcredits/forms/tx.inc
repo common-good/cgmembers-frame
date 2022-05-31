@@ -51,7 +51,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $cat = $hasCats ? catFld() : NULL;
+  $cat = $hasCats ? catFld() : NULL; // fbo income gets categorized automatically
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -65,7 +65,7 @@ function formTx($form, &$sta, $type, $args = '') {
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
   $admin = $mya->admNonmemberTx;
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats')));
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin')));
   
   $paying = hidFld($pay);
   $fbo = hidFld($fbo);
@@ -99,7 +99,7 @@ function formTx_submit($form, &$sta) {
 
   extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
-  if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ray('cat', $paying ? [$cat, NULL] : [NULL, $cat]);
+  if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat];
 
   if (!$who) return fboTx($input);
 
@@ -138,7 +138,7 @@ function formTx_submit($form, &$sta) {
   } else { // no delay, transact now
     $data = [];
     if ($start and $start < today()) $data['created'] = $start; // admin chose a date in the past
-    if ($cat) $data += $cat;
+    if ($cat) $data += compact('cat');
     if ($isGift) $data['gift'] = TRUE;
 
     $z = $paying

@@ -154,7 +154,7 @@ function completeCCPayment($args) {
   $DBTX = \db_transaction();
   $tx = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
   if ($coA->id != CGID) {
-    be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_USD_FEE);
+    be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_XFEE);
     be\insertTxes($txes, $tx->xid);
   }
   unset($DBTX);

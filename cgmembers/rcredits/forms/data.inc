@@ -56,7 +56,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $links = item(u\ul($links), NBSP);
     $form = compact(ray('title subtext sql submit links'));
   }
-  return cgform($form, $args ? 'wider nolabs' : '');
+  return cgform($form, $args ? ($code ? 'wide' : 'wider') . ' nolabs' : '');
 }
 
 function formData_validate($form, &$sta) {

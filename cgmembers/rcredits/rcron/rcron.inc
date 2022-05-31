@@ -258,6 +258,7 @@ function oneAcct($item) {
  * Action options are: 
  *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
  *   pay or charge: recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
+ * OBSCURE NOTE: if you want to count a transaction as the latest recurrence, give it the right rule and set its date/time AFTER the expected recur date/time
  */
 function recurs() {
   $sql = <<< EOF

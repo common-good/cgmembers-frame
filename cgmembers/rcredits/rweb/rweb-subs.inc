@@ -108,7 +108,7 @@ function goFar($url, $params = '') {
 function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
   
-  if ($types and $filetype = mime_content_type($tmp_name) and !in($filetype, $types)) return t('bad file type', compact('filetype'));
+  if (!$types or !$tmp_name or !$filetype = mime_content_type($tmp_name) or !in($filetype, $types)) return t('bad file type', compact('filetype'));
   if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');

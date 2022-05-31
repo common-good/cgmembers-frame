@@ -59,7 +59,7 @@ Scenario: A non-member pays a member company by credit card
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | type       |*
   | 1   | 1   | %UID_OUTER | .ZZC  | 123    | apples   | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_USD_FEE |
+  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_XFEE |
   And we email "purchase-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |

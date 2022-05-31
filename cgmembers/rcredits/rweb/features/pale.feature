@@ -23,9 +23,9 @@ Scenario: A member makes a transaction that triggers paying a little extra
   | did    | otherName  | amount |*
   | paid   | Corner Pub | $100   |
   And these "txs":
-  | eid | xid | type     | created | amount | from  | to   | description       | rule |*
-  |   1 |   1 | prime    | %today  |    100 | .ZZA  | .ZZC | fun               | 1    |
-  |   3 |   1 | aux      | %today  |      5 | .ZZA  | .ZZD | food fund         | 1    |
+  | eid | xid | type     | created | amount | payer | payee | for       | rule |*
+  |   1 |   1 | prime    | %today  |    100 | .ZZA  | .ZZC  | fun       |      |
+  |   3 |   1 | aux      | %today  |      5 | .ZZA  | .ZZD  | food fund | 1    |
   # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
   And balances:
   | uid  | balance |*

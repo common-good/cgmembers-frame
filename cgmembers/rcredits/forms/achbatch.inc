@@ -121,8 +121,9 @@ X;
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
-  
-  db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', substr(r\bankData()->acctIn, -4) . "000$entryDate0", $depositDt));
+
+  $id = $entryDate0 . substr(r\bankData()->acctIn, -4); // set bankTxId to effective date (10 digits), bank account number (last 4 digits)  
+  db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', $id, $depositDt));
 
   u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
   if (test()) return $testRecs = $recs;

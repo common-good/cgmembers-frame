@@ -1,3 +1,19 @@
+2022-05-27 feature/cat-test
+. created feature test for setting transaction categories
+. completely rewrote t\doTx() to make it clearer and work right
+. added rayhas() function, so we don't have to remember and type array_key_exists
+. we now set B_QBOK in bank transactions (txs) record instead of setting qbok in their txs2 record
+. added a new accounting category for sponsored stepups
+. added r\qbCat() function to get QBO category from tx_cats id or nick
+. transfers to CG from donation "buckets" are now labeled as coming from "various"
+. fixed simmering bug: reversal of outgoing transfers was not marking the original deposited and completed
+. reversing a bank transaction now gets marked as NOT having been sent to QBO
+. cleaned up namespaces in QB class
+. bankTxId is now effective date and last four of bank account, so easier to reconcile and last four starting with zero will work
+. fixed QB transaction date bug
+. QB sendTxs now includes non-sponsored accounts that we allow to accept credit card payments
+. added changeCat and getQbTx methods to Qb class
+
 2022-05-21 feature/qbo3
 . production site now shows useful error info for coders (admCode permission)
 . created nick2cat() function to get category ID from nickname

@@ -5,23 +5,13 @@ use CG\Web as w;
 use CG\DB as db;
 use CG\Backend as be;
 
-use QuickBooksOnline\API\Core\ServiceContext;
-use QuickBooksOnline\API\DataService\DataService;
-use QuickBooksOnline\API\PlatformService\PlatformService;
-use QuickBooksOnline\API\Core\Http\Serialization\XmlObjectSerializer;
-use QuickBooksOnline\API\Facades\Purchase;
-use QuickBooksOnline\API\Data\Transaction;
-use QuickBooksOnline\API\Data\IPPPurchase;
-use QuickBooksOnline\API\QueryFilter\QueryMessage;
-use QuickBooksOnline\API\ReportService\ReportService;
-use QuickBooksOnline\API\ReportService\ReportName;
-
-use QuickBooksOnline\API\Core\OAuth\OAuth2;
-use QuickBooksOnline\API\Core\OAuth\OAuth2\OAuth2AccessToken;
+use QuickBooksOnline\API\DataService as qbDS;
+use QuickBooksOnline\API\Data as qbData;
+use QuickBooksOnline\API\Facades as qbFacades;
 
 const LOAN_CAT = 11150; // cat of "Other Loans" asset category
-const QSEND_TEST = TRUE; // outputs instead of sending
-const MAX_QCNT = 1; // maximum number of txs to send (whether testing or not)
+const QSEND_TEST = FALSE; // outputs instead of sending
+const MAX_QCNT = 0; // maximum number of txs to send (whether testing or not)
 
 // https://help.developer.intuit.com/s/error-resolver
 
@@ -73,7 +63,7 @@ class QB {
   public function __construct($creds, $refresh = TRUE) {
     list ($clientId, $secret) = ray($creds);
     
-    $ds = $this->ds = DataService::Configure([
+    $ds = $this->ds = qbDS\DataService::Configure([
       'auth_mode' => 'oauth2',
       'ClientID' => $clientId,
       'ClientSecret' => $secret,
@@ -156,49 +146,53 @@ class QB {
   /**
    * Send the latest transactions in CG's various accounts to QBO.
    * Strategy: Create a journal entry for each CG transaction.
+   *
    * Except: Create a single journal entry for each ACH batch -- see sendBankTxs() below
-   * AND a separate journal entry for each credit card purchase -- see sendCCTxs() below.
-   * Creating an entry just for the net, allows easy reconciliation with the bank and CC Processor.
+   * AND a separate journal entry for each credit card purchase -- see sendCCTx() below.
+   * Creating an entry just for the net of the ACH batch allows easy reconciliation with the bank and CC Processor.
    * So these journal entries do not include an increase in a Dollar Pool bank account and Dollar Pool liability
    * because those other functions do that.
+   *
    * A standard income, expense, or transfer for CG itself results in a 2-line journal entry (for example, increase in assets and income).
    * A non-member transaction would normally increase the dollar pool (and dollar pool liability),
    * but that is handled separately, as describe here above.
    * Fiscal sponsor fees increase the number of journal entry lines by 4 (from 2 to 6): Sponsee -> CG and Sponsored Donations -> Sponsorship Fees
    * Credit card charges increase the number by 4 again: Sponsee -> CG and [increase the (negative) Tx Fee Reimbursement Expense and the (positive) Sponsored Tx Expense]
-   * This is all driven by the accounting categories (cat field) chosen manually and by be\setCat().
+   * This is all driven by the accounting categories (cat field) chosen manually or by be\setCat().
+   *
    * Accounting NOTE: to increase an account, CREDIT income and liability, DEBIT expense and asset (maybe think of expenses and assets as being negative income and liabilities).
    */
-  public function sendTxs() {
+  public function sendTxs($end = NOW + 1) { // call only from sendBankTxs
     global $testQbTxs;
     
     $start = strtotime('7/1/2021');
     $this->refresh();
     $cnt = 0;
-    $uids = db\q('SELECT DISTINCT uid1 FROM txs WHERE :IS_CC AND uid1=:UID_OUTER AND created>=:start', compact('start'))->fetchCol(0); // sponsored only for CC processing
+    $sql = 'SELECT DISTINCT uid2 FROM txs WHERE :IS_CC AND uid1=:UID_OUTER AND created BETWEEN :start AND :end';
+    $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids(FALSE)));
 
-    $txs = $start ? be\getTxs($uids, $start, now(), ray('includeSelfTxs catsOnly', TRUE, TRUE)) : [];
+    $txs = be\getTxs($uids, $start, $end, ray('includeSelfTxs catsOnly', TRUE, TRUE));
 
     foreach ($txs as $entries) {
-      extract(just('xid description created banking cat2 uid2 name', $entries[0]));
+      extract(just('xid description created banking cat2 uif2 uid2 name', $entries[0]));
       if (!$this->isNew("cg#$xid")) break;
-//      if ($xid == 160309) break;
 
       if ($banking) {
         if (r\acct($uid2)->sponsored) $description = strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
       } else $description .= " [$name]";
-      $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'YYYY-MM-dd'));
-      $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry($info);
+
+      $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'yyyy-MM-dd'));
+      $qbTx = new qbData\IPPJournalEntry($info);
 
       foreach ($entries as $e) $this->addTxLine($qbTx, $e, $description);
 
-      if (test()) $testQbTxs[] = $qbTx; else
       if (QSEND_TEST) {
-        debug($qbTx);
+/**/    debug($qbTx);
       } else {
+        if (test()) $testQbTxs[] = $qbTx; else
         $this->ds->Add($qbTx);
-        db\setFlag('tx_hdrs', $xid, B_QBOK);
+        r\setQbOk($xid);
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
     }
@@ -209,11 +203,12 @@ class QB {
 
   /**
    * Send the latest batches of CG bank transfers to QBO.
+   * Then send all other transactions up to the latest deposit date (and no further! lest a transaction get marked done before it gets transferred as a deposit)
    */
-  public function sendBankTxs() {
+  public function sendBankTxs($end = NOW + 1) {
     global $testQbTxs;
     
-    $start = strtotime('4/19/2021');
+    $start = strtotime('7/1/2021');
     $this->refresh();
     $tx0 = ray('uid1 cat1 uid2 cat2', '', '', UID_BANK, db\get('id', 'tx_cats', "nick='POOL'")); // same asset and liability categories for all entries
     $cnt = 0;
@@ -222,12 +217,13 @@ class QB {
       SELECT deposit, bankTxId, (MIN(txid)<0 AND SUM(1)=1) AS reversal, SUM(amount) AS amt, SUM(1) AS txCnt,
       SUM(IF(amount<0, 0, amount)) AS amtIn, SUM(IF(amount<0, 0, 1)) AS cntIn,
       SUM(IF(amount<0, amount, 0)) AS amtOut, SUM(IF(amount<0, 1, 0)) AS cntOut
-      FROM txs2 
-      WHERE deposit>=:start AND qbok IS NULL AND bankAccount IS NOT NULL
+      FROM txs2 x2 JOIN tx_hdrs h USING (xid)
+      WHERE deposit BETWEEN :start AND :end AND bankAccount IS NOT NULL
+      AND NOT h.:IS_QBOK AND bankTxId IS NOT NULL
       GROUP BY deposit, bankTxId
 X;
-///  AND bankTxId<>0 (add this soon)
-    $q = db\q($sql, compact('start'));
+
+    $q = db\q($sql, compact(ray('start end')));
 
     while ($row = $q->fetchAssoc()) {
       extract($row);
@@ -239,18 +235,19 @@ X;
       
       if ($txCnt > 1) $PrivateNote .= t(': IN %in (%cntIn), OUT %out (%cntOut)', 'in out cntIn cntOut', 
           u\fmtAmt($amtIn), u\fmtAmt($amtOut), $cntIn, $cntOut);
-      $effectiveDt = $bankTxId ? substr($bankTxId, 8) : u\nextBizDay(u\nextBizTm($deposit)); // at some point all relevant bankTxIds will be set and this will be simpler
+      $effectiveDt = $bankTxId ? substr($bankTxId, 0, 10) : u\nextBizDay(u\nextBizTm($deposit)); // at some point all relevant bankTxIds will be set and this will be simpler
       $TxnDate = fmtDt($effectiveDt, 'YYYY-MM-dd');
-      $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate')));
+      $qbTx = new qbData\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate')));
 
       $this->addTxLine($qbTx, $tx0 + ray('amt', $amtIn + $amtOut), $PrivateNote);
       
-      if (test()) $testQbTxs[] = $qbTx; else
       if (QSEND_TEST) {
-        debug($qbTx);
+/**/    debug($qbTx);
       } else {
+        if (test()) $testQbTxs[] = $qbTx; else
         $this->ds->Add($qbTx);
-        db\q('UPDATE txs2 SET qbok=:NOW WHERE deposit=:deposit', compact('deposit'));
+        $this->sendTxs($deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
+        db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
     }
@@ -266,7 +263,7 @@ X;
   public function sendCCTxs() {
     global $testQbTxs;
         
-    $start = strtotime('4/19/2021');
+    $start = strtotime('7/1/2021');
     $this->refresh();
     $cnt = 0;
     $uids = join(',', r\catUids(FALSE));
@@ -284,7 +281,7 @@ X;
 
     while ($tx = $q->fetchAssoc()) {
       if (!$this->sendCCTx($tx)) break;
-      if (!QSEND_TEST) db\setFlag('tx_hdrs', $xid, B_QBOK);
+      if (!QSEND_TEST) r\setQbOk($xid);
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
     }
 
@@ -296,17 +293,20 @@ X;
 
   /**
    * Send a credit card entry to QBO.
-   */
+   *//*
   private function sendCCTx($e, $desc) {
     extract(just('xid amt uid2 created', $e));
-    $DocNumber = "ccCharge#$xid";
-    if (!$this->isNew($DocNumber)) return FALSE;
     
     $PrivateNote = $desc;
     $TxnDate = fmtDt($created, 'YYYY-MM-dd');
-    $qbTx = new QuickBooksOnline\API\Data\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate')));
-    $e['cat1'] = r\nick2cat($uid2 == CGID ? 'PROCESSOR' : 'FBO-PROCESSOR');
-    $e['cat2'] = NULL; // don't redo this
+
+    $DocNumber = $uid2 == CGID ? "cgCC#$xid" : "CC#$xid"; // allows us to identify and move the cgCC transactions to CC Processor easily (for reporting)
+    if (!$this->isNew($DocNumber)) return FALSE;
+    $qbTx = new qbData\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate')));
+
+///    $e['cat1'] = r\nick2cat($uid2 == CGID ? 'PROCESSOR' : 'FBO-PROCESSOR');
+    $e['cat1'] = r\nick2cat('FBO-PROCESSOR'); // until we have a separate processor account for CG, dump everything here to make reconciliation possible
+    $e['cat2'] = NULL; // don't process the cat2 half of this entry twice
     $this->addTxLine($qbTx, $e, $desc);
     
     if (test()) $testQbTxs[] = $qbTx; else
@@ -316,7 +316,8 @@ X;
       $this->ds->Add($qbTx);
     }
   }
-  
+  */
+
   /**
    * Add a CG transaction entry pair to a QBO Journal Entry as a debit/credit pair (or possibly two pairs).
    * @param obj $qbTx: the QBO JournalEntry object to add to
@@ -326,25 +327,26 @@ X;
    * @param 
    */
   public function addTxLine($qbTx, $e, $desc) {
-    extract(just('xid amt uid1 cat1 noBank', $e));
-    debug($e);
+    extract(just('xid amt uid1 uid2 cat1 flags noBank', $e));
 
     $AMT = abs($amt); // QBO handles only positive amounts
-    if ($uid1 == UID_OUTER and $noBank and !$cat1) { // no bank account in the CG system (and not being called from senCCTx())
-//      if ($amt < 0 or strhas($desc, t('check ')) or strihas($desc, t(' ach)')) or strhas($desc, t(' wire'))) { // entered manually
+
+    if ($uid1 == UID_OUTER and $noBank and !$cat1) { // no bank account in the CG system and payer category not set yet (because UID_OUTER is not owned by CG)
       if (u\getBit($flags, B_CC)) { // payment by cc
-        if ($e['created'] > strtotime('9/1/2021')) u\EXPECT($cc = db\exists('tx_entries', ray('xid entryType', $xid, E_USD_FEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc')))); // delete if() part after 7/1/2022
-        $this->sendCCTx($e, $desc); // create CC record separately to make it easy to reconcile
+        if ($e['created'] > strtotime('9/1/2021')) u\EXPECT($uid2 == CGID or $cc = db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc')))); // delete if() part after 7/1/2022
+///    $e['cat1'] = r\nick2cat($uid2 == CGID ? 'PROCESSOR' : 'FBO-PROCESSOR');
+        $e['cat1'] = r\nick2cat('FBO-PROCESSOR'); // until we have a separate processor account for CG, dump everything here to make reconciliation possible
+//        $this->sendCCTx($e, $desc); // create CC record separately to make it easy to reconcile
       } else {
         $e['cat1'] = r\nick2cat(r\acct(UID_BANK)->mainQid); // check/wire/directACH in or out of the Ctty Fund bank account
-      }
+      } // either way, UID_OUTER will map to Dollar Pool Liability (POOL)
     }
-    
+
     foreach ([2, 1] as $i) if ($e["cat$i"]) { // do recipient first
       list ($typeA, $typeB) = u\order($i == 2 xor $amt < 0, 'Debit', 'Credit');
       foreach (ray('uid cat') as $k) $$k = $e["$k$i"];
       $uidNick = ($uid == UID_OUTER) ? 'POOL' : r\acct($uid)->mainQid; // UID_OUTER only when called from sendCCTx()
-      $this->addJLine($qbTx, $typeA, r\nick2cat($uidNick), $AMT, $desc);
+      $this->addJLine($qbTx, $typeA, $uidNick, $AMT, $desc);
       $this->addJLine($qbTx, $typeB, $cat, $AMT, $desc);
     }
   }
@@ -353,28 +355,65 @@ X;
    * Add a Journal Entry Line to the Journal Entry Transaction.
    * @param IPPJournalEntry $qbTx: (MODIFIED) the QB JournalEntry object to add lines to
    * @param string $PostingType: Debit or Credit
-   * @param int $id: CG's internal accounting category ID (record ID in tx_cats)
+   * @param int $id: CG's internal accounting category nickname or ID (in tx_cats)
    * @param numeric $Amount: the transaction amount for the recipient
    * @param string $Description: transaction description
    */
   private function addJLine(&$qbTx, $PostingType, $id, $Amount, $Description) {
-    $AccountRef = db\get('externalId', 'tx_cats', compact('id'));
+    $AccountRef = r\qbCat($id);
     u\EXPECT(!empty($AccountRef), t('empty AccountRef for cat=%cat in tx %txid', 'cat txid', $id, $qbTx->DocNumber));
     $DetailType = 'JournalEntryLineDetail';
-    $$DetailType = new QuickBooksOnline\API\Data\IPPJournalEntryLineDetail(compact(ray('PostingType AccountRef')));
+    $$DetailType = new qbData\IPPJournalEntryLineDetail(compact(ray('PostingType AccountRef')));
 // (not needed and doesn't work)   if ($id == LOAN_CAT) $$DetailType->Entity = $this->getEntity($Description);
     $line = compact(ray("Description Amount DetailType $DetailType"));
-    $qbTx->Line[] = new QuickBooksOnline\API\Data\IPPLine($line);
+    $qbTx->Line[] = new qbData\IPPLine($line);
   }
 
+  /**
+   * In a given Journal Entry, change every occurrence of a given AccountRef to a given other AccountRef, identified by CG tx_cats IDs.
+   * @param int $oldCat: the old CG tx_cats ID
+   * @param int $newCat: the new CG tx_cats ID
+   * @param int/string $id: the Journal Entry ID or CG transaction ID
+   * @return the number of changes made (NULL if the transaction does not exist)
+   */
+  public function changeCat($oldCat, $newCat, $id) {
+    if (is_numeric($id)) { // xid
+      $cnt = 0;
+      db\q('UPDATE tx_entries SET cat=:newCat WHERE xid=:id AND cat=:oldCat', compact(ray('oldCat newCat id')));
+      foreach (ray('cg ccCharge cgFund') as $k) $cnt += ($this->changeCat($oldCat, $newCat, "$k#$id") ?: 0);
+    } else { // QBO DocNumber
+      if (!$qbTx = $this->getQbTx($id)) return NULL;
+
+      foreach (ray('old new') as $k) ${$k . 'AcctRef'} = r\qbCat(${$k . 'Cat'});
+      $cnt = 0;
+
+      foreach ($qbTx->Line as $i => $line) {
+        if ($line->JournalEntryLineDetail->AccountRef == $oldAcctRef) {
+          $qbTx->Line[$i]->JournalEntryLineDetail->AccountRef = $newAcctRef;
+          $cnt++;
+        }
+      }
+
+      if ($cnt) {
+        $qbTx = qbFacades\JournalEntry::update($qbTx, ray('sparse Line', TRUE, $qbTx->Line));
+        if (test()) $testQbTxs[] = $qbTx; else
+        $res = $this->ds->Update($qbTx);
+      }
+    }
+    
+    w\say("Made $cnt changes");
+    return $cnt;
+  }
+   
   /**
    * If the transaction has already been sent to QBO, show an error message and return FALSE (else return TRUE).
    * @param string $id: the journal entry identifier
    */
   private function isNew($id) {
+    if (test()) return TRUE;
     if (!$this->get('Id', 'JournalEntry', "DocNumber='$id'")) return TRUE;
 //    $xid = substr($id, strpos($id, '#') + 1);
-//    if (TRUE or $xid <= 163686) {db\setFlag('tx_hdrs', $xid, B_QBOK); return TRUE;} // delete this line and the preceding after 7/1/2022
+//    if (TRUE or $xid <= 163686) {r\setQbOk($xid); return TRUE;} // delete this line and the preceding after 7/1/2022
     w\err(t('Transaction %id has already been transferred! Stopping...', compact('id')));
     return FALSE;
   }
@@ -382,6 +421,18 @@ X;
   private function getEntity($desc) {
     $nm = strtr(strstr($desc, '['), ray('[ ]', '', ''));
     return $this->get('Id', 'Customer', tr("DisplayName='%nm'", compact('nm')));
+  }
+  
+  /**
+   * Return the QBO transaction corresponding to the given DocNumber.
+   * @param string $id: the QBO DocNumber (transaction identifier)
+   * @param string $objName: the QBO Object name (defaults to JournalEntry)
+   * @return the QBO transaction (NULL if the transaction does not exist)
+   */
+  public function getQbTx($id, $objName = 'JournalEntry') {
+    $this->refresh();
+    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('Entry %id does not exist.', compact('id')));
+    return $res[0];
   }
   
   /**

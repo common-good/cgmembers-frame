@@ -45,6 +45,7 @@ function extraSetup() {
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminActivatesAnAccountUnconfirmed
  *     TEST activate AdminDeactivatesAnAccount
+ *     MAKE cats Setup
  *     MAKE changes Setup
  *     MAKE checks Setup
  *     MAKE deletion Setup
@@ -57,6 +58,7 @@ function members($list) {return t\members($list);}
  *
  * in: MAKE aaOther AdminDeletesAnAccount
  *     MAKE ach AdminDownloadsACHRequests
+ *     MAKE cats AdminVisitsTheSetCategoriesPage
  *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
  */
@@ -66,6 +68,8 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * we show (ARG) with: (ARG)
  *
  * in: TEST ach AdminDownloadsACHRequests
+ *     TEST cats AdminVisitsTheSetCategoriesPage
+ *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     TEST changes AMemberChangesSomeSettings
  *     TEST checks AdminPrintsChecks
  */
@@ -132,6 +136,8 @@ function with($content) {return t\weShow($content);}
  *     MAKE ach Setup
  *     BOTH ach AdminDownloadsACHRequests
  *     MAKE activate Setup
+ *     MAKE cats Setup
+ *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     MAKE changes Setup
  *     MAKE checks Setup
  *     BOTH checks AdminPrintsChecks
@@ -239,7 +245,8 @@ function memberIsSignedIn($id) {return t\isSignedIn($id);}
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE super AnAdminPrintsChecks
+ * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE super AnAdminPrintsChecks
  *     MAKE super AMemberTriesToDoAnAdminThing
  *     MAKE super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
  */
@@ -287,3 +294,83 @@ function cryptcookieIsDecrypted($nm, $v) {return cryptcookieIs($nm, u\b64decode(
  *     TEST super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
  */
 function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
+
+/**
+ * member (ARG) submits (ARG) with: (ARG)
+ *
+ * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
+
+/**
+ * we say (ARG): (ARG)
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function weSay($type, $index) {return t\weSayWithSubs($type, $index, array());}
+
+/**
+ * QBO gets Tx (ARG) with IN (ARG) and OUT (ARG) dated (ARG) with entries: (ARG)
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testQbTxs;
+  
+  if (!$rec = array_shift($testQbTxs)) return t\output(t('Record %id not found (no more records).', compact('id')));
+  if (t\badEq('DocNumber ' . $dt, $id, $rec->DocNumber)) return;
+  $desc = $rec->PrivateNote;
+  foreach (ray('in out') as $k) if ($$k and !strhas($desc, $$k)) return t\output(t('Mising "%kk" in PrivateNote: ', 'kk', $$k) . "$desc - " . pr($rec));
+  if (t\badEq('TxnDate', $dt, $rec->TxnDate)) return;
+  
+  $gotLines = $rec->Line;
+  if (t\badEq(t('Journal Entry line count'), count($lines) * 2, count($gotLines))) return FALSE; // entries are specified in pairs (so *2)
+  $got = [];
+
+  for ($i = 0; $i < count($gotLines); $i++) {
+    $L = $gotLines[$i];
+    $detail = $L->JournalEntryLineDetail;
+    $gotRay = [$L->Amount, $detail->PostingType, $detail->AccountRef];
+    $wantRay = ray($wantRay0 = $lines[(int) $i / 2][$i & 1]); // conceptually the index is just $i, but we specify them in pairs
+    $w2 = $wantRay[2];
+    $map0 = $w2[0] == '.' ? ray($w2, t\uid($w2)) : ray(tr('cgf:%CGID, fund:%UID_BANK')); // in the tests, any nickname starting with '.' is an account abbreviation
+    foreach ($map0 as $k => $v) $map[$k] = r\acct($v)->mainQid;
+    $wantRay[2] = r\qbCat(strtr($w2, $map));
+    for ($j = 0; $j < 3; $j++) if (t\badEq(t('journal line #') . "$i - $id: $wantRay0", $wantRay[$j], $gotRay[$j])) return FALSE;
+  }
+  
+  return TRUE;
+}
+
+/**
+ * QBO gets Tx (ARG):(ARG) dated (ARG) with entries: (ARG)
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function qBOGetsTxDatedWithEntries($id, $desc, $dt, $lines) {return qBOGetsTxWithINAndOUTDatedWithEntries($id, $desc, NULL, $dt, $lines);}
+
+/**
+ * member (ARG) is sponsored
+ *
+ * in: MAKE cats Setup
+ */
+function memberIsSponsored($id) {
+  global $testOnly;
+  $a = r\acct(t\uid($id));
+  if ($testOnly) return $a->sponsored;
+  $a->setCoBit(CO_SPONSORED);
+  $qid = $a->mainQid;
+  db\updateOrInsert('tx_cats', ray('id category nick externalId', 98765, "A: Sponsored: $a->fullName .." . substr($qid, -3), $qid, 12345), 'id');
+  return TRUE;
+}
+
+/**
+ * QBO gets nothing else
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function qBOGetsNothingElse() {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testQbTxs; return empty($testQbTxs) ?: t\output(t('There are more QBO transactions: ') . pr($testQbTxs));
+}

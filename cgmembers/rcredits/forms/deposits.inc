@@ -22,7 +22,7 @@ function formDeposits($form, &$sta, $args = NULL) {
     if ($reverse < today()) {
       err(t('That transfer batch is too old to reverse (before today).'));
     } else {
-      $q = db\q('UPDATE txs2 SET deposit=0 WHERE deposit=:reverse', compact('reverse'));
+      $q = db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags & ~(1<<:B_QBOK)), x2.deposit=0, x2.bankTxId=NULL WHERE x2.deposit=:reverse', compact('reverse'));
       $cnt = $q->rowCount();
       say(t('%cnt transfers canceled.', compact('cnt')), $cnt ? NULL : 'err');
       return go('/sadmin/deposits'); // make sure we don't accidentally reverse twice

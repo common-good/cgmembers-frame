@@ -99,7 +99,8 @@ X;
     }
 
     $sql = <<< X
-      SELECT CONCAT('<a class="xid">', h.xid, '</a>') AS xid, u1.fullName AS `from`, u2.fullName AS `to`, e1.amount, e1.description, e1.rule, h.recursId, h.reversesXid
+      SELECT CONCAT('<a class="xid">', h.xid, '</a>') AS xid, FROM_UNIXTIME(h.created, '%m/%d/%Y') AS created,
+        u1.fullName AS `from`, u2.fullName AS `to`, e1.amount, e1.description, e1.rule, h.recursId, h.reversesXid
       FROM tx_entries e1 JOIN tx_hdrs h USING(xid) JOIN tx_entries e2 ON e2.id=-e1.id
       LEFT JOIN users u1 ON u1.uid=e1.uid LEFT JOIN users u2 ON u2.uid=e2.uid
       WHERE e1.cat=%cat AND h.created BETWEEN %start AND %end

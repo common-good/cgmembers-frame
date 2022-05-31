@@ -14,8 +14,8 @@ use CG\Util as u;
 
 class TxEntry {
   const REQUIRED_FIELDS = 'amount uid agentUid';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description cat rule relType relatedId';
-  const E_FIELDS = self::INSERT_FIELDS . ' id xid';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' id xid entryType description cat rule relType relatedId';
+  const E_FIELDS = self::INSERT_FIELDS; // . ' id xid';
 
   public $id;           // record ID (second entry in a pair should have a positive ID, first is the inverse)
   public $xid;          // record ID of the header for this transaction in tx_hdrs
@@ -92,8 +92,8 @@ class TxEntry {
    */
   function insert($xid, $id = 0) {
     $e = $this;
-    $info = just(self::INSERT_FIELDS, (array)$e) + compact('xid');
-    if ($id) $info += compact('id');
+    $info = just(self::INSERT_FIELDS, (array)$e);
+    foreach (ray('xid id') as $k) if ($$k) u\preRay(compact($k), $info);
 
     $DBTX = \db_transaction();
     $id = db\insert('tx_entries', $info, 'id');

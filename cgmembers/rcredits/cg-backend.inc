@@ -23,7 +23,8 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param integer $ending: the ending unix time
  * @param assoc $extra: extra parameters
  *   includeSelfTxs: <include transactions between the various $uids>
- *   catsOnly: <include only transactions that have cat1 or cat2 set AND B_QBOK flag off>
+ *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are a credit card payment) AND B_QBOK flag off> 
+ *     NOTE: usually cats are set manually or by be\setCat(), but CC donations are handled differently and cat1 gets set in Qb::sendCCTx()
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
@@ -36,7 +37,11 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   $where .= ' AND !(t.amt=0 AND t.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND t.created>=$starting";
   if (is_integer($ending)) $where .= " AND t.created<=$ending";
-  if ($catsOnly) $where .= " AND (t.cat1 IS NOT NULL OR t.cat2 IS NOT NULL) AND NOT t.:IS_QBOK";
+  if ($catsOnly) {
+    $where .= " AND (t.cat1 IS NOT NULL OR t.cat2 IS NOT NULL OR (t.:IS_CC AND t.uid1=:UID_OUTER)) AND NOT t.:IS_QBOK";
+    $catUids = join(',', r\catUids(FALSE));
+    $toMe = "($toMe AND (NOT ($fromMe) OR t.uid2 IN ($catUids)))";
+  }
   $special = be\specialTxFlds();
   $order = 't.created, t.xid, t.eid, name';
 
@@ -49,19 +54,21 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
-    FROM txs t LEFT JOIN users u ON u.uid=IF($toMe, t.uid1, t.uid2)
+    FROM txs t 
+    LEFT JOIN users u ON u.uid=IF($toMe, t.uid1, t.uid2)
     LEFT JOIN txs2 t2 ON t2.xid=t.xid
     LEFT JOIN tx_timed tm ON tm.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
     WHERE $where ORDER BY $order
 EOF;
-  /// showq($sql, ray('uids', $uids[0]));
+  /// showq($sql, ray('uids', join(',', $uids)));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
+
   while ($row = $q->fetchAssoc()) {
     $xid = $row['xid'];
     if ($xid != $lastXid) {  // start of new transaction
@@ -75,8 +82,10 @@ EOF;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
+  $catUids = r\catUids(FALSE);
+  
   foreach ($txs as $i => $entries) {
-    extract(just('actorId type xid pid', $entries[0]));
+    extract(just('actorId type xid pid uid name', $entries[0]));
     $byMe = in_array($actorId, $uids);
     $banking = ($type == E_BANK);
     $newEntries = [];
@@ -85,10 +94,13 @@ EOF;
     if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
     
     foreach ($entries as $j => $entry) {
-      if ($j == 0) {
-        if ($banking) $entry['name'] = '--';
-        if ($pid and $type == E_OUTER) $entry['name'] = db\get('fullName', 'people', compact('pid')) . t(' (non-member)');
+      if ($j == 0) { // use values extracted above to handle special names for first entry in a tx
+        $entry['name'] = $banking ? '--'
+        : (in($uid, BUCKET_UIDS) ? t('various') // (first entry in tx)
+        : (($type == E_OUTER and $pid) ? db\get('fullName', 'people', compact('pid')) . t(' (non-member)') // (first entry in tx)
+        : $name ));
       }
+
       $description = txDesc($entry);
       $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
     }
@@ -342,6 +354,7 @@ function reverse($xid, $mya) {
   $newTx->created = now();
   $newTx->actorId = $mya->id;
   $newTx->actorAgentId = $mya->agentId;
+  $newTx->flags &= ~u\bit(B_QBOK); // reversing transaction has not been sent to QB yet
   
   foreach ($tx->entries as $oldE) {
     $newE = clone $oldE;
@@ -658,6 +671,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $other = []) {
   extract(just('cat rule inv', $other, NULL));
   $cat0 = $cat ?: [NULL, NULL];
+
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType cat') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
@@ -666,7 +680,7 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
     $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description cat rule relType relatedId')));
   }
   $i9 = count($txes) - 1;
-  foreach ([1, 0] as $i) if (!$cat0[$i]) be\setCat($txes, $tx, $i9 + $i - 1);
+  foreach ([1, 0] as $i) if (!$cat0[$i]) be\setCat($txes, $tx, $i9 - $i); // -$i NOT (+ $i - 1) because entries are switched with cat2 first ([0])
 }
 
 /**
@@ -686,23 +700,23 @@ function setCat(&$txes, $tx, $i) {
   $j_uid = $txes[$j]->uid;
   $in = ($i < $j); $out = !$in;
 
-  $gift = ((u\getBit($tx->flags, 'gift') and in($type, [E_PRIME, E_OUTER])) or $for == t('donation'));
+  $gift = in($type, [E_PRIME, E_OUTER]) ? u\getBit($tx->flags, 'gift') : ($for == t('donation')); // "donation" includes stepups
   $inv = ($i_relType == 'I');
   $recurs = $tx->recursId;
   $refund = (($in xor $i_amount < 0) and !in($type, [E_BANK, E_OUTER]));
   
   $nick = NULL;
 
-  if ($in and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
-    $nick = 'FS-FEE';
-  } elseif ($in and $type == E_USD_FEE) {
+  if ($type == E_AUX and strhas($for, FS_NOTE)) {
+    $nick = $in ? 'FS-FEE' : 'D-SPONSORED';
+  } elseif ($in and $type == E_XFEE) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
     $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
+  } elseif ($in and $iA->sponsored) {
+      $nick = $type == E_AUX ? 'D-SPONSORED-STEPUP' : 'D-SPONSORED';
   } elseif ($in and $gift) {
-    if ($iA->sponsored) {
-      $nick = 'D-SPONSORED';
-    } elseif ($j_uid == UID_STEPUPS) {
+    if ($j_uid == UID_STEPUPS) {
       $nick = 'D-STEPUP';
     } elseif ($j_uid == UID_CRUMBS) {
       $nick = 'D-CRUMB';
@@ -714,16 +728,16 @@ function setCat(&$txes, $tx, $i) {
       $nick = 'D-COMPANY';
     } else $nick = 'D-ONCE';
 
-  } elseif ($out and $type == E_AUX and strhas($for, t('fiscal sponsorship fee'))) {
-    $nick = 'D-SPONSORED'; // subtract from this when adding to FS-FEE
-  } elseif ($out and $iA->sponsored and $type == E_USD_FEE) {
+  } elseif ($out and $type == E_AUX and strhas($for, FS_NOTE)) {
+    $nick = 'D-SPONSORED'; // subtract from this cat when adding to FS-FEE
+  } elseif ($out and $iA->sponsored and $type == E_XFEE) {
     $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
     $nick = 'TO-PERSON';
   } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
     $nick = 'TO-ORG';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
-    $nick = 'LABOR';
+    $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
   } elseif ($out and $inv and $type != E_OUTER) {
     $toQid = r\acct($j_uid)->mainQid;
     if (in($toQid, 'CAAAAO NEWAZS NYAAIV')) {
@@ -732,9 +746,9 @@ function setCat(&$txes, $tx, $i) {
       $nick = 'COMPUTER';
     } elseif (in($toQid, 'NEVABJ')) {
       $nick = 'ACCOUNTING';
+    } elseif (strihas($for, 'Mailtrap')) {
+      $nick = 'INFO-SVC';
     } 
-  } elseif ($out and $inv and strihas($for, 'Mailtrap')) {
-    $nick = 'INFO-SVC';
   } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
     $nick = $iA->mainQid;
   }
@@ -1344,7 +1358,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
   $tx = new r\Tx($tx0);
   $cat1 = u\getBit($flags, B_CC) ? r\nick2cat(r\acct(UID_BANK)->mainQid) : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
-  $cat2 = $cat ?: NULL;
+  $cat2 = is_array($cat) ? $cat[1] : NULL;
   $extra = ($cat1 or $cat2) ? ray('cat', [$cat1, $cat2]) : [];
   txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
