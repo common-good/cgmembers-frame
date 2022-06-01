@@ -234,6 +234,18 @@ Scenario: a dormant joint member with a negative balance hasn't had wentNeg set 
   | uid  | wentNeg |*
   | .ZZA | %now    |
 
+Scenario: member has negative balance, an approved invoice, and a usable credit line
+  Given members have:
+  | uid  | balance | flags             | floor |*
+  | .ZZA | -57.01  | ok,confirmed,debt | -30   |
+  And these "tx_requests":
+  | payer | payee | amount | status   |*
+  | .ZZA  | .ZZC  | 37.63  | approved |
+  When cron runs "getFunds"
+  Then these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  | 64.64  | %today  |         0 |       0 |
+
 Skip no longer delaying first transfer, to verify account first
 Scenario: member's bank account has not been verified
   Given members have:

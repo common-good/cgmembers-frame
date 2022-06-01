@@ -116,6 +116,7 @@ const WEEK7_SECS = 52 * DAY_SECS; // 4,492,900
 const MONTH_SECS = 30.4368 * DAY_SECS;  // 18,408,176.64
 define('QUARTER_SECS', round(3 * MONTH_SECS));  // 55,224,530
 define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
+const FLOOR_DECAY_MOS = 20; // how many months to take to reduce to zero the credit line of an account with a negative balance
 const FLOOR_DAYS = 183; // how many days to consider for credit line calculation
 const RECENT_DAYS = 60; // back how long is "recent" (don't change this without recreating r_stats data)
 const RECENT_SECS = RECENT_DAYS * DAY_SECS;

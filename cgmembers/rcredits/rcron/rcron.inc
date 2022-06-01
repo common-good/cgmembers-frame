@@ -67,8 +67,10 @@ function run() {
     extract($row);
     $item = unserialize($item);
     try {
+      $DBTX = \db_transaction(); // this is crucial! otherwise we may partially do something several times (like add a bank transfer request to the queue)
       cr\doTask($item);
-      db\q('DELETE FROM queue WHERE id=:id', compact('id'));
+      db\del('queue', compact('id'));
+      unset($DBTX);
     } catch (\Exception $e) {
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
       r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
@@ -463,12 +465,19 @@ function tickleStep($item) {
 function activeMonthly($item) {
   extract(just('uid monthly', $item));
   $a = r\acct($uid);
-  
+
   // adjust credit line
   $floorX = $a->o_floor; // current floor (of just this account, not summed with joint)
   
-  $floor = -$monthly;
-  if ($a->isCtty) $floor = -db\sum('amount', 'txs2_bank t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
+  if ($a->balance < 0 and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // negative for too long
+    $m = u\monthDif(now(), $a->wentNeg); // how many months ago the account went negative (rounded)
+    $m -= $a->wentNeg > strtotime("-$m months", now()) ? 2 : 1; // don't count the first month or a partial subsequent month
+    $floor = round($floorX * (1 - (1 / (FLOOR_DECAY_MOS - $m))), 2);
+    $floor = min(0, max($floor, $floorX + 1)); // reduce credit line by at least a dollar but not beyond zero
+  } else { // not overly negative, so calculate credit line (-floor) baseded on activity
+    $floor = -$monthly;
+    if ($a->isCtty) $floor = -db\sum('amount', 'txs2_bank t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
+  }
   $a->update('floor', $floor);
 
   $ratio = $floor ? $floorX / $floor : 1;
@@ -977,6 +986,7 @@ o;
   list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
   ? [$a->minimum + $pending, tr('to target')]
   : [($a->balance < 0 and $balPlusPend > 0) ? $balPlusPend : min($pending, $balPlusPend), t('to pending')]; // this could be negative (just enough to pay pending)
+///  debug(compact(ray('uid request stakeid pending balPlusPend target why')));
 
   $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
   $debtTimeout = FALSE; // disable this 

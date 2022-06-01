@@ -1,3 +1,7 @@
+2022-06-01 feature/floor-decay
+. credit lines now slowly dwindle if an account balance is negative for more than 30 days
+. cron tasks are now wrapped in a transaction, to avoid (for example) duplicate fund transfers
+
 2022-05-27 feature/cat-test
 . created feature test for setting transaction categories
 . completely rewrote t\doTx() to make it clearer and work right
