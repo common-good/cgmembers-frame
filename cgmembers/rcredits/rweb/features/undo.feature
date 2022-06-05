@@ -123,8 +123,8 @@ Scenario: An administrator reverses a bank transfer out
 Scenario: An administrator reverses a non-member ACH in
   Given these "txs":
   | eid | xid | payer      | payee | amount | purpose | cat1        | cat2        | type     |*
-  |   3 | 3   | %UID_OUTER | .ZZC  | 100    | grant   |             | D-SPONSORED | %E_OUTER |
-  |   4 | 3   | .ZZC       | cgf   | 5      | sponsor | D-SPONSORED | FS-FEE      | %E_AUX   |
+  |   3 | 3   | %UID_OUTER | .ZZC  | 100    | grant   |             | D-FBO       | %E_OUTER |
+  |   4 | 3   | .ZZC       | cgf   | 5      | sponsor | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | txid | xid | payee | amount | completed | deposit | pid |*
   |   11 | 3   | .ZZC  | 100    | %now      | %now    | 2   |
@@ -141,5 +141,5 @@ Scenario: An administrator reverses a non-member ACH in
   |  -11 | 4   | .ZZC  | -100   | %now    | %now      | %now    | 2   |
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
-  |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    |             | D-SPONSORED | %E_OUTER |
-  |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | D-SPONSORED | FS-FEE      | %E_AUX   |
+  |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    |             | D-FBO       | %E_OUTER |
+  |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | D-FBO       | FS-FEE      | %E_AUX   |

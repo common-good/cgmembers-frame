@@ -238,6 +238,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
+ *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
@@ -250,6 +251,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
  *     TEST risk Setup
+ *     BOTH tickle MemberHasNegativeBalanceForSeveralMonths
  *     TEST trust WeCalculateTrust
  *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
@@ -391,6 +393,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE bank AMembersBankAccountGetsVerified
  *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
+ *     BOTH bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout Setup
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
@@ -531,6 +534,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
+ *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
@@ -578,6 +582,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
+ *     MAKE tickle MemberHasNegativeBalanceForSeveralMonths
  *     MAKE trust WeCalculateTrust
  *     MAKE weekly AMemberCrawlsOutOfDebt
  *     MAKE weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay

@@ -1,3 +1,24 @@
+2022-06-05 feature/clickup
+. created a table for CEF billing (see misc/cef-billing.sql)
+. created these queries for billing CEF for a particular month, after importing timesheets from Clickup (ignoring first month):
+
+  SELECT DISTINCT CONCAT(`Task Name`,' ',IF(Tags='[]','',Tags),' (',`Task Status`,')') AS task, REPLACE(REPLACE(CONCAT('.', SEC_TO_TIME(ROUND(SUM(Stop-Start)/60000)), 'm'), '.00:', ''), ':', 'h ') AS time FROM `cef` WHERE mid(FROM_UNIXTIME(Start/1000), 1, 7)='2022-01' AND `Parent Task ID`<>'2nfaugn' AND Tags<>'["unbillable"]' GROUP BY `Task Name` HAVING SUM(Stop-Start)/60000>.5 ORDER BY `Task Name`
+
+  SELECT DISTINCT CONCAT(`Task Name`,' (',`Task Status`,')') AS task, REPLACE(REPLACE(CONCAT('.', SEC_TO_TIME(ROUND(SUM(Stop-Start)/60000)), 'm'), '.00:', ''), ':', 'h ') AS Time,  SUM(Stop-Start)/60000 AS Minutes, SUM(Stop-Start)/3600000 AS Hours FROM `cef` WHERE mid(FROM_UNIXTIME(Start/1000), 1, 7)='2022-03' AND `Parent Task ID`<>'2nfaugn' GROUP BY `Task Name` HAVING SUM(Stop-Start)/60000>.5 ORDER BY `Task Name`
+
+  SELECT DISTINCT REPLACE(REPLACE(CONCAT('.', SEC_TO_TIME(ROUND(SUM((Stop-Start)/60000))), 'm'), '.00:', ''), ':', 'h ') AS time, SEC_TO_TIME(ROUND(SUM(Stop-Start)/1000)) AS `h:m:s`, SUM(Stop-Start)/60000 AS Minutes, SUM(Stop-Start)/3600000 AS Hours, 120*SUM(Stop-Start)/3600000 AS Dollars FROM `cef` WHERE mid(FROM_UNIXTIME(Start/1000), 1, 7)='2022-03' AND `Parent Task ID`<>'2nfaugn' HAVING SUM(Stop-Start)/60000>.5
+  
+. see also the SOPs for billing CEF
+. shortened some accounting category nicknames
+. changed QBO export to expect PayPal transactions not to be imported from PayPal and matched (fees are now included in the transaction)
+. added a delete transaction function to Qb class
+. fixed year bug in Qb::sendBankTxs()
+. added a failsafe in Qb::sendTxs() so it can't process transactions beyond the latest deposit date
+
+2022-06-01 feature/floor-decay
+. credit lines now slowly dwindle if an account balance is negative for more than 30 days
+. cron tasks are now wrapped in a transaction, to avoid (for example) duplicate fund transfers
+
 2022-05-27 feature/cat-test
 . created feature test for setting transaction categories
 . completely rewrote t\doTx() to make it clearer and work right

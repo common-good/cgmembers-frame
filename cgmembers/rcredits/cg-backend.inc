@@ -708,13 +708,13 @@ function setCat(&$txes, $tx, $i) {
   $nick = NULL;
 
   if ($type == E_AUX and strhas($for, FS_NOTE)) {
-    $nick = $in ? 'FS-FEE' : 'D-SPONSORED';
+    $nick = $in ? 'FS-FEE' : 'D-FBO';
   } elseif ($in and $type == E_XFEE) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
     $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
   } elseif ($in and $iA->sponsored) {
-      $nick = $type == E_AUX ? 'D-SPONSORED-STEPUP' : 'D-SPONSORED';
+      $nick = $type == E_AUX ? 'D-FBO-STEPUP' : 'D-FBO';
   } elseif ($in and $gift) {
     if ($j_uid == UID_STEPUPS) {
       $nick = 'D-STEPUP';
@@ -729,7 +729,7 @@ function setCat(&$txes, $tx, $i) {
     } else $nick = 'D-ONCE';
 
   } elseif ($out and $type == E_AUX and strhas($for, FS_NOTE)) {
-    $nick = 'D-SPONSORED'; // subtract from this cat when adding to FS-FEE
+    $nick = 'D-FBO'; // subtract from this cat when adding to FS-FEE
   } elseif ($out and $iA->sponsored and $type == E_XFEE) {
     $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {

@@ -59,16 +59,16 @@ Scenario: A non-member donates to a sponsored member
   And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-SPONSORED |
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-FBO       |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose            | cat1        | cat2        | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant              |             | D-SPONSORED | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-SPONSORED | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -137,7 +137,7 @@ Scenario: A sponsored member pays a nonmember
 Scenario: A sponsored member charges a member
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | who  | amount | purpose | cat         |*
-  | charge |   1 | .ZZB |    100 | grant   | D-SPONSORED |
+  | charge |   1 | .ZZB |    100 | grant   | D-FBO       |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
@@ -149,7 +149,7 @@ Scenario: A sponsored member charges a member
   | Our Pub   | $100   | grant   |
   And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   | cat         |*
-  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant | D-SPONSORED |
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZC  | grant | D-FBO       |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -161,12 +161,12 @@ Scenario: A sponsored member charges a member
   | pay  |     |    1 |       100 | .ZZB  | .ZZC  | grant   | %today  |
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat2        |*
-  |   1 | %today  |    100 | .ZZB  | .ZZC  | grant   | 0      | I       | 1   | D-SPONSORED |
+  |   1 | %today  |    100 | .ZZB  | .ZZC  | grant   | 0      | I       | 1   | D-FBO       |
 
 Scenario: A sponsored member views their transaction history
   Given these "txs":
   | xid | payer      | payee | amount | purpose | cat2        | type     | agt2 |*
-  | 1   | %UID_OUTER | .ZZC  | 100    | grant   | D-SPONSORED | %E_OUTER | .ZZB |
+  | 1   | %UID_OUTER | .ZZC  | 100    | grant   | D-FBO       | %E_OUTER | .ZZB |
   | 2   | %UID_OUTER | .ZZC  | -200   | labor   | FBO-LABOR   | %E_OUTER | .ZZB |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
@@ -326,9 +326,9 @@ Scenario: A member pays a sponsored organization
   | op  | who     | amount | purpose | period | periods | isGift |*
   | pay | Our Pub | 123    | gift    | month  | 1       | 1      |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose            | type       | cat1        | cat2        |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift               | %E_PRIME   |             | D-SPONSORED |
-  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     | D-SPONSORED | FS-FEE      |
+  | eid | xid | payer | payee | amount | purpose  | type       | cat1        | cat2        |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift     | %E_PRIME   |             | D-FBO       |
+  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     | D-FBO       | FS-FEE      |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose | payerType    | payeeType    | period | periods |*
   | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | gift    | %REF_ANYBODY | %REF_ANYBODY | month  | 1       |
