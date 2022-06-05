@@ -1,7 +1,7 @@
 Feature: Bank
 AS a member
 I WANT credit to flow from my bank account
-SO I can spend it with my rCard.
+SO I can spend it with my CG Card.
 
 Setup:
   Given members:

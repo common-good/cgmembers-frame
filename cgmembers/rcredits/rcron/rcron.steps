@@ -44,6 +44,10 @@ function extraSetup($feature) {
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH aaSeldomNotices ItsTimeToRenewBacking
  *     MAKE bank Setup
+ *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE cashout Setup
  *     MAKE communitybits Setup
  *     MAKE daily Setup
@@ -67,7 +71,18 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST cashout AMemberCompanyCashesOutWeekly
+ * in: MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ *     TEST bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
+ *     MAKE bank AMemberHasANegativeBalance
+ *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
+ *     MAKE bank AMemberIsAtTarget
+ *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     MAKE bank AnAccountHasATargetButNoRefills
+ *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits Setup
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
@@ -88,14 +103,25 @@ function balances($list) {return t\balances($list);}
 /**
  * bank transfer count is (ARG)
  *
- * in: TEST joint AJointAccountDoesNotNeedRefilling
+ * in: TEST bank AMemberIsBarelyBelowTarget
+ *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     TEST bank AMemberIsAtTarget
+ *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     TEST bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     TEST bank AMemberHasADepositedButNotCompletedTransfer
+ *     TEST bank AnAccountHasATargetButNoRefills
+ *     TEST joint AJointAccountDoesNotNeedRefilling
  */
 function bankTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ * in: TEST bank AMemberIsBarelyBelowTarget
+ *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     TEST bank AMemberHasANegativeBalance
+ *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
@@ -206,7 +232,13 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
 /**
  * members have: (ARG)
  *
- * in: MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
+ * in: TEST bank AMemberIsBarelyBelowTarget
+ *     MAKE bank AnAccountHasATargetButNoRefills
+ *     BOTH bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
+ *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
@@ -349,6 +381,18 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     BOTH bank AMemberIsBarelyBelowTarget
+ *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
+ *     TEST bank AMemberHasANegativeBalance
+ *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     TEST bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     TEST bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     TEST bank ANonmemberHasATargetAndRefills
+ *     MAKE bank AMembersBankAccountGetsVerified
+ *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     BOTH bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout Setup
  *     TEST cashout AMemberCompanyCashesOutMonthly
@@ -412,7 +456,11 @@ function these($thing, $list) {return t\these($thing, $list);}
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ * in: TEST bank ANonmemberHasATargetAndRefills
+ *     TEST bank AMembersBankAccountGetsVerified
+ *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     TEST bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ASecondRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
@@ -469,6 +517,23 @@ function riskThresholdPercentIs($pct) {
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE aaSeldomNotices ItsTimeToRenewBacking
+ *     MAKE bank AMemberIsBarelyBelowTarget
+ *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
+ *     MAKE bank AMemberHasANegativeBalance
+ *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
+ *     MAKE bank AMemberIsAtTarget
+ *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     MAKE bank AnAccountHasATargetButNoRefills
+ *     MAKE bank ANonmemberHasATargetAndRefills
+ *     MAKE bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
