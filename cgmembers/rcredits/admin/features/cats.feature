@@ -123,13 +123,13 @@ Scenario: admin sets most categories and sends to QBO
   | 201 |            | D-ONCE      |
   | 202 |            | D-ONCE      |
   | 203 |            | D-ONCE      |
-  | 301 |            | D-SPONSORED |
-  | 311 | D-SPONSORED| FS-FEE      |
+  | 301 |            | D-FBO       |
+  | 311 | D-FBO      | FS-FEE      |
   | 321 | FBO-TX-FEE | TX-FEE-BACK |
-  | 302 |            | D-SPONSORED |
-  | 312 | D-SPONSORED| FS-FEE      |
-  | 303 |            | D-SPONSORED |
-  | 313 | D-SPONSORED| FS-FEE      |
+  | 302 |            | D-FBO       |
+  | 312 | D-FBO      | FS-FEE      |
+  | 303 |            | D-FBO       |
+  | 313 | D-FBO      | FS-FEE      |
   | 401 |            |             |
   | 411 |            | TX-FEE-BACK |
   | 501 |            | D-ONCE      |
@@ -143,17 +143,17 @@ Scenario: admin sets most categories and sends to QBO
   | 508 | TO-ORG     |             |
   | 509 | LABOR      |             |
   | 500 |            |             |
-  | 601 |            | D-SPONSORED |
-  | 611 | D-SPONSORED| FS-FEE      |
-  | 602 |            | D-SPONSORED |
-  | 612 | D-SPONSORED| FS-FEE      |
+  | 601 |            | D-FBO       |
+  | 611 | D-FBO      | FS-FEE      |
+  | 602 |            | D-FBO       |
+  | 612 | D-FBO      | FS-FEE      |
   | 603 |            |             |
-  | 613 |            | D-SPONSORED-STEPUP |
-  | 623 | D-SPONSORED| FS-FEE      |
-  | 604 |            | D-SPONSORED |
-  | 614 | D-SPONSORED| FS-FEE      |
-  | 605 |            | D-SPONSORED |
-  | 615 | D-SPONSORED| FS-FEE      |
+  | 613 |            | D-FBO-STEPUP|
+  | 623 | D-FBO      | FS-FEE      |
+  | 604 |            | D-FBO       |
+  | 614 | D-FBO      | FS-FEE      |
+  | 605 |            | D-FBO       |
+  | 615 | D-FBO      | FS-FEE      |
   | 709 | FBO-LABOR  |             |
   | 700 |            |             |
   | 801 |            |             |
@@ -163,31 +163,34 @@ Scenario: admin sets most categories and sends to QBO
   Then QBO gets Tx "cgFund#%now0" with IN "$1,010 (4)" and OUT "$0 (0)" dated "%ymd0" with entries:
   | 1010 Debit fund  | 1010 Credit POOL |
   And QBO gets Tx "cg#21":"by CC [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
-  | 201 Debit cgf   | 201 Credit D-ONCE       |
-  | 201 Credit POOL | 201 Debit FBO-PROCESSOR |
+  | 201 Debit cgf     | 201 Credit D-ONCE         |
+  | 201 Credit POOL   | 201 Debit PROCESSOR       |
+  | 4.49 Debit TX-FEE | 4.49 Credit PROCESSOR     |
   # when we have a separate processor for sponsored activity, the above line will be PROCESSOR not FBO-...
   And QBO gets Tx "cg#22":"by ACH [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 202 Debit cgf   | 202 Credit D-ONCE |
   And QBO gets Tx "cg#23":"by ACHs [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 203 Debit cgf   | 203 Credit D-ONCE |
   And QBO gets Tx "cg#31":"by CC [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
-  | 301 Debit .ZZC  | 301 Credit D-SPONSORED  |
-  | 301 Credit POOL | 301 Debit FBO-PROCESSOR |
-  | 9 Debit cgf     | 9 Credit FS-FEE         |
-  | 9 Credit .ZZC   | 9 Debit D-SPONSORED     |
-  | 9 Debit cgf     | 9 Credit TX-FEE-BACK    |
-  | 9 Credit .ZZC   | 9 Debit FBO-TX-FEE      |
+  | 301 Debit .ZZC    | 301 Credit D-FBO          |
+  | 301 Credit POOL   | 301 Debit FBO-PROCESSOR   |
+  | 6.48 Debit TX-FEE | 6.48 Credit FBO-PROCESSOR |
+  | 9 Debit cgf       | 9 Credit FS-FEE           |
+  | 9 Credit .ZZC     | 9 Debit D-FBO             |
+  | 9 Debit cgf       | 9 Credit TX-FEE-BACK      |
+  | 9 Credit .ZZC     | 9 Debit FBO-TX-FEE        |
   And QBO gets Tx "cg#32":"by ACH [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
-  | 302 Debit .ZZC  | 302 Credit D-SPONSORED  |
+  | 302 Debit .ZZC  | 302 Credit D-FBO        |
   | 9 Debit cgf     | 9 Credit FS-FEE         |
-  | 9 Credit .ZZC   | 9 Debit D-SPONSORED     |
+  | 9 Credit .ZZC   | 9 Debit D-FBO           |
   And QBO gets Tx "cg#33":"by ACHs [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
-  | 303 Debit .ZZC  | 303 Credit D-SPONSORED  |
+  | 303 Debit .ZZC  | 303 Credit D-FBO        |
   | 9 Debit cgf     | 9 Credit FS-FEE         |
-  | 9 Credit .ZZC   | 9 Debit D-SPONSORED     |
+  | 9 Credit .ZZC   | 9 Debit D-FBO           |
   And QBO gets Tx "cg#41":"by CC [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
-  | 401 Credit POOL | 401 Debit FBO-PROCESSOR |
-  | 12 Debit cgf    | 12 Credit TX-FEE-BACK   |
+  | 401 Credit POOL   | 401 Debit FBO-PROCESSOR   |
+  | 8.47 Debit TX-FEE | 8.47 Credit FBO-PROCESSOR |
+  | 12 Debit cgf      | 12 Credit TX-FEE-BACK     |
   And QBO gets Tx "cg#51":"once [Bea Two]" dated "%ymd-5m" with entries:
   | 501 Debit cgf   | 501 Credit D-ONCE       |
   And QBO gets Tx "cg#52":"once co [Fox Co]" dated "%ymd-5m" with entries:
@@ -205,25 +208,25 @@ Scenario: admin sets most categories and sends to QBO
   And QBO gets Tx "cg#59":"labor [Bea Two]" dated "%ymd-5m" with entries:
   | 509 Credit cgf   | 509 Debit LABOR        |
   And QBO gets Tx "cg#61":"once [Bea Two]" dated "%ymd-5m" with entries:
-  | 601 Debit .ZZC   | 601 Credit D-SPONSORED  |
+  | 601 Debit .ZZC   | 601 Credit D-FBO        |
   | 18 Debit cgf     | 18 Credit FS-FEE        |
-  | 18 Credit .ZZC   | 18 Debit D-SPONSORED    |
+  | 18 Credit .ZZC   | 18 Debit D-FBO          |
   And QBO gets Tx "cg#62":"once co [Fox Co]" dated "%ymd-5m" with entries:
-  | 602 Debit .ZZC   | 602 Credit D-SPONSORED  |
+  | 602 Debit .ZZC   | 602 Credit D-FBO        |
   | 18 Debit cgf     | 18 Credit FS-FEE        |
-  | 18 Credit .ZZC   | 18 Debit D-SPONSORED    |
+  | 18 Credit .ZZC   | 18 Debit D-FBO          |
   And QBO gets Tx "cg#63":"stepup [Bea Two]" dated "%ymd-5m" with entries:
-  | 30 Debit .ZZC    | 30 Credit D-SPONSORED-STEPUP |
+  | 30 Debit .ZZC    | 30 Credit D-FBO-STEPUP  |
   | 1 Debit cgf      | 1 Credit FS-FEE         |
-  | 1 Credit .ZZC    | 1 Debit D-SPONSORED     |
+  | 1 Credit .ZZC    | 1 Debit D-FBO           |
   And QBO gets Tx "cg#64":"regular [Bea Two]" dated "%ymd-5m" with entries:
-  | 604 Debit .ZZC   | 604 Credit D-SPONSORED  |
+  | 604 Debit .ZZC   | 604 Credit D-FBO        |
   | 18 Debit cgf     | 18 Credit FS-FEE        |
-  | 18 Credit .ZZC   | 18 Debit D-SPONSORED    |
+  | 18 Credit .ZZC   | 18 Debit D-FBO          |
   And QBO gets Tx "cg#65":"non-don [Bea Two]" dated "%ymd-5m" with entries:
-  | 605 Debit .ZZC   | 605 Credit D-SPONSORED  |
+  | 605 Debit .ZZC   | 605 Credit D-FBO        |
   | 18 Debit cgf     | 18 Credit FS-FEE        |
-  | 18 Credit .ZZC   | 18 Debit D-SPONSORED    |
+  | 18 Credit .ZZC   | 18 Debit D-FBO          |
   And QBO gets Tx "cg#79":"labor [Bea Two]" dated "%ymd-5m" with entries:
   | 709 Credit .ZZC  | 709 Debit FBO-LABOR     |
   And QBO gets nothing else

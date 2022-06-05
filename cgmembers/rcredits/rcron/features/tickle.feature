@@ -81,6 +81,16 @@ Scenario: A nonmember has accepted an invitation from someone else instead
   When cron runs "tickle"
   Then we do not email "nonmember" to member "b@example.com"
 
+Scenario: member has negative balance for several months
+  Given members have:
+  | uid  | balance | flags             | floor | wentNeg  | activated |*
+  | .ZZA | -57.01  | ok,confirmed,debt | -500  | %now-16m | %now-60d  |
+  When cron runs "tickle"
+  Then members have:
+  | uid  | floor                                                 |*
+  | .ZZA | %(-500 * (1 - (1 / (%FLOOR_DECAY_MOS - (16-1))))) |
+  # for example, if FLOOR_DECAY_MOS is 20, -500 would be multiplied by (1 - 1/5), resulting in a new floor of -400.
+  
 Skip this test doesn't work but the functionality gets tested elsewhere
 Scenario: A member gets a credit line
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
@@ -95,25 +105,6 @@ Resume
 #  And we notice "new floor|no floor effect" to member ".ZZE" with subs:
 #  | limit |*
 #  |  $50 |
-# (feature temporarily disabled)
-
-# We use rewards rather than floor, to measure credit-worthiness
-#Scenario: A member gets a bigger credit line after several months
-# This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
-#  Given these "txs":
-#  | created   | amount | payer | payee | rebate | bonus | purpose |*
-#  | %today-6m |    300 | .ZZE | .ZZF |   5000 |     0 | gift    |
-#  | %today-5m |   1500 | .ZZE | .ZZF |      0 |     0 | gift    |
-#  Then balances:
-#  | uid  | rewards |*
-#  | .ZZE |    5000 |
-#  When cron runs "tickle"
-#  Then members have:
-#  | uid  | floor |*
-#  | .ZZE |  -300 |
-#  And we notice "new floor|no floor effect" to member ".ZZE" with subs:
-#  | limit |*
-#  | $300 |
 # (feature temporarily disabled)
 
 # only works if not the first of the month

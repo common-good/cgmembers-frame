@@ -12,6 +12,8 @@ class CatTest extends AbstractMigration {
         $this->execute("ALTER TABLE $tnm CHANGE `bankTxId` `bankTxId` BIGINT(20) NULL DEFAULT NULL COMMENT 'bank transaction ID';");
         $this->execute("ALTER TABLE $tnm DROP `qbok`;");
       }
+      $this->execute('CREATE OR REPLACE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
+      $this->execute('CREATE OR REPLACE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');
     }
   }
 }
