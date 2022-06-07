@@ -51,6 +51,7 @@ define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
 define('QBO_CREDS', config('qboCreds'));
+define('CLICKUP_CREDS', config('clickupCreds'));
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
