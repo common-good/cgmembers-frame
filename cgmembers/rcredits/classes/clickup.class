@@ -1,0 +1,93 @@
+<?php
+use CG as r;
+use CG\Util as u;
+use CG\Web as w;
+use CG\DB as db;
+use CG\Backend as be;
+
+/**
+ * @file
+ * Common Good Clickup Class
+ * 
+ * We keep a copy of much of our Clickup data in various tables: cu_spaces, cu_folders, cu_lists, cu_tasks, cu_tags, etc.
+ * We do not keep a copy of individual time entries. Instead we summarize these after the 5th of each month and weekly the day before staff meetings.
+ */
+
+class Clickup {
+  const API = 'https://api.clickup.com/api';
+  private $team;
+  private $token;
+  
+  /**
+   * Return a new Clickup object.
+   * @param string $creds: the company's credentials for the Clickup API
+   */
+  public function __construct() {
+    $cu = $this;
+    list ($cu->team, $cu->token) = ray(CLICKUP_CREDS);
+  }
+  
+  /**
+   * Update clickup data in our tables, starting 3 days before the latest time entry.
+   */
+  public function update() {
+    $cu = $this;
+    $cnt = array_fill_keys(ray('members spaces folders lists tasks times'), 0);
+    
+    foreach ($cu->getTeam() as $o) if (db\updateOrInsert('cu_members', just('id name', $o)) === TRUE) $cnt['members']++;
+    foreach ($cu->getSpaces() as $o) {
+      if (db\updateOrInsert('cu_spaces', just('id name', $o)) === TRUE) $cnt['spaces']++;
+      foreach ($cu->getOtherLists($o->id) as $list) if (db\updateOrInsert('cu_lists', just('id name', $list) + ray('space', $o->id)) === TRUE) $cnt['lists']++;
+    }
+    foreach ($cu->getFolders() as $o) {
+      if (db\updateOrInsert('cu_folders', just('id name', $o)) === TRUE) $cnt['folders']++;
+      foreach ($o->lists as $list) if (db\updateOrInsert('cu_lists', just('id name', $list) + ray('folder', $o->id)) === TRUE) $cnt['lists']++;
+    }
+    
+    $lastDt = db\max('stop', 'cu_times');
+    $lastDt0 = $lastDt = $lastDt ? strtotime('-3 days', today($lastDt)) : strtotime('1/1/2022');
+    while ($lastDt < now()) {
+      $nextDt = strtotime('+1 day', $lastDt);
+      foreach ($cu->getTimes($lastDt, $nextDt) as $o) {
+        extract(just('id task user start end', $o));
+        if (db\updateOrInsert('cu_times', ray('id task member start stop', $id, $task->id, $user->id, $start / 1000, $end / 1000)) === TRUE) $cnt['times']++;
+      }
+      $lastDt = $nextDt;
+    }
+    
+    $sql = 'SELECT DISTINCT task FROM cu_times tm LEFT JOIN cu_tasks ts WHERE stop>=%lastDt0';
+    $q = db\q($sql, compact('lastDt0'));
+    while ($row = $q->fetch()) {
+      $o = $cu->getTask($row->task);
+      extract(just('id name parent list status priority tags time_estimate time_spent date_closed', $o));
+      $info = compact(ray('id name parent priority tags')) 
+      + ray('list status estimate spent closed', $list->id, $status->status, $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
+      if (db\updateOrInsert('cu_tasks', $info) === TRUE) $cnt['tasks']++;
+    }
+    
+    debug($cnts);
+  }
+  
+  /**
+   * Get all time entries in the given range of date/times.
+   */
+  public function getTimes($start, $end) {
+    foreach ($this->getTeam() as $member) $team[] = $member->user->id;
+    $args['assignee'] = join(',', $team);
+    foreach (ray('start end') as $k) $args[$k . '_date'] = $$k * 1000;
+    $args += ray('include_task_tags include_location_names', FALSE, FALSE);
+    return $this->get("team/$this->team/time_entries", $args)->data;
+  }
+  
+  private function get($uri, $args = []) {
+    $hdrs['Authorization'] = $this->token;
+    return json_decode(u\post(self::API . "/v2/$uri", $args, t('Unable to get time entries'), $hdrs, 'GET'));
+  }
+  
+  public function getTeam() {return $this->get('team')->teams[0]->members;}
+  public function getSpaces() {return $this->get("team/$this->team/space");}
+  public function getFolders($space) {return $this->get("space/$space/folder", ray('archived', 'false'));}
+  public function getOtherLists($space) {return $this->get("space/$space/list", ray('archived', 'false'));}
+  public function getTask($task) {return $this->get("task/$task", ray('include_subtasks', TRUE));}
+  
+}

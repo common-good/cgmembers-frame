@@ -13,6 +13,7 @@ function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
   if (in($arg, S_FU_TASKS)) { // called from Dashboard page when member clicks to launch a followup task
+    if ($mya->co) return go('', t('This page has been updated for your current account.')); // button for personal account was leftover (in a separate tab)
     $note = r\stampNote(t('member clicked ' . ucfirst($arg)));
     $mya->update('notes', $note . $mya->notes);
 

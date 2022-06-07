@@ -1,3 +1,8 @@
+2022-06-06 feature/clickup2
+. created a Clickup class to collect and analyze users, spaces, folders, lists, tasks, and tracked time data from Clickup
+. fixed bug in contact form: update to Michigan or Mississippi failed in postalAddr
+. fixed bug in scraps.inc: a company account can no longer get saddled with task "person"
+
 2022-06-05 feature/clickup
 . created a table for CEF billing (see misc/cef-billing.sql)
 . created these queries for billing CEF for a particular month, after importing timesheets from Clickup (ignoring first month):

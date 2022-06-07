@@ -1,4 +1,4 @@
-var statesStr = '' // must match states.inc and of course r_states table in database
+var statesStr = '' // must match r_states table in database
 + 'AL:Alabama,'
 + 'AK:Alaska,'
 + 'AZ:Arizona,'
@@ -20,9 +20,9 @@ var statesStr = '' // must match states.inc and of course r_states table in data
 + 'ME:Maine,'
 + 'MD:Maryland,'
 + 'MA:Massachusetts,'
-+ 'MA:Michigan,'
++ 'MI:Michigan,'
 + 'MN:Minnesota,'
-+ 'MI:Mississippi,'
++ 'MS:Mississippi,'
 + 'MO:Missouri,'
 + 'MT:Montana,'
 + 'NB:Nebraska,'
