@@ -1231,6 +1231,7 @@ o;
    * @param assoc $info: other parameters, including:
    *   explicit: <user requested this transfer explicitly>
    *   recursId: the tx_timed ID if this transfer is recurring
+   *   cat: the expense category, if this account is sponsored
    *
    * @return [xid, amtDone, report] where:
    *   xid: the transfer transaction ID
@@ -1240,8 +1241,8 @@ o;
   public function bank($amount, $why, $info = []) {
     $a = $this;
     u\EXPECT($a->hasBank, 'banking with no bank');
-    extract(just('explicit recursId', $info, [FALSE, NULL]));
-    
+    extract(just('explicit recursId cat', $info, [FALSE, NULL, NULL]));
+
     $report = '';
     if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
 
@@ -1275,7 +1276,7 @@ o;
     if (!$combined) {
       u\setDft($created, $okNow ? now() : strtotime('+7 days')); // delay long enough to identify and address problems
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
-      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created recursId')))->xid;
+      $xid = be\createUsdTransfer($a, $amount, compact(ray('completed created recursId cat')))->xid;
       if ($fuMsg = be\usdTxFollowup($xid, FALSE)) $fuMsg = '|' . $fuMsg; // fuMsg is not needed here (use 'available now' instead)
       u\EXPECT($xid, 'saving usd record');
     }

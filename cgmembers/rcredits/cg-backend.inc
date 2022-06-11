@@ -39,7 +39,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($ending)) $where .= " AND t.created<=$ending";
   if ($catsOnly) {
     $where .= " AND (t.cat1 IS NOT NULL OR t.cat2 IS NOT NULL OR (t.:IS_CC AND t.uid1=:UID_OUTER)) AND NOT t.:IS_QBOK";
-    $catUids = join(',', r\catUids(FALSE));
+    $catUids = join(',', r\catUids());
     $toMe = "($toMe AND (NOT ($fromMe) OR t.uid2 IN ($catUids)))";
   }
   $special = be\specialTxFlds();
@@ -82,7 +82,7 @@ EOF;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
-  $catUids = r\catUids(FALSE);
+  $catUids = r\catUids();
   
   foreach ($txs as $i => $entries) {
     extract(just('actorId type xid pid uid name', $entries[0]));
@@ -1358,7 +1358,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
   $tx = new r\Tx($tx0);
   $cat1 = u\getBit($flags, B_CC) ? r\nick2cat(r\acct(UID_BANK)->mainQid) : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
-  $cat2 = is_array($cat) ? $cat[1] : NULL;
+  $cat2 = is_array($cat) ? $cat[1] : $cat;
   $extra = ($cat1 or $cat2) ? ray('cat', [$cat1, $cat2]) : [];
   txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
@@ -1483,6 +1483,8 @@ function checkSanity() {
     $total += $entry->amount;
   }
 // odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }
+
+  if ($id = db\get('id', 'tx_entries e JOIN tx_hdrs h USING (xid)', 'uid IN (:uids) AND created>:dt1 AND (cat IS NULL OR cat=0)', ray('uids dt1', r\catUids(), strtotime('7/1/2021')))) sanityErr("Transaction entry #$id has no accounting category (cat).");
 
   // Check txs2
   $txids = db\rows('txid', 'txs2');

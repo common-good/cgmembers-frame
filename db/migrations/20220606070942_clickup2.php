@@ -27,15 +27,15 @@ class Clickup2 extends AbstractMigration {
     $t = $this->table('cu_lists', ray('id primary_key comment', FALSE, 'id', 'lists of tasks'));
     $t->addColumn('id', 'integer', ray('length null identity comment', phx::INT_BIG, FALSE, FALSE, 'record ID'));
     $t->addColumn('name', 'string', ray('length null comment', 255, TRUE, 'list name'));
-    $t->addColumn('folder', 'integer', ray('length null comment', phx::INT_MEDIUM, TRUE, 'folder record ID, if any'));
-    $t->addColumn('space', 'integer', ray('length null comment', phx::INT_MEDIUM, TRUE, 'space record ID, if not in any folder'));
+    $t->addColumn('folder', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'folder record ID, if any'));
+    $t->addColumn('space', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'space record ID, if not in any folder'));
     $t->create();
 
     $t = $this->table('cu_tasks', ray('id primary_key comment', FALSE, 'id', 'things to be done'));
     $t->addColumn('id', 'string', ray('length null identity comment', 255, FALSE, FALSE, 'record ID'));
     $t->addColumn('name', 'string', ray('length null comment', 255, TRUE, 'task name'));
     $t->addColumn('parent', 'string', ray('length null comment', 255, TRUE, 'parent task, if this is a subtask'));
-    $t->addColumn('list', 'integer', ray('length null comment', phx::INT_MEDIUM, TRUE, 'list record ID'));
+    $t->addColumn('list', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'list record ID'));
     $t->addColumn('status', 'string', ray('length null comment', 255, TRUE, 'task status'));
     $t->addColumn('priority', 'string', ray('length null comment', 255, TRUE, 'task priority'));
     $t->addColumn('tags', 'string', ray('length null comment', 255, TRUE, 'comma-delimted list of tags for this task'));

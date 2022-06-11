@@ -1,3 +1,11 @@
+2022-06-11 feature/fbo-bank
+. sponsored accounts now must specify an accounting category for bank transfers (which can be outgoing only)
+. separated clickup update functions
+. automated clickup updates in cron and set sleep to avoid going over 100 requests per minute
+. clickup update now handles times with no task and tasks with no list
+. fixed bug in cron recurs that crashed checking flags
+. stopped suggesting medium ints in migration model (and fixed that in clickup migration)
+
 2022-06-06 feature/clickup2
 . created a Clickup class to collect and analyze users, spaces, folders, lists, tasks, and tracked time data from Clickup
 . fixed bug in contact form: update to Michigan or Mississippi failed in postalAddr

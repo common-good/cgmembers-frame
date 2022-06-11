@@ -173,7 +173,7 @@ class QB {
     $cnt = 0;
     $sql = 'SELECT DISTINCT uid2 FROM txs WHERE :IS_CC AND uid1=:UID_OUTER AND created BETWEEN :start AND :end';
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
-    $uids = array_unique(array_merge($uids, r\catUids(FALSE)));
+    $uids = array_unique(array_merge($uids, r\catUids()));
 
     $txs = be\getTxs($uids, $start, $end, ray('includeSelfTxs catsOnly', TRUE, TRUE));
 

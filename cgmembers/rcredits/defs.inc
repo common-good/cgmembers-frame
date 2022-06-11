@@ -416,6 +416,7 @@ const CO_CLUB = 9;
 const CO_CUSTODIAN = 12;
 
 const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
+const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account expense categories begin
 
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit

@@ -350,3 +350,36 @@ Scenario: A member pays a sponsored organization
   | note         |                      |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
+
+Scenario: a sponsored organization moves credit to the bank
+  Given members have:
+  | uid  | balance |*
+  | .ZZC | 100     |
+  When member ".ZZC" visits "get"
+  Then we show "Transfer Funds" with:
+  | Pending  | You have no pending bank transfer requests. |
+  | Balance  | $100 with a Credit Line of $0 |
+  | Amount $ |  |
+  | Category |  |
+  | CG   Bank | |
+  And without:
+  | Bank   CG | |                                        
+  
+  When member ".ZZC" completes form "get" with values:
+  | op  | amount | cat       |*
+  | put |     86 | FBO-LABOR |
+  Then these "txs":
+  | xid | payer     | payee | amount | cat1 | cat2      |*
+  | 1   | %UID_BANK | .ZZC  |    -86 | %NUL | FBO-LABOR |
+  Then these "txs2":
+  | payee | amount | created   | completed | channel | xid |*
+  |  .ZZC |    -86 | %today    | %today    | %TX_WEB |   1 |
+  And we say "status": "banked" with subs:
+  | action  | tofrom  | amount | why             |*
+  | deposit | to      | $86    | as soon as possible |
+  And balances:
+  | uid  | balance |*
+  | .ZZC |      14 |
+  And we notice "banked" to member ".ZZC" with subs:
+  | action  | tofrom | amount | why             |*
+  | deposit | to     | $86    | as soon as possible |
