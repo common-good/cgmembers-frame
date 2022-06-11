@@ -1485,7 +1485,7 @@ function recurIndex($period) {return nni(array_flip(ray(PERIODS)), $period);}
  *  -- those are conceptually part of CG's main account and appear only on ctty's and CG's Balance Sheets.
  * @param int $uid: account record ID
  */
-function hasCats($uid) {return in($uid, catUids(FALSE));}
+function hasCats($uid) {return in($uid, catUids());}
 
 /**
  * Return an array of record IDs of all accounts owned by CG whose transactions get categorized.

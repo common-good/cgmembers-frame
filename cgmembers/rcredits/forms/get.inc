@@ -63,13 +63,14 @@ function formGet($form, &$sta, $args = '') {
  
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
   $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->admin ? t(' (no limit for admin)') : ''));
+  $cat = $mya->sponsored ? fboCatFld() : NULL; // fbo income gets categorized automatically
 
   $arrow = '<span class="glyphicon glyphicon-arrow-right"></span>';
   $get = submit(BARE . t('Bank %m CG', '_m', $arrow));
   $put = submit(BARE . t('CG %m Bank', '_m', $arrow));
-  $actions = fieldSet('actions', compact('get', 'put'));
+  $actions = fieldSet('actions', $mya->sponsored ? compact('put') : compact('get', 'put'));
 
-  return cgform(compact(ray('title subtext waiting balances amount actions avail')));
+  return cgform(compact(ray('title subtext waiting balances amount cat actions avail')));
 }
   
 function formGet_validate($form, &$sta) {
@@ -91,9 +92,9 @@ function formGet_validate($form, &$sta) {
 function formGet_submit($form, &$sta) {
   global $mya;
 
-  extract(just('amount', $sta['input']));
+  extract(just('amount cat', $sta['input'], NULL));
 
-  list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit', TRUE));
+  list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit cat', TRUE, $cat));
   say($report); // expanded message
   return go('get'); // required for testing
 }

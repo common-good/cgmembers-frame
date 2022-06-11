@@ -145,6 +145,22 @@ function everyHour() { // stuff to do every hour
     if (!is_numeric($flnm)) continue;
     if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
   }
+  
+  queueEach('clickup', 'SELECT :NOW AS now FROM cu_spaces'); // no query needed, so this is a placeholder
+}
+
+/**
+ * Bring our local clickup data up to date.
+ */
+function clickup($item) {
+  require_once R_ROOT . '/classes/clickup.class';
+  $cu = new \Clickup();
+  $start = strtotime('-14 days'); // nobody should be adding or editing any times before that
+  $end = strtotime('-2 hours'); // give people time to edit or delete mistakes
+  $cu->updateMost();
+  $cu->updateTimes($start, $end);
+  $cu->updateTasks($start, NOW); // no harm in adding all possible tasks
+  $cu->updateTasks('SELECT DISTINCT parent AS task FROM cu_tasks WHERE parent IS NOT NULL'); // add parent tasks
 }
 
 function geocode($item) {
@@ -338,7 +354,7 @@ function recur($template) {
     }
 
     $data = compact('created');
-    if ($flags) foreach (ray(TX_FLAGS) as $k) if (u\getBit($flags, $k)) $data[$k] = TRUE;
+    if ($flags) foreach (ray(TX_FLAGS) as $k) if (!strhas($k, 'u') and u\getBit($flags, $k)) $data[$k] = TRUE;
 
     if ($action == 'pay') {
       if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift

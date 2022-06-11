@@ -12,6 +12,9 @@ use CG\Backend as be;
  * We keep a copy of much of our Clickup data in various tables: cu_spaces, cu_folders, cu_lists, cu_tasks, cu_tags, etc.
  * We do not keep a copy of individual time entries. Instead we summarize these after the 5th of each month and weekly the day before staff meetings.
  */
+ 
+ const MISC_LIST = 88345493; // CG record ID of miscellaneous admin list (for orphaned time entries without a task or list)
+ const LAZY_UPDATE = FALSE; // mostly for intial data loading
 
 class Clickup {
   const API = 'https://api.clickup.com/api';
@@ -28,44 +31,70 @@ class Clickup {
   }
   
   /**
-   * Update clickup data in our tables, starting 3 days before the latest time entry.
+   * Update clickup data in all our tables except time entries.
    */
-  public function update() {
+  public function updateMost() {
     $cu = $this;
-    $cnt = array_fill_keys(ray('members spaces folders lists tasks times'), 0);
-    
-    foreach ($cu->getTeam() as $o) if (db\updateOrInsert('cu_members', just('id name', $o)) === TRUE) $cnt['members']++;
-    foreach ($cu->getSpaces() as $o) {
-      if (db\updateOrInsert('cu_spaces', just('id name', $o)) === TRUE) $cnt['spaces']++;
-      foreach ($cu->getOtherLists($o->id) as $list) if (db\updateOrInsert('cu_lists', just('id name', $list) + ray('space', $o->id)) === TRUE) $cnt['lists']++;
-    }
-    foreach ($cu->getFolders() as $o) {
-      if (db\updateOrInsert('cu_folders', just('id name', $o)) === TRUE) $cnt['folders']++;
-      foreach ($o->lists as $list) if (db\updateOrInsert('cu_lists', just('id name', $list) + ray('folder', $o->id)) === TRUE) $cnt['lists']++;
-    }
-    
-    $lastDt = db\max('stop', 'cu_times');
-    $lastDt0 = $lastDt = $lastDt ? strtotime('-3 days', today($lastDt)) : strtotime('1/1/2022');
-    while ($lastDt < now()) {
-      $nextDt = strtotime('+1 day', $lastDt);
-      foreach ($cu->getTimes($lastDt, $nextDt) as $o) {
-        extract(just('id task user start end', $o));
-        if (db\updateOrInsert('cu_times', ray('id task member start stop', $id, $task->id, $user->id, $start / 1000, $end / 1000)) === TRUE) $cnt['times']++;
+
+    foreach ($cu->getTeam() as $m) db\updateOrInsert('cu_members', ray('id name', $m->user->id, $m->user->username));
+    foreach ($cu->getSpaces() as $s) {
+      db\updateOrInsert('cu_spaces', just('id name', $s));
+      foreach ($cu->getFolders($s->id) as $f) {
+        db\updateOrInsert('cu_folders', just('id name', $f));
+        foreach ($f->lists as $list) db\updateOrInsert('cu_lists', just('id name', $list) + ray('folder', $f->id));
       }
-      $lastDt = $nextDt;
+      foreach ($cu->getOtherLists($s->id) as $list) db\updateOrInsert('cu_lists', just('id name', $list) + ray('space', $s->id));
     }
-    
-    $sql = 'SELECT DISTINCT task FROM cu_times tm LEFT JOIN cu_tasks ts WHERE stop>=%lastDt0';
-    $q = db\q($sql, compact('lastDt0'));
-    while ($row = $q->fetch()) {
-      $o = $cu->getTask($row->task);
-      extract(just('id name parent list status priority tags time_estimate time_spent date_closed', $o));
-      $info = compact(ray('id name parent priority tags')) 
-      + ray('list status estimate spent closed', $list->id, $status->status, $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
-      if (db\updateOrInsert('cu_tasks', $info) === TRUE) $cnt['tasks']++;
+    w\say('Done.');
+  }
+
+  /**
+   * Update clickup time entries ending in the given time range.
+   */
+  public function updateTimes($start = NOW - DAY_SECS, $end = NOW) {
+    foreach ($this->getTimes($start, $end) as $t) {
+      extract($ray = just('id task user start end task_location', $t, NULL));
+      if (!is_object($task)) {
+        if ($task_location) {
+          extract(just('list_id', $task_location));
+          $taskid = "inlist#$list_id";
+        } else list ($list_id, $taskid) = [MISC_LIST, "inlist#unknown"];
+        db\updateOrInsert('cu_tasks', ray('id name list', $taskid, t('Unknown Task ') . $taskid, $list_id));
+      } else $taskid = $task->id;
+      if (!is_object($user)) die("user=$user");
+      db\updateOrInsert('cu_times', ray('id task member start stop', $id, $taskid, $user->id, round($start / 1000), round($end / 1000)));
     }
-    
-    debug($cnts);
+    w\say(t('Done'));
+  }
+  
+  /**
+   * Update tasks for time entries ending in a given time range or other criteria.
+   * call as:
+   *   $cu->updateTasks(start, end); OR
+   *   $cu->updateTasks(sql);
+   * @param int $start: starting time (Unix)
+   * @param int $end: ending time (Unix)
+   * @param string $sql: selection criteria to use instead of date range of time entries
+   *   for example, 'SELECT DISTINCT parent AS task FROM cu_tasks WHERE parent IS NOT NULL'
+   */
+  public function updateTasks($start = NOW - DAY_SECS, $end = NOW) {
+    $sql = is_int($start) ? 'SELECT DISTINCT task FROM cu_times tm LEFT JOIN cu_tasks ts ON ts.id=tm.task WHERE stop BETWEEN :start AND :end' : $start;
+    $q = db\q($sql, compact(ray('start end')));
+    while ($row = $q->fetch()) if (!strhas($id = $row->task, '#')) { // don't look for tasks that don't exist in ClickUp
+      if (LAZY_UPDATE and db\exists('cu_tasks', compact('id'))) continue;
+      $o = $this->getTask($id);
+      extract(just('name parent list status priority tags time_estimate time_spent date_closed', $o, NULL)); // sometimes this doesn't even have an id field!
+      u\setDft($name, t('Unnamed'));
+      $priority = is_object($priority) ? $priority->id : $priority;
+      $status = is_object($status) ? $status->status : $status;
+      $list = is_object($list) ? $list->id : MISC_LIST;
+/// if (!is_object($$k)) die('non object in task: ' . pr($o));
+      $tags = $tags ? join(',', $this->just1('name', $tags)) : '';
+      $info = compact(ray('id list name parent tags priority status')) + ray('estimate spent closed', $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
+      db\updateOrInsert('cu_tasks', $info);
+    }
+
+    w\say(t('Done'));
   }
   
   /**
@@ -76,18 +105,24 @@ class Clickup {
     $args['assignee'] = join(',', $team);
     foreach (ray('start end') as $k) $args[$k . '_date'] = $$k * 1000;
     $args += ray('include_task_tags include_location_names', FALSE, FALSE);
-    return $this->get("team/$this->team/time_entries", $args)->data;
+    $o = $this->get("team/$this->team/time_entries", $args);
+    if (!is_object($o) or !isset($o->data)) die('bad times: ' . pr($o)); // usually a Clickup error message
+    return $o ? $o->data : [];
   }
   
   private function get($uri, $args = []) {
+    static $cnt = 0; $cnt++;
     $hdrs['Authorization'] = $this->token;
+    if ($cnt > 100) {$cnt = 0; sleep(61);}
     return json_decode(u\post(self::API . "/v2/$uri", $args, t('Unable to get time entries'), $hdrs, 'GET'));
   }
   
-  public function getTeam() {return $this->get('team')->teams[0]->members;}
-  public function getSpaces() {return $this->get("team/$this->team/space");}
-  public function getFolders($space) {return $this->get("space/$space/folder", ray('archived', 'false'));}
-  public function getOtherLists($space) {return $this->get("space/$space/list", ray('archived', 'false'));}
+  public function getTeam() {static $members; return nn($members) ?: ($members = $this->get('team')->teams[0]->members);}
+  public function getSpaces() {return $this->get("team/$this->team/space")->spaces;}
+  public function getFolders($space) {return $this->get("space/$space/folder", ray('archived', 'true'))->folders;}
+  public function getOtherLists($space) {return $this->get("space/$space/list", ray('archived', 'true'))->lists;}
   public function getTask($task) {return $this->get("task/$task", ray('include_subtasks', TRUE));}
+
+  public function just1($k, $ray) {foreach ((array) $ray as $one) $res[] = nni((array) $one, $k); return nn($res, []);}
   
 }

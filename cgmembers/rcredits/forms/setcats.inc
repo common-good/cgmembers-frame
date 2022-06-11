@@ -53,7 +53,7 @@ function formSetCats_submit($form, &$sta) {
 }
 
 function setMostCats($start, $overwrite) {
-  $uids = r\catUids(FALSE);
+  $uids = r\catUids();
   $catCrit = $overwrite ? '1' : 'cat IS NULL';
   $q = db\q("SELECT DISTINCT xid,flags,recursId FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid IN (:uids) AND $catCrit AND created>=:start ORDER BY created DESC,xid DESC", compact(ray('uids start')));
 

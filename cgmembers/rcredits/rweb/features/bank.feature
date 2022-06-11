@@ -1,4 +1,4 @@
-Feature: Get cgCredits/USD
+Feature: Bank -- transfer funds to or from a bank account
 AS a member
 I WANT to transfer credit to my bank account
 SO I can pay it to non-members
@@ -40,6 +40,9 @@ Scenario: a member moves credit to the bank
   When member ".ZZA" completes form "get" with values:
   | op  | amount |*
   | put |     86 |
+  Then these "txs":
+  | xid | payer     | payee | amount |*
+  | 8   | %UID_BANK | .ZZA  |    -86 |
   Then these "txs2":
   | payee | amount | created   | completed | channel | xid |*
   |  .ZZA |    -86 | %today    | %today    | %TX_WEB |   8 |

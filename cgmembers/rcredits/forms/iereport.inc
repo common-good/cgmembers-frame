@@ -55,7 +55,7 @@ function iereport($start, $end) {
   $catIds = db\keyed('category,id', 'tx_cats', "(category RLIKE '^[IE]' OR category LIKE '%To Be Paid Through CG%') AND `show` ORDER BY id");
   $cats = array_fill_keys(array_keys($catIds), 0);
   
-  $uids = join(', ', r\catUids(FALSE));
+  $uids = join(', ', r\catUids());
 
   $sql = <<< X
     SELECT cat, e.id > 0 AS toMe, SUM(amount) AS amount, COUNT(e.id) AS cnt,
