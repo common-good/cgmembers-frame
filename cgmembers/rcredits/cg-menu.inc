@@ -71,7 +71,7 @@ function menu($submenu = '') {
     'community/coupons/list' => ['call', t('List Discounts and Gift Cards'), 'CouponsList 3', 'manage'],
     'community/discount' => ['call', t('Simplified Discounts'), 'Discount', 'manage', '', t(), 'usd'],
     'community/posts' => ['sub', t('Offers, Needs, & Tips'), 'Posts 2', ANY, '', t(), 'heart'],
-    'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(), 'list-alt'],
+    'community/data' => ['sub', t('Community & Money Data'), 'Data 2', '', '', t(), 'list-alt'],
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage linkable', '', t(), 'bell'],
     
     'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'ok'],

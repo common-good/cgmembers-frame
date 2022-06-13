@@ -243,6 +243,7 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
+      if (vs['fbo'] == 1 && !pay) cat.parent().parent().hide();
 
       // question, allowNonmember, and restrict cannot be passed to jsx, because (bool) pay is calculated herein
       vs['question'] = desc + vs['question'];
@@ -251,7 +252,7 @@ function doit(what, vs) {
       suggestWhoScrap();
       mem0Click(true);
     });
-    if (vs['isCGs'] == 1) $('#edit-who').change(function () {
+    if (vs['hasCats'] == 1) $('#edit-who').change(function () {
       var otherId = $('.whoId', $(this).parents('form:first'));
       if (purpose.val() == '' || cat.val() == '') post('suggestTxDesc', {
         otherId: otherId.val(),

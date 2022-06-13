@@ -15,7 +15,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
 
   require queryFile($isco0 == 'co');
   
-  extract(just('qName sql q isco', u\decryRay($code), NULL));
+  extract(just('qName sql sqlTitle q isco', u\decryRay($code), NULL));
   u\setDft($isco, $isco0 == 'co');
   
   if ($q) {
@@ -23,8 +23,8 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     w\go("$url/code=" . u\cryRay(ray('qName', $q)));
   }
 
-  if ($mya->admRegion and $sql2 = $sql) {
-    $title = t('MySQL Query');
+  if ($sql2 = $sql) {
+    $title = $sqlTitle ?: t('MySQL Query');
     try {
       $q = db\adminQ($sql2);
       if ($q and $rows = $q->fetchAll()) {
@@ -32,13 +32,17 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
         foreach ($rows as $i => $row) $rows[$i] = array_values((array) $row);
         $list = w\makeTable($rows, $hdrs);
       } else $list = t('Zero matching rows found.');
-      $form = compact(ray('title list'));
       jsx('query');
+      return cgform(compact(ray('title list')), 'wide nolabs');
     } catch (\Exception $e) {
       err($e->getMessage());
       return go('/community/data/code=' . u\cryRay(ray('sql', $sql2)));
     }
-  } elseif ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr($qName, 1))) {
+  }
+
+  if (!$mya) return softErr(tr('no page permission', 'page', t('Community Data'))); // only members get to see standard queries
+
+  if ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr($qName, 1))) {
     if (substr($sql2, 0, 1) == '/') return go($sql2);
     $title = t('Query Results');
     $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
@@ -48,13 +52,14 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
     $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft(urldecode(nn($sql))) + maxlen(4096)) : NULL;
+    $sqlTitle = textFld(t('Title:'), [t('Results Title')], t('Query Results'));
     $submit = $mya->admRegion ? submit(t('Go')) : NULL;
 
     foreach ($queries as $k0 => $v) {
       if ($k = w\queryPermitted($k0)) $links[$k0] = lnk('/community/data/code=' . u\cryRay(ray('q isco', $k0, $isco)), $k);
     }
     $links = item(u\ul($links), NBSP);
-    $form = compact(ray('title subtext sql submit links'));
+    $form = compact(ray('title subtext sql sqlTitle submit links'));
   }
   return cgform($form, $args ? ($code ? 'wide' : 'wider') . ' nolabs' : '');
 }
@@ -67,9 +72,9 @@ function formData_validate($form, &$sta) {
 }
 
 function formData_submit($form, &$sta) {
-  extract(just('sql', $sta['input'], NULL));
+  extract($info = just('sql sqlTitle', $sta['input'], NULL));
 
-  if ($sql) return w\go('/community/data/code=' . u\cryRay(compact('sql')));
+  if ($info) return w\go('/community/data/code=' . u\cryRay($info));
 }
 
 function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/rweb/queries.inc');}

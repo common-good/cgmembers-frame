@@ -146,13 +146,14 @@ function everyHour() { // stuff to do every hour
     if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
   }
   
-  queueEach('clickup', 'SELECT :NOW AS now FROM cu_spaces'); // no query needed, so this is a placeholder
+  queueEach('clickup', 'SELECT 1'); // no query needed, so this query is a placeholder
 }
 
 /**
  * Bring our local clickup data up to date.
  */
 function clickup($item) {
+  if (test()) return; // no tests for this yet
   require_once R_ROOT . '/classes/clickup.class';
   $cu = new \Clickup();
   $start = strtotime('-14 days'); // nobody should be adding or editing any times before that
@@ -484,6 +485,11 @@ function activeMonthly($item) {
 
   // adjust credit line
   $floorX = $a->o_floor; // current floor (of just this account, not summed with joint)
+  
+  if (!test())
+  $a->redoBal(); // balance gets off occasionally
+  if ($a->balance < 0 and !$a->wentNeg) $a->update('wentNeg', now());
+  if ($a->balance >= 0 and $a->wentNeg) $a->update('wentNeg', '');
   
   if ($a->balance < 0 and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // negative for too long
     $m = u\monthDif(now(), $a->wentNeg); // how many months ago the account went negative (rounded)
