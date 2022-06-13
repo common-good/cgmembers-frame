@@ -1,3 +1,10 @@
+2022-06-13 feature/sql
+. custom query results are now available to anyone with the link
+. sponsored account payments to other members are now required to specify an expense category
+. comprehensive expense categories added for sponsored organizations
+. monthly cron for active accounts now refigures balance and wentNeg date
+. added class to cu_tasks table
+
 2022-06-11 feature/fbo-bank
 . sponsored accounts now must specify an accounting category for bank transfers (which can be outgoing only)
 . separated clickup update functions

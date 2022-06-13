@@ -859,6 +859,7 @@ EOF;
     $a = $this;
     $balance = db\sum('amount', 'tx_entries', 'uid IN (:uids)', ['uids'=>$a->uids]);
     if (empty($balance)) $balance = 0;
+    if ($balance != $a->balance) r\tellAdmin(t('bad bal fixed'), ray('who was nowIs', "$a->fullName ($a->mainQid)", $a->balance, $balance));
     $result = db\update('users', ray('uid balance', $a->id, $balance), 'uid');
     u\EXPECT($result == 1, "trouble updating balance");
     $a->reread();
