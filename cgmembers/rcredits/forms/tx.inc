@@ -49,7 +49,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $email = emailFld(t('Email:'), [t('Email address')]);
   $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
-  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
+  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
   $cat = $fbo ? fboCatFld() : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
   $start = dateFld(t('Date:'));

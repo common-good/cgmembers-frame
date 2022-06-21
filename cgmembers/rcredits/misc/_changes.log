@@ -1,3 +1,13 @@
+2022-06-21 feature/misc
+. deleted all transactions in the bankCharges account (uid=192) after downloading them to misc/ (and removed that account)
+. added Juneteenth as a holiday
+. added class name to clickup import
+. disabled automatic cashout for sponsored projects
+. fixed bug in people form that prevented submission
+. added admin queries: Dollar Pool Liability and Community Fund Balance By Community
+. fixed file upload bug, so encrypted files now work in Message a Member
+. in cron added monthly check for non-zero balance in closed accounts and report on long-term negative balances
+
 2022-06-13 feature/sql
 . custom query results are now available to anyone with the link
 . sponsored account payments to other members are now required to specify an expense category

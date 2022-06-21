@@ -100,7 +100,7 @@ function goFar($url, $params = '') {
 /**
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
- * @param string $types: space-delimited list of acceptable mime types
+ * @param string $types: space-delimited list of acceptable mime types (empty means "any")
  * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
  * @param string $fldName: field name of file upload field (defaults to "file")
  * @return an assoc of file data OR the error message
@@ -108,7 +108,8 @@ function goFar($url, $params = '') {
 function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
   
-  if (!$types or !$tmp_name or !$filetype = mime_content_type($tmp_name) or !in($filetype, $types)) return t('bad file type', compact('filetype'));
+  if (!$tmp_name) return t('Upload failed with error ') . $error;
+  if (!$filetype = mime_content_type($tmp_name) or ($types and !in($filetype, $types))) return t('bad file type', compact('filetype'));
   if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');

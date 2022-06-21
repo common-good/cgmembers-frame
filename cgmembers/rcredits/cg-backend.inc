@@ -28,7 +28,8 @@ require_once R_ROOT . '/classes/txentry.class';
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
-  if (is_integer($uids)) { $uids = [ $uids ]; }
+  if (is_integer($uids)) $uids = [$uids];
+
   extract(just('includeSelfTxs catsOnly', $extra, FALSE));
 
   $fromMe = 't.uid1 IN (:uids)';

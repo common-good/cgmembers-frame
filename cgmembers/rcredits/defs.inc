@@ -229,12 +229,12 @@ const UID_REGULARS = 128; // Recurring Donations
 const UID_ROUNDUPS = 129; // Donations of spare change on each purchase
 const UID_CRUMBS = 130; // Donations of a percentage of payments received
 const UID_STEPUPS = 131; // Donations of a percentage of payments made (donated to CG itself)
-const UID_BANK_FEES = 192;
 const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
 const UID_BANK = 256; // current Community Fund bank account
 
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
 const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
+const EXTERNAL_UIDS = [UID_OUTER, UID_BANK]; // omit these when totaling balances to figure overall Dollar Pool Liability
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
 

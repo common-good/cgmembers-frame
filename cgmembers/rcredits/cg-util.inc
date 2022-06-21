@@ -1772,6 +1772,7 @@ function nextBizDay($dt = NOW) {
 //    'third monday of april', // Patriots Day (Massachusetts only)
 //    easter_date(), // Easter 
     'last monday may', // Memorial Day
+    holiwiggle('6/19', $dt), // Juneteenth (Emancipation Day) -- federal, recognized by 18 states, including VT
     holiwiggle('7/4', $dt), // Independence Day
 //    'first sunday of august', // American Family Day (Arizona only)
     'first monday of september', // Labor Day

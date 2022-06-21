@@ -6,6 +6,7 @@ cgLogs/
 cgPhotoTemp/
 gherkin/
 log/
+msgs/
 db/migrations/migrate.log
 config/config.json
 config/phinx.json
