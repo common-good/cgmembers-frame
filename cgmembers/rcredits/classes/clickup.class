@@ -83,13 +83,18 @@ class Clickup {
     while ($row = $q->fetch()) if (!strhas($id = $row->task, '#')) { // don't look for tasks that don't exist in ClickUp
       if (LAZY_UPDATE and db\exists('cu_tasks', compact('id'))) continue;
       $o = $this->getTask($id);
-      extract(just('name parent list status priority class tags time_estimate time_spent date_closed', $o, NULL)); // sometimes this doesn't even have an id field!
+      extract(just('name parent list status priority custom_fields tags time_estimate time_spent date_closed', $o, NULL)); // sometimes this doesn't even have an id field!
       u\setDft($name, t('Unnamed'));
       $priority = is_object($priority) ? $priority->id : $priority;
       $status = is_object($status) ? $status->status : $status;
       $list = is_object($list) ? $list->id : MISC_LIST;
 /// if (!is_object($$k)) die('non object in task: ' . pr($o));
       $tags = $tags ? join(',', $this->just1('name', $tags)) : '';
+      if ($custom_fields and $fld = nni($custom_fields, 0) and $opts = nni($fld->type_config, 'options')) {
+        $opts = $this->just1('name', $opts);
+        $i = nni($fld, 'value', NULL);
+        $class = isset($i) ? $opts[$i] : NULL;
+      } else $class = NULL;
       $info = compact(ray('id list name parent class tags priority status')) + ray('estimate spent closed', $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
       db\updateOrInsert('cu_tasks', $info);
     }

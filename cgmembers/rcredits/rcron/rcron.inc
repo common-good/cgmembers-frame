@@ -146,13 +146,13 @@ function everyHour() { // stuff to do every hour
     if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
   }
   
-  queueEach('clickup', 'SELECT 1'); // no query needed, so this query is a placeholder
+  clickup();
 }
 
 /**
  * Bring our local clickup data up to date.
  */
-function clickup($item) {
+function clickup() {
   if (test()) return; // no tests for this yet
   require_once R_ROOT . '/classes/clickup.class';
   $cu = new \Clickup();
@@ -432,6 +432,7 @@ X;
 X;
 
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
+  foreach (db\col('uid', 'users', ':IS_OK AND uid<=:UID_CANON9') as $uid) r\acct($uid)->redoBal();
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:UID_CANON9 AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
   queueNext();
 }  
@@ -486,7 +487,7 @@ function activeMonthly($item) {
   // adjust credit line
   $floorX = $a->o_floor; // current floor (of just this account, not summed with joint)
   
-  if (!test())
+  if (!test()) // don't redo balance in tests because we fake balances
   $a->redoBal(); // balance gets off occasionally
   if ($a->balance < 0 and !$a->wentNeg) $a->update('wentNeg', now());
   if ($a->balance >= 0 and $a->wentNeg) $a->update('wentNeg', '');
@@ -496,6 +497,7 @@ function activeMonthly($item) {
     $m -= $a->wentNeg > strtotime("-$m months", now()) ? 2 : 1; // don't count the first month or a partial subsequent month
     $floor = round($floorX * (1 - (1 / (FLOOR_DECAY_MOS - $m))), 2);
     $floor = min(0, max($floor, $floorX + 1)); // reduce credit line by at least a dollar but not beyond zero
+    r\tellAdmin(t('Account negative 30+ days'), ray('who balance wentNegative oldCreditLimit newCreditLimit', "$a->fullName ($a->mainQid)", $a->balance, fmtDt($a->wentNeg), -$floorX, -$floor));
   } else { // not overly negative, so calculate credit line (-floor) baseded on activity
     $floor = -$monthly;
     if ($a->isCtty) $floor = -db\sum('amount', 'txs2_bank t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
@@ -638,7 +640,8 @@ X;
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
   r\tellAdmin(t('Send paper statements'), compact('list'), 0); // 0 = don't state current account
-
+  
+  if ($col = db\col('uid', 'users', 'NOT :IS_OK AND balance<>0')) r\tellAdmin(t('Closed account(s) with non-zero balance'), ray('uids', join(',', $col)));
 }
 
 /**

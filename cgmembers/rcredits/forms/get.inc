@@ -25,8 +25,10 @@ function formGet($form, &$sta, $args = '') {
   }
   
   $title = t('Transfer Funds');
-  $subtext = t('<p>When you transfer funds FROM your bank account, you are buying Common Good credit. That credit is backed partly by Dollars in your Common Good Community\'s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>].</p>
-  <p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund'));
+  $subtext = t('<p>It may take up to 4 business days to transfer funds (3 if you submit your request before 2pm Eastern US Time). If you have an emergency and need funds immediately, talk to us.</p>');
+  
+  if (!$mya->sponsored) $subtext = t('<p>When you transfer funds FROM your bank account, you are buying Common Good credit. That credit is backed partly by Dollars in your Common Good Community\'s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>].</p>', '_aBacking', atag('/help/backing-common-good-credits')) . $subtext
+    . t('<p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aSettings', atag('/settings/fund'));
 
   $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
   foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {

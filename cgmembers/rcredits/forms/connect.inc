@@ -20,8 +20,8 @@ function formConnect($form, &$sta, $args = '') {
 
   $desc = t('Refill your %PROJECT Account automatically when it goes below a chosen target balance? ');
   $desc .= $mya->co ? t('<span class="loud">Say <b>No</b> if you will be receiving plenty of payments from customers</span> to cover expenses for supplies, vendor services, and payroll.') : t('Say no if you tend to bounce checks.');
-  $refills = boolFld(t('Refills:'), $desc, $mya->refill);
-  $cashout = $mya->co ? radiosFld(t('Cashout:'), t('If you choose weekly or monthly automatic transfers to your bank account, the system will leave some amount in your %PROJECT account for your short term expenses.'), required($mya->cashoutW ? 1 : ($mya->cashoutM ? 2 : 0)), ray('0 1 2', t('no automatic cashout'), t('weekly (automatic)'), t('monthly (automatic)'))) : NULL;
+  $refills = $mya->sponsored ? NULL : boolFld(t('Refills:'), $desc, $mya->refill);
+  $cashout = ($mya->co and !$mya->sponsored) ? radiosFld(t('Cashout:'), t('If you choose weekly or monthly automatic transfers to your bank account, the system will leave some amount in your %PROJECT account for your short term expenses.'), required($mya->cashoutW ? 1 : ($mya->cashoutM ? 2 : 0)), ray('0 1 2', t('no automatic cashout'), t('weekly (automatic)'), t('monthly (automatic)'))) : NULL;
   $autopay = autopays($orig);
   $autoboxes = hidFld(serialize($orig));
   $minDesc = t('How much to keep in your %PROJECT Account, for purchases. Aim for enough to cover a month of expenses. When your balance goes below this amount, the system automatically refills it for you from your bank account. Refilling may take 1-4 days.');

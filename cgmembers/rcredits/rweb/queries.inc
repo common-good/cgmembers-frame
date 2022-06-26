@@ -27,6 +27,19 @@ if ($mya and $mya->admin) {
   $qtrDt1 = u\qtrDt($qtrDt2 = u\qtrDt() - 1);
   
   $queries = [
+  1 . t('Dollar Pool Liability') => 
+    'SELECT SUM(IF(uid NOT IN :EXTERNAL_UIDS, IF(jid, balance/2, balance), 0)) AS balTotal,
+     SUM(IF(uid IN :EXTERNAL_UIDS, balance, 0)) AS netIn,
+     SUM(IF(jid, balance/2, balance)) AS discrepancy
+     FROM users',
+  
+  1 . t('Community Fund Balance By Community') => 
+    'SELECT c.fullName AS community, SUM(IF(u.jid, u.balance/2, u.balance)) AS balance 
+     FROM users u LEFT JOIN users c ON c.uid=u.community 
+     WHERE u.uid NOT IN :EXTERNAL_UIDS
+     GROUP BY u.community
+     ORDER BY c.fullName',
+  
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
   1 . t('Gifts From "Disqualified Persons"') => 

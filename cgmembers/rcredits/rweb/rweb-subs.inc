@@ -100,7 +100,7 @@ function goFar($url, $params = '') {
 /**
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
- * @param string $types: space-delimited list of acceptable mime types
+ * @param string $types: space-delimited list of acceptable mime types (empty means "any")
  * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
  * @param string $fldName: field name of file upload field (defaults to "file")
  * @return an assoc of file data OR the error message
@@ -108,7 +108,8 @@ function goFar($url, $params = '') {
 function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
   
-  if (!$types or !$tmp_name or !$filetype = mime_content_type($tmp_name) or !in($filetype, $types)) return t('bad file type', compact('filetype'));
+  if (!$tmp_name) return t('Upload failed with error ') . $error;
+  if (!$filetype = mime_content_type($tmp_name) or ($types and !in($filetype, $types))) return t('bad file type', compact('filetype'));
   if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');
@@ -1391,7 +1392,7 @@ function stateFld($dft = NULL, $req = REQ) {return selectFld($req . t('State:'),
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + ($accts ?: db\keyed('id, category', 'tx_cats', '`show`')));}
-function fboCatFld($dft = '') {return catFld($dft, REQ, db\keyed("id, REPLACE(category, ':FBO_OUT_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_OUT_HDR%'"));}
+function fboCatFld($dft = '') {return catFld($dft, '', db\keyed("id, REPLACE(category, ':FBO_OUT_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_OUT_HDR%'"));} // not REQ!
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}

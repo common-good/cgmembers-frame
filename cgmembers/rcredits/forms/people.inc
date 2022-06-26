@@ -29,8 +29,9 @@ function formPeople($form, &$sta, $args = '') {
 
   $method = w\radiosFld(t('Preferred Contact:'), '', dft($method), ray(METHOD_OPTS));
   $source = textFld(t('Source:'), '', dft($source));
-  $latitude = numFld(t('Latitude:'), '', dft($latitude ?: 0));
-  $longitude = numFld(t('longitude:'), '', dft($longitude ?: 0));
+  $gpsExtra = ray('step min', .00000001, -99.99999999);
+  $latitude = numFld(t('Latitude:'), '', dft($latitude ?: 0) + $gpsExtra);
+  $longitude = numFld(t('longitude:'), '', dft($longitude ?: 0) + $gpsExtra);
   $notes = areaFld(t('Notes:'), '', dft($notes));
   
   $submit = submit();

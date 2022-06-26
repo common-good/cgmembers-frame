@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60u'; // software version
+const R_VERSION = '3.60v'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -229,12 +229,12 @@ const UID_REGULARS = 128; // Recurring Donations
 const UID_ROUNDUPS = 129; // Donations of spare change on each purchase
 const UID_CRUMBS = 130; // Donations of a percentage of payments received
 const UID_STEPUPS = 131; // Donations of a percentage of payments made (donated to CG itself)
-const UID_BANK_FEES = 192;
 const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, etc)
 const UID_BANK = 256; // current Community Fund bank account
 
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
 const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
+const EXTERNAL_UIDS = [UID_OUTER, UID_BANK]; // omit these when totaling balances to figure overall Dollar Pool Liability
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
 
@@ -612,8 +612,8 @@ const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
 const B_u4 = 4; // 
 const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
-const B_u7 = 7; // 
-const B_CC = 8; // transaction by credit card
+const B_CHECK = 7; // transaction method is payment by check -- default method is by normal CG transfer (member) OR by one-time ACH through CG system (nonmember)
+const B_CC = 8; // payment by credit card
 const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)
@@ -625,7 +625,9 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs u7 u8 qbok gift loan investment stake fine noask funding food partial button';
+const B_DIRECTACH = 20; // payment by direct ACH
+const B_WIRE = 21; // payment by wire transfer
+const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)

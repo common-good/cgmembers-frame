@@ -41,7 +41,7 @@ EOF;
   //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amtIn amtOut') as $k) $$k = u\fmtAmt($$k);
-  $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amtIn)<b class="newout">New OUT:</b> %countOut (%amtOut)', compact(ray('countIn amtIn countOut amtOut')));
+  $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amtIn)<br><b>New OUT:</b> %countOut (%amtOut)', compact(ray('countIn amtIn countOut amtOut')));
   
   if ($mya->admAch) {
     $btns = btn("$base_url/sadmin/achs/date=0&mark=1", t('Download ACH File'));

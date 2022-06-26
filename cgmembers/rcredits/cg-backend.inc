@@ -28,7 +28,8 @@ require_once R_ROOT . '/classes/txentry.class';
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
-  if (is_integer($uids)) { $uids = [ $uids ]; }
+  if (is_integer($uids)) $uids = [$uids];
+
   extract(just('includeSelfTxs catsOnly', $extra, FALSE));
 
   $fromMe = 't.uid1 IN (:uids)';
@@ -474,6 +475,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'offline'
  *   'loan'
  *   'investment'
+ *   'method': the TX_FLAGS index of the payment type, if non-standard (check, cc, directach, wire)
  *   'stake'
  *   'fine'
  *   'noask'
@@ -500,7 +502,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId rule cat reversesXid', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
+  extract(just('created force boxId rule cat reversesXid method', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -548,7 +550,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
 
   if ($error = u\badAmount($amount)) return txErr($error, $erInfo);
-  $flags = 0; foreach (ray(TX_FLAGS) as $k) if ($$k) u\setBit($flags, $k);
+  $flags = $method ? u\bit($method) : 0;
+  foreach (ray(TX_FLAGS) as $k) if ($$k) u\setBit($flags, $k);
 
   $DBTX = \db_transaction();
 
@@ -665,6 +668,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
  * @param int $entryType0: entry type(s)
  * @param assoc $other: optional parameters
  * - array $cat: budget category for each entry in the pair (record ID in tx_cats), if any
+ * - int $method: payment method (index into TX_FLAGS)
  * - int $rule: relevant record ID in tx_rules table
  * - int $inv: related invoice ID
  */
@@ -993,10 +997,10 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
 
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
-  extract(just('created status reversesXid cat', $extra, [now(), NULL, NULL, NULL]));
+  extract(just('created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
   if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
-  $flags = 0;
-  foreach (ray('cat reversesXid') as $k) unset($extra[$k]);
+  $flags = $method ? u\bit($method) : 0;
+  foreach (ray('cat reversesXid method') as $k) unset($extra[$k]);
 
   foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
@@ -1360,6 +1364,8 @@ function createUsdTransfer($a, $amount, $options = []) {
   $cat1 = u\getBit($flags, B_CC) ? r\nick2cat(r\acct(UID_BANK)->mainQid) : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
   $cat2 = is_array($cat) ? $cat[1] : $cat;
   $extra = ($cat1 or $cat2) ? ray('cat', [$cat1, $cat2]) : [];
+  if (isset($method)) $extra += compact('method');
+  
   txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
   if ($amount) handleSurTx($txes, $tx, $buyer, $seller, abs($amount), FALSE);

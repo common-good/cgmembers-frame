@@ -43,14 +43,18 @@ function formTx($form, &$sta, $type, $args = '') {
   $fullName = textFld(t('Full Name:'), [t('Full name properly capitalized')]);
   $address = textFld(t('Postal Addr:'), [t('Number and street')]);
   $city = textFld(t('City:'), [t('Postal city')]);
-  $state = stateFld(NULL, '');
+  $state = stateFld(NULL, REQ); // should be always possible
   $zip = textFld(t('Zip:'), [t('Postal code')]);
   $phone = phoneFld(t('Phone:'), [t('Phone number')]);
   $email = emailFld(t('Email:'), [t('Email address')]);
   $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
-  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a gift'), NULL, notab()))));
+  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
+  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card, 0:Standard')));
+  $ckNumber = textFld(t('Ck Number:'));
+  $ckDate = dateFld(t('Ck Date:'));
+  
   $cat = $fbo ? fboCatFld() : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
@@ -65,18 +69,19 @@ function formTx($form, &$sta, $type, $args = '') {
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
   $admin = $mya->admNonmemberTx;
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats')));
+  list ($methodDft, $byCheck) = [B_DIRECTACH, B_CHECK];
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats methodDft byCheck')));
   
   $paying = hidFld($pay);
   $fbo = hidFld($fbo);
-  $form = cgform(compact(ray("title buttons who addr amount purpose cat start periods end advanced submit paying fbo")));
+  $form = cgform(compact(ray("title buttons who addr amount purpose method ckNumber ckDate cat start periods end advanced submit paying fbo")));
 
   return $form;
 }
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('amount purpose start end paying fbo who fullName address city state zip phone email', $sta['input'], NULL);
+  $info = just('amount purpose start end paying fbo who fullName address city state zip phone email ckDate', $sta['input'], NULL);
   extract($info);
 /*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
@@ -87,17 +92,18 @@ function formTx_validate($form, &$sta) {
     if ($zip and $err = u\badZip($zip)) return say($err, 'zip');
     if ($phone and $err = u\badPhone($phone)) return say($err, 'phone');
     if ($email and !u\validEmail($email)) return say('bad email', 'email');
+    if ($ckDate and $err = u\badDate($ckDate)) return say($err, 'ckDate');
   }
   
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
   foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->admEditTx ? today() - 3 * MONTH_SECS : today())) return say($err, $k);
-  u\preray(compact(ray('fullName zip amount start end')), $sta['input']);
+  u\preray(compact(ray('fullName zip amount start end phone ckDate')), $sta['input']);
 }
 
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift method ckNumber ckDate', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
   if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat]; // if $paying and !$who, cat is cat2 with a negative amount
 
@@ -169,7 +175,11 @@ function fboTx($input) {
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
-  $info = ray('purpose pid completed deposit cat gift', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat, $isGift);
+  if ($method == B_CHECK) $purpose .= t(' (check #%num, %dt)', 'num dt', $ckNumber, fmtDt($ckDate));
+
+  $flags = $method ? u\bit($method) : 0;
+  if ($isGift) $flags |= u\bit(B_GIFT);
+  $info = ray('purpose pid completed deposit cat flags', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat, $flags);
   $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');

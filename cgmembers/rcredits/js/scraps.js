@@ -243,7 +243,10 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
-      if (vs['fbo'] == 1 && !pay) cat.parent().parent().hide();
+      if (vs['fbo'] == 1 && !pay) {
+        cat.removeAttr('required');
+        cat.parent().parent().hide();
+      } else cat.attr('required', 'required');
 
       // question, allowNonmember, and restrict cannot be passed to jsx, because (bool) pay is calculated herein
       vs['question'] = desc + vs['question'];
@@ -283,8 +286,17 @@ function doit(what, vs) {
     function mem0Click(member) {
       reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member, vs['admin'] == 1);
       reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
+      reqQ($('.form-item-method'), !member && !pay, vs['admin'] == 1);
       $('.form-item-amount .suffix').toggle(member ? pay : !pay); // logic for isGift option is reversed for non-members (received can be a gift, but not payments)
-      if (!member && !pay) $('.form-item-isGift input').prop('checked', true); // non-member 
+      if (!member && !pay) {
+        $('.form-item-isGift input').prop('checked', true); // non-member
+        $('.form-item-method input').click(function () {
+          var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
+          $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
+          if (isCheck) $('.form-item-ckNumber input').focus();
+        });
+        $('#edit-method-' + vs['methodDft']).click(); // set default
+      }
     }
     break;
 
