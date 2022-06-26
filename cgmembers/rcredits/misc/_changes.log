@@ -1,3 +1,6 @@
+2022-06-26 feature/bug
+. fixed bug that made Pay and Charge fail (because of the check fields i put in yesterday)
+
 2022-06-25 feature/payment-type
 . tx form now asks for payment type for non-member payment transactions and asks for check number and date for checks
 . new transaction flags added for check, directACH, and wire

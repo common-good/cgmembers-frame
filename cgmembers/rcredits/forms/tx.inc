@@ -43,7 +43,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $fullName = textFld(t('Full Name:'), [t('Full name properly capitalized')]);
   $address = textFld(t('Postal Addr:'), [t('Number and street')]);
   $city = textFld(t('City:'), [t('Postal city')]);
-  $state = stateFld(NULL, REQ); // should be always possible
+  $state = stateFld(NULL, ''); // should be always possible
   $zip = textFld(t('Zip:'), [t('Postal code')]);
   $phone = phoneFld(t('Phone:'), [t('Phone number')]);
   $email = emailFld(t('Email:'), [t('Email address')]);
@@ -168,6 +168,7 @@ function fboTx($input) {
   global $mya;
 
   extract($input);
+  $state = (int) $state;
   u\EXPECT($fbo and ($paying or $mya->admNonmemberTx), 'fbo income by non-admin');
   $uid = UID_OUTER;
   

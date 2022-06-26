@@ -288,15 +288,19 @@ function doit(what, vs) {
       reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
       reqQ($('.form-item-method'), !member && !pay, vs['admin'] == 1);
       $('.form-item-amount .suffix').toggle(member ? pay : !pay); // logic for isGift option is reversed for non-members (received can be a gift, but not payments)
+      toggleCkFlds();
       if (!member && !pay) {
         $('.form-item-isGift input').prop('checked', true); // non-member
         $('.form-item-method input').click(function () {
-          var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
-          $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
+          toggleCkFlds();
           if (isCheck) $('.form-item-ckNumber input').focus();
         });
         $('#edit-method-' + vs['methodDft']).click(); // set default
       }
+    }
+    function toggleCkFlds() {
+      var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
+      $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
     }
     break;
 
@@ -335,7 +339,9 @@ function doit(what, vs) {
     function changeCtty(newCtty, retro) {post('changeCtty', {newCtty:newCtty, retro:retro}, reportErr);}
     break;
 
-  case 'focus-on': $('#edit-' + vs['field']).focus(); break;
+  case 'focus-on':
+    $('#edit-' + vs['field'] + ':not([class="invisible"]):input:enabled:visible:first:not([tabindex="-1"])').focus();
+    break;
     
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();
