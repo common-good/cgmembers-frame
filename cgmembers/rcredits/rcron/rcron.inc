@@ -146,13 +146,13 @@ function everyHour() { // stuff to do every hour
     if ($flnm + 0 < now()) u\deleteFile(MSG_DIR . "/$flnm"); else break;
   }
   
-  queueEach('clickup', 'SELECT 1'); // no query needed, so this query is a placeholder
+  clickup();
 }
 
 /**
  * Bring our local clickup data up to date.
  */
-function clickup($item) {
+function clickup() {
   if (test()) return; // no tests for this yet
   require_once R_ROOT . '/classes/clickup.class';
   $cu = new \Clickup();

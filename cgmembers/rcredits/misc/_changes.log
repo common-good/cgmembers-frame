@@ -1,3 +1,7 @@
+2022-06-25 feature/payment-type
+. tx form now asks for payment type for non-member payment transactions and asks for check number and date for checks
+. new transaction flags added for check, directACH, and wire
+
 2022-06-21 feature/misc
 . deleted all transactions in the bankCharges account (uid=192) after downloading them to misc/ (and removed that account)
 . added Juneteenth as a holiday
