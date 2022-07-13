@@ -1,3 +1,15 @@
+2022-07-13 feature/hours
+. started a page to show staff tasks and hours worked
+. fixed bug that complained of missing V permission when deleting or re-adding a bank account connection
+. sending txs to QB now shows a warning if no ACH batch has been requested yet in the current month
+. food fund now sends 10% of receipts to CG every month
+. set-cats and send-to-qbo now require only admEditTx permission (not admCode) so admin staff can do it
+. fixed a bug on community data page
+. sending txs to QB is not allowed until all relevant txs have been categorized
+. overwrite is no longer an option when setting cats
+. checks to CG can now be handled in CG (just as for sponsored accounts)
+. tests now expect repeat store credit to get added, not to create a new rule
+
 2022-06-26 feature/bug
 . fixed bug that made Pay and Charge fail (because of the check fields i put in yesterday)
 

@@ -2032,7 +2032,6 @@ function drupal_bootstrap() {
 
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
-  
   // Register autoload functions so that we can access classes and interfaces.
   // The database autoload routine comes first so that we can load the database
   // system without hitting the database. That is especially important during

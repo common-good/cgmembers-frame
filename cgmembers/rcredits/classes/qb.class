@@ -258,6 +258,7 @@ X;
     list ($dt1, $dt9) = $cnt ? [fmtDt($dt1), fmtDt($deposit)] : ['', ''];
 //    r\tellAdmin(t('QBO Ctty Fund export complete'), compact(ray('cnt dt1 dt9')));
     w\say(t('QBO Ctty Fund export complete: ') . pr(compact(ray('cnt dt1 dt9'))));
+    if (!db\exists('txs2', 'deposit>:mdt1', ray('mdt1', u\monthDay1()))) w\err(t("WARNING: There are no bank transfers completed yet in the current month, so you will need to export to QBO again before last month's definitive financial reports can be produced."));
   }
   
   /**

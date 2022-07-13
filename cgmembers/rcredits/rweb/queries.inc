@@ -179,7 +179,7 @@ $queries = array_merge(nn($queries, []), [
      WHERE IFNULL(u.jid,0)=0 AND c.uid<0 AND u.uid NOT :CANONIC GROUP BY c.fullName",
 
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.recursId,0,amount)) AS `payments to CG`
-  t('Actual Donations to Common Good and Community') =>
+  t('Actual Donations to CG and Community') =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
     SUM(IF(t.recursId,amt,0)) AS recurring,
     SUM(IF(uid2=:UID_ROUNDUPS,amt,0)) AS roundups,

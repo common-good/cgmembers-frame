@@ -587,6 +587,7 @@ const MASTER = '(jid=0 OR uid < jid)'; // account is the master in a joint accou
 /* const U_FOODY = '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'; // MySQL for "the account with record ID u.uid is a food-related business" */
 const FOOD_INDUSTRY = 2; // any industry with this base ancestor is food-related
 const U_FOODY = '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'; // MySQL for "the account u is a food-related business"
+const FUND_TITHE = .10; // percentage of donations to reserve for administration of the fund
 
 const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MySQL involving txs VIEW, meaning "payee is FOODY"
 const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)
