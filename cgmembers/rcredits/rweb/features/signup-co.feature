@@ -61,8 +61,8 @@ Scenario: A company signs up
   | coType    | LLC          |
 #  | coFlags   | sellcg       |
   And these "u_relations":
-  | main | other | permission |*
-  | .AAA | .ZZA  | manage     |
+  | main | other | permission | otherNum |*
+  | .AAA | .ZZA  | manage     | 1        |
   And we email "verify-co" to member "d@" with subs:
   | fullName | qid    | site      | code     | pwMsg      |*
   | New Co   | NEWAAA | %BASE_URL | WHATEVER | co nonpass |

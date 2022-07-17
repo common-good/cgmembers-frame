@@ -315,7 +315,7 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.tables table.
-    return (bool) $this->connection->query("SELECT 1 FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
+    return (bool) $this->connection->quer("SELECT 1 FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
   }
 
   /**
@@ -337,7 +337,7 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.tables table.
-    return $this->connection->query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
+    return $this->connection->quer("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
   }
 
   /**
@@ -360,7 +360,7 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.columns table.
-    return (bool) $this->connection->query("SELECT 1 FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchField();
+    return (bool) $this->connection->quer("SELECT 1 FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchField();
   }
 
   /**
@@ -658,7 +658,7 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     }
     $statements = $this->createTableSql($name, $table);
     foreach ($statements as $statement) {
-      $this->connection->query($statement);
+      $this->connection->quer($statement);
     }
   }
 

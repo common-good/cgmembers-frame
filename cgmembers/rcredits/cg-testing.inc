@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -615,8 +615,8 @@ function gotACH($flnm, $rows) {
  * Minimum parameters: main, agent (both are qids -- at least one must be local)
  */
 function doRelations($info) {
-  include_once __DIR__ . '/forms/printcard.inc';
   global $testOnly, $memberIdCalled;
+  include_once __DIR__ . '/forms/printcard.inc';
 
   //  t\fixData($info);
   extract($info);

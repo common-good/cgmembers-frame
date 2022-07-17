@@ -243,7 +243,7 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
-      if (vs['fbo'] == 1 && !pay) {
+      if (vs['fbo'] != 1) {
         cat.removeAttr('required');
         cat.parent().parent().hide();
       } else cat.attr('required', 'required');

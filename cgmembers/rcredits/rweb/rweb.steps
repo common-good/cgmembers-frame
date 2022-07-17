@@ -125,6 +125,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
  * in: MAKE cgpay AMemberRedeemsStoreCredit
+ *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -183,10 +184,12 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  * member (ARG) confirms (ARG) with: (ARG)
  *
  * in: MAKE accredit AMemberCompanyGivesACustomerCredit
+ *     MAKE accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE message AMemberSendsAMessageToAnotherMember
@@ -557,6 +560,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberBuysStoreCreditAgain
  *     TEST cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -832,6 +836,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
  *     MAKE cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
@@ -1200,6 +1205,7 @@ function statisticsGetSet($time) {
  *     MAKE card AMemberAddsATip
  *     MAKE cardself Setup
  *     MAKE cardself AMemberCardIsCharged
+ *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -1467,6 +1473,7 @@ function memberClicksXOnTransaction($id, $xid) {
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
  * in: TEST accredit AMemberCompanyGivesACustomerCredit
+ *     TEST accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
@@ -1642,6 +1649,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE aacc SomeoneCompletesACreditCardDonation
  *     MAKE accredit Setup
  *     TEST accredit AMemberCompanyGivesACustomerCredit
+ *     TEST accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE backing AMemberIncreasesBackingAmount
  *     MAKE balancesheet Setup
@@ -1665,9 +1673,11 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE cgpay Setup
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberBuysStoreCreditAgain
  *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     BOTH cgpay AMemberRedeemsStoreCredit
+ *     BOTH cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -2495,6 +2505,7 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit

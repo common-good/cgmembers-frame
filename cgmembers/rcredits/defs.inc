@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.60w'; // software version
+const R_VERSION = '3.60x'; // software version
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -189,9 +189,6 @@ const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode card
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
-const R_SHARE_MAX = 50; // minimum sharing percentage
-const R_SHARE_DFT = 25; // default sharing percentage
-define('R_SHARING_MSG', t('sharing rewards with CGF'));
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
 const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
@@ -237,6 +234,7 @@ const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
 const EXTERNAL_UIDS = [UID_OUTER, UID_BANK]; // omit these when totaling balances to figure overall Dollar Pool Liability
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
+define('STORE_CREDIT', t('store credit'));
 
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
@@ -587,6 +585,7 @@ const MASTER = '(jid=0 OR uid < jid)'; // account is the master in a joint accou
 /* const U_FOODY = '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'; // MySQL for "the account with record ID u.uid is a food-related business" */
 const FOOD_INDUSTRY = 2; // any industry with this base ancestor is food-related
 const U_FOODY = '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'; // MySQL for "the account u is a food-related business"
+const FUND_TITHE = .10; // percentage of donations to reserve for administration of the fund
 
 const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MySQL involving txs VIEW, meaning "payee is FOODY"
 const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)

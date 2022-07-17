@@ -158,6 +158,7 @@ function menu($submenu = '') {
     
     'sadmin' => ['norm', t('Admin'), 'Admin', isDEV ? ANY : 'admin'],
     'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'admPanel'],
+    'sadmin/hours' => ['sub', t('Hours'), 'Hours 2', 'admRegion'], // we use Region for all staff (not including local organizers)
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admFollowup'],
     'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'admExport'],
     'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'admExport'],
@@ -200,7 +201,7 @@ function menu($submenu = '') {
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
-    'qbo' => ['call', t('QBO'), 'QBO 1', 'admCode'],
+    'qbo' => ['call', t('QBO'), 'QBO 1', 'admEditTx'],
     'account-photo' => ['call', 'Account Photo', 'AccountPhoto 0 1', ANY],
     'account-thumb' => ['call', 'Account Photo Thumbnail', 'AccountPhoto 0 1', ANY],
     'account-logo' => ['call', 'Account Logo', '1', ANY, 'logo'],

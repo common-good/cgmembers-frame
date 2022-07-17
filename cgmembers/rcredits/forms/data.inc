@@ -51,9 +51,11 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
-    $sql = $mya->admRegion ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft(urldecode(nn($sql))) + maxlen(4096)) : NULL;
-    $sqlTitle = textFld(t('Title:'), [t('Results Title')], t('Query Results'));
-    $submit = $mya->admRegion ? submit(t('Go')) : NULL;
+    if ($mya->admRegion) {
+      $sql = areaFld(t('SQL:'), [t('MySQL Select Query')], dft(urldecode(nn($sql))) + maxlen(4096));
+      $sqlTitle = textFld(t('Title:'), [t('Results Title')], t('Query Results'));
+      $submit = submit(t('Go'));
+    } else $sql = $sqlTitle = $submit = NULL;
 
     foreach ($queries as $k0 => $v) {
       if ($k = w\queryPermitted($k0)) $links[$k0] = lnk('/community/data/code=' . u\cryRay(ray('q isco', $k0, $isco)), $k);

@@ -308,7 +308,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
     }
 
     $info = $this->getPrefixInfo($new_name);
-    return $this->connection->query('ALTER TABLE {' . $table . '} RENAME TO `' . $info['table'] . '`');
+    return $this->connection->quer('ALTER TABLE {' . $table . '} RENAME TO `' . $info['table'] . '`');
   }
 
   public function dropTable($table) {
@@ -316,7 +316,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query('DROP TABLE {' . $table . '}');
+    $this->connection->quer('DROP TABLE {' . $table . '}');
     return TRUE;
   }
 
@@ -338,7 +338,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
     if ($keys_sql = $this->createKeysSql($keys_new)) {
       $query .= ', ADD ' . implode(', ADD ', $keys_sql);
     }
-    $this->connection->query($query);
+    $this->connection->quer($query);
     if (isset($spec['initial'])) {
       $this->connection->update($table)
         ->fields(array($field => $spec['initial']))
@@ -355,7 +355,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP `' . $field . '`');
+    $this->connection->quer('ALTER TABLE {' . $table . '} DROP `' . $field . '`');
     return TRUE;
   }
 
@@ -371,7 +371,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       $default = is_string($default) ? "'$default'" : $default;
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN `' . $field . '` SET DEFAULT ' . $default);
+    $this->connection->quer('ALTER TABLE {' . $table . '} ALTER COLUMN `' . $field . '` SET DEFAULT ' . $default);
   }
 
   public function fieldSetNoDefault($table, $field) {
@@ -379,13 +379,13 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field @table.@field: field doesn't exist.", array('@table' => $table, '@field' => $field)));
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN `' . $field . '` DROP DEFAULT');
+    $this->connection->quer('ALTER TABLE {' . $table . '} ALTER COLUMN `' . $field . '` DROP DEFAULT');
   }
 
   public function indexExists($table, $name) {
     // Returns one row for each column in the index. Result is string or FALSE.
     // Details at http://dev.mysql.com/doc/refman/5.0/en/show-index.html
-    $row = $this->connection->query('SHOW INDEX FROM {' . $table . "} WHERE key_name = '$name'")->fetchAssoc();
+    $row = $this->connection->quer('SHOW INDEX FROM {' . $table . "} WHERE key_name = '$name'")->fetchAssoc();
     return isset($row['Key_name']);
   }
 
@@ -397,7 +397,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table @table: primary key already exists.", array('@table' => $table)));
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} ADD PRIMARY KEY (' . $this->createKeySql($fields) . ')');
+    $this->connection->quer('ALTER TABLE {' . $table . '} ADD PRIMARY KEY (' . $this->createKeySql($fields) . ')');
   }
 
   public function dropPrimaryKey($table) {
@@ -405,7 +405,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP PRIMARY KEY');
+    $this->connection->quer('ALTER TABLE {' . $table . '} DROP PRIMARY KEY');
     return TRUE;
   }
 
@@ -417,7 +417,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key @name to table @table: unique key already exists.", array('@table' => $table, '@name' => $name)));
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} ADD UNIQUE KEY `' . $name . '` (' . $this->createKeySql($fields) . ')');
+    $this->connection->quer('ALTER TABLE {' . $table . '} ADD UNIQUE KEY `' . $name . '` (' . $this->createKeySql($fields) . ')');
   }
 
   public function dropUniqueKey($table, $name) {
@@ -425,7 +425,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP KEY `' . $name . '`');
+    $this->connection->quer('ALTER TABLE {' . $table . '} DROP KEY `' . $name . '`');
     return TRUE;
   }
 
@@ -437,7 +437,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add index @name to table @table: index already exists.", array('@table' => $table, '@name' => $name)));
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} ADD INDEX `' . $name . '` (' . $this->createKeySql($fields) . ')');
+    $this->connection->quer('ALTER TABLE {' . $table . '} ADD INDEX `' . $name . '` (' . $this->createKeySql($fields) . ')');
   }
 
   public function dropIndex($table, $name) {
@@ -445,7 +445,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP INDEX `' . $name . '`');
+    $this->connection->quer('ALTER TABLE {' . $table . '} DROP INDEX `' . $name . '`');
     return TRUE;
   }
 
@@ -461,7 +461,7 @@ class DatabaseSchema_mysql extends DatabaseSchema {
     if ($keys_sql = $this->createKeysSql($keys_new)) {
       $sql .= ', ADD ' . implode(', ADD ', $keys_sql);
     }
-    $this->connection->query($sql);
+    $this->connection->quer($sql);
   }
 
   public function prepareComment($comment, $length = NULL) {
@@ -486,11 +486,11 @@ class DatabaseSchema_mysql extends DatabaseSchema {
       $condition->condition('column_name', $column);
       $condition->compile($this->connection, $this);
       // Don't use {} around information_schema.columns table.
-      return $this->connection->query("SELECT column_comment FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchField();
+      return $this->connection->quer("SELECT column_comment FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchField();
     }
     $condition->compile($this->connection, $this);
     // Don't use {} around information_schema.tables table.
-    $comment = $this->connection->query("SELECT table_comment FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
+    $comment = $this->connection->quer("SELECT table_comment FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
     // Work-around for MySQL 5.0 bug http://bugs.mysql.com/bug.php?id=11379
     return preg_replace('/; InnoDB free:.*$/', '', $comment);
   }

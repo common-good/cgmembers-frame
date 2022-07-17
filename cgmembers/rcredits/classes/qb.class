@@ -182,7 +182,7 @@ class QB {
       if (!$this->isNew("cg#$xid")) break;
 
       if ($banking) {
-        if (r\acct($uid2)->sponsored) $description = strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
+        if (r\acct($uid2)->sponsored) $description .= ': ' . strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
       } else $description .= " [$name]";
 
       $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'yyyy-MM-dd'));
@@ -258,6 +258,7 @@ X;
     list ($dt1, $dt9) = $cnt ? [fmtDt($dt1), fmtDt($deposit)] : ['', ''];
 //    r\tellAdmin(t('QBO Ctty Fund export complete'), compact(ray('cnt dt1 dt9')));
     w\say(t('QBO Ctty Fund export complete: ') . pr(compact(ray('cnt dt1 dt9'))));
+    if (!db\exists('txs2', 'deposit>:mdt1', ray('mdt1', u\monthDay1()))) w\err(t("WARNING: There are no bank transfers completed yet in the current month, so you will need to export to QBO again before last month's definitive financial reports can be produced."));
   }
   
   /**
@@ -276,7 +277,7 @@ X;
     if ($uid1 == UID_OUTER and $noBank and (!$cat1 or $cat1 = r\nick2cat($processorNick))) { // no bank account in the CG system and payer category not set yet (because UID_OUTER is not owned by CG)
       if (u\getBit($flags, B_CC)) { // payment by cc
         $ccFee = u\sign($amt) * round(CC_PT + CC_PCT * abs($amt), 2); // add a couple lines for the processing fees CG pays
-        if ($e['created'] > strtotime('9/1/2021')) u\EXPECT($uid2 == CGID or $cc = db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc')))); // delete if() part after 7/1/2022
+        u\EXPECT($uid2 == CGID or db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc'))));
         $e['cat1'] = r\nick2cat($processorNick);
       } else {
         $e['cat1'] = r\nick2cat(r\acct(UID_BANK)->mainQid); // check/wire/directACH in or out of the Ctty Fund bank account
@@ -293,7 +294,7 @@ X;
     
     if (isset($ccFee)) { // save the CC processor fees for AFTER the main transaction
       $this->addJLine($qbTx, 'TX-FEE', -$ccFee, $desc);
-      $this->addJLine($qbTx, $processorNick, $ccFee, $desc);
+      $this->addJLine($qbTx, 'PROCESSOR', $ccFee, $desc); // fees CG pays for CC processing do not affect dollar pool liability, so post them to the normal processor account
     }
   }
 

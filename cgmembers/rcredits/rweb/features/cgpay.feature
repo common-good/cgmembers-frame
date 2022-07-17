@@ -102,6 +102,38 @@ Scenario: A member clicks a button to buy store credit for a different amount
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -30    | 1   | %STORE_CREDIT | %now    |
+
+Scenario: A member buys store credit again
+  Given button code "BUTTONCODE" for:
+  | account | secret | for    | amount | credit |*
+  | .ZZC    | Cc3    | credit | 23     | 30     |
+  When member "?" visits page "cgpay?code=BUTTONCODE"
+  Then we show "Pay with %PROJECT" with:
+  | Pay        | 23.00 | to Our Pub |
+  | For        | $30 store credit ||
+  | Account ID |  ||
+  | Password   |  ||
+  
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
+  | qid  | pass |*
+  | .ZZA | a1   |
+  Then these "tx_rules":
+  | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
+  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  
+  When member "?" confirms "cgpay?code=BUTTONCODE" with:
+  | qid  | pass |*
+  | .ZZA | a1   |
+  Then these "tx_rules":
+  | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
+  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 60     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -30    | 1   | %STORE_CREDIT | %now    |
+  | 2  | .ZZC    | .ZZA  | -30    | 2   | %STORE_CREDIT | %now    |
 
 Scenario: A member cancels their purchase of store credit
   Given these "txs":
@@ -110,6 +142,9 @@ Scenario: A member cancels their purchase of store credit
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -23    | 1   | %STORE_CREDIT | %now-1d |
   When member "C:B" visits page "history/transactions/period=5"
   And member "C:B" clicks X on transaction 1
   Then these "txs":
@@ -118,12 +153,16 @@ Scenario: A member cancels their purchase of store credit
   And these "tx_rules":
   | id | end  |*
   |  1 | %now |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -23    | 1   | %STORE_CREDIT | %now-1d |
   And we notice "your credit canceled" to member ".ZZA" with subs:
   | amount | co      |*
   | $23    | Our Pub |
   And we notice "customer credit canceled" to member ".ZZC" with subs:
   | amount | customer |*
   | $23    | Abe One  |
+  # Note that there is still a record in tx_credits pointing to the reversed transaction
 
 Scenario: A member types account ID to buy 50% store credit
   Given button code "BUTTONCODE" for:
@@ -155,16 +194,20 @@ Scenario: a member redeems store credit
   |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
   # MariaDb bug: autonumber passes over id=2 when there are record ids 1 and -1
 
+Scenario: a member redeems store credit overspending a zero balance
+  Given members have:
+  | uid  | balance |*
+  | .ZZA | 0       |
+  And these "tx_rules":
+  | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax | end |*
+  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | .50     | 23     |     |
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
-  | pay | Our Pub | 40     | %FOR_GOODS | stuff   |
+  | pay | Our Pub | 20     | %FOR_GOODS | stuff   |
   Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
-  |   4 |   2 | %today  |     40 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
-  |   5 |   2 | %today  |     13 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
-  And these "tx_rules":
-  | id | end  |*
-  |  1 | %now |
+  |   1 |   1 | %today  |     20 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
+  |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
 
 Scenario: A member clicks a button to buy a gift of store credit
   Given button code "BUTTONCODE" for:

@@ -533,7 +533,7 @@ class Acct {
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $k => $v) {
-      $ak = (in($k, VSECURE_FLDS) and !$a->admSeeChanges) ? t('(encrypted)') : $a->$k;
+      $ak = (in($k, VSECURE_FLDS) and !$a->admV) ? t('(encrypted)') : $a->$k;
       if ($v == $ak or (is_numeric($v) and is_numeric($ak) and $v + 0 == $ak + 0)) continue; // don't record if no change
 
       $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
@@ -681,7 +681,7 @@ class Acct {
     $a = $this;
     
     // no going into debt without permission
-    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt) {
+    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
     } else {$floor = $a->floor;}
 
@@ -1515,7 +1515,7 @@ X;
   }
    
   //  private static function flagBit($bit) {return is_numeric($bit) ? $bit : u\consta('b', $bit);}
-  public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit, 'co');}
+  public function coCan($bit = NULL) {return u\getBit((is_numeric($bit) and $bit > B_MAX) ? $this->coFlags2 : $this->coFlags, $bit, 'co');}
   public function setCoBit($bit, $on = TRUE) {$this->setBit($bit, $on, 'coFlags');}
   
   public function setCoCans($cans) {

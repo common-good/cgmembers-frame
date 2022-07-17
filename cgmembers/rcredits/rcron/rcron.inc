@@ -634,6 +634,12 @@ function everyMonth() {
 X;
   queueEach('crumbs', $sql);
   queueEach('sweep', "SELECT $start AS start,$end AS end"); // must come after all crumbs
+  
+  $ffid = db\get('uid', 'users', "name='foodfund'");
+  $amt = db\sum('amt', 'txs', 'uid2=:ffid', compact('ffid')) ?: 0;
+  $amt = round($amt * FUND_TITHE - db\sum('amt', 'txs', 'uid1=:ffid AND uid2=:CGID', compact('ffid')), 2);
+  $cats = [r\nick2cat('D-FBO'), r\nick2cat('FS-FEE')];
+  if ($amt > 0) be\transfer('payment', r\acct($ffid), r\acct(CGID), $amt, t('reserved for administrative costs'), FOR_GOODS, ray('created cat', $end, $cats));
 
   // figure amount to share with each official Common Good Community
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));

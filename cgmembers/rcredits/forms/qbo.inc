@@ -68,7 +68,10 @@ function formQBO($form, &$sta, $args = '') {
       }
       break;
 
-    case 'txs': $qb->sendBankTxs(); return go('sadmin/panel');
+    case 'txs': 
+      if (db\exists('tx_entries JOIN tx_hdrs USING (xid)', 'uid IN (:uids) AND cat IS NULL AND created>:start', ray('uids start', r\catUids(), strtotime('7/1/2021')))) return go('sadmin/set-cats', tr('categorize txs'), 'err');
+      $qb->sendBankTxs();
+      return go('sadmin/panel');
     
     case 'table': say(pr($qb->getRows($flds ?: 'Id', $tnm, '', 10))); break;
     case 'special': 
@@ -77,7 +80,10 @@ function formQBO($form, &$sta, $args = '') {
 //      debug(pr($qb->getRows('*', 'Transfer', '', 3)));
 //      debug(pr($qb->getRows('*', 'JournalEntry', '', 3)));
       break;
+
+    case 'test': say(t('Test OK')); break;
   }
+
   
   $title = t('QBO Test');
   $subtext = t('Details.');

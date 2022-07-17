@@ -2032,7 +2032,6 @@ function drupal_bootstrap() {
 
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
-  
   // Register autoload functions so that we can access classes and interfaces.
   // The database autoload routine comes first so that we can load the database
   // system without hitting the database. That is especially important during
@@ -2820,7 +2819,7 @@ function _registry_check_code($type, $name = NULL) {
   // This function may get called when the default database is not active, but
   // there is no reason we'd ever want to not use the default database for
   // this query.
-  $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
+  $file = Database::getConnection('default', 'default')->quer("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
       ':name' => $name,
       ':type' => $type,
     ))

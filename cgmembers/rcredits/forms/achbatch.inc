@@ -144,7 +144,7 @@ function achRecord($values, $jlens) {
     $v = $values[$k];
     $res .= $left 
     ? substr(str_pad($v, $len), 0, $len)
-    : u\lpad(strval((int) round($v)), $len);
+    : u\lpad(is_numeric($v) ? strval((int) round($v)) : $v, $len);
   }
   return $res;
 }

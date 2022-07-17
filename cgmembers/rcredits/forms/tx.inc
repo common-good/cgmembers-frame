@@ -14,7 +14,7 @@ function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args, ''));
   global $mya;
 
-  $fbo = $mya->sponsored;
+  $fbo = ($mya->sponsored or $mya->id == CGID);
   $hasCats = r\hasCats($mya->uid) ?: 0;
 
   $pay = in($type, 'pay both');
@@ -55,7 +55,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
-  $cat = $fbo ? fboCatFld() : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
+  $cat = $mya->sponsored ? fboCatFld() : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -184,7 +184,7 @@ function fboTx($input) {
   $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
-  $res = $paying ? go('dashboard') : be\thanks('fbo', FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
+  $res = $paying ? go('dashboard') : be\thanks($mya->sponsored ? 'fbo' : ($isGift ? 'cggift' : 'purchase'), FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
   unset($DBTX);
   
   return $res; // no need to continue (outer transactions never delay or repeat)

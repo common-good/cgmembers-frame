@@ -80,8 +80,9 @@ X;
 
   $transactions = item('<div>' . $html . '</div>', BARE);
   $title = t('Automated Payments'); // . $mya->bestName;
+  $subtext = t('Listed here are scheduled or recurring payments from you or to you. If you bought store credit at a participating business, that will appear on the list of <%a>Discounts Available to You</a> in your region.', '_a', atag('/community/coupons/list/ALL'));
 
-  return cgform(compact(ray('title transactions')));
+  return cgform(compact(ray('title subtext transactions')));
 }
 
 function addLine($info, $classes, $url, $person = FALSE) {

@@ -51,13 +51,15 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   $byState = submi('Accts By State');
   if ($mya->admRegion) $ieReport = submi('IE Report');
-  if ($mya->admEditTx) $setCats = submi(t('Set Cats'));
+  if ($mya->admEditTx) {
+    $setCats = submi(t('Set Cats'));
+    $sendTxs = submi(t('Send to QBO'));
+  }
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
     $askForAppData = submi(t('Ask for App Data'));
     $seeAppData = submi(t('See App Data'));
-    $sendTxs = submi('Send to QBO');
   }
   if ($mya->admRecheckSsn) $ssnLink = submi(t('SSN Link'));
   if ($mya->admSeeSecure) $seeSecure = submi(t('See Secure'));

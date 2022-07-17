@@ -16,24 +16,22 @@ use CG\Web as w;
  * Set transaction categories for export to QBO.
  * @param string $args: URL parameters -- may include:
  * - int $start: starting date
- * - bool $overwrite: redo the cat field of all transactions in the range
  * - bool $reshow: <redisplay the most recent list of transactions that need cat set>
  */
 function formSetCats($form, &$sta, $args = '') {
-  extract(just('start overwrite reshow', $args, NULL));
+  extract(just('start reshow', $args, NULL));
 
   $title = t('Set Transaction Categories');
   
   if ($start) {
-    $rows = setMostCats($start, $overwrite);
+    $rows = setMostCats($start);
     svar('catsList', $rows);
   } elseif ($reshow) {
     $rows = svar('catsList') ?: [];
   } else {
-    $start = dateFld(REQ . t('Starting Date:'));
-    $overwrite = boolFld(t('Overwrite:'), FALSE);
+    $start = dateFld(REQ . t('Starting Date:'), '', dft(strtotime('-1 month', u\monthDay1())));
     $submit = t('Set Cats');
-    return cgForm(compact(ray('title start overwrite submit')));
+    return cgForm(compact(ray('title start submit')));
   }
 
   $return = u\pry('/sadmin/set-cats/reshow=1');
@@ -48,14 +46,13 @@ function formSetCats_validate($form, &$sta) {
 }
 
 function formSetCats_submit($form, &$sta) {
-  extract(just('start overwrite', $sta['input'], ''));
-  return go("sadmin/set-cats/start=$start&overwrite=$overwrite");
+  extract(just('start', $sta['input'], ''));
+  return go("sadmin/set-cats/start=$start");
 }
 
-function setMostCats($start, $overwrite) {
+function setMostCats($start) {
   $uids = r\catUids();
-  $catCrit = $overwrite ? '1' : 'cat IS NULL';
-  $q = db\q("SELECT DISTINCT xid,flags,recursId FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid IN (:uids) AND $catCrit AND created>=:start ORDER BY created DESC,xid DESC", compact(ray('uids start')));
+  $q = db\q("SELECT DISTINCT xid,flags,recursId FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid IN (:uids) AND cat IS NULL AND created>=:start ORDER BY created DESC,xid DESC", compact(ray('uids start')));
 
   $flds = ray('xid type me you purpose');
   $cnt = 0;
