@@ -122,10 +122,14 @@ X;
   
   $m->doSql('CREATE VIEW tx_entries_o AS SELECT * FROM tx_entries ORDER BY ABS(id), id'); // for debugging 
   
-  $m->doSql('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL');
+  $m->doSql('CREATE VIEW tx_requests AS SELECT * FROM tx_requests_all WHERE deleted IS NULL AND amount>0');
   if ($migDt < 20210702) return;
 
   $m->doSql('CREATE VIEW txs2_bank AS SELECT * FROM txs2 WHERE pid IS NULL');
   $m->doSql('CREATE VIEW txs2_outer AS SELECT * FROM txs2 WHERE pid IS NOT NULL');
+  
+  if ($migDt < 20220717) return;
+  $m->doSql('CREATE VIEW tx_credits AS SELECT nvid AS id, created, payee AS fromUid, payer AS toUid, amount, status AS xid, purpose FROM tx_requests_all WHERE amount<0');
+  
   cgpr('done recreating views!');
 }

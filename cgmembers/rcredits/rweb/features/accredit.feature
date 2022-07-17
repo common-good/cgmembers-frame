@@ -38,6 +38,9 @@ Scenario: A member company gives a customer credit
   | amtMax    | 3 |
   | code      | |
   | purpose   | any purchase |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -3     | 0   | %STORE_CREDIT | %now    |
   And we message "store grant|to redeem|want a card|finish get card" to member ".ZZA" with subs:
   | co      | amount | topic           |*
   | Cor Pub | $3     | You got credit! |

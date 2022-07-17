@@ -150,7 +150,7 @@ function stampNote($note) {
 function badUnpaidInv($nvid, &$inv = '') {
   $fields = 'nvid,status,amount,payer,payee,goods,purpose,cat,flags,data,recursId,reversesXid,created,deleted';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
-  if (!$inv = db\get($fields, 'tx_requests_all', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
+  if (!$inv = db\get($fields, 'tx_requests', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['deleted']) return 'inv is canceled';
   if ($inv['status'] >= TX_PAID) return 'inv already paid';
   return FALSE;
@@ -174,6 +174,15 @@ function dupTx($aId, $otherId, $amount) {
           and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS));
 }
  
+/**
+ * Give credit to someone at some company.
+ */
+function credit($fromUid, $toUid, $amount, $xid = 0, $purpose = STORE_CREDIT, $created = NOW, $id = NULL) {
+  u\EXPECT($amount < 0, t('credit must be negative'));
+  $flds = 'fromUid toUid amount xid purpose created' . ($id ? ' id' : '');
+  return db\insert('tx_credits', compact(ray($flds)));
+}
+
 /**
  * Say whether the named employee works for the account owner.
  * @param string $name: the employee's name

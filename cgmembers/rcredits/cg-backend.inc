@@ -613,22 +613,24 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
   }
   
-  if ($ruid = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount)) { // purchase/gift of store credit
+  if ($res = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount)) { // purchase/gift of store credit
     u\EXPECT(!$rule, 'credit purchase already has a rule!');
+    extract($res); // crid and ruid
     for ($i = 0; $i < 2; $i++) $entries[$i]->rule = $ruid; // point the main entry pair at the rule (in case of reversal)
-  }
+  } else $crid = NULL;
     
   $tx->addEntries($entries);
   if (array_key_exists('xid', $data)) {
     $tx->xid = $data['xid'];
     $xid = $tx->insert(TRUE);
-  } else { $xid = $tx->insert(); }
+  } else $xid = $tx->insert();
   
   if (!$xid) {
     $DBTX->rollback();
     return txErr(t('tx save error'), $erInfo);
   }
   
+  if ($crid) db\update('tx_credits', ray('id xid', $crid, $xid));
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
   
   unset($DBTX);
@@ -777,12 +779,12 @@ function insertTxes(&$txes, $xid) {
 }
 
 /**
- * Create a personal credit for buyer or someone else, at the seller.
+ * Create a personal credit for buyer or someone else, at the seller. Add to any existing identical credit
  * @param string $for: SELF_CREDIT, SELF_CREDIT50, or qid of gift recipient
  * @param acct $buyer: payer acct
  * @param acct $seller: seller acct (where the recipient gets store credit)
  * @param float $credit: amount of credit the recipient gets
- * @return the new rule's record ID (FALSE if not a purchase of credit)
+ * @return assoc of the credit record ID and the the rule record ID: [crid, ruid] (FALSE if not a purchase of credit)
  */
 function advanceCredit($for, $buyer, $seller, $credit) {
   if (!nn($for) or $for == 'other' or !$credit) return FALSE; // not a purchase of credit
@@ -796,9 +798,21 @@ function advanceCredit($for, $buyer, $seller, $credit) {
   }
   
   $portion = $for == SELF_CREDIT50 ? .5 : 1;
-  $info = ray('action portion amtMax payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, $credit, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
+  $info = ray('action portion payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
+  $rule = db\get('id,end,amtMax', 'tx_rules', $info);
 
-  return db\insert('tx_rules', $info);
+  $DBTX = db_transaction();
+  $crid = r\credit($seller->id, $buyer->id, -$credit);
+  $info['amtMax'] = $credit;
+
+  if ($rule and !$rule['end']) {
+    $info['id'] = $ruid = $rule['id'];
+    $info['amtMax'] += $rule['amtMax'];
+    db\update('tx_rules', $info);
+  } else $ruid = db\insert('tx_rules', $info);
+  unset($DBTX);
+  
+  return compact(ray('crid ruid'));
 }
 
 /**

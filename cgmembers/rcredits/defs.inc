@@ -189,9 +189,6 @@ const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode card
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
-const R_SHARE_MAX = 50; // minimum sharing percentage
-const R_SHARE_DFT = 25; // default sharing percentage
-define('R_SHARING_MSG', t('sharing rewards with CGF'));
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
 const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
@@ -237,6 +234,7 @@ const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
 const EXTERNAL_UIDS = [UID_OUTER, UID_BANK]; // omit these when totaling balances to figure overall Dollar Pool Liability
 const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
 define('STEPUP_PURPOSE', t('donation'));
+define('STORE_CREDIT', t('store credit'));
 
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos

@@ -1,3 +1,7 @@
+2022-07-17 feature/loyalty
+. created new View, tx_credits, based on negative amounts in the tx_requests_all table, for tracking store credit given by a store owner or purchased by the customer
+. purchases of additional credit now simply add to the existing rule
+
 2022-07-17 feature/php8
 . made it work with PHP 8.0.12, mostly by renaming Drupal's query function to quer so it doesn't disagree with PDO::query syntax
 . also removed deprecated parameter in handleError() function in errors.inc

@@ -22,4 +22,5 @@ class Model extends AbstractMigration {
     $t->update();
     if ($this->isMigratingUp()) {}
   }
+//  public function doSql($sql) {cgpr("$sql\n"); $this->execute($sql);}
 }

@@ -102,6 +102,9 @@ Scenario: A member clicks a button to buy store credit for a different amount
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -30    | 1   | %STORE_CREDIT | %now    |
 
 Scenario: A member buys store credit again
   Given button code "BUTTONCODE" for:
@@ -127,6 +130,10 @@ Scenario: A member buys store credit again
   Then these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 60     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -30    | 1   | %STORE_CREDIT | %now    |
+  | 2  | .ZZC    | .ZZA  | -30    | 2   | %STORE_CREDIT | %now    |
 
 Scenario: A member cancels their purchase of store credit
   Given these "txs":
@@ -135,6 +142,9 @@ Scenario: A member cancels their purchase of store credit
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -23    | 1   | %STORE_CREDIT | %now-1d |
   When member "C:B" visits page "history/transactions/period=5"
   And member "C:B" clicks X on transaction 1
   Then these "txs":
@@ -143,12 +153,16 @@ Scenario: A member cancels their purchase of store credit
   And these "tx_rules":
   | id | end  |*
   |  1 | %now |
+  And these "tx_credits":
+  | id | fromUid | toUid | amount | xid | purpose       | created |*
+  | 1  | .ZZC    | .ZZA  | -23    | 1   | %STORE_CREDIT | %now-1d |
   And we notice "your credit canceled" to member ".ZZA" with subs:
   | amount | co      |*
   | $23    | Our Pub |
   And we notice "customer credit canceled" to member ".ZZC" with subs:
   | amount | customer |*
   | $23    | Abe One  |
+  # Note that there is still a record in tx_credits pointing to the reversed transaction
 
 Scenario: A member types account ID to buy 50% store credit
   Given button code "BUTTONCODE" for:
