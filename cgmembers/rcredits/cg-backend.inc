@@ -1266,7 +1266,7 @@ EOF;
   $resultKeys = 'in out balance fromBank toBank pendingBank uids';
   $result = compact(ray($resultKeys));
 ///    $asof = fmtDt($asof); debug(compact(ray('asof sums in out fromBank toBank balance result')));
-  foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);
+  foreach ($result as $k => $v) if ($k != 'uids') $result[$k] = round($v, 2);
 
   return $result;
 }

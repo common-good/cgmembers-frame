@@ -69,7 +69,11 @@ X;
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
-  $cat = ($mya->admEditTx and r\hasCats(${"uid$me"})) ? catFld($cat, '') : ($category ? item($category, t('Category:')) : NULL);
+
+  $cat = ($mya->admEditTx and r\hasCats(${"uid$me"}))
+  ? ($mya->sponsored ? fboCatFld($cat) : catFld($cat, ''))
+  : ($category ? item(str_replace(FBO_OUT_HDR, '', $category), t('Category:')) : NULL);
+  
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));

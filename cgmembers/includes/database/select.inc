@@ -1262,7 +1262,7 @@ class SelectQuery extends Query implements SelectQueryInterface {
     }
 
     $args = $this->getArguments();
-    return $this->connection->query((string) $this, $args, $this->queryOptions);
+    return $this->connection->quer((string) $this, $args, $this->queryOptions);
   }
 
   public function distinct($distinct = TRUE) {

@@ -16,7 +16,7 @@ Setup:
   | id    | action | from         | to    | amount | purpose    | period  | start    | end        | payerType    | payer |*
   | 99900 | pay    | .ZZA         | .ZZB  | 59.59  | something  | year    | %now-16m |            | %REF_ANYBODY |       |
   | 99901 | pay    | .ZZA         | .ZZC  | 37.00  | this       | quarter | %now-13m |            | %REF_ANYBODY |       |
-  | 99902 | pay    | .ZZA         | .ZZB  | 43.00  | that       | week    | %now-13m | %now-11m   | %REF_ANYBODY |       |
+  | 99902 | pay    | .ZZA         | .ZZB  | 43.00  | zipy       | week    | %now-13m | %now-11m   | %REF_ANYBODY |       |
   | 99903 | pay    | .ZZC         | .ZZA  | 37.43  | whatever   | week    | %now-13m |            | %REF_ANYBODY |       |
   | 99904 | pay    | .ZZB         | .ZZA  | 22.00  | nothing    | quarter | %now-1m  |            | %REF_ANYBODY |       |
   | 99905 | pay    | .ZZB         | .ZZC  | 37.37  | everything | quarter | %now-1m  |            | %REF_ANYBODY |       |
@@ -43,7 +43,7 @@ Scenario: A member looks at their Recurring Payments
   | [L] | Ned Nine   | 99.87  | donation  | Weekly     | %mdY-2d  | %mdY+5d  |          | [close] |
   | [L] | Bea Two    | 22.00  | nothing   | Quarterly  | %mdY-1m  | %mdY+2m  |          | [close] |
   | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13m | %mdY+6d  |          | [close] |
-  | [R] | Bea Two    | 43.00  | that      | Weekly     | %mdY-13m |          | %mdY-11m |         |
+  | [R] | Bea Two    | 43.00  | zipy      | Weekly     | %mdY-13m |          | %mdY-11m |         |
   | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          | [close] |
   
 Scenario: A non-admin looks at their Recurring Payments
@@ -61,7 +61,7 @@ Scenario: A non-admin looks at their Recurring Payments
   | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13m | %mdY+6d  |          | [close] |
   | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          | [close] |
   And without:
-  | 43.00  | that      |
+  | 43.00  | zipy      |
 
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99901&do=stop"

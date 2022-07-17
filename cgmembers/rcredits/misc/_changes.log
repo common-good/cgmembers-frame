@@ -1,3 +1,14 @@
+2022-07-17 feature/php8
+. made it work with PHP 8.0.12, mostly by renaming Drupal's query function to quer so it doesn't disagree with PDO::query syntax
+. also removed deprecated parameter in handleError() function in errors.inc
+. adapted tests to handle error checks in QB export
+. handled two places where we had tried to round a string
+. db\q() can now handle y\zWhereSubs()-type $subs parameter
+. fixed bug in acct::coCan to handle string parameter
+. sponsored bank transfers now export a transaction description including "to bank:"
+. all PayPal charges now get posted to regular PROCESSOR account, not the FBO-PROCESSOR account (they are not part of the Dollar Pool)
+. improved txdetail page handling of category
+
 2022-07-13 feature/hours
 . started a page to show staff tasks and hours worked
 . fixed bug that complained of missing V permission when deleting or re-adding a bank account connection

@@ -19,7 +19,7 @@ define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rat
  * Do a database query with easy substitutions.
  * @param string $sql: the raw query with substitution markers preceded by ':'
  *   These can be keys supplied in $subs OR constants (all uppercase and underscores)
- * @param assoc $subs: array of substitutions to make in $sql
+ * @param assoc $subs: array of substitutions to make in $sql OR a set of required field/value pairs from which to build a WHERE clause
  *   Each key, with a colon tacked on the front, is replaced (in $sql) with its value
  * @param bool $retId: <return an inserted record ID rather than a recordset>
  * @param bool $log: <log the operation>
@@ -29,6 +29,11 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
 
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
+  if ($where = $subs and !strihas($sql, ':')) {
+    $subs = NULL;
+    u\zWhereSubs($where, $subs);
+    $sql .= ' WHERE ' . $where;
+  }
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), $retId ? ray('return', \Database::RETURN_INSERT_ID) : []);

@@ -318,7 +318,7 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testQbTxs;
   
-  if (!$rec = array_shift($testQbTxs)) return t\output(t('Record %id not found (no more records).', compact('id')));
+  if (!$testQbTxs or !$rec = array_shift($testQbTxs)) return t\output(t('Record %id not found (no more records).', compact('id')));
   if (t\badEq('DocNumber ' . $dt, $id, $rec->DocNumber)) return;
   $desc = $rec->PrivateNote;
   foreach (ray('in out') as $k) if ($$k and !strhas($desc, $$k)) return t\output(t('Mising "%kk" in PrivateNote: ', 'kk', $$k) . "$desc - " . pr($rec));
@@ -373,4 +373,17 @@ function memberIsSponsored($id) {
 function qBOGetsNothingElse() {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testQbTxs; return empty($testQbTxs) ?: t\output(t('There are more QBO transactions: ') . pr($testQbTxs));
+}
+
+/**
+ * tx (ARG) cat (ARG) is (ARG)
+ *
+ * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function txCatIs($xid, $catNum, $v) {
+  global $testOnly;
+  $id = db\get('id', 'tx_entries', 'xid=:xid AND id' . ($catNum == 1 ? '<0' : '>0'), compact('xid'));
+  if (!$cat = r\nick2cat($v)) return FALSE;
+  if ($testOnly) return (db\get('cat', 'tx_entries', compact('id')) == $cat);
+  return db\update('tx_entries', compact(ray('id cat')));
 }

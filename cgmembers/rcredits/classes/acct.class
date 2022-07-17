@@ -1515,7 +1515,7 @@ X;
   }
    
   //  private static function flagBit($bit) {return is_numeric($bit) ? $bit : u\consta('b', $bit);}
-  public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit, 'co');}
+  public function coCan($bit = NULL) {return u\getBit((is_numeric($bit) and $bit > B_MAX) ? $this->coFlags2 : $this->coFlags, $bit, 'co');}
   public function setCoBit($bit, $on = TRUE) {$this->setBit($bit, $on, 'coFlags');}
   
   public function setCoCans($cans) {

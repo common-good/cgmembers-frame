@@ -615,8 +615,8 @@ function gotACH($flnm, $rows) {
  * Minimum parameters: main, agent (both are qids -- at least one must be local)
  */
 function doRelations($info) {
-  include_once __DIR__ . '/forms/printcard.inc';
   global $testOnly, $memberIdCalled;
+  include_once __DIR__ . '/forms/printcard.inc';
 
   //  t\fixData($info);
   extract($info);

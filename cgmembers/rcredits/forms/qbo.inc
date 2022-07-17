@@ -69,7 +69,7 @@ function formQBO($form, &$sta, $args = '') {
       break;
 
     case 'txs': 
-      if (db\exists('tx_entries JOIN tx_hdrs USING (xid)', 'uid IN (:uids) AND cat IS NULL AND created>:start', ray('uids start', r\catUids(), strtotime('7/1/2021')))) return go('sadmin/set-cats', t('You must resolve uncategorized transactions before exporting to QBO.'));
+      if (db\exists('tx_entries JOIN tx_hdrs USING (xid)', 'uid IN (:uids) AND cat IS NULL AND created>:start', ray('uids start', r\catUids(), strtotime('7/1/2021')))) return go('sadmin/set-cats', tr('categorize txs'), 'err');
       $qb->sendBankTxs();
       return go('sadmin/panel');
     

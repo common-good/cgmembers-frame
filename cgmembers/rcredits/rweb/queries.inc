@@ -111,7 +111,7 @@ X
 X
   ,
   
-  2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
+  2 . t('Where Do Our Members Hear About CG') => <<< X
     SELECT 
       IF(helper in (0,1), 
         IF(source LIKE '%presentation%' OR source LIKE '%talk%', '"Presentation"',

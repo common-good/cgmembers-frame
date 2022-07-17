@@ -50,7 +50,7 @@ Scenario: A member visits the Community Data page
   | Company Income and Payments - 30 day totals |
   | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
-  | Actual Donations to Common Good and Community |
+  | Actual Donations to CG and Community |
   | Expected Member Donations to CG and Community |
   | Expected Company Donations to CG and Community |
   And without:
@@ -58,7 +58,7 @@ Scenario: A member visits the Community Data page
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
-  | Where Do Our Members Hear About Common Good |
+  | Where Do Our Members Hear About CG |
   
 Scenario: An admin visits the Community Data page
   When member ".ZZB" visits page "community/data"
@@ -67,11 +67,11 @@ Scenario: An admin visits the Community Data page
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
-  | Where Do Our Members Hear About Common Good |
+  | Where Do Our Members Hear About CG |
   | Company Income and Payments - 30 day totals |
   | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
-  | Actual Donations to Common Good and Community |
+  | Actual Donations to CG and Community |
   | Expected Member Donations to CG and Community |
   | Expected Company Donations to CG and Community |
   
@@ -120,7 +120,7 @@ Scenario: A member runs a query about Balances
   | Common Good Western Mass | 3,875.00 |    300.00 |          0.00 | 2,070.00 |   300.00 |         0.00 |
 
 Scenario: A member runs a query about Actual Donations
-  When member ".ZZA" runs query "Actual Donations to Common Good and Community"
+  When member ".ZZA" runs query "Actual Donations to CG and Community"
   Then we show "" with:
   | data set is empty |
 
@@ -137,7 +137,7 @@ Scenario: A member runs a query about Expected Company Donations
   | Common Good Western Mass |         3 |         |        0 |      0 |           |
 
 Scenario: A member runs a query about Whence
-  When member ".ZZB" runs query "Where Do Our Members Hear About Common Good"
+  When member ".ZZB" runs query "Where Do Our Members Hear About CG"
   Then we show "" with:
   | origin    | member | stuck | avgYearlyGiftDollars | avgRoundup | eachInvited |
   | "(Other)" |      1 |     0 |                      |     0.0000 |             |

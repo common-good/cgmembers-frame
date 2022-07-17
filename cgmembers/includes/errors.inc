@@ -41,7 +41,7 @@ function drupal_error_levels() {
 /**
  * Handle unhandled exceptions like we handle errors.
  */
-function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), NULL, $e->getTrace());}
+function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTrace());}
 
 /**
  * Handle all errors, including warnings.
@@ -52,10 +52,9 @@ function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), 
  * @param $msg: The error message.
  * @param $file: The filename that the error was raised in.
  * @param $line: The line number the error was raised at.
- * @param $context: An array that points to the active symbol table at the point the error occurred.
  * @param $trace: Stack trace (only when called from handleException)
  */
-function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
+function handleError($level, $msg, $file, $line, $trace = NULL) {
   global $channel, $mya;
   list($severity_msg, $severity) = nni(drupal_error_levels(), $level, ['unknown error', WATCHDOG_ERROR]);
 
@@ -74,7 +73,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   u\loga($title, $msg);
   $devPhpPage = (!isPRODUCTION and $channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php');
 
-  if (empty($trace)) $trace = debug_backtrace() ?: [];
+  if (empty($trace) or !rayhas($trace, 0)) $trace = debug_backtrace() ?: []; // !rayhas is for PHP before 8.0 (context param)
   $traceMsg = [];
   foreach ($trace as $one) {
     if (!is_array($one) or count($traceMsg) > 20) break; // don't overflow memory

@@ -124,7 +124,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
+ * in: MAKE cgpay AMemberRedeemsStoreCredit
+ *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -185,6 +186,12 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  * in: MAKE accredit AMemberCompanyGivesACustomerCredit
  *     MAKE accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
+ *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE message AMemberSendsAMessageToAnotherMember
  */
 function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
@@ -320,6 +327,11 @@ function members($list) {return t\members($list);}
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     TEST card AMemberUndoesACharge
  *     TEST cardself AMemberCardIsCharged
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST donate AMemberDonates
  *     TEST donate AMemberMakesARecurringDonation
@@ -377,6 +389,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
+ *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     TEST contact AMemberUpdatesContactInfo
@@ -543,6 +556,12 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST card AMemberUndoesACharge
  *     TEST card AMemberAddsATip
  *     TEST cardself AMemberCardIsCharged
+ *     TEST cgpay AMemberClicksACGPayButton
+ *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberBuysStoreCreditAgain
+ *     TEST cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
  *     TEST changeaccount ACommunityAdminChangesAccount
@@ -812,6 +831,14 @@ function balances($list) {return t\balances($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
+ *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
+ *     MAKE cgpay AMemberCancelsTheirPurchaseOfStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -1057,6 +1084,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberUndoesACharge
+ *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST donate AMemberDonates
  *     TEST donate AMemberMakesARecurringDonation
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -1433,7 +1461,8 @@ function memberHasCompanyInfo($id, $info) {
 /**
  * member (ARG) clicks X on transaction (ARG)
  *
- * in: MAKE txs AdminReversesABankTransfer
+ * in: MAKE cgpay AMemberCancelsTheirPurchaseOfStoreCredit
+ *     MAKE txs AdminReversesABankTransfer
  */
 function memberClicksXOnTransaction($id, $xid) {
   global $testPeriod;
@@ -1642,7 +1671,14 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE cardself Setup
  *     TEST cardself AMemberCardIsCharged
  *     MAKE cgpay Setup
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberBuysStoreCreditAgain
+ *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
+ *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     BOTH cgpay AMemberRedeemsStoreCredit
  *     BOTH cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
+ *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     TEST community CronCalculatesTheStatistics
@@ -2462,6 +2498,17 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  * button code (ARG) for: (ARG)
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberBuysStoreCreditAgain
+ *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
+ *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
