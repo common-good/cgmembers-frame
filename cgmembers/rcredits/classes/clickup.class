@@ -79,7 +79,7 @@ class Clickup {
    */
   public function updateTasks($start = NOW - DAY_SECS, $end = NOW) {
     $sql = is_int($start) ? 'SELECT DISTINCT task FROM cu_times tm LEFT JOIN cu_tasks ts ON ts.id=tm.task WHERE stop BETWEEN :start AND :end' : $start;
-    $q = db\q($sql, compact(ray('start end')));
+    $q = db\q($sql, is_int($start) ? compact(ray('start end')) : []);
     while ($row = $q->fetch()) if (!strhas($id = $row->task, '#')) { // don't look for tasks that don't exist in ClickUp
       if (LAZY_UPDATE and db\exists('cu_tasks', compact('id'))) continue;
       $o = $this->getTask($id);

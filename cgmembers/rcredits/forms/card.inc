@@ -120,8 +120,8 @@ function formCard_submit($form, &$sta) {
 
   if ($mode == 'choose') { // chose an account to scan from
     $scannerA = r\acct($account);
-    if ($scannerA->id != $mya->id) {
-      w\signout(TRUE);
+    if (!$mya or $scannerA->id != $mya->agentId) {
+      if ($mya) w\signout(TRUE);
       w\boxId($box, $scannerA); // create boxid if it doesn't exist yet
     }
     r\setCook('scanner', $scannerA->mainQid); // not ->qid

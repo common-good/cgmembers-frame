@@ -857,6 +857,28 @@ function toSMT() {
 }
 
 /**
+ * Export a list of major donors, prioritized by probable donation size.
+ */
+function majorDonors() {
+  $q = db\q('SELECT uid FROM users WHERE :IS_OK AND :MASTER AND uid>:UID_CANON9');
+  $hdrDone = FALSE;
+
+  while ($row = $q->fetchAssoc()) {
+    extract(just('uid', $row));
+    $a = r\acct($uid);
+    $out = $a->majorInfo();
+    if (!$hdrDone) {
+      u\startDown('major-donors-' . fmtDt(now(), 'Ymd'));
+      u\csv(array_keys($out), "\t");
+      $hdrDone = TRUE;
+    }
+    u\csv(array_values($out), "\t");
+  }
+  if (!$hdrDone) return w\go('', t('no active users'));
+  exit();
+}
+
+/**
  * Move customer transactions to a subsidiary company. (used 9/2020 for Co-op Power subsidiaries)
  * @param string $coQid: the main company's QID
  * @param string $custQids: space-delimited list of customer's QIDs to move txs and invoices from coQid to co2Qid
@@ -894,6 +916,24 @@ function ccFees() {
     WHERE t.type IN (:E_PRIME, :E_AUX) AND u.:IS_CO
 X;
   return u\fmtAmt(db\get('.1 * cnt + .02 * total', "($totals) xx"));
+}
+
+/**
+ * Clone an account and return the clone.
+ */
+function cloneA($oldA) {
+  $ray = justNOT('uid name pass ' . VSECURE_FLDS . ' ' . SECURE_FLDS . ' ' . PSECURE_FLDS, $oldA->account());
+  
+  $ray['fullName'] .= '2';
+  $ray['email'] = $oldA->email; // this gets created arbitratily unless we specify
+  $a = new r\Acct($ray);
+  foreach (ray('u_photo u_company') as $tnm) {
+    if ($ray = db\get('*', $tnm, ray('uid', $oldA->uid))) {
+      $ray['uid'] = $a->uid;
+      db\insert($tnm, $ray, 'uid');
+    }
+  }
+  return $a;
 }
 
 /*
