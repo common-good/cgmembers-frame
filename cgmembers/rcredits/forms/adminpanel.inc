@@ -63,6 +63,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
   if ($mya->admRecheckSsn) $ssnLink = submi(t('SSN Link'));
   if ($mya->admSeeSecure) $seeSecure = submi(t('See Secure'));
+  if ($mya->admV) $clone = submi(t('Clone'));
   if ($mya->admRecheckSsn) $resetSSN = submi(t('Recheck SSN'));
   if ($mya->admMakeVAdmin) $makeVKeyE = submi(t('Make vKeyE'));
   if ($mya->admMakeVAdmin or $mya->admPrintCards) $make2 = boxFld('make', t('Make:'));
@@ -82,7 +83,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
-  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN makeVKeyE askForAppData seeAppData');
+  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
@@ -133,6 +134,10 @@ function formAdminPanel_submit($form, &$sta) {
     say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? fmtDt($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
+  } elseif ($op == 'clone' and $a) {
+    $newA = a\cloneA($a);
+    say(t('You are now in cloned account %qid. Add any desired relations', 'qid', $newA->mainQid));
+    return changeWho('', tr('page=%page&acct=%acct', 'page acct', u\urlify('/settings/relations'), $newA->id), $sta);
   } elseif ($op == 'resetSSN' and $a) {
     $a->setBit(B_MEMBER, FALSE);
     $a->stepDone('verifyid', FALSE);

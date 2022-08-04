@@ -711,7 +711,7 @@ function setCat(&$txes, $tx, $i) {
   $recurs = $tx->recursId;
   $refund = (($in xor $i_amount < 0) and !in($type, [E_BANK, E_OUTER]));
   
-  $nick = NULL;
+  $nick = NULL; // in the if/else chain below, either return with $txes[$i]->cat set OR try to set $nick
 
   if ($type == E_AUX and strhas($for, FS_NOTE)) {
     $nick = $in ? 'FS-FEE' : 'D-FBO';
@@ -744,17 +744,9 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'TO-ORG';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
-  } elseif ($out and $inv and $type != E_OUTER) {
-    $toQid = r\acct($j_uid)->mainQid;
-    if (in($toQid, 'CAAAAO NEWAZS NYAAIV')) {
-      $nick = 'CONTRACTOR';
-    } elseif (in($toQid, 'MIWAAA MIWAAB')) {
-      $nick = 'COMPUTER';
-    } elseif (in($toQid, 'NEVABJ')) {
-      $nick = 'ACCOUNTING';
-    } elseif (strihas($for, 'Mailtrap')) {
-      $nick = 'INFO-SVC';
-    } 
+  } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
+    $cats = db\col('DISTINCT cat1', 'txs', "relType='I' AND type<>:E_OUTER AND uid2=:j_uid AND cat1 IS NOT NULL AND created>:NOW-2*:MONTH_SECS", compact('j_uid'));
+    if (count($cats) == 1) return $txes[$i]->cat = $cats[0];
   } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
     $nick = $iA->mainQid;
   }
@@ -1118,7 +1110,8 @@ function deleteCell($number) {
 }
 
 /**
- * Figure out who the user meant. Only OK people in the user's community are eligible (except admin sees all).
+ * Figure out who the user meant. Only OK people in the user's community, nearby, 
+ *   or previous tx partners are eligible (except admin sees all).
  *
  * @param string $who: how the user referred to the other account:
  *   name, phone, email, or account ID
@@ -1138,6 +1131,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   $myid = $mya->id;
   $who = $who0 = trim($who);
   $searchable = $mya->admin ? '1' : '(IF(activated, :IS_OK, :IS_MEMBER) AND !:IS_NOSEARCH)';
+  $a = NULL; // set this if a specific account ID is specified
 
   if ($atPos = mb_strpos($who, '@')) { // email or location (point to @)
     $at = trim(mb_substr($who, $atPos + 1)); // what's after the @
@@ -1186,8 +1180,9 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   }
       
   if ($restrict) $where .= ' AND ' . $restrict;
-  if (!$mya->admRegion and !$atPos and !nn($cphone)) { // look only locally unless company
-    $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
+  if (!$mya->admRegion and !$a and !$atPos and !nn($cphone)) { // look only locally unless company
+    $txPartner = "uid IN (SELECT DISTINCT IF(uid1=$myid, uid2, uid1) AS uid FROM txs WHERE $myid IN (uid1, uid2))";
+    $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX OR %txPartner)', compact('txPartner')); // restrict to nearby
     list ($lat, $lon) = [$mya->latitude ?: 0, $mya->longitude ?: 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
   }
@@ -1207,7 +1202,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
     WHERE $where AND $uidCrit
     ORDER BY community<>:ctty, fullName
 EOF;
-
+  
   $subs['ctty'] = test() ? $mya->community : ($mya->seedpacker ? -1 : $mya->community);
   $q = db\q($sql, $subs);
   

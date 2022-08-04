@@ -307,13 +307,15 @@ function adminSummary() {
 
     // Company Flag bits
     if ($mya->co) {
-      $aliases = [];
-      foreach (ray(CO_FLAGS) as $k) if ($k) {
+      $aliases = $coList = [];
+      $dft = 0;
+      foreach (ray(CO_FLAGS) as $i => $k) if ($k) {
+        if (u\getBit($mya->coFlags, $i)) u\setBit($dft, count($coList));
         $coList[] = $k;
         $dpy = popHelp($k, nni($coHelp, $k), '#', '', 'click');
         $aliases[$k] = "<div class=\"$class\">$dpy</div>";
       }
-      $coFlags = bitsFld(t('Co Flags:'), $mya->coFlags, '', join(' ', $coList), $aliases);
+      $coFlags = bitsFld(t('Co Flags:'), $dft, '', join(' ', $coList), $aliases);
     } else $coFlags = NULL;
     
     // Risk bits

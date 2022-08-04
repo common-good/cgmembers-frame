@@ -688,15 +688,16 @@ function bestCat($tx, $minScore = 100000) {
 X;
 
   $tnm0 = 'txs';
+  $canN = $paying ? 'cat1' : 'cat2';
   if (FALSE and !in($type, E_PRIMES) and $mainCat) {
     $score .= " + IF(mainCat=$mainCat, $match_mainCat, 0)"; // $mainCat, not %mainCat, avoids having to add it to subs
-    $tnm0 = '(SELECT t.*,t2.cat AS mainCat FROM txs t JOIN txs t2 USING(xid) WHERE t2.type IN :E_PRIMES AND t2.eid!=t.eid AND t2.cat IS NOT NULL';
+    $tnm0 = "(SELECT t.*,t2.$canN AS mainCat FROM txs t JOIN txs t2 USING(xid) WHERE t2.type IN :E_PRIMES AND t2.eid!=t.eid AND t2.$canN IS NOT NULL";
   }
-  $tnm = "(SELECT cat, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE cat IS NOT NULL GROUP BY cat, score HAVING score>=$minScore ORDER BY score DESC, cnt DESC) x";
+  $tnm = "(SELECT $canN, $score AS score, COUNT(*) AS cnt FROM $tnm0 WHERE $canN IS NOT NULL GROUP BY $canN, score HAVING score>=$minScore ORDER BY score DESC, cnt DESC) x";
   
 ///  global $mya; if ($mya and $mya->admin) debug(compact(ray('tx minScore me you score tnm')));
 
-  return db\get('cat', $tnm, 1, $tx) ?: '';
+  return db\get($canN, $tnm, 1, $tx) ?: '';
 }
 
 /**
@@ -1207,7 +1208,7 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  *    rewards: the average end-of-day credit reserve amount for that period (possibly with fractional cents)
  *    days:    (unused) number of days from start to end, inclusive
  */
-function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
+function averageBalance($uid, $start = 0, $end = NULL, $noj = FALSE) {
   $uids = is_array($uid) ? $uid : [$uid];
   u\setDft($end, now());
   $days = round(($end - $start) / DAY_SECS);

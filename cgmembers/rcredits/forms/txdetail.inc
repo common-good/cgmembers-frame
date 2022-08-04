@@ -15,7 +15,6 @@ use CG\Db as db;
  */
 function formTxDetail($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
-  global $channel;
   
   extract(just('xid eid return', $args, NULL));
 
@@ -40,7 +39,7 @@ function formTxDetail($form, &$sta, $args = '') {
   list ($me, $you) = u\order($toMe, 2, 1);
 
   $sql = <<< X
-    SELECT t.created, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
+    SELECT t.created, t.channel, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
       uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me

@@ -12,6 +12,7 @@ use CG\Db as db;
  * @param string op: what to do
  * @param string sid: session id
  * NOTE: to test for syntax errors, paste "include R_ROOT . '/forms/ajax.inc';" into the PHP window.
+ * NOTE: autocomplete and account selection dropdown are below under "suggestWho" (hard to find otherwise)
  * @todo: maybe all zero uid for some ops (by looking up two fields in sessions?)
  */
 
@@ -34,6 +35,10 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
+      $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
+      return exitJust(u\jsonize($res ? array_values($res) : []));
+
     case 'suggestTxDesc': // suggest a description and/or category for a transaction being entered
       extract(just('otherId purpose paying', $data));
       $purpose = $purpose ?: r\suggestDesc($myid, $otherId, $paying);
@@ -68,10 +73,6 @@ function ajax($args = NULL) {
       foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
       $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
       return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
-    
-    case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
-      $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
-      return exitJust(u\jsonize($res ? array_values($res) : []));
     
     case 'setNotice': // change notice preference for one notice type (code, type, freq)
       extract(just('code type freq', $data, ''));

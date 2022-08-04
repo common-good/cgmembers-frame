@@ -262,7 +262,7 @@ function changeWho($zot, $args = '', &$sta = '') {
 
 /**
  * Let there be no current user.
- * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
+ * @param bool/string $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
   global $mya;
@@ -270,10 +270,10 @@ function signout($continue = FALSE) {
   $from = basename(nni($_SERVER, 'HTTP_REFERER'));
   r\deleteCook('qboRefresh');
   
-  if ($from == 'app' and $continue == 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
+  if ($from == 'app' and $continue === 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
   
   if (isDEV and !test()) db\q('TRUNCATE test');
-  if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
+  if ((string) $continue === 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
   $sid = session_id();
   if ($continue) {
@@ -285,10 +285,10 @@ function signout($continue = FALSE) {
   
   if ($mya and !$mya->admin and !$continue) r\setCook('trust', NULL);
   r\deleteCook('vKeyPw'); // no longer admV, if we ever were
-  r\setAcct(NULL);
+  r\setAcct(NULL); // but $mya still points to the signed-out account
   r\Acct::_clear(); // empty the acct cache
   
-  if ($from == 'app') return w\go('app'); // if signing out from app, stay there
+  if ($from == 'app' and $mya and r\cook('scanner') == $mya->mainQid) return w\go('app'); // if signing out from app, stay there
   if (isDEV and !test() and !$continue) return w\go('signin', $timeout ? tr('You were automatically signed out, to protect your account.') : '');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }

@@ -372,6 +372,32 @@ class Acct {
   }      
   
   /**
+   * Return major donor information.
+   */
+  public function majorInfo() {
+    $a = $this;
+    $uids = $a->uids;
+    foreach (ray($flds = 'co fullName phone email city st') as $k) $$k = $a->$k;
+    $phone = u\fmtPhone($phone, '-');
+    $co = $co ? 'co' : ' ';
+    $maxGift = db\max('amt', 'txs', 'uid1 IN (:uids) AND uid2=:CGID', compact('uids')) ?: ''; // was :IS_GIFT but old recurring donations don't have that
+    $pastYear = db\sum('amt', 'txs', 'uid1 IN (:uids) AND (uid2=:CGID OR uid2 IN :BUCKET_UIDS) AND created>:yearAgo', ray('uids yearAgo', $uids, strtotime('-1 year'))) ?: '';
+    $months = (now() - $a->created) / MONTH_SECS;
+    $investor = $a->iclubq;
+    $invitees = db\count('r_invites', 'inviter IN (:uids)', compact('uids')) ?: '';
+    $avgBalance = nni(r\averageBalance($a->id), 0);
+
+    $score = 0;
+    $ws = ray('maxGift:20, pastYear:10, months:10, investor:20, invitees:5, avgBalance:7');
+    foreach ($ws as $k => $v) if ($$k > 0) $score += (in($k, 'investor invitees') ? $$k : log10($$k)) * $v;
+    if ($investor) $investor = $a->iintent;
+    $ask = round(max(2 * $maxGift, $pastYear, $months, $investor / 10, $invitees, $avgBalance) + 9.99, -1);
+    if ($ask > 1000) $ask = round($ask, -2);
+    
+    return compact(ray("score ask $flds " . join(' ', array_keys($ws))));
+  }
+
+  /**
    * Set the company categories.
    */
   function setCategories($cats) {
@@ -487,11 +513,11 @@ class Acct {
         $sFlds += $a->$special; // replace existing values with update info
       } else continue;
 
-      if ($special == 'vsecure' and $sFlds) {
+      if ($special == 'vsecure' and is_array($sFlds) and $sFlds) {
         if ($a->activated) foreach ($sFlds as $k => $v) {
           if ($v !== '' and !u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !! ($v !== '' is for deleting a vsecure value, such as bankAccount, without being an admin)
         }
-        if (array_key_exists('bankAccount', $sFlds)) $a->setRisk('hasBank', (bool) $sFlds['bankAccount']);
+        if (rayhas($sFlds, 'bankAccount')) $a->setRisk('hasBank', (bool) $sFlds['bankAccount']);
       }
       self::$rs[$a->id]->$special = $sFlds;
       $sFlds = serialize($sFlds);
@@ -1564,10 +1590,12 @@ X;
     $a = $this;
     u\setDft($values, []); // fails in arg list (dunno why)
     $coFlags = $a->coFlags;
+    $i = 0; // display position
     foreach (ray(CO_FLAGS) as $bit => $bitName) { // set all these on or off
       if (!$bitName) continue;
-      $on = isset($values[$bit]); // isset because bit 0 is 0 when checked
+      $on = isset($values[$i]); // isset because bit 0 is 0 when checked
       u\setBit($coFlags, $bit, $on);
+      $i++;
     }
     $a->update(compact('coFlags'));
   } 

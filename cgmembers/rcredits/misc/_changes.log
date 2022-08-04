@@ -1,3 +1,13 @@
+2022-08-04 feature/misc
+. major donor spreadsheet export
+. clone account feature (for fiscal sponsorship etc)
+. fixed bug in bestCat
+. be\setCat now uses recent invoices to choose an accounting cat
+. previous customers are now included in account dropdown, even if from elsewhere
+. fixed bug in set coFlags on summary page
+. fixed bug in app setup that looped on account selection
+. channel now displays properly on txDetail page
+
 2022-07-17 feature/loyalty
 . created new View, tx_credits, based on negative amounts in the tx_requests_all table, for tracking store credit given by a store owner or purchased by the customer
 . purchases of additional credit now simply add to the existing rule
