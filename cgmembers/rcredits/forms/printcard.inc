@@ -40,9 +40,9 @@ function printCard($id, $agent = '', $retroactive = FALSE) {
   $permitted = ($proSe or B_RELATED + r\relation('permission', $a->id, $aa->id) >= B_BUY);
   $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : R_NOT_VALID; // '@' tells tcpdf it's an image, not a file; $a->canBuy fails because admin has permission
 
-  list ($wCard, $hCard, $m, $xText) = [3.375, 2.125, .24, .06]; // card dimensions, negative page margin, text indent
+  list ($wCard, $hCard, $m, $xText) = [3.375, 2.125, 0, .06]; // card dimensions, negative page margin, text indent
   //  list ($wPhoto, $mPhoto, $xCardNo) = [1.09, .1, 2.4];
-  list ($xProj, $yProj) = [1.54, $m+.04];
+  list ($xProj, $yProj) = [$m+1.3, $m+.04];
   list ($xSite, $ySite, $wPhoto, $mxPhoto, $myPhoto, $xCardNo) = [$xProj+.035, $yProj+.29, 1.1, .085, .09, 2.4];
   list ($cCG, $cSite, $cName) = ['#000065', 'black', '#004000'];
   list ($xTest, $xPhoto, $yPhoto, $hPhoto) = [$m+$wCard-.74, $m+$mxPhoto, $m+$myPhoto, $wPhoto*4/3];
@@ -57,14 +57,14 @@ function printCard($id, $agent = '', $retroactive = FALSE) {
                  'module_height' => 1, // height of a single module in points
                   );
 
-  $pdf = new r\Pdf();
+  $pdf = new r\Pdf('L', 'in', 'CREDIT_CARD');
   $pdf->setPrintHeader(FALSE);
   $pdf->setPrintFooter(FALSE);
   $pdf->SetAutoPageBreak(FALSE);
 
   $pdf->AddPage();
   $pdf->StartTransform();
-  $pdf->ScaleXY(100 * 8.5 / $wCard); // widen to page width (for extra resolution)
+  $pdf->ScaleXY(100 * 3.375 / $wCard); // widen to page width (for extra resolution)
 
   $pdf->Image(R_ROOT . "/images/idcard/$bg.png", $m, $m, $wCard, $hCard, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
   //  $pdf->Image($photo, $m+$mPhoto, $m+$mPhoto, $wPhoto, $wPhoto*4/3, '', '', 'L', true);
