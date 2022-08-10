@@ -1,3 +1,9 @@
+2022-08-10 feature/print-cards
+. adjusted card printing to show an image that can be printed directly to a C80 card printer
+. improved cloning
+. minor adjustments to partnersignup.inc to prevent warnings on hack attempts
+. fixed empty numeric field handling in Rules form (allowing 0 for non-nullable fields)
+
 2022-08-04 feature/misc
 . major donor spreadsheet export
 . clone account feature (for fiscal sponsorship etc)

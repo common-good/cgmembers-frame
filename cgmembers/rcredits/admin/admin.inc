@@ -925,7 +925,7 @@ function cloneA($oldA) {
   $ray = justNOT('uid name pass ' . VSECURE_FLDS . ' ' . SECURE_FLDS . ' ' . PSECURE_FLDS, $oldA->account());
   
   $ray['fullName'] .= '2';
-  $ray['email'] = $oldA->email; // this gets created arbitratily unless we specify
+  foreach (ray(PSECURE_FLDS) as $k) $ray[$k] = $oldA->$k;
   $a = new r\Acct($ray);
   foreach (ray('u_photo u_company') as $tnm) {
     if ($ray = db\get('*', $tnm, ray('uid', $oldA->uid))) {

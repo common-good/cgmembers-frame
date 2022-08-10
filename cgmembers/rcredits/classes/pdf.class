@@ -26,8 +26,8 @@ class Pdf extends \TCPDF {
   /**
    * Create a PDF object.
    */
-  public function __construct() {
-    parent::__construct('P', 'in', 'LETTER');
+  public function __construct($orient = 'P', $unit='in', $format='LETTER') {
+    parent::__construct($orient, $unit, $format);
     $this->pageW = $this->getPageWidth();
     $this->pageH = $this->getPageHeight();
     $this->lineH = PDF_FONT_SIZE / 72;

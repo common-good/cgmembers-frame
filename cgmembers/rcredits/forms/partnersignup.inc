@@ -206,8 +206,9 @@ function handleInput($input, &$sfData = []) {
   $retURL = 'http://cooppower.coop'; // return from salesForce
   list ($first_name, $last_name) = u\parseName($fullName);
   if (empty($first_name)) $first_name = '-';
+  if (empty($m_state)) $m_state = '--';
   $m_wholeAddress = "$m_address, $m_city, $m_state $m_zip";
-  $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
+  $customer = substr(nn($m_company, 'X'), 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
   $upfront = FALSE; // default to not paying membership fee upfront (don't scare people by asking the question)
 
   // validate data

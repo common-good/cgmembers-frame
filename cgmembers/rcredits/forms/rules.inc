@@ -15,7 +15,7 @@ const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount port
 const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations';
 const RULE_FLDS = BOTH_FLDS . ' template code';
 const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code tnm url flds';
-const NULL_FLDS = 'payer payee amount from to purpose useMax amtMax end template code';
+const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code';
 const ZERO_FLDS = 'amount portion minimum start';
 const RULES_URL = 'sadmin/rules/id';
 const TIMED_URL = 'sadmin/timed/id';
@@ -46,10 +46,10 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $from = textFld(REQ . t('Then From:'), $fromToDesc . t(', %UID_BANK = bank'), dft($from));
   $to = textFld(REQ . t('To:'), $fromToDesc . t(', %UID_BANK = bank'), dft($to));
   $action = radiosFld(REQ . t('Action:'), '', dft($action), ray(ACT_LIST));
-  $amount = numFld(t('Amount:'), '', dft($amount > 0 ? $amount : '') + vmin(.01));
-  $portion = numFld(t('Portion:'), '', dft($portion > 0 ? $portion : '') + vmin(.001) + step('.001'));
+  $amount = numFld(t('Amount:'), '', dft($amount ?: 0) + vmin(0));
+  $portion = numFld(t('Portion:'), '', dft($portion ?: 0) + vmin(0) + step('.001'));
   $purpose = textFld(REQ . t('Purpose:'), '', dft($purpose));
-  $minimum = numFld(t('Minimum:'), '', dft($minimum));
+  $minimum = numFld(t('Minimum:'), '', dft($minimum ?: 0) + vmin(0));
   $useMax = intFld(t('Use Max:'), $maxDesc, dft($useMax));
   $amtMax = numFld(t('Extra Max:'), $maxDesc, dft($amtMax));
   $start = dateFld(t('Start:'), $dtDesc, dft($start));
@@ -72,7 +72,7 @@ function formRules_validate($form, &$sta) {
   list ($tnm, $flds, $url, $input) = getStuff($sta);
   extract($input);
 
-  foreach (ray(ZERO_FLDS) as $k) if (isset($$k) and !$$k) $$k = 0;
+  foreach (ray(ZERO_FLDS) as $k) if (!isset($$k) or !$$k) $$k = 0;
   
   foreach (ray('from to') as $k) if (!in($v0 = $$k, [MATCH_PAYER, MATCH_PAYEE, UID_BANK])) {
     if (!$$k = db\get('uid', 'users', [is_numeric($$k) ? 'uid' : 'fullName' => $$k])) return say(t('User not found: ') . $v0, $k);
