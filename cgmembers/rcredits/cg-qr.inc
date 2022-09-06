@@ -121,7 +121,7 @@ function acct($qr, $requireCode) {
   } else return NULL;
 
   if ($unfmt) extract($unfmt); else return NULL;
-  if (!$a = r\acct($qid)) return NULL
+  if (!$a = r\acct($qid)) return NULL;
   if ($requireCode and $cardCode != $a->cardCode()) return NULL;
   return r\acct($qid);
 }

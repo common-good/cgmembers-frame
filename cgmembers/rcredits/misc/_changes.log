@@ -1,3 +1,8 @@
+2022-09-06 feature/api
+. renamed api test directory to smp
+. split out SMP code to separate file
+. added (empty) api test directory for CGPay api
+
 2022-09-05 feature/api
 . expanded exitJust to include HTTP return status and added exitJson() for api data returns
 . parameterized be\accountChoices() for use in api's GET /accounts

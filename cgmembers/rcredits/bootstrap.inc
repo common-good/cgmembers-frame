@@ -656,7 +656,7 @@ function exitJust($s = '', $status = X_GOT) {
   
   if (test()) {
     t\output("exiting ($status) with: " . pr($s)); 
-/**/t\logRec('echo', "$status: $s");
+/**/t\logRec('echo', $s);
     return NULL;
   }
 
