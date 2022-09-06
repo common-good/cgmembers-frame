@@ -226,9 +226,10 @@ X
     
     <p>The Common Good System flourishes only as much as we commit to it. How important is it to you? How much do you and your community stand to gain over the next 3 years, for example?</p>
 
-    <p>For businesses, we can easily predict how much will be saved in credit card fees and the value of increased customer loyalty. But for individuals (and also for businesses), the value of Common Good investments and grants and greater local control of our destiny may be immeasurable.</p>
+    <p>For businesses, we can easily predict how much will be saved in credit card fees and the value of increased customer loyalty. But for individuals (and also for businesses), the value of %PROJECT investments and grants and greater local control of our destiny may be immeasurable.</p>
+    <p><%aFunded>Here's some of what %PROJECT communities have been able to fund</a>, thanks to backing by members like you, with just a small part of their Community Fund.</p>
 X
-  ) . $back;
+  , '_aFunded', atag('https://commongood.earth/communities/projects-and-investments', away())) . $back;
   
   if ($i == 'cashing-out') return t(<<< X
     <p>%RCREDITS has value and acts like money because we agree to accept it as payment for our good and services, so it moves from member to member to member as a token of exchange. When someone pays you in %RCREDITS, you can spend those funds &mdash; OR you can "cash it out" by transferring it to your bank account or exchanging it for US Dollars.</p>

@@ -388,18 +388,20 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
 /**
  * Add a deactivated or phony (and used) card code to the "bad" list.
  * @param string $qid: the account ID
- * @param string $code: the bad card code
+ * @param string $code: the bad card code (if NULL, don't mark it bad, just tell admin)
  * @param string $msg: type of error
+ * @return FALSE 
  */
 function badCard($qid, $code, $msg) {
   $created = now();
   $info = compact('qid', 'code');
-  if (!db\exists('r_bad', $info)) {
+  if (isset($code) and !db\exists('r_bad', $info)) {
     $info += compact('created');
     db\insert('r_bad', $info, 'created');
     $index = 'card marked bad';
   } else $index = 'attempted card already marked bad';
   r\tellCAdmin($index, $info + compact('msg'));
+  return FALSE;
 }
 
 /**

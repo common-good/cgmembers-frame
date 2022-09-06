@@ -911,28 +911,28 @@ function decry($type, $data, $pwInstead = '') {
 
 /**
  * Encrypt / Decrypt with our PGP key pair.
- * Test with $cry = u\cryPGP('success'); debug (u\decryPGP($cry));
+ * Test with $cry = u\cryPGP('success', 'private'); debug (u\decryPGP($cry, 'public'));
  * @param string $data: what to encrypt
- * @param bool $priv: <use private key> (otherwise encrypt with public key)
+ * @param bool $porp: "private" or "public" - which key to use
  * @param string $trash: (RETURNED) the randomness added before encryption
  */
-function cryPGP($data, $priv = TRUE, &$trash = '') {
+function cryPGP($data, $porp, &$trash = '') {
   if (!$trash) $trash = openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
-  return cryPGP0('en', $data . $trash, $priv, $res) ? $res : '';
+  return cryPGP0('en', $data . $trash, $porp, $res) ? $res : '';
 }
 
 /**
  * Decryt with our PGP key pair (for testing at least).
  */
-function decryPGP($data, $priv = FALSE) {
-  $success = cryPGP0('de', $data, $priv, $res);
+function decryPGP($data, $porp) {
+  $success = cryPGP0('de', $data, $porp, $res);
   return $success ? substr_replace($res, '', -30) : '';
 }
 
-function cryPGP0($way, $data, $priv, &$res = '') {
-  $func = 'openssl_' . ($priv ? 'private' : 'public') . "_{$way}crypt";
+function cryPGP0($way, $data, $porp, &$res = '') {
+  $func = "openssl_{$porp}_{$way}crypt";
   $k = u\fmtKey(u\unfmtKey(PGP_KEY), 'PRIVATE');
-  return $func($data, $res, $priv ? $k : u\pubKey($k)) ? $res : FALSE;
+  return $func($data, $res, $porp == 'private' ? $k : u\pubKey($k)) ? $res : FALSE; // die here if bad $porp
 }
 
 /**

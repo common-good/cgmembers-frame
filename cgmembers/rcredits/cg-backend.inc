@@ -809,9 +809,10 @@ function advanceCredit($for, $buyer, $seller, $credit) {
 
 /**
  * Send appropriate notifications and return a success message array
+ * @param bool $doTell: actually send notifications (otherwise just return the txRet object)
  * @return a txRet object
  */
-function sendNotifications($mya, $type, $tx, $shortfall) {
+function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
   if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
@@ -848,7 +849,7 @@ function sendNotifications($mya, $type, $tx, $shortfall) {
       $notice = 'paid you linked';
       $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
-    if ($notice and !$a->isCanonic) $a->$tell($notice, $args);
+    if ($notice and !$a->isCanonic and $doTell) $a->$tell($notice, $args);
     if ($i == (($mya ? ($mya->id == $tx->uid2) : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }
 
@@ -1293,25 +1294,27 @@ function roundupDonations($uids, $start, $end) {
 }
 
 /**
- * Return a list of account choices for the current user (agent of the current account)
+ * Return a list of account choices for the given account -- normally the current user (agent of the current account)
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
-function accountChoices() {
-  if (!$mya = r\acct()) return FALSE;
-  $result[$aid = $mya->agentId] = $mya->agentA->fullName;
+function accountChoices($a) {
+  global $mya;
+  if (!$a) return FALSE;
+
+  $result[$aid = $a->agentId] = $a->agentA->fullName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
   $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
 
-  if ($mya->admRegion) {
+  if ($mya and $mya->admRegion) {
     $where = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
-    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (uid<0) DESC, $nameOrder");
-  } elseif ($mya->admin) {
+    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
+  } elseif ($mya and $mya->admin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
 ORDER BY (id<0) DESC, $nameOrder
 EOF;
-    $q = db\q($sql, ray('ctty aid', $mya->community, $aid));
+    $q = db\q($sql, ray('ctty aid', $a->community, $aid));
   } else $q = db\q("$sqlNormal ORDER BY $nameOrder", compact('aid')); // the usual case
 
   return $result + $q->fetchAllKeyed();

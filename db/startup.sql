@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `block` (
   PRIMARY KEY (`bid`),
   UNIQUE KEY `tmd` (`theme`,`module`,`delta`),
   KEY `list` (`theme`,`status`,`region`,`weight`,`module`)
-) ENGINE=InnoDB AUTO_INCREMENT=427 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores block settings, such as region and visibility...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=427 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores block settings, such as region and visibility...';
 
 --
 -- Dumping data for table `block`
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `cache` (
   `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
   PRIMARY KEY (`cid`),
   KEY `expire` (`expire`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Generic cache table for caching things not separated out...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Generic cache table for caching things not separated out...';
 
 -- --------------------------------------------------------
 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `cache_bootstrap` (
   `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
   PRIMARY KEY (`cid`),
   KEY `expire` (`expire`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for data required to bootstrap Drupal, may be...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for data required to bootstrap Drupal, may be...';
 
 -- --------------------------------------------------------
 
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `cache_form` (
   `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
   PRIMARY KEY (`cid`),
   KEY `expire` (`expire`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for the form system to store recently built...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for the form system to store recently built...';
 
 -- --------------------------------------------------------
 
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `cache_menu` (
   `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
   PRIMARY KEY (`cid`),
   KEY `expire` (`expire`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for the menu system to store router...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cache table for the menu system to store router...';
 
 -- --------------------------------------------------------
 
@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS `flood` (
   PRIMARY KEY (`fid`),
   KEY `allow` (`event`,`identifier`,`timestamp`),
   KEY `purge` (`expiration`)
-) ENGINE=InnoDB AUTO_INCREMENT=2237 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Flood controls the threshold of events, such as the...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=2237 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Flood controls the threshold of events, such as the...';
 
 -- --------------------------------------------------------
 
@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `menu_links` (
   KEY `menu_plid_expand_child` (`menu_name`,`plid`,`expanded`,`has_children`),
   KEY `menu_parents` (`menu_name`,`p1`,`p2`,`p3`,`p4`,`p5`,`p6`,`p7`,`p8`,`p9`),
   KEY `router_path` (`router_path`(128))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains the individual links within a menu.';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8 COMMENT='Contains the individual links within a menu.';
 
 -- --------------------------------------------------------
 
@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS `menu_router` (
   KEY `fit` (`fit`),
   KEY `tab_parent` (`tab_parent`(64),`weight`,`title`),
   KEY `tab_root_weight_title` (`tab_root`(64),`weight`,`title`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Maps paths to various callbacks (access, page and title)';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Maps paths to various callbacks (access, page and title)';
 
 --
 -- Dumping data for table `menu_router`
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS `messages` (
   `created` int(11) DEFAULT NULL COMMENT 'creation date',
   PRIMARY KEY (`id`),
   KEY `sender` (`sender`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='messages responding to offers and needs';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='messages responding to offers and needs';
 
 -- --------------------------------------------------------
 
@@ -317,7 +317,7 @@ CREATE TABLE IF NOT EXISTS `people` (
   `health` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0' COMMENT 'summary of COVID19 survey answers',
   PRIMARY KEY (`pid`),
   KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='contact information for non-members';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='contact information for non-members';
 
 -- --------------------------------------------------------
 
@@ -333,7 +333,7 @@ CREATE TABLE IF NOT EXISTS `phinxlog` (
   `end_time` timestamp NULL DEFAULT NULL,
   `breakpoint` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `phinxlog`
@@ -431,7 +431,7 @@ CREATE TABLE IF NOT EXISTS `posts` (
   KEY `type` (`type`),
   KEY `cat` (`cat`),
   KEY `created` (`created`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='offers and needs posted by members and non-members';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='offers and needs posted by members and non-members';
 
 -- --------------------------------------------------------
 
@@ -445,7 +445,7 @@ CREATE TABLE IF NOT EXISTS `post_cats` (
   `cat` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'category of service',
   `sort` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'sorting order',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='types of offers and needs';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='types of offers and needs';
 
 --
 -- Dumping data for table `post_cats`
@@ -480,7 +480,7 @@ CREATE TABLE IF NOT EXISTS `queue` (
   `item` longblob DEFAULT NULL COMMENT 'arbitrary data for the item.',
   `created` int(11) DEFAULT NULL COMMENT 'Unixtime record was created',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cron queue';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cron queue';
 
 -- --------------------------------------------------------
 
@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS `registry` (
   `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'The order in which this module’s hooks should be invoked relative to other modules. Equal-weighted modules are ordered by name.',
   PRIMARY KEY (`name`,`type`),
   KEY `hook` (`type`,`weight`,`module`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Each record is a function, class, or interface name and...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Each record is a function, class, or interface name and...';
 
 --
 -- Dumping data for table `registry`
@@ -772,7 +772,7 @@ CREATE TABLE IF NOT EXISTS `registry_file` (
   `filename` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Path to the file.',
   `hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'sha-256 hash of the file’s contents when last parsed.',
   PRIMARY KEY (`filename`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Files parsed to build the registry.';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Files parsed to build the registry.';
 
 --
 -- Dumping data for table `registry_file`
@@ -860,7 +860,7 @@ CREATE TABLE IF NOT EXISTS `r_areas` (
   `area_code` char(3) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'telephone area code',
   `region` varchar(24) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'state, province, or territory',
   PRIMARY KEY (`area_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_areas`
@@ -1212,7 +1212,7 @@ CREATE TABLE IF NOT EXISTS `r_bad` (
   `code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'phoney card security code',
   `created` int(11) NOT NULL COMMENT 'Unixtime record was created',
   PRIMARY KEY (`created`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='lost, stolen, or faked rCard codes';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='lost, stolen, or faked rCard codes';
 
 -- --------------------------------------------------------
 
@@ -1232,7 +1232,7 @@ CREATE TABLE IF NOT EXISTS `r_ballots` (
   KEY `question` (`question`),
   KEY `voter` (`voter`),
   KEY `proxy` (`proxy`)
-) ENGINE=InnoDB AUTO_INCREMENT=257489 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='A votable question addressed by a particular voter';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=257489 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='A votable question addressed by a particular voter';
 
 -- --------------------------------------------------------
 
@@ -1258,7 +1258,7 @@ CREATE TABLE IF NOT EXISTS `r_banks` (
   `view` char(1) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'status',
   PRIMARY KEY (`route`),
   KEY `newroute` (`newRoute`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bank routing numbers';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bank routing numbers';
 
 --
 -- Dumping data for table `r_banks`
@@ -21214,7 +21214,7 @@ CREATE TABLE IF NOT EXISTS `r_boxes` (
   `restricted` tinyint(4) DEFAULT 0 COMMENT 'permit no new users of this device',
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Names for devices';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Names for devices';
 
 -- --------------------------------------------------------
 
@@ -21233,7 +21233,7 @@ CREATE TABLE IF NOT EXISTS `r_changes` (
   `changedBy` bigint(20) DEFAULT NULL COMMENT 'uid of user who made the change',
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Member record changes';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Member record changes';
 
 -- --------------------------------------------------------
 
@@ -21258,7 +21258,7 @@ CREATE TABLE IF NOT EXISTS `r_company` (
   `payrollStart` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime date last payroll started',
   `payrollEnd` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime date last payroll ended',
   PRIMARY KEY (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=40326000000003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Companies';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=40326000000003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Companies';
 
 --
 -- Dumping data for table `r_company`
@@ -21289,7 +21289,7 @@ CREATE TABLE IF NOT EXISTS `r_countries` (
   UNIQUE KEY `name_iso_code` (`name`,`iso_code`),
   KEY `address_format_id` (`address_format_id`),
   KEY `region_id` (`region_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1247 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=1247 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_countries`
@@ -21562,7 +21562,7 @@ CREATE TABLE IF NOT EXISTS `r_criteria` (
   `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
   PRIMARY KEY (`id`),
   KEY `ctty` (`ctty`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Criteria for funding proposals';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Criteria for funding proposals';
 
 --
 -- Dumping data for table `r_criteria`
@@ -21604,7 +21604,7 @@ CREATE TABLE IF NOT EXISTS `r_do` (
   `before` int(11) DEFAULT 0 COMMENT 'Unixtime expiration',
   PRIMARY KEY (`doid`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Clickable actions with no signin';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Clickable actions with no signin';
 
 -- --------------------------------------------------------
 
@@ -21623,7 +21623,7 @@ CREATE TABLE IF NOT EXISTS `r_events` (
   `end` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime event ends',
   PRIMARY KEY (`id`),
   KEY `ctty` (`ctty`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Events in each community’s democratic process';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Events in each community’s democratic process';
 
 -- --------------------------------------------------------
 
@@ -21640,7 +21640,7 @@ CREATE TABLE IF NOT EXISTS `r_honors` (
   `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime of first associated gift',
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=270 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='gifts in honor or memory';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=270 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='gifts in honor or memory';
 
 -- --------------------------------------------------------
 
@@ -21655,7 +21655,7 @@ CREATE TABLE IF NOT EXISTS `r_industries` (
   `parent` int(11) DEFAULT NULL,
   PRIMARY KEY (`iid`),
   KEY `parent` (`parent`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_industries`
@@ -21769,7 +21769,7 @@ CREATE TABLE IF NOT EXISTS `r_investments` (
   PRIMARY KEY (`vestid`),
   KEY `coid` (`coid`),
   KEY `proposedBy` (`proposedBy`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='potential and actual investments';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='potential and actual investments';
 
 -- --------------------------------------------------------
 
@@ -21792,7 +21792,7 @@ CREATE TABLE IF NOT EXISTS `r_invites` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `inviter` (`inviter`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who invited whom';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who invited whom';
 
 -- --------------------------------------------------------
 
@@ -21818,7 +21818,7 @@ CREATE TABLE IF NOT EXISTS `r_invoices` (
   KEY `payee` (`payee`),
   KEY `created` (`created`),
   KEY `status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits invoices in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits invoices in the region';
 
 -- --------------------------------------------------------
 
@@ -21833,7 +21833,7 @@ CREATE TABLE IF NOT EXISTS `r_ips` (
   `device` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'device code',
   PRIMARY KEY (`ip`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP addresses of approved accounts';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP addresses of approved accounts';
 
 --
 -- Dumping data for table `r_ips`
@@ -21855,7 +21855,7 @@ CREATE TABLE IF NOT EXISTS `r_near` (
   `uid2` bigint(20) NOT NULL COMMENT 'account record ID of other account',
   `weight` mediumint(9) DEFAULT NULL COMMENT 'number of connections',
   PRIMARY KEY (`uid1`,`uid2`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='How members are connected';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='How members are connected';
 
 -- --------------------------------------------------------
 
@@ -21873,7 +21873,7 @@ CREATE TABLE IF NOT EXISTS `r_notices` (
   `message` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'the notice text',
   PRIMARY KEY (`msgid`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Message digest buffer';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Message digest buffer';
 
 -- --------------------------------------------------------
 
@@ -21898,7 +21898,7 @@ CREATE TABLE IF NOT EXISTS `r_options` (
   `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
   PRIMARY KEY (`id`),
   KEY `question` (`question`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Options for a question to be voted on';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Options for a question to be voted on';
 
 -- --------------------------------------------------------
 
@@ -21919,7 +21919,7 @@ CREATE TABLE IF NOT EXISTS `r_pairs` (
   PRIMARY KEY (`id`),
   KEY `option1` (`option1`),
   KEY `option2` (`option2`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Counts of preferences of one option over another';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Counts of preferences of one option over another';
 
 -- --------------------------------------------------------
 
@@ -21933,7 +21933,7 @@ CREATE TABLE IF NOT EXISTS `r_photos` (
   `photo` longblob DEFAULT NULL COMMENT 'member photo',
   `thumb` blob DEFAULT NULL COMMENT 'small version of photo',
   PRIMARY KEY (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='one photo for each account';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='one photo for each account';
 
 -- --------------------------------------------------------
 
@@ -21972,7 +21972,7 @@ CREATE TABLE IF NOT EXISTS `r_proposals` (
   PRIMARY KEY (`id`),
   KEY `ctty` (`ctty`),
   KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='rCredits funding proposals';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='rCredits funding proposals';
 
 -- --------------------------------------------------------
 
@@ -21988,7 +21988,7 @@ CREATE TABLE IF NOT EXISTS `r_proxies` (
   `priority` tinyint(4) DEFAULT NULL COMMENT 'precedence of this proxy (1=top priority)',
   PRIMARY KEY (`id`),
   KEY `person` (`person`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who represents whom';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who represents whom';
 
 -- --------------------------------------------------------
 
@@ -22014,7 +22014,7 @@ CREATE TABLE IF NOT EXISTS `r_questions` (
   `result` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'results of the vote or grading',
   `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Questions to be voted on';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Questions to be voted on';
 
 -- --------------------------------------------------------
 
@@ -22034,7 +22034,7 @@ CREATE TABLE IF NOT EXISTS `r_ratings` (
   PRIMARY KEY (`ratingid`),
   KEY `vestid` (`vestid`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='how a member rates an investment';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='how a member rates an investment';
 
 -- --------------------------------------------------------
 
@@ -22054,7 +22054,7 @@ CREATE TABLE IF NOT EXISTS `r_regions` (
   PRIMARY KEY (`region`),
   UNIQUE KEY `fullName` (`fullName`),
   KEY `state` (`st`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_regions`
@@ -22140,7 +22140,7 @@ CREATE TABLE IF NOT EXISTS `r_relations` (
   PRIMARY KEY (`reid`),
   KEY `main` (`main`),
   KEY `other` (`other`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who can manage which accounts, and how';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who can manage which accounts, and how';
 
 -- --------------------------------------------------------
 
@@ -22158,7 +22158,7 @@ CREATE TABLE IF NOT EXISTS `r_shares` (
   `sold` int(11) DEFAULT NULL COMMENT 'Unixtime investment totally sold',
   PRIMARY KEY (`shid`),
   KEY `vestid` (`vestid`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='club stakes in investments';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='club stakes in investments';
 
 -- --------------------------------------------------------
 
@@ -22177,7 +22177,7 @@ CREATE TABLE IF NOT EXISTS `r_stakes` (
   `requestedOut` int(11) NOT NULL DEFAULT 0 COMMENT 'when this member last requested cash out',
   PRIMARY KEY (`stakeid`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='member stakes in an investment club';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='member stakes in an investment club';
 
 -- --------------------------------------------------------
 
@@ -22194,7 +22194,7 @@ CREATE TABLE IF NOT EXISTS `r_states` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_country_id` (`name`,`country_id`),
   KEY `country_id` (`country_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10057 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=10057 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_states`
@@ -25994,7 +25994,7 @@ CREATE TABLE IF NOT EXISTS `r_stats` (
   `invites` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'total invitations to date',
   PRIMARY KEY (`id`),
   KEY `ctty` (`ctty`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Operating statistics for communities and overall';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Operating statistics for communities and overall';
 
 -- --------------------------------------------------------
 
@@ -26010,7 +26010,7 @@ CREATE TABLE IF NOT EXISTS `r_tous` (
   `message` blob DEFAULT NULL COMMENT 'the message',
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Secure messages sent from member to us.';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Secure messages sent from member to us.';
 
 -- --------------------------------------------------------
 
@@ -26023,7 +26023,7 @@ CREATE TABLE IF NOT EXISTS `r_transit` (
   `id` int(11) NOT NULL,
   `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`location`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `r_transit`
@@ -26156,7 +26156,7 @@ CREATE TABLE IF NOT EXISTS `r_usd` (
   `xid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'id of related tx_hdrs record',
   PRIMARY KEY (`txid`),
   KEY `created` (`created`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of bank transfers in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of bank transfers in the region';
 
 -- --------------------------------------------------------
 
@@ -26175,7 +26175,7 @@ CREATE TABLE IF NOT EXISTS `r_usd2` (
   `xid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'id of related tx_hdrs record',
   PRIMARY KEY (`id`),
   KEY `completed` (`completed`)
-) ENGINE=InnoDB AUTO_INCREMENT=145 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of transfers to or from a bank account';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=145 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of transfers to or from a bank account';
 
 -- --------------------------------------------------------
 
@@ -26191,7 +26191,7 @@ CREATE TABLE IF NOT EXISTS `r_user_industries` (
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`),
   KEY `iid` (`iid`)
-) ENGINE=InnoDB AUTO_INCREMENT=367 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='industries for each company';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=367 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='industries for each company';
 
 -- --------------------------------------------------------
 
@@ -26213,7 +26213,7 @@ CREATE TABLE IF NOT EXISTS `r_votes` (
   PRIMARY KEY (`id`),
   KEY `ballot` (`ballot`),
   KEY `option` (`option`)
-) ENGINE=InnoDB AUTO_INCREMENT=16989 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='What grade a particular voter gave a particular options...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=16989 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='What grade a particular voter gave a particular options...';
 
 -- --------------------------------------------------------
 
@@ -26229,7 +26229,7 @@ CREATE TABLE IF NOT EXISTS `semaphore` (
   PRIMARY KEY (`name`),
   KEY `value` (`value`),
   KEY `expire` (`expire`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Table for holding semaphores, locks, flags, etc. that...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Table for holding semaphores, locks, flags, etc. that...';
 
 -- --------------------------------------------------------
 
@@ -26251,7 +26251,7 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   KEY `timestamp` (`timestamp`),
   KEY `uid` (`uid`),
   KEY `ssid` (`ssid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drupal’s session handlers read and write into the...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drupal’s session handlers read and write into the...';
 
 -- --------------------------------------------------------
 
@@ -26273,7 +26273,7 @@ CREATE TABLE IF NOT EXISTS `system` (
   PRIMARY KEY (`filename`),
   KEY `system_list` (`status`,`bootstrap`,`type`,`weight`,`name`),
   KEY `type_name` (`type`,`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='A list of all modules, themes, and theme engines that are...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='A list of all modules, themes, and theme engines that are...';
 
 --
 -- Dumping data for table `system`
@@ -26351,7 +26351,7 @@ CREATE TABLE IF NOT EXISTS `test` (
   PRIMARY KEY (`id`),
   KEY `test` (`test`),
   KEY `type` (`type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='transient data while testing offline';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='transient data while testing offline';
 
 -- --------------------------------------------------------
 
@@ -26782,7 +26782,7 @@ CREATE TABLE IF NOT EXISTS `tx_disputes_all` (
   `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT 'status of the dispute',
   `deleted` bigint(20) DEFAULT NULL COMMENT 'unix timestamp of when the dispute record was deleted, null if it hasn''t been',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='record of dispute of transaction';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='record of dispute of transaction';
 
 -- --------------------------------------------------------
 
@@ -26828,7 +26828,7 @@ CREATE TABLE IF NOT EXISTS `tx_entries_all` (
   PRIMARY KEY (`id`),
   KEY `xid` (`xid`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of a transaction line entry';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of a transaction line entry';
 
 --
 -- Triggers `tx_entries_all`
@@ -26923,7 +26923,7 @@ CREATE TABLE IF NOT EXISTS `tx_hdrs_all` (
   UNIQUE KEY `reversesXid` (`reversesXid`),
   KEY `actorId` (`actorId`),
   KEY `created` (`created`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits transactions in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits transactions in the region';
 
 -- --------------------------------------------------------
 
@@ -26952,7 +26952,7 @@ CREATE TABLE IF NOT EXISTS `tx_rules` (
   `code` int(11) DEFAULT NULL COMMENT 'For gift cards the individual code',
   `template` int(11) DEFAULT NULL COMMENT 'Template of which this is an occurrence',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Occurrences of a rule';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Occurrences of a rule';
 
 -- --------------------------------------------------------
 
@@ -26983,7 +26983,7 @@ CREATE TABLE IF NOT EXISTS `tx_templates` (
   `duration` enum('once','day','week','month','quarter','year','forever') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'The unit of duration',
   `durations` int(11) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'How many duration units an occurrence is valid for',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Templates for auxiliary transactions';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Templates for auxiliary transactions';
 
 -- --------------------------------------------------------
 
@@ -27051,7 +27051,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `mail` (`email`),
   KEY `picture` (`picture`),
   KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores user data.';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores user data.';
 
 --
 -- Dumping data for table `users`
@@ -27079,7 +27079,7 @@ CREATE TABLE IF NOT EXISTS `u_groupies` (
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`,`start`),
   KEY `grpId` (`grpId`,`start`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -27093,7 +27093,7 @@ CREATE TABLE IF NOT EXISTS `u_groups` (
   `name` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -27115,7 +27115,7 @@ CREATE TABLE IF NOT EXISTS `u_shouters` (
   `rating` int(11) NOT NULL DEFAULT 0 COMMENT 'how awesome is the quote, 0=not',
   PRIMARY KEY (`uid`),
   UNIQUE KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='people who have signed a public statement of support';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='people who have signed a public statement of support';
 
 -- --------------------------------------------------------
 
@@ -27133,7 +27133,7 @@ CREATE TABLE IF NOT EXISTS `u_track` (
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`),
   KEY `type` (`type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='contact information for non-members';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='contact information for non-members';
 
 -- --------------------------------------------------------
 
@@ -27146,7 +27146,7 @@ CREATE TABLE IF NOT EXISTS `variable` (
   `name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'The name of the variable.',
   `value` longblob NOT NULL COMMENT 'The value of the variable.',
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Named variable/value pairs created by Drupal core or any...';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Named variable/value pairs created by Drupal core or any...';
 
 --
 -- Dumping data for table `variable`
@@ -27182,7 +27182,7 @@ CREATE TABLE IF NOT EXISTS `x_invoices` (
   KEY `payee` (`payee`),
   KEY `created` (`created`),
   KEY `status` (`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=952 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits invoices in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=952 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits invoices in the region';
 
 -- --------------------------------------------------------
 
@@ -27197,7 +27197,7 @@ CREATE TABLE IF NOT EXISTS `x_photos` (
   `photo` longblob DEFAULT NULL COMMENT 'member photo',
   `thumb` blob DEFAULT NULL COMMENT 'small version of photo',
   PRIMARY KEY (`uid`,`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='one photo for each account';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='one photo for each account';
 
 -- --------------------------------------------------------
 
@@ -27220,7 +27220,7 @@ CREATE TABLE IF NOT EXISTS `x_relations` (
   PRIMARY KEY (`reid`,`deleted`),
   KEY `main` (`main`),
   KEY `other` (`other`)
-) ENGINE=InnoDB AUTO_INCREMENT=40326000000006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who can manage which accounts, and how';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=40326000000006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Who can manage which accounts, and how';
 
 -- --------------------------------------------------------
 
@@ -27255,7 +27255,7 @@ CREATE TABLE IF NOT EXISTS `x_txs` (
   KEY `payer` (`payer`),
   KEY `payee` (`payee`),
   KEY `created` (`created`)
-) ENGINE=InnoDB AUTO_INCREMENT=103273 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits transactions in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=103273 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits transactions in the region';
 
 -- --------------------------------------------------------
 
@@ -27280,7 +27280,7 @@ CREATE TABLE IF NOT EXISTS `x_usd` (
   `xid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'id of related tx_hdrs record',
   PRIMARY KEY (`txid`,`deleted`),
   KEY `created` (`created`)
-) ENGINE=InnoDB AUTO_INCREMENT=6131340 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of USD (Dwolla) transactions in the region';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC AUTO_INCREMENT=6131340 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of USD (Dwolla) transactions in the region';
 
 -- --------------------------------------------------------
 
@@ -27349,7 +27349,7 @@ CREATE TABLE IF NOT EXISTS `x_users` (
   KEY `mail` (`email`),
   KEY `picture` (`picture`),
   KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores user data.';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores user data.';
 
 -- --------------------------------------------------------
 
@@ -27363,7 +27363,7 @@ CREATE TABLE IF NOT EXISTS `zip3` (
   `region` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'city or region within a state',
   `state` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'state abbreviation',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='meaning of first 3 digits of Zip Codes';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='meaning of first 3 digits of Zip Codes';
 
 --
 -- Dumping data for table `zip3`

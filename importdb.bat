@@ -1,2 +1,2 @@
-%SqlPath% -uroot<db\import-%1.sql
+%SqlPath% -uroot -ppass<db\import-%1.sql
 

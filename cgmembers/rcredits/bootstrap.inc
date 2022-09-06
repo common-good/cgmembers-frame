@@ -638,21 +638,33 @@ function delV($name) {
 function variable_del($nm) {return delV($nm);} // for legacy Drupal
 
 /**
- * Exit with a plaintext message.
+ * Exit with a plaintext message or integer.
+ * call with:
+ *   ExitJust(s)
+ *   ExitJust(s, status)
+ *   ExitJust(status)
+ * @param string $s: text to print
+ * @param int $status: HTTP return code (default 200)
  * @return (only for tests): NULL
  * @see also t\getExitMsg()
  */
-function exitJust($s = '') {
-  if (test()) {
-    t\output('exiting with: ' . pr($s)); 
-/**/t\logRec('echo', $s);
-    return NULL;
+function exitJust($s = '', $status = X_GOT) {
+  if (is_numeric($s)) {
+    $status = $s;
+    $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many requests. Please stop trying!')), $status);
   }
   
-/**/  echo pr($s);
-  exit();
+  if (test()) {
+    t\output("exiting ($status) with: " . pr($s)); 
+/**/t\logRec('echo', "$status: $s");
+    return NULL;
+  }
+
+  if (!empty($s)) echo pr($s);
+  exit($status);
 }
 function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
+function exitJson($message, $status = X_GOT) {return exitJust(is_array($message) ? $message : compact('message'), $status);}
 
 /**
  * Return the account to scan from. Also set $boxId.
