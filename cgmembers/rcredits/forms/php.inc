@@ -27,7 +27,7 @@ function formPhp_submit($form, &$sta) {
   $code = str_replace('<.', '<', $code); // fudge around drupal's sanitizing of all HTML
   \setV('code', $code); // remember for next time
 
-  $u = 'r:, db:\DB, be:\Backend, u:\Util, a:\Admin, w:\Web, cr:\Cron, s:\Smart, v:\Vote, k:\Risk';
+  $u = 'r:, db:\DB, qr:\QR, be:\Backend, u:\Util, a:\Admin, w:\Web, cr:\Cron, s:\Smart, v:\Vote, k:\Risk';
   if (!isPRODUCTION) $u .= ', t:\Testing';
   foreach (ray($u) as $k => $v) $uses[] = "use CG$v as $k;";
 

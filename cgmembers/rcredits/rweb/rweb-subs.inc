@@ -974,18 +974,24 @@ function flooding($uid, &$sta, &$err) {
   return FALSE;
 }
 
-function noFlood($sta) {\flood_clear_event('failed_login_attempt_user', nni($sta, 'flood_control_user_identifier'));}
+function noFlood($sta) {\flood_clear_event('failed_login_attempt_user', nni($sta, 'flood_control_user_identifier')); return NULL;}
 
-function updateFlood($sta, $success) {
+/**
+ * Track failed signin attempts by account and by IP (code largely inherited from Drupal).
+ * @param assoc $sta: an associative array with the data
+ * @param bool $success: <signin was successful>
+ * @param string $err (RETURNED): an error message if $success is FALSE (else NULL)
+ */
+function updateFlood($sta, $success, $err = NULL) {
   if ($success) return noFlood($sta); // Clear failures (don't block a user who might log in and out more than once in an hour)
   
   \flood_register_event('failed_login_attempt_ip', 3600); // Always register an IP-based failed login event.
   if ($id = nni($sta, 'flood_control_user_identifier')) \flood_register_event('failed_login_attempt_user', 21600, $id); // Register a per-user failed login event.
 
   if ($trigger = nni($sta, 'flood_control_triggered')) {
-    $msg = $trigger == 'user' ? t('Sorry, there have been more than :MAX_PW_FAILS failed sign-in attempts for this account. It is temporarily blocked.') : t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked.');
-    w\say($msg . t(' Try again later or <%a>request a new password</a>.', '_a', atag('/user/password')), 'name');
-  } else return w\say(t('bad login', '_a', atag('/settings/password')), 'name');
+    $err = $trigger == 'user' ? t('We\'re sorry, there have been more than :MAX_PW_FAILS failed sign-in attempts for this account. It is temporarily blocked.') : t('We\'re sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked.');
+    $err .= t(' Try again later or <%a>request a new password</a>.', '_a', atag('/user/password'));
+  } else $err = t('bad login', '_a', atag('/settings/password'));
 }
 
 /**

@@ -1,3 +1,29 @@
+2022-09-09 feature/api
+. added regression tests for new API
+. fixed the bugs that appeared
+. fixed qr code processing bugs
+
+2022-09-06 feature/api
+. renamed api test directory to smp
+. split out SMP code to separate file
+. added (empty) api test directory for CGPay api
+
+2022-09-05 feature/api
+. expanded exitJust to include HTTP return status and added exitJson() for api data returns
+. parameterized be\accountChoices() for use in api's GET /accounts
+. added functions for interpreting an abbreviated QR
+. moved QR functions to cg-qr.inc
+. made u\cryPGP and u\decryPGP more explicit
+. implemented these endpoints in CGPay api: accounts, identity, idPhoto, transactions
+. gave admV admins the power to select any accounting category in txdetail.inc
+. improved investment club help message text
+. pointlessly added a password to mariadb ("pass") (since adminer still doesn't work)
+. made all db tables ROW_FORMAT=DYNAMIC;
+
+  $q = db\q("SELECT CONCAT('ALTER TABLE `', TABLE_SCHEMA, '`.`', TABLE_NAME, '` ', 'ROW_FORMAT=DYNAMIC;') AS _alter
+  FROM INFORMATION_SCHEMA.TABLES WHERE ENGINE='InnoDB' AND IFNULL(ROW_FORMAT,'')<> 'DYNAMIC';");
+  while ($row = $q->fetch()) db\q($row->_alter); // change all tables to ROW_FORMAT=DYNAMIC
+
 2022-08-10 feature/print-cards
 . adjusted card printing to show an image that can be printed directly to a C80 card printer
 . improved cloning

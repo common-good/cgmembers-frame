@@ -190,7 +190,7 @@ function formAccounts($form, &$sta) {
     return compact('accounts');
   }
   
-  if (!$accounts = be\accountChoices()) return [];
+  if (!$accounts = be\accountChoices(r\acct())) return [];
   $choices = [];
 
   foreach ($accounts as $uid => $choice) {

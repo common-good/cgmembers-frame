@@ -150,7 +150,6 @@ define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
 const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
-const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
 const PHONE_PUNC = '\(\) \-\./'; // punctuation commonly found in phone numbers (excluding "+")
 
 const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
@@ -297,6 +296,23 @@ const IBY_SELF = 0; // signed up without an invitation/confirmation yet
 const IBY_EMAIL = 1; // invited by email (this invitation # is re-usable, but needs to be confirmed)
 const IBY_ICARD = 2; // >=this is invitation number, also needing confirmation
 const IBYS = 'form late self email icard';
+
+// HTTP Return codes
+const X_GOT = 200;
+const X_OK = 201;
+const X_SYNTAX = 400;
+const X_UNAUTH = 401;
+const X_NOTFOUND = 404;
+const X_DENIED = 406;
+const X_TOOMANY = 429; // too many requests (DOS)
+const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
+
+// card format
+const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to demo and production servers, respectively (for QR codes)
+const CODE_LEN_MIN = 11; // some old cards have codes this short
+const CODE_LEN_MAX = 64; // head off db errors
+const REGION_LENS = '112233344'; // field lengths implied by format character divided by 4
+const ACCT_LENS = '232323445';
 
 // notification preferences
 $GLOBALS['notifyWhens'] = t('N:Never,I:Immediately,D:Daily,W:Weekly,M:Monthly');
