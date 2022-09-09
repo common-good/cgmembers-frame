@@ -656,15 +656,15 @@ function exitJust($s = '', $status = X_GOT) {
   
   if (test()) {
     t\output("exiting ($status) with: " . pr($s)); 
-/**/t\logRec('echo', $s);
+/**/t\logRec('echo', "%$status: $s");
     return NULL;
   }
 
-  if (!empty($s)) echo pr($s);
+/**/  if (!empty($s)) echo pr($s);
   exit($status);
 }
 function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
-function exitJson($message, $status = X_GOT) {return exitJust(is_array($message) ? $message : compact('message'), $status);}
+function exitJson($message, $status = X_GOT) {return exitJust(json_encode(is_array($message) ? $message : compact('message')), $status);}
 
 /**
  * Return the account to scan from. Also set $boxId.
@@ -1443,7 +1443,7 @@ function f($func) {
  */
 function funcNickname($func) {
   list ($n, $func) = explode('.', $func);
-  $funcs = array_combine(ray('r w s u be db t p a cr y v i'), ray(' Web Smart Util Backend DB Testing SMS Admin Cron Special Vote Install'));
+  $funcs = array_combine(ray('r w s u be db qr t p a cr y v i'), ray(' Web Smart Util Backend DB QR Testing SMS Admin Cron Special Vote Install'));
   return 'CG\\' . ($funcs[$n] ? $funcs[$n] . '\\' : '') . $func;
 }
 

@@ -88,10 +88,10 @@ function acct($qr, $requireCode) {
   $count = count($parts);
   
   if ($count <= 2) { // abbreviated format (for QRs displayed by app) - <fmt><region><acct><agent><cardCode><type><counter>
-    if (!preg_match('/^[0-9A-Z]/', $qr)) return NULL;
+    if (!preg_match('/^[0-9A-Z]{3,}/', $qr)) return NULL;
     $fmt = $qr[0]; // one radix 36 digit representing format (field lengths)
     $i = (int) u\a2n($fmt, 36) / 4;
-    $regionLen = (int) REGION_LENS[$i];
+    if (!$regionLen = (int) substr(REGION_LENS, $i, 1)) return NULL;
 
     $region = substr($qr, 1, $regionLen);
     $isTestCard = !strhas($qr, '-');
@@ -121,6 +121,7 @@ function acct($qr, $requireCode) {
   } else return NULL;
 
   if ($unfmt) extract($unfmt); else return NULL;
+
   if (!$a = r\acct($qid)) return NULL;
   if ($requireCode and $cardCode != $a->cardCode()) return NULL;
   return r\acct($qid);
@@ -131,7 +132,7 @@ function qrUnfmt($region, $tail, $isTestCard) {
   if (!preg_match('/[0-9A-Z]/', $fmt)) return NULL;
   $i = (int) u\a2n($fmt, 36);
   $agentLen = $i % 4;
-  $acctLen = (int) ACCT_LENS[$i / 4];
+  $acctLen = substr(ACCT_LENS, $i / 4, 1);
 
   if ($acctLen == 6 or strlen($tail) < 1 + $acctLen + $agentLen) return NULL;
 
@@ -142,7 +143,7 @@ function qrUnfmt($region, $tail, $isTestCard) {
 
   $region = u\n2a(u\a2n($region, 36), 3);
   $account = u\n2a(u\a2n($account, 36), 3);
-  $agent = $isAgent ? ('-' . u\n2a(u\a2n($agent))) : '';
+  $agent = $isAgent ? ('-' . u\n2a(u\a2n($agent), -1)) : '';
 
   $co = $region . $account;
   $qid = $co . $agent;

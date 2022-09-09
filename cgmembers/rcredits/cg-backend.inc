@@ -1295,15 +1295,17 @@ function roundupDonations($uids, $start, $end) {
 
 /**
  * Return a list of account choices for the given account -- normally the current user (agent of the current account)
+ * @param acct $a: the account for which to find related accounts
+ * @param int $perm: $a's minimum permissions to include an account in the list
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
-function accountChoices($a) {
+function accountChoices($a, $perm = B_READ) {
   global $mya;
   if (!$a) return FALSE;
 
   $result[$aid = $a->agentId] = $a->agentA->fullName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
+  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>=' . r\perm($perm); // normal selection SQL
 
   if ($mya and $mya->admRegion) {
     $where = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';

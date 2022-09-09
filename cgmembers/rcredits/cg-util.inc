@@ -832,7 +832,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
   if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
   if (is_numeric($data)) $data = strval($data);
   
-  if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
+  if ($type == 'D') return FAIL("use cryPGP not cry('D')"); //return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
   
   if ($de) {
     if (!u\starts($data, CRYPT_FLAG . $type)) throw new \BadCry('encrypted value must begin with crypt flag');

@@ -1,3 +1,8 @@
+2022-09-09 feature/api
+. added regression tests for new API
+. fixed the bugs that appeared
+. fixed qr code processing bugs
+
 2022-09-06 feature/api
 . renamed api test directory to smp
 . split out SMP code to separate file
@@ -8,7 +13,7 @@
 . parameterized be\accountChoices() for use in api's GET /accounts
 . added functions for interpreting an abbreviated QR
 . moved QR functions to cg-qr.inc
-. made u\cryPGP and u\decryPHP more explicit
+. made u\cryPGP and u\decryPGP more explicit
 . implemented these endpoints in CGPay api: accounts, identity, idPhoto, transactions
 . gave admV admins the power to select any accounting category in txdetail.inc
 . improved investment club help message text

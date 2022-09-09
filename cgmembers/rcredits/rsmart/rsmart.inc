@@ -82,6 +82,7 @@ $GLOBALS['tStrings'] += array(
  */
 function pos($args = FALSE) {
 ///  debug("pos(" . pr($args) . ")");
+
   global $channel; $channel = TX_APP;
   global $scanned; $scanned = true;
   global $mya;
@@ -96,7 +97,6 @@ function pos($args = FALSE) {
   extract(just('op signin device agent member version', $args, NULL));
   if ($op != 'time') u\loga('in', $args); // avoid filling the log with time requests
   $args['version'] = (int) $version;
-  
   if (!$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
   
   if (isDEV and $op == 'test') return smartTest($args0);
@@ -215,7 +215,6 @@ function getTime($args) {
  */
 function identify($args) {
   global $mya;
-
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
   extract(just($keys . ' agent pin signin', $args, NULL)); // no agent on scanin
@@ -608,7 +607,8 @@ function decodeDevice($device) {
 function badDevice(&$device, $signin, $version) {
   global $mya, $boxId;
   global $nextCode; // tests usurp generated device code, using this instead
-  if ($version >= 230 and $device and !$device = decodeDevice($device)) return posErr('unknown device'); // bad crypt
+
+  if ($version >= 230 and $device and !decodeDevice($device)) return posErr('unknown device'); // bad crypt
 
   if (!$device) { // no device specified, set it up
     if ($version < 230) return posErr('old app');
@@ -616,8 +616,7 @@ function badDevice(&$device, $signin, $version) {
     $device = nn($nextCode) ?: u\b64encode(u\cryPGP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
   }
 
-  // find device in the db or put it there
-  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version);
+  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there
 
   return FALSE;
 }

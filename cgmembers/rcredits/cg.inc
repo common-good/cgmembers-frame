@@ -728,7 +728,8 @@ function uniqueName($fullName, $info = []) {
  * @return the uid (FALSE if unsuccessful)
  */
 function loginString($qid) {
-  if (u\isQid($qid = trim(mb_strtoupper($qid))) and $a = r\acct($qid)) return $a->id; // try to interpret as a qid
+  if ($qid = trim(mb_strtoupper($qid)) and $a = r\acct($qid)) return $a->id; // try to interpret as a qid
+  if (preg_match('/^[A-Z0-9\\.\\-]{3,}/', $qid) and $a = f('qr.acct', $qid, TRUE)) return $a->id; // abbreviated account code
   $email = u\cry('P', mb_strtolower($qid));
   $name = u\shortName($qid);
   return db\get('uid', 'users', 'name=:name OR email=:email ORDER BY :IS_CO', compact('email', 'name'));

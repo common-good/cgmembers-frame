@@ -33,8 +33,8 @@ function api($arg = null) {
  * @param string $identifier: qd (abbreviated qid) or email
  * @param string password: account password
  * @return a JSON hash:
- *   accounts: an array of assocs: for each saccount accessible from the given account: [cardId, deviceId, name]
- *   where cardId is what will be stored on the device to identify the account associated with it
+ *   accounts: an array of assocs: for each account accessible from the given account: [accountId, deviceId, name]
+ *   where accountId is what will be stored on the device to identify the account associated with it
  *         deviceId is a unique identifier for this device associated with this account
  *         name is the name (fullName) on the account
  */
@@ -50,13 +50,13 @@ function accounts() {
   $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
   w\updateFlood($sta, $success, $err);
   if (!$success) return exitJust($err, X_NOTFOUND);
-  if (!$list = be\accountChoices(r\acct($uid))) return exitJust(X_NOTFOUND);
+  if (!$list = be\accountChoices(r\acct($uid), B_MANAGE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid);
-    $cardId = qr\url($a, TRUE);
+    $accountId = qr\url($a, TRUE);
     $deviceId = nn($nextCode) ?: u\b64encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
-    $accounts[] = compact(ray('cardId deviceId name'));
+    $accounts[] = compact(ray('accountId deviceId name'));
   }
   return exitJson(compact('accounts'));
 }
@@ -74,28 +74,27 @@ function accounts() {
  */
 function identity() {
   include_once R_ROOT . '/cg-qr.inc';
-  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_UNAUTH);
+//  if (!rayhas($_GET, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
+  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
   
   return exitJson(ray('name agent location', $a->fullName, $a->proSe ? '' : $a->agentA->fullName, $a->location()));
 }
 
 /**
- * GET /idPhoto
+ * GET /identity (syntax for ID photo image source)
  * Return an account's id photo.
  *
  * @param string $accountId: part of the abbreviated version of the account associated with the device, just <fmt><region><acct>
- * @param string $code: A cyphertext consisting of the first 50 characters of the device’s unique identifier followed by the otherId (the same as for the identity endpoint), encrypted with the server’s public key then base64-encoded, substituting “-” and “_” for “+” and “/” (342 chars).
+ * @param string $code: A ciphertext consisting of the first DEVICE_MAXLEN characters of the device’s unique identifier followed by the otherId (the same as for the identity endpoint), encrypted with the server’s public key then base64-encoded, substituting '-' and '_' for '+' and '/' (342 chars).
  * @return the image (mime type image/jpeg) or an error message (plain text)
  */
 function idPhoto() {
   include_once R_ROOT . '/cg-qr.inc';
-  foreach (ray('accountId code') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_UNAUTH);
+  foreach (ray('accountId code') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
   if (!$mya = getAcct($accountId, FALSE)) return exitJust(X_NOTFOUND);
   if (!$code = u\decryPGP(u\b64decode($code), 'private')) return exitJust(X_NOTFOUND);
-  if (!db\exists('r_boxes', ray('uid code', $mya->id, substr($code, 0, 50)))) return exitJust(X_NOTFOUND);
-  if (!$otherId = substr($code, 50) or !$a = qr\acct($otherId, TRUe)) return exitJust(X_NOTFOUND);
-  
+  if (!$otherId = substr($code, DEVICE_MAXLEN) or !$a = qr\acct($otherId, TRUe)) return exitJust(X_NOTFOUND);
   return photoReturn($a->agentA->photo);
 }
 
@@ -113,38 +112,34 @@ function idPhoto() {
 function transactions() {
   global $mya, $boxId;
   include_once R_ROOT . '/classes/tx.class';
-  extract(just($flds = 'amount deviceId actorId otherId description created proof offline', $_POST, NULL));
-  
-  // for testing
-  $_POST = ray($flds, 123, '', 'K6VMDJI', 'K6VMDJJ', 'stuff', now(), '', FALSE);
-  extract($args = just($flds, $_POST, NULL));
-  $deviceId = 'qXQL7XsUfsn85DYWIx7lfZIfqTRCqk0_eJoxzIHl4NfbJNyaXHo8sGD1LHq6JC3rvWd0V3UFetNrXG2OHxUybMr2h55K9uP8FANCtyxiDfZ248NJd39czaEWVQohsD82hGouLCdkwpQy2ojV3to8XObSiIj-4MczkbXStq5C4HxJTCJ--st_z8t6EqhGByvuXwTFMeylTlq6agCVvwAhfX6clyS6-TcnmdA9IJs4HnT9vTC1rpqN05zW7S3bi566w7pEfcHh-A28QKsx172XkSiEaHo2cpapYQreUs4QCYXNyLbaq5l-i6m3d0y-RmB9ImFsbGaxhThIh_zLKXyxDw'; // test
-  $mya = a('zza'); $a = a('zzb');
-  $proof = u\hash("$actorId$amount.00$otherId$a->cardCode$created");
-  // end of for testing
 
-  foreach (ray($flds) as $k) if (!isset($$k)) return exitJust($k, X_SYNTAX);
+  $flds = 'amount deviceId actorId otherId description created proof offline';
+  foreach (ray($flds) as $k) if (!$$k = nni($_POST, $k)) return exitJust(t('missing parameter %k', compact('k')), X_SYNTAX);
   $version = 100;
+  $offline = (int) ($offline == 'true');
 
-  if (!$mya = getAcct($actorId)) return exitJust(X_NOTFOUND);
+  if (!$mya = getAcct($actorId, FALSE)) return exitJust(t('bad actorId'), X_NOTFOUND);
   r\setAcct($mya);
-  if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND); // proof is proof enough (no cardCode needed)
-  $code = $a->cardCode();
-  if ($err = u\badAmount($amount, '', 2, MAX_AMOUNT)) return exitJust(X_SYNTAX); // allow negatives
+  if (!$a = getAcct($otherId, FALSE)) return exitJust(t('bad otherId'), X_NOTFOUND); // proof is proof enough (no cardCode needed)
+  $cardCode = $a->cardCode();
+  if ($err = u\badAmount($amount, '>0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
 
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
+  if (!is_numeric($created) or $created < now() - 30 * DAY_SECS or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
 
-  $hashOfTx = u\hash($wanted = "$actorId$amount$otherId$code$created");
+  if (test()) $proof = u\hash($got = "$actorId$amount$otherId$proof$created");
+  $hashOfTx = u\hash($wanted = "$actorId$amount$otherId$cardCode$created");
+
   if ($proof != $hashOfTx) {
-    r\tellAdmin('bad proof', compact(ray('version proof hashOfTx actorId amount otherId code created offline')));
-    if (test()) f('t.output', "Should be proof of $wanted");
-    return exitJust(X_SYNTAX);
+    r\tellAdmin('bad proof', compact(ray('version proof hashOfTx actorId amount otherId cardCode created offline')));
+    if (test()) f('t.output', "Wanted proof: $wanted, got: $got");
+    return exitJust(t('bad proof'), X_NOTFOUND);
   }
 
-  if (!$device = decodeDevice($deviceId)) return exitJust(X_NOTFOUND);
-  $boxId = w\boxId($device, $mya, $version); // find device in the db or put it there
+  if (!$device = decodeDevice($deviceId)) return exitJust(t('bad deviceId'), X_NOTFOUND);
+  $boxId = w\boxId(substr($deviceId, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there
 
-  $goods = $selfHelp = 0;
+  $goods = 0; $selfhelp = FALSE;
   $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
 
   if ($offline and $xid = db\get('xid', 'txs', $info)) { // forcing and transaction exists
@@ -153,7 +148,7 @@ function transactions() {
   } else { // transaction doesn't exist (yet)
     if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount]; else $type = 'charge';
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
-    if (!$z->ok) return badTx($args, $a->fullName, $z->msg, $z->subs);
+    if (!$z->ok) return badTx($_POST, $a->fullName, $z->msg, $z->subs);
 
     if (!$offline and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
     $txid = $z->subs['xid'];
@@ -193,14 +188,14 @@ function getAcct($cardId, $requireCode = TRUE) {
 function badTx($args, $account, $message, $subs = []) {
   extract(just('offline amount created', $args, NULL));
   
-  if ($offline) {
+  if ($offline == 'true') {
     global $mya;
     $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
     $subs += ray('account amount created by', $account, u\fmtAmt($amount), fmtDt($created), $by);
     $mya->tell("bad forced tx|$message", $subs);
   }
   
-  return exitJust(compact('message'), X_DENIED);
+  return exitJson($message, X_DENIED);
 }
 
 /**
@@ -225,7 +220,7 @@ function photoReturn($pic) {
     $picNone = file_get_contents(R_DFT_PICTURE); // never a company photo
     if (u\starts(bin2hex(substr($picNone, 0, $max)), $message)) $message = 'no photo';
     f('t.output', $message); 
-    return $message;
+    $pic = $message;
   }
 
   if (strlen($pic) > $max) header("Content-type: image/jpeg");
