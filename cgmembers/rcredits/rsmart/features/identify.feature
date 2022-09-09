@@ -44,25 +44,25 @@ Scenario: a cashier signs in
   | 1  | Bea Two | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: Device has no identifier yet
-  Given next code is "Jasper" encrypted with "D"
+  Given next code is "Jasper" PGP "private" encrypted
   When agent "" asks device "" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | person  | descriptions    | can          | bad | device | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd |     | Jasper | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | device    | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd |     | %nextCode | Corner Pub | %now |
 
 Scenario: Device has no identifier yet for an individual
-  Given next code is "Jasper" encrypted with "D"
+  Given next code is "Jasper" PGP "private" encrypted
   When agent "" asks device "" to sign in ".ZZA,ccA"
   Then we respond with:
-  | ok | person  | descriptions | can | canMgr                                    | bad | device | person  | time |*
-  | 1  | Abe One |              |     | charge,undo,refund,r4usd,usd4r,buy,manage |     | Jasper | Abe One | %now |
+  | ok | person  | descriptions | can | canMgr                                    | bad | device    | person  | time |*
+  | 1  | Abe One |              |     | charge,undo,refund,r4usd,usd4r,buy,manage |     | %nextCode | Abe One | %now |
   
 Scenario: Device has no identifier yet for trial company
-  Given next code is "Jasper" encrypted with "D"
+  Given next code is "Jasper" PGP "private" encrypted
   When agent "" asks device "" to sign in ".ZZH,ccH"
   Then we respond with:
-  | ok | person | descriptions | can                 | canMgr | bad | device | company | time |*
-  | 1  |        | hills        | charge,r4usd,manage |        |     | Jasper | Hill Co | %now |
+  | ok | person | descriptions | can                 | canMgr | bad | device    | company | time |*
+  | 1  |        | hills        | charge,r4usd,manage |        |     | %nextCode | Hill Co | %now |
 
 Scenario: Device should have an identifier
   When agent "C:A" asks device "" to identify "C:B,ccB2"
@@ -140,19 +140,19 @@ Scenario: a cashier scans a company customer card
   | 1  | Eve Five | this,that,other | refund,r4usd |     | Ftown, FL | Far Co  | 0     |
 
 Scenario: Device asks for a picture to go with the QR
-  Given member ".ZZB" has picture "picture1"
+  Given member ".ZZB" has photo "picture1"
   When agent "C:A" asks device "devC" for a picture of member ".ZZB" with card code "ccB"
-  Then we respond with picture "picture1"
+  Then we respond with photo "picture1"
 
 Scenario: Device asks for a picture but there isn't one
-  Given member ".ZZB" has no picture
+  Given member ".ZZB" has no photo
   When agent "C:A" asks device "devC" for a picture of member ".ZZB" with card code "ccB"
-  Then we respond with picture "no photo"
+  Then we respond with photo "no photo"
 
 Scenario: Device asks for a picture with the wrong card code
-  Given member ".ZZB" has picture "picture1"
+  Given member ".ZZB" has photo "picture1"
   When agent "C:A" asks device "devC" for a picture of member ".ZZB" with card code "garbage#@!"
-  Then we respond with picture "bad member"
+  Then we respond with photo "bad member"
   
 Scenario: A non-yet-active member card is scanned
   When agent "C:B" asks device "devC" to identify ".ZZG,ccG"

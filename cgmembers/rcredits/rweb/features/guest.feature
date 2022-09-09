@@ -25,10 +25,10 @@ Setup:
   | .ZZC |       0 |
 
 Scenario: A non-member pays a member company by credit card
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | item   | secret |*
   | .ZZC    | apples | Cc3    |
-  When member "?" visits "ccpay/code=BUTTONCODE"
+  When member "?" visits "ccpay/code=%buttonCode"
   Then we show "Pay Our Pub" with:
   | Pay         |
   | Name        |
@@ -39,10 +39,10 @@ Scenario: A non-member pays a member company by credit card
   | Pay         |
 
   Given next captcha is "37"
-  And var "CODE" encrypts:
+  And var "code" encrypts:
   | type     | item     | pid | period | amount | coId   |*
   | purchase | apples   | 1   | once   | 123.00 | NEWZZC |
-  When member "?" completes "ccpay/code=BUTTONCODE" with:
+  When member "?" completes "ccpay/code=%buttonCode" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
@@ -50,9 +50,9 @@ Scenario: A non-member pays a member company by credit card
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
 
   And we redirect to "https://www.paypal.com/cgi-bin/webscr"
-  And return URL "/ccpay/op=done&code=CODE"
+  And return URL "/ccpay/op=done&code=%code"
   
-  When member "?" visits "ccpay/op=done&code=CODE"
+  When member "?" visits "ccpay/op=done&code=%code"
   Then these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
@@ -82,10 +82,10 @@ Scenario: A non-member pays a member company by credit card
   | coName | Our Pub |**
 
 Scenario: A non-member pays Common Good by credit card
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | item   | secret |*
   | cgf     | apples | CgF    |
-  When member "?" visits "ccpay/code=BUTTONCODE"
+  When member "?" visits "ccpay/code=%buttonCode"
   Then we show "Pay Common Good" with:
   | Pay         |
   | Name        |
@@ -96,10 +96,10 @@ Scenario: A non-member pays Common Good by credit card
   | Pay         |
 
   Given next captcha is "37"
-  And var "CODE" encrypts:
+  And var "code" encrypts:
   | type     | item     | pid | period | amount | coId   |*
   | purchase | apples   | 1   | once   | 123.00 | NEWAAB |
-  When member "?" completes "ccpay/code=BUTTONCODE" with:
+  When member "?" completes "ccpay/code=%buttonCode" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
@@ -107,9 +107,9 @@ Scenario: A non-member pays Common Good by credit card
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
 
   And we redirect to "https://www.paypal.com/cgi-bin/webscr"
-  And return URL "/ccpay/op=done&code=CODE"
+  And return URL "/ccpay/op=done&code=%code"
   
-  When member "?" visits "ccpay/op=done&code=CODE"
+  When member "?" visits "ccpay/op=done&code=%code"
   Then these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | cgf   | 123    | %now      |    %now | 1   |
@@ -141,11 +141,11 @@ Scenario: A non-member pays Common Good by credit card
 Skip Don't allow ACH for guests (for regulatory reasons: the bank wants us to KYC)
 # This includes donations to member organizations we don't sponsor, because we don't trust the member organization like we do ourselves.
 Scenario: A non-member pays a member company by ACH
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | item   | secret |*
   | .ZZC    | apples | Cc3    |
   And next captcha is "37"
-  When member "?" completes "ccpay/code=BUTTONCODE" with:
+  When member "?" completes "ccpay/code=%buttonCode" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
   Then these "people":

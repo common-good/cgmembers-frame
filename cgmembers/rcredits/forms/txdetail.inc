@@ -70,7 +70,7 @@ X;
   $email = item($email, t('Email:'));
 
   $cat = ($mya->admEditTx and r\hasCats(${"uid$me"}))
-  ? ($mya->sponsored ? fboCatFld($cat) : catFld($cat, ''))
+  ? (($mya->sponsored and !$mya->admV) ? fboCatFld($cat) : catFld($cat, '')) // admV lets you choose ANY category
   : ($category ? item(str_replace(FBO_OUT_HDR, '', $category), t('Category:')) : NULL);
   
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);

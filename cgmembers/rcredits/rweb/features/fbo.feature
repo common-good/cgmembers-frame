@@ -194,10 +194,10 @@ Scenario: A sponsored member views their transaction history
   | Channel     | Web |
 
 Scenario: A non-member donates to a sponsored organization by credit card
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member "?" visits "community/donate/code=BUTTONCODE"
+  When member "?" visits "community/donate/code=%buttonCode"
   Then we show "Donate to Our Pub" with:
   | Donation    |
   | Name        |
@@ -209,10 +209,10 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | Donate      |
 
   Given next captcha is "37"
-  And var "CODE" encrypts:
+  And var "code" encrypts:
   | type | item     | pid | period | amount | coId   |*
   | fbo  | donation | 1   | once   | 123.00 | NEWZZC |
-  When member "?" completes "community/donate/code=BUTTONCODE" with:
+  When member "?" completes "community/donate/code=%buttonCode" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
@@ -220,9 +220,9 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
 
   And we redirect to "https://www.paypal.com/donate"
-  And return URL "/community/donate/op=done&code=CODE"
+  And return URL "/community/donate/op=done&code=%code"
   
-  When member "?" visits "community/donate/op=done&code=CODE"
+  When member "?" visits "community/donate/op=done&code=%code"
   Then these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
@@ -251,11 +251,11 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | coName | Our Pub |**
 
 Scenario: A non-member donates to a sponsored organization by ACH
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
   And next captcha is "37"
-  When member "?" completes "community/donate/code=BUTTONCODE" with:
+  When member "?" completes "community/donate/code=%buttonCode" with:
   | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
   Then these "people":
@@ -289,10 +289,10 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | coName | Our Pub |**
 
 Scenario: A member donates to a sponsored organization
-  Given button code "BUTTONCODE" for:
+  Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member ".ZZA" completes "community/donate/code=BUTTONCODE" with:
+  When member ".ZZA" completes "community/donate/code=%buttonCode" with:
   | amount | comment  | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":

@@ -69,8 +69,8 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
   $a = r\acct($uid);
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
-  w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
-  if (!$success) return say('login failed', 'qid');
+  w\updateFlood($sta, $success, $err); // should be before pw2 and vKeyE checks
+  if (!$success) return say($err, 'qid');
   $sta['input']['uid'] = $uid; // especially for cgpay
 
   if ($a->id == UID_SUPER) {

@@ -99,7 +99,6 @@ function weRespondWith($args) {
     if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
     if ($k == 'message') $v = tr($v);
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
-    if ($k == 'device' and $got) $got = u\decry('D', $got);
     if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
       if ($k == 'canMgr') $got = nni($rposResult, 'can') >> (APP_CAN_BITS + 1);
       $got &= APP_CAN_MASK;
@@ -129,32 +128,32 @@ function agentAsksDeviceForAPictureOfMemberWithCardCode($agent, $device, $member
 }
 
 /**
- * member (ARG) has picture (ARG)
+ * member (ARG) has photo (ARG)
  *
  * in: MAKE identify DeviceAsksForAPictureToGoWithTheQR
  *     MAKE identify DeviceAsksForAPictureWithTheWrongCardCode
  */
-function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
+function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 
 /**
- * we respond with picture (ARG)
+ * we respond with photo (ARG)
  *
  * in: TEST identify DeviceAsksForAPictureToGoWithTheQR
  *     TEST identify DeviceAsksForAPictureButThereIsntOne
  *     TEST identify DeviceAsksForAPictureWithTheWrongCardCode
  */
-function weRespondWithPicture($picture) {
+function weRespondWithPhoto($photo) {
   global $testOnly;
   global $rposResult;
-  return ($rposResult == $picture);
+  return ($rposResult == $photo);
 }
 
 /**
- * member (ARG) has no picture
+ * member (ARG) has no photo
  *
  * in: MAKE identify DeviceAsksForAPictureButThereIsntOne
  */
-function memberHasNoPicture($id) {
+function memberHasNoPhoto($id) {
   global $testOnly; if ($testOnly) return FALSE;
   if (!$a = r\acct(t\uid($id))) return FALSE;
   $a->update('photo', '');
@@ -580,7 +579,7 @@ function membersHave($list) {return t\membersHave($list);}
 function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $signin = 0) {
   global $testOnly; if ($testOnly) return FALSE;
   list ($member, $code) = t\parseQr($qr);
-  if ($device) $device = u\cry('D', $device);
+  if ($device) $device = u\b64encode(u\cryPGP($device, 'private'));
   return t\hitServer('identify', compact(ray('member code pin signin')), $agent, $device);
 }
 
@@ -720,13 +719,13 @@ function countIs($what, $count) {return t\count($what, $count);}
 function agentAsksDeviceToSignIn($agent, $device, $qr) {return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, NULL, 1);}
 
 /**
- * next code is (ARG) encrypted with (ARG)
+ * next code is (ARG) PGP (ARG) encrypted
  *
  * in: MAKE identify DeviceHasNoIdentifierYet
  *     MAKE identify DeviceHasNoIdentifierYetForAnIndividual
  *     MAKE identify DeviceHasNoIdentifierYetForTrialCompany
  */
-function nextCodeIsEncryptedWith($phrase, $method) {return t\cryNextCode($method, $phrase);}
+function nextCodeIsPGPEncrypted($phrase, $type) {return t\cryNextCode($phrase, $type);}
 
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
@@ -734,7 +733,6 @@ function nextCodeIsEncryptedWith($phrase, $method) {return t\cryNextCode($method
  * in: TEST undo AnAgentAsksToUndoARefundTooLate
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
-
 
 /**
  * these (ARG): (ARG)

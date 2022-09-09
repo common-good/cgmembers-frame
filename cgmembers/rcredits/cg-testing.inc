@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -88,7 +88,7 @@ function fixData(&$info, $direct = FALSE) {
   $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
-  if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
+  if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
@@ -1154,9 +1154,9 @@ function noEmailTo($email) {
 /**
  * Set a given phrase, encrypted, as the next code to be used in tests.
  */
-function cryNextCode($method, $phrase) {
+function cryNextCode($phrase, $type = 'private') {
   global $testOnly; if ($testOnly) return FALSE;
-  global $nextCode; $nextCode = u\cry($method, $phrase);
+  global $nextCode, $testVars; $testVars['nextCode'] = $nextCode = u\b64encode(u\cryPGP($phrase, $type));
   return TRUE;
 }
 
@@ -2070,14 +2070,20 @@ function logRec($type, $value) {
 /**
  * Return the earliest exit message and delete it from the log (so the next one will be found for a subsequent test).
  */
-function getExitMsg() {
+function getExitMsg(&$status = NULL) {
 /**/  $id = db\get('id', 'test', "type='echo' ORDER BY id");
   $res = db\get('value', 'test', compact('id'));
+  if (preg_match('/^%([0-9]+): (.*)/', $res, $m)) list($zot, $status, $res) = $m;
   db\del('test', 'id', $id);
   return $res;
 }
 
-function fixTestVars(&$parm) {global $testVars; foreach (nn($testVars, []) as $k => $v) $parm = str_replace($k, $v, $parm);}
+function fixTestVars(&$parm) {
+  global $testVars; 
+  if (is_array($parm)) foreach ($parm as $k => $v) fixTestVars($parm[$k]);
+  foreach (nn($testVars, []) as $k => $v) if (!is_array($v)) $parm = str_replace("%$k", $v, $parm);
+}
+
 function itsLater() {return timeIs(now() + 1);}
 function timeIs($tm) {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = $tm);}
 function log($msg) {if (test()) u\log($msg, 'debug');}

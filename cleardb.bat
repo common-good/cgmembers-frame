@@ -1,3 +1,3 @@
-%SqlPath% -uroot<db\clear-db.sql
+%SqlPath% -uroot -ppass<db\clear-db.sql
 
 
