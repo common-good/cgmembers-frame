@@ -344,7 +344,8 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
 
   try { // catch Mailer errors
     require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-
+    
+/*
     $m = (new Email())
       ->from(eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]))
       ->to(eAddr($to))
@@ -364,16 +365,45 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
     $mSigned = $signer->sign($m);
     $mailer->send($mSigned);
+    */
+    $m = obj();
+    $m->To = eAddr($to);
+    $m->From = eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]);
+    $m->TrackOpens = true;
+    $m->Subject = $subject;
+    $m->TextBody = strip_tags($body);
+    $m->HtmlBody = $body;
+  //  $m->Tag = "New Year's Email Campaign";
+    $m->Headers = [ "X-CUSTOM-HEADER" => "Header content"];
+    $m->Attachments = $attachments;
+  //  $m->MessageStream = "outbound" // here you can set your custom Message Stream
+
+    if (nn($cc)) $m->Cc(eAddr($cc));
+    //->Bcc('bcc@example.com')
+    //->priority(Email::PRIORITY_HIGH)
+    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) $m->attachFromPath($flnm);
+    if ($reply) $m->ReplyTo(eAddr($reply));
+  //    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
+
+    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
+      $m->Attachments[] = PostmarkAttachment::fromFile($flnm); //  ($flnm, 'attachment-file-name.jpg', 'image/jpg');
+    }
+
+    $client = new PostmarkClient("<server token>");
+    $sendResult = $client->sendEmailBatch([(array) $m]);
     
     if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
-      $m->to(eAddr([$jA->email => $jA->fullName]));
-      $m->subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
-      $mSigned = $signer->sign($m);
-      $mailer->send($mSigned);
+      $m->To(eAddr([$jA->email => $jA->fullName]));
+      $m->Subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
+//      $mSigned = $signer->sign($m);
+      //$mailer->send($mSigned);
+      $sendResult = $client->sendEmailBatch([(array) $m]);
     }
     
-  } catch (\TransportExceptionInterface  | \Exception $e) {
-    $exErr = $e->getMessage() . "<br>\n" . trace();
+  } catch (\Postmark\Models\PostmarkException | \Exception $e) {
+//  } catch (\TransportExceptionInterface | \Exception $e) {
+//    $exErr = $e->getMessage() . "<br>\n" . trace();
+    $exErr = $e->message . "<br>\n" . trace();
     if (!isPRODUCTION) {
       if (!isDEV) u\loga('FATAL', $exErr);
 /**/  if ($channel == TX_WEB) die($exErr);
@@ -844,6 +874,7 @@ function invite($email, $inviter, $code = '', $subject = '', $message = '', $zip
  * @return assoc of all parameters in the notices template (FALSE if none)
  */
 function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at = NULL) {
+  global $mya;
   u\setDft($at, now());
   $a = r\acct($uid);
   foreach (ray('weekly monthly') as $k) $$k = (int) $$k;
@@ -855,11 +886,13 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   
   $notices = ray($a->notices);
   
-  $q = db\q("SELECT message, created, sent, $nType AS nType, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
+  $q = db\q("SELECT msgid, message, created, sent, $nType AS nType, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
 
   while ($row = $q->fetch()) {
     $date = ($weekly or $monthly) ? str_replace(' ', '&nbsp;', fmtDt($row->created, ' MMM dd')) : R_BULLET;
-    $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; min-width:50px; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
+    $sent = $row->sent ? '&x2713;' : '';
+    $extra = $mya->admin ? "<td>$row->msgid$sent</td>" : '';
+    $messages[] = "<tr>$extra<td class=\"notice-date\" stule=\"vertical-align:top; min-width:50px; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
   }
   if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
   
@@ -1593,7 +1626,8 @@ function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
 function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
 function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data
-function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}
+//function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}
+function eAddr($x) {return is_array($x) ? '"' . reset($x) . '" <' . key($x) . '>' : $x;}
 function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}
 function qbCat($id) {return db\get('externalId', 'tx_cats', ray(is_numeric($id) ? 'id' : 'nick', $id));}
 function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, $set);}
