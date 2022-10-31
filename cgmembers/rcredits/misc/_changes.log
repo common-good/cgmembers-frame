@@ -1,3 +1,9 @@
+2022-10-31 feature/desc-len 
+. increase length of transaction description field (in tx_entries_all)
+. fix bug in short qr code processing
+. improve Gifts From "Disqualified Persons" query
+. remove CG-owned accounts from Positive and Negative Balance Totals query
+
 2022-09-09 feature/api
 . added regression tests for new API
 . fixed the bugs that appeared
