@@ -1,3 +1,6 @@
+2022-11-01 feature/postmark2
+. fixed shortcomings in postmark feature
+
 2022-10-31 feature/postmark
 . change rMail to use PostMark to send emails (instead of swiftmailer)
 . in list of Notices, include record ID and a check mark if sent
