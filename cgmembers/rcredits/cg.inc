@@ -340,33 +340,10 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE; // allow emails to admin from non-production servers
   }
 
-  $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
 
   try { // catch Mailer errors
     require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-    
-/*
-    $m = (new Email())
-      ->from(eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]))
-      ->to(eAddr($to))
-      ->subject($subject)
-      ->text(strip_tags($body))
-      ->html($body);
-
-    if (nn($cc)) $m->cc(eAddr($cc));
-    //->bcc('bcc@example.com')
-    //->priority(Email::PRIORITY_HIGH)
-    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) $m->attachFromPath($flnm);
-    if ($reply) $m->replyTo(eAddr($reply));
-//    if (nn($sms)) $m->subject('')->to($sms); // send as text message
-    
-    $transport = Transport::fromDsn(tr('gmail+smtp://%user:%pw@default', 'user pw', CG_SMTP_USER, CG_SMTP_PASS));
-    $mailer = new Mailer($transport); 
-    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
-    $mSigned = $signer->sign($m);
-    $mailer->send($mSigned);
-    */
-    $m = obj();
+        $m = obj();
     $m->To = eAddr($to);
     $m->From = eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]);
     $m->TrackOpens = true;
@@ -374,35 +351,27 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $m->TextBody = strip_tags($body);
     $m->HtmlBody = $body;
   //  $m->Tag = "New Year's Email Campaign";
-    $m->Headers = [ "X-CUSTOM-HEADER" => "Header content"];
-    $m->Attachments = $attachments;
+  //  $m->Headers = [ "X-CUSTOM-HEADER" => "Header content"];
   //  $m->MessageStream = "outbound" // here you can set your custom Message Stream
 
-    if (nn($cc)) $m->Cc(eAddr($cc));
-    //->Bcc('bcc@example.com')
-    //->priority(Email::PRIORITY_HIGH)
-    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) $m->attachFromPath($flnm);
-    if ($reply) $m->ReplyTo(eAddr($reply));
-  //    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
+    if (nn($cc)) $m->Cc = eAddr($cc);
+  //  $m->Bcc = 'bcc@example.com';
+    if ($reply) $m->ReplyTo = eAddr($reply);
 
     if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-      $m->Attachments[] = PostmarkAttachment::fromFile($flnm); //  ($flnm, 'attachment-file-name.jpg', 'image/jpg');
+      $m->Attachments[] = \Postmark\Models\PostmarkAttachment::fromFile($flnm); //  ($flnm, 'attachment-file-name.jpg', 'image/jpg');
     }
 
-    $client = new PostmarkClient("<server token>");
+    $client = new \Postmark\PostmarkClient(POSTMARK_KEY);
     $sendResult = $client->sendEmailBatch([(array) $m]);
     
     if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
       $m->To(eAddr([$jA->email => $jA->fullName]));
       $m->Subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
-//      $mSigned = $signer->sign($m);
-      //$mailer->send($mSigned);
       $sendResult = $client->sendEmailBatch([(array) $m]);
     }
     
-  } catch (\Postmark\Models\PostmarkException | \Exception $e) {
-//  } catch (\TransportExceptionInterface | \Exception $e) {
-//    $exErr = $e->getMessage() . "<br>\n" . trace();
+  } catch (\Postmark\Models\PostmarkException $e) { //  | \Exception
     $exErr = $e->message . "<br>\n" . trace();
     if (!isPRODUCTION) {
       if (!isDEV) u\loga('FATAL', $exErr);
