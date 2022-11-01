@@ -67,7 +67,8 @@ function url($a, $coOnly = FALSE) {
   $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
   $regLen = strlen($region = u\n2a(u\a2n($qo->region), -1, 36));
   $tailLen = strlen($tail = u\n2a(u\a2n($qo->tail), $regLen > 3 ? -4 : -2, 36));
-  $codeLen = ($agentCode = $qo->agentCode()) ? strlen($agentCode = u\n2a(u\a2n($agentCode), -1, 36)) : 0;
+  $agentCode = $qo->agentCode();
+  $codeLen = $agentCode ? strlen($agentCode = u\n2a(u\a2n($agentCode), -1, 36)) : 0;
   $i = array_search($regLen . $tailLen, ray('12 13 22 23 32 33 34 44 45'));
   u\EXPECT($i !== FALSE, 'bad piece lengths in qo->qr mainQid=' . $qo->mainQid);
   u\EXPECT($codeLen < 4, 'agentCode too long: ' . $qo->agentCode);
@@ -143,7 +144,7 @@ function qrUnfmt($region, $tail, $isTestCard) {
 
   $region = u\n2a(u\a2n($region, 36), 3);
   $account = u\n2a(u\a2n($account, 36), 3);
-  $agent = $isAgent ? ('-' . u\n2a(u\a2n($agent), -1)) : '';
+  $agent = $isAgent ? ('-' . u\n2a(u\a2n($agent, 36), -1)) : '';
 
   $co = $region . $account;
   $qid = $co . $agent;

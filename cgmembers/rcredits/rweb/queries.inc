@@ -45,10 +45,16 @@ if ($mya and $mya->admin) {
   1 . t('Gifts From "Disqualified Persons"') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
       SUM(IF(amt>=1000 AND t.:IS_GIFT, amt, 0)) AS over999,
-      SUM(IF(t.:IS_GIFT, 0, amt)) AS otherWithCG, u.:IS_INFLUENCER AS marked, p.pid IS NULL AS member
-      FROM txs t LEFT JOIN txs2 t2 USING (xid) LEFT JOIN users u ON u.uid=t.uid1 LEFT JOIN people p ON p.pid=t2.pid
-      WHERE t.created BETWEEN $fy0 AND $fy9 AND t.uid2 IN ($cgUids)
+      SUM(IF(t.:IS_GIFT, 0, amt)) AS nonGift, u.:IS_INFLUENCER AS marked, p.pid IS NULL AS member,
+      IF(p.pid IS NULL, CONCAT(u.city, ', ', s.abbreviation, ' ', u.zip), CONCAT(IFNULL(p.address, ''), ', ', p.city, ', ', s.abbreviation, ' ', p.zip)) AS address
+      FROM txs t LEFT JOIN txs2 t2 USING (xid) 
+      LEFT JOIN users u ON u.uid=t.uid1 
+      LEFT JOIN people p ON p.pid=t2.pid AND p.pid>0
+      LEFT JOIN r_states s ON s.id=IF(p.pid IS NULL, u.state, p.state)
+      WHERE t.created BETWEEN $fy0 AND $fy9 AND t.uid2 IN ($cgUids) AND t.uid1 NOT IN ($cgUids)
+      GROUP BY name
       HAVING over999>=:SUBSTANTIAL_GIFT OR marked
+      ORDER BY giftTotal DESC
     ". t('~<p>Total gifts in %PROJECT\'s most recently ended fiscal year (July to June) from Influencers or that exceed $5,000 &mdash; ignoring separate gifts of less than $1,000 as allowed for IRS Form 990 Schedule B: "Include all separate and independent gifts that are $1,000 or more Gifts that are less than $1,000 may be disregarded."</p><p>"marked" means the person is marked in the database as an influencer &mdash; that is, someone who might have significant influence over the affairs of the organization because of their position (including being a board member, former board member, key employee, or relative of such a person). Otherwise the person\'s "influence" is because they donated a lot of money.'),
     // in advance: $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : amt) >= SUBSTANTIAL_GIFT)
     
@@ -70,6 +76,16 @@ if ($mya and $mya->admin) {
             SUM(IF(:IS_CO, 1, 0)) AS companies
       FROM users u WHERE activated BETWEEN $qtrDt1 AND $qtrDt2",
       
+  2 . t('Positive and Negative Balance Totals') => 
+    "SELECT c.fullName AS community, 
+     SUM(IF(u.balance<0, 1, 0)) AS negCount,
+     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalTotal,
+     SUM(IF(u.balance>=0, 1, 0)) AS posCount,
+     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
+     FROM users u LEFT JOIN users c ON c.uid=u.community 
+     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT :CANONIC AND u.uid NOT IN ($cgUids)
+     GROUP BY c.fullName",
+  
   2 . t('Most Trusted Members') => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC, fullName",
     
@@ -156,16 +172,6 @@ $queries = array_merge(nn($queries, []), [
      LEFT JOIN ($bizQ :NOW-(180+30)*:DAY_SECS AND :NOW-180*:DAY_SECS GROUP BY payee) t6 ON t6.payee=u.uid
      LEFT JOIN ($bizQ :NOW-:YEAR_SECS-30*:DAY_SECS AND :NOW-:YEAR_SECS GROUP BY payee) t12 ON t12.payee=u.uid
      WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY t0.sales DESC",
-
-  t('Positive and Negative Balance Totals') => 
-    "SELECT c.fullName AS community, 
-     SUM(IF(u.balance<0, 1, 0)) AS negCount,
-     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalTotal,
-     SUM(IF(u.balance>=0, 1, 0)) AS posCount,
-     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
-     FROM users u LEFT JOIN users c ON c.uid=u.community 
-     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT :CANONIC
-     GROUP BY c.fullName",
   
   t('Company and Member Balances and Credit Lines') =>
     "SELECT c.fullName AS community,
