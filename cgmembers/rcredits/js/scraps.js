@@ -243,11 +243,13 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
-      if (vs['fbo'] != 1) {
+      if (vs['fbo'] == 1 && pay) {
+        cat.attr('required', 'required');
+      } else {
         cat.removeAttr('required');
         cat.parent().parent().hide();
-      } else cat.attr('required', 'required');
-
+      }
+      
       // question, allowNonmember, and restrict cannot be passed to jsx, because (bool) pay is calculated herein
       vs['question'] = desc + vs['question'];
       vs['allowNonmember'] = !pay;

@@ -532,12 +532,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     
   $erInfo += compact('loserId');
 
-  $lastTx = $actorA->lastTx();
-  if (!empty($lastTx) and !$force and $channel != TX_WEB and $lastTx->actorId == $actorId
-      and $lastTx->otherId == $otherId and $lastTx->goods == $goods and $lastTx->getAmount($actorA) == $amount
-      and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS)) {
-    return txErr(t('duplicate transaction'), $erInfo);
-  }
+  if (r\dupTx($actorA, $otherA, $taking ? $amount : -$amount, $force)) return txErr(t('duplicate transaction'), $erInfo);
 
   if ($zErr = r\txPermErr($actorA, $otherA, $taking, $amount < 0)) { // Check permissions
     if ($force) {
@@ -865,19 +860,19 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
 }
 
 /**
- * Generate tentative transaction entries for a coupon
+ * Generate tentative transaction entries for an auxiliary transaction (surcharge, coupon, etc.)
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param Tx $tx: the transaction header data
  * @param acct $buyer:
  * @param acct $seller:
- * @param number $price: pre-discount, pre-stepup amount
+ * @param number $price: pre-discount, pre-stepup amount (must be positive)
  * @param bool $forCredit: <buying store credit as a gift or for oneself>
- * @param unixtime $when: when was the transaction (defaults to now)
+ * @param bool $test: don't actually change anything? (default FALSE)
  * @return the net increase in overall transaction amount
  */
 
-function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit) {
-  u\EXPECT($price > 0, 'non-positive price handling coupon');
+function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test = FALSE) {
+  u\EXPECT($price > 0, 'non-positive price handling surTx');
   
   $payerCo = $buyer->co ? 1 : 0;
   $payeeCo = $seller->co ? 1 : 0;
@@ -909,29 +904,37 @@ EOF;
   /// showq($sql, $subs);
   $q = db\q($sql, $subs);
 
-  $rebate = 0;
+  $stepups = $rebates = 0;
   while ($row = $q->fetchAssoc()) {
     extract($row);
 
-    $value = round($amount + $portion * $price, 2); // potential rebate/stepup amount
-    if ($amtMax) $value = min($value, $amtMax - $amtUsed); // limited by amtUsed
+    $absValue = round($amount + $portion * $price, 2); // potential rebate/stepup amount
+    if ($amtMax) $absValue = round(min($absValue, $amtMax - $amtUsed), 2); // limited by amtUsed
+    if (!$absValue) continue;
 
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
-    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_AUX, $purpose]; // any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
-    if ($to == $buyer->id) $value = min($price - $rebate, $value); // don't refund more than is being spent (food fund especially)
 
-    if ($value <= 0) continue;
-    $rebate += $value;
+    if ($to == $buyer->id) { // rebate
+      list ($type, $desc) = [E_REBATE, REBATE_DESC];
+      $absValue = min($price - $rebates, $absValue); // don't refund more than is being spent (food fund especially)
+      if ($absValue <= 0) continue;
+      $rebates += $absValue;
+    } else { // stepup -- any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
+      list ($type, $desc) = [E_AUX, $purpose];
+      $stepups += $absValue;
+    }
+
+    if ($test) continue;
     
     if ($to == CGID and $purpose == STEPUP_PURPOSE) $to = UID_STEPUPS; // bring just the total of the month's stepup donations into CG's account
-    txEntryPair($entries, $tx, $value, [$from, $to], $desc, $type, compact('rule'));
-    if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
+    txEntryPair($entries, $tx, $absValue, [$from, $to], $desc, $type, compact('rule'));
+    if (($amtMax and $amtUsed + $absValue >= $amtMax) or ($useMax and $absValue > 1 and $timesUsed + 1 >= $useMax)) {
       if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $rule, now()), 'id'); // rule is just for payer
     }
   }
 
-  return -$rebate;
+  return round($stepups - $rebates, 2);
 }
 
 /**
@@ -1019,7 +1022,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
   if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
-  if (r\dupTx($payee, $payer, -$amount)) return txErr(t('duplicate transaction'), $subs);
+  if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
@@ -1297,19 +1300,20 @@ function roundupDonations($uids, $start, $end) {
  * Return a list of account choices for the given account -- normally the current user (agent of the current account)
  * @param acct $a: the account for which to find related accounts
  * @param int $perm: $a's minimum permissions to include an account in the list
+ * @param string $where: additional criteria
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
-function accountChoices($a, $perm = B_READ) {
+function accountChoices($a, $perm = B_READ, $crit = 1) {
   global $mya;
   if (!$a) return FALSE;
 
-  $result[$aid = $a->agentId] = $a->agentA->fullName;
+  $res[$aid = $a->agentId] = $a->agentA->bestName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = 'SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>=' . r\perm($perm); // normal selection SQL
+  $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $crit AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
 
   if ($mya and $mya->admRegion) {
-    $where = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
-    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
+    $admWhere = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
+    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $admWhere UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
   } elseif ($mya and $mya->admin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
@@ -1319,7 +1323,9 @@ EOF;
     $q = db\q($sql, ray('ctty aid', $a->community, $aid));
   } else $q = db\q("$sqlNormal ORDER BY $nameOrder", compact('aid')); // the usual case
 
-  return $result + $q->fetchAllKeyed();
+  $res += $q->fetchAllKeyed();
+  if (sizeof($res) < 30) foreach ($res as $uid => $nm) $res[$uid] = r\acct($uid)->bestName;
+  return $res;
 }
 
 /**
@@ -1578,6 +1584,7 @@ function checkSanity() {
 function balChange($info) {
   extract(just('uid amount', $info));
   $a = r\acct($uid);
+  u\EXPECT($a, 'invalid account in balChange');
   if ($a->isCanonic) return;
   
   $bal = $a->balance; // balance after insert

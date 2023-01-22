@@ -481,6 +481,26 @@ function doTxs($info, $thing) {
 }
 
 /**
+ * Return the given (wanted) array JSON encoded.
+ * @param string $want: the wanted array
+ * @param bool $sub: is this a recursive call? (default FALSE)
+ */
+function json($want, $sub = FALSE) {
+  foreach ($want as $k => $v) {
+    if (is_array($v)) {
+      $want[$k] = json($v, TRUE);
+    } elseif ($v and substr($v, 0, 1) == '[' and substr($v, -1) == ']') {
+      $want[$k] = [substr($v, 1, strlen($v) - 2)];
+    } elseif ($v == 'true' or $v == 'false') {
+      $want[$k] = ($v == 'true');
+    } elseif (is_numeric($v)) {
+      $want[$k] = strhas($v, '.') ? (float) $v : (int) $v;
+    }
+  }
+  return $sub ? $want : preg_replace('/"(%[a-z]+[a-z0-9]*)"/', '$1', json_encode($want));
+}
+
+/**
  * Fabricate a bogus invoice or pre-approved payment.
  * Minimum parameters: amount, payer, payee
  * @return:

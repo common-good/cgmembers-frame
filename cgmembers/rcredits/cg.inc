@@ -158,20 +158,24 @@ function badUnpaidInv($nvid, &$inv = '') {
 
 /**
  * Say whether an account's proposed transaction duplicates the last recent one.
- * @param int $aId: the account id
- * @param int $otherId: the other accountId
- * @param float $amount: the amount proposed to transfer from the account to the other account (can be negative)
- * @return TRUE if the proposed transaction duplicates the last one.
+ * @param int $a1: the actor account
+ * @param int $a2: the other account
+ * @param float $amount: the amount proposed to transfer from the other account to the actor account (can be negative)
+ * @param bool $force: does this transaction have to go through?
+ * @return TRUE if the proposed transaction duplicates the last one unintentionally (that is, unless the actor insists)
  * @see also X::cacheTotals(), where the transaction data is recorded
  */
-function dupTx($aId, $otherId, $amount) {
+function dupTx($a1, $a2, $amount, $force = FALSE) {
   global $channel;
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
-  $lastTx = r\acct($aId)->lastTx;
-  if (!$lastTx) { return FALSE; }
-  return (($lastTx->actorId == $aId and $lastTx->otherId == $otherId
-           and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount))
-          and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS));
+  if (!$lastTx = $a1->lastTx) return FALSE; // no previous transaction
+  if ($lastTx->getAmount($a1) != $amount) return FALSE; // different amount (so not duplicate)
+  if (now() - ($a1->lastDup ?: 0) < DUPTX_SECS) return FALSE; // recent duplicate complaint, so allow this one
+  if ($lastTx->actorId != $a1->id or $lastTx->otherId != $a2->id) return FALSE; // different payer or payee
+  if (now() - $lastTx->created > DUPTX_SECS) return FALSE; // last tx like this was long enough ago
+
+  $a1->update('lastDup', now()); // allow cashier to retry transaction after warning
+  return TRUE;
 }
  
 /**
@@ -359,15 +363,15 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     if ($reply) $m->ReplyTo = eAddr($reply);
 
     if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-      $m->Attachments[] = \Postmark\Models\PostmarkAttachment::fromFile($flnm); //  ($flnm, 'attachment-file-name.jpg', 'image/jpg');
+      $m->Attachments[] = \Postmark\Models\PostmarkAttachment::fromFile($flnm, basename($flnm)); //  ($flnm, 'attachment-file-name.jpg', 'image/jpg');
     }
 
     $client = new \Postmark\PostmarkClient(POSTMARK_KEY);
     $sendResult = $client->sendEmailBatch([(array) $m]);
     
     if (nn($jA) and $index != 'tell-staff' and $jA->email) { // also send to partner in joint account unless it's an admin notice
-      $m->To(eAddr([$jA->email => $jA->fullName]));
-      $m->Subject($subject . t(' (for %acct)', 'acct', $jA->fullName));
+      $m->To = eAddr([$jA->email => $jA->fullName]);
+      $m->Subject = $subject . t(' (for %acct)', 'acct', $jA->fullName);
       $sendResult = $client->sendEmailBatch([(array) $m]);
     }
     
@@ -724,13 +728,18 @@ function uniqueName($fullName, $info = []) {
  * Return the uid for the given qid or email (or name field, for old time's sake).
  * If $qid is an email and more than one account has that same email address, the first non-company account is assumed.
  * @todo later: when regional prefix is required for signin, this function will ignore it in matching name field
- * @return the uid (FALSE if unsuccessful)
+ * @return the uid (NULL if unsuccessful)
  */
 function loginString($qid) {
-  if ($qid = trim(mb_strtoupper($qid)) and $a = r\acct($qid)) return $a->id; // try to interpret as a qid
-  if (preg_match('/^[A-Z0-9\\.\\-]{3,}/', $qid) and $a = f('qr.acct', $qid, TRUE)) return $a->id; // abbreviated account code
-  $email = u\cry('P', mb_strtolower($qid));
-  $name = u\shortName($qid);
+  if (strhas($qid, '@')) {
+    $name = '!!!';
+    $email = u\cry('P', mb_strtolower($qid));
+  } else {
+    if ($qid = trim(mb_strtoupper($qid)) and $a = r\acct($qid)) return $a->id; // try to interpret as a qid
+    if (preg_match('/^[A-Z0-9\\.\\-]{3,12}$/', $qid) and $a = f('qr.acct', $qid, TRUE)) return $a->id; // abbreviated account code
+    $name = u\shortName($qid);
+    $email = '!!!';
+  }
   return db\get('uid', 'users', 'name=:name OR email=:email ORDER BY :IS_CO', compact('email', 'name'));
 }
   

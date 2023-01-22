@@ -10,6 +10,9 @@ Setup:
   | .ZZB | Bea Two  | +20002 | b@    | ccB |      | ok     |      | Bton | MA    |
   | .ZZC | Coco Co  | +20003 | c@    | ccC |      | ok,co  |      | Cton | CA    |
   | .ZZF | For Co   | +20006 | f@    | ccF |      | co     |      | Fton | FL    |
+  And these "u_company":
+  | uid  | selling |*
+  | .ZZF | stuff   |
   And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
@@ -23,10 +26,10 @@ Setup:
 
 Scenario: A member signs in to the app for a list of accounts to choose from
   Given next random code is "whatever"
-  And var "accounts" is:
-  | accountId | deviceId | name    |*
-  | K6VMDJI   | whatever | Abe One |
-  | K6VMDJN   | whatever | For Co  |
+  And var "accounts" is JSON:
+  | accountId | deviceId | name    | items   |*
+  | K6VMDJI   | whatever | Abe One | []      |
+  | K6VMDJN   | whatever | For Co  | [stuff] |
   When app gets "accounts" with:
   | identifier | password |*
   | .ZZA       | Aa1      |

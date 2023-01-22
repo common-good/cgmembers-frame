@@ -22,43 +22,38 @@ Setup:
 # GET /idPhoto
 
 Scenario: The app asks to show a customer ID photo
-  Given next random code is "A123456789B123456789C123456789D123456789E123456789etc"
-  And var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJJccB" encrypted
-  And member ".ZZB" has photo "pictureB"
+  Given member ".ZZB" has photo "pictureB"
   When app gets "idPhoto" with:
-  | accountId  | code  |*
-  | K6VMDJI    | %code |
+  | deviceId | actorId | otherId    |*
+  | devC     | K6VMDJK | K6VMDJJccB |
   Then we reply "got" with: "pictureB"
 
-Scenario: The app asks to show a customer ID photo with no accountId
-  And var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJJccB" encrypted
+Scenario: The app asks to show a customer ID photo with no otherId
   When app gets "idPhoto" with:
-  | accountId  | code  |*
-  |            | %code |
+  | deviceId | actorId | otherId    |*
+  | devC     | K6VMDJK |            |
   Then we reply "syntax" with: "?"
 
-Scenario: The app asks to show a customer ID photo with no code
+Scenario: The app asks to show a customer ID photo with no actorId
   When app gets "idPhoto" with:
-  | accountId  | code  |*
-  | K6VMDJI    |       |
+  | deviceId | actorId | otherId    |*
+  | devC     |         | K6VMDJJccB |
   Then we reply "syntax" with: "?"
-
-Scenario: The app asks to show a customer ID photo with bad accountId
-  And var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJJccB" encrypted
-  When app gets "idPhoto" with:
-  | accountId   | code  |*
-  | whatever    | %code |
-  Then we reply "notfound" with: "?"
-
-Scenario: The app asks to show a customer ID photo with bad code
-  When app gets "idPhoto" with:
-  | accountId  | code     |*
-  | K6VMDJI    | whatever |
-  Then we reply "notfound" with: "?"
 
 Scenario: The app asks to show a customer ID photo with bad otherId
-  And var "code" is "A123456789B123456789C123456789D123456789E123456789.whatever" encrypted
   When app gets "idPhoto" with:
-  | accountId  | code  |*
-  | K6VMDJI    | %code |
+  | deviceId | actorId | otherId    |*
+  | devC     | K6VMDJK | whatever   |
   Then we reply "notfound" with: "?"
+
+Scenario: The app asks to show a customer ID photo with bad actorId
+  When app gets "idPhoto" with:
+  | deviceId | actorId  | otherId    |*
+  | devC     | whatever | K6VMDJJccB |
+  Then we reply "unauth" with: "?"
+
+Scenario: The app asks to show a customer ID photo with bad deviceId
+  When app gets "idPhoto" with:
+  | deviceId | actorId | otherId    |*
+  | whatever | K6VMDJK | K6VMDJJccB |
+  Then we reply "unauth" with: "?"

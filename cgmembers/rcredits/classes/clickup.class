@@ -124,8 +124,8 @@ class Clickup {
   
   public function getTeam() {static $members; return nn($members) ?: ($members = $this->get('team')->teams[0]->members);}
   public function getSpaces() {return $this->get("team/$this->team/space")->spaces;}
-  public function getFolders($space) {return $this->get("space/$space/folder", ray('archived', 'true'))->folders;}
-  public function getOtherLists($space) {return $this->get("space/$space/list", ray('archived', 'true'))->lists;}
+  public function getFolders($space) {$q = $this->get("space/$space/folder", ray('archived', 'true')); return $q ? $q->folders : [];}
+  public function getOtherLists($space) {$q = $this->get("space/$space/list", ray('archived', 'true')); return $q ? $q->lists : [];}
   public function getTask($task) {return $this->get("task/$task", ray('include_subtasks', TRUE));}
 
   public function just1($k, $ray) {foreach ((array) $ray as $one) $res[] = nni((array) $one, $k); return nn($res, []);}

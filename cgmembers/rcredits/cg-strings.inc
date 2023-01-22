@@ -308,6 +308,7 @@ EOF
   'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
   
   // error messages
+  'bad login' => t('We couldn\'t find an account with that information. Please try again or <%a>ask for a new password</a>.'),
   'search forbidden' => t('You need to be signed in to refer to a member account.'),
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
   'no paypal cancel' => t('We apologize. this form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
@@ -399,7 +400,7 @@ EOF
   'share too big' => t('You are not allowed to donate more than half your transaction rewards. Here\'s why: The %PROJECT system aligns your personal financial benefit with benefit to the community, so you can do what is best for the community just by doing what is best for you. If your personal benefit percentage is too small, you lose that convenient compass.'),
   'no photoid' => t('You must make a purchase in person using your %PROJECT card and show your driver\'s license or state ID, before any other transaction.'),
   'other no photoid' => t('%who must make a purchase in person to verify their identity, before you can pay or charge them.'),
-  'duplicate transaction' => t('You already just %op that member that much. Wait a few minutes or type a different amount.'),
+  'duplicate transaction' => t('You already just %op this member that much. Try again, if that\'s okay.'),
   'no search' => t('OR that member has chosen not to be identified by email or phone number.'),
   'first at home' => t('The first transaction you initiate must be in person in your home community (or a current member can confirm you).'),
   'zero transaction' => t('The transaction amount cannot be zero.'),

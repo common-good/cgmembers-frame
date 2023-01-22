@@ -65,7 +65,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   }
 
   if ($qid == 'admin') $qid = 'AAAAAA';
-  if (!$uid = r\loginString($qid)) return say('bad login', 'qid');
+  if (!$uid = r\loginString($qid)) return say(t('bad login', '_a', atag('/settings/password')), 'qid');
   if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
   $a = r\acct($uid);
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine

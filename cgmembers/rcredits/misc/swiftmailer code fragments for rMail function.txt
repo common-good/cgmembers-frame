@@ -1,0 +1,24 @@
+
+  $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
+    $m = (new Email())
+      ->from(eAddr([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')]))
+      ->to(eAddr($to))
+      ->subject($subject)
+      ->text(strip_tags($body))
+      ->html($body);
+
+    if (nn($cc)) $m->cc(eAddr($cc));
+    //->bcc('bcc@example.com')
+    //->priority(Email::PRIORITY_HIGH)
+    if ($attachment) foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) $m->attachFromPath($flnm);
+    if ($reply) $m->replyTo(eAddr($reply));
+//    if (nn($sms)) $m->subject('')->to($sms); // send as text message
+    
+    $transport = Transport::fromDsn(tr('gmail+smtp://%user:%pw@default', 'user pw', CG_SMTP_USER, CG_SMTP_PASS));
+    $mailer = new Mailer($transport); 
+    $signer = new DkimSigner($privateKey, EMAIL_DOMAIN, 'system');
+    $mSigned = $signer->sign($m);
+    $mailer->send($mSigned);
+
+  } catch (\TransportExceptionInterface | \Exception $e) {
+    $exErr = $e->getMessage() . "<br>\n" . trace();

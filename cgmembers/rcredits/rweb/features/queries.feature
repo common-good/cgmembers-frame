@@ -48,12 +48,12 @@ Scenario: A member visits the Community Data page
   When member ".ZZA" visits page "community/data"
   Then we show "Community and Money Data" with:
   | Company Income and Payments - 30 day totals |
-  | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
   | Actual Donations to CG and Community |
   | Expected Member Donations to CG and Community |
   | Expected Company Donations to CG and Community |
   And without:
+  | Positive and Negative Balance Totals |
   | Food Fund Contributions |
   | Most Trusted Members |
   | Individuals Paid By A Company |
@@ -64,12 +64,12 @@ Scenario: An admin visits the Community Data page
   When member ".ZZB" visits page "community/data"
   Then we show "Community and Money Data" with:
   | Food Fund Contributions |
+  | Positive and Negative Balance Totals |
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
   | Where Do Our Members Hear About CG |
   | Company Income and Payments - 30 day totals |
-  | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
   | Actual Donations to CG and Community |
   | Expected Member Donations to CG and Community |
@@ -108,10 +108,10 @@ Scenario: A member runs a query about Business Income
   | Corner Pub |  120.00 |     1 |                  |        |                   |         |
 
 Scenario: A member runs a query about Positive and Negative
-  When member ".ZZA" runs query "Positive and Negative Balance Totals"
+  When member ".ZZB" runs query "Positive and Negative Balance Totals"
   Then we show "" with:
-  | community | negCount | negativeBalTotal | posCount | positiveBalTotal |
-  | Common Good Western Mass | 0 | 0.00 | 5 | 5,945.00 |
+  | community                | negCount | negativeBalTotal | posCount | positiveBalTotal |
+  | Common Good Western Mass | 0        | 0.00             | 3        | 5,945.00         |
 
 Scenario: A member runs a query about Balances
   When member ".ZZA" runs query "Company and Member Balances and Credit Lines"

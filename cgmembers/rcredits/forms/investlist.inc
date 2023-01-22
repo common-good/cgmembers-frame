@@ -13,9 +13,9 @@ include_once __DIR__ . '/invest.inc';
  */
 function formInvestList($form, &$sta, $args = '') {
   global $mya;
-  extract(just('actual clubqid', $args));
+  extract(just('actual clubqid', $args, NULL));
   
-  if (!$clubA = clubA(nn($clubqid))) return;
+  if (!$clubA = clubA($clubqid)) return;
   list ($clubid, $clubqid) = [$clubA->id, $clubA->mainQid];
   
   $title = t('Club Investments');

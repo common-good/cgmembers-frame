@@ -650,8 +650,8 @@ function variable_del($nm) {return delV($nm);} // for legacy Drupal
  */
 function exitJust($s = '', $status = X_GOT) {
   if (is_numeric($s)) {
-    $status = $s;
-    $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many requests. Please stop trying!')), $status);
+    $status = (int) $s;
+    $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
   }
   
   if (test()) {
@@ -660,6 +660,8 @@ function exitJust($s = '', $status = X_GOT) {
     return NULL;
   }
 
+  header('HTTP/1.1 ' . $status);
+  u\loga('exit', "($status) " . pr($s));
 /**/  if (!empty($s)) echo pr($s);
   exit($status);
 }
@@ -1418,7 +1420,7 @@ function af($field, $a = NULL) {
 function f($func) {
   global $cronOp; 
   list ($prefix, $funcName) = explode('.', $func);
-  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
+  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc,qr:cg-qr.inc');
   if ($flnm = nni($incs, $prefix)) require_once R_ROOT . "/$flnm";
 
   if ($prefix == 'v') {

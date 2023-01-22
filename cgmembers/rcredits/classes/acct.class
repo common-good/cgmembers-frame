@@ -707,7 +707,7 @@ class Acct {
     $a = $this;
     
     // no going into debt without permission
-    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
+    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
     } else {$floor = $a->floor;}
 
@@ -1128,7 +1128,7 @@ EOF;
     if (!strlen($a->$passFieldName)) return !$err = 'password required';
     require_once DRUPAL_ROOT . '/includes/password.inc';
     $hash = \_password_crypt('sha512', $password, $a->$passFieldName);
-    return ($hash and $a->$passFieldName == $hash) ?: (!$err = 'bad login');
+    return ($hash and $a->$passFieldName == $hash) ?: (!$err = t('bad login', '_a', w\atag('/settings/password')));
   }
   
   /**

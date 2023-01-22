@@ -67,7 +67,6 @@ function these($thing, $list) {return t\these($thing, $list);}
  * next random code is (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -81,14 +80,17 @@ function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
  *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoAccountId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoCode
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadAccountId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadCode
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
  *     MAKE identity TheAppAsksToIdentifyACustomer
- *     MAKE identity TheAppAsksToIdentifyACustomerWithNoId
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
  *     MAKE identity TheAppAsksToIdentifyACustomerWithABadSecurityCode
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
  */
@@ -122,6 +124,8 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
  *     TEST identity TheAppAsksToIdentifyACustomer
+ *     TEST transactions TheAppAsksToChargeACustomer
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
@@ -129,7 +133,7 @@ function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $w
 /**
  * var (ARG) is: (ARG)
  *
- * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ * in: 
  */
 function varIs($var, $want) {
   global $testOnly, $testVars;
@@ -137,22 +141,16 @@ function varIs($var, $want) {
 }
 
 /**
+ * var (ARG) is JSON: (ARG)
+ *
+ * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ */
+function varIsJSON($var, $want) {return varIs($var, t\json($want));}
+
+/**
  * var (ARG) is (ARG) encrypted
  *
- * in: MAKE idphoto TheAppAsksToShowACustomerIDPhoto
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoAccountId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadAccountId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
- *     MAKE transactions TheAppAsksToChargeACustomer
- *     MAKE transactions TheAppAsksToChargeACustomerWithAMissingParameter
- *     MAKE transactions TheAppAsksToChargeACustomerWithABadActorId
- *     MAKE transactions TheAppAsksToChargeACustomerWithABadOtherId
- *     MAKE transactions TheAppAsksToChargeACustomerWithABadAmount
- *     MAKE transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
- *     MAKE transactions TheAppAsksToChargeACustomerWithABadDate
- *     MAKE transactions TheAppAsksToChargeACustomerWithADateOutOfRange
- *     MAKE transactions TheAppAsksToChargeACustomerWithABadProof
- *     MAKE transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
+ * in: 
  */
 function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($want, 'public')));}
 
@@ -165,19 +163,20 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
  *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoAccountId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoCode
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadAccountId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadCode
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
- *     TEST identity TheAppAsksToIdentifyACustomerWithNoId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
+ *     TEST identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
+ *     TEST identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
+ *     TEST identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
  *     TEST identity TheAppAsksToIdentifyACustomerWithABadSecurityCode
+ *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
- *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
- *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
@@ -189,8 +188,9 @@ function weReplyWith($wantStatus, $want, $json = FALSE) {
   if (!$got = t\getExitMsg($gotStatus)) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
   if (!t\eq('status', u\consta('x', $wantStatus), $gotStatus)) return FALSE;
-  $want = $json ? json_encode($want[0]) : (is_array($want) ? $want[0] : $want);
-  foreach (nn($testVars, []) as $k => $v) $want = $json ? str_replace("\"%$k\"", json_encode($v), $want) : str_replace("%$k", $v, $want);
+  if ($json) {
+    $want = t\json($want[0]);
+  } else $want = is_array($want) ? $want[0] : $want;
   return t\eq('show', $want, '' . $got);
 }
 
@@ -200,3 +200,10 @@ function weReplyWith($wantStatus, $want, $json = FALSE) {
  * in: MAKE idphoto TheAppAsksToShowACustomerIDPhoto
  */
 function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
+
+/**
+ * members have: (ARG)
+ *
+ * in: MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
+ */
+function membersHave($list) {return t\membersHave($list);}

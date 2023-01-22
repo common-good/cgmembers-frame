@@ -201,7 +201,7 @@ function clubA($clubqid = NULL) {
   global $mya;
   if ($clubqid) {
     if ($clubA = r\acct($clubqid) and $clubA->iclub) return $clubA;
-  } else {
+  } elseif ($mya) {
     if ($mya->iclub) return $mya;
     if ($clubid = $mya->iClubId) return r\acct($clubid);
   }

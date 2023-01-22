@@ -448,7 +448,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
 
   if ($type == 'int') u\setDft($x['step'], 1);
-  $type = strtr($type0 = $type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel, datetime:datetime-local'));
+  $type = strtr($type0 = $type, ray('text:textfield, currency:number, num:number, int:number, pass:password, area:textarea, phone:tel, datetime:datetime-local'));
   if (in($subtype = $type, 'number tel date datetime-local email range password')) {
     $dft = nni($x, 'default_value', NULL);
     if ($type == 'tel') {
@@ -462,6 +462,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         r\tellAdmin("bad char in $type0 fld dft", compact(ray('type0 dft label help x options')));
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
+      if ($type0 == 'currency') u\preray(ray('subtype pattern', 'textfield', '^\$\d{1,3}(,\d{3})*(\.\d+)?$'), $x);
     } elseif (in($type, 'date datetime-local')) {
       if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . ($type == 'date' ? '' : 'T' . fmtDt($dft, 'HH:mm'));
     }
@@ -488,6 +489,7 @@ function editIf(bool $do, $type, $lab, $dft, $item = NULL, $x = []) {return $do 
 function textFld() {return fld('text', func_get_args());}
 function passFld() {return fld('pass', func_get_args());}
 function areaFld() {return fld('area', func_get_args());}
+function dolFld() {return fld('currency', func_get_args());}
 function numFld() {return fld('num', func_get_args());}
 function intFld() {return fld('int', func_get_args());}
 function phoneFld() {return fld('phone', func_get_args());}
@@ -959,7 +961,7 @@ function flooding($uid, &$sta, &$err) {
     return TRUE;
   }
   
-  $err = t('bad login');
+  $err = t('bad login', '_a', atag('/settings/password'));
   if (!$uid) return TRUE;
 
   $uidOnly = FALSE; 
@@ -981,8 +983,9 @@ function noFlood($sta) {\flood_clear_event('failed_login_attempt_user', nni($sta
  * @param assoc $sta: an associative array with the data
  * @param bool $success: <signin was successful>
  * @param string $err (RETURNED): an error message if $success is FALSE (else NULL)
+ * @param bool $fatal: terminate on error
  */
-function updateFlood($sta, $success, $err = NULL) {
+function updateFlood($sta, $success, $err = NULL, $fatal = FALSE) {
   if ($success) return noFlood($sta); // Clear failures (don't block a user who might log in and out more than once in an hour)
   
   \flood_register_event('failed_login_attempt_ip', 3600); // Always register an IP-based failed login event.
@@ -991,7 +994,11 @@ function updateFlood($sta, $success, $err = NULL) {
   if ($trigger = nni($sta, 'flood_control_triggered')) {
     $err = $trigger == 'user' ? t('We\'re sorry, there have been more than :MAX_PW_FAILS failed sign-in attempts for this account. It is temporarily blocked.') : t('We\'re sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked.');
     $err .= t(' Try again later or <%a>request a new password</a>.', '_a', atag('/user/password'));
-  } else $err = t('bad login', '_a', atag('/settings/password'));
+    if ($fatal) exitJust($err, X_TOOMANY);
+  } else {
+    $err = t('bad login', '_a', atag('/settings/password'));
+    if ($fatal) exitJust($err, X_NOTFOUND);
+  }
 }
 
 /**
@@ -1398,7 +1405,8 @@ function stateFld($dft = NULL, $req = REQ) {return selectFld($req . t('State:'),
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + ($accts ?: db\keyed('id, category', 'tx_cats', '`show`')));}
-function fboCatFld($dft = '') {return catFld($dft, '', db\keyed("id, REPLACE(category, ':FBO_OUT_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_OUT_HDR%'"));} // not REQ!
+function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
+function fboCatChoices($way) {return db\keyed("id, REPLACE(category, ':FBO_{$way}_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_{$way}_HDR%'");}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
@@ -2202,7 +2210,7 @@ function signupCoDisplay($info, &$company = '') {
  */
 function creditLineSuffix() {
   global $mya;
-  return (!$mya->debt or $mya->depends or !$mya->refill) ? suffix(t('(disabled)')) 
+  return (!$mya->debt or $mya->depends) ? suffix(t('(disabled)')) // allow debt without autorefill (just don't allow setting debt ok without autorefill)
   : ($mya->debt ? [] : suffix(t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"')));
 }
     
@@ -2220,7 +2228,7 @@ function captcha() {
 
 function badCaptcha($sta) {
   extract(just('cq ca', $sta['input'], NULL));
-  return ($cq * 2 == $ca) ? FALSE : !say(t('Wrong sum. Try again.'), 'cq');
+  return (is_numeric($cq) and $cq * 2 == $ca) ? FALSE : !say(t('Wrong sum. Try again.'), 'cq');
 }
 
 /**

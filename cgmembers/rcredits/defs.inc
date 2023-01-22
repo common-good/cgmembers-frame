@@ -178,7 +178,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut founded'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce lastDup'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
@@ -305,7 +305,7 @@ const X_SYNTAX = 400;
 const X_UNAUTH = 401;
 const X_NOTFOUND = 404;
 const X_DENIED = 406;
-const X_TOOMANY = 429; // too many requests (DOS)
+const X_TOOMANY = 429; // too many requests (DOS or too many failed password attempts)
 const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
 
 // card format
@@ -387,7 +387,7 @@ const R_ANCIENT_EFT = 10; // how long, at most, an EFT might take (transferring 
 const R_REQUIRED = ' <span class="form-required" title="This field is required.">*</span>';
 const R_CC_RATE = 2.5; // typical credit card percentage rate
 const R_CODE_LEN = 32; // length of most random identifiers
-const R_DUPTX_MINS = 4; // number of minutes before a duplicate transaction is allowed
+const DUPTX_SECS = 3 * MIN_SECS; // number of minutes before a duplicate transaction is allowed
 const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
 define('FS_NOTE', t('fiscal sponsorship fee')); // standard message for this in tx_timed / aux transactions
@@ -431,6 +431,7 @@ const CO_CLUB = 9;
 const CO_CUSTODIAN = 12;
 
 const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
+const FBO_IN_HDR = 'I: Donations: Sponsored: '; // how sponsored account income categories begin
 const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account expense categories begin
 
 // Company Account flags (bits)

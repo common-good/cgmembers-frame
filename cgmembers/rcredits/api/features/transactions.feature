@@ -22,72 +22,67 @@ Setup:
 # POST /transactions
 
 Scenario: The app asks to charge a customer
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJJ | stuff       | %now    | ccB   | false   |
-  Then we reply "ok" with: "?"
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJJccB | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message                   |*
+  | true  | You charged Bea Two $123. |
 
 Scenario: The app asks to charge a customer with a missing parameter
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJJ |             | %now    | ccB   | false   |
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJJccB |             | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer with a bad actorId
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJX | K6VMDJJ | stuff       | %now    | ccB   | false   |
-  Then we reply "notfound" with: "?"
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJX | K6VMDJJccB | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
+  Then we reply "unauth" with: "?"
   
 Scenario: The app asks to charge a customer with a bad otherId
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJX | stuff       | %now    | ccB   | false   |
-  Then we reply "notfound" with: "?"
-
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJXccx | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message                        |*
+  | false | That is not an active account. |
+  
 Scenario: The app asks to charge a customer with a bad amount
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 1.2.3  | K6VMDJK | K6VMDJJ | stuff       | %now    | ccB   | false   |
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 1.2.3  | K6VMDJK | K6VMDJJccB | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer with an amount out of range
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount             | actorId | otherId | description | created | proof | offline |*
-  | %code    | %(%MAX_AMOUNT + 1) | K6VMDJK | K6VMDJJ | stuff       | %now    | ccB   | false   |
+  | deviceId | amount             | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | %(%MAX_AMOUNT + 1) | K6VMDJK | K6VMDJJccB | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer with a bad date
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJJ | stuff       | abc     | ccB   | false   |
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJJccB | stuff       | abc     | K6VMDJK123.00K6VMDJJccB%now | false   |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer with a date out of range
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJJ | stuff       | 123     | ccB   | false   |
+  | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJJccB | stuff       | 123     | K6VMDJK123.00K6VMDJJccB%now | false   |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer with a bad proof
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 123    | K6VMDJK | K6VMDJJ | stuff       | %now    | ccX   | false   |
-  Then we reply "notfound" with: "?"
+  | deviceId | amount | actorId | otherId    | description | created | proof | offline |*
+  | devC     | 123    | K6VMDJK | K6VMDJJccB | stuff       | %now    | ccX   | false   |
+  Then we reply "syntax" with: "?"
 
 Scenario: The app asks to charge a customer who has insufficient funds
-  Given var "code" is "A123456789B123456789C123456789D123456789E123456789K6VMDJKccC" encrypted
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | %code    | 12300  | K6VMDJK | K6VMDJJ | stuff       | %now    | ccB   | false   |
-  Then we reply "denied" with JSON:
-  | message | Bea Two is $11,300 short for this request (do NOT try again). Available balance is $1,000. |**
+  | deviceId | amount | actorId | otherId    | description | created | proof                         | offline |*
+  | devC     | 12300  | K6VMDJK | K6VMDJJccB | stuff       | %now    | K6VMDJK12300.00K6VMDJJccB%now | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message                                                                                    |*
+  | false | Bea Two is $11,300 short for this request (do NOT try again). Available balance is $1,000. |

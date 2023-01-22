@@ -65,7 +65,7 @@ function formGet($form, &$sta, $args = '') {
  
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
   $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->admin ? t(' (no limit for admin)') : ''));
-  $cat = $mya->sponsored ? fboCatFld() : NULL; // fbo income gets categorized automatically
+  $cat = $mya->sponsored ? fboCatFld('', 'OUT') : NULL; // fbo income gets categorized automatically
 
   $arrow = '<span class="glyphicon glyphicon-arrow-right"></span>';
   $get = submit(BARE . t('Bank %m CG', '_m', $arrow));
