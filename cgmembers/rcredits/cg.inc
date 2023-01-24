@@ -167,10 +167,13 @@ function badUnpaidInv($nvid, &$inv = '') {
  */
 function dupTx($a1, $a2, $amount, $force = FALSE) {
   global $channel;
+  
+  $lastDup = $a1->lastDup; $a1->update('lastDup', 0); // clear dup if we return FALSE
+  
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
   if (!$lastTx = $a1->lastTx) return FALSE; // no previous transaction
   if ($lastTx->getAmount($a1) != $amount) return FALSE; // different amount (so not duplicate)
-  if (now() - ($a1->lastDup ?: 0) < DUPTX_SECS) return FALSE; // recent duplicate complaint, so allow this one
+  if (now() - ($lastDup ?: 0) < DUPTX_SECS) return FALSE; // recent duplicate complaint, so allow this one
   if ($lastTx->actorId != $a1->id or $lastTx->otherId != $a2->id) return FALSE; // different payer or payee
   if (now() - $lastTx->created > DUPTX_SECS) return FALSE; // last tx like this was long enough ago
 
