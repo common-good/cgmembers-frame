@@ -16,6 +16,14 @@ Setup:
   | .ZZH | Hal Eight  | 8 A St. | 01008 | ok         | ssnOff   | 100    | 10    | Hton | %now-28y |
   | .ZZI | Ida Nine   | 9 A St. | 01009 | ok         | fishy    | 3      | 20    | Iton | %now-29y |
   | .ZZJ | Jay Ten    | A J St. | 01010 | ok,co      |          | 5      | 0     | Jton | %now-30y |
+  And member ".ZZA" has "person" steps done: "contact"
+  And member ".ZZB" has "person" steps done: "contact"
+  And member ".ZZD" has "person" steps done: "contact"
+  And member ".ZZE" has "person" steps done: "contact"
+  And member ".ZZF" has "person" steps done: "contact"
+  And member ".ZZG" has "person" steps done: "contact"
+  And member ".ZZH" has "person" steps done: "contact"
+  And member ".ZZI" has "person" steps done: "contact"
   And these "r_invites":
   | inviter | invitee | email |*
   | .ZZA    | .ZZD    | d2@   |
@@ -77,8 +85,8 @@ Scenario: A company agent runs the demographics query
   Then we show "Customer Demographics" with:
   | Customer Count: |     7 |
   | Median Age:     |    29 |
-  | Median Tenure:  | 23 months at current location |
-  | Owns vs. Rents: | 85.7% |
+  | Median Tenure:  | 34 months at current location |
+  | Owns vs. Rents: | 83.3% |
   
   | Top Cities:     | |
   | City/Town       | Count |

@@ -22,7 +22,7 @@ function formTaxInfo($form, &$sta, $ending = '') {
   $dbaName = r\regionfield('fullName');
   if ($dbaName != $regName) $regName .= t(' dba ') . $dbaName;
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
-  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
+  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.</p>', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
 
   if (now() < strtotime('1/1/2021')) { // 1099-B through 2020, 1099-K thereafter
     $title = t('Your "Barter" Income <small>(Forms 1099-B)</small>');
@@ -109,7 +109,10 @@ EOF
     <p>The purpose of 1099-K is to report payment card transaction totals, not total income. So don't worry if some of the total listed here is something other than income (such as reimbursements or selling something at a loss). Also, you may receive a Form W2 or 1099-MISC from your employer or customers for some of the same money. Take care not to over-report your income by counting things twice.</p>
 EOF
     );
-    $txCount = item(number_format($txCount, 2), t('Payments (count):'));
+    
+    if ($mya->jid) $subtext .= t('<p>This report applies only to one of the participants in this joint account. Your partner in the joint account receives a separate 1099-K.</p>');
+
+    $txCount = item(number_format($txCount), t('Payments (count):'));
     $gross = item(u\fmtAmt($gross, '$'), t('Total:'));
     $noCard = item(u\fmtAmt($noCard, '$'), t('Paid Online:'));
     $withheld = item('0.00', t('Income Tax Withheld:'));

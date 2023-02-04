@@ -21,7 +21,7 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  * Log in at fire.irs.gov (or fire.test.irs.gov)
  * @param string $type: 1099 type (B, K, MISC, etc)
  * @param mixed $testMode: TRUE if testing, otherwise FALSE
- * @param assoc $extra: miscellaneous parameters
+ * @param assoc $extra: miscellaneous parameters (omit for CG itself)
  *   string $ein, $nm, $addr, $phone: payer information (defaults to CG's)
  *   int $year: tax year (defaults to most recently completed calendar year)
  *   assoc $badNames: names reported incorrectly, indexed by uid (1099-B only)
@@ -34,7 +34,7 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  *
  * Example for 1099-NEC and 1099-R (get amounts from QBO and/or CG)
  *
- * Get lines on production server with:
+ * Get lines for each contractor (or retiring employee for 1099-R) on production server with:
      foreach (ray('aka nevabj etc') as $qid) { // these can also be numeric account IDs
        $a = a($qid); $co = $a->co ? 1 : 0;
        e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
@@ -44,6 +44,7 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  * Paste in the PHP box on a DEV machine to generate file to upload to fire.irs.gov:
  
      include R_ROOT . '/cg-yearly.inc';
+     $extra = NULL; // for CG itself
      $extra = ray('ein nm addr phone', '043125436', 'Creative Thought and Action Inc', 'PO Box 305, Ashfield, MA 01330', '4136281957');
      $keys = 'nm ein co addr qid amount dt';
      $rows = [
@@ -60,7 +61,7 @@ function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
   $testMode = $testMode ? 'T' : '';
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
-  $flnm = ($ein ? t('guest-') : '') . "Y$year$testMode-forms1099$type.txt";
+  $flnm = (($ein and $ein != CGF_EIN) ? t('guest-') : '') . "Y$year$testMode-forms1099$type.txt";
   u\beginDownload($flnm); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
@@ -220,10 +221,10 @@ function recA($type, $year, $extra = []) {
   
   extract(just('ein nm addr phone', $extra, [CGF_EIN, CGF_LEGALNAME, CGF_POSTALADDR, CGF_PHONE]));
 
-  $forCG = in($type, 'MISC NEC');
+  $forCG = in($type, 'MISC NEC R');
   $combo = pad($stateCode == STATE_CODE, 1); // combined Federal/State filing (for anything but NEC)
   
-  $regionTIN = $forCG ? $ein : '461821792';
+  $regionTIN = $forCG ? $ein : str_replace('-', '', R_REGION_EIN);
   $nameControl = sp(4);
   $lastEver = pad(FALSE, 1);
   
@@ -236,7 +237,7 @@ function recA($type, $year, $extra = []) {
 
   list ($addrLine, $city, $st, $zip) = u\parseAddr($forCG ? $addr : 'c/o Common Good, PO Box 21, Ashfield, MA 013300021');
   $payerAddr = pad($addrLine, 40) . pad($city, 40) . $st . pad(nodash($zip), 9);
-  $payerPhone = pad($forCG ? u\fmtPhone($phone, 'n') : '4136281723', 15); // was 4133765021 (maybe again someday)
+  $payerPhone = pad($forCG ? u\fmtPhone($phone, 'n') : CGF_PHONE, 15); // was 4133765021 for the Region (maybe again someday)
   
   return 'A' . $year . $combo . sp(5) . $regionTIN . $nameControl . $lastEver . $typeCode . $amountCodes . sp(8) . $foreign . $payerName . $isAgent . $payerAddr . $payerPhone . sp(260) . seq() . sp(241) . EOL;
 }

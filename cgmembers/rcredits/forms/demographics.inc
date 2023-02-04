@@ -20,8 +20,8 @@ function formDemographics($form, &$sta) {
   $ages = [];
   foreach ($uids as $id) {
     $a = r\acct($id);
-    if ($a->hasDob) $ages[] = date('Y') - $a->yob;
-    if ($a->created >= $statStart) {
+    if ($a->yob) $ages[] = date('Y') - $a->yob;
+    if ($a->created >= $statStart and $a->stepIsDone('contact')) {
       $tenures[] = $a->tenure;
       $owns[] = $a->owns ? 1 : 0;
     }

@@ -23,7 +23,10 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
-  $cgUids = join(',', r\catUids());
+  $y9 = strtotime('January 1') - 1;
+  $y0 = strtotime('-1 year', $y9) + 1;
+  $cgUids = join(',', r\cgUids());
+  $justCgUids = join(',', r\justCgUids());
   $qtrDt1 = u\qtrDt($qtrDt2 = u\qtrDt() - 1);
   
   $queries = [
@@ -42,6 +45,23 @@ if ($mya and $mya->admin) {
   
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
+  1 . t('Major Gifts') => 
+    "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, u2.name AS `to`,
+      SUM(IF(t.:IS_GIFT, amt, 0)) AS gifts,
+      SUM(IF(t.:IS_GIFT, 0, amt)) AS nonGifts, u.:IS_INFLUENCER AS marked, p.pid IS NULL AS member,
+      IF(p.pid IS NULL, CONCAT(u.city, ', ', s.abbreviation, ' ', u.zip), CONCAT(IFNULL(p.address, ''), ', ', p.city, ', ', s.abbreviation, ' ', p.zip)) AS address
+      FROM txs t LEFT JOIN txs2 t2 USING (xid) 
+      LEFT JOIN users u ON u.uid=t.uid1 
+      LEFT JOIN users u2 ON u2.uid=t.uid2
+      LEFT JOIN people p ON p.pid=t2.pid AND p.pid>0
+      LEFT JOIN r_states s ON s.id=IF(p.pid IS NULL, u.state, p.state)
+      WHERE t.created BETWEEN $y0 AND $y9 AND t.uid2 IN ($justCgUids) AND t.uid1 NOT IN ($justCgUids)
+      AND t.cat2 NOT BETWEEN 1150 AND 1300
+      GROUP BY name
+      HAVING gifts>=99
+      ORDER BY gifts DESC
+    ". t('~<p>Total gifts specifically to %PROJECT in its most recently ended calendar year from top donors.'),
+
   1 . t('Gifts From "Disqualified Persons"') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
       SUM(IF(amt>=1000 AND t.:IS_GIFT, amt, 0)) AS over999,

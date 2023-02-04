@@ -2036,6 +2036,7 @@ function memberStepsLeft($id, $left0) {
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
+ *     MAKE demographics Setup
  *     MAKE invest Setup
  *     MAKE posts Setup
  *     MAKE showqr ACardMemberDisplaysTheirQR

@@ -1524,6 +1524,7 @@ function catUids() {
 }
 
 function cgUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of all accounts owned by CG (called in queries.inc)
+function justCgUids() {return array_merge([CGID, r\serverUid(), r\qo('NEWAZV')->id], BUCKET_UIDS);} // uids of all non-sponsored accounts owned by CG (called in queries.inc)
 
 /**
  * Return the appropriate exchange fee for the given transaction description and amount.

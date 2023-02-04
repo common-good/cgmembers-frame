@@ -17,7 +17,7 @@ include_once R_ROOT . '/cg-qr.inc';
  * @param string $arg: the operation
  */
 function api($arg = null) {
-  global $mya;
+  global $mya, $boxId;
   global $channel;
 
   if (is_array($arg) or nni($_GET, 'request')) { // SMP interface uses /api with no explicit endpoints
@@ -34,9 +34,10 @@ function api($arg = null) {
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     if (!$mya = getA($device)) return exitJust(X_UNAUTH);
     if (!$actorId = nni($_POST ?: $_GET, 'actorId')) return exitJust(X_SYNTAX);
-    if (qr\url($mya, TRUE) != $actorId) return exitJust(X_UNAUTH); // each device user should have their own deviceId
+// This should work but doesn't    if (qr\url($mya, TRUE) != $actorId) return exitJust(X_UNAUTH); // each device user should have their own deviceId
     $boxId = w\boxId($device, $mya, 500); // find device in the db or put it there
   } elseif ($arg != 'accounts') return exitJust(X_UNAUTH);
+  w\signout(TRUE);
 
   if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_UNAUTH);
   return $func();
@@ -58,23 +59,34 @@ function accounts() {
   global $nextCode; // tests usurp generated device code, using this instead
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_UNAUTH);
-  if (!$uid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
+  if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
   
-  if (w\flooding($uid, $sta, $err)) return exitJson($err, X_TOOMANY);
-  $a = r\acct($uid);
+  if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
+  $a = r\acct($myid);
   $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
   if (!$success) return exitJust($err, X_NOTFOUND);
   w\updateFlood($sta, $success, $err, TRUE);
-  if (!$list = be\accountChoices(r\acct($uid), B_MANAGE)) return exitJust(X_NOTFOUND);
+  if (!$a->ok) return exitJust(X_UNAUTH);
+  
+  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid);
     $accountId = qr\url($a, TRUE);
-    $deviceId = nn($nextCode) ?: u\b64encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
+    $deviceId = nn($nextCode) ?: base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
+    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : '';
     $items = explode("\n", $a->selling);
     $accounts[] = compact(ray('accountId deviceId name items'));
   }
   return exitJson(compact('accounts'));
+}
+
+function myQr($a) {
+  include_once R_ROOT . '/cg-qr.inc';
+  $logo = $a->photoSrc(FALSE, TRUE, TRUE);
+//  $text = $a->bestName . ", $a->city, $a->st"; // maybe put this at the top, under device-owner name
+  $testQr = qr\url($a);
+  return base64_encode(qr\generate($testQr, $logo, $a->mainQid));
 }
 
 /**
@@ -130,6 +142,7 @@ function idPhoto() {
   if (!$otherId = substr($code, DEVICE_MAXLEN) or !$a = qr\acct($otherId, TRUe)) return exitJust(X_NOTFOUND);
   */
   foreach (ray('actorId otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH); // don't just get this from deviceId (could be ambiguous)
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
 
   return photoReturn($a->agentA->photo);

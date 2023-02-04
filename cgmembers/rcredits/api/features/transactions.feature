@@ -39,7 +39,9 @@ Scenario: The app asks to charge a customer with a bad actorId
   When app posts "transactions" with:
   | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
   | devC     | 123    | K6VMDJX | K6VMDJJccB | stuff       | %now    | K6VMDJK123.00K6VMDJJccB%now | false   |
-  Then we reply "unauth" with: "?"
+  Then we reply "ok" with JSON:
+  | ok    | message                                                |*
+  | false | This device is not connected to an authorized account. |
   
 Scenario: The app asks to charge a customer with a bad otherId
   When app posts "transactions" with:

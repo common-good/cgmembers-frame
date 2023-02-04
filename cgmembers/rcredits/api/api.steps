@@ -125,6 +125,7 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST transactions TheAppAsksToChargeACustomer
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  */
@@ -176,7 +177,6 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
- *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
