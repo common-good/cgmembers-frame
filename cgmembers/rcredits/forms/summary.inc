@@ -65,7 +65,7 @@ function formSummary($form, &$sta) {
     $desc = t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally'));
 
     $creditLine = $mya->admSetCredit
-    ? numFld(t('Credit Line:'), $desc, dft(-$mya->floor) + creditLineSuffix())
+    ? numFld(t('Credit Line:'), $desc, dft(0-$mya->floor) + creditLineSuffix())
     : ($mya->underage ? NULL : item($credit, t('Credit Line:'), $desc, creditLineSuffix()));
 
   } else $acctType = t('community account');
@@ -141,7 +141,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admManageAccts) return hack('managing account without permission'); // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid legalName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans coFlags', $sta['input'], NULL));
+  extract($args = just('uid legalName shortName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans coFlags', $sta['input'], NULL));
   if (!$mya->admManageAccts) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
@@ -186,10 +186,10 @@ function formSummary_submit($form, &$sta) {
       } else { $notes = r\stampNote('account closed') . $notes; }
     }
   }
-  
-  if (isset($creditLine)) $floor = -$creditLine;
+
+  if (isset($creditLine)) $floor = 0-$creditLine;
   $fields = 'notes';
-  foreach (ray('floor legalName tickle moves helper') as $k) if (nn($$k)) $fields .= " $k"; // don't overwrite
+  foreach (ray('floor legalName shortName tickle moves helper') as $k) if (isset($$k)) $fields .= " $k"; // don't overwrite
   $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
 
   $mya->update($info);

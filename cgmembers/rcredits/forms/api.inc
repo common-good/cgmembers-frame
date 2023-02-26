@@ -17,30 +17,33 @@ include_once R_ROOT . '/cg-qr.inc';
  * @param string $arg: the operation
  */
 function api($arg = null) {
-  global $mya, $boxId;
+  global $mya;
   global $channel;
+
+  $params = $_POST ?: $_GET;
 
   if (is_array($arg) or nni($_GET, 'request')) { // SMP interface uses /api with no explicit endpoints
     $channel = TX_API;
-    u\loga('in', $arg ?: ($_POST ?: $_GET));
+    u\loga('in', $arg ?: ($params));
     include_once R_ROOT . '/forms/smp.inc';
     return smp($arg);
   }
 
   $channel = TX_APP;
-  u\loga('in:' . $arg, $_POST ?: $_GET);
+  u\loga('in:' . $arg, $params);
   setHeaders();
-  if ($deviceId = nni($_POST ?: $_GET, 'deviceId')) { // identify user if deviceId specified
-    $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    if (!$mya = getA($device)) return exitJust(X_UNAUTH);
-    if (!$actorId = nni($_POST ?: $_GET, 'actorId')) return exitJust(X_SYNTAX);
-// This should work but doesn't    if (qr\url($mya, TRUE) != $actorId) return exitJust(X_UNAUTH); // each device user should have their own deviceId
-    $boxId = w\boxId($device, $mya, 500); // find device in the db or put it there
-  } elseif ($arg != 'accounts') return exitJust(X_UNAUTH);
-  w\signout(TRUE);
+  if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_SYNTAX);
 
-  if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_UNAUTH);
-  return $func();
+  if ($these = nni($_POST, 'these')) { // process an array with no response needed other than "ok"
+    foreach (json_decode($these) as $one) {
+      if (!$ok = authOk($arg, $one)) return; // return is for testing -- any error triggers exitJust()
+      $func($one);
+    }
+    return (X_OK);
+  }
+  
+  if (!$ok = authOk($arg, $params)) return; // return is for testing -- any error triggers exitJust()
+  return $func($params); // functions ignore $params unless they optionally accept a POSTed array
 }
 
 /**
@@ -66,17 +69,18 @@ function accounts() {
   $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
   if (!$success) return exitJust($err, X_NOTFOUND);
   w\updateFlood($sta, $success, $err, TRUE);
-  if (!$a->ok) return exitJust(X_UNAUTH);
+  if (!$a->ok) return exitJust(X_FORBIDDEN);
   
-  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE)) return exitJust(X_NOTFOUND);
+  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK')) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid);
-    $accountId = qr\url($a, TRUE);
+    $accountId = qr\url($a, 'main');
     $deviceId = nn($nextCode) ?: base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
-    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : '';
-    $items = explode("\n", $a->selling);
-    $accounts[] = compact(ray('accountId deviceId name items'));
+    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
+    $isCo = $a->co;
+    $selling = explode("\n", $a->selling);
+    $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
   }
   return exitJson(compact('accounts'));
 }
@@ -85,8 +89,8 @@ function myQr($a) {
   include_once R_ROOT . '/cg-qr.inc';
   $logo = $a->photoSrc(FALSE, TRUE, TRUE);
 //  $text = $a->bestName . ", $a->city, $a->st"; // maybe put this at the top, under device-owner name
-  $testQr = qr\url($a);
-  return base64_encode(qr\generate($testQr, $logo, $a->mainQid));
+  $testQr = qr\url($a, 'short');
+  return qr\generate($testQr, $logo, t('Account: %qid (%city, %st)', 'qid city st', $a->mainQid, $a->city, $a->st));
 }
 
 /**
@@ -100,14 +104,13 @@ function myQr($a) {
  *   agent: the name of the person acting on behalf of a company (empty for an individual account)
  *   location: the account’s city, state
  *   limit: the maximum amount this account can be charged at this time
- *   items: the device owner's list of transaction descriptions
+ *   selling: the device owner's list of transaction descriptions
  */
 function identity() {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
 //  if (!rayhas($_GET, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
   foreach (ray('actorId otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
-  if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH); // don't just get this from deviceId (could be ambiguous)
   if (!$a = getAcct($otherId) or !$a->ok) return exitJust(X_NOTFOUND);
 
   $name = $a->fullName;
@@ -120,9 +123,9 @@ function identity() {
   $avgBalance = round($avgs[0], 2);
   $trustRatio = round($a->trust / (db\avg('trust', 'users', ':IS_OK AND NOT :IS_CO') ?: 1), 2);
   $since = (int) $a->activated;
-  $items = explode("\n", $mya->selling);
+  $selling = explode("\n", $mya->selling);
 
-  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since items')));
+  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling')));
 }
 
 /**
@@ -136,13 +139,8 @@ function identity() {
 function idPhoto() {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
-/*  foreach (ray('accountId code') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
-  if (!$mya = getAcct($accountId, FALSE)) return exitJust(X_NOTFOUND);
-  if (!$code = u\decryPGP(u\b64decode($code), 'private')) return exitJust(X_NOTFOUND);
-  if (!$otherId = substr($code, DEVICE_MAXLEN) or !$a = qr\acct($otherId, TRUe)) return exitJust(X_NOTFOUND);
-  */
+
   foreach (ray('actorId otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
-  if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH); // don't just get this from deviceId (could be ambiguous)
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
 
   return photoReturn($a->agentA->photo);
@@ -150,10 +148,11 @@ function idPhoto() {
 
 /**
  * Create the requested transaction.
- * @param numeric $amount: amount of transaction, from the actor's point of view (negative to reverse a charge)
+ * @param int $version: app version number
  * @param string $deviceId: the device identifier
  * @param string $actorId: abbreviated identifier for the account associated with the device (the actor)
  * @param string $otherId: abbreviated identifier for the other account
+ * @param numeric $amount: amount of transaction, from the actor's point of view (negative to reverse a charge)
  * @param string $description: a brief description of the transaction
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
@@ -161,72 +160,85 @@ function idPhoto() {
  *
  * NOTE: use only X_OK and X_SYNTAX here.
  */
-function transactions() {
+function transactions($params) {
   global $mya, $boxId;
   include_once R_ROOT . '/classes/tx.class';
 
-  u\loga('in', $_POST);
-  $flds = 'amount deviceId actorId otherId description created proof';
-  foreach (ray($flds) as $k) if (!nni($_POST, $k)) return exitJust(t('missing parameter %k', compact('k')), X_SYNTAX);
-  extract(just($flds . ' offline', $_POST));
-  $version = 100;
-  $offline = (int) ($offline == 'true');
+  $flds = 'version deviceId actorId otherId amount description created proof offline';
+  foreach (ray($flds) as $k) if (!$$k = $params[$k]) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
+  $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for errors
+  if (test()) $proof = u\hash($got = $proof);
 
-  if (!$mya = getAcct($actorId, FALSE)) return postErr(t('This device is not connected to an authorized account.'));
-  r\setAcct($mya);
-  if (!$a = getAcct($otherId, FALSE) or !$a->ok) return postErr(t('That is not an active account.')); // proof is proof enough (no cardCode needed)
+  if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
+    return $offline ? badTx($a, $params, obj('msg', $err)) : postErr($err); // proof is proof enough (no cardCode needed)
+  }
   $cardCode = $a->cardCode();
   if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
   if (!is_numeric($created) or $created < now() - 30 * DAY_SECS or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
 
-  $proofAmt = number_format(abs($amount), 2, '.', '');
-  if (test()) $proof = u\hash($got = $proof);
-  $hashOfTx = u\hash($wanted = "$actorId$proofAmt$otherId$created");
-  
-  if ($proof != $hashOfTx) {
-    r\tellAdmin('bad proof', compact(ray('version proof hashOfTx actorId amount otherId cardCode created offline')));
-    if (test()) f('t.output', "Wanted proof: $wanted, got: $got");
+  foreach (['', 'Undo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
+    $proofAmt = number_format($uq ? -$amount : $amount, 2, '.', '');
+    $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $cardCode . $created); // cardCode is not a parameter, but it is hashed into the proof
+    ${"proofOk$uq"} = ($proof == $proofWanted);
+  }
+
+  if (!$proofOk and !$proofOkUndo) { // bad proof
+    flog(compact(ray('testProofWanted testProofWantedUndo')));
+    r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
+    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $got");
     return exitJust(t('bad proof'), X_SYNTAX);
   }
   
-  if (!$device = decodeDevice($deviceId)) return postErr(t('This device is not connected to a %PROJECT account.'));
-  $boxId = w\boxId(substr($deviceId, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there
-
-  $goods = 0; $selfhelp = FALSE;
-  $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $proofAmt, $goods, $description);
+  $goods = FOR_GOODS; $selfhelp = FALSE;
+  $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
   
-  if ($amount < 0) { // reversing (no effort is made to Undo in real time, so all reversals are offline-agnostic)
+  if ($proofOkUndo) { // reversing (no effort is made to Undo in real time, so all reversals are offline-agnostic)
+    $info['amt'] = -$amount; // look for original transaction
     if ($xid = db\get('xid', 'txs', $info)) { // exists
-      $z = be\undoTx($mya, $xid, 1, [], TRUE);
-      if ($z->ok) r\tellAdmin('reversing tx', ray('xid who created message subs', $xid, "$mya->fullName ($mya->mainQid)", fmtDt($z->subs['created']), $z->msg, $z->subs)); // if ($z->ok and nni($z->subs, 'xid'))
-      if (!$z->ok) return badTx($_POST, $a->fullName, $z->msg, $z->subs);
-    } else { // does not exist
-      exitJson(ray('ok message', TRUE, 'deleted'), X_OK); // message is ignored
+      $z = be\posUndo($mya, $xid, TRUE);
+      if (!$z->ok) return badTx($a, $params, $z);
     }
+    exitJson(ray('ok message', TRUE, 'deleted'), X_OK); // message is ignored by app
   }  
 
-  if ($offline and $xid = db\get('xid', 'txs', $info)) { // forcing and transaction exists
+  // new transaction
+  if ($xid = db\get('xid', 'txs', $info)) { // transaction exists
     $type = $amount < 0 ? 'payment' : 'charge';
     $z = be\sendNotifications($mya, $type, r\Tx::read($xid), 0, FALSE); // fake the message from existing transaction
     $message = $z->msg;
   } else { // transaction doesn't exist (yet)
-    if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount]; else $type = 'charge';
+    if ($amount < 0) list ($type, $amount) = ['payment', -$amount]; else $type = 'charge';
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
-    if (!$z->ok) return badTx($_POST, $a->fullName, $z->msg, $z->subs);
-
-    if (!$offline and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
-    $txid = $z->subs['xid'];
-    if ($selfhelp) {
-      $message = 'selfhelp tx';
-    } else {
-      $message = $z->msg;
-      $forCash = $goods == FOR_USD ? t('for USD') : '';
-      $we = $mya->co ? t('We') : t('You');
-      $did = tr('just did', $z->subs + compact('forCash', 'we'));
+    $message = $selfhelp ? 'selfhelp tx' : $z->msg;
+    if ($z->ok) {
+      if (!$offline and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
+    } else { // failed to create transaction
+      if ($offline) return badTx($a, $params, $z);
     }
   }
   
-  return exitJson(ray('ok message', TRUE, $message), X_OK);
+  return exitJson(ray('ok message', $z->ok, $message), X_OK);
+}
+
+/**
+ * POST /comments
+ *
+ * Send a comment to an administrator.
+ *
+ * @param string $deviceId: the device identifier
+ * @param string $accountId: the user's account ID, including cardCode
+ * @param string $text: the comment
+ * @param int $created: Unixtime the comment was submitted
+ */
+function comments($params) {
+  global $mya;
+
+  foreach (ray('text created') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+  $created = fmtDt($created);
+  $qid = $mya->qid;
+  r\tellAdmin(t('Comment from ') . $mya->fullName, compact(ray('qid text created')));
+  
+  return exitJust(X_OK);
 }
 
 /**
@@ -246,30 +258,34 @@ function postErr($msg) {
  * @param bool $requireCode: require card code (FALSE for transactions)
  * @return: the customer's acct object (NULL if error)
  */
-function getAcct($cardId, $requireCode = TRUE) {
+function getAcct($cardId, $requireCode = TRUE, &$err = '') {
   include_once R_ROOT . '/cg-qr.inc';
   
-  if (!$a = qr\acct($cardId, $requireCode)) return r\badCard($cardId, NULL, $err = 'bad card'); 
+  if (!$a = qr\acct($cardId, $requireCode) or !$a->ok) {
+    r\badCard($cardId, NULL);
+    $err = t('That is not an active %PROJECT account.');
+    return FALSE;
+  }
 //  if (r\foreignServer(r\uidRegion($a->agentId))) return !$err = 'wrong server for customer';
-  if (!$a->ok) return r\badCard($cardId, NULL, $err = 'card inactive');
   return $a;
 }
 
 /**
  * Tell the device owner about a failed background transaction
  */
-function badTx($args, $account, $message, $subs = []) {
-  extract(just('offline amount created', $args, NULL));
+function badTx($a, $info, $z) {
+  global $mya;
+  extract(just('offline amount created', $info, NULL));
   
-  if ($offline == 'true') {
-    global $mya;
-    $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
-    $subs += ray('account amount created by', $account, u\fmtAmt($amount), fmtDt($created), $by);
-    $mya->tell("bad forced tx|$message", $subs);
-    r\tellAdmin("bad forced tx|$message", $subs);
-  }
+  $info['offline'] = (int) $offline;  
+  db\insert('tx_bads', $info);
   
-  return postErr($message); // offline transactions are always accepted
+  $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
+  $dpy = ray('name amount created by', $a ? $a->fullName : t('UNKNOWN'), u\fmtAmt($amount), fmtDt($created), $by);
+//    $mya->tell("bad forced tx|$message", $info);
+  r\tellAdmin("bad forced tx|$z->msg", $info + $dpy);
+  
+  return postErr($z->msg); // offline transactions are always accepted
 }
 
 /**
@@ -278,6 +294,7 @@ function badTx($args, $account, $message, $subs = []) {
  * @return: an adequate abbreviation of $device (FALSE if error)
  */
 function decodeDevice($device) {
+  if (test() and $device == 'whatever') return FALSE;
   if (FALSE) if (!test() and !u\decryPGP(u\b64decode($device), 'public')) return FALSE; // temporarily disabled while figuring out how to do ssl public encryption from JS or switch to GPG
   return substr($device, 0, DEVICE_MAXLEN);
 }
@@ -312,8 +329,30 @@ function getA($device) {
   if (!$mya = r\acct($uid)) return NULL; // bad agent
 //  if (r\foreignServer(r\uidRegion($mya->agentId))) return NULL; // wrong server for agent
   if (!$mya->ok) return NULL; // company inactive
-  if (!$mya->proSe) r\setAcct($mya->agentId); // get agent first, if not proSe
-  return r\setAcct($mya);
+  return $mya; // don't log in
+//  if (!$mya->proSe) r\setAcct($mya->agentId); // get agent first, if not proSe
+//  return r\setAcct($mya);
+}
+
+/**
+ * Check the validity of a specified deviceId and actorId.
+ * @param string $arg: the endpoint
+ * @param assoc $params: the parameters
+ * @return <ok>
+ */
+function authOk($arg, $params) {
+  global $mya, $boxId;
+
+  if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
+    if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
+    if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
+    if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
+///    debug($nm);
+    $device = substr($deviceId, 0, DEVICE_MAXLEN);
+    $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
+  } elseif ($arg != 'accounts') return exitJust(X_UNAUTH);
+
+  return TRUE;
 }
 
 function setHeaders() {

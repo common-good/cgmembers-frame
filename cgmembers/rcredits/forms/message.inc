@@ -61,7 +61,7 @@ function formMessage_submit($form, &$sta) {
   $a = r\acct($uid);
   
   if ($fileData = unserialize($fileData) or strlen($secret)) { // encrypted file and/or message
-    $at = now() + HOUR_SECS * $expires;
+    $at = now() + DAY_SECS * $expires;
     $ray = ray('qid from exp', $a->mainQid, $fromQid, $at);
     if (strlen($secret)) $ray += compact('secret');
     if ($fileData) $ray += just('path name type size', $fileData);

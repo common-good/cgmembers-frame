@@ -12,24 +12,26 @@ Setup:
   | .ZZF | For Co   | +20006 | f@    | ccF |      | co     |      | Fton | FL    |
   And these "u_company":
   | uid  | selling |*
+  | .ZZC | bags    |
   | .ZZF | stuff   |
   And these "r_boxes":
   | uid  | code |*
   | .ZZC | devC |
   And these "u_relations":
   | main | agent | num | permission |*
-  | .ZZC | .ZZA  |   1 | buy        |
-  | .ZZC | .ZZB  |   2 | scan       |
+  | .ZZC | .ZZA  |   1 | manage     |
+  | .ZZC | .ZZB  |   2 | manage     |
   | .ZZF | .ZZA  |   1 | manage     |
+  And member ".ZZA" has "card" steps done: "all"
 
 # GET /accounts
 
 Scenario: A member signs in to the app for a list of accounts to choose from
   Given next random code is "whatever"
   And var "accounts" is JSON:
-  | accountId | deviceId | name    | items   |*
-  | K6VMDJI   | whatever | Abe One | []      |
-  | K6VMDJN   | whatever | For Co  | [stuff] |
+  | accountId | deviceId | qr   | isCo  | name    | selling |*
+  | K6VMDJI   | whatever | ?    | false | Abe One | []      |
+  | K6VMDJK   | whatever | %NUL | true  | Coco Co | [bags] |
   When app gets "accounts" with:
   | identifier | password |*
   | .ZZA       | Aa1      |

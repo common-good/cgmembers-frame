@@ -392,21 +392,13 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
 }
 
 /**
- * Add a deactivated or phony (and used) card code to the "bad" list.
- * @param string $qid: the account ID
- * @param string $code: the bad card code (if NULL, don't mark it bad, just tell admin)
- * @param string $msg: type of error
+ * Report attempted use of a deactivated or phony card code to admin.
+ * @param string $acctId: the attempted account ID
+ * @param string $code: the bad card code
  * @return FALSE 
  */
-function badCard($qid, $code, $msg) {
-  $created = now();
-  $info = compact('qid', 'code');
-  if (isset($code) and !db\exists('r_bad', $info)) {
-    $info += compact('created');
-    db\insert('r_bad', $info, 'created');
-    $index = 'card marked bad';
-  } else $index = 'attempted card already marked bad';
-  r\tellCAdmin($index, $info + compact('msg'));
+function badCard($acctId, $code) {
+  r\tellAdmin('bad card code', compact(ray('acctId code')));
   return FALSE;
 }
 
@@ -871,7 +863,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
 
   while ($row = $q->fetch()) {
     $date = ($weekly or $monthly) ? str_replace(' ', '&nbsp;', fmtDt($row->created, ' MMM dd')) : R_BULLET;
-    $sent = $row->sent ? '&x2713;' : '';
+    $sent = $row->sent ? ' &x2713;' : '';
     $extra = $mya->admin ? "<td>$row->msgid$sent</td>" : '';
     $messages[] = "<tr>$extra<td class=\"notice-date\" stule=\"vertical-align:top; min-width:50px; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
   }

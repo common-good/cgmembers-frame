@@ -29,7 +29,7 @@ Scenario: The app asks to identify a customer
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDJK | K6VMDJJccB |
   Then we reply "got" with JSON:
-  | name    | agent | location | limit | creditLine | avgBalance | trustRatio | since    | items   |*
+  | name    | agent | location | limit | creditLine | avgBalance | trustRatio | since    | selling |*
   | Bea Two |       | Bton, MA |     0 |          0 |          0 |          0 | %now0-2w | [stuff] |
   
 Scenario: The app asks to identify a customer without an identifier  
@@ -41,13 +41,13 @@ Scenario: The app asks to identify a customer without an identifier
 Scenario: The app asks to identify a customer with a bad device identifier  
   When app gets "identity" with:
   | deviceId | actorId | otherId    |*
-  | xxx      | K6VMDJK | K6VMDJJccB |
+  | whatever | K6VMDJK | K6VMDJJccB |
   Then we reply "unauth" with: "?"
 
 Scenario: The app asks to identify a customer with a bad actor identifier
   When app gets "identity" with:
-  | deviceId | actorId | otherId    |*
-  | devC     | xxx     | K6VMDJJccB |
+  | deviceId | actorId  | otherId    |*
+  | devC     | whatever | K6VMDJJccB |
   Then we reply "unauth" with: "?"
 
 Scenario: The app asks to identify a customer with a bad security code

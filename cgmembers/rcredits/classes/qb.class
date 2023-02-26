@@ -360,6 +360,7 @@ X;
   private function isNew($id) {
     if (test() or QSEND_TEST) return TRUE;
     if (!$this->get('Id', 'JournalEntry', "DocNumber='$id'")) return TRUE;
+    if (u\starts($id, 'cgFund#')) return TRUE; // ignore if QBO already has this bank transfer (no doubt caused by a crash while processing transactions up to that deposit date)
 //    $xid = substr($id, strpos($id, '#') + 1);
 //    if (TRUE or $xid <= 163686) {r\setQbOk($xid); return TRUE;} // delete this line and the preceding after 7/1/2022
     w\err(t('Transaction %id has already been transferred! Stopping...', compact('id')));

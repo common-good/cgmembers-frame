@@ -145,7 +145,7 @@ function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 function weRespondWithPhoto($photo) {
   global $testOnly;
   global $rposResult;
-  return ($rposResult == $photo);
+  return t\eq('photo result', tr($photo), $rposResult);
 }
 
 /**
@@ -586,7 +586,7 @@ function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $si
 /**
  * bad codes (ARG)
  *
- * in: TEST identify TheDefaultCashierScansADeactivatedCard
+ * in: 
  */
 function badCodes($bad) {
   global $testOnly; 

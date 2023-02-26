@@ -20,6 +20,13 @@ use Endroid\QrCode\Writer\PngWriter;
 
 function html($data, $logo, $text) {return tr('<img src="%data" />', '_data', generate($data, $logo, $text));}
 
+/**
+ * Return a QR code for the given data, with the logo in the middle, and text at the bottom.
+ * @param string $data: the URL or other data for which to create a QR code
+ * @param string $logo: a fully-qualified URL for an image to place in the center
+ * @param string $text: text to append too the bottom of the QR image
+ * @return a QR image data URI
+ */
 function generate($data, $logo, $text) {
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 
@@ -46,7 +53,7 @@ function generate($data, $logo, $text) {
 }
 
 /**
- * Return a more tightly-encoded qid for use in a QR code or magnetic stripe (radix 36 instead of 26)
+ * Return a tightly-encoded qid for use in a QR code or magnetic stripe (radix 36 instead of 26)
  * The first character (fmt) tells the length of region, account in region (tail), and agentCode, as follows:
  * 0-3: 1/2/n, n=c (where c is a radix-36 digit)
  * 4-7: 1/3/n, n=c-4
@@ -58,11 +65,14 @@ function generate($data, $logo, $text) {
  * S-V: 4/4/n
  * W-Z: 4/5/n
  * @param acct $a: the account for which to return a QR url
- * @param bool $coOnly: <omit protocol, agentCode, cardCode, and "."> (used in PWA api)
- * @return <fmt><region><tail> if $coOnly, else HTTP://<region>.<domain>/<fmt><tail><agentCode><cardCode> 
- *   where <domain> is the appropriate domain for production cards if we're running in a production environment, otherwise for test cards
+ * @param bool $type: 
+ *   'card':  standard for printing a Common Good card (HTTP://<region>.<domain>/<fmt><tail><agentCode><cardCode>)
+ *            where <domain> is the appropriate domain for production cards if we're running in a production environment, otherwise for test cards
+ *   'short': compact code for displaying on PWA (<fmt><region><tail><agentCode><cardCode> ending with "." for a test card)
+ *   'main':  like short but omit agentCode, cardCode, and ".", if any (used in PWA api: <fmt><region><tail>)
+ * @return the code as appropriate for the type
  */
-function url($a, $coOnly = FALSE) {
+function url($a, $type = 'card') {
   $qo = $a->qo;
   $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
   $regLen = strlen($region = u\n2a(u\a2n($qo->region), -1, 36));
@@ -74,8 +84,11 @@ function url($a, $coOnly = FALSE) {
   u\EXPECT($codeLen < 4, 'agentCode too long: ' . $qo->agentCode);
   $fmt = u\n2a($i * 4 + $codeLen, 1, 36);
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
-
-  return $coOnly ? "$fmt$region$tail" : "HTTP://$region.$qrDom/$fmt$tail$agentCode$cardCode";
+  $testFlag = isPRODUCTION ? '' : '.';
+  if ($type == 'short') return "$fmt$region$tail$agentCode$cardCode";
+  if ($type == 'main') return "$fmt$region$tail";
+  if ($type == 'card') return "HTTP://$region.$qrDom/$fmt$tail$agentCode$cardCode";
+  u\FAIL(t('invalid qr type: ') . $type);
 }
 
 /**

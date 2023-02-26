@@ -67,7 +67,8 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admRecheckSsn) $resetSSN = submi(t('Recheck SSN'));
   if ($mya->admMakeVAdmin) $makeVKeyE = submi(t('Make vKeyE'));
   if ($mya->admMakeVAdmin or $mya->admPrintCards) $make2 = boxFld('make', t('Make:'));
-  if ($mya->admPrintCards)  $printId = submi(t('Print ID'));
+  if ($mya->admPrintCards) $printId = submi(t('Print ID'));
+  if ($mya->admMakeRules) $fsRule = submi(t('Set Sponsorship Fee'));
 
   //  $connectBank = submi(t('Connect Bank'));
   //  $seeHidden = submi(t('See Hidden'));
@@ -83,7 +84,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
-  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData');
+  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsRule');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
@@ -125,6 +126,17 @@ function formAdminPanel_submit($form, &$sta) {
       }
     }
     return w\go('print-rcard/' . $a->id . ($a->co ? "/$a->agentId" : ''));
+  } elseif ($a and $op == 'fsRule') { // make fiscal sponsorship surtx rule (defaults to 5%)
+    if (!$a->co) return err(t('That account is not a company, so it cannot be sponsored.'));
+    $info = ray('action payerType payeeType payee from to', ACT_SURTX, REF_ANYBODY, REF_ACCOUNT, $a->id, MATCH_PAYEE, CGID);
+    if ($id = db\get('id', 'tx_rules', u\where($info) . " AND amount=0 AND purpose LIKE '%sponsorship fee%' AND IFNULL(end, :NOW+1) > :NOW", $info)) {
+      return err(t('You already have a fiscal sponsorship rule for that account. <%a>Click here</a> to edit it.'), '_a', atag("/sadmin/rules/id=$id"));
+    }
+    $info += ray('start portion purpose', today(), .05, t('fiscal sponsorship fee (5%)'));
+    db\insert('tx_rules', $info);
+    $a->setBit(B_OK); $a->setBit(B_CONFIRMED);
+    $a->setCoBit(CO_SPONSORED);
+    say(t('A sponsorship fee rule has been added for %nm.', 'nm', $a->bestName));
   } elseif ($op == 'askForAppData') {
     $a->update('getAppData appData', '!report', []);
     say(t('Request for app data sent to ') . $a->fullName);

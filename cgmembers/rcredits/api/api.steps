@@ -40,6 +40,7 @@ function extraSetup() {
  * members: (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE comments Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
  *     MAKE transactions Setup
@@ -57,9 +58,11 @@ function balances($list) {return t\balances($list);}
  * these (ARG): (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE comments Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
  *     MAKE transactions Setup
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -106,10 +109,14 @@ function appGetsWith($url, $params, $method = 'get') {
 /**
  * app posts (ARG) with: (ARG)
  *
- * in: MAKE transactions TheAppAsksToChargeACustomer
+ * in: MAKE comments TheAppAsksToSubmitAComment
+ *     MAKE comments TheAppAsksToSubmitACommentWithAMissingParameter
+ *     MAKE comments TheAppAsksToSubmitACommentWithABadActorId
+ *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadActorId
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadOtherId
+ *     MAKE transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadAmount
  *     MAKE transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadDate
@@ -125,7 +132,6 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST transactions TheAppAsksToChargeACustomer
- *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  */
@@ -163,6 +169,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
+ *     TEST comments TheAppAsksToSubmitACommentWithAMissingParameter
  *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
@@ -207,3 +214,41 @@ function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
  * in: MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  */
 function membersHave($list) {return t\membersHave($list);}
+
+/**
+ * we tell Admin (ARG) with subs: (ARG)
+ *
+ * in: TEST comments TheAppAsksToSubmitAComment
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ */
+function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
+
+/**
+ * we reply (ARG)
+ *
+ * in: TEST comments TheAppAsksToSubmitAComment
+ *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
+ *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ */
+function weReply($wantStatus) {
+  global $testOnly; if (!$testOnly) return FALSE; 
+
+  t\getExitMsg($gotStatus);
+/**/  db\del('test', "type='echo'"); // reset for subsequent steps
+  return t\eq('status', u\consta('x', $wantStatus), $gotStatus);
+}
+
+/**
+ * member (ARG) steps left (ARG)
+ *
+ * in: 
+ */
+function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
+
+/**
+ * member (ARG) has (ARG) steps done: (ARG)
+ *
+ * in: MAKE accounts Setup
+ */
+function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}

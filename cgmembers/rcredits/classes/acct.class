@@ -968,7 +968,7 @@ EOF;
     u\EXPECT(!($a->co and $noAgt) or (test() and $newCode == ''), 'companies cannot have a cardCode'); // allow tests to set company cardCode blank
     $field = $noAgt ? 'cardCode' : 'cardCode2';
     $qid = $noAgt ? $a->mainQid : $a->qid;
-    if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
+//    if ($aA->$field) r\badCard($qid, $aA->$field); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode()); // resave the secure fields
   }
@@ -1733,7 +1733,7 @@ X;
     db\updateOrInsert('admins', ray('id uid vKeyE can', $id, $uid, $vKeyE, adminCanBit('v')));
     $pw = u\b64encode($vKeyPw);
 
-    return $showQr ? w\qrHtml($pw, '', t('%PROJECT SuperAdmin')): $pw;
+    return $showQr ? qr\html($pw, '', t('%PROJECT SuperAdmin')): $pw;
   }
   
   /**

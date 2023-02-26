@@ -281,7 +281,7 @@ function photo($args) {
   if ($err = missingArg($keys = 'member', $args)) return photoReturn($err);
   extract(just($keys . ' code version', $args, NULL));
 
-  if (!$member) return photoReturn('missing member');
+  if (!$member) return photoReturn(tr('missing member'));
   if (!$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
   if (!$a = getMember($member, $code, $err, TRUE)) return photoReturn($err);
 
@@ -293,7 +293,7 @@ function photo($args) {
  * Return the customer's account photo.
  */
 function photoReturn($pic) {
-  $max = 50; // arbitrary abbreviation length for logging and testing
+  $max = 100; // arbitrary abbreviation length for logging and testing
   $message = strlen($pic) <= $max ? $pic : bin2hex(substr($pic, 0, $max)); // identifies pic in log w/out a big storage hit
   u\loga('out', compact('message'));
 
@@ -502,12 +502,15 @@ function getAgent($agent, &$err = '') {
  */
 function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
   if (!$a = r\acct($qid) or ($requireCode and $code != $a->cardCode() and $code != $a->codeHash())) {
-    r\badCard($qid, $code, $err = 'bad member'); 
-    return FALSE;
+    r\badCard($qid, $code); 
+    return !$err = tr('bad member');
   }
 //  }
 //  if (r\foreignServer(r\uidRegion($a->agentId))) return !$err = 'wrong server for customer';
-  if (!$a->ok) {r\badCard($qid, $code, $err = 'member inactive'); return FALSE;}
+  if (!$a->ok) {
+    r\badCard($qid, $code); 
+    return !$err = tr('member inactive');
+  }
   return $a;
   
 //    if (!$smartInfo = db\get('owner,defaultAgent,transientId,access', 'r_boxes', 'code=:q_code', compact('q_code'))) return be\error('unknown device');

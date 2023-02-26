@@ -481,6 +481,27 @@ function doTxs($info, $thing) {
 }
 
 /**
+ * Either mark all other steps done or say whether they are.
+ */
+function stepsLeft($id, $left0) {
+  global $testOnly;
+  
+  if (!$a = t\acct($id)) return FALSE;
+  $left = ray($left0);
+  
+  if (!$testOnly) {
+    return $a->update('stepsLeft', $left);
+    $a->update(ray('steps stepsLeft', u\bit(count(ray(S_ALL))) - 1, '')); // set all steps done
+    foreach ($left as $k) $a->stepDone($k, FALSE); // unset the ones that are supposed to be left
+  }
+
+  foreach ($left as $k) if ($a->stepIsDone($k)) return t\output("step $k is marked done (shouldn't be)"); // check the bits
+  $actual = join(' ', $a->stepsLeft ?: []);
+  if ($actual != $left0) return t\output("actual steps left ($actual) are not what's wanted ($left0)"); // proper order
+  return TRUE;
+}
+
+/**
  * Return the given (wanted) array JSON encoded.
  * @param string $want: the wanted array
  * @param bool $sub: is this a recursive call? (default FALSE)
@@ -497,7 +518,8 @@ function json($want, $sub = FALSE) {
       $want[$k] = strhas($v, '.') ? (float) $v : (int) $v;
     }
   }
-  return $sub ? $want : preg_replace('/"(%[a-z]+[a-z0-9]*)"/', '$1', json_encode($want));
+
+  return $sub ? $want : str_replace('"' . NUL . '"', 'null', preg_replace('/"(%[a-z]+[a-z0-9]*)"/', '$1', json_encode($want)));
 }
 
 /**
@@ -1568,18 +1590,32 @@ function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
   $want = str_replace('\\n', "\n", $want);
   if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
   if ($want == '?') return TRUE;
-  $match = (is_numeric($want) and is_numeric($got)) ?
-    (abs($want - $got) <= $offBy)
-    : ($want == $got or (empty($want) and empty($got)));
+  if (is_array($want)) list ($want, $got) = [pr($want), pr($got)];
+
+  $match = (is_numeric($want) and is_numeric($got)) 
+    ? (abs($want - $got) <= $offBy)
+    : strMatch($want, $got);
     
   if ($match) return TRUE;
-
-  if (is_array($want)) list ($want, $got) = [pr($want), pr($got)];
 
   if ($id !== '') $id = "uid=$id ";
   return t\output($id . t('%desc: wanted "%want" got "%got"', compact(ray('id desc want got'))));
 }
 function badEq($desc, $want, $got, $id = '', $list = '') {return !eq($desc, $want, $got, $id, $list);}
+
+/**
+ * See if we got the string that was wanted, treating '?' as a wildcard.
+ */
+function strMatch($want, $got) {
+  if ($want == $got or (empty($want) and empty($got))) return TRUE;
+  if (empty($got) or !strhas($want, '?')) return FALSE;
+  
+  $escape = '.^$*+()[{\\|]/';
+  $chars = '\\' . join('\\', str_split($escape));
+  $want = preg_replace("/[$chars]/", '\\\\$0', $want); // 4 backslashes (instead of 2) seems odd, but it's what works
+  $want = str_replace('?', '.*', $want);
+  return preg_match("/^$want$/", $got);
+}
 
 /**
  * Fake $_SERVER params for testing
@@ -1673,6 +1709,7 @@ function clear($ch = 0) {
     'r_user_industries',  // r_industries, users
     'semaphore',          // -
     'sessions',           // users
+    'tx_bads',            // -
     'tx_disputes_all',    // tx_hdrs, users
     'tx_entries_all',     // tx_hdrs, users, tx_rules
     'tx_hdrs_all',        // users, r_boxes, self 

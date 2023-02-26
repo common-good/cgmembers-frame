@@ -240,6 +240,9 @@ $queries = array_merge(nn($queries, []), [
 /**
  * Ideas for other queries
 
+Inviters
+select fullName, CONCAT(city, ', ', abbreviation) AS location, COUNT(*) AS count, IF(:IS_OK, '', 'NO') AS active FROM r_invites i join users u ON u.uid=i.inviter LEFT JOIN r_states s ON s.id=u.state where uid<>26742000000001 GROUP by uid order by fullName
+
 // when people signed up recently
 eachA(function ($a) {
   $dt = fmtDt($a->created);
