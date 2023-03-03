@@ -651,18 +651,20 @@ function variable_del($nm) {return delV($nm);} // for legacy Drupal
 function exitJust($s = '', $status = X_GOT) {
   if (is_numeric($s)) {
     $status = (int) $s;
-    $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
+    $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_FORBIDDEN:Forbidden, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
   }
   
   if (test()) {
-    t\output("exiting ($status) with: " . pr($s)); 
+    t\output("exiting ($status) with: " . pr($s));
 /**/t\logRec('echo', "%$status: $s");
     return NULL;
   }
 
   header('HTTP/1.1 ' . $status);
-  u\loga('exit', "($status) " . pr($s));
-/**/  if (!empty($s)) echo pr($s);
+  $logS = $s = pr($s);
+  foreach (['quality = 50', 'png;base64,'] as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
+  u\loga('exit', "($status) " . $logS);
+/**/  if (!empty($s)) echo $s;
   exit($status);
 }
 function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}

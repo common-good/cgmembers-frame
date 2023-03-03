@@ -84,7 +84,7 @@ X;
     $entryType = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
     $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
     if ($reversesXid) jsx('txdetail', ray('xid url', $xid, $return ? u\dePry($return) : ''));
-    $suffix = $reversesXid ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
+    $suffix = ($reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
     $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid) + $suffix);
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));

@@ -9,7 +9,7 @@ const R_SERVER_ID = 'NEW'; // qid header for this region's server (New England /
 const ADMIN_NAME = 'William Spademan';
 const SIGNATORY = 'William Spademan, President';
 const R_ADMIN_EMAIL = 'wspademan@CommonGood.earth'; // regional admin's personal email
-const R_ADMIN_PHONE = '+14136281021';
+const R_ADMIN_PHONE = '+14136281957';
 const R_REGION_EIN = '46-1821792';
 
 date_default_timezone_set('America/New_York'); // server handles just one timezone

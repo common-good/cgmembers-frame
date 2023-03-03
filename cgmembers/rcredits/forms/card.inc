@@ -4,7 +4,10 @@ use CG\Web as w;
 use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
+use CG\QR as qr;
 use CG\Db as db;
+
+include_once R_ROOT . '/cg-qr.inc';
 
 /**
  * Handle a scanned Common Good card.
@@ -59,6 +62,8 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   // no special $dom parameter -- must be region code
   if (!$subdom = strtoupper($dom) or !$code) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
+
+//  if (!$a = qr\acct("HTTP://$subdom.$qrDom/$code", TRUE)) return softErr(t('That is not a valid %PROJECT card.'));
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
   if (!$res or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
     

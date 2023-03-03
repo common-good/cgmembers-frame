@@ -729,8 +729,6 @@ function setCat(&$txes, $tx, $i) {
       $nick = 'D-COMPANY';
     } else $nick = 'D-ONCE';
 
-  } elseif ($out and $type == E_AUX and strhas($for, FS_NOTE)) {
-    $nick = 'D-FBO'; // subtract from this cat when adding to FS-FEE
   } elseif ($out and $iA->sponsored and $type == E_XFEE) {
     $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
@@ -739,6 +737,8 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'TO-ORG';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
+  } elseif ($out and $iA->mainQid == 'NEWAIN') { // 457 retirement
+    $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
     $cats = db\col('DISTINCT cat1', 'txs', "relType='I' AND type<>:E_OUTER AND uid2=:j_uid AND cat1 IS NOT NULL AND created>:NOW-2*:MONTH_SECS", compact('j_uid'));
     if (count($cats) == 1) return $txes[$i]->cat = $cats[0];

@@ -3,7 +3,9 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61d'; // software version
+const R_VERSION = '3.61e'; // software version
+const APP_VERSION = 40000; // 4.0.0
+
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -303,6 +305,7 @@ const X_GOT = 200;
 const X_OK = 201;
 const X_SYNTAX = 400;
 const X_UNAUTH = 401;
+const X_FORBIDDEN = 403;
 const X_NOTFOUND = 404;
 const X_DENIED = 406;
 const X_TOOMANY = 429; // too many requests (DOS or too many failed password attempts)

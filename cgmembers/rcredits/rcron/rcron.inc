@@ -669,7 +669,7 @@ function everyYear() {
   $year = date('Y') - 1;
   $start = strtotime("$year-01-01"); // previous year
   $end = u\plusMonths(12, $start) - 1;
-  queueEach('taxInfo', "SELECT DISTINCT uid, $year AS year FROM tx_entries JOIN tx_hdrs USING(xid) WHERE created between $start AND $end AND uid NOT :CANONIC ORDER BY uid");
+  queueEach('taxInfo', "SELECT DISTINCT uid, $year AS year FROM tx_entries JOIN tx_hdrs USING(xid) WHERE created between $start AND $end AND uid NOT :CANONIC AND id>0 ORDER BY uid");
 }
 
 /**

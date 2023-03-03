@@ -114,7 +114,7 @@ class Qo {
   }
 
   /**
-   * Convert qr to qid
+   * Convert qr to qid (called from form card.inc to handle a scanned Common Good card.)
    * @param string qr: qr-style account code
    * @return [qid, cardCode] (FALSE if none)
    */

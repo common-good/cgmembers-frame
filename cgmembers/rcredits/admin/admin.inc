@@ -213,6 +213,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_user_industries:uid:D',
     // r_votes
     'sessions:uid:D',
+    // tx_bads
     'tx_disputes:uid',
     'tx_disputes:agentUid',
     'tx_entries:uid',
@@ -388,7 +389,7 @@ define('ID_KEYS', 'id uid uid1 uid2 t.uid myid payer payee main other inviter in
 function formatField($k, $v, $flagsField = B_LIST) {
   global $base_url;
   $v = $v . ''; // convert to string
-  if ($v and in($k, ID_KEYS) and strlen($v) >= strlen(CGID)) {
+  if ($v and in($k, ID_KEYS) and is_numeric($v) and strlen($v) >= strlen(CGID) - 1) { // note that some uids are a little shorter or longer than CGID
     if ($a = r\acct($v)) $v = $k == 'uid' ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v); else $v .= t(' (missing)'); // eg, when uid is changed
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);

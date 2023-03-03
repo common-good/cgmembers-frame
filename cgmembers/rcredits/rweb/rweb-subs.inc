@@ -904,8 +904,8 @@ function pickPassword($reset = TRUE, $req = '') {
 }
   
 /**
- * Return the box record ID for the given machine code and account record ID (create one if none).
- * @param int $code: machine identifier
+ * Return the box record ID for the given device code and account record ID (create one if none).
+ * @param int $code: device identifier
  * @param int $a: current account (can be a company)
  * @param string $version: app version (web version is not used here)
  * @return the box record ID
@@ -924,9 +924,14 @@ function boxId($code, $a, $version = NULL) {
 }
 
 /**
- * Return the box record ID for the given machine code and account record ID (NULL if none).
+ * Return the box record ID for the given device code and account record ID (NULL if none).
  */
-function boxIdCheck($code, $a) {return db\get('id', 'r_boxes', ray('code uid', $code, $a->id));}
+function boxIdCheck($code, $a) {
+  if (!$row = db\row('r_boxes', compact('code'))) return NULL;
+  extract((array) $row[0]);
+// nope. might be several accounts on this device  u\EXPECT($uid == $a->id, 'actor mismatch in deviceId');
+  return $id;
+}
 
 /**
  * Return rows from an uploaded file.
@@ -2012,7 +2017,9 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $headers .= "<th><a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a></th>";
+      $yearLink = "<a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a>";
+      $fyLink = strtr($yearLink, ray("/CY:/FY, >$year:>FY" . substr($year, 2)));
+      $headers .= "<th><span class=\"fy\">$fyLink</span><br>$yearLink</th>";
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";

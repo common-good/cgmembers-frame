@@ -114,7 +114,7 @@ Scenario: a customer scans their own card for self-service with wrong PIN
 
 Scenario: the default cashier scans a de-activated card
   When we change member ".ZZD" cardCode
-  Then bad codes ".ZZD,ccD"
+# (no longer used)  Then bad codes ".ZZD,ccD"
   // member reported lost card, we just changed cardCode, now the member (or someone) tries to use the card with app online:
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
   Then we return error "bad member"

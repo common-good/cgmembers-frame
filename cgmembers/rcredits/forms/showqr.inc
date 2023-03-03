@@ -26,9 +26,12 @@ function formShowQr($form, &$sta, $args = '') {
     $aA = $mya->agentId == UID_SUPER ? $mya : $mya->agentA;
     $logo = $aA->photoSrc(FALSE, TRUE, TRUE);
     $text = $aA->bestName . ", $mya->city, $mya->st";
-    $testQr = qr\url($mya);
+    $testQr = qr\url($mya, 'short');
     $qr = item(qr\html($testQr, $logo, $text));
-    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
+    
+    $testQrA = qr\acct($testQr, TRUE);
+    u\EXPECT($testQrA->qid == $mya->qid, 'generated QR differs from source');
+//    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
     $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag($mya->co ? '/dashboard' : '/scraps/card'));
     $qr = NULL;

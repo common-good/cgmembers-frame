@@ -1395,6 +1395,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #notices th, #notices td {text-align:left; vertical-align:top; border:1px solid silver;}
 .notice-date {vertical-align:top; margin-right:5px;}
 #statements th a, #notices th a {color:white;}
+#statements th .fy a {color:gold; font-size:85%;}
+#notices th .fy a {display:none;}
 #statements th a:hover, #notices th a:hover {color:silver; text-decoration:none;}
 
 /* Deposits */
