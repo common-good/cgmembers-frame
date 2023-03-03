@@ -2017,7 +2017,9 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $headers .= "<th><a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a></th>";
+      $yearLink = "<a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a>";
+      $fyLink = strtr($yearLink, ray("/CY:/FY, >$year:>FY" . substr($year, 2)));
+      $headers .= "<th><span class=\"fy\">$fyLink</span><br>$yearLink</th>";
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";

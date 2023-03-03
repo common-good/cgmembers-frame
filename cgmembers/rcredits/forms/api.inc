@@ -29,6 +29,11 @@ function api($arg = null) {
     return smp($arg);
   }
 
+  /**
+   * Endpoints
+   *   GET accounts, identity, idPhoto, latest, transactions
+   *   POST transactions, comments, lostPassword
+   */
   $channel = TX_APP;
   u\loga('in:' . $arg, $params);
   setHeaders();
@@ -110,7 +115,7 @@ function identity() {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
 //  if (!rayhas($_GET, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
-  foreach (ray('actorId otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId) or !$a->ok) return exitJust(X_NOTFOUND);
 
   $name = $a->fullName;
@@ -132,20 +137,34 @@ function identity() {
  * GET /identity (syntax for ID photo image source)
  * Return an account's id photo.
  *
- * @param string $accountId: part of the abbreviated version of the account associated with the device, just <fmt><region><acct>
- * @param string $code: A ciphertext consisting of the first DEVICE_MAXLEN characters of the device’s unique identifier followed by the otherId (the same as for the identity endpoint), encrypted with the server’s public key then base64-encoded, substituting '-' and '_' for '+' and '/' (342 chars).
+ * @param string $otherId: abbreviated info from QR code for the other account ID
  * @return the image (mime type image/jpeg) or an error message (plain text)
  */
 function idPhoto() {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
 
-  foreach (ray('actorId otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
 
   return photoReturn($a->agentA->photo);
 }
 
+/**
+ * GET /latest
+ * Return very short information about latest information of interest to the app.
+ * @param int $lastTx: Unixtime of last tx initiated by the device
+ * @return {version, txCount}
+ */
+function latest() {
+  global $mya;
+  foreach (ray('lastTx') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+
+  $version = APP_VERSION;
+  $txCount = db\count('txs', '(uid1 IN (:uids) OR uid2 IN (:uids)) AND created>:lastTx', ray('uids, lastTx', $mya->uids, $lastTx));
+  return exitJson(compact(ray('version txCount')));
+}
+  
 /**
  * Create the requested transaction.
  * @param int $version: app version number
@@ -165,7 +184,7 @@ function transactions($params) {
   include_once R_ROOT . '/classes/tx.class';
 
   $flds = 'version deviceId actorId otherId amount description created proof offline';
-  foreach (ray($flds) as $k) if (!$$k = $params[$k]) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
+  foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
   $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for errors
   if (test()) $proof = u\hash($got = $proof);
 

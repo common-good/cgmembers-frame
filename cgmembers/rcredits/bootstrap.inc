@@ -661,10 +661,10 @@ function exitJust($s = '', $status = X_GOT) {
   }
 
   header('HTTP/1.1 ' . $status);
-  $logS = strstr(pr($s), 'quality = 50', TRUE); // don't show images
-  $logS = strstr($logS, 'png;base64,', TRUE);
+  $logS = $s = pr($s);
+  foreach (['quality = 50', 'png;base64,'] as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
   u\loga('exit', "($status) " . $logS);
-/**/  if (!empty($s)) echo pr($s);
+/**/  if (!empty($s)) echo $s;
   exit($status);
 }
 function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
