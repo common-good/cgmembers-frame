@@ -51,9 +51,7 @@ X
   
   $args = hidFld($args);
 
-  $coTypes = ray(CO_TYPES);
-  unset($coTypes[CO_PERSONAL]);
-  $coType = radiosFld(t('Account Type:'), '', required(), $coTypes);
+  $coType = coTypeFld();
   
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 

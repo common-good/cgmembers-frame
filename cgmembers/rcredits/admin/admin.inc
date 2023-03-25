@@ -14,6 +14,7 @@ use CG\Util as u;
 use CG\Admin as a;
 use CG\Web as w;
 use CG\Testing as t;
+use CG\QR as qr;
 
 /**
  * Set up the basic user accounts and relations on the server.
@@ -90,57 +91,76 @@ function setupBasicAccounts() {
 }
 
 /**
- * Re-setup the test cards on the DEMO server.
+ * Re-setup the test cards on the DEMO server (or other dev server).
  */
 function makeTestAccounts() {
-  global $mya;
-  if (isPRODUCTION or (!isDev and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  global $mya, $channel;
+  if (isPRODUCTION or (!isDEV and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  require_once R_ROOT . '/cg-qr.inc';
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
   $testAccts = [
-  'aaa' => ['Maria Manager', '', 'WeHlioM5JZv1O9G'],
-  'aab' => ['Corner Store', TRUE, 'CvRM3AwXJppPmf'], // include cardCode so we can test the company proSe (or with agent)
-  'aad' => ['Cathy Cashier', '', 'ME04nW44DHzxVDg'],
-  'aak' => ['Curt Customer', '', 'NyCBBlUF1qWNZ2k'],
-  'aaq' => ['Helga\'s Hardware', TRUE, 'Y9d8fuwiejKfd'],
-  'abb' => ['Susan Shopper', '', 'ZzhWMCq0zcBowqw'],
+    'a' => ['Abe One', '',   '12345a'],
+    'b' => ['Bea Two', '',   '12345b'],
+    'c' => ['Citre', TRUE,   '12345c'], // include cardCode so we can test the company proSe (or with agent)
+    'd' => ['Dee Four', '',  '12345d'],
+    'e' => ['Eli Five', '',  '12345e'],
+    'f' => ['Flo Six', '',   '12345f'],
+    'g' => ['Gisette', TRUE, '12345g'],
+    'h' => ['Hal Ate', '',   '12345h'],
+    'i' => ['Ida Nine', '',  '12345i'],
   ];
 
   $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
+  $hd = 'newzz'; // prefix for account letter
   
-  foreach ($testAccts as $qid => $vs) {
+  foreach ($testAccts as $id => $vs) {
+    $d = (ord($id) - ord("a") + 1);
+    $ID = strtoupper($id);
     extract(array_combine(ray('fullName co cardCode'), $vs));
-    $uid = t\uid(strtoupper(".$qid"));
+    $uid = t\uid(strtoupper("$hd$id"));
+    $testUids[] = $uid;
+    
     $name = u\shortName($fullName);
     $emailCode = $cardCode;
     $flags = u\bits('ok member confirmed carded ided debt');
     if ($co) $flags |= u\bit('co');
-    $email = "$qid@example.com";
-    $phone = u\fmtPhone('413' . u\randomString(7, 'digits'));
-    $federalId = u\randomString(9, 'digits');
-    $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
+    $email = "$id@example.com";
+    $phone = u\fmtPhone("700-000-000$d");
+    $federalId = "00000000$d";
+    $postalAddr = "10$d Demo St., {$ID}ton, MA 1000$d";
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
     $info = $info0 + compact(ray('uid fullName name flags cardCode emailCode email phone federalId postalAddr address city state zip'));
+    if (!$co) $info['pass'] = '123';
 
-    if ($a = a($qid)) $a->update($info); else $a = new r\Acct($info);
-    a\photoFromFile($a);
+    if ($a = a($uid)) $a->update($info); else $a = new r\Acct($info);
+    if (!$a->co) a\photoFromFile($a);
+///    debug("$id: " . qr\url($a));
   }
   
-  foreach (ray('aaa aad aak') as $qid) {
-    $coA = a($qid == 'aak' ? 'aaq' : 'aab');
-    $coA->setDftAppCans();
-    list ($a, $perm) = [a($qid), $qid == 'aad' ? B_SCAN : B_MANAGE];
-    if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $qid == 'aad' ? 2 : 1));
-    $a->update('cardCode2', $a->cardCode); // this is new for Maria (aaa) and Curt (aak)
+  foreach (str_split('abdefhi') as $id) { // the individual accounts
+    $a = a("$hd$id");
+    if (in($id, 'a b f')) {
+      $coA = a($hd . ($id == 'f' ? 'g' : 'c'));
+      $coA->setDftAppCans();
+      $perm = $id == 'b' ? B_SCAN : B_MANAGE;
+      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
+      $a->update('cardCode2', $a->cardCode); // this is new for Maria (aaa) and Curt (aak)
+///      debug("$id: " . qr\url(a($coA->id, $a->id)));
+    }
+    foreach (ray(S_CARD) as $k) $a->stepDone($k);
   }
   
-  a('aaa')->setBit(B_ADMIN);
-  a('aab')->update('selling', "groceries\ngifts\nsundries\ndeli\nbaked goods");
-  a('aaq')->update('selling', 'hardware');
+  a($hd . 'c')->update('selling', "groceries\ngifts\nsundries");
+  a($hd . 'g')->update('selling', 'hardware');
   
-  w\say(t('Done!'));
+  db\del('txs', 'uid1 IN (:testUids) OR uid2 IN (:testUids)', compact('testUids'));
+  db\del('txs2', 'payee IN (:testUids)', compact('testUids'));
+  db\q('UPDATE users SET balance=9999 WHERE uid IN (:testUids)', compact('testUids'));
+  
+  if ($channel == TX_WEB) w\say(t('Done!'));
 }
 
 /**

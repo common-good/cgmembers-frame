@@ -9,6 +9,7 @@ use CG\Txs as x;
 use CG\Admin as a;
 use CG\Risk as k;
 use CG\Web as w;
+use CG\Test as t;
 
 include_once R_ROOT . '/cg-qr.inc';
 
@@ -17,12 +18,13 @@ include_once R_ROOT . '/cg-qr.inc';
  * @param string $arg: the operation
  */
 function api($arg = null) {
+  flog('top of api');
   global $mya;
   global $channel;
 
   $params = $_POST ?: $_GET;
 
-  if (is_array($arg) or nni($_GET, 'request')) { // SMP interface uses /api with no explicit endpoints
+  if (is_array($arg) or nni($params, 'request')) { // SMP interface uses /api with no explicit endpoints
     $channel = TX_API;
     u\loga('in', $arg ?: ($params));
     include_once R_ROOT . '/forms/smp.inc';
@@ -31,28 +33,31 @@ function api($arg = null) {
 
   /**
    * Endpoints
-   *   GET accounts, identity, idPhoto, latest, transactions
-   *   POST transactions, comments, lostPassword
+   *   GET identity, idPhoto, latest, transactions
+   *   POST accounts, transactions, comments, lostPassword, test
    */
   $channel = TX_APP;
   u\loga('in:' . $arg, $params);
   setHeaders();
+  if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
   if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_SYNTAX);
 
   if ($these = nni($_POST, 'these')) { // process an array with no response needed other than "ok"
     foreach (json_decode($these) as $one) {
+      fixVersion($one);
       if (!$ok = authOk($arg, $one)) return; // return is for testing -- any error triggers exitJust()
       $func($one);
     }
     return (X_OK);
   }
-  
+
+  fixVersion($params);
   if (!$ok = authOk($arg, $params)) return; // return is for testing -- any error triggers exitJust()
   return $func($params); // functions ignore $params unless they optionally accept a POSTed array
 }
 
 /**
- * GET /accounts
+ * POST /accounts
  * Return a list of accounts managed by the given user.
  *
  * @param string $identifier: qd (abbreviated qid) or email
@@ -63,10 +68,10 @@ function api($arg = null) {
  *         deviceId is a unique identifier for this device associated with this account
  *         name is the name (fullName) on the account
  */
-function accounts() {
+function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
-  foreach (ray('identifier password') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_UNAUTH);
+  foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
   if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
   
   if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
@@ -79,22 +84,22 @@ function accounts() {
   if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK')) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
-    $a = r\acct($uid);
-    $accountId = qr\url($a, 'main');
+    $a = r\acct($uid, $myid);
+    $accountId = qr\url(r\acct($uid), 'main');
     $deviceId = nn($nextCode) ?: base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
     $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $isCo = $a->co;
     $selling = explode("\n", $a->selling);
     $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
   }
-  return exitJson(compact('accounts'));
+  return exitJson(compact('accounts'), $_POST ? X_OK : X_GOT); // change this to just X_OK once Upinngil's app updates
 }
 
 function myQr($a) {
   include_once R_ROOT . '/cg-qr.inc';
   $logo = $a->photoSrc(FALSE, TRUE, TRUE);
 //  $text = $a->bestName . ", $a->city, $a->st"; // maybe put this at the top, under device-owner name
-  $testQr = qr\url($a, 'short');
+  $testQr = qr\url($a, 'card');
   return qr\generate($testQr, $logo, t('Account: %qid (%city, %st)', 'qid city st', $a->mainQid, $a->city, $a->st));
 }
 
@@ -111,11 +116,11 @@ function myQr($a) {
  *   limit: the maximum amount this account can be charged at this time
  *   selling: the device owner's list of transaction descriptions
  */
-function identity() {
+function identity($params) {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
 //  if (!rayhas($_GET, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
-  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  foreach (ray('otherId') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId) or !$a->ok) return exitJust(X_NOTFOUND);
 
   $name = $a->fullName;
@@ -140,11 +145,11 @@ function identity() {
  * @param string $otherId: abbreviated info from QR code for the other account ID
  * @return the image (mime type image/jpeg) or an error message (plain text)
  */
-function idPhoto() {
+function idPhoto($params) {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
 
-  foreach (ray('otherId') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  foreach (ray('otherId') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
 
   return photoReturn($a->agentA->photo);
@@ -154,15 +159,16 @@ function idPhoto() {
  * GET /latest
  * Return very short information about latest information of interest to the app.
  * @param int $lastTx: Unixtime of last tx initiated by the device
- * @return {version, txCount}
+ * @return {version, txCount, msg}
  */
-function latest() {
+function latest($params) {
   global $mya;
-  foreach (ray('lastTx') as $k) if (!$$k = nni($_GET, $k)) return exitJust(X_SYNTAX);
+  foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
 
   $version = APP_VERSION;
   $txCount = db\count('txs', '(uid1 IN (:uids) OR uid2 IN (:uids)) AND created>:lastTx', ray('uids, lastTx', $mya->uids, $lastTx));
-  return exitJson(compact(ray('version txCount')));
+  $msg = NULL; // a way to communicate with app user(s)
+  return exitJson(compact(ray('version txCount msg')));
 }
   
 /**
@@ -180,6 +186,8 @@ function latest() {
  * NOTE: use only X_OK and X_SYNTAX here.
  */
 function transactions($params) {
+  if (!$_POST) return getTxs($params); // the GET endpoint instead of the POST
+  
   global $mya, $boxId;
   include_once R_ROOT . '/classes/tx.class';
 
@@ -240,6 +248,46 @@ function transactions($params) {
 }
 
 /**
+ * GET /transactions (CQP, lastTx)
+ *   -> {balance, surtxs, crumbs, roundups, txs: [{xid, amount, other: {}, description, created}, …]}
+ *   where other: {name, avatar}
+ *
+ * Retrieve recent transactions and related data from the server.
+ *
+ */
+function getTxs($params) {
+  global $mya;
+  
+  foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+
+  foreach (ray('balance crumbs roundup') as $k) $$k = $mya->$k;
+  $surtxs = (array) db\get('SUM(amount) AS amount, SUM(`portion`) AS `portion`', 'tx_rules', '`from`=:myid AND action=:ACT_SURTX AND payeeType=:REF_ANYCO', ray('myid', $mya->id));
+  $surtxs += compact(ray('crumbs roundup'));
+
+  $myUids = $mya->uids;
+  $toMe = 'uid2 IN (:myUids)';
+  $fromMe = 'uid1 IN (:myUids)';
+  $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt2, agt1) AS agent, IF($toMe, for2, for1) AS description, created";
+  $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) AND created>:lastTx", compact(ray('myUids lastTx')));
+
+  foreach ($txs as $i => $tx) {
+    $a = r\acct($tx->other);
+//    $otherId = qr\url($a, 'main');
+    $name = $a->fullName;
+//    $agent = $a->proSe ? '' : $a->agentA->fullName;
+//    $location = $a->location();
+    $photo = $a->hasPhoto ? $a->photo : file_get_contents($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
+//    die(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36));
+$avatar = ''; // dies    $avatar = base64_encode(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36)); // always 36 high (best if height is a multiple of 12)
+//    $since = $a->created;
+    $txs[$i]->other = compact(ray('name, avatar'));
+//    $txs[$i] = (array) $txs[$i];
+  }
+  
+  return exitJson(compact(ray('balance surtxs txs')));
+}  
+
+/**
  * POST /comments
  *
  * Send a comment to an administrator.
@@ -257,7 +305,41 @@ function comments($params) {
   $qid = $mya->qid;
   r\tellAdmin(t('Comment from ') . $mya->fullName, compact(ray('qid text created')));
   
-  return exitJust(X_OK);
+  return exitJust('', X_OK);
+}
+
+/**
+ * POST /test
+ * 
+ * Put or get test data.
+ *
+ * @param string $op: the test operation (see below)
+ * @param assoc $args: arguments to the operation
+ *
+ *   initialize (): creates default data (especially for Release A)
+ *   clear (): removes all test data
+ *   insert (table, [{keyedValues}]) where the first keyed value is the record key
+ *   update (table, [{keyedValues}]) where the first keyed value is the record key
+ *   query (fieldList, table, criteria) -> [[values]]
+ *     where fieldList is a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
+ *     and criteria is a MySQL criteria string to follow “WHERE “ OR [{keyedValues}]
+*/
+function testops($params) {
+  if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
+
+  if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
+  require_once(R_ROOT . '/cg-testing.inc');
+  require_once(R_ROOT . '/admin/admin.inc');
+
+  switch ($op) {
+    case 'initialize': 
+      //t\clear(TX_APP); 
+      a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
+      break;
+      
+    default: return exitJust(X_SYNTAX);
+  }
+  return exitJust('', X_OK);
 }
 
 /**
@@ -369,9 +451,19 @@ function authOk($arg, $params) {
 ///    debug($nm);
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
-  } elseif ($arg != 'accounts') return exitJust(X_UNAUTH);
+  } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;
+}
+
+/**
+ * Convert the version to a number.
+ */
+function fixVersion(&$params) {
+  extract(just('version', $params, NULL));
+  if (!$version) exitJust(X_SYNTAX);
+  $vv = explode('.', $version);
+  if (count($vv) == 3) $params['version'] = $vv[0] * 10000 + $vv[1] * 100 + $vv[2] * 1;
 }
 
 function setHeaders() {

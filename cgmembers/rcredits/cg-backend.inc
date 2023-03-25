@@ -304,9 +304,10 @@ function undoTx($mya, $xid, $where = '1', $subs = [], $force = FALSE) {
   $otherE = $tx->otherEntry;
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
-  $posUndo = ($channel == TX_APP and $tx->created >= now() - REVERSE_WINDOW);
+  $posUndo = ($channel == TX_APP and $tx->created >= now() - APP_REVERSE_WINDOW);
+  $donUndo = ($tx->uid2 == UID_REGULARS and $tx->created >= now() - DON_REVERSE_WINDOW);
 
-  if ($toMe or $posUndo) { // someone paid me (at my initiative or theirs)
+  if ($toMe or $posUndo or $donUndo) { // someone paid me (at my initiative or theirs) or just charged me at POS or I recently made a recurring donation
     return reverse($xid, $mya); // create an offsetting transaction
   } elseif ($byMe) { // I paid someone (on my initiative)
 ///    debug("other=$tx->otherId actor=$tx->actorId amt=$otherE->amount posUndo=$posUndo toMe=$toMe");

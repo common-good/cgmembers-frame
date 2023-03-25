@@ -58,13 +58,14 @@ function formSignin($form, &$sta, $arg = '') {
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('qid pass pw2 vKeyE trust', $sta['input'], NULL));
+
+  if ($qid == 'admin' or (isDEV and $qid == 'root')) $qid = 'AAAAAA'; // root is so password managers can handle phpMyAdmin (user root) AND this
   if (isDEV and $qid == 'admin' and !r\acct(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
     db\del('sessions', 'uid', '1');
     \CG\admin\setupBasicAccounts(); // happens sometimes during testing
   }
 
-  if ($qid == 'admin') $qid = 'AAAAAA';
   if (!$uid = r\loginString($qid)) return say(t('bad login', '_a', atag('/settings/password')), 'qid');
   if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
   $a = r\acct($uid);

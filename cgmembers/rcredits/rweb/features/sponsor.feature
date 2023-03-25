@@ -5,10 +5,13 @@ SO I/we can fund our operations with grants and donations from people who need t
 
 Setup:
   Given members:
-  | uid  | fullName | flags   |*
-  | .ZZA | Abe One  | ok,confirmed      |
-  | .ZZB | Bea Two  | ok,confirmed      |
-  | .ZZC | Cor Pub  | ok,confirmed,co   |
+  | uid  | fullName | flags           |*
+  | .ZZA | Abe One  | ok,confirmed    |
+  | .ZZB | Bea Two  | ok,confirmed    |
+  | .ZZC | Cor Pub  | ok,confirmed,co |
+  And members have:
+  | uid  | coType  |*
+  | .ZZC | %CO_LLC |
   And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZA  | read       |
@@ -23,6 +26,8 @@ Scenario: A non-member applies for fiscal sponsorship
   | Org Email     |
   | Country       |
   | Postal Code   |
+  | Federal ID    |
+  | Account Type  |
   | Referred By   |
   | Mission       |
   | Activities    |
@@ -40,6 +45,8 @@ Scenario: A non-member applies for fiscal sponsorship
   | email      | jd@example.com |
   | country    | US |
   | zip        | 01301 |
+  | federalId  | 12-3456789 |
+  | coType     | %CO_CLUB |
   | source     | news |
   | mission    | thrive |
   | activities | do stuff |
@@ -50,8 +57,9 @@ Scenario: A non-member applies for fiscal sponsorship
   | comments   | cool! |
   Then we say "status": "got application|meanwhile join"
   And we tell admin "Fiscal Sponsorship Application" with subs:
-  | contact    | Jane Dough |
-  | fullName   | Bread Co   |
+  | contact    | Jane Dough |**
+  | fullName   | %PROJECT FBO Bread Co   |
+  | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
@@ -65,6 +73,7 @@ Scenario: A non-member applies for fiscal sponsorship
   | email      | jd@example.com |
   | country    | US |
   | zip        | 01301 |
+  | coType     | %CO_CLUB |
   | source     | news |
   | mission    | thrive |
   | activities | do stuff |
@@ -82,6 +91,8 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | Org Email     |
   | Country       |
   | Postal Code   |
+  | Federal ID    |
+  | Account Type  |
   | Referred By   |
   | Mission       |
   | Activities    |
@@ -99,6 +110,8 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | email      | jd@example.com |
   | country    | US |
   | zip        | 01301 |
+  | federalId  | 12-3456789 |
+  | coType     | %CO_CLUB |
   | source     | news |
   | mission    | thrive |
   | activities | do stuff |
@@ -107,10 +120,11 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | checksIn   | 30 |
   | checksOut  | 40 |
   | comments   | cool! |
-  Then we say "status": "got application|meanwhile join"
+  Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
-  | contact    | Jane Dough |
-  | fullName   | Bread Co   |
+  | contact    | Jane Dough |**
+  | fullName   | %PROJECT FBO Bread Co   |
+  | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
@@ -146,6 +160,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | source     | news |
   | gross      | 123456.78 |
   | employees  | 9 |
+  | coType     | %CO_LLC |
   
   When member "C:B" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
@@ -174,10 +189,11 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | checksIn   | 30 |
   | checksOut  | 40 |
   | comments   | cool! |
-  Then we say "status": "got application|meanwhile join"
+  Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
-  | contact    | Bea Two |
-  | fullName   | Cor Pub |
+  | contact    | Bea Two |**
+  | fullName   | %PROJECT FBO Cor Pub |
+  | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
@@ -203,15 +219,16 @@ Scenario: A fiscally sponsored applicant updates its settings
   Given members:
   | uid        | .ZZF |**
   | contact    | Bea Two |
-  | fullName   | %PROJECT FBO Far Co   |
+  | fullName   | %PROJECT FBO Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,ok |
-  | coFlags    |  |
+  | coFlags    | sponsored |
   | phone      | 413-987-6543 |
   | email      | f@ |
   | country    | US |
   | zip        | 01301 |
+  | coType     | %CO_LLC |
   | source     | news |
   | mission    | thrive |
   | activities | do stuff |
@@ -224,11 +241,13 @@ Scenario: A fiscally sponsored applicant updates its settings
   | .ZZF | .ZZB  | manage     |
   When member "F:B" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
-  | Mission       | thrive  |
-  | Activities    | do stuff |
-  | Checks In     | 30        |
-  | Checks Out    | 40        |
-  | Update        |           |
+  | Mission         | thrive    |
+  | Activities      | do stuff  |
+  | Expected Income | 123456.78 |
+  | Employees       | 9         |
+  | Checks In       | 30        |
+  | Checks Out      | 40        |
+  | Update          |           |
   And without:
   | Your Name     |
   | Organization  |
@@ -236,9 +255,9 @@ Scenario: A fiscally sponsored applicant updates its settings
   | Org Email     |
   | Country       |
   | Postal Code   |
+  | Federal ID    |
+  | Account Type  |
   | Referred By   |
-  | Expected Income |
-  | Employees     |
   | Comments      |
 
   When member "F:B" submits "co/sponsor" with:
@@ -254,7 +273,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,member,ok,ided |
-  | coFlags    |  |
+  | coFlags    | sponsored |
   | phone      | 413-987-6543 |
   | email      | f@ |
   | country    | US |

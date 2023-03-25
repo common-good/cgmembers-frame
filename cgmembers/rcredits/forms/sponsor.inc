@@ -8,6 +8,10 @@ use CG\Db as db;
 
 /**
  * Accept an application for fiscal sponsorship.
+ * Three cases:
+ * - Non-member organization applying (!$mya)
+ * - Member organization applying ($mya and $mya->co and !$mya->sponsored)
+ * - Displaying existing fiscal sponsorship ($mya and $mya->sponsored)
  */
 
 function formSponsor($form, &$sta, $args = '') {
@@ -26,12 +30,14 @@ function formSponsor($form, &$sta, $args = '') {
   $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees does the organization have?')], dft($isCo ? $mya->employees : ''));
   $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks (not the dollar amount) you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
   $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments (not the dollar amount) you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
+  
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
   
-  if ($isCo and ($mya->ok or $mya->admRegion)) {
+  if ($isCo) {
     if (!$mya->can(B_MANAGE)) return say('no sponsor perm', 'err');
-    $contact = $fullName = $phone = $email = $zip = $country = $source = NULL;
-    if ($mya->sponsored or u\starts($mya->fullName, t('%PROJECT FBO '))) $gross = $employees = $comments = NULL;
+    if (!$mya->ok and !$mya->sponsored) return say(t('You must finishing opening your company account before you can use it as a model for a fiscal sponsorship account.'));
+    $contact = $fullName = $phone = $email = $zip = $country = $source = $federalId = $coType = NULL;
+    if ($mya->sponsored) $comments = NULL;
   } else {
     $contact = textFld(REQ . t('Your Name:'), [t('Your full name')]);
     $fullName = textFld(REQ . t('Organization:'), [t('Organization or project name')]);
@@ -39,17 +45,19 @@ function formSponsor($form, &$sta, $args = '') {
     $email = emailFld(REQ . t('Org Email:'), [t('Email')]);
     $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
     $zip = zipFld();
+    $federalId = passFld(REQ . tr('einTitle'), ['', tr('einDesc') . t(' This cannot be an individual\'s SSN. You can get an EIN from the IRS free online at <%a>this link</a>.', '_a', atag('https://www.irs.gov/businesses/small-businesses-self-employed/how-to-apply-for-an-ein'))], autofill('off'));
+    $coType = coTypeFld($mya ? $mya->coType : NULL, [CO_PERSONAL, CO_SOLE_PROPRIETOR], t('The "personal" and "sole-proprietor" choices are intentionally omitted here. If you are taking this intitiative on your own, choose "%club". You will need a volunteer oversight board of at least two people who meet with you at least once a quarter.', 'club', ray(CO_TYPES)[CO_CLUB]));
     $source = sourceFld();
   }
 
-  $submit = isset($gross) ? t('Submit') : t('Update');
+  $submit = ($mya and $mya->sponsored) ? t('Update') : t('Submit');
   
-  return cgform(compact(ray('title subtext contact fullName phone email country zip source mission activities gross employees checksIn checksOut comments submit')));
+  return cgform(compact(ray('title subtext contact fullName phone email country zip federalId coType source mission activities gross employees checksIn checksOut comments submit')));
 }
 
 function formSponsor_validate($form, &$sta) {
   $mya = w\eLinkAcct($sta);
-  extract(just('fullName phone email zip gross employees checksIn checksOut', $sta['input'], NULL));
+  extract(just('fullName phone email zip federalId gross employees checksIn checksOut', $sta['input'], NULL));
   foreach (ray($flds = 'gross employees checksIn checksOut') as $k) if (isset($$k) and $err = u\badAmount($$k, '>=0')) return say($k . ': ' . $err, $k);
   
   if (!($mya and $mya->co)) {
@@ -59,7 +67,8 @@ function formSponsor_validate($form, &$sta) {
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (!emailOkay($email, FALSE, nn($myid) ? r\acct($myid) : '')) return;
     if ($err = u\badZip($zip)) return say($err, 'zip');
-    $flds .= ' fullName phone email zip';
+    if (isset($federalId) and $err = u\badEin($federalId, TRUE)) return say($err, 'federalId');
+    $flds .= ' fullName phone email zip federalId';
   }
   u\preray(compact(ray($flds)), $sta['input']);
 }
@@ -67,19 +76,23 @@ function formSponsor_validate($form, &$sta) {
 function formSponsor_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
-  $dbFlds = 'contact fullName legalName federalId email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut';
+  $dbFlds = 'contact fullName legalName federalId coType email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut';
   extract(just('comments source2 ' . $dbFlds, $sta['input'], NULL));
-  $notes = $comments ? (r\stampNote($comments) . ($mya ? $mya->notes : '')) : '';
+  
+  if ($comments or $federalId) {
+    if ($federalId) $comments = "EIN: $federalId. $comments";
+    $notes = $comments ? (r\stampNote($comments) . ($mya ? $mya->notes : '')) : '';
+  }
 
   if (!isset($contact)) { // using company data
-    if (isset($gross)) { // copying from org to new FBO org
-      u\EXPECT((bool) $gross, 'no gross copying FBO from co');
-      $contact = $mya->agentA->fullName;
-      foreach (ray('fullName email phone zip country source city state latitude longitude') as $k) $$k = $mya->$k;
-      $mya->update(compact(ray('gross employees')));
-    } else {
+    if ($mya and $mya->sponsored){ // just updating
       $mya->update(compact(ray('mission activities checksIn checksOut')));
       return say('info saved');
+    }
+    if ($mya and $mya->co) { // copying from org to new FBO org
+      $contact = $mya->agentA->fullName;
+      foreach (ray('fullName email phone zip country source city state latitude longitude coType') as $k) $$k = $mya->$k;
+      $mya->update(compact(ray('gross employees'))); // update these in old record
     }
   }
   
@@ -89,7 +102,11 @@ function formSponsor_submit($form, &$sta) {
   $fullName = PROJECT . t(' FBO ') . $fullName;
   $legalName = CGF_LEGALNAME;
   $federalId = CGF_EIN;
-  r\tellAdmin(t('Fiscal Sponsorship Application'), compact(ray($dbFlds)) + ($mya ? [] : ['NEW ORG!' => 1]));
+  $subs = compact(ray($dbFlds)) + ($mya ? [] : ['NEW ORG!' => 1]);
+  $subs['to'] = 'partnerships@' . CG_DOMAIN;
+  $subs['state'] = r\realState($state);
+  $subs['coType'] = ray(CO_TYPES)[$coType];
+  r\tellAdmin(t('Fiscal Sponsorship Application'), $subs);
   $msg = 'got application';
 
   $acctType = hidFld(CO_CUSTODIAN);
@@ -97,7 +114,7 @@ function formSponsor_submit($form, &$sta) {
   if ($source2) $source = trim(mb_strtoupper($source2) . "-$source");
   $info = []; foreach (ray($dbFlds) as $k) if (isset($$k)) $info[$k] = $$k;
   if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
-  $msg .= '|meanwhile join';
+  if (!$mya) $msg .= '|meanwhile join';
   $a->stepDone('signup');
   return sayEmpty($msg);
 }
