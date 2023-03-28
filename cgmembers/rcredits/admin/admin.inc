@@ -101,15 +101,15 @@ function makeTestAccounts() {
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
   $testAccts = [
-    'a' => ['Abe One', '',   '12345a'],
-    'b' => ['Bea Two', '',   '12345b'],
-    'c' => ['Citre', TRUE,   '12345c'], // include cardCode so we can test the company proSe (or with agent)
-    'd' => ['Dee Four', '',  '12345d'],
-    'e' => ['Eli Five', '',  '12345e'],
-    'f' => ['Flo Six', '',   '12345f'],
-    'g' => ['Gisette', TRUE, '12345g'],
-    'h' => ['Hal Ate', '',   '12345h'],
-    'i' => ['Ida Nine', '',  '12345i'],
+    'a' => [0, 'Abe One'],
+    'b' => [0, 'Bea Two'],
+    'c' => [1, 'Citre'],
+    'd' => [0, 'Dee Four'],
+    'e' => [0, 'Eli Five'],
+    'f' => [0, 'Flo Six'],
+    'g' => [1, 'Gisette'],
+    'h' => [0, 'Hal Ate'],
+    'i' => [0, 'Ida Nine'],
   ];
 
   $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
@@ -118,12 +118,12 @@ function makeTestAccounts() {
   foreach ($testAccts as $id => $vs) {
     $d = (ord($id) - ord("a") + 1);
     $ID = strtoupper($id);
-    extract(array_combine(ray('fullName co cardCode'), $vs));
+    extract(array_combine(ray('co fullName'), $vs));
     $uid = t\uid(strtoupper("$hd$id"));
     $testUids[] = $uid;
     
     $name = u\shortName($fullName);
-    $emailCode = $cardCode;
+    $emailCode = $cardCode = "12345$id";
     $flags = u\bits('ok member confirmed carded ided debt');
     if ($co) $flags |= u\bit('co');
     $email = "$id@example.com";
@@ -133,7 +133,7 @@ function makeTestAccounts() {
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
     $info = $info0 + compact(ray('uid fullName name flags cardCode emailCode email phone federalId postalAddr address city state zip'));
-    if (!$co) $info['pass'] = '123';
+    if (!$co) $info['pass'] = 'k';
 
     if ($a = a($uid)) $a->update($info); else $a = new r\Acct($info);
     if (!$a->co) a\photoFromFile($a);
@@ -147,7 +147,7 @@ function makeTestAccounts() {
       $coA->setDftAppCans();
       $perm = $id == 'b' ? B_SCAN : B_MANAGE;
       if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
-      $a->update('cardCode2', $a->cardCode); // this is new for Maria (aaa) and Curt (aak)
+      $a->update('cardCode2', "98765$id");
 ///      debug("$id: " . qr\url(a($coA->id, $a->id)));
     }
     foreach (ray(S_CARD) as $k) $a->stepDone($k);
@@ -546,7 +546,6 @@ function getBanks() {
  * Create a smaller photo to send to POS devices
  * CALLED ONLY FROM a\makeTestAccounts()!
  * @param acct $a: the account whose photo is to be shrunk
- * @param string $filename: the photo filename (defaults to account's shortname)
  * @param string $err: (RETURNED) the error message, if any
  * @return <success>
  include_once R_ROOT . '/admin/admin.inc';
@@ -554,16 +553,16 @@ function getBanks() {
  debug ($err);
  currently called only from a.makeTestAccounts()
 */
-function photoFromFile($a, $filename = '', &$err = '') {
+function photoFromFile($a, &$err = '') {
   if ($a->co) return !$err = 'tried to shrink a company photo';
   //  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
   if ($a->photo) $err = 'POS photo already exists'; // not really an error
-  $photoPath = r\pic($filename ?: "$a->name.jpg");
-  $img = u\alterImg(imagecreatefromjpeg($photoPath), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
+  $photoFlnm = R_ROOT . "/images/test-faces/$a->name.jpg";
+  $img = u\alterImg(imagecreatefromjpeg($photoFlnm), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
   ob_start();
   imagejpeg($img, NULL, 50);
   $photo = ob_get_clean();
-  //if (!$photo = u\fixPicture($photoPath, FACE_ASPECT, R_PIXEL_FACTOR / 2, FALSE, $err)) return FALSE;
+  //if (!$photo = u\fixPicture($photoFlnm, FACE_ASPECT, R_PIXEL_FACTOR / 2, FALSE, $err)) return FALSE;
   return $a->update(compact('photo'));
 }
 

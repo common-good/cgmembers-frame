@@ -48,7 +48,7 @@ function api($arg = null) {
       if (!$ok = authOk($arg, $one)) return; // return is for testing -- any error triggers exitJust()
       $func($one);
     }
-    return (X_OK);
+    return exitJson('', X_OK);
   }
 
   fixVersion($params);
@@ -72,6 +72,7 @@ function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
+  if (strlen($identifier) == 1) $identifier = 'newzz' . $identifier;
   if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
   
   if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
@@ -305,7 +306,7 @@ function comments($params) {
   $qid = $mya->qid;
   r\tellAdmin(t('Comment from ') . $mya->fullName, compact(ray('qid text created')));
   
-  return exitJust('', X_OK);
+  return exitJson('', X_OK);
 }
 
 /**
@@ -339,7 +340,7 @@ function testops($params) {
       
     default: return exitJust(X_SYNTAX);
   }
-  return exitJust('', X_OK);
+  return exitJson('', X_OK);
 }
 
 /**
@@ -447,8 +448,12 @@ function authOk($arg, $params) {
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
     if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
-    if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
+    if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
+      // accept it when testing
+    } else {
+      if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
 ///    debug($nm);
+    }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
