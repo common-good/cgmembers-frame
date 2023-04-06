@@ -126,7 +126,7 @@ function formSummary_validate($form, &$sta) {
     if (!$mya->co and !nn($dob) and !$mya->hasDob and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
-  if (!nn($active) and $mya->ok) { // de-activating
+  if (isset($active) and !$active and $mya->ok) { // de-activating (use isset here)
     if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
   if (isset($creditLine) and $err = u\badAmount($creditLine)) return sayFieldErr($err, 'creditLine'); 

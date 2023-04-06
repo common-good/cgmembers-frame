@@ -678,7 +678,8 @@ const TX_BANK = 99; // used only internally, to mark bank transfers
 
 const TX_DEFAULT_PERIOD = 90; // number of days to show in transaction history, by default
 const TX_DEFAULT_INV_PERIOD = -2; // number of days to show in invoice history, by default (all of them)
-const REVERSE_WINDOW = 120; // seconds you're allowed in the app to reverse a refund or payment with only implicit agreement of the original payee
+const APP_REVERSE_WINDOW = 120; // seconds before you're not allowed in the app to reverse a refund or payment with only implicit agreement of the original payee
+const DON_REVERSE_WINDOW = MONTH_SECS; // seconds before you're not allowed to reverse a recurring donation to CG
 
 const MIN_TX_ROWS = 3; // minimum number of transaction lines to show
 const NORMAL_TX_ROWS = 30; // normal number of transaction lines to show

@@ -495,7 +495,7 @@ function activeMonthly($item) {
   if ($a->balance < 0 and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // negative for too long
     $m = u\monthDif(now(), $a->wentNeg); // how many months ago the account went negative (rounded)
     $m -= $a->wentNeg > strtotime("-$m months", now()) ? 2 : 1; // don't count the first month or a partial subsequent month
-    $floor = round($floorX * (1 - (1 / (FLOOR_DECAY_MOS - $m))), 2);
+    $floor = round($floorX * (1 - (1 / max(FLOOR_DECAY_MOS - $m, 1))), 2); // reduce floor progressively over time (while balance is negative)
     $floor = min(0, max($floor, $floorX + 1)); // reduce credit line by at least a dollar but not beyond zero
     r\tellAdmin(t('Account negative 30+ days'), ray('who balance wentNegative oldCreditLimit newCreditLimit', "$a->fullName ($a->mainQid)", $a->balance, fmtDt($a->wentNeg), -$floorX, -$floor));
   } else { // not overly negative, so calculate credit line (-floor) baseded on activity

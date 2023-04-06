@@ -68,8 +68,8 @@ function generate($data, $logo, $text) {
  * @param bool $type: 
  *   'card':  standard for printing a Common Good card (HTTP://<region>.<domain>/<fmt><tail><agentCode><cardCode>)
  *            where <domain> is the appropriate domain for production cards if we're running in a production environment, otherwise for test cards
- *   'short': compact code for displaying on PWA (<fmt><region><tail><agentCode><cardCode> ending with "." for a test card)
- *   'main':  like short but omit agentCode, cardCode, and ".", if any (used in PWA api: <fmt><region><tail>)
+ *   'short' (DEPRECATED): compact code for displaying on PWA (<fmt><region><tail><agentCode><cardCode> ending with "." for a test card)
+ *   'main':  like short but omit cardCode (and .) (used in PWA api: <fmt><region><tail><agentCode>)
  * @return the code as appropriate for the type
  */
 function url($a, $type = 'card') {
@@ -84,9 +84,9 @@ function url($a, $type = 'card') {
   u\EXPECT($codeLen < 4, 'agentCode too long: ' . $qo->agentCode);
   $fmt = u\n2a($i * 4 + $codeLen, 1, 36);
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
-  $testFlag = isPRODUCTION ? '' : '.';
-  if ($type == 'short') return "$fmt$region$tail$agentCode$cardCode";
-  if ($type == 'main') return "$fmt$region$tail";
+//  $testFlag = isPRODUCTION ? '-A' : '.'; // test mode indicator for short version (-A only while transitioning from old app (3/2023))
+  if ($type == 'short') u\FAIL('short QR url is deprecated'); // return "$fmt$region$tail$agentCode$cardCode$testFlag";
+  if ($type == 'main') return "$fmt$region$tail$agentCode";
   if ($type == 'card') return "HTTP://$region.$qrDom/$fmt$tail$agentCode$cardCode";
   u\FAIL(t('invalid qr type: ') . $type);
 }
@@ -108,8 +108,8 @@ function acct($qr, $requireCode) {
     if (!$regionLen = (int) substr(REGION_LENS, $i, 1)) return NULL;
 
     $region = substr($qr, 1, $regionLen);
-    $isTestCard = !strhas($qr, '-');
-    $counter = $count < 2 ? 0 : $parts[1];
+    $isTestCard = strhas($qr, '.'); // ignore -A on temporary QRs generated in spring 2023
+//    $counter = $count < 2 ? 0 : $parts[1]; //phased out 3/2023
     $unfmt = qrUnfmt($region, $fmt . substr($parts[0], 1 + $regionLen), $isTestCard); // pretend it was the long format to get the rest
   } else if ($count == 6) { // normal format - HTTP://<region>.<server>/<fmt><acct><agent><cardCode>
     $region = $parts[2];

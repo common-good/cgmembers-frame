@@ -754,7 +754,7 @@ function firstUnusedId($key, $table, $start = 1, $end = 0, $where0 = '1', $subs 
 function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angle = 0) {
   list ($w0, $h0) = [imagesx($img0), imagesy($img0)];
   list ($bX, $bY) = [max(0, $cropW - $w), max(0, $cropH - $h)]; // borders, if cropped image is bigger than new width or height
-  flog(compact(ray('w0 h0 w h x1 y1 cropW cropH angle bX bY')));
+///  flog(compact(ray('w0 h0 w h x1 y1 cropW cropH angle bX bY')));
   
   if ($w0 != $w or $h0 != $h) { // resize
     $img1 = imagecreatetruecolor($w, $h); // resize the original image to size of editor
@@ -922,7 +922,7 @@ function cryPGP($data, $porp, &$trash = '') {
 }
 
 /**
- * Decryt with our PGP key pair (for testing at least).
+ * Decrypt with our PGP key pair (for testing at least).
  */
 function decryPGP($data, $porp) {
   $success = cryPGP0('de', $data, $porp, $res);

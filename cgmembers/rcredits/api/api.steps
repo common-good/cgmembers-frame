@@ -41,8 +41,10 @@ function extraSetup() {
  *
  * in: MAKE accounts Setup
  *     MAKE comments Setup
+ *     MAKE gettxs Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE transactions Setup
  */
 function members($list) {return t\members($list);}
@@ -50,7 +52,7 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: 
+ * in: TEST gettxs Setup
  */
 function balances($list) {return t\balances($list);}
 
@@ -59,8 +61,10 @@ function balances($list) {return t\balances($list);}
  *
  * in: MAKE accounts Setup
  *     MAKE comments Setup
+ *     MAKE gettxs Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE transactions Setup
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
@@ -82,6 +86,7 @@ function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
  *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
+ *     MAKE gettxs TheAppAsksForRecentTransactions
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
@@ -100,6 +105,7 @@ function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 function appGetsWith($url, $params, $method = 'get') {
   global $testOnly; if ($testOnly) return FALSE;
   $params = $params[0];
+  $params['version'] = '4.0.0'; // don't make the tests specify this every time
   t\fixTestVars($params);
   t\fixData($params);
   if ($method == 'get') $_GET = $params; else $_POST = $params;
@@ -130,6 +136,7 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  * we reply (ARG) with JSON: (ARG)
  *
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     TEST gettxs TheAppAsksForRecentTransactions
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
@@ -151,6 +158,7 @@ function varIs($var, $want) {
  * var (ARG) is JSON: (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE gettxs TheAppAsksForRecentTransactions
  */
 function varIsJSON($var, $want) {return varIs($var, t\json($want));}
 
@@ -250,5 +258,15 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE accounts Setup
+ *     TEST test TheAppAsksToInitializeTheTestData
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
+
+/**
+ * test op (ARG) with (ARG)
+ *
+ * in: MAKE test TheAppAsksToInitializeTheTestData
+ */
+function testOpWith($op, $args) {
+  return appPostsWith('test', [ray('op', 'initialize')]);
+}

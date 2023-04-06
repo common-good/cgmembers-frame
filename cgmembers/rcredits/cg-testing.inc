@@ -152,7 +152,7 @@ X
   }
   if (!empty($boxId) and !is_numeric($code = $boxId)) $boxId = db\get('id', 'r_boxes', compact('code'));
 
-  foreach (just(T_ID_FLDS, $info) as $k => $v) {
+  foreach (just(T_ID_FLDS, $info) as $k => $v) if (!($k == 'to' and strhas($v, '@'))) { // exception for the "to" parameter in r\rMail() subs
     $$k = fixIdFld($v);
     if ($k == 'qid') $$k = r\qid($$k); // convert back to qid for qid field
     $info[$k] = $$k;
@@ -566,18 +566,20 @@ function doRequests($info) {
  */
 function hasStepsDone($id, $task, $steps) {
   global $testOnly;
-  
+
+  $steps0 = $steps;
   if ($steps == 'all') $steps = u\consta('s', $task);
   if ($task == 'card') $steps = trim(join(' ', [S_PERSON, $steps]));
   if ($task == 'vote') $steps = trim(join(' ', [S_PERSON, S_CARD, $steps]));
 
-  $a = r\acct(t\uid($id));
+  if (!$a = r\acct(t\uid($id))) return t\output(t('Account %id does not exist.', compact('id')));
+
   if (!$testOnly) {
     $a->update('steps', 0);
     $a->setTask($task);
     foreach(ray($steps) as $k) $a->stepDone($k);
   } else {
-    if ($a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
+    if ($steps0 != 'all' and $a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
   }
   foreach(ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
   return TRUE;  
@@ -715,7 +717,7 @@ function doCompanyFlags(&$info) {
   if (!$a = r\acct(t\uid($uid))) return t\output("Not an account: $uid");
 
   if ($testOnly) {
-    return eq('coFlags', $a->coFlags, $coFlags);
+    return eq('coFlags', $coFlags, $a->coFlags);
   } else return $a->update('coFlags', $coFlags);
 }
 
@@ -1087,8 +1089,10 @@ function getErrors() {
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
-  $email = $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL;
-  return t\findEmail('tell-staff', $email, nni($subs ?: [], 0, []) + ray('topic noFrame message', $topic, TRUE, '?'));
+  $subs = $subs ? $subs[0] : [];
+  $email = nni($subs, 'to', $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL);
+  
+  return t\findEmail('tell-staff', $email, $subs + ray('topic noFrame message', $topic, TRUE, '?'));
 }
 
 /**
@@ -1194,7 +1198,7 @@ function noEmailTo($email) {
 }
 
 /**
- * Set a given phrase, encrypted, as the next code to be used in tests.
+ * Set a given phrase, encrypted, as the next code to be used in rSmart tests.
  */
 function cryNextCode($phrase, $type = 'private') {
   global $testOnly; if ($testOnly) return FALSE;

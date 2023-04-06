@@ -338,7 +338,7 @@ class Acct {
   /**
    * Return the value of a relationship field for this compound account.
    */
-  private function relFld($k) {
+  function relFld($k = 'reid') {
     $a = $this;
     if ($a->proSe) return NULL;
     if (in($k, REL_FLAGS)) {
