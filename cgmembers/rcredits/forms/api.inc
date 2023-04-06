@@ -72,7 +72,7 @@ function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
-  if (strlen($identifier) == 1) $identifier = 'newzz' . $identifier;
+  if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
   if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
   
   if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
@@ -86,11 +86,11 @@ function accounts($params) {
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
-    $accountId = qr\url(r\acct($uid), 'main');
-    $deviceId = nn($nextCode) ?: base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
+    $accountId = qr\url($a, 'main'); // r\acct($uid)
+    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
     $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $isCo = $a->co;
-    $selling = explode("\n", $a->selling);
+    $selling = $isCo ? explode("\n", $a->selling) : NULL;
     $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
   }
   return exitJson(compact('accounts'), $_POST ? X_OK : X_GOT); // change this to just X_OK once Upinngil's app updates
@@ -448,6 +448,7 @@ function authOk($arg, $params) {
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
     if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
+///    flog('deviceId=' . $deviceId);
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {

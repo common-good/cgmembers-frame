@@ -44,10 +44,13 @@ if ($mya and $mya->admin) {
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, GREATEST(e.amount, 0))), 2) AS `sales/mo`, 
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, GREATEST(-e.amount, 0))), 2) AS `payments/mo`,
        ROUND($perMo * COUNT(IF(h.created < :NOW-6*:MONTH_SECS, 0, ABS(e.amount))), 2) AS `tx/mo`, 
+       ROUND($perMo * COUNT(IF(h.created < :NOW-1*:MONTH_SECS, 0, ABS(e.amount))), 2) AS `tx last mo`, 
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.entryType=:E_REBATE, -e.amount, 0))), 2) AS `rebates/mo`,
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.cat=$fsFeeCat, GREATEST(-e.amount, 0), 0))), 2) AS `FS fees/mo`,
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0))), 2) AS `to CG/mo`,
-       ROUND(SUM(IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0)), 2) AS `to CG ever`
+       ROUND(SUM(IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0)), 2) AS `to CG ever`,
+       LEFT(FROM_UNIXTIME(MAX(h.created)), 10) AS lastTx
+       
        FROM tx_hdrs h JOIN tx_entries e USING (xid) 
          JOIN users u USING (uid) 
          LEFT JOIN r_states s ON s.id=u.state

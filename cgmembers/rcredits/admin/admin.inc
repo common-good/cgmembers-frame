@@ -92,11 +92,17 @@ function setupBasicAccounts() {
 
 /**
  * Re-setup the test cards on the DEMO server (or other dev server).
+ * @param bool $print: if true show corresponding objects for mocking in the app
  */
-function makeTestAccounts() {
+function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
   if (isPRODUCTION or (!isDEV and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
   require_once R_ROOT . '/cg-qr.inc';
+  
+  function testAcctLine($key, $info) { // used only by makeTestAccounts()
+    $ray = []; foreach ($info as $k => $v) $ray[] = "$k:" . (in($v, 'true false null') ? $v : "'$v'");
+    echo "'$key': { " . join(', ', $ray) . " },<br>\n";
+  }
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
@@ -113,7 +119,7 @@ function makeTestAccounts() {
   ];
 
   $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
-  $hd = 'newzz'; // prefix for account letter
+  $hd = 'newzp'; // prefix for account letter
   
   foreach ($testAccts as $id => $vs) {
     $d = (ord($id) - ord("a") + 1);
@@ -129,7 +135,8 @@ function makeTestAccounts() {
     $email = "$id@example.com";
     $phone = u\fmtPhone("700-000-000$d");
     $federalId = "00000000$d";
-    $postalAddr = "10$d Demo St., {$ID}ton, MA 1000$d";
+    $location = "{$ID}ton, MA";
+    $postalAddr = "10$d Demo St., $location 1000$d";
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
     $info = $info0 + compact(ray('uid fullName name flags cardCode emailCode email phone federalId postalAddr address city state zip'));
@@ -137,24 +144,43 @@ function makeTestAccounts() {
 
     if ($a = a($uid)) $a->update($info); else $a = new r\Acct($info);
     if (!$a->co) a\photoFromFile($a);
-///    debug("$id: " . qr\url($a));
+
+    $selling = 'null';
+    if ($id == 'c') a($hd . 'c')->update('selling', $selling = "groceries\ngifts\nsundries");
+    if ($id == 'g') a($hd . 'g')->update('selling', $selling = 'hardware');
+    
+    if ($print) {
+      $isCo = $co ? 'true' : 'false';
+      $accountId = qr\url($a, 'main');
+      list ($name, $deviceId, $qr) = [$fullName, "dev$ID", "qr$ID"];
+      $firstName = ray($name)[0];
+      $info = compact(ray('name location isCo accountId cardCode deviceId selling'));
+      if ($co) $coInfo[$id] = $info;
+      echo testAcctLine($firstName, $info);
+    }
   }
   
   foreach (str_split('abdefhi') as $id) { // the individual accounts
     $a = a("$hd$id");
     if (in($id, 'a b f')) {
-      $coA = a($hd . ($id == 'f' ? 'g' : 'c'));
+      $cid = $id == 'f' ? 'g' : 'c';
+      $CID = strtoupper("$cid:$id");
+      $coA = a($hd . $cid);
       $coA->setDftAppCans();
       $perm = $id == 'b' ? B_SCAN : B_MANAGE;
       if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
-      $a->update('cardCode2', "98765$id");
-///      debug("$id: " . qr\url(a($coA->id, $a->id)));
+      $a->update('cardCode2', $cardCode2 = "98765$id");
+      foreach (ray(S_CO) as $k) $coA->stepDone($k); // this gets done twice when there are 2 agents for a company, but no harm
+      if ($print) {
+        $firstName = ray($a->fullName)[0];
+        $info = $coInfo[$cid];
+        $info['accountId'] = qr\url(a($coA->id, $a->id), 'main');
+        $info['cardCode'] = $cardCode2;
+        echo testAcctLine("$firstName/$coA->fullName", $info);
+      }
     }
     foreach (ray(S_CARD) as $k) $a->stepDone($k);
   }
-  
-  a($hd . 'c')->update('selling', "groceries\ngifts\nsundries");
-  a($hd . 'g')->update('selling', 'hardware');
   
   db\del('txs', 'uid1 IN (:testUids) OR uid2 IN (:testUids)', compact('testUids'));
   db\del('txs2', 'payee IN (:testUids)', compact('testUids'));
@@ -162,6 +188,8 @@ function makeTestAccounts() {
   
   if ($channel == TX_WEB) w\say(t('Done!'));
 }
+
+
 
 /**
  * Assign the given account a new id (or delete it).

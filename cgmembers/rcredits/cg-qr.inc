@@ -69,7 +69,7 @@ function generate($data, $logo, $text) {
  *   'card':  standard for printing a Common Good card (HTTP://<region>.<domain>/<fmt><tail><agentCode><cardCode>)
  *            where <domain> is the appropriate domain for production cards if we're running in a production environment, otherwise for test cards
  *   'short' (DEPRECATED): compact code for displaying on PWA (<fmt><region><tail><agentCode><cardCode> ending with "." for a test card)
- *   'main':  like short but omit agentCode, cardCode, and ".", if any (used in PWA api: <fmt><region><tail>)
+ *   'main':  like short but omit cardCode (and .) (used in PWA api: <fmt><region><tail><agentCode>)
  * @return the code as appropriate for the type
  */
 function url($a, $type = 'card') {
@@ -86,7 +86,7 @@ function url($a, $type = 'card') {
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
 //  $testFlag = isPRODUCTION ? '-A' : '.'; // test mode indicator for short version (-A only while transitioning from old app (3/2023))
   if ($type == 'short') u\FAIL('short QR url is deprecated'); // return "$fmt$region$tail$agentCode$cardCode$testFlag";
-  if ($type == 'main') return "$fmt$region$tail";
+  if ($type == 'main') return "$fmt$region$tail$agentCode";
   if ($type == 'card') return "HTTP://$region.$qrDom/$fmt$tail$agentCode$cardCode";
   u\FAIL(t('invalid qr type: ') . $type);
 }
