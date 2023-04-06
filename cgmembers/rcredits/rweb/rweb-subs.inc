@@ -462,7 +462,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         r\tellAdmin("bad char in $type0 fld dft", compact(ray('type0 dft label help x options')));
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
-      if ($type0 == 'currency') u\preray(ray('subtype pattern', 'textfield', '^\$?\d{1,3}(,\d{3})*(\.\d+)?$'), $x);
+      if ($type0 == 'currency') u\preray(ray('subtype pattern', 'textfield', '^\$?\d{1,3}(,?\d{3})*(\.\d+)?$'), $x);
     } elseif (in($type, 'date datetime-local')) {
       if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . ($type == 'date' ? '' : 'T' . fmtDt($dft, 'HH:mm'));
     }
