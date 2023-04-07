@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61e'; // software version
+const R_VERSION = '3.61f'; // software version
 const APP_VERSION = 40000; // 4.0.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
