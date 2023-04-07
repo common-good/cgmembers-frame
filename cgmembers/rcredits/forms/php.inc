@@ -24,7 +24,7 @@ function formPhp_validate($form, &$sta) {
 
   if (!!isPRODUCTION) { // safety precaution
     $code = str_replace("\r", '', $code);
-    if (strstr($code, "\n", TRUE) != $mya->name) return w\err(t('You are on the PRODUCTION server, so you can\'t do that.'));
+    if (strstr($code, "\n", TRUE) != $mya->agentA->name) return w\err(t('You are on the PRODUCTION server, so you can\'t do that.'));
     $sta['input']['code'] = substr(strstr($code, "\n"), 1);
   }
 }
