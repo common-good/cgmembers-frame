@@ -462,7 +462,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
         r\tellAdmin("bad char in $type0 fld dft", compact(ray('type0 dft label help x options')));
         $x['default_value'] = preg_replace($bad, '', $dft); // bad chars prevent it from displaying
       }
-      if ($type0 == 'currency') u\preray(ray('subtype pattern', 'textfield', '^\$\d{1,3}(,\d{3})*(\.\d+)?$'), $x);
+      if ($type0 == 'currency') u\preray(ray('subtype pattern', 'textfield', '^\$?\d{1,3}(,?\d{3})*(\.\d+)?$'), $x);
     } elseif (in($type, 'date datetime-local')) {
       if ($dft) $x['default_value'] = fmtDt($dft, 'yyyy-MM-dd') . ($type == 'date' ? '' : 'T' . fmtDt($dft, 'HH:mm'));
     }
@@ -1419,6 +1419,12 @@ function ssnFld($req = REQ, $extra = []) {
   $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
   return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
 }
+function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
+  $coTypes = ray(CO_TYPES);
+  foreach ($omit as $k) unset($coTypes[$k]);
+  return radiosFld(REQ . t('Account Type:'), ['', $desc], dft($dft), $coTypes);
+}
+
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
 function logoFld($a) {return $a->hasLogo ? item(logoHtml($a)) : NULL;}

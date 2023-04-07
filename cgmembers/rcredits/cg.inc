@@ -455,6 +455,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   global $mya, $channel;
 /**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
+  $to = nni($subs, 'to', R_ADMIN_EMAIL);
   $message = t($index, $subs);
   foreach (ray(NOLOG_FLDS) as $k) unset($subs[$k]); // secret stuff
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
@@ -465,7 +466,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   
   $currentAcct = $mya ? $mya->nameAndQid() : NULL;
   $keyAcct = $keyA ? $keyA->nameAndQid() : NULL;
-  $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
+  $email = $tellCOA ? $tellCOA->cttyA->email : $to; // tell cAdmin if appropriate, else superAdmin
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 100 ? strip_tags($index) : '';
@@ -476,7 +477,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
   $info['topic'] .= t(' (to admin)');
-  if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
+  if ($email != $to) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }
 
@@ -1516,7 +1517,7 @@ function catUids() {
 }
 
 function cgUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of all accounts owned by CG (called in queries.inc)
-function justCgUids() {return array_merge([CGID, r\serverUid(), r\qo('NEWAZV')->id], BUCKET_UIDS);} // uids of all non-sponsored accounts owned by CG (called in queries.inc)
+function justCgUids() {return array_merge([CGID, r\serverUid(), r\qo('NEWAZV')->id], BUCKET_UIDS);} // uids of all non-sponsored accounts owned by CG (called in queries.inc) - NEWAZV is Food Fund
 
 /**
  * Return the appropriate exchange fee for the given transaction description and amount.

@@ -16,8 +16,9 @@ function formShowQr($form, &$sta, $args = '') {
   global $mya, $testQr;
 //  extract(just('nothing', $args));
 
-  if (!$mya->ok) return softErr(t('You cannot display this account\'s QR code until you have completed the steps to set it up.'));
-  if (!$mya->canBuy) return softErr(t('You do not have permission to use this account\'s QR code.'));
+  if ($mya->co and !$mya->relFld()) return go('dashboard', t('You cannot show a company QR without an agent. There is no way for an admin to do that yet.'), 'err'); // make sure admin is actually related to the company
+  if (!$mya->ok) return go('dashboard', t('You cannot display this account\'s QR code until you have completed the steps to set it up.'), 'err');
+  if (!$mya->canBuy) return go('dashboard', t('You do not have permission to use this account\'s QR code.'), 'err');
 
   $title = $mya->bestName;
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
@@ -25,13 +26,10 @@ function formShowQr($form, &$sta, $args = '') {
   if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : $mya->card) {
     $aA = $mya->agentId == UID_SUPER ? $mya : $mya->agentA;
     $logo = $aA->photoSrc(FALSE, TRUE, TRUE);
-    $text = $aA->bestName . ", $mya->city, $mya->st";
-    $testQr = qr\url($mya, 'short');
-    $qr = item(qr\html($testQr, $logo, $text));
-    
-    $testQrA = qr\acct($testQr, TRUE);
-    u\EXPECT($testQrA->qid == $mya->qid, 'generated QR differs from source');
-//    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
+    $text = "$mya->bestName, $mya->city, $mya->st"; // not enough room to show agent also
+    $testQr = $qr0 = qr\url($mya, 'card');
+    $qr = item(qr\html($qr0, $logo, $text));
+    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $qr0)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
     $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag($mya->co ? '/dashboard' : '/scraps/card'));
     $qr = NULL;

@@ -1233,6 +1233,7 @@ function statisticsGetSet($time) {
  *     MAKE signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberConnectsABankAccount
+ *     MAKE sponsor Setup
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
  *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine

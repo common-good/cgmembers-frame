@@ -25,9 +25,9 @@ function formSignupCo($form, &$sta, $args = '') {
   extract(just('relate', $args, FALSE));
   if (!$mya) { // not signed in (presumably from promo site)
     $subtext = t(<<< X
-      <p>To open a company account, the first step is to open a personal account. To get started, <%aSignup>click here</a>.</p>
-      <p><b>If you already have a personal account</b>, <%aSignin>click here</a> to create a company account.</p>
-      <p>This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified (just like a bank account).</p>
+      <p>The first step is to open a personal account (even if you never use it) for signing in to your company account. To get started, <%aSignup>click here</a>.</p>
+      <p><b>If you already have a personal account</b>, <%aSignin>click here</a> to sign in. Then click "Create a Company Account".</p>
+      <p>This extra step is important for security &mdash; by law you can't open a financial account unless your identity has been verified.</p>
 X
     , '_aSignin _aSignup', atag(first('/signin', '/signup-co/relate=1&' . $args)), atag('/signup/' . $args));
     return cgform(compact(ray('title subtext')));
@@ -51,9 +51,7 @@ X
   
   $args = hidFld($args);
 
-  $coTypes = ray(CO_TYPES);
-  unset($coTypes[CO_PERSONAL]);
-  $coType = radiosFld(t('Account Type:'), '', required(), $coTypes);
+  $coType = coTypeFld();
   
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 

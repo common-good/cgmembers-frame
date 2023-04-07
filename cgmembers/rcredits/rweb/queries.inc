@@ -18,6 +18,7 @@ global $mya;
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = r\annualAmt();
+$fsFeeCat = r\nick2cat('FS-FEE');
 
 if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
@@ -28,6 +29,7 @@ if ($mya and $mya->admin) {
   $cgUids = join(',', r\cgUids());
   $justCgUids = join(',', r\justCgUids());
   $qtrDt1 = u\qtrDt($qtrDt2 = u\qtrDt() - 1);
+  $perMo = ':MONTH_SECS/LEAST(:NOW-u.activated, 6*:MONTH_SECS)';
   
   $queries = [
   1 . t('Dollar Pool Liability') => 
@@ -35,6 +37,27 @@ if ($mya and $mya->admin) {
      SUM(IF(uid IN :EXTERNAL_UIDS, balance, 0)) AS netIn,
      SUM(IF(jid, balance/2, balance)) AS discrepancy
      FROM users',
+     
+  3 . t('Company participation') =>
+    "SELECT LEFT(FROM_UNIXTIME(activated), 10) AS since, fullName, CONCAT(city, ', ', abbreviation) AS location,
+       IF(crumbs=0, '-', CONCAT(ROUND(100*crumbs, 2), '%')) AS crumbs,
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, GREATEST(e.amount, 0))), 2) AS `sales/mo`, 
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, GREATEST(-e.amount, 0))), 2) AS `payments/mo`,
+       ROUND($perMo * COUNT(IF(h.created < :NOW-6*:MONTH_SECS, 0, ABS(e.amount))), 2) AS `tx/mo`, 
+       ROUND($perMo * COUNT(IF(h.created < :NOW-1*:MONTH_SECS, 0, ABS(e.amount))), 2) AS `tx last mo`, 
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.entryType=:E_REBATE, -e.amount, 0))), 2) AS `rebates/mo`,
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.cat=$fsFeeCat, GREATEST(-e.amount, 0), 0))), 2) AS `FS fees/mo`,
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0))), 2) AS `to CG/mo`,
+       ROUND(SUM(IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0)), 2) AS `to CG ever`,
+       LEFT(FROM_UNIXTIME(MAX(h.created)), 10) AS lastTx
+       
+       FROM tx_hdrs h JOIN tx_entries e USING (xid) 
+         JOIN users u USING (uid) 
+         LEFT JOIN r_states s ON s.id=u.state
+         JOIN (SELECT id, uid AS otherUid, entryType, cat FROM tx_entries) other ON other.id=-e.id
+       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($justCgUids, :UID_OUTER, :UID_BANK)
+       GROUP BY e.uid
+       ORDER BY `to CG/mo` DESC, `sales/mo` DESC",
   
   1 . t('Community Fund Balance By Community') => 
     'SELECT c.fullName AS community, SUM(IF(u.jid, u.balance/2, u.balance)) AS balance 
@@ -56,7 +79,7 @@ if ($mya and $mya->admin) {
       LEFT JOIN people p ON p.pid=t2.pid AND p.pid>0
       LEFT JOIN r_states s ON s.id=IF(p.pid IS NULL, u.state, p.state)
       WHERE t.created BETWEEN $y0 AND $y9 AND t.uid2 IN ($justCgUids) AND t.uid1 NOT IN ($justCgUids)
-      AND t.cat2 NOT BETWEEN 1150 AND 1300
+      AND t.cat2 NOT BETWEEN 1150 AND $fsFeeCat
       GROUP BY name
       HAVING gifts>=99
       ORDER BY gifts DESC
@@ -207,13 +230,14 @@ $queries = array_merge(nn($queries, []), [
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.recursId,0,amount)) AS `payments to CG`
   t('Actual Donations to CG and Community') =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
-    SUM(IF(t.recursId,amt,0)) AS recurring,
+    SUM(IF(uid2=:UID_REGULARS,amt,0)) AS recurring,
     SUM(IF(uid2=:UID_ROUNDUPS,amt,0)) AS roundups,
     SUM(IF(uid2=:UID_CRUMBS,amt,0)) AS crumbs,
-    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:UID_ROUNDUPS, :UID_CRUMBS) AND t.recursId IS NULL, amt, 0)) AS other
+    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:UID_REGULARS, :UID_ROUNDUPS, :UID_CRUMBS) AND t.recursId IS NULL, amt, 0) AND cat2<>$fsFeeCat) AS `stepups/other`,
+    SUM(IF(cat2=$fsFeeCat,amt,0)) AS `FS fees`
     FROM txs t JOIN users u ON u.uid=t.uid1
     WHERE u.community=:ctty 
-    AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:UID_ROUNDUPS, :UID_CRUMBS))
+    AND ((uid2=:CGID AND t.:IS_GIFT) OR uid2 IN (:UID_REGULARS, :UID_ROUNDUPS, :UID_CRUMBS) OR cat2=$fsFeeCat)
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
   t('Expected Member Donations to CG and Community') =>

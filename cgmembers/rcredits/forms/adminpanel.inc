@@ -69,6 +69,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admMakeVAdmin or $mya->admPrintCards) $make2 = boxFld('make', t('Make:'));
   if ($mya->admPrintCards) $printId = submi(t('Print ID'));
   if ($mya->admMakeRules) $fsRule = submi(t('Set Sponsorship Fee'));
+  if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
 
   //  $connectBank = submi(t('Connect Bank'));
   //  $seeHidden = submi(t('See Hidden'));
@@ -80,7 +81,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty');
+  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -184,6 +185,8 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('qbo/op=txs');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
+  } elseif ($op == 'makeTestAccts') {
+    return a\makeTestAccounts();
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
     $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;
