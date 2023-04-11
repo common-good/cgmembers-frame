@@ -36,104 +36,46 @@ Setup:
   | .ZPC |    3091 |
 
 # GET /transactions (version, deviceId, actorId, lastTx)
-#   -> {balance, surtxs, crumbs, roundups, txs: [{xid, amount, other: {}, description, created}, …]}
-#   where other: {name, avatar}
+#   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
 
 Scenario: The app asks for recent transactions
   Given var "surtxs" is JSON:
-  | amount | portion |*
-  |      4 |    1.26 |
-  And var "zpb" is JSON:
-  | name    | location |*
-  | Bea Two | Bton, MA |
-  And var "zpc" is JSON:
-  | name    | location |*
-  | Coco Co | Cton, MA |
-  And var "cb" is JSON:
-  | name    | location |*
-  | Coco Co | Cton, CA |
-  And var "zpf" is JSON:
-  | name    | location |*
-  | For Co  | Fton, FL |
+  | amount | portion | crumbs | roundup |*1
+  |      4 |    1.26 |      0 |    true |
   And var "txs" is JSON:
-  | xid | amount | other | description | created |*
-  |   6 |    -90 | %cb   | theta       | %ymd-1d |
-  |   5 |     78 | %zpf  | epsil       | %ymd-2d |
-  |   4 |    -56 | %zpb  | delta       | %ymd-3d |
-  |   1 |    -12 | %zpc  | alpha       | %ymd-6d |
+  | xid | amount | accountId | name    | description | created |*
+  |   6 |    -90 | K6VMDCC   | Coco Co | theta       | %now-1d |
+  |   5 |     78 | K6VMDCF   | For Co  | epsil       | %now-2d |
+  |   4 |    -56 | K6VMDCB   | Bea Two | delta       | %now-3d |
+  |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
   When app gets "transactions" with:
   | version | deviceId | actorId | lastTx  |*
   | 400     | devA     | K6VMDCA | %now-7d |
-  Then we reply "got" with JSON:
-  | balance | surtxs  | crumbs | roundups | txs  |*
-  | 920     | %surtxs |      0 |     true | %txs |
-Skip
-Scenario: The app asks to charge a customer with a missing parameter
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCB |             | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
+  Then we reply "got" with JSON values:
+  | balance | surtxs  | txs  |*1
+  | 920     | %surtxs | %txs |
+
+Scenario: The app asks for recent transactions with a missing parameter
+  When app gets "transactions" with:
+  | version | deviceId | actorId |*
+  | 400     | devC     | K6VMDCC |
   Then we reply "syntax" with: "?"
 
-Scenario: The app asks to charge a customer with a bad actorId
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCX | K6VMDCB | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
+Scenario: The app asks for recent transactions with a bad actorId
+  When app gets "transactions" with:
+  | version | deviceId | actorId | lastTx  |*
+  | 400     | devC     | K6VMDCX | %now-7d |
   Then we reply "unauth"
 
-Scenario: The app asks to charge a customer with a bad otherId
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCXccx | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
-  Then we reply "ok" with JSON:
-  | ok    | message                                 |*
-  | false | That is not an active %PROJECT account. |
-
-Scenario: The app asks to charge a customer with a bad otherId offline
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCXccx | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | true    |
-  Then we reply "ok"
-  And we tell Admin "bad card code" with subs:
-  | acctId     | code |*
-  | K6VMDCXccx |      |
-  And these "tx_bads":
-  | version | deviceId | amount | actorId | otherId    | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCXccx | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | 1       |
-  
-Scenario: The app asks to charge a customer with a bad amount
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | 1.2.3  | K6VMDCC | K6VMDCB | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
+Scenario: The app asks for recent transactions with a bad date
+  When app gets "transactions" with:
+  | version | deviceId | actorId | lastTx   |*
+  | 400     | devC     | K6VMDCC | whatever |
   Then we reply "syntax" with: "?"
 
-Scenario: The app asks to charge a customer with an amount out of range
-  When app posts "transactions" with:
-  | version | deviceId | amount             | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | %(%MAX_AMOUNT + 1) | K6VMDCC | K6VMDCB | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
+Scenario: The app asks for recent transactions with a date out of range
+  When app gets "transactions" with:
+  | version | deviceId | actorId | lastTx  |*
+  | 400     | devC     | K6VMDCC | %now+9d |
   Then we reply "syntax" with: "?"
 
-Scenario: The app asks to charge a customer with a bad date
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCB | stuff       | abc     | K6VMDCC123.00K6VMDCBccB%now | false   |
-  Then we reply "syntax" with: "?"
-
-Scenario: The app asks to charge a customer with a date out of range
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCB | stuff       | 123     | K6VMDCC123.00K6VMDCBccB%now | false   |
-  Then we reply "syntax" with: "?"
-
-Scenario: The app asks to charge a customer with a bad proof
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof | offline |*
-  | 400     | devC     | 123    | K6VMDCC | K6VMDCB | stuff       | %now    | ccX   | false   |
-  Then we reply "syntax" with: "?"
-
-Scenario: The app asks to charge a customer who has insufficient funds
-  When app posts "transactions" with:
-  | version | deviceId | amount | actorId | otherId | description | created | proof                         | offline |*
-  | 400     | devC     | 12300  | K6VMDCC | K6VMDCB | stuff       | %now    | K6VMDCC12300.00K6VMDCBccB%now | false   |
-  Then we reply "ok" with JSON:
-  | ok    | message                                                                                    |*
-  | false | Bea Two is $11,300 short for this request (do NOT try again). Available balance is $1,000. |

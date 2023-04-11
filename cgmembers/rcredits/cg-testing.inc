@@ -37,6 +37,7 @@ function output($msg, $color = 'error') {
   if (!isPRODUCTION and !nn($wholeModule)) \drupal_set_message(color($msg, $color)); // make sure we don't do this on production
   return $color == 'error' ? FALSE : TRUE;
 }
+function err($msg) { return t\output($msg); }
 
 /**
  * Return the message in a given color box.
@@ -364,7 +365,9 @@ function doAccounts($info = []) {
   if (trim(nn($pass)) === '') $pass = '123';
 
   $zza = r\qo('.ZZA')->id;
-  $mailDft = ($zza <= $uid and $uid < $zza + 26) ? chr(ord('a') + $uid - $zza) : u\randomString(10, 'word');
+  $zpa = r\qo('.ZPA')->id;
+  $mailDft = u\randomString(10, 'word');
+  foreach ([$zza, $zpa] as $uid0) if($uid >= $uid0 and $uid < $uid0 + 26) $mailDft = chr(ord('a') + $uid - $uid0);
   u\setDft($email, $mailDft . '@' . EMAILX); // a@example.com, etc.
 
   u\setDft($community, r\serverUid());
@@ -418,7 +421,8 @@ function doAccounts($info = []) {
  *   otherwise return the xid of the created transaction(s) (treated as TRUE in test steps)
  * Note: for $testOnly TRUE, if there are multiple entry pairs for one transaction, put the eid field first so verifyRecord() can distinguish them.
  */
-function doTxs($info, $thing) {
+function doTxs($info) {
+  //debug('doTxs top:' . pr($info));
   global $testOnly;
 
   $map = 'amount:amt, payer:uid1, payee:uid2, purpose:for';
@@ -1585,10 +1589,46 @@ function radioOptions($form) {
 }
 
 /**
- * Compare two values and complain if they aren't close to equal.
+ * Compare the wanted values in an array to what we got.
+ * For associative arrays, wanted values can be in any order.
+ * For numeric-indexed arrays, the indices must match.
+ * In either case, got can have additional values.
+ */
+function objEq($desc, $want, $got) {
+  $wantDesc = t(' Wanted: ') . pr($want);
+
+  if (is_scalar($got)) {
+    if (is_scalar($want)) return t\eq($desc, $want, $got);
+    return t\err($desc . t(' Expected an array/object, but got a string.') . $wantDesc);
+  } else $got = (array) $got;
+  
+  if (is_scalar($want)) fixTestVars($want);
+  if (is_scalar($want) and !$want = (array) json_decode($want)) return t\err($desc . t(' Expected a string but got and array/object: ') . $wantDesc);
+  $wantDesc = t(' Wanted: ') . pr($want); // redo this with non-scalar vars fixed
+
+  foreach ((array) $want as $k => $v) {
+///    t\output(tr('%got=%want?', 'got want', pr($got), pr($want))); // debug(
+    if (!rayhas($got, $k)) return t\err($desc . t(' Missing value for property "%k".', compact('k')) . $wantDesc);
+    if (is_scalar($v) and is_scalar($got[$k])) {
+      if (!eq("$desc [$k]", $v, $got[$k])) return t\err($wantDesc); // eq() outputs the specifics
+    } else {
+      if (!objEq("$desc [$k]", $v, $got[$k])) return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * Compare two values and complain if they aren't equal (or close to equal).
+ * @param string $desc: description of the things that should be equal
+ * @param scalar $want: value wanted
+ * @param scalar $got: actual value
+ * @param string $id: relevant account ID, if any
+ * @param bool $list: if true, treat $want and $got as names of flag bits
+ * @param numeric $offBy: how much the values can differ and still be considered equal
  * @return <the values are equal>
  */
-function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
+function eq($desc, $want, $got, $id = NULL, $list = '', $offBy = 0) {
   global $testVars;
   foreach (ray('want got') as $k) fixTestVars($$k);
   $want = str_replace('\\n', "\n", $want);
@@ -1602,8 +1642,8 @@ function eq($desc, $want, $got, $id = '', $list = '', $offBy = 0) {
     
   if ($match) return TRUE;
 
-  if ($id !== '') $id = "uid=$id ";
-  return t\output($id . t('%desc: wanted "%want" got "%got"', compact(ray('id desc want got'))));
+  $id = $id ? "uid=$id " : '';
+  return t\output(t('%id%desc: wanted "%want" got "%got"', compact(ray('id desc want got'))));
 }
 function badEq($desc, $want, $got, $id = '', $list = '') {return !eq($desc, $want, $got, $id, $list);}
 
@@ -2129,13 +2169,13 @@ function logRec($type, $value) {
 }
 
 /**
- * Return the earliest exit message and delete it from the log (so the next one will be found for a subsequent test).
+ * Return the latest exit message.
  */
 function getExitMsg(&$status = NULL) {
-/**/  $id = db\get('id', 'test', "type='echo' ORDER BY id");
+/**/  $id = db\get('id', 'test', "type='exit' ORDER BY id DESC");
   $res = db\get('value', 'test', compact('id'));
   if (preg_match('/^%([0-9]+): (.*)/', $res, $m)) list($zot, $status, $res) = $m;
-  db\del('test', 'id', $id);
+//  db\update('test', ray('id type', $id, 'wasExit'), 'id');
   return $res;
 }
 

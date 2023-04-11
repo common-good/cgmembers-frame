@@ -653,10 +653,10 @@ function exitJust($s = '', $status = X_GOT) {
     $status = (int) $s;
     $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_FORBIDDEN:Forbidden, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
   }
-  
+
   if (test()) {
     t\output("exiting ($status) with: " . pr($s));
-/**/t\logRec('echo', "%$status: $s");
+    $logid = t\logRec('exit', "%$status: $s");
     return NULL;
   }
 

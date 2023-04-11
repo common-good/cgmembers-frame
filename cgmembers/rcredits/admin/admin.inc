@@ -98,11 +98,6 @@ function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
   if (isPRODUCTION or (!isDEV and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
   require_once R_ROOT . '/cg-qr.inc';
-  
-  function testAcctLine($key, $info) { // used only by makeTestAccounts()
-    $ray = []; foreach ($info as $k => $v) $ray[] = "$k:" . (in($v, 'true false null') ? $v : "'$v'");
-    echo "'$key': { " . join(', ', $ray) . " },<br>\n";
-  }
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
@@ -156,7 +151,7 @@ function makeTestAccounts($print = FALSE) {
       $firstName = ray($name)[0];
       $info = compact(ray('name location isCo accountId cardCode deviceId selling'));
       if ($co) $coInfo[$id] = $info;
-      echo testAcctLine($firstName, $info);
+/**/  echo testAcctLine($firstName, $info);
     }
   }
   
@@ -176,7 +171,7 @@ function makeTestAccounts($print = FALSE) {
         $info = $coInfo[$cid];
         $info['accountId'] = qr\url(a($coA->id, $a->id), 'main');
         $info['cardCode'] = $cardCode2;
-        echo testAcctLine("$firstName/$coA->fullName", $info);
+/**/    echo testAcctLine("$firstName/$coA->fullName", $info);
       }
     }
     foreach (ray(S_CARD) as $k) $a->stepDone($k);
@@ -189,7 +184,10 @@ function makeTestAccounts($print = FALSE) {
   if ($channel == TX_WEB) w\say(t('Done!'));
 }
 
-
+function testAcctLine($key, $info) { // used only by makeTestAccounts() - DO NOT try to put this inside that function (kills tests that call parent function twice)
+  $ray = []; foreach ($info as $k => $v) $ray[] = "$k:" . (in($v, 'true false null') ? $v : "'$v'");
+/**/  echo "'$key': { " . join(', ', $ray) . " },<br>\n";
+}
 
 /**
  * Assign the given account a new id (or delete it).

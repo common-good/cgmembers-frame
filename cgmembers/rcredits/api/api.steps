@@ -45,6 +45,8 @@ function extraSetup() {
  *     MAKE idphoto Setup
  *     MAKE identity Setup
  *     TEST test TheAppAsksToInitializeTheTestData
+ *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
+ *     MAKE test TheAppAsksUsForTransactionData
  *     MAKE transactions Setup
  */
 function members($list) {return t\members($list);}
@@ -65,6 +67,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE idphoto Setup
  *     MAKE identity Setup
  *     TEST test TheAppAsksToInitializeTheTestData
+ *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
+ *     MAKE test TheAppAsksUsForTransactionData
  *     MAKE transactions Setup
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
@@ -87,6 +91,10 @@ function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
  *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
  *     MAKE gettxs TheAppAsksForRecentTransactions
+ *     MAKE gettxs TheAppAsksForRecentTransactionsWithAMissingParameter
+ *     MAKE gettxs TheAppAsksForRecentTransactionsWithABadActorId
+ *     MAKE gettxs TheAppAsksForRecentTransactionsWithABadDate
+ *     MAKE gettxs TheAppAsksForRecentTransactionsWithADateOutOfRange
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
  *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
@@ -136,8 +144,8 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  * we reply (ARG) with JSON: (ARG)
  *
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     TEST gettxs TheAppAsksForRecentTransactions
  *     TEST identity TheAppAsksToIdentifyACustomer
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
@@ -178,6 +186,9 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
  *     TEST comments TheAppAsksToSubmitACommentWithAMissingParameter
+ *     TEST gettxs TheAppAsksForRecentTransactionsWithAMissingParameter
+ *     TEST gettxs TheAppAsksForRecentTransactionsWithABadDate
+ *     TEST gettxs TheAppAsksForRecentTransactionsWithADateOutOfRange
  *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
@@ -204,9 +215,9 @@ function weReplyWith($wantStatus, $want, $json = FALSE) {
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
   if (!t\eq('status', u\consta('x', $wantStatus), $gotStatus)) return FALSE;
   if ($json) {
-    $want = t\json($want[0]);
+    $want = is_array($want) ? t\json($want[0]) : $want;
   } else $want = is_array($want) ? $want[0] : $want;
-  return t\eq('show', $want, '' . $got);
+  return t\eq('reply', $want, '' . $got);
 }
 
 /**
@@ -236,6 +247,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
+ *     TEST gettxs TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
@@ -263,10 +275,39 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
 
 /**
- * test op (ARG) with (ARG)
+ * test op (ARG) with: (ARG)
  *
  * in: MAKE test TheAppAsksToInitializeTheTestData
+ *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
+ *     MAKE test TheAppAsksUsForTransactionData
  */
 function testOpWith($op, $args) {
-  return appPostsWith('test', [ray('op', 'initialize')]);
+  if (is_array($args)) $args = $args[0];
+  return appPostsWith('test', [compact(ray('op args'))]);
 }
+
+/**
+ * we reply (ARG) with JSON values: (ARG)
+ *
+ * in: TEST gettxs TheAppAsksForRecentTransactions
+ *     TEST test TheAppAsksUsForTransactionData
+ */
+function weReplyWithJSONValues($wantStatus, $want) {
+  global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
+  if (!$gotJson = t\getExitMsg($gotStatus)) return FALSE;
+/**/  db\del('test', "type='echo'"); // reset for subsequent steps
+  if (!t\eq('status', u\consta('x', $wantStatus), $gotStatus)) return FALSE;
+  $got = json_decode($gotJson);
+  if (rayhas($want, 0)) {
+    foreach ($want as $i => $one) t\fixData($want[$i]);
+  } else t\fixData($want);
+  return t\objEq('reply values', $want, (array) $got);
+}
+
+/**
+ * count (ARG) is (ARG)
+ *
+ * in: TEST test TheAppAsksToInitializeTheTestData
+ *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
+ */
+function countIs($what, $count) {return t\count($what, $count);}

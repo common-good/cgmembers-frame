@@ -18,7 +18,6 @@ include_once R_ROOT . '/cg-qr.inc';
  * @param string $arg: the operation
  */
 function api($arg = null) {
-  flog('top of api');
   global $mya;
   global $channel;
 
@@ -180,6 +179,7 @@ function latest($params) {
  * @param string $otherId: abbreviated identifier for the other account
  * @param numeric $amount: amount of transaction, from the actor's point of view (negative to reverse a charge)
  * @param string $description: a brief description of the transaction
+ *               last character="!" means don't complain about duplicate transactions (crucial for testing)
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
  * @param bool $offline: <transaction was processed offline and stored for later upload>
@@ -187,13 +187,15 @@ function latest($params) {
  * NOTE: use only X_OK and X_SYNTAX here.
  */
 function transactions($params) {
+  global $allowDupTxs;
   if (!$_POST) return getTxs($params); // the GET endpoint instead of the POST
   
-  global $mya, $boxId;
+  global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
   $flds = 'version deviceId actorId otherId amount description created proof offline';
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
+  if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
   $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for errors
   if (test()) $proof = u\hash($got = $proof);
 
@@ -250,8 +252,7 @@ function transactions($params) {
 
 /**
  * GET /transactions (CQP, lastTx)
- *   -> {balance, surtxs, crumbs, roundups, txs: [{xid, amount, other: {}, description, created}, …]}
- *   where other: {name, avatar}
+ *   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
  *
  * Retrieve recent transactions and related data from the server.
  *
@@ -260,6 +261,7 @@ function getTxs($params) {
   global $mya;
   
   foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+  if (!is_numeric($lastTx) or $lastTx > now()) return exitJust(X_SYNTAX);
 
   foreach (ray('balance crumbs roundup') as $k) $$k = $mya->$k;
   $surtxs = (array) db\get('SUM(amount) AS amount, SUM(`portion`) AS `portion`', 'tx_rules', '`from`=:myid AND action=:ACT_SURTX AND payeeType=:REF_ANYCO', ray('myid', $mya->id));
@@ -268,21 +270,22 @@ function getTxs($params) {
   $myUids = $mya->uids;
   $toMe = 'uid2 IN (:myUids)';
   $fromMe = 'uid1 IN (:myUids)';
-  $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt2, agt1) AS agent, IF($toMe, for2, for1) AS description, created";
+  $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
   $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) AND created>:lastTx", compact(ray('myUids lastTx')));
 
   foreach ($txs as $i => $tx) {
-    $a = r\acct($tx->other);
-//    $otherId = qr\url($a, 'main');
+    extract((array) $tx);
+    $a = r\acct($tx->other, $tx->agent);
+    $accountId = qr\url($a, 'main');
     $name = $a->fullName;
 //    $agent = $a->proSe ? '' : $a->agentA->fullName;
 //    $location = $a->location();
-    $photo = $a->hasPhoto ? $a->photo : file_get_contents($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
+//    $photo = $a->hasPhoto ? $a->photo : file_get_contents($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
 //    die(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36));
-$avatar = ''; // dies    $avatar = base64_encode(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36)); // always 36 high (best if height is a multiple of 12)
+//    $avatar = ''; // dies    $avatar = base64_encode(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36)); // always 36 high (best if height is a multiple of 12)
 //    $since = $a->created;
-    $txs[$i]->other = compact(ray('name, avatar'));
 //    $txs[$i] = (array) $txs[$i];
+    $txs[$i] = compact(ray('xid, amount, accountId, name, description, created'));
   }
   
   return exitJson(compact(ray('balance surtxs txs')));
@@ -320,23 +323,38 @@ function comments($params) {
  *   initialize (): creates default data (especially for Release A)
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
- *   update (table, [{keyedValues}]) where the first keyed value is the record key
- *   query (fieldList, table, criteria) -> [[values]]
- *     where fieldList is a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
- *     and criteria is a MySQL criteria string to follow “WHERE “ OR [{keyedValues}]
+ *   update (table, {keyedValues}) where the first keyed value is the record key
+ *   rows (fieldList, table) -> [[values]]
+ *     where fieldList is '*'
+ *       eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
 function testops($params) {
   if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
 
-  if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
+  extract(just('op args', $params)); // hard to do syntax check in same line since $args can be empty ([])
+  foreach (ray('op args') as $k) if (!isset($$k)) return exitJust(X_SYNTAX);
+   
   require_once(R_ROOT . '/cg-testing.inc');
   require_once(R_ROOT . '/admin/admin.inc');
+  require_once(R_ROOT . '/classes/qo.class');
+
+  $uidMin = r\qo('NEWZPA')->id; $uidMax = r\qo('NEWZPI')->id;
+  $uidCrit = "BETWEEN $uidMin AND $uidMax";
 
   switch ($op) {
     case 'initialize': 
       //t\clear(TX_APP); 
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
+      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_ENTRIES_ALL e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
       break;
+    case 'rows':
+      foreach (ray('fieldList table') as $k) if (!$$k = nni($args, $k)) return exitJust(X_SYNTAX);
+      if (!in($table, 'txs')) return exitJust(X_SYNTAX);
+      try {
+        return exitJson(db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid"), X_OK);
+      } catch (\Exception $er) {
+        return exitJust(X_SYNTAX);
+      }
       
     default: return exitJust(X_SYNTAX);
   }
