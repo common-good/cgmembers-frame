@@ -23,11 +23,77 @@ Setup:
 
 Scenario: The app asks to charge a customer
   When app posts "transactions" with:
-  | deviceId | amount | actorId | otherId | description | created | proof                       | offline |*
-  | devC     | 123    | K6VMDCC | K6VMDCB | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   |
+  | deviceId | amount | actorId  | otherId | description | created | proof                        | offline |*
+  | devC     | 123    | L6VMDCC0 | K6VMDCB | stuff       | %now    | L6VMDCC0123.00K6VMDCBccB%now | false   |
   Then we reply "ok" with JSON:
   | ok    | message                   |*
   | true  | You charged Bea Two $123. |
+  And these "txs":
+  | actorId | uid1 | uid2 | agt1 | agt2 | amt | for2  | created | flags |*
+  | .ZPC    | .ZPB | .ZPC | .ZPB | .ZPA | 123 | stuff | %now    |       |
+
+Scenario: The app asks to pay a customer
+  When app posts "transactions" with:
+  | deviceId | amount | actorId | otherId | description | created | proof                        | offline |*
+  | devC     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message                |*
+  | true  | You paid Bea Two $123. |
+  And these "txs":
+  | actorId | uid1 | uid2 | amt | for2  | created | flags |*
+  | .ZPA    | .ZPA | .ZPB | 123 | stuff | %now    |       |
+  
+Scenario: The app asks to undo a charge to a customer
+  Given these "txs":
+  | xid | actorId | uid1 | uid2 | agt1 | agt2 | amt | for2  | created | flags |*
+  | 1   | .ZPC    | .ZPB | .ZPC | .ZPB | .ZPA | 123 | stuff | %now0   |       |
+  When app posts "transactions" with:
+  | deviceId | amount | actorId  | otherId | description | created | proof                         | offline |*
+  | devC     | -123   | L6VMDCC0 | K6VMDCB | stuff       | %now0   | L6VMDCC0123.00K6VMDCBccB%now0 | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message |*
+  | true  | deleted |
+  And these "txs":
+  | xid | actorId | uid1 | uid2 | agt1 | agt2 | amt  | for2  | created | flags | reversesXid |*
+  | 2   | .ZPC    | .ZPB | .ZPC | .ZPB | .ZPA | -123 | stuff | ?       |       | 1           |
+
+Scenario: The app asks to undo a payment to a customer
+  Given these "txs":
+  | xid | actorId | uid1 | uid2 | amt | for2  | created | flags |*
+  | 1   | .ZPA    | .ZPA | .ZPB | 123 | stuff | %now0   |       |
+  When app posts "transactions" with:
+  | deviceId | amount | actorId | otherId | description | created | proof                         | offline |*
+  | devC     | 123    | K6VMDCA | K6VMDCB | stuff       | %now0   | K6VMDCA-123.00K6VMDCBccB%now0 | false   |
+  Then we reply "ok" with JSON:
+  | ok    | message           |*
+  | true  | reversal invoiced |
+  And these "tx_requests":
+  | payer | payee | amount | purpose | created | reversesXid |*
+  | .ZPB  | .ZPA  | 123    | stuff   | ?       | 1           |
+
+Scenario: The app asks to charge a customer and add a tip
+  When app posts "transactions" with:
+  | deviceId | amount | actorId  | otherId | description | created | proof                        | offline | tip  |*
+  | devC     | 123    | L6VMDCC0 | K6VMDCB | stuff       | %now    | L6VMDCC0123.00K6VMDCBccB%now | false   | 12.3 |
+  Then we reply "ok" with JSON:
+  | ok    | message                   |*
+  | true  | You charged Bea Two $123. |
+  And these "txs":
+  | eid | xid | actorId | uid1 | uid2 | agt1 | agt2 | amt  | for2        | created | flags | type  |*
+  | 1   | 1   | .ZPC    | .ZPB | .ZPC | .ZPB | .ZPA | 123  | stuff       | %now    |       | prime |
+  | 3   | 1   | .ZPC    | .ZPB | .ZPC | .ZPB | .ZPA | 12.3 | tip (10.0%) | %now    |       | aux   |
+
+Scenario: The app asks to pay a customer and add a tip
+  When app posts "transactions" with:
+  | deviceId | amount | actorId | otherId | description | created | proof                        | offline | tip  |*
+  | devC     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   | 2.34 |
+  Then we reply "ok" with JSON:
+  | ok    | message                |*
+  | true  | You paid Bea Two $123. |
+  And these "txs":
+  | eid | xid | actorId | uid1 | uid2 | amt  | for2       | created | flags | type  |*
+  | 1   | 1   | .ZPA    | .ZPA | .ZPB | 123  | stuff      | %now    |       | prime |
+  | 3   | 1   | .ZPA    | .ZPA | .ZPB | 2.34 | tip (1.9%) | %now    |       | aux   |
 
 Scenario: The app asks to charge a customer with a missing parameter
   When app posts "transactions" with:

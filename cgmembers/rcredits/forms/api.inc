@@ -31,9 +31,7 @@ function api($arg = null) {
   }
 
   /**
-   * Endpoints
-   *   GET identity, idPhoto, latest, transactions
-   *   POST accounts, transactions, comments, lostPassword, test
+   * Endpoints (always POST): accounts, identity, idPhoto, latest, info, transactions, comments, lostPassword, test
    */
   $channel = TX_APP;
   u\loga('in:' . $arg, $params);
@@ -92,7 +90,7 @@ function accounts($params) {
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
     $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
   }
-  return exitJson(compact('accounts'), $_POST ? X_OK : X_GOT); // change this to just X_OK once Upinngil's app updates
+  return exitJson(compact(ray('accounts')), X_OK);
 }
 
 function myQr($a) {
@@ -104,7 +102,7 @@ function myQr($a) {
 }
 
 /**
- * GET /identity
+ * POST /identity
  * Return an account's name, agent name, and location.
  *
  * @param string $otherId: abbreviated version of the information from the QR Code for the account to charge, without <type> and <counter>
@@ -119,7 +117,7 @@ function myQr($a) {
 function identity($params) {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
-//  if (!rayhas($_GET, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
+//  if (!rayhas($_POST, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
   foreach (ray('otherId') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId) or !$a->ok) return exitJust(X_NOTFOUND);
 
@@ -139,7 +137,7 @@ function identity($params) {
 }
 
 /**
- * GET /identity (syntax for ID photo image source)
+ * POST /idPhoto (syntax for ID photo image source)
  * Return an account's id photo.
  *
  * @param string $otherId: abbreviated info from QR code for the other account ID
@@ -156,7 +154,7 @@ function idPhoto($params) {
 }
 
 /**
- * GET /latest
+ * POST /latest
  * Return very short information about latest information of interest to the app.
  * @param int $lastTx: Unixtime of last tx initiated by the device
  * @return {version, txCount, msg}
@@ -183,6 +181,8 @@ function latest($params) {
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
  * @param bool $offline: <transaction was processed offline and stored for later upload>
+ * @param numeric $tip: amount of tip or empty
+ * @return {$xid, $message}
  *
  * NOTE: use only X_OK and X_SYNTAX here.
  */
@@ -193,11 +193,12 @@ function transactions($params) {
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
-  $flds = 'version deviceId actorId otherId amount description created proof offline';
+  $flds = 'version deviceId actorId otherId amount description created offline';
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
+  extract(just('proof tip', $params, NULL));
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
-  $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for errors
-  if (test()) $proof = u\hash($got = $proof);
+  $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for error
+  if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
     return $offline ? badTx($a, $params, obj('msg', $err)) : postErr($err); // proof is proof enough (no cardCode needed)
@@ -210,12 +211,13 @@ function transactions($params) {
     $proofAmt = number_format($uq ? -$amount : $amount, 2, '.', '');
     $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $cardCode . $created); // cardCode is not a parameter, but it is hashed into the proof
     ${"proofOk$uq"} = ($proof == $proofWanted);
+///    debug(compact(ray('proofAmt proofWanted gotProof proof ' . "testProofWanted$uq proofOk$uq")));
   }
 
   if (!$proofOk and !$proofOkUndo) { // bad proof
     flog(compact(ray('testProofWanted testProofWantedUndo')));
     r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
-    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $got");
+    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $gotProof");
     return exitJust(t('bad proof'), X_SYNTAX);
   }
   
@@ -223,21 +225,24 @@ function transactions($params) {
   $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
   
   if ($proofOkUndo) { // reversing (no effort is made to Undo in real time, so all reversals are offline-agnostic)
-    $info['amt'] = -$amount; // look for original transaction
-    if ($xid = db\get('xid', 'txs', $info)) { // exists
+    if ($amount > 0) {
+      $info = ray('uid1 uid2', $mya->id, $a->id) + $info; // correct the point of view if undoing a payment
+    } else $info['amt'] = -$amount; // look for original amount (the correction of point of view above also reverses the sign)
+    if ($xid = db\get('xid', 'txs', $info)) { // see if original transaction exists
       $z = be\posUndo($mya, $xid, TRUE);
+      debug($z);
       if (!$z->ok) return badTx($a, $params, $z);
-    }
-    exitJson(ray('ok message', TRUE, 'deleted'), X_OK); // message is ignored by app
+    } // else nothing to do (pretend we deleted it)
+    return exitJson(ray('ok message', TRUE, $amount > 0 ? t('reversal invoiced') : t('deleted')), X_OK); // message is ignored by app
   }  
+
+  if ($amount < 0) list ($type, $amount) = ['payment', -$amount]; else $type = 'charge';
 
   // new transaction
   if ($xid = db\get('xid', 'txs', $info)) { // transaction exists
-    $type = $amount < 0 ? 'payment' : 'charge';
     $z = be\sendNotifications($mya, $type, r\Tx::read($xid), 0, FALSE); // fake the message from existing transaction
     $message = $z->msg;
   } else { // transaction doesn't exist (yet)
-    if ($amount < 0) list ($type, $amount) = ['payment', -$amount]; else $type = 'charge';
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
     $message = $selfhelp ? 'selfhelp tx' : $z->msg;
     if ($z->ok) {
@@ -245,19 +250,28 @@ function transactions($params) {
     } else { // failed to create transaction
       if ($offline) return badTx($a, $params, $z);
     }
+
+    if ($tip > 0) {
+      include_once R_ROOT . '/classes/tx.class';
+      $pct = number_format(100 * $tip / $amount, 1);
+      $tx = r\Tx::read($z->subs['xid']);
+      list ($a1, $a2) = u\order($type == 'payment', $mya, $a);
+      be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
+      be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
+    }  
   }
   
   return exitJson(ray('ok message', $z->ok, $message), X_OK);
 }
 
 /**
- * GET /transactions (CQP, lastTx)
+ * POST /info (CQP, lastTx)
  *   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
  *
  * Retrieve recent transactions and related data from the server.
  *
  */
-function getTxs($params) {
+function info($params) {
   global $mya;
   
   foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
@@ -288,7 +302,7 @@ function getTxs($params) {
     $txs[$i] = compact(ray('xid, amount, accountId, name, description, created'));
   }
   
-  return exitJson(compact(ray('balance surtxs txs')));
+  return exitJson(compact(ray('balance surtxs txs')), X_OK);
 }  
 
 /**
@@ -307,7 +321,7 @@ function comments($params) {
   foreach (ray('text created') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   $created = fmtDt($created);
   $qid = $mya->qid;
-  r\tellAdmin(t('Comment from ') . $mya->fullName, compact(ray('qid text created')));
+  r\tellPromo($text, t('CGPay comment from %who (%qid %dt)', 'who qid dt', $mya->fullName, $qid, $created), $mya->nameAndEmail());
   
   return exitJson('', X_OK);
 }
@@ -318,21 +332,18 @@ function comments($params) {
  * Put or get test data.
  *
  * @param string $op: the test operation (see below)
- * @param assoc $args: arguments to the operation
- *
+ * plust other parameters depending on the operation:
  *   initialize (): creates default data (especially for Release A)
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
  *   update (table, {keyedValues}) where the first keyed value is the record key
  *   rows (fieldList, table) -> [[values]]
- *     where fieldList is '*'
- *       eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
+ *     where fieldList is '*' --  eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
 function testops($params) {
   if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
 
-  extract(just('op args', $params)); // hard to do syntax check in same line since $args can be empty ([])
-  foreach (ray('op args') as $k) if (!isset($$k)) return exitJust(X_SYNTAX);
+  if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
    
   require_once(R_ROOT . '/cg-testing.inc');
   require_once(R_ROOT . '/admin/admin.inc');
@@ -345,10 +356,10 @@ function testops($params) {
     case 'initialize': 
       //t\clear(TX_APP); 
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
-      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_ENTRIES_ALL e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
+      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
       break;
     case 'rows':
-      foreach (ray('fieldList table') as $k) if (!$$k = nni($args, $k)) return exitJust(X_SYNTAX);
+      foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'txs')) return exitJust(X_SYNTAX);
       try {
         return exitJson(db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid"), X_OK);
@@ -435,7 +446,7 @@ function photoReturn($pic) {
   }
 
   if (strlen($pic) > $max) header("Content-type: image/jpeg");
-  return exitJust($pic, X_GOT);
+  return exitJust($pic, X_OK);
 }
 
 /**

@@ -32,38 +32,38 @@ Scenario: A member signs in to the app for a list of accounts to choose from
   | accountId | deviceId | qr   | isCo  | name    | selling |*
   | K6VMDCA   | whatever | ?    | false | Abe One | %NUL    |
   | L6VMDCC0  | whatever | %NUL | true  | Coco Co | [bags]  |
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       | Aa1      |
-  Then we reply "got" with JSON:
+  Then we reply "ok" with JSON:
   | accounts | %accounts |**
 
 Scenario: A member tries to sign in without an identifier
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   |            | Aa1      |
   Then we reply "unauth" with: "?"
 
 Scenario: A member tries to sign in without a password
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       |          |
   Then we reply "unauth" with: "?"
 
 Scenario: A member tries to sign in without a non-existent account identifier
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   | .ZPZ       | Aa1      |
   Then we reply "notfound" with: "?"
 
 Scenario: A member tries to sign in without a totally bad identifier
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   | piffle     | Aa1      |
   Then we reply "notfound" with: "?"
 
 Scenario: A member tries to sign in without a bad password
-  When app gets "accounts" with:
+  When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       | zork     |
   Then we reply "notfound" with: "?"

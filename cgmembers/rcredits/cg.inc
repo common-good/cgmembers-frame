@@ -1,8 +1,8 @@
 <?php
 /**
  * @file
- * All of the business logic common to the various rCredits interfaces
- * (SMS, web, smartphone, etc.)
+ * All of the business logic common to the various Common Good interfaces
+ * (SMS, web, mobile, etc.)
  * EXCEPT:
  *   - the Drupalish callbacks, which are in rcredits.module
  *   - application interfaces to the user interfaces, which are in cg-backend.inc (i)
@@ -444,7 +444,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
 */
 
 /**
- * Notify rCredits staff (Community Admin, if uid is specified and in their area)
+ * Notify CG staff (Community Admin, if uid is specified and in their area)
  * @param string $index: the message or message index
  * @param assoc $subs: optional substitutions for the message and/or data to show (show both)
  * @param bool/int $uid: related account record id (TRUE means current account), defaults to none (NULL), 
@@ -1607,3 +1607,4 @@ function eAddr($x) {return is_array($x) ? '"' . reset($x) . '" <' . key($x) . '>
 function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}
 function qbCat($id) {return db\get('externalId', 'tx_cats', ray(is_numeric($id) ? 'id' : 'nick', $id));}
 function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, $set);}
+function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for Promo Team')); return r\rMail('tell-staff', 'info@' . CG_DOMAIN, compact(ray('topic body')), $reply);}
