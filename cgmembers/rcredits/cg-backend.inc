@@ -816,7 +816,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
   $positive = ($tx->amt2 > 0); // transaction amount is positive (normal)
 
   if ($type == 'charge') {
-    $notices = $goods ? ($positive ? ['charged you', 'you charged'] : ['refunded you', 'you refunded'])
+    $notices = $goods ? ($positive ? ['you paid', 'you charged'] : ['refunded you', 'you refunded'])
     : u\order($positive, 'you got cash', 'you gave cash');
     $did = $positive ? t('charged') : ($goods ? t('refunded') : t('credited'));
   } elseif ($type == 'draw') {
