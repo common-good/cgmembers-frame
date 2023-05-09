@@ -14,7 +14,7 @@ use CG\Db as db;
  */
 function helpScrap($topic) {
   switch ($topic) {
-  case 'qr': return hret(t('QR Codes'), t('<p>Your QR code is a visual representation of your account ID and security code, that appears on your %PROJECT card. Member businesses and other members can scan your QR code from your card or directly from your mobile device.</p><p>Similarly, you can use your device to scan another member\'s %PROJECT card (or a QR code displayed on their device) by clicking the "Scan QR" link.</p><p>You then have the option to pay them or charge them.</p><p>Show your QR code only to people and businesses you trust.</p>'));
+  case 'qr': return hret(t('QR Codes'), t('<p>Your QR code represents your account ID and security code. Member businesses and other members can scan here or from your CGPay mobile app.</p><p>Similarly, you can use your device to scan another member\'s %PROJECT QR code by clicking the "Scan QR" link here or on your CGPay mobile app.</p><p>You then have the option to pay them or charge them.</p><p>Show your QR code only to people and businesses you trust.</p>'));
   default: u\FAIL('bad help scrap');
   }
 }

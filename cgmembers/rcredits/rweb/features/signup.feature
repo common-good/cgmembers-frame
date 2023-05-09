@@ -13,6 +13,10 @@ Setup:
   | .ZZB | Bea Two |     2 | b@    |       | UT    | 02000 |  -200 |         | |
   | .ZZC | Cor Pub |     3 | c@    | Ctown | CA    | 03000 |     0 | ok,co   | |
   And next captcha is "37"
+  And members have:
+  | uid  | flags  |*
+  | .ZZB | member |
+  # an ideosyncracy of testing framework sets ided when account is created
 
 Scenario: A newbie visits the individual signup page
   When member "?" visits page "signup"
@@ -34,7 +38,7 @@ Scenario: A member signs up
   And member ".AAA" is logged in
   And we show "Identity Verification"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "verifyid fund preferences verifyemail"
+  And member ".AAA" steps left "verifyid photo contact preferences donate fund verifyemail"
   And members have:
   | uid  | signed | signedBy |*
   | .AAA | %today | Al Aargh |
@@ -48,75 +52,21 @@ Scenario: A member verifies ID
   Then members:
   | uid  | federalId | dob       |*
   | .ZZB | 123456789 | 633848400 |
-  And we show "Connect a Checking Account" with:
-  | Routing |
-  | Account |
-  | Refill  |
+  And we show "Photo ID Picture"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "fund preferences verifyemail ssn"
-
-Scenario: A member connects a bank account
-  Given member ".ZZB" has "person" steps done: "signup agree verifyid"
-  When member ".ZZB" completes form "settings/fund" with values:
-  | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
-  Then we show "Account Preferences"
-  And we say "status": "info saved|step completed"
-  And members have:
-  | uid  | risks   |*
-  | .ZZB | hasBank |
-  And member ".ZZB" steps left "preferences verifyemail"
-
-Scenario: A member sets preferences
-  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund"
-  When member ".ZZB" completes form "settings/preferences" with values:
-  | roundup | statements | nosearch | secretBal |*
-  |       1 | electronic |        0 |         1 |
-  Then we show "Verify Your Email Address"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "verifyemail"
-
-Scenario: A member verifies email
-  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences"
-  And member is logged out
-  And member ".ZZB" one-time password is "WHATEVER"
-  When member "?" visits page "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1"
-  Then we show "Verified!"
-  And member ".ZZB" steps left ""
-
-  When member "?" completes form "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1" with values:
-  | zot | whatever |**
-  # no change to password
-#  | pass1 | pass2 |*
-#  |       |       |
-  Then we show "You: Bea Two" with:
-  | Get a Card |
-  And member ".ZZB" steps left ""
-  And members:
-  | uid  | flags       | task |*
-  | .ZZB | member,ided |      |
-  And we say "status": "success"
-  And we say "status": "info saved"
-  And we say "status": "member tentative|join thanks"
-
-Scenario: A member clicks Get a Card
-  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences verifyemail"
-  Then member ".ZZB" steps left ""
-  When member ".ZZB" visits page "scraps/card"
-  Then we show "Photo ID Picture"
-  And member ".ZZB" steps left "photo contact backing"
+  And member ".ZZB" steps left "photo contact preferences donate fund verifyemail ssn"
 
 Scenario: A member uploads a photo
-  Given member ".ZZB" has "card" steps done: ""
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid"
   When member ".ZZB" completes form "settings/photo" with values:
   | op       |*
   | nextStep |
   Then we show "Contact Information"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "contact backing"
+  And member ".ZZB" steps left "contact preferences donate fund verifyemail"
 
 Scenario: A member gives contact info
-  Given member ".ZZB" has "card" steps done: "photo"
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid photo"
   When member ".ZZB" completes form "settings/contact" with values:
   | fullName  | Bea Two        |**
   | email     | b@             |
@@ -146,33 +96,102 @@ Scenario: A member gives contact info
   | tenure     | 27             |
   | risks      |                |
   # owns, so no rents risk
-  And we show "Backing Promise"
+  Then we show "Account Preferences"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "backing"
+  And member ".ZZB" steps left "preferences donate fund verifyemail"
+  
+Scenario: A member sets preferences
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact"
+  When member ".ZZB" completes form "settings/preferences" with values:
+  | roundup | statements | nosearch | secretBal |*
+  |       1 | electronic |        0 |         1 |
+  Then we show "Donate to %PROJECT"
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "donate fund verifyemail"
 
-Scenario: A member sets backing  
-  Given member ".ZZB" has "card" steps done: "photo contact"
-  When member ".ZZB" completes form "community/backing" with values:
-  | amtChoice |*
-  |       100 |
+Scenario: A member donates
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences"
+  When member ".ZZB" completes form "community/donate" with values:
+  | amtChoice | period | honor | honored |*
+  |        50 | month  |     - |         |
+  Then we show "Connect a Checking Account" with:
+  | Routing |
+  | Account |
+  | Refill  |
+  And we say "status": "gift thanks|cggift thanks" with subs:
+  | coName | %PROJECT |**
+  And we say "status": "gift transfer later"
+  And we say "status": "step completed"
+  And member ".ZZB" steps left "verifyemail"
+  
+Scenario: A member connects a bank account
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences donate"
+  When member ".ZZB" completes form "settings/fund" with values:
+  | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
+  | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  Then we show "Verify Your Email Address"
+  And we say "status": "info saved|step completed"
+  And members have:
+  | uid  | risks   |*
+  | .ZZB | hasBank |
+  And member ".ZZB" steps left "verifyemail"
+
+Scenario: A member verifies email
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences donate fund"
+  And member is logged out
+  And member ".ZZB" one-time password is "WHATEVER"
+  When member "?" visits page "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1"
+  Then we show "Verified!"
+  And member ".ZZB" steps left ""
+
+  When member "?" completes form "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1" with values:
+  | zot | whatever |**
+  # no change to password
+#  | pass1 | pass2 |*
+#  |       |       |
+#  Then we show "You: Bea Two" with:
+#  | Get a Card |
   Then we show "You: Bea Two" with:
   | Get a Vote |
   And member ".ZZB" steps left ""
   And members:
-  | uid  | task |*
-  | .ZZB |      |
-  And we say "status": "info saved|success"
-  And we say "status": "card tentative"
+  | uid  | flags  | task |*
+  | .ZZB | member |      |
+#  And we say "status": "info saved|success"
+  And we say "status": "success"
+  And we say "status": "info saved"
+  And we say "status": "member tentative"
+#   And we say "status": "member tentative|join thanks"
+ # And members:
+ # | uid  | task |*
+ # | .ZZB |      |
+
+
+# Scenario: A member clicks Get a Card
+#   Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences verifyemail"
+#   Then member ".ZZB" steps left ""
+#   When member ".ZZB" visits page "scraps/card"
+#   Then we show "Photo ID Picture"
+#   And member ".ZZB" steps left "photo contact backing"
 
 Scenario: A member clicks Get a Vote
-  Given member ".ZZB" has "card" steps done: "photo contact backing"
+  Given member ".ZZB" has "card" steps done: "all"
   Then member ".ZZB" steps left ""
   When member ".ZZB" visits page "scraps/vote"
+  Then we show "Backing Promise"  
+  And member ".ZZB" steps left "backing work invite proxies"
+  
+Scenario: A member sets backing  
+  Given member ".ZZB" has "vote" steps done: ""
+  When member ".ZZB" completes form "community/backing" with values:
+  | amtChoice |*
+  |       100 |
   Then we show "Your Work"
-  And member ".ZZB" steps left "work invite donate proxies"
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "work invite proxies"
 
 Scenario: A member sets calling
-  Given member ".ZZB" has "vote" steps done: ""
+  Given member ".ZZB" has "vote" steps done: "backing"
   When member ".ZZB" completes form "settings/work" with values:
   | calling  | company | companyPhone | companyOptions |*
   | whatever | Cor Pub |              | employee       |
@@ -181,10 +200,10 @@ Scenario: A member sets calling
   | .ZZC | .ZZB  | employee | %now    |
   And we show "Invite People"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "invite donate proxies"
+  And member ".ZZB" steps left "invite proxies"
 
 Scenario: A member invites
-  Given member ".ZZB" has "vote" steps done: "work"
+  Given member ".ZZB" has "vote" steps done: "backing work"
   When member ".ZZB" completes form "community/invite" with values:
   | sign | quote | org  | position | website |*
   | 1    | cuz   | MeCo | Boss     | me.co   |
@@ -192,20 +211,8 @@ Scenario: A member invites
   | uid  | quote | org  | title | website |*
   | .ZZB | cuz   | MeCo | Boss  | me.co   |
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "donate proxies"
-  And we show "Donate to %PROJECT"
-
-Scenario: A member donates
-  Given member ".ZZB" has "vote" steps done: "work invite"
-  When member ".ZZB" completes form "community/donate" with values:
-  | amtChoice | period | honor | honored |*
-  |        50 | month  |     - |         |
-  Then we show "Proxies"
-  And we say "status": "gift thanks|cggift thanks" with subs:
-  | coName | %PROJECT |**
-  And we say "status": "gift transfer later"
-  And we say "status": "step completed"
   And member ".ZZB" steps left "proxies"
+  And we show "Proxies"
 
 #Scenario: A member chooses crumbs
 #  Given member ".ZZB" has "card" steps done: "photo contact donate"
@@ -219,7 +226,7 @@ Scenario: A member donates
 #  And member ".ZZB" steps left "proxies work backing stepup invite"
 
 Scenario: A member chooses proxies
-  Given member ".ZZB" has "vote" steps done: "work invite donate"
+  Given member ".ZZB" has "vote" steps done: "backing work invite donate"
   And these "r_proxies":
   | person | proxy | priority |*
   | .ZZB   | .ZZA  |        1 |

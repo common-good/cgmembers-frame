@@ -83,19 +83,23 @@ function accounts($params) {
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
+    $isCo = $a->co;
+    if ($a->stepsLeft($isCo ? 'co' : 'card')) continue; // no using app without card permission
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
-    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
-    $isCo = $a->co;
+//    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
+    $qr = myQr($a);
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
     $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
   }
+  if (!nn($accounts)) return exitJust(X_NOTFOUND);
+  
   return exitJson(compact(ray('accounts')), X_OK);
 }
 
 function myQr($a) {
   include_once R_ROOT . '/cg-qr.inc';
-  $logo = $a->photoSrc(FALSE, TRUE, TRUE);
+  $logo = $a->agentA->photoSrc(FALSE, TRUE, TRUE);
 //  $text = $a->bestName . ", $a->city, $a->st"; // maybe put this at the top, under device-owner name
   $testQr = qr\url($a, 'card');
   return qr\generate($testQr, $logo, t('Account: %qid (%city, %st)', 'qid city st', $a->mainQid, $a->city, $a->st));
@@ -119,7 +123,7 @@ function identity($params) {
   include_once R_ROOT . '/cg-qr.inc';
 //  if (!rayhas($_POST, 'otherId')) return idPhoto(); // use /identity as a single endpoint for identity and idPhoto
   foreach (ray('otherId') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-  if (!$a = getAcct($otherId) or !$a->ok) return exitJust(X_NOTFOUND);
+  if (!$a = getAcct($otherId, FALSE) or !$a->ok) return exitJust(X_NOTFOUND);
 
   $name = $a->fullName;
   $agent = $a->proSe ? '' : $a->agentA->fullName;
@@ -146,7 +150,7 @@ function identity($params) {
 function idPhoto($params) {
   global $mya;
   include_once R_ROOT . '/cg-qr.inc';
-
+  
   foreach (ray('otherId') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!$a = getAcct($otherId)) return exitJust(X_NOTFOUND);
 
@@ -321,7 +325,9 @@ function comments($params) {
   foreach (ray('text created') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   $created = fmtDt($created);
   $qid = $mya->qid;
-  r\tellPromo($text, t('CGPay comment from %who (%qid %dt)', 'who qid dt', $mya->fullName, $qid, $created), $mya->nameAndEmail());
+  $topic = t('%who (%qid %dt)', 'who qid dt', $mya->fullName, $qid, $created);
+  list ($text, $topic) = u\starts($text, '[dev]') ? ["$topic<br>$text", '[DEV]'] : [$text, t('CGPay comment from ') . $topic];
+  r\tellPromo($text, $topic, $mya->nameAndEmail());
   
   return exitJson('', X_OK);
 }
@@ -358,6 +364,7 @@ function testops($params) {
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
       db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
       break;
+      
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'txs')) return exitJust(X_SYNTAX);
@@ -366,6 +373,19 @@ function testops($params) {
       } catch (\Exception $er) {
         return exitJust(X_SYNTAX);
       }
+      
+    case 'update':
+    flog($params);
+      foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+      if (!in($table, 'users')) return exitJust(X_SYNTAX);
+      if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
+      // for users (the only choice for now)
+      $uid0 = db\get('uid', 'users', ray('name', 'abeone'));
+      foreach ($ray as $i => $row) {
+        $row->uid = $uid0 + ord($row->uid) - ord("A");
+        db\update($table, (array) $row, 'uid');
+      }
+      break;
       
     default: return exitJust(X_SYNTAX);
   }

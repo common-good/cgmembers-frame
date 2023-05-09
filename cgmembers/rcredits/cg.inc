@@ -170,6 +170,7 @@ function dupTx($a1, $a2, $amount, $force = FALSE) {
   
   $lastDup = $a1->lastDup; $a1->update('lastDup', 0); // clear dup if we return FALSE
   
+  if ($force) return FALSE; // tx was taken offline -- too late to warn
   if (isset($allowDupTxs)) return FALSE; // testing (don't prevent reruns)
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
   if (!$lastTx = $a1->lastTx) return FALSE; // no previous transaction
