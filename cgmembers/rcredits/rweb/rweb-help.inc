@@ -74,19 +74,13 @@ X
     <h2>Need Help Signing In?</h2>
     <p>If your username and password aren't working, no worries. Just click "<%aForgot>Forgot it</a>" here or on the sign-in page, to get an email for choosing a new password.</p>
     <h2>About %PROJECT&reg;</h2>
-    <p>%PROJECT is a credit/debit card and payment system to support the common good. It is also a %PROJECT Economics Toolkit, to help you and people everywhere create a democratic, community-centered economic system that puts people and planet first -- one community at a time.</p>
+    <p>%PROJECT is a payment system for the common good. It is also a %PROJECT Economics Toolkit, to help you and people everywhere create a democratic, community-centered economic system that puts people and planet first -- one community at a time.</p>
     <p>We take transparency seriously &mdash; for true democratic control of our local economy we have to be able to see what's going on. Even if you are not a member, you can see what's happening in the %PROJECT economy graphically on the <%aCtty>Community page</a>.</p>
     <p>The <%aAgree>%PROJECT Agreement</a> is at the heart of the %PROJECT system. It is the promise we make together to accept %RCREDITS that gives them value.</p>
     <p>Participation in %PROJECT is by invitation. Ask a friend to invite you or <%aPromo>request an invitation here</a> and we will let you know when the %PROJECT Economy comes to your community.</p>
     <p>%PROJECT is a 501(c)(3) Massachusetts-based nonprofit.</p>
 X
   , 'username _aForgot _aCtty _aAgree _aPromo', $username, atag("/account/password/%username"), atag('/community'), atag('/agreement'), atag(PROMO_URL));
-
-  if ($i == 'smartphone') return t(<<< X
-    <p>To use the smartphone interface, you will need to install an app to read QR codes (for example QRDroid on Android phones or Qrafter for iPhones). You can pay participating businesses by scanning their QR code, then visiting the scanned URL.</p>
-    <p>Your customers (or employer) can pay you by scanning the QR code on your member ID card. You can print an Advance ID card for your individual account, using the link on the Dashboard page.</p>
-X
-  );
 
   if ($i == 'sms') return t('The Text Message Interface is intended to be easy enough that you can just muddle your way through the first time. Give it a shot. You can even <i>sign up</i> with Text Messaging. Send your texts to +1 413.285.2867 OR use the <%aSMS>Test SMS form</a> to simulate sending a text.', '_aSMS', atag('/sms'));
 
@@ -133,17 +127,17 @@ X
     <p>To change settings in a Yes/No column, click + or -. To remove someone from the list, make them all "No"s, and no permissions (if they are already that way, change something and change it back). Be sure to "Save Changes".</p>
     <p>You can allow another account to "draw" from this one to avoid overdrafts (a 25 cent fee may apply).</p>
 X
-    ) . ($company ? t('<p>If you give the person at least "Sell" permission (and save the record), you can request a Member ID Card for them to use on behalf of this account.</p>') : '');
+    );
     
   if ($i == 'account/contact') return t(<<< X
-    <p><b>Full name</b> should be your full legal name. If you change the name on the account, you will need to buy a new %PROJECT card and your account will be disabled until you supply new proof of identity. For companies, your %PROJECT website address will also change.</p>
+    <p><b>Full name</b> should be your full legal name. If you change the name on the account, your account will be disabled until you supply new proof of identity. For companies, your %PROJECT website address will also change.</p>
     <p><b>Postal code:</b> Your postal code determines what %PROJECT Community you are in.</p>
     <p><b>All other settings on this page</b> are private for individual accounts, public for company accounts.</p>
 X
   );
 
   if ($i == 'account/photo') return t(<<< X
-    <p>For an individual account you will need to upload a clear photo of your face, for identification. This is the photo that will appear on your Member ID card. If you have trouble coming up with a photo in a format that works, have a youngster take picture of you with their cell phone or tablet. Ask them to email you the picture, save that attachment to your desktop, then upload it here. If you still have trouble, email a description of your predicament to us at <%a>%regEmail</a> and we will help.</p>
+    <p>For an individual account you will need to upload a clear photo of your face, for identification. This is the photo a member business will see when you present your QR Code for payment. If you have trouble coming up with a photo in a format that works, have a youngster take picture of you with their cell phone or tablet. Ask them to email you the picture, save that attachment to your desktop, then upload it here. If you still have trouble, email a description of your predicament to us at <%a>%regEmail</a> and we will help.</p>
 X
   , '_a regEmail', u\emailTag($regEmail, t('photo trouble'))) . $companyAccount;
 
@@ -347,7 +341,7 @@ X
     <p>There are no specific requirements for a group of members to become a sovereign %PROJECT Community. But <%aClearness>these Clearness Questions</a> will help you get ready for that responsibility.</p>
 
     <a name="Backing"></a>
-    <p><b>Dollar Pool.</b> A bank account, owned by your %PROJECT Community. When you buy %PROJECT credit by transferring funds from your bank account to your %PROJECT account, your Dollars go into the Dollar Pool and the system gives you that amount of %PROJECT credit. You can then use your credit to buy something from a participating business by presenting your card (or your phone if you have our free "CGPay" smartphone app). You can also pay someone online by clicking a "Pay With %PROJECT" button on a website. Or sign in at CommonGood.earth and click "Pay" on the menu. Meanwhile, just as a bank can invest the money in your checking account, you and your %PROJECT Community can use the money in the Dollar Pool to invest in worthwhile projects for the community and the common good.</p>
+    <p><b>Dollar Pool.</b> A bank account, owned by your %PROJECT Community. When you buy %PROJECT credit by transferring funds from your bank account to your %PROJECT account, your Dollars go into the Dollar Pool and the system gives you that amount of %PROJECT credit. You can then use your credit to buy something from a participating business by presenting your member QR Code. You can also pay someone online by clicking a "Pay With %PROJECT" button on a website. Or sign in at CommonGood.earth and click "Pay" on the menu. Meanwhile, just as a bank can invest the money in your checking account, you and your %PROJECT Community can use the money in the Dollar Pool to invest in worthwhile projects for the community and the common good.</p>
 
     <p><b>Backed.</b> Backing [a %PROJECT Community] is a promise, made by supportive members and member organizations one year at a time, to buy additional %PROJECT credit in the event of a cash crunch or termination of the %PROJECT Community. These promises give you the security of knowing your %PROJECT credit is backed by Dollars held in the Dollar Pool and/or by promises, helping prevent the sort of panic that can lead to a cash crunch. Backing Promises are a key component of taking responsibility and control of our own local economy.</p>
 
@@ -495,43 +489,6 @@ X
 X
   ) . $back;
   
-  if ($i == '2018-question-1') return u\parseUp(t(<<< X
-**Investments, grants, and incentives.** Investment terms can be whatever we negotiate with the recipient -- ranging from a zero-interest loan to a full-ownership stake with regular dividends indefinitely. 
-
-Incentives are a sort of diffuse grant. **Made-up Examples:** Get a 10% rebate on any purchase with your Common Good card during the month of December, while funds last. Or donate to a member nonprofit this month and Common Good Greenfield increases your donation by 50%.
-
-**Arguments for $20,000.** Growth of the Dollar Pool since last year has been very steady, so repeating what worked last year, but in proportion to our current size, follows from common sense. Funding community projects contributes to growth in participation by new members and businesses, while also continuing to inspire hope, which many new members are seeking.
-
-**Arguments for MORE than $20,000.** Our Dollar Pool has grown steadily since the end of 2015, with no dips of more than $8,000, before resuming the steady climb. If that trend continues, we could use as much as $93,000 this year ($101,000 minus $8,000).
-![CGG July 2018 Dollar Pool](%BASE_URL/rcredits/images/rvote/CGG-2018-07-dollar-pool.png)
-**Arguments for LESS than $20,000.** The red line on the chart shows the total in the top 10 Common Good accounts: $94,000. If all 10 at once try to transfer their Common Good Credits to their bank accounts it would be like a "run on the bank" and some people would have to wait for more money to come in, before they could take money out.
-
-Similarly, the yellow line on the chart shows the total amount members are saving to spend later**: $84,000. If everyone at once tried to transfer these savings to a bank account, it would be like a "run on the bank" and some people would have to wait before they could take money out.
-
-* ** The amount members are saving is the amount NOT used last month for transactions.
-
-Our Coordinating Committee thinks the risk of either of these events is very, very small and believes we are capable, as a community, of handling any such crunch in a way that minimizes the financial inconvenience to any participant; for example, by borrowing funds until the system has time to grow again. But it is important that you judge this risk for yourself and vote accordingly.
-
-There is also one argument for using nothing at all: Some people may choose not to participate in Common Good unless every Common Good Credit is backed by a US Dollar, so once we use ANY of the Dollar Pool, we would miss out on their participation. Our Coordinating Committee believes the number of participants attracted by our funding of worthwhile projects (a key part of our mission) will outweigh the number who shy away.
-X
-  )) . $back;
-  
-  if ($i == '2018-question-2') return u\parseUp(t(<<< X
-**About Grants.** Grant funding can make a huge difference to community-spirited projects. Grants are harder to get than loans, so they make a bigger publicity splash, which could more quickly propel the Common Good movement forward in the public eye, bringing in many new members and businesses. When we make a grant, we are permanently trading our financial assets for short-term publicity and one-shot support of something worthwhile.
-
-Once we grant funds from the Dollar Pool, the system can no longer end without someone losing out. When we make grants (or incentives) we are saying we are very confident the Common Good System will continue indefinitely -- and in the very unlikely event it fails, we would each pay our fair share of the grants we made together.
-
-**About Incentives.** Offering incentives to people to make different everyday choices can also make a big difference—reshaping society locally according to our local values. This might also make a splash (we haven’t tried it yet, so we don’t know). 
-
-**About Investments.** Fewer applicants wanted investment funds last year than wanted grants, so we might have to work harder to find such applicants this year. When we invest, we are temporarily trading our financial assets for incoming-producing assets, plus some publicity (but probably less than with grants). Investments help the Common Good system become financially sustainable by providing ongoing interest or dividends to cover administrative costs, and eventually a possible [Social Dividend](https://en.wikipedia.org/wiki/Social_dividend).
-X
-  )) . $back;
-
-/*
-  <p>We recommend you NOT report %PROJECT rewards or inflation adjustments as income, because your %PROJECT community has not yet decided you can keep them &mdash; they are still just a credit reserve.</p>
-  
-  <p>However, if you prefer to count rewards and inflation adjustments as income NOW, rather than when the community makes that decision, you have that option. The chart below suggests some tax form lines you might choose, for reporting your %PROJECT activity. It also suggests how you might report your monthly tax-deductible "sharing" contributions to the %PROJECT project.</p>
-*/  
   if ($i == 'taxes') {
     $taxhead = ray('Tax Form:;1120;990;990EZ;990-A;1040;1040A;1040 Sched C');
     $taxline[] = ray('Sales / Other Income,1a,varies,varies,varies,7 or 21 ("barter"),7,1');
@@ -616,15 +573,3 @@ function riskHelpLine($k, $weight, $extra = '', $tag) {
   $class = $weight < 0 ? 'goodRisk' : 'badRisk';
   return "<tr><td class=\"$class\">$k</td><td class=\"weight\">[$weight]</td><td>$basic. $extra</td></tr>\n";
 }
-
-/*
-<p>"$/mo" is the most important column. Type the amount you pay each employee or supplier in a month &mdash; more or less. Then, if you select the payment exchange option on the preferences page, your rCredits will get distributed every night to those employees and suppliers in exchange for US Dollars.</p>
-
-    'why-wait') return t(<<< X
-    <p>Exchanges of rCredits for US Dollars reflect an incomplete economic circle. That is, the individual or company selling the rCredits does not yet have enough places to spend them.</p>
-    <p>The 2-week delay in spending rCredits that you buy takes that amount out of circulation temporarily, giving the seller time to find more places to spend rCredits, without meanwhile having to sell more and more of them.</p>
-X
-    ),
-    
-      <p>If you are acting as an agent for someone else's account &mdash; for example if you are a sales clerk for a department store &mdash; the period will be a colon instead. Your company ID Card will show your picture, with the company name under yours. The second part of the account ID (and the scannable code) identifies both you and the company.</p>
-*/

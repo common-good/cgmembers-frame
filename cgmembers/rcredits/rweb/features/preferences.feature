@@ -20,8 +20,6 @@ Scenario: A member visits the preferences page
   And radio "statements" is "printed statements"
   And radio "secretBal" is "No"
   And radio "nosearch" is "Yes"
-  And with:
-  | Backing   | $100 |
   And without:
   | Food Fund |  |
 
@@ -29,7 +27,6 @@ Scenario: A company agent visits the preferences page
   When member "C:A" visits page "settings/preferences"
   Then we show "Account Preferences" with:
   | Statements |     |
-  | Backing    | $10 |
   And without:
   | Food Assistance? |  |  
   And radio "statements" is "accept electronic"

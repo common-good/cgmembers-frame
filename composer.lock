@@ -66,17 +66,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/cakephp/core.git",
-                "reference": "20e50de2f461b5983a1a1296fe5c3762857b9edd"
+                "reference": "d6490294420e2602e4e65fb8a17f76547c10139e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cakephp/core/zipball/20e50de2f461b5983a1a1296fe5c3762857b9edd",
-                "reference": "20e50de2f461b5983a1a1296fe5c3762857b9edd",
+                "url": "https://api.github.com/repos/cakephp/core/zipball/d6490294420e2602e4e65fb8a17f76547c10139e",
+                "reference": "d6490294420e2602e4e65fb8a17f76547c10139e",
                 "shasum": ""
             },
             "require": {
                 "cakephp/utility": "^4.0",
                 "php": ">=7.4.0"
+            },
+            "provide": {
+                "psr/container-implementation": "^1.0 || ^2.0"
             },
             "suggest": {
                 "cakephp/cache": "To use Configure::store() and restore().",
@@ -115,7 +118,7 @@
                 "issues": "https://github.com/cakephp/cakephp/issues",
                 "source": "https://github.com/cakephp/core"
             },
-            "time": "2022-10-07T16:40:13+00:00"
+            "time": "2023-03-08T05:26:37+00:00"
         },
         {
             "name": "cakephp/database",

@@ -127,7 +127,7 @@ function formSummary_validate($form, &$sta) {
   }
 
   if (isset($active) and !$active and $mya->ok) { // de-activating (use isset here)
-    if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
+    if ($mya->balance + 0) return say('no deactivate', 'err');
   }
   if (isset($creditLine) and $err = u\badAmount($creditLine)) return sayFieldErr($err, 'creditLine'); 
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');

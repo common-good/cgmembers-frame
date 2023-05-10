@@ -38,7 +38,7 @@ if ($mya and $mya->admin) {
      SUM(IF(jid, balance/2, balance)) AS discrepancy
      FROM users',
      
-  3 . t('Company participation') =>
+  1 . t('Company participation') =>
     "SELECT LEFT(FROM_UNIXTIME(activated), 10) AS since, fullName, CONCAT(city, ', ', abbreviation) AS location,
        IF(crumbs=0, '-', CONCAT(ROUND(100*crumbs, 2), '%')) AS crumbs,
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, GREATEST(e.amount, 0))), 2) AS `sales/mo`, 
@@ -58,6 +58,21 @@ if ($mya and $mya->admin) {
        WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($justCgUids, :UID_OUTER, :UID_BANK)
        GROUP BY e.uid
        ORDER BY `to CG/mo` DESC, `sales/mo` DESC",
+       
+  1 . t('Company profiles') =>
+    "SELECT LEFT(FROM_UNIXTIME(activated), 10) AS since, fullName, CONCAT(city, ', ', abbreviation) AS location,
+       IF(c.coFlags&(1<<:CO_SPONSORED), 'FS', '') AS FS,
+       c.website, c.selling,
+       GROUP_CONCAT(i.industry SEPARATOR ', ') AS industries
+       
+       FROM users u
+         LEFT JOIN u_company c USING (uid)
+         LEFT JOIN r_states s ON s.id=u.state
+         LEFT JOIN r_user_industries ui USING (uid)
+         LEFT JOIN r_industries i USING (iid)
+       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($justCgUids, :UID_OUTER, :UID_BANK)
+       GROUP BY uid
+       ORDER BY u.fullName",
   
   1 . t('Community Fund Balance By Community') => 
     'SELECT c.fullName AS community, SUM(IF(u.jid, u.balance/2, u.balance)) AS balance 

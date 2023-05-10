@@ -57,3 +57,16 @@ Scenario: Admin deactivates an account
   Then members:
   | uid  | flags       | activated |*
   | .ZZB | member,ided | %now-3m   |
+  
+Scenario: Admin tries to deactivate an account with a non-zero balance
+  Given members have:
+  | uid  | flags          | activated | balance |*
+  | .ZZB | ok,member,ided | %now-3m   | 2       |
+  # (tests add the ided bit by default when creating an active account)
+  When member "B:A" completes form "sadmin/summary" with values:
+  | active | federalId  | adminable | tickle |*
+  |        | %R_ON_FILE | member    |        |
+  Then members:
+  | uid  | flags          | activated |*
+  | .ZZB | ok,member,ided | %now-3m   |
+  And we say "error": "no deactivate"

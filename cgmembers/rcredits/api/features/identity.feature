@@ -25,7 +25,7 @@ Setup:
 # GET /identity
 
 Scenario: The app asks to identify a customer
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCBccB |
   Then we reply "got" with JSON:
@@ -33,25 +33,25 @@ Scenario: The app asks to identify a customer
   | Bea Two |       | Bton, MA |     0 |          0 |          0 |          0 | %now0-2w | [stuff] |
   
 Scenario: The app asks to identify a customer without an identifier  
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId |*
   | devC     | K6VMDCC |         |
   Then we reply "syntax" with: "?"
   
 Scenario: The app asks to identify a customer with a bad device identifier  
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId    |*
   | whatever | K6VMDCC | K6VMDCBccB |
   Then we reply "unauth" with: "?"
 
 Scenario: The app asks to identify a customer with a bad actor identifier
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId  | otherId    |*
   | devC     | whatever | K6VMDCBccB |
   Then we reply "unauth" with: "?"
 
 Scenario: The app asks to identify a customer with a bad security code
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCBccX |
   Then we reply "notfound" with: "?"
@@ -60,19 +60,19 @@ Scenario: The app asks to identify a customer with an id for an inactive account
   Given members have:
   | uid  | flags |*
   | .ZPB |       |
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCBccB |
   Then we reply "notfound" with: "?"
   
 Scenario: The app asks to identify a customer with an id for a nonexistent account
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCXccB |
   Then we reply "notfound" with: "?"
 
 Scenario: The app asks to identify a customer with a really bad id
-  When app gets "identity" with:
+  When app posts "identity" with:
   | deviceId | actorId | otherId  |*
   | devC     | K6VMDCC | nonsense |
   Then we reply "notfound" with: "?"

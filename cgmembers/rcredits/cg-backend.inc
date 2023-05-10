@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Top level application interfaces (SMS, web, smartphone, etc.) to rCredits.
+ * Top level application interfaces (SMS, web, mobile, etc.) to Commnon Good.
  * These high-level business functions are called by more than one interface.
  */
 
