@@ -306,6 +306,7 @@ EOF
   'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
   
   // error messages
+  'no deactivate' => t('You cannot de-activate an account with a non-zero balance.'),
   'bad login' => t('We couldn\'t find an account with that information. Please try again or <%a>ask for a new password</a>.'),
   'search forbidden' => t('You need to be signed in to refer to a member account.'),
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),

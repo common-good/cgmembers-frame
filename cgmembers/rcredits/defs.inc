@@ -478,7 +478,7 @@ const FUNDBY_PAY = 1; // paid by employer
 const FUNDBY_CASH = 2; // buy with cash at a participating business
 
 // Membership steps (DO NOT CHANGE S_ALL -- each item represents a bit in the steps field)
-const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end (or reuse an unused step)
+const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end (or reuse an unused step)
 const S_ONESTEP = 1 + 64; // "only the signup and agreement steps have been done" (just the first page) -- items/bits 0 and 6 in S_ALL
 const S_PERSON = 'signup agree verifyid photo contact preferences donate fund verifyemail';
 const S_CARD = S_PERSON;

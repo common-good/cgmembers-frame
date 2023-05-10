@@ -183,7 +183,7 @@ Scenario: A member clicks Get a Vote
   
 Scenario: A member sets backing  
   Given member ".ZZB" has "vote" steps done: ""
-  When member ".ZZB" completes form "community/backing" with values:
+  When member ".ZZB" completes form "settings/backing" with values:
   | amtChoice |*
   |       100 |
   Then we show "Your Work"

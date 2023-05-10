@@ -686,7 +686,6 @@ function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\w
  * in: TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeoneRepliesToAnOffer
- *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST txs AMemberLooksAtTransactionsForThePastYear

@@ -23,6 +23,7 @@ Setup:
   | .ZPC | .ZPB  |   2 | manage     |
   | .ZPF | .ZPA  |   1 | manage     |
   And member ".ZPA" has "card" steps done: "all"
+  And member ".ZPC" has "co" steps done: "all"
 
 # GET /accounts
 
@@ -31,7 +32,7 @@ Scenario: A member signs in to the app for a list of accounts to choose from
   And var "accounts" is JSON:
   | accountId | deviceId | qr   | isCo  | name    | selling |*
   | K6VMDCA   | whatever | ?    | false | Abe One | %NUL    |
-  | L6VMDCC0  | whatever | %NUL | true  | Coco Co | [bags]  |
+  | L6VMDCC0  | whatever | ?    | true  | Coco Co | [bags]  |
   When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       | Aa1      |

@@ -1838,7 +1838,7 @@ function weSayWithSubs($type, $index, $subs) {
 
   $subs = nn($subs[0]) ?: array();
   if (isset($subs['email'])) $subs['email'] = t\fixEmail($subs['email']);
-  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
+  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output(t('Empty %type message in "%index": "%one"', compact(ray('type index one'))));
   $msg0 = tr($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot

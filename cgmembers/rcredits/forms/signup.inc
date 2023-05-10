@@ -83,14 +83,15 @@ EOF
   $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full name, properly capitalized, as you would like it to appear to other members and member companies.')], required(nn($fullName)));
   $email = emailFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
 
-  $midtext = t('<h3>%PROJECT Agreement</h3>Please actually read this, so you know what you\'re agreeing to.</p>');
+  $midtext = t('By opening an account, you agree to the <%a>%PROJECT Agreement</a> (Please actually read it, so you know what you\'re agreeing to. It\'s short).</p>', '_a', atag('', 'show-agreement'));
 
-  extract(just('agreement details', formAgreement($form, $sta)));
+  extract(just('agreement', formAgreement($form, $sta))); // used to also extract 'details'
   list ($cq, $ca) = w\captcha();
   $then = hidFld($then);
   $submit = t('I agree'); //  was t('Next')
+  jsx('signup');
     
-  $form = compact(ray('title forother subtext acctType fullName phone email country zip source midtext agreement details cq ca submit then args confirmed helper iCode notes source2'));
+  $form = compact(ray('title forother subtext acctType fullName phone email country zip source cq ca midtext agreement submit then args confirmed helper iCode notes source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
   return cgform($form);
 }
