@@ -68,7 +68,8 @@ Scenario: A company signs up
   | New Co   | NEWAAA | %BASE_URL | WHATEVER | co nonpass |
   And we show "Connect a Checking Account"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "fund contact backing photo donate company crumbs verifyemail"
+  And member ".AAA" steps left "contact backing photo donate company crumbs verifyemail"
+  # step "fund" is optional, so it is marked "done for now" even if skipped
   And members have:
   | uid  | signed | signedBy |*
   | .AAA | %today | Abe One  |
@@ -81,7 +82,7 @@ Scenario: A company signs up
   And we say "status": "verified email"
   And we say "status": "info saved|step completed"
   And we say "status": "continue co setup"
-  And member ".AAA" steps left "fund contact backing photo donate company crumbs"
+  And member ".AAA" steps left "contact backing photo donate company crumbs"
 
 Scenario: A company verifies email while signed in
   Given member ".ZZC" has "co" steps done: "signup fund contact backing photo donate company crumbs"

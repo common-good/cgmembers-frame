@@ -45,6 +45,7 @@ function extraSetup() {
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminActivatesAnAccountUnconfirmed
  *     TEST activate AdminDeactivatesAnAccount
+ *     TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  *     MAKE cats Setup
  *     MAKE changes Setup
  *     MAKE checks Setup
@@ -83,6 +84,7 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
  * in: MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE activate AdminDeactivatesAnAccount
+ *     MAKE activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  *     MAKE changes AMemberChangesSomeSettings
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
@@ -170,6 +172,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *
  * in: MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE activate AdminDeactivatesAnAccount
+ *     MAKE activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -305,7 +308,8 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
 /**
  * we say (ARG): (ARG)
  *
- * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ * in: TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
+ *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  */
 function weSay($type, $index) {return t\weSayWithSubs($type, $index, array());}
 

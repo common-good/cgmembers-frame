@@ -22,7 +22,7 @@ function formPrefs($form, &$sta) {
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
   $backingLink = lnk('/community/backing', t('change'));
   $backingEnd = $mya->backing > 0 ? t(' until ') . fmtDt($mya->backingDate + YEAR_SECS) : '';
-  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(" $backingEnd <small>[$backingLink]</small>"));
+//  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make investments. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(" $backingEnd <small>[$backingLink]</small>"));
   
   $mediumRadios = array(
     t('I will accept electronic statements**.'), 
@@ -44,7 +44,7 @@ function formPrefs($form, &$sta) {
   $desc = t('Use your %PROJECT card as a <i>credit</i> card, allowing your account balance to go negative, limited by your credit limit (currently %limit), based on your average monthly account activity. When you use your credit line  (that is, when your balance goes negative) it is a short-term loan from your %PROJECT community. <span class="loud">In choosing this option, you agree to bring your balance back up above zero within 30 days.</span>', 'limit', u\fmtAmt(-$mya->floor));
   if ((!$mya->hasBank or !$mya->refill) and !$mya->can(B_DEBT)) {
     $desc .= t(' <b>NOTE:</b> This setting is disabled unless you <%a>choose automatic refills from a bank account</a>, with a target balance.', '_a', atag('/settings/fund'));
-    $extra = disabled() + suffix(t(' (see <b>NOTE</b>)'));
+    $extra = disabled();
   } else list ($desc, $extra) = ['', []];
   
   $debtOk = $mya->underage ? NULL : boolFld(t('Debt Okay:'), $desc, $mya->can(B_DEBT), NULL, $extra);
@@ -57,7 +57,7 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin secretBal nosearch food backing';
+  $advancedFields = 'achMin secretBal nosearch food debtOk';
   
 //  $submit = submit(t('Update Preferences'));
   

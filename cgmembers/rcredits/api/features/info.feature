@@ -35,7 +35,7 @@ Setup:
   | .ZPA |     920 |
   | .ZPC |    3091 |
 
-# GET /transactions (version, deviceId, actorId, lastTx)
+# GET /info (version, deviceId, actorId, lastTx)
 #   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
 
 Scenario: The app asks for recent transactions
@@ -48,33 +48,33 @@ Scenario: The app asks for recent transactions
   |   5 |     78 | K6VMDCF   | For Co  | epsil       | %now-2d |
   |   4 |    -56 | K6VMDCB   | Bea Two | delta       | %now-3d |
   |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
-  When app gets "transactions" with:
+  When app posts "info" with:
   | version | deviceId | actorId | lastTx  |*
   | 400     | devA     | K6VMDCA | %now-7d |
-  Then we reply "got" with JSON values:
+  Then we reply "ok" with JSON values:
   | balance | surtxs  | txs  |*1
   | 920     | %surtxs | %txs |
 
 Scenario: The app asks for recent transactions with a missing parameter
-  When app gets "transactions" with:
+  When app posts "info" with:
   | version | deviceId | actorId |*
   | 400     | devC     | K6VMDCC |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks for recent transactions with a bad actorId
-  When app gets "transactions" with:
+  When app posts "info" with:
   | version | deviceId | actorId | lastTx  |*
   | 400     | devC     | K6VMDCX | %now-7d |
   Then we reply "unauth"
 
 Scenario: The app asks for recent transactions with a bad date
-  When app gets "transactions" with:
+  When app posts "info" with:
   | version | deviceId | actorId | lastTx   |*
   | 400     | devC     | K6VMDCC | whatever |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks for recent transactions with a date out of range
-  When app gets "transactions" with:
+  When app posts "info" with:
   | version | deviceId | actorId | lastTx  |*
   | 400     | devC     | K6VMDCC | %now+9d |
   Then we reply "syntax" with: "?"

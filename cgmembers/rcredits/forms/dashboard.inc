@@ -45,11 +45,11 @@ function formDashboard($form, &$sta, $args = '') {
           r\tellAdmin('unapproved company!', ['qid' => $mya->mainQid]);
           say(tr('co tentative|pioneer thanks')); // UNUSED except in tests?
         }
-    } elseif ($mya->stepCount('card')) { // not eligible for card yet
-      if (!$mya->ok) say(tr('member tentative|join thanks'));
-      $continue = btn('/scraps/card', t('Get a Card'), 'success', 'lg');
+//    } elseif ($mya->stepCount('card')) { // not eligible for card yet
+//      if (!$mya->ok) say(tr('member tentative|join thanks'));
+//      $continue = btn('/scraps/card', t('Get a Card'), 'success', 'lg');
     } elseif ($mya->stepCount('vote')) { // not eligible to vote yet
-      if (!$mya->ok) say(tr('card tentative'));
+      if (!$mya->ok) say(tr('member tentative'));
       $continue = btn('/scraps/vote', t('Get a Vote'), 'success', 'lg');
     } elseif (!$mya->ok) say(tr('voter tentative|pioneer thanks'));
   }

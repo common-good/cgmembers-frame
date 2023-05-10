@@ -41,9 +41,9 @@ function extraSetup() {
  *
  * in: MAKE accounts Setup
  *     MAKE comments Setup
- *     MAKE gettxs Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
+ *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -54,7 +54,7 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST gettxs Setup
+ * in: TEST info Setup
  */
 function balances($list) {return t\balances($list);}
 
@@ -63,13 +63,19 @@ function balances($list) {return t\balances($list);}
  *
  * in: MAKE accounts Setup
  *     MAKE comments Setup
- *     MAKE gettxs Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
+ *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
  *     MAKE transactions Setup
+ *     TEST transactions TheAppAsksToChargeACustomer
+ *     TEST transactions TheAppAsksToPayACustomer
+ *     BOTH transactions TheAppAsksToUndoAChargeToACustomer
+ *     BOTH transactions TheAppAsksToUndoAPaymentToACustomer
+ *     TEST transactions TheAppAsksToChargeACustomerAndAddATip
+ *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -84,31 +90,7 @@ function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 /**
  * app gets (ARG) with: (ARG)
  *
- * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutAPassword
- *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
- *     MAKE gettxs TheAppAsksForRecentTransactions
- *     MAKE gettxs TheAppAsksForRecentTransactionsWithAMissingParameter
- *     MAKE gettxs TheAppAsksForRecentTransactionsWithABadActorId
- *     MAKE gettxs TheAppAsksForRecentTransactionsWithABadDate
- *     MAKE gettxs TheAppAsksForRecentTransactionsWithADateOutOfRange
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
- *     MAKE identity TheAppAsksToIdentifyACustomer
- *     MAKE identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
- *     MAKE identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
- *     MAKE identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
- *     MAKE identity TheAppAsksToIdentifyACustomerWithABadSecurityCode
- *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
- *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
- *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ * in: 
  */
 function appGetsWith($url, $params, $method = 'get') {
   global $testOnly; if ($testOnly) return FALSE;
@@ -123,10 +105,40 @@ function appGetsWith($url, $params, $method = 'get') {
 /**
  * app posts (ARG) with: (ARG)
  *
- * in: MAKE comments TheAppAsksToSubmitAComment
+ * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutAPassword
+ *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
+ *     MAKE comments TheAppAsksToSubmitAComment
  *     MAKE comments TheAppAsksToSubmitACommentWithAMissingParameter
  *     MAKE comments TheAppAsksToSubmitACommentWithABadActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
+ *     MAKE identity TheAppAsksToIdentifyACustomer
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithABadSecurityCode
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     MAKE info TheAppAsksForRecentTransactions
+ *     MAKE info TheAppAsksForRecentTransactionsWithAMissingParameter
+ *     MAKE info TheAppAsksForRecentTransactionsWithABadActorId
+ *     MAKE info TheAppAsksForRecentTransactionsWithABadDate
+ *     MAKE info TheAppAsksForRecentTransactionsWithADateOutOfRange
  *     MAKE transactions TheAppAsksToChargeACustomer
+ *     MAKE transactions TheAppAsksToPayACustomer
+ *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
+ *     MAKE transactions TheAppAsksToUndoAPaymentToACustomer
+ *     MAKE transactions TheAppAsksToChargeACustomerAndAddATip
+ *     MAKE transactions TheAppAsksToPayACustomerAndAddATip
  *     MAKE transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadActorId
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadOtherId
@@ -147,6 +159,11 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST transactions TheAppAsksToChargeACustomer
+ *     TEST transactions TheAppAsksToPayACustomer
+ *     TEST transactions TheAppAsksToUndoAChargeToACustomer
+ *     TEST transactions TheAppAsksToUndoAPaymentToACustomer
+ *     TEST transactions TheAppAsksToChargeACustomerAndAddATip
+ *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  */
@@ -166,7 +183,7 @@ function varIs($var, $want) {
  * var (ARG) is JSON: (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     MAKE gettxs TheAppAsksForRecentTransactions
+ *     MAKE info TheAppAsksForRecentTransactions
  */
 function varIsJSON($var, $want) {return varIs($var, t\json($want));}
 
@@ -186,9 +203,6 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
  *     TEST comments TheAppAsksToSubmitACommentWithAMissingParameter
- *     TEST gettxs TheAppAsksForRecentTransactionsWithAMissingParameter
- *     TEST gettxs TheAppAsksForRecentTransactionsWithABadDate
- *     TEST gettxs TheAppAsksForRecentTransactionsWithADateOutOfRange
  *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
  *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
@@ -202,6 +216,9 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     TEST info TheAppAsksForRecentTransactionsWithAMissingParameter
+ *     TEST info TheAppAsksForRecentTransactionsWithABadDate
+ *     TEST info TheAppAsksForRecentTransactionsWithADateOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
@@ -237,8 +254,7 @@ function membersHave($list) {return t\membersHave($list);}
 /**
  * we tell Admin (ARG) with subs: (ARG)
  *
- * in: TEST comments TheAppAsksToSubmitAComment
- *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ * in: TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -247,7 +263,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
- *     TEST gettxs TheAppAsksForRecentTransactionsWithABadActorId
+ *     TEST info TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
@@ -283,13 +299,13 @@ function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $tas
  */
 function testOpWith($op, $args) {
   if (is_array($args)) $args = $args[0];
-  return appPostsWith('test', [compact(ray('op args'))]);
+  return appPostsWith('test', [compact('op') + ($args ?: [])]);
 }
 
 /**
  * we reply (ARG) with JSON values: (ARG)
  *
- * in: TEST gettxs TheAppAsksForRecentTransactions
+ * in: TEST info TheAppAsksForRecentTransactions
  *     TEST test TheAppAsksUsForTransactionData
  */
 function weReplyWithJSONValues($wantStatus, $want) {
@@ -311,3 +327,10 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
 function countIs($what, $count) {return t\count($what, $count);}
+
+/**
+ * we tell Promo (ARG) with subs: (ARG)
+ *
+ * in: TEST comments TheAppAsksToSubmitAComment
+ */
+function weTellPromoWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs, 'info@' . CG_DOMAIN);}

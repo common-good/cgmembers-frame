@@ -367,7 +367,7 @@ function doAccounts($info = []) {
   $zza = r\qo('.ZZA')->id;
   $zpa = r\qo('.ZPA')->id;
   $mailDft = u\randomString(10, 'word');
-  foreach ([$zza, $zpa] as $uid0) if($uid >= $uid0 and $uid < $uid0 + 26) $mailDft = chr(ord('a') + $uid - $uid0);
+  foreach ([$zza, $zpa] as $z0) if($uid >= $z0 and $uid < $z0 + 26) $mailDft = chr(ord('a') + $uid - $z0);
   u\setDft($email, $mailDft . '@' . EMAILX); // a@example.com, etc.
 
   u\setDft($community, r\serverUid());
@@ -1088,16 +1088,19 @@ function getErrors() {
  * Say whether we sent the given email to admin or ctty admin.
  * @param string $topic: message topic
  * @param assoc $subs: message parameters
- * @param int $coUid: <tell ctty admin instead of overall admin>
+ * @param int $coUid: <tell ctty admin or promo instead of overall admin>
  */
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
-  $subs = $subs ? $subs[0] : [];
-  $email = nni($subs, 'to', $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL);
+  $subs = !$subs ? [] : (nni($subs, 0) ?: $subs);
+  $email = nni($subs, 'to', !$coUid ? R_ADMIN_EMAIL : (strhas($coUid, '@') ? $coUid : r\acct($coUid)->cttyA->email));
   
-  return t\findEmail('tell-staff', $email, $subs + ray('topic noFrame message', $topic, TRUE, '?'));
+//  return t\findEmail('tell-staff', $email, $subs + ray('topic noFrame message', $topic, TRUE, '?'));
+  return t\findEmail('tell-staff', $email, ray('topic noFrame message', $topic, TRUE, '?')); // including $subs crashes the test
 }
+
+function weTellPromo($topic, $subs = []) { return weTellAdmin($topic, $subs, 'info@' . CG_DOMAIN); }
 
 /**
  * Say whether any such email has been sent to the specified address.
@@ -1158,6 +1161,8 @@ function findEmail($index, $email, $subs) {
         unset($subs[$k]);
       } elseif ($v == 'TESTDOCODE') {
         $subs[$k] = t\doCode();
+      } elseif ($k == 'subs') {
+        $subs[$k] = pr($v); // fails
       } else $subs[$k] = tr(strtr(strip_tags($v), $map));
     }
     ksort($subs);
@@ -1833,7 +1838,7 @@ function weSayWithSubs($type, $index, $subs) {
 
   $subs = nn($subs[0]) ?: array();
   if (isset($subs['email'])) $subs['email'] = t\fixEmail($subs['email']);
-  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
+  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output(t('Empty %type message in "%index": "%one"', compact(ray('type index one'))));
   $msg0 = tr($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
