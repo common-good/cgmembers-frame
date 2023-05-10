@@ -51,11 +51,14 @@ EOF;
     $otherCo = $a->co;
     $otherPerson = !$otherCo;
 
+/* NO LONGER USED
     $idLink = R_NONE; // default to no link
-    if ($mya->co and !$otherCo and $permission >= r\perm(B_SCAN) and $permission != r\perm(B_JOINT)) {
-      $text = str_replace(' ', '&nbsp;', $permission >= r\perm(B_BUY) ? t('request %PROJECT card') : t('request Cashier Card'));
+    if ($mya->co and !$otherCo and $permission >= r\perm(B_BUY) and $permission != r\perm(B_JOINT)) { // don't issue cashier cards
+//      $text = str_replace(' ', '&nbsp;', $permission >= r\perm(B_BUY) ? t('request %PROJECT card') : t('request Cashier Card'));
+      $text = str_replace(' ', '&nbsp;', t('request %PROJECT card'));
       $idLink = "<a href=\"$base_url/request-employee-rcard/$other\">$text</a>";
     }
+*/
 
     $ii = $reid;
     $drawn = toggle('draw', $draw, $ii);

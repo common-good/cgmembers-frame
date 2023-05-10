@@ -43,7 +43,6 @@ Setup:
 Scenario: A non-member donates to a sponsored member
   When member "C:A" visits "tx/charge"
   Then we show "Charge" with:
-  | Member      | Non-member |
   | Full Name   | |
   | Postal Addr | |
   | City        | |
@@ -52,11 +51,18 @@ Scenario: A non-member donates to a sponsored member
   | Amount      | |
   | For         | |
   | Category    | |
+  And without:
+  | Member      | Non-member |
   
   Given members have:
   | uid  | flags    |*
   | .ZZA | ok,admin |
   And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "C:A" visits "tx/charge"
+  Then we show "Charge" with:
+  | Member      | Non-member |
+  | Full Name   | |
+  | Postal Addr | |
   When member "C:A" submits "tx/charge" with:
   | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
   | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-FBO       |
@@ -101,7 +107,6 @@ Scenario: A non-member donates to a sponsored member
 Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
   Then we show "Pay" with:
-  | Member      | Non-member |
   | Full Name   | |
   | Postal Addr | |
   | City        | |
@@ -110,6 +115,18 @@ Scenario: A sponsored member pays a nonmember
   | Amount      | |
   | For         | |
   | Category    | |
+  And without:
+  | Member      | Non-member |
+
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts payFrom nonmemberTx"
+  When member "C:A" visits "tx/pay"
+  Then we show "Pay" with:
+  | Member      | Non-member |
+  | Full Name   | |
+  | Postal Addr | |
   
   When member "C:A" submits "tx/pay" with:
   | op  | fbo | fullName | address | city | state | zip   | amount | purpose | cat       |*
@@ -124,7 +141,8 @@ Scenario: A sponsored member pays a nonmember
   | 1   | %UID_OUTER | .ZZC  | -100   | labor   | FBO-LABOR | %E_OUTER |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | -100   | %now      |       0 | 1   |
+  | 1   | .ZZC  | -100   | %now      |    %now | 1   |
+  #if sometime we allow fbo members to request payments, change the deposit date above to 0 (already that way in the code)
   And these "people":
   | pid | fullName | address | city | state | zip   |*
   | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 |

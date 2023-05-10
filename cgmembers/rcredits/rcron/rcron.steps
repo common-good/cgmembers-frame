@@ -632,7 +632,7 @@ function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
  *
  * in: TEST daily AMemberHasABigDay
  */
-function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => $ray]);}
+function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => pr($ray)]);}
 
 /**
  * member (ARG) has admin permissions: (ARG)

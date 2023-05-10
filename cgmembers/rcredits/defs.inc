@@ -3,8 +3,8 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61f'; // software version
-const APP_VERSION = 40000; // 4.0.0
+const R_VERSION = '3.61g'; // software version
+const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -146,7 +146,7 @@ define('R_LAUNCH', strtotime('12/15/2013')); // original launch date
 const EMAIL_DOMAIN = CG_DOMAIN; // replace this with CG_DOMAIN when ready
 const SYS_EMAIL = 'system@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
-const APP_URL = 'cg4.us/app';
+const APP_URL = 'cg4.us/pay';
 
 define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
 define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
@@ -157,8 +157,9 @@ const PHONE_PUNC = '\(\) \-\./'; // punctuation commonly found in phone numbers 
 
 const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
 const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s
-const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
-const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
+const MINIMA1099 = 'X:600/1'; // no 1099-K for gross/txCount under this amount (by state)
+// BEFORE 2022 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
+//const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 
 const R_NONE = '<span class="none">--</span>'; // how to show an empty field let the tests see null values
 const R_AGREE_0 = 1; // number of the first point in the rCredits Agreement
@@ -321,7 +322,7 @@ const ACCT_LENS = '232323445';
 // notification preferences
 $GLOBALS['notifyWhens'] = t('N:Never,I:Immediately,D:Daily,W:Weekly,M:Monthly');
 $GLOBALS['notifyNowBys'] = t('E:Email,T:Text message,B:Both'); // how to send immediate messages
-const N_DEFAULTS = 'MMNIIMDIDWD';
+const N_DEFAULTS = 'IIIIIMDIDWD';
 const N_EXPLICIT_OUT = 0; // manual payment or transfer out
 const N_AUTO_OUT = 1; // automatic payment made
 const N_AUTO_IN = 2; // auto-refill initiated
@@ -477,13 +478,13 @@ const FUNDBY_PAY = 1; // paid by employer
 const FUNDBY_CASH = 2; // buy with cash at a participating business
 
 // Membership steps (DO NOT CHANGE S_ALL -- each item represents a bit in the steps field)
-const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end (or reuse an unused step)
-const S_ONESTEP = 1 + 64; // "only the signup and agreement steps have been done" (just the first page)
-const S_PERSON = 'signup agree verifyid fund preferences verifyemail';
-const S_CARD = S_PERSON . ' photo contact backing';
+const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end (or reuse an unused step)
+const S_ONESTEP = 1 + 64; // "only the signup and agreement steps have been done" (just the first page) -- items/bits 0 and 6 in S_ALL
+const S_PERSON = 'signup agree verifyid photo contact preferences donate fund verifyemail';
+const S_CARD = S_PERSON;
 const S_CO = 'signup fund contact backing photo donate company crumbs verifyemail';
-const S_SELL = 'ssn contact crumbs'; // keep this for when an individual member goes over the limit for no 1099
-const S_VOTE = S_CARD . ' work invite donate proxies'; // add comment
+const S_SELL = S_CARD . ' ssn crumbs'; // keep this for when an individual member goes over the limit for not filing 1099K
+const S_VOTE = S_CARD . ' backing work invite proxies'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
 
 const S_FU_TASKS = 'card vote co'; // followup tasks for members

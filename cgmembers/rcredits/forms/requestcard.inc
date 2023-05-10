@@ -10,6 +10,7 @@ use CG\Db as db;
  * Request an employee ID card (for buying on behalf of the company).
  */
 function formRequestRCard($form, &$sta, $other = '') {
+  return; // NO LONGER USED
   global $mya;
   if (!$acct = r\acct($mya->id, nn($other))) return hack('request rCard');
 //  if (!$mya->co or !$mya->can(B_REFUND)) return say('no account permission');

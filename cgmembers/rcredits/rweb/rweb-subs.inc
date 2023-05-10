@@ -1416,7 +1416,7 @@ function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
-  $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
+  $ssReason = $req ? t('Required by the IRS if you accept more than $600 a year in %PROJECT payments.') : '';
   return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
 }
 function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
@@ -2198,6 +2198,16 @@ function skipStep($substitute = NULL, $justDid = '') {
   return w\go($nextStep);
 }
 
+/**
+ * Put the step off until the next stage (or indefinitely if this is the final stage)
+ */
+function skipStepLonger() {
+  global $mya;
+  if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
+  unset($stepsLeft[0]);
+  $mya->update('stepsLeft', array_values($stepsLeft));
+}
+  
 /**
  * Return account and password fields for sign-in.
  */

@@ -25,7 +25,7 @@ Scenario: The app asks to submit a comment
   When app posts "comments" with:
   | deviceId | actorId | otherId    | text  | created |*
   | devC     | K6VMDCC | K6VMDCBccB | stuff | %now    |
-  Then we tell Admin "Comment from Coco Co" with subs:
+  Then we tell Promo "CGPay comment from Coco Co (NEWZPC %mdY)" with subs:
   | qid    | text  | created |*
   | NEWZPC | stuff | %mdY    |
   And we reply "ok"

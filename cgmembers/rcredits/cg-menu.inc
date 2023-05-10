@@ -82,7 +82,6 @@ function menu($submenu = '') {
     'community/events/proposal-notes' => ['call', t('Proposal Notes'), 'ProposalNotes 3', 'manage'],
     
     'community/agreement' => ['sub', t('The Agreement'), 'Agreement', ANY, '', t(), 'globe'],
-    'community/backing' => ['call', t('Backing Promise'), 'Backing', 'manage linkable', '', t(), 'knight'],
     'community/honors' => ['sub', t('Honored & Remembered'), 'Honors', ANY, '', t(), 'grain'],
     'community/message' => ['sub', t('Message a Member'), 'Message', 'ok refund', '', t(), 'envelope'],
     'community/message/x' => ['call', t('Decode a Secret Message'), 'Message 3', ANY],
@@ -114,6 +113,7 @@ function menu($submenu = '') {
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
     'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage -depends', '', t(), 'magnet'],
+    'settings/backing' => ['sub', t('Backing Promise'), 'Backing', 'manage linkable', '', t(), 'knight'],
 // DISABLE FOR now()    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage -depends', '', t(), 'phone'],
     'settings/proxies' => ['sub', t('Proxies'), 'Proxies', 'manage -co -depends linkable', '', t(), 'thumbs-up'],
 
