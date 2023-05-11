@@ -23,37 +23,37 @@ Setup:
 
 Scenario: The app asks to show a customer ID photo
   Given member ".ZPB" has photo "pictureB"
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCBccB |
-  Then we reply "got" with: "pictureB"
+  Then we reply "ok" with: "pictureB"
 
 Scenario: The app asks to show a customer ID photo with no otherId
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC |            |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to show a customer ID photo with no actorId
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId | otherId    |*
   | devC     |         | K6VMDCBccB |
   Then we reply "syntax" with: "?"
 
 Scenario: The app asks to show a customer ID photo with bad otherId
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | whatever   |
   Then we reply "notfound" with: "?"
 
 Scenario: The app asks to show a customer ID photo with bad actorId
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId  | otherId    |*
   | devC     | whatever | K6VMDCBccB |
   Then we reply "unauth" with: "?"
 
 Scenario: The app asks to show a customer ID photo with bad deviceId
-  When app gets "idPhoto" with:
+  When app posts "idPhoto" with:
   | deviceId | actorId | otherId    |*
   | whatever | K6VMDCC | K6VMDCBccB |
   Then we reply "unauth" with: "?"

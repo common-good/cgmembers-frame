@@ -24,7 +24,7 @@ function formPhoto($form, &$sta, $arg = '') {
 
   $recrop = $recrop ? "$base_url/account-photo/orig=1/" . now() : '';
 
-  $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
+  $body = t('I am attaching a photo of me for my %PROJECT account. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));
   $recropIt = $mya->admManageAccts ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
   $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
@@ -35,18 +35,17 @@ function formPhoto($form, &$sta, $arg = '') {
   } else { $nextStep = item(w\skipButton()); }
   $desc = $mya->co
   ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
-  : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them). <%b>Requirements</b>:
+  : t('<p>1. Choose a recent color picture of yourself for seller to see when they scan your member QR Code. Your photo will be encrypted, unseen by other members unless you transact with them. <%b>Requirements</b>:
   <ul>
-  <li>It should be a color photo of you and only you (you can crop other people out).</li>
-  <li>It must show clearly your full face (no sunglasses, eyes open).</li>
-  <li class="loud">Include the top of your head and your chin, with just a little space above and below.</li></ul>', '_b', 'b class="loud"');    
+  <li>A color photo of you, and only you (you can crop other people out).</li>
+  <li>It must show your full face clearly (no sunglasses, eyes open).</li>
+  <li class="loud">It includes the top of your head and your chin, with just a little space above and below.</li></ul>', '_b', 'b class="loud"');    
   $desc .= t('<p>2. Drag to reposition, use the buttons to adjust size and rotation, then click the <%img>button to upload. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/green-checkmark.png\" height=\"20\" /");
   
   $title = $mya->co ? t('Company Photo') : t('Photo ID Picture');
 
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');
-    if (!$mya->co and $mya->stepIsDone('photo')) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
     $del = $mya->admDeletePhoto ? submit(t('Delete')) : NULL;
   } else {
     $choose = t('Choose a Photo File');

@@ -784,6 +784,10 @@ function doit(what, vs) {
     $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
     $('#edit-fullname').change(function () {if (legalname.val() == '') legalname.val($(this).val());});
     break;
+
+  case 'signup': // agreement includes its own toggle
+    $('#wrap-agreement').hide();
+    break;
     
   case 'agree':
     $('#show-agreement').click(function () {$('#wrap-agreement').toggle();}); 

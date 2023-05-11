@@ -94,7 +94,7 @@ function url($a, $type = 'card') {
 /**
  * Interpret a CG card QR code (from an actual card or an abbreviated one from our app).
  * @param string $qr: the QR code to interpret
- * @param bool $requireCode: require card code
+ * @param bool $requireCode: require card code (code is also required if supplied!)
  * @return NULL on error, else the account.
  */
 function acct($qr, $requireCode) {
@@ -137,7 +137,7 @@ function acct($qr, $requireCode) {
   if ($unfmt) extract($unfmt); else return NULL;
 
   if (!$a = r\acct($qid)) return NULL;
-  if ($requireCode and $cardCode != $a->cardCode()) return NULL;
+  if (($requireCode or !empty($cardCode)) and $cardCode != $a->cardCode()) return NULL;
   return r\acct($qid);
 }
 

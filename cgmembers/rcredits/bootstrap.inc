@@ -653,16 +653,16 @@ function exitJust($s = '', $status = X_GOT) {
     $status = (int) $s;
     $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_FORBIDDEN:Forbidden, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
   }
-  
+
   if (test()) {
     t\output("exiting ($status) with: " . pr($s));
-/**/t\logRec('echo', "%$status: $s");
+    $logid = t\logRec('exit', "%$status: $s");
     return NULL;
   }
 
   header('HTTP/1.1 ' . $status);
   $logS = $s = pr($s);
-  foreach (['quality = 50', 'png;base64,'] as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
+  foreach (ray('quality = 50, png;base64, gd-jpeg, JFIF, JPEG') as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
   u\loga('exit', "($status) " . $logS);
 /**/  if (!empty($s)) echo $s;
   exit($status);
@@ -1305,6 +1305,7 @@ function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   global $dtFormatter; if (!$dtFormatter) $dtFormatter = new IntlDateFormatter('en_US', IntlDateFormatter::LONG, IntlDateFormatter::NONE);
   if ($fmt == 'dmY') $fmt = 'ddMMMyyyy'; // must be lower case y (uppercase Y is current year)
   if ($fmt == 'Ymd') $fmt = 'yyyyMMdd';
+  if ($fmt == 'Y-m') $fmt = 'yyyy-MM';
   datefmt_set_pattern($dtFormatter, $fmt ?: DATE_FMT);
   return strtr($dtFormatter->format($dt), ray('AM PM', 'am', 'pm'));
 }

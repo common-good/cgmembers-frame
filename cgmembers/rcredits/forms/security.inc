@@ -16,12 +16,11 @@ function formSecurity($form, &$sta, $arg = '') {
 
   if ($arg == 'gotPhoto') say('got photo');
 
-//  button(t('password'), "$base_url/settings/security/change-password", '', 'warning'), t('Change:'), ['', $mya->ok ? t('triggers new card', 'field', 'photo') : ' ']);
   $btns = btn("$base_url/settings/security/change-password", t('password'))
   . ' ' . btn("$base_url/settings/photo", t('photo'));
   
   $title = t('Security Information');
-  $change = item($btns, t('Change:'), ['', $mya->ok ? t('triggers new card', 'field', 'photo') : ' ']);
+  $change = item($btns, t('Change:'));
   
   $disAdmin = ($mya->admin and !$mya->proSe) ? disabled() : [];
   $questionDesc = t('Type a question no one but you could guess the answer to.');

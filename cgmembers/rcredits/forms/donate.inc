@@ -51,7 +51,7 @@ function formDonate($form, &$sta, $args = NULL) {
     } else $recurOnly = $noOneTime = '';
 
     $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-    $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', $recurOnly, nn($replaces), $amountTip) . $noOneTime;
+    $subtext = t('<p>By opening a %PROJECT account, you are partnering with us to create a %PROJECT Economy. Most members choose to make a tax-deductible donation%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', $recurOnly, nn($replaces), $amountTip) . $noOneTime;
     $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
     jsx('amtChoice');
 
@@ -96,7 +96,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $form = payFlds(t('Donation'), $mya, $coA, t('donation'), '', nn($s_amount), $form);
   if (!nni($form, 'amount')) return $form; // error
   
-  $noteSuffix = suffix(lnk('', t('Add comment')));
+  $noteSuffix = []; // suffix(lnk('', t('Add comment')));
   $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : ray('submit', submit(t('Donate'), '', '', $noteSuffix));
 
   return cgForm($form);

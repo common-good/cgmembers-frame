@@ -27,9 +27,7 @@ function formTx($form, &$sta, $type, $args = '') {
   
   focusOn($who ? 'amount' : 'who');
 
-//  $mem = rent(radiosFld('', '', ray('inline', 1), ray(t('Member Non-member')))); // fails
-  $mem = rentRadios('mem', 0, ray(t('Member Non-member')));
-
+  $mem = $mya->admNonmemberTx ? rentRadios('mem', 0, ray(t('Member Non-member'))) : '';
   $title = $fbo ? item($opDesc, NBSP, '', suffix($mem)) : $opDesc;
 
   if ($mya->co) {
@@ -61,7 +59,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
   $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Automated Payments</a>.', '_a', atag('/history/recurring')));
   
-  $advanced = item(btnOpt('', t('delay'), 'btn-delay') . btnOpt('', t('repeat'), 'btn-repeat'));
+  $advanced = item(btnOpt('', t('schedule'), 'btn-delay') . btnOpt('', t('repeat'), 'btn-repeat'));
   $submit = t('Submit');
 
   list ($field, $question, $selfErr) = ['who', t(' %amount to %name?'), 'self-tx'];

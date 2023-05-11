@@ -1416,7 +1416,7 @@ function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
-  $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
+  $ssReason = $req ? t('Required by the IRS if you accept more than $600 a year in %PROJECT payments.') : '';
   return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
 }
 function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
@@ -1996,18 +1996,24 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
 /**
  * Return a form showing month choices.
  * @param string $title: page title
- * @param string $things: "statements" or "notices"
- * @param string $subtext: explanatory text
- * @param int $end: how many months from now to end (starts with account creation month)
- * @param string $target: link target ('' or _blank)
+ * @param string $things: statements, notices, or whatever
+ * @param assoc $params: other parameters (all optional
+ *   string $subtext: explanatory text
+ *   int $start: how many months from now to begin (if omitted, start with account creation month)
+ *   int $end: how many months from now to end (can be negative)
+ *   string $newTab: true to open the result in a new tab
  */
-function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_blank') {
+function monthChoices($title, $things, $params = []) {
   global $mya, $base_url;
-  $start = u\monthDay1($mya->created); // start of account's first month
+  extract(just('subtext start end newTab', $params, ''));
+  
   $thisMo = u\monthDay1(); // start of this month
+  
+  $start = $start ? u\plusMonths($start, $thisMo) : u\monthDay1($mya->created); // default start of account's first month
   $end = $end ? u\plusMonths($end, $thisMo) : $thisMo;
   $endYear = date('Y', $end);
   $startYear = date('Y', $start);
+  $target = $newTab ? '_blank' : '';
 
   for ($year = $endYear; $year >= $startYear; $year--) {  
 //    for ($month = $start; $month <= $; $month = u\plusMonths(-1, $month)) {
@@ -2016,19 +2022,21 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
          $month <= $end and date('Y', $month) == $year; 
          $month = u\plusMonths(1, $month)) {
       $mon = fmtDt($month, 'MMM');
-      $list[$year] .= $month < $start ? '.<br>' : "<a href=\"$base_url/history/$things/$mon$year\" target=\"$target\">$mon</a><br>\n";
+      $list[$year] .= $month < $start ? '.<br>' : "<a href=\"$base_url/$things/$mon$year\" target=\"$target\">$mon</a><br>\n";
     }
   }
   
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $yearLink = "<a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a>";
+      $yearLink = "<a href=\"$base_url/$things/CY$year\" target=\"$target\">$year</a>";
       $fyLink = strtr($yearLink, ray("/CY:/FY, >$year:>FY" . substr($year, 2)));
-      $headers .= "<th><span class=\"fy\">$fyLink</span><br>$yearLink</th>";
+      foreach (ray('1 2 3 4') as $q) ${"q$q"} = strtr($yearLink, ray("/CY:/Q$q, >$year:>$q"));
+      $headers .= "<th><span class=\"fy\">$q1 $q2 $q3 $q4<br>$fyLink</span><br>$yearLink</th>";
       $data .= "<td>$v</td>";
     }
-    $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";
+    $id = basename($things);
+    $list = "<table id=\"$id\" class=\"month-table\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";
   } else $list = t('There are no %things available yet for this account.', 'things', mb_strtolower($title));
   
   $title = item($title);
@@ -2198,6 +2206,16 @@ function skipStep($substitute = NULL, $justDid = '') {
   return w\go($nextStep);
 }
 
+/**
+ * Put the step off until the next stage (or indefinitely if this is the final stage)
+ */
+function skipStepLonger() {
+  global $mya;
+  if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
+  unset($stepsLeft[0]);
+  $mya->update('stepsLeft', array_values($stepsLeft));
+}
+  
 /**
  * Return account and password fields for sign-in.
  */
