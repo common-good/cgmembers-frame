@@ -158,5 +158,7 @@ X;
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, ''));
     
+  } elseif ($nm == 'cef-billing') {
+    w\go('/sadmin/cef-billing');
   }
 }

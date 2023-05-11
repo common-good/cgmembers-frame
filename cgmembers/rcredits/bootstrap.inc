@@ -1305,6 +1305,7 @@ function fmtDt($dt = NOW, $fmt = DATE_FMT) {
   global $dtFormatter; if (!$dtFormatter) $dtFormatter = new IntlDateFormatter('en_US', IntlDateFormatter::LONG, IntlDateFormatter::NONE);
   if ($fmt == 'dmY') $fmt = 'ddMMMyyyy'; // must be lower case y (uppercase Y is current year)
   if ($fmt == 'Ymd') $fmt = 'yyyyMMdd';
+  if ($fmt == 'Y-m') $fmt = 'yyyy-MM';
   datefmt_set_pattern($dtFormatter, $fmt ?: DATE_FMT);
   return strtr($dtFormatter->format($dt), ray('AM PM', 'am', 'pm'));
 }

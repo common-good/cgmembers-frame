@@ -44,7 +44,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  * Call this in a "try" block, if you want to catch errors.
  */
 function adminQ($sql) {
-  $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
+  $word1 = mb_strtolower(mb_strstr(trim($sql), ' ', TRUE));
   u\EXPECT(in($word1, 'select show'), 'bad admin query');
   $sql = str_replace(';', '', $sql); // don't allow concatenation of queries
   return \db_query(u\SUBS($sql));

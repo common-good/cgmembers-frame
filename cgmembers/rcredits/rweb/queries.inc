@@ -134,6 +134,8 @@ if ($mya and $mya->admin) {
             SUM(IF(:IS_CO, 1, 0)) AS companies
       FROM users u WHERE activated BETWEEN $qtrDt1 AND $qtrDt2",
       
+  1 . t('CEF Billing') => 'cef-billing',
+      
   2 . t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
      SUM(IF(u.balance<0, 1, 0)) AS negCount,
