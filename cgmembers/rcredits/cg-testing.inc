@@ -422,7 +422,6 @@ function doAccounts($info = []) {
  * Note: for $testOnly TRUE, if there are multiple entry pairs for one transaction, put the eid field first so verifyRecord() can distinguish them.
  */
 function doTxs($info) {
-  //debug('doTxs top:' . pr($info));
   global $testOnly;
 
   $map = 'amount:amt, payer:uid1, payee:uid2, purpose:for';

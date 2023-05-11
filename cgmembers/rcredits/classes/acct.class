@@ -857,7 +857,6 @@ EOF;
     
     $subs['uid'] = $uid = $a->id;
     u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
-    $subs['otherName'] = nni($subs, 'myName', NULL); // notifying someone else about US, if anyone
     $subs['todayDesc'] = fmtDt(now());
     $topic = $topic ?: (nni($subs, 'topic') ?: (nni($GLOBALS['topics'], $index) ?: $index)); // index should never be used literally (wrong language) but more importantly never fail
     $subs['topic'] = tr($topic, $subs);
@@ -869,6 +868,8 @@ EOF;
     $message = tr($index, $subs);
     $created = now();
     if (test()) f('t.output', t('Actual Notice [%index] to %fullName: %message', 'index fullName message', $index, $a->fullName, $message));
+    if ($type and $notices = ray($a->notices) and $notices[$type] == SEND_NOW) $type = ''; // immediate when no type or explicitly immediate
+
     if ($type) {
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
     } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }

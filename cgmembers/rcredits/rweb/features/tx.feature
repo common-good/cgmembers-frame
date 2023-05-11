@@ -296,9 +296,9 @@ Scenario: A member pays, backed by an inactive credit line
   And we say "status": "report tx" with subs:
   | did  | otherName | amount |*
   | paid | Abe One   | $10    |
-  And we notice "you paid" to member ".ZZB" with subs:
+  And we message "you paid" to member ".ZZB" with subs:
   | otherName | amount | payerPurpose |*
   | Abe One   | $10    | lunch        |
-  And we notice "paid you" to member ".ZZA" with subs:
+  And we message "paid you" to member ".ZZA" with subs:
   | otherName | amount | payeePurpose |*
   | Bea Two   | $10    | lunch        |

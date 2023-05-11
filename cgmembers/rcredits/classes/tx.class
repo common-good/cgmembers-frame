@@ -263,26 +263,24 @@ EOF;
 
     u\EXPECT(is_object($e1) and is_object($e2), 'party not an object in tx entry:' . pr($tx));
     
-    $amount = ($tx->actorId == $e1->uid) ? $e1->amount : $e2->amount;
-      
-    $otherA = r\acct(($me->isMe($e1->uid)) ? $e2->uid : $e1->uid);
-    
-    $toMe = $otherA->isBank() ? ($amount < 0 xor $tx->xid < 0) : $me->isMe($e2->uid);
+    $toMe = r\isBank($tx->uid2) ? ($e2->amount < 0 xor empty($tx->reversesXid)) : $me->isMe($e2->uid);
+    $otherA = r\acct($toMe ? $e1->uid : $e2->uid);
+    $tofrom = $toMe ? t('from') : t('to'); 
+    $amount = $toMe ? $e2->amount : $e1->amount;
+    if ($amount < 0) list ($amount, $tofrom) = [-$amount, t('to')];
     
     $reverses = !empty($tx->reverses);
     $role = $toMe ? 'payee' : 'payer';
     $purpose = $toMe ? $e2->description : $e1->description;
-    $tofrom = $toMe ? t('from') : t('to'); 
     $why = ray(R_WHYS)[$tx->goods];
-    $balance = ($getMyBal and ($me->can(B_BUY))) ? u\fmtAmt($me->avail(FOR_GOODS)) : NULL;
 
-    if ($amount < 0) list ($amount, $tofrom) = [-$amount, t('to')];
-
-    $balance = ($getMyBal and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
+    list ($balance, $creditLine) = ($getMyBal and ($me->can(B_BUY))) ? [u\fmtAmt($me->balance), u\fmtAmt(-$me->floor)] : [NULL, NULL]; // was avail(FOR_GOODS)
+    if (!$me->can(B_DEBT)) $creditLine = t('disabled');
     
-    return ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
+
+    return ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom balance creditLine otherUid myName otherName short success',  // . ' role'
                $tx->created, fmtDt($tx->created), $tx->xid, $role, $why, $e1->description,
-               $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $otherA->id, $me->fullName,
+               $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $creditLine, $otherA->id, $me->fullName,
                $otherA->fullName, u\fmtAmt($shortfall), TRUE);
   }
 

@@ -1481,6 +1481,7 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 

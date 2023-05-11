@@ -816,7 +816,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
   $positive = ($tx->amt2 > 0); // transaction amount is positive (normal)
 
   if ($type == 'charge') {
-    $notices = $goods ? ($positive ? ['you paid', 'you charged'] : ['refunded you', 'you refunded'])
+    $notices = $goods ? ($positive ? ['charged you', 'you charged'] : ['refunded you', 'you refunded'])
     : u\order($positive, 'you got cash', 'you gave cash');
     $did = $positive ? t('charged') : ($goods ? t('refunded') : t('credited'));
   } elseif ($type == 'draw') {
@@ -836,17 +836,19 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
   } else u\FAIL("unknown type: '$type'.");
 
   list ($tell1, $tell2) = u\order($positive, 'tellOut', 'tellIn');
-  foreach ([1,2] as $i) { // notify both parties
+
+  foreach ([1,2] as $i) { // notify both parties (from=1 then to=2)
     $notice = $notices[$i - 1];
-    list ($a, $otherA, $tell) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i ? 'tellIn' : 'tellOut'];
-    $args = $tx->reportArgs($otherA, TRUE, $shortfall);
+    list ($a, $otherA, $inout) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i == 1 ? 'out' : 'in'];
+    $args = $tx->reportArgs($a, TRUE, $shortfall);
 
     if ($notice == 'paid you' and $a->co) {
       $notice = 'paid you linked';
       $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
-    if ($notice and !$a->isCanonic and $doTell) $a->$tell($notice, $args);
-    if ($i == (($mya ? ($mya->id == $tx->uid2) : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
+    if ($notice and !$a->isCanonic and $doTell) $a->tell($notice, $args, '', $inout);
+    $isMe = (($mya ? $mya->id : $tx->actorId) == $a->uid);
+    if ($isMe) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }
 
   $msg = 'report tx';

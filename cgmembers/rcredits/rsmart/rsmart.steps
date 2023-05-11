@@ -392,13 +392,6 @@ function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
  *
  * in: TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
- *     TEST joint ACashierAsksToChargeSomeone
- *     TEST offline ACashierChargedSomeoneOffline
- *     TEST offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
- *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
- *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
- *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
  *     TEST undo AnAgentAsksToUndoARefundSoonEnough
@@ -730,7 +723,14 @@ function nextCodeIsPGPEncrypted($phrase, $type) {return t\cryNextCode($phrase, $
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST undo AnAgentAsksToUndoARefundTooLate
+ * in: TEST joint ACashierAsksToChargeSomeone
+ *     TEST offline ACashierChargedSomeoneOffline
+ *     TEST offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
+ *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
+ *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
+ *     TEST transact ACashierAsksToRefundSomeone
+ *     TEST undo AnAgentAsksToUndoARefundTooLate
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 
