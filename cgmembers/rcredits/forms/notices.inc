@@ -10,7 +10,7 @@ use CG\Db as db;
  * List the months for which notices are available for the current account, with links.
  */
 function formNotices($form, $sta, $month = '') {
-  return $month ? notice($month) : monthChoices(t('Notices'), 'notices', '', 0, '');
+  return $month ? notice($month) : monthChoices(t('Notices'), 'history/notices');
 }
 
 /**

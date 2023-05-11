@@ -10,5 +10,5 @@ function formStatements($form, $sta, $month = '') {
   
   $mo = date('F');
   $subtext = date('d') < 10 ? t('note|Statements are not final until the 10th of the next month.', compact('mo')) : NULL;
-  return cgform(monthChoices(t('Statements'), 'statements', $subtext));
+  return cgform(monthChoices(t('Statements'), 'history/statements', ray('subtext end newTab', $subtext, -1, true)));
 }

@@ -195,6 +195,7 @@ function menu($submenu = '') {
     'sadmin/print-cards' => ['call', t('Print Cards'), 'PrintCards 2', 'admPrintCards'],
     'sadmin/stats' => ['call', t('Stats'), 'Stats 2', 'admRegion'],
     'sadmin/iereport' => ['call', t('Income/Expense Report'), 'IEReport 2', 'admRegion'],
+    'sadmin/cef-billing' => ['call', t('CEF Billing'), 'CEFBilling 2', 'read'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
