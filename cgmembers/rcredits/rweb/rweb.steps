@@ -1078,25 +1078,7 @@ function memberOnetimePasswordIs($id, $pass) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST bank AMemberMovesCreditToTheBank
- *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
- *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST card AMemberUndoesACharge
- *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
- *     TEST donate AMemberDonates
- *     TEST donate AMemberMakesARecurringDonation
- *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
- *     TEST tx AMemberConfirmsRequestToPayAnotherMember
- *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
- *     TEST tx AMemberPaysAnotherMemberRepeatedly
- *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
- *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
- *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
- *     TEST undo AMemberReversesAPaymentFromSomeone
- *     TEST undo AMemberReversesAPaymentToSomeone
- *     TEST undo ACustomerReversesARefundFromAStore
- *     TEST undo AnAdministratorReversesABankTransferIn
- *     TEST undo AnAdministratorReversesABankTransferOut
+ * in: 
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1334,12 +1316,12 @@ function signupCompanyInfoForAccountIsRemembered($id) {
 }
 
 /**
- * that (ARG) has link results: (ARG)
+ * that link has results: (ARG)
  *
  * in: TEST donate AMemberDonates
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  */
-function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $info);}
+function thatLinkHasResults($info) {return t\hasLinkResults($info);}
 
 /**
  * member (ARG) edits transaction (ARG) with values: (ARG)
@@ -1475,12 +1457,31 @@ function memberClicksXOnTransaction($id, $xid) {
  *
  * in: TEST accredit AMemberCompanyGivesACustomerCredit
  *     TEST accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
+ *     TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST card AMemberUndoesACharge
+ *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
+ *     TEST donate AMemberDonates
+ *     TEST donate AMemberMakesARecurringDonation
  *     TEST fbo ASponsoredMemberChargesAMember
+ *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberRepeatedlyWithAnEndDate
+ *     TEST tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
+ *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
+ *     TEST undo AMemberReversesAPaymentFromSomeone
+ *     TEST undo AMemberReversesAPaymentToSomeone
+ *     TEST undo ACustomerReversesARefundFromAStore
+ *     TEST undo AnAdministratorReversesABankTransferIn
+ *     TEST undo AnAdministratorReversesABankTransferOut
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 

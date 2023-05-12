@@ -53,13 +53,13 @@ Setup:
   |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |
   |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |
 
-  And we notice "short invoice|expect a transfer" to member ".ZZA" with subs:
+  And we message "short invoice|expect a transfer" to member ".ZZA" with subs:
   | short | payeeName | nvid |*
   | $200  | Our Pub   |    2 |
-  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
   | draw   | from   | $200   |        2 | to pay pending payment request #2 |
-  And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
+  And we message "short invoice|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
   | $50   | Our Pub   |    3 |
   
@@ -134,10 +134,10 @@ Scenario: Second invoice gets funded too for a non-refilling account
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
-  And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why     |*
   | draw   | from   | $100   |     $100 |  $200 |        2 | to pay pending payment request #2 |
-  And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why     |*
   | draw   | from   | $100   |     $200 |  $300 |        2 | to cover your pending payment requests |
 

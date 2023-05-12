@@ -60,9 +60,9 @@ Scenario: A cashier asks to charge someone for cash
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | from   | Bea Two   |
-  And we notice "you got cash" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose |*
-  | %now    | Bea Two  | Corner Pub | $100   | cash out     |
+  And we message "you got cash" to member ".ZZB" with subs:
+  | created | otherName  | amount | payerPurpose |*
+  | %now    | Corner Pub | $100   | cash out     |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |
@@ -83,9 +83,9 @@ Scenario: A cashier asks to refund someone
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | to     | Bea Two   |
-  And we notice "you gave cash" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payeePurpose |*
-  | %now    | Bea Two  | Corner Pub | $100   | cash in      |
+  And we message "you gave cash" to member ".ZZB" with subs:
+  | created | otherName  | amount | payeePurpose |*
+  | %now    | Corner Pub | $100   | cash in      |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |

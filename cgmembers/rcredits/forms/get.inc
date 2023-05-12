@@ -116,7 +116,7 @@ function cancelTx($way) {
     db\del('txs2_bank', $crit);
     say('bank tx canceled', $crit);
     r\tellAdmin("canceled bank transfer xid #$xid: $mya->fullName ($mya->mainQid)");
-    $mya->tellInOut($way == 'in', t('bank tx canceled', $crit));
+    $mya->tellInOut($way == 'in', 'bank tx canceled', $crit);
   }
 
   if (!nn($crit)); // ignore if none

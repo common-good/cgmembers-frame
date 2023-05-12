@@ -156,10 +156,10 @@ Scenario: A member cancels their purchase of store credit
   And these "tx_credits":
   | id | fromUid | toUid | amount | xid | purpose       | created |*
   | 1  | .ZZC    | .ZZA  | -23    | 1   | %STORE_CREDIT | %now-1d |
-  And we notice "your credit canceled" to member ".ZZA" with subs:
+  And we message "your credit canceled" to member ".ZZA" with subs:
   | amount | co      |*
   | $23    | Our Pub |
-  And we notice "customer credit canceled" to member ".ZZC" with subs:
+  And we message "customer credit canceled" to member ".ZZC" with subs:
   | amount | customer |*
   | $23    | Abe One  |
   # Note that there is still a record in tx_credits pointing to the reversed transaction

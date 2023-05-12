@@ -51,9 +51,9 @@ Scenario: A cashier asks to charge someone
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $400   | from   | Bea Two   |
-  And we notice "charged you" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose |*
-  | %now    | Bea Two  | Corner Pub | $400   | food         |
+  And we message "charged you" to member ".ZZB" with subs:
+  | created | otherName  | amount | payerPurpose |*
+  | %now    | Corner Pub | $400   | food         |
   And balances:
   | uid  | balance |*
   | ctty |    -200 |

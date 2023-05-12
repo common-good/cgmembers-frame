@@ -46,6 +46,9 @@ Scenario: A member confirms request to charge another member
   And we message "invoiced you" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
+  And we message "you invoiced" to member ".ZZA" with subs:
+  | otherName | amount | purpose |*
+  | Bea Two   | $100   | labor   |
   And these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %now    | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
@@ -82,9 +85,9 @@ Scenario: A member confirms request to pay another member
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Bea Two   | $100   |
-  And we notice "paid you" to member ".ZZB" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %now   | Bea Two  | Abe One    | $100   | labor        |
+  And we message "paid you" to member ".ZZB" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %now    | Abe One   | $100   | labor        |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | boxId | taking |*
   |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |
@@ -113,12 +116,12 @@ Scenario: A member confirms request to pay a member company
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Our Pub   | $100   |
-  And we notice "paid you linked" to member ".ZZC" with subs:
-  | created | fullName | otherName | amount | payeePurpose | aPayLink |*
-  | %now    | Our Pub  | Abe One   | $100 | stuff | ? |
-  And that "notice" has link results:
-  | ~name | Abe One |
-  | ~postalAddr | 1 A, A, AK |
+  And we message "paid you linked" to member ".ZZC" with subs:
+  | created | otherName | amount | payeePurpose | aPayLink |*
+  | %now    | Abe One   | $100   | stuff        | ?        |
+  And that link has results:
+  | ~name             | Abe One |
+  | ~postalAddr       | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking |*
@@ -211,9 +214,9 @@ Scenario: A member pays another member repeatedly
   Then we say "status": "report tx|repeats" with subs:
   | did  | otherName | amount | often  |*
   | paid | Bea Two   | $100   | weekly |
-  And we notice "paid you" to member ".ZZB" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %now    | Bea Two  | Abe One    | $100   | labor        |
+  And we message "paid you" to member ".ZZB" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %now    | Abe One   | $100   | labor        |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
   |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
@@ -231,9 +234,9 @@ Scenario: A member pays another member repeatedly with an end date
   Then we say "status": "report tx|repeats" with subs:
   | did  | otherName | amount | often  |*
   | paid | Bea Two   | $100   | weekly |
-  And we notice "paid you" to member ".ZZB" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %now    | Bea Two  | Abe One    | $100   | labor        |
+  And we message "paid you" to member ".ZZB" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %now    | Abe One   | $100   | labor        |
   And these "txs":
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
   |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 0      |        1 |
@@ -255,7 +258,7 @@ Scenario: A member ask to pay another member too much, repeatedly
   Then we say "status": "short to|when resolved|repeats" with subs:
   | short | avail | often  |*
   | $650  | $250  | weekly |
-  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
   | action | amount | tofrom | why                              | checkNum |*
   | draw   | $650   | from   | to cover your payment request #1 | 1        |
   And we say "status": "banked|bank tx number" with subs:
@@ -290,15 +293,15 @@ Scenario: A member pays, backed by an inactive credit line
   And we say "status": "banked|bank tx number|available now" with subs:
   | action | amount | tofrom | why                               | checkNum |*
   | draw   | $10    | from   | to cover your $10 payment request | 1        |
-  And we notice "banked|bank tx number|available now" to member ".ZZB" with subs:
+  And we message "banked|bank tx number|available now" to member ".ZZB" with subs:
   | action | amount | tofrom | why                               | checkNum |*
   | draw   | $10    | from   | to cover your $10 payment request | 1        |
   And we say "status": "report tx" with subs:
   | did  | otherName | amount |*
   | paid | Abe One   | $10    |
-  And we notice "you paid" to member ".ZZB" with subs:
+  And we message "you paid" to member ".ZZB" with subs:
   | otherName | amount | payerPurpose |*
   | Abe One   | $10    | lunch        |
-  And we notice "paid you" to member ".ZZA" with subs:
+  And we message "paid you" to member ".ZZA" with subs:
   | otherName | amount | payeePurpose |*
   | Bea Two   | $10    | lunch        |

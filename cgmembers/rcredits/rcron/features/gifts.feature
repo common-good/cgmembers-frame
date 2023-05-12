@@ -31,7 +31,7 @@ Scenario: A brand new recurring donation to CG can be completed
   Then these "txs":
   | xid | created | amount | payer | payee    | purpose | flags | recursId |*
   |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
-  And we notice "paid you linked" to member ".ZZC" with subs:
+  And we message "paid you linked" to member ".ZZC" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | gift!        | ?        |
   And that "notice" has link results:
@@ -39,7 +39,7 @@ Scenario: A brand new recurring donation to CG can be completed
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01001 |
   | ~footer | %PROJECT |
-  And we notice "recur pay" to member ".ZZA" with subs:
+  And we message "recur pay" to member ".ZZA" with subs:
   | amount | when    | purpose | payee    |*
   |    $10 | monthly | gift!   | %PROJECT |
   # and many other fields
@@ -71,7 +71,7 @@ Scenario: A brand new recurring donation to CG can be completed
   Then these "txs":
   | xid | created | amount | payer | payee    | purpose | flags | recursId |*
   |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
-  And we notice "recur pay" to member ".ZZA" with subs:
+  And we message "recur pay" to member ".ZZA" with subs:
   | amount | when    | purpose | payee    |*
   |    $10 | monthly | gift!   | %PROJECT |
   # and many other fields
@@ -86,7 +86,6 @@ Scenario: A brand new recurring donation to CG can be completed
   Then count "txs" is 2
   And count "txs2" is 0
   And count "tx_requests" is 0
-  And count "r_notices" is 2
 
 Scenario: A second recurring donation to CG can be completed
   Given these "tx_timed":

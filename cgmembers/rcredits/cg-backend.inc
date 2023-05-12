@@ -809,6 +809,7 @@ function advanceCredit($for, $buyer, $seller, $credit) {
  * @return a txRet object
  */
 function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
+  global $testLink;
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
   if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
@@ -836,17 +837,19 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
   } else u\FAIL("unknown type: '$type'.");
 
   list ($tell1, $tell2) = u\order($positive, 'tellOut', 'tellIn');
-  foreach ([1,2] as $i) { // notify both parties
+
+  foreach ([1,2] as $i) { // notify both parties (from=1 then to=2)
     $notice = $notices[$i - 1];
-    list ($a, $otherA, $tell) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i ? 'tellIn' : 'tellOut'];
-    $args = $tx->reportArgs($otherA, TRUE, $shortfall);
+    list ($a, $otherA, $inout) = [$tx->{"a$i"}, $tx->{'a' . (3 - $i)}, $i == 1 ? 'out' : 'in'];
+    $args = $tx->reportArgs($a, TRUE, $shortfall);
 
     if ($notice == 'paid you' and $a->co) {
       $notice = 'paid you linked';
-      $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
+      $args['_aPayLink'] = $testLink = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
-    if ($notice and !$a->isCanonic and $doTell) $a->$tell($notice, $args);
-    if ($i == (($mya ? ($mya->id == $tx->uid2) : $tx->toActor) ? 1 : 2)) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
+    if ($notice and !$a->isCanonic and $doTell) $a->tell($notice, $args, '', $inout);
+    $isMe = (($mya ? $mya->id : $tx->actorId) == $a->uid);
+    if ($isMe) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }
 
   $msg = 'report tx';
@@ -1020,31 +1023,33 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
-  if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
+  $subs2 = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
+  if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs2);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
-  if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs);
+  if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs2);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId reversesXid cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
+  $payeeA->tell('you invoiced', $subs2);
 
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
-    $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
-    $payerA->tell('invoiced you', $subs); // tell other party by email about this invoice
+    $subs1 = ray('myName otherName otherEmail otherPhone _a1 reply', 
+      $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee) + $subs2;
+    $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);
-      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs + $info);
+      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs1 + $info);
     }
   }
 
   $msg = 'report tx';
 //  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return txRet(TRUE, $msg, $subs + ray('success nvid status', TRUE, $nvid, $status));
+  return txRet(TRUE, $msg, $subs2 + ray('success nvid status', TRUE, $nvid, $status));
 }
 
 /**

@@ -13,6 +13,7 @@ use CG\Db as db;
 
  */
 function formNotifications($form, &$sta) {
+  u\FAIL('NYI');
   global $notifyWhens, $notifyNowBys;
   
   global $mya;
