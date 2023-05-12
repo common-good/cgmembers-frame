@@ -45,7 +45,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  * Call this in a "try" block, if you want to catch errors.
  */
 function adminQ($sql) {
-  $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
+  $word1 = mb_strtolower(mb_strstr(trim($sql), ' ', TRUE));
   if (!in($word1, 'select show')) return w\err('The query must begin with SELECT or SHOW.');
   $sql = str_replace(';', '', $sql); // don't allow concatenation of queries
   return \db_query(u\SUBS($sql));
