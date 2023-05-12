@@ -867,8 +867,8 @@ EOF;
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
     $message = tr($index, $subs);
     $created = now();
-    if (test()) f('t.output', t('Actual Notice [%index] to %fullName: %message', 'index fullName message', $index, $a->fullName, $message));
     if ($type and $notices = ray($a->notices) and $notices[$type] == SEND_NOW) $type = ''; // immediate when no type or explicitly immediate
+    if (test()) f('t.output', t('Actual %thing [%index] to %fullName: %message', 'thing index fullName message', $type ? t('notice') : t('message'), $index, $a->fullName, $message));
 
     if ($type) {
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
