@@ -1023,31 +1023,33 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
-  if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs);
+  $subs2 = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
+  if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs2);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
-  if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs);
+  if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs2);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId reversesXid cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
+  $payeeA->tell('you invoiced', $subs2);
 
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
-    $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
-    $payerA->tell('invoiced you', $subs); // tell other party by email about this invoice
+    $subs1 = ray('myName otherName otherEmail otherPhone _a1 reply', 
+      $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee) + $subs2;
+    $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);
-      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs + $info);
+      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs1 + $info);
     }
   }
 
   $msg = 'report tx';
 //  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return txRet(TRUE, $msg, $subs + ray('success nvid status', TRUE, $nvid, $status));
+  return txRet(TRUE, $msg, $subs2 + ray('success nvid status', TRUE, $nvid, $status));
 }
 
 /**

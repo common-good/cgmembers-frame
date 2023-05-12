@@ -83,7 +83,7 @@ global $tStrings; $tStrings = array(
   'refunded you' => t('<b>Received:</b> %otherName refunded you %amount for "%payerPurpose".'),
   'paid you' => t('<b>Received:</b> %otherName paid you <b>%amount</b> for "%payeePurpose".'),
   'paid you linked' => t('<b>Received:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'paid you'
-  'invoiced you' => t('<p><b>Invoice:</b> %myName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %myName</i> at %email or %phone.</p>'), // can't separate out 'invoice concerns'
+  'invoiced you' => t('<p><b>Invoice:</b> %otherName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %otherName</i> at %otherEmail or %otherPhone.</p>'), // can't separate out 'invoice concerns'
   'you gave cash' => t('<b>Credit:</b> You traded %amount USD for %amount of %PROJECT credit from %otherName.'),
   'drew from you' => t('<b>Transfer:</b> %otherName drew %amount from your account automatically.'),
 
