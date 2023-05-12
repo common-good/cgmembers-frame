@@ -809,6 +809,7 @@ function advanceCredit($for, $buyer, $seller, $credit) {
  * @return a txRet object
  */
 function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
+  global $testLink;
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
   if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
@@ -844,7 +845,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
 
     if ($notice == 'paid you' and $a->co) {
       $notice = 'paid you linked';
-      $args['_aPayLink'] = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
+      $args['_aPayLink'] = $testLink = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
     if ($notice and !$a->isCanonic and $doTell) $a->tell($notice, $args, '', $inout);
     $isMe = (($mya ? $mya->id : $tx->actorId) == $a->uid);
