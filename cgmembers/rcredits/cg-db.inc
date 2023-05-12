@@ -9,6 +9,7 @@ use CG as r;
 use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
+use CG\Web as w;
 
 require_once __DIR__ . '/cg-util.inc';
 
@@ -45,7 +46,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  */
 function adminQ($sql) {
   $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
-  u\EXPECT(in($word1, 'select show'), 'bad admin query');
+  if (!in($word1, 'select show')) return w\err('The query must begin with SELECT or SHOW.');
   $sql = str_replace(';', '', $sql); // don't allow concatenation of queries
   return \db_query(u\SUBS($sql));
 }
