@@ -20,8 +20,8 @@ Scenario: A member visits the company info page
 
 Scenario: A member updates company info
   When member "C:A" confirms form "settings/company" with values:
-  | private | selling | website     | description   | employees | gross | tips | staleNudge | founded |*
-  |         | stuff   | example.com | we do vittles |         2 |   100 |    1 |          3 | %mdY-1y |
+  | private | selling | website     | description   | employees | gross | staleNudge | founded |*
+  |         | stuff   | example.com | we do vittles |         2 |   100 |          3 | %mdY-1y |
   Then members:
   | uid  | selling | website     | description   | employees | gross | staleNudge | founded      |*
   | .ZZC | stuff   | example.com | we do vittles |         2 |   100 |          3 | %daystart-1y |
