@@ -117,20 +117,8 @@ function bankTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST bank AMemberIsBarelyBelowTarget
- *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
- *     TEST bank AMemberHasANegativeBalance
- *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
- *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
- *     TEST invoices UnpaidInvoicesGetHandled
- *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
- *     TEST joint AJointAccountNeedsRefilling
- *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
- *     TEST recurs ARecurringSweepCanBeCompleted
- *     TEST recurs ARecurringBankTransferCanBeCompleted
- *     TEST tickle ANewbieHasTakenOnlyTheFirstStep
+ * in: TEST tickle ANewbieHasTakenOnlyTheFirstStep
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
- *     TEST weekly AMemberCashesOutAutomatically
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -371,8 +359,19 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST invoices UnpaidInvoicesGetHandled
+ * in: TEST bank AMemberIsBarelyBelowTarget
+ *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     TEST bank AMemberHasANegativeBalance
+ *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     TEST joint AJointAccountNeedsRefilling
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ARecurringSweepCanBeCompleted
+ *     TEST recurs ARecurringBankTransferCanBeCompleted
  *     TEST recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     TEST weekly AMemberCashesOutAutomatically
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 

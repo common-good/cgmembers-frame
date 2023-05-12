@@ -20,7 +20,6 @@ Scenario: A member donates from an email link
   | When:     |
   | Honoring: |
   | Donate    |
-  | Add comment |
   And without:
   | Name: |
   | Phone: |

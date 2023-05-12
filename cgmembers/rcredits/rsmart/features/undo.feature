@@ -61,7 +61,7 @@ Scenario: An agent asks to undo a charge
   | reversed | refunded | Abe One   | $80    | goods |
   And with did ""
   And with undo "4"
-  And we notice "refunded you" to member ".ZZA" with subs:
+  And we message "refunded you" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose |*
   | %now    | Corner Pub | $80    | whatever     |
 
@@ -75,7 +75,7 @@ Scenario: An agent asks to undo a charge when balance is secret
   | reversed | refunded | Eve Five  | $80    | goods |
   And with did ""
   And with undo "5"
-  And we notice "refunded you" to member ".ZZE" with subs:
+  And we message "refunded you" to member ".ZZE" with subs:
   | created | otherName  | amount | payerPurpose |*
   | %today  | Corner Pub | $80    | whatever     |
 
@@ -89,7 +89,7 @@ Scenario: An agent asks to undo a refund soon enough
   | reversed | re-charged | Abe One   | $80    | goods |
   And with did ""
   And with undo "4"
-  And we notice "re-charged you" to member ".ZZA" with subs:
+  And we message "re-charged you" to member ".ZZA" with subs:
   | otherName  | amount | payerPurpose |*
   | Corner Pub | $80    | refund       |
 
@@ -115,9 +115,9 @@ Scenario: An agent asks to undo a cash-out charge
   | reversed | credited | Abe One   | $80    | usd |
   And with did ""
   And with undo "4"
-  And we notice "refunded you" to member ".ZZA" with subs:
-  | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Abe One  | Corner Pub | $80    | cash out     |
+  And we message "refunded you" to member ".ZZA" with subs:
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | cash out     |
 
 Scenario: An agent asks to undo a cash-in payment
   Given these "txs": 
@@ -129,9 +129,9 @@ Scenario: An agent asks to undo a cash-in payment
   | reversed | re-charged | Abe One   | $80    | usd |
   And with did ""
   And with undo "4"
-  And we notice "re-charged you" to member ".ZZA" with subs:
-  | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Abe One  | Corner Pub | $80    | cash in      |
+  And we message "re-charged you" to member ".ZZA" with subs:
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | cash in      |
 
 Scenario: An agent asks to undo a charge, with insufficient balance  
   Given these "txs": 
@@ -144,7 +144,7 @@ Scenario: An agent asks to undo a charge, with insufficient balance
   | reversed | refunded | Abe One   | $80    | goods |
   And with did ""
   And with undo "4"
-  And we notice "refunded you" to member ".ZZA" with subs:
+  And we message "refunded you" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose |*
   | %today  | Corner Pub | $80    | whatever     |
   And balances:
@@ -165,7 +165,7 @@ Scenario: An agent asks to undo a refund, with insufficient balance
   | reversed | re-charged | Abe One   | $80    | goods |
   And with did ""
   And with undo "4"
-  And we notice "re-charged you" to member ".ZZA" with subs:
+  And we message "re-charged you" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose |*
   | %today  | Corner Pub | $80    | refund       |
   And balances:
@@ -186,7 +186,7 @@ Scenario: An agent asks to undo a charge, without permission
 #  Then we return error "no perm" with subs:
 #  | what    |*
 #  | refunds |
-#  And we notice "bad forced tx|no perm" to member ".ZZC" with subs:
+#  And we message "bad forced tx|no perm" to member ".ZZC" with subs:
 #  | what    | account | amount | created | by                  |*
 #  | refunds | Bea Two | $80    | %dmy-1d | %(" agent Abe One") |
 
@@ -230,9 +230,9 @@ Scenario: A cashier reverses a transaction with insufficient funds
   Then we respond ok txid 7 created %now balance -1
 #  And with proof of agent "C:B" amount -100.00 created "%now-1h" member ".ZZA" code "ccA"
   And with undo "5"
-  And we notice "you gave cash" to member ".ZZA" with subs:
-  | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Bea Two  | Corner Pub | $100   | cash in      |
+  And we message "you gave cash" to member ".ZZA" with subs:
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $100   | cash in      |
   And balances:
   | uid  | balance |*
   | ctty |    -100 |

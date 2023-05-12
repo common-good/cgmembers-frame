@@ -247,7 +247,7 @@ const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
 define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));
 define('POST_NOTICE_TYPE_KEYS', 'offer need tip');
-const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:w,out:d,misc:d';
+const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:i,out:i,misc:d';
 const NOTICE_DFTS_CTTY = 'offer:n,need:n,tip:n,in:d,out:d,misc:d';
 const NOTICE_NONE = 'offer:n,need:n,tip:n,in:n,out:n,misc:n'; // for one-time non-member donations
 const SEND_NOW = 'i';
@@ -319,7 +319,7 @@ const CODE_LEN_MAX = 64; // head off db errors
 const REGION_LENS = '112233344'; // field lengths implied by format character divided by 4
 const ACCT_LENS = '232323445';
 
-// notification preferences
+/* notification preferences (NYI)
 $GLOBALS['notifyWhens'] = t('N:Never,I:Immediately,D:Daily,W:Weekly,M:Monthly');
 $GLOBALS['notifyNowBys'] = t('E:Email,T:Text message,B:Both'); // how to send immediate messages
 const N_DEFAULTS = 'IIIIIMDIDWD';
@@ -334,6 +334,7 @@ const N_OTHER_IN = 7; // fine, grant, loan, or investment received
 const N_CHANGED = 8; // transaction/invoice edited, canceled, or disputed
 const N_NUDGE = 9; // your invitee needs a nudge
 const N_SUGGESTION = 10; // suggestion from the system
+*/
 
 define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.')); // . R_SHARING_MSG); // transaction purposes
 const FOR_GOODS = 0; // index into R_WHYS for goods
@@ -447,10 +448,10 @@ const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, e
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
-const CO_TIP = 30; // ask customer what percent tip to add
+const CO_TIP = 30; // ask customer what percent tip to add (deprecated -- remove once most companies, including Mesa Verde, switch to new app, v4.2 and up)
 const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,,private,atm,,,,,,,,,,,,,,,fast,tip';
 
-const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21
+const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21 (remove this and related features once no companies are using our Android app)
 const CO_CHARGE = 0;
 const CO_UNDO = 1;
 const CO_R4USD = 2;
@@ -771,6 +772,21 @@ $GLOBALS['topics'] = array( // topics for 'message' email
   'approved' => t('Account APPROVED!'),
   'join accounts' => t('Invitation to Create a Joint Account'),
   'force without perm' => t('Unauthorized transaction'),
+  
+  'you paid' => t('Payment complete (Transaction #%xid)'),
+  'charged you' => t('Payment complete (Transaction #%xid)'),
+  'you refunded' => t('Payment complete (Transaction #%xid)'),
+  'you gave cash' => t('Payment complete (Transaction #%xid)'),
+  'drew from you' => t('Transfer complete (Transaction #%xid)'),
+  're-charged you' => t('Payment complete (Transaction #%xid)'),
+  
+  'you charged' => t('Payment received (Transaction #%xid)'),
+  'paid you' => t('Payment received (Transaction #%xid)'),
+  'paid you linked' => t('Payment received (Transaction #%xid)'),
+  'refunded you' => t('Payment received (Transaction #%xid)'),
+  'you got cash' => t('Payment complete (Transaction #%xid)'),
+  'you drew' => t('Transfer complete (Transaction #%xid)'),
+  'you re-charged' => t('Payment received (Transaction #%xid)'),
 );
 
 if (TRUE) { // can't use if(u\test()) here (this block should be moved somewhere)

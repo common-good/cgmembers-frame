@@ -422,7 +422,6 @@ function doAccounts($info = []) {
  * Note: for $testOnly TRUE, if there are multiple entry pairs for one transaction, put the eid field first so verifyRecord() can distinguish them.
  */
 function doTxs($info) {
-  //debug('doTxs top:' . pr($info));
   global $testOnly;
 
   $map = 'amount:amt, payer:uid1, payee:uid2, purpose:for';
@@ -1697,12 +1696,13 @@ function clear($ch = 0) {
   /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
-  global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
-  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr, $testVars, $testRecs;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
   global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
+
+  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs';
+  foreach (ray($vars) as $k) { global $$k; $$k = NULL; }
 
   $formOut['text'] = '';
 
@@ -1710,8 +1710,6 @@ function clear($ch = 0) {
   global $testMessages; $testMessages = [];
   global $sceneTest;
   global $conf; $conf = [];
-
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs') as $k) $$k = NULL;
 
   r\deleteAllCooksBut('');
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
@@ -1964,18 +1962,19 @@ function weMessage($index, $id, $subs) {
 /**
  * Check the linked URL content and any Drupal messages (which don't show up in file_get_contents) against expectations.
  */
-function hasLinkResults($thing, $info) {
-  global $formOut;
+function hasLinkResults($info) {
+  global $testLink, $formOut;
   global $testOnly; if (!$testOnly) return FALSE;
 
-  if (!preg_match('/ href="([^"]*)"/', t\that($thing), $matches)) return FALSE;
+  if (!preg_match('/ href="([^"]*)"/', $testLink, $matches)) return FALSE;
+  $url = $matches[1];
 
-  if (isDEV) {
-    $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
-    $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
-  } else { $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1])); }
+  $arrContextOptions = [ "ssl" => [ 'verify_peer' => FALSE, 'verify_peer_name' => FALSE ] ];
+  $url = preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $url);
+  $zot = file_get_contents($url, FALSE, stream_context_create($arrContextOptions));
   foreach (ray('error status') as $one) $$one = u\getFile(t\dosayFilename($one));
-  $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
+  $formOut['text'] = "$error$status";
+
   return t\shownWith($info, 'text', TRUE);
 }
 
@@ -2193,7 +2192,7 @@ function fixTestVars(&$parm) {
 function itsLater() {return timeIs(now() + 1);}
 function timeIs($tm) {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = $tm);}
 function log($msg) {if (test()) u\log($msg, 'debug');}
-function that($thing) {global $thatThing; return nni($thatThing, $thing, FALSE);}
+//function that($thing) {global $thatThing; return nni($thatThing, $thing, FALSE);}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);}

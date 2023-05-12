@@ -41,13 +41,12 @@ Scenario: A member donates
   And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
-  And we notice "gift sent" to member ".ZZA" with subs:
-  | amount | rewardAmount |*
-  |    $10 |        $0.50 | 
-  And we notice "paid you linked" to member "cgf" with subs:
+  And we message "gift sent" to member ".ZZA" with subs:
+  | amount | $10 |**
+  And we message "paid you linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | donation     | ?        |
-  And that "notice" has link results:
+  And that link has results:
   | ~name | Abe One |
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
@@ -71,9 +70,8 @@ Scenario: A member makes a recurring donation
   And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
-  And we notice "gift sent" to member ".ZZA" with subs:
-  | amount | rewardAmount |*
-  |    $10 |        $0.50 | 
+  And we message "gift sent" to member ".ZZA" with subs:
+  | amount | $10 |**
 
 Scenario: A member makes a new recurring donation
   Given these "tx_timed":

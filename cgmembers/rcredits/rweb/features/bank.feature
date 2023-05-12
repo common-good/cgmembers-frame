@@ -52,7 +52,7 @@ Scenario: a member moves credit to the bank
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
-  And we notice "banked" to member ".ZZA" with subs:
+  And we message "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why             |*
   | deposit | to     | $86    | as soon as possible |
   
@@ -86,7 +86,7 @@ Scenario: a member draws credit from the bank with adequate floor
   And we say "status": "banked|bank tx number|available now" with subs:
   | action | tofrom  | amount | checkNum | why             |*
   | draw   | from    |    $10 |        8 | as soon as possible |
-  And we notice "banked|bank tx number|available now" to member ".ZZC" with subs:
+  And we message "banked|bank tx number|available now" to member ".ZZC" with subs:
   | action | tofrom | amount | checkNum | why             |*
   | draw   | from   | $10    |        8 | as soon as possible |
 Scenario: a member moves too little to the bank
@@ -149,7 +149,7 @@ Scenario: a member draws credit from the bank then cancels
   | .ZZC |      30 |
   And count "txs2" is 6
   And count "txs" is 7
-  And we notice "bank tx canceled" to member ".ZZC" with subs:
+  And we message "bank tx canceled" to member ".ZZC" with subs:
   | xid | 8 |**
   And we redirect to "/get"
 

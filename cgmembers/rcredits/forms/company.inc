@@ -54,7 +54,7 @@ EOF;
   $private = boxFld('private', t('Private:'), t('Hide this company from the public (omit from public listings)'), $mya->coCan(CO_PRIVATE) ?: 0);
   $categories = selectFld(t('Categories:'), t('Hold down the Ctrl key to select more than one'), ray('multiple size', TRUE, 8) + dft($myCats), coCats());
   $selling = w\sellingFld($mya->selling);
-  $can2 = item($permissions, t('App permissions:'), t('Download the CGPay app from Google Play Store. Limit app permissions here, or go to <%aRel>Relations</a> settings to limit them for each agent.', '_aRel', atag('/settings/relations')));
+//  $can2 = item($permissions, t('App permissions:'), t('Download the CGPay app from Google Play Store. Limit app permissions here, or go to <%aRel>Relations</a> settings to limit them for each agent.', '_aRel', atag('/settings/relations')));
 //    $shareRpos = boolFld(t('Share rPOS:'), t('Allow other companies to use our POS device(s).'), $mya->coCan(CO_SHARE_RPOS) ?: 0);
 //    $requireCashier = boolFld(t('Must scan in:'), t('Require a cashier to sign in before using rPOS (this also allows you to share the device with another company).'), $mya->coCan(CO_REQUIRE_CASHIER) ?: 0);
 
@@ -68,16 +68,16 @@ EOF;
   $employees = intFld(t('Employees:'), [t('Employee count'), t('How many employees do you have?')], required($mya->employees));
   $gross = numFld(t('Annual Gross:'), [t('Approximate annual gross income')], required($mya->gross));
   $staleNudge = intFld(t('Nudge Every:'), [t('Number of days between nudges'), t('Wait this many days before nudging a customer to pay an invoice you sent them (zero means never send a reminder).')], required($mya->staleNudge ?: STALE_NUDGE));
-  $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
+//  $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
   if ($mya->admManageAccts) {
     $fast = NULL; // boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
-    $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
+//    $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   } else { $fast = $atm = NULL; }
   
   $showAdvanced = item(btn('', t('Advanced Settings'), 'default'), NBSP);
-  $advanced = fieldSet(NBSP, compact(ray('founded logo descPreface description can2 staleNudge fast atm')));
+  $advanced = fieldSet(NBSP, compact(ray('logo descPreface description staleNudge')));
 
-  return cgform(compact(ray('title links name private categories selling shortDesc employees gross website tips showAdvanced advanced')) + w\setupFoot(''));
+  return cgform(compact(ray('title links name private categories selling shortDesc employees gross website founded showAdvanced advanced')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
@@ -105,13 +105,13 @@ function formCompany_validate($form, &$sta) {
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($rawInfo = just('private description shortDesc website logo selling categories can requireCashier employees gross staleNudge founded tips fast atm', $sta['input'], NULL));
+  extract($rawInfo = just('private description shortDesc website logo selling categories requireCashier employees gross staleNudge founded', $sta['input'], NULL));
   
-  $mya->setCoCans(nn($can));
+//  $mya->setCoCans(nn($can));
   $mya->setCoBit(CO_PRIVATE, nn($private));
-  $mya->setCoBit(CO_TIP, $tips);
-  if ($mya->admManageAccts) $mya->setCoBit(CO_FAST, nn($fast));
-  if ($mya->admManageAccts) $mya->setCoBit(CO_ATM, nn($atm));
+//  $mya->setCoBit(CO_TIP, $tips);
+//  if ($mya->admManageAccts) $mya->setCoBit(CO_FAST, nn($fast));
+//  if ($mya->admManageAccts) $mya->setCoBit(CO_ATM, nn($atm));
   $info = []; foreach (ray('description shortDesc website logo selling employees gross staleNudge founded') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
   if (nn($categories)) $mya->setCategories($categories);

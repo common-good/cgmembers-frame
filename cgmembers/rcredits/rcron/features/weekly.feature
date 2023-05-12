@@ -67,9 +67,9 @@ Scenario: A member cashes out automatically
   Then these "txs2":
   | txid | payee | amount |*
   |    1 | .ZZB  |   -670 |
-#  And we notice "banked|bank tx number" to member ".ZZB" with subs:
+#  And we message "banked|bank tx number" to member ".ZZB" with subs:
 #  | action  | tofrom  | amount | checkNum |*
 #  | deposit | to      | $670   |        1 |
-  And we notice "banked" to member ".ZZB" with subs:
+  And we message "banked" to member ".ZZB" with subs:
   | action  | tofrom  | amount | why                                   |*
   | deposit | to      | $670   | (your weekly automatic bank transfer) |
