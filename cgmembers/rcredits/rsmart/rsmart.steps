@@ -390,16 +390,7 @@ function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST exchange ACashierAsksToChargeSomeoneForCash
- *     TEST exchange ACashierAsksToRefundSomeone
- *     TEST undo AnAgentAsksToUndoACharge
- *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
- *     TEST undo AnAgentAsksToUndoARefundSoonEnough
- *     TEST undo AnAgentAsksToUndoACashoutCharge
- *     TEST undo AnAgentAsksToUndoACashinPayment
- *     TEST undo AnAgentAsksToUndoAChargeWithInsufficientBalance
- *     TEST undo AnAgentAsksToUndoARefundWithInsufficientBalance
- *     TEST undo ACashierReversesATransactionWithInsufficientFunds
+ * in: 
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -723,14 +714,24 @@ function nextCodeIsPGPEncrypted($phrase, $type) {return t\cryNextCode($phrase, $
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST joint ACashierAsksToChargeSomeone
+ * in: TEST exchange ACashierAsksToChargeSomeoneForCash
+ *     TEST exchange ACashierAsksToRefundSomeone
+ *     TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierChargedSomeoneOffline
  *     TEST offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
+ *     TEST undo AnAgentAsksToUndoACharge
+ *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
+ *     TEST undo AnAgentAsksToUndoARefundSoonEnough
  *     TEST undo AnAgentAsksToUndoARefundTooLate
+ *     TEST undo AnAgentAsksToUndoACashoutCharge
+ *     TEST undo AnAgentAsksToUndoACashinPayment
+ *     TEST undo AnAgentAsksToUndoAChargeWithInsufficientBalance
+ *     TEST undo AnAgentAsksToUndoARefundWithInsufficientBalance
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 

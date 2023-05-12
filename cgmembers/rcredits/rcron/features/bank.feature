@@ -23,7 +23,7 @@ Scenario: a member is barely below target
   | txid | payee | amount | channel  | xid |*
   |    1 | .ZZA  |     30 | %TX_CRON |   8 |
   And bank transfer count is 1
-  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $30    |        8 | to bring your balance up to the target you set |
 
@@ -36,7 +36,7 @@ Scenario: a member gets credit for the bank transfer immediately
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |     30 | %TX_CRON |
   And bank transfer count is 1
-  And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:
+  And we message "banked|bank tx number|available now" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $30    |        1 | to bring your balance up to the target you set |
 
@@ -60,7 +60,7 @@ Scenario: a member has a negative balance
   Then these "txs2":
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |  150   | %TX_CRON |
-  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $150   |        1 | to bring your balance up to the target you set |
   
@@ -71,9 +71,9 @@ Scenario: an unbanked non-drawing member barely below target cannot get funded
   | .ZZB | 99.99  |
 
   When cron runs "getFunds"
-  Then we notice "cannot bank|when funded|how to fund" to member ".ZZB" with subs:
+  Then we message "cannot bank|when funded|how to fund" to member ".ZZB" with subs:
   | tofrom | why       |*
-  | from   | to target |
+  | from   | to bring your balance up to the target you set |
   
 Scenario: a member is at target
   Given balances:

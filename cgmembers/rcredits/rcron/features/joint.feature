@@ -31,7 +31,7 @@ Scenario: a joint account needs refilling
   Then these "txs2":
   | txid | payee | amount | xid |*
   |    1 | .ZZA  |  30    |   3 |
-  And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:
+  And we message "banked|bank tx number|available now" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $30    |        3 | to bring your balance up to the target you set |
 Resume

@@ -398,6 +398,6 @@ Scenario: a sponsored organization moves credit to the bank
   And balances:
   | uid  | balance |*
   | .ZZC |      14 |
-  And we notice "banked" to member ".ZZC" with subs:
+  And we message "banked" to member ".ZZC" with subs:
   | action  | tofrom | amount | why             |*
   | deposit | to     | $86    | as soon as possible |

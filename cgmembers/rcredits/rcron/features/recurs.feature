@@ -24,10 +24,10 @@ Scenario: A brand new recurring payment can be completed
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | flags  |*
   |   2 | %now    |     10 | .ZZA  | .ZZB  | pmt     |        |
-  And we notice "paid you" to member ".ZZB" with subs:
+  And we message "paid you" to member ".ZZB" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | pmt          | ?        |
-  And we notice "recur pay" to member ".ZZA" with subs:
+  And we message "recur pay" to member ".ZZA" with subs:
   | amount | when   | purpose | payee   |*
   |    $10 | weekly | pmt     | Bea Two |
   # and many other fields
@@ -50,7 +50,7 @@ Scenario: A recurring sweep can be completed
   And these "txs":
   | xid | created | amount | payer | payee | recursId | for2    |*
   |   2 | %now    |   -100 | bank  | .ZZA  |        7 | to bank |
-  And we notice "banked" to member ".ZZA" with subs:
+  And we message "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why                              |*
   | deposit | to     | $100   | (your automatic weekly transfer) |
 
@@ -66,7 +66,7 @@ Scenario: A recurring bank transfer can be completed
   | xid | created | amount | payer | payee | recursId | for2    |*
   |   2 | %now    |    -50 | bank  | .ZZA  |        7 | to bank |
   And count "txs" is 2
-  And we notice "banked" to member ".ZZA" with subs:
+  And we message "banked" to member ".ZZA" with subs:
   | action  | tofrom | amount | why                             |*
   | deposit | to     | $50    | (your automatic daily transfer) |
   

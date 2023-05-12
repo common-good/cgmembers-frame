@@ -23,12 +23,12 @@ Scenario: A member reverses a payment from someone
   And we say "status": "report undo|tx desc active" with subs:
   | solution | did      | otherName | amount |*
   | reversed | refunded | Bea Two   | $123   |  
-  And we notice "refunded you" to member ".ZZB" with subs:
-  | created | fullName | otherName | amount | payerPurpose |*
-  | %today  | Bea Two  | Abe One   | $123   | bread        |
-  And we notice "you refunded" to member ".ZZA" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Abe One  | Bea Two   | $123   | bread        |
+  And we message "refunded you" to member ".ZZB" with subs:
+  | created | otherName | amount | payerPurpose |*
+  | %today  | Abe One   | $123   | bread        |
+  And we message "you refunded" to member ".ZZA" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %today  | Bea Two   | $123   | bread        |
 
 Scenario: A member reverses a payment to someone
   Given these "u_relations":
@@ -45,12 +45,12 @@ Scenario: A member reverses a payment to someone
   And we say "status": "report undo|tx desc active" with subs:
   | solution | did      | otherName | amount |*
   | reversed | refunded | Cor Pub   | $123   |  
-  And we notice "refunded you" to member ".ZZC" with subs:
-  | created | fullName | otherName | amount | payerPurpose |*
-  | %today  | Cor Pub  | Abe One   | $123   | labor        |
-  And we notice "you refunded" to member ".ZZA" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Abe One  | Cor Pub   | $123   | labor        |
+  And we message "refunded you" to member ".ZZC" with subs:
+  | created | otherName | amount | payerPurpose |*
+  | %today  | Abe One   | $123   | labor        |
+  And we message "you refunded" to member ".ZZA" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %today  | Cor Pub   | $123   | labor        |
   
 Scenario: A customer reverses a refund from a store
   Given these "u_relations":
@@ -67,12 +67,12 @@ Scenario: A customer reverses a refund from a store
   And we say "status": "report undo|tx desc active" with subs:
   | solution | did      | otherName | amount |*
   | reversed | refunded | Cor Pub   | $123   |  
-  And we notice "refunded you" to member ".ZZC" with subs:
-  | created | fullName | otherName | amount | payerPurpose |*
-  | %today  | Cor Pub  | Abe One   | $123   | refund       |
-  And we notice "you refunded" to member ".ZZA" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Abe One  | Cor Pub   | $123   | refund       |
+  And we message "refunded you" to member ".ZZC" with subs:
+  | created | otherName | amount | payerPurpose |*
+  | %today  | Abe One   | $123   | refund       |
+  And we message "you refunded" to member ".ZZA" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %today  | Cor Pub   | $123   | refund       |
   
 Scenario: A member tries to reverse a non-existent transaction
   When member ".ZZA" visits "history/transactions/period=365&undo=3"
@@ -90,7 +90,7 @@ Scenario: An administrator reverses a bank transfer in
   Then we say "status": "reversed bank tx" with subs:
   | amount | who     |*
   | $1,000 | Abe One |
-  And we notice "bank tx canceled" to member ".ZZA" with subs:
+  And we message "bank tx canceled" to member ".ZZA" with subs:
   | xid | 4 |**
   And these "txs2":
   | txid | payee | amount | created | completed  | deposit           | xid |*
@@ -110,7 +110,7 @@ Scenario: An administrator reverses a bank transfer out
   Then we say "status": "reversed bank tx" with subs:
   | amount  | who     |*
   | $-1,000 | Abe One |
-  And we notice "bank tx canceled" to member ".ZZA" with subs:
+  And we message "bank tx canceled" to member ".ZZA" with subs:
   | xid | 4 |**
 #  This should be an immediate notice
   And these "txs2":

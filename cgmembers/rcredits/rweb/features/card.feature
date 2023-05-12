@@ -229,12 +229,12 @@ Scenario: a member undoes a charge
   And we say "status": "report undo|tx desc active" with subs:
   | solution | did      | otherName | amount |*
   | reversed | refunded | Abe One   | $123   |  
-  And we notice "refunded you" to member ".ZZA" with subs:
-  | created | fullName | otherName | amount | payerPurpose |*
-  | %today  | Abe One  | Our Pub   | $123   | bread        |
-  And we notice "you refunded" to member ".ZZC" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Our Pub  | Abe One   | $123   | bread        |
+  And we message "refunded you" to member ".ZZA" with subs:
+  | created | otherName | amount | payerPurpose |*
+  | %today  | Our Pub   | $123   | bread        |
+  And we message "you refunded" to member ".ZZC" with subs:
+  | created | otherName | amount | payeePurpose |*
+  | %today  | Abe One   | $123   | bread        |
   And we show "You: Our Pub" with:
   | Scan a CG Card |
   And without:
