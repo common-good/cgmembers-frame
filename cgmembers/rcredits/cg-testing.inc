@@ -1696,12 +1696,13 @@ function clear($ch = 0) {
   /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
-  global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
-  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr, $testVars, $testRecs;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
   global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
+
+  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs';
+  foreach (ray($vars) as $k) { global $$k; $$k = NULL; }
 
   $formOut['text'] = '';
 
@@ -1709,8 +1710,6 @@ function clear($ch = 0) {
   global $testMessages; $testMessages = [];
   global $sceneTest;
   global $conf; $conf = [];
-
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs') as $k) $$k = NULL;
 
   r\deleteAllCooksBut('');
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));

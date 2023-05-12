@@ -1243,7 +1243,7 @@ o;
       $subs = [];
     } else {
       list ($amtDone, $msg) = [0, 'cannot bank|when funded|how to fund'];
-      $subs = ray('tofrom why', 'from', t('to target'));
+      $subs = ray('tofrom why', 'from', tr('to target'));
     }
 
     w\say($msg, $subs);
