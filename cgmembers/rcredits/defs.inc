@@ -766,6 +766,7 @@ foreach (ray(' gift- cggift- fbo-') as $k) foreach(ray('member nonmember') as $m
 $GLOBALS['topics'] = array( // topics for 'message' email
   'confirm invite' => t('Confirm invitation to %otherName'),
   'not confirmed' => t('Your %PROJECT membership requires confirmation.'),
+  'you invoiced' => t('INVOICE sent to %otherName'),
   'invoiced you' => t('INVOICE from %otherName'),
   'account suspended' => t('Account SUSPENDED'),
   'account funded' => t('Account FUNDED'),

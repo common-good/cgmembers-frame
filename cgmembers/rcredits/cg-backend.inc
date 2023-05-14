@@ -1024,6 +1024,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
   $subs2 = ray('myName otherName otherEmail otherPhone amount why purpose did op created createdDpy', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'), $created, fmtDt($created));
+  $subs2 += r\balAndCred($payeeA);
   if ($err = u\badAmount($amount, '>0')) return txErr($err, $subs2);
   if ($zErr = r\txPermErr($payeeA, $payerA, TRUE)) return $zErr;
   if (r\dupTx($payeeA, $payerA, $amount)) return txErr(t('duplicate transaction'), $subs2);

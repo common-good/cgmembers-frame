@@ -862,7 +862,7 @@ EOF;
     $subs['topic'] = tr($topic, $subs);
     $testMessages[] = compact(ray('uid index subs topic type'));
 
-    if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $this, $subs, nni($subs, 'reply') ?: 'ctty');
+    if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
 
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
     $message = tr($index, $subs);
@@ -872,7 +872,9 @@ EOF;
 
     if ($type) {
       return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
-    } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }
+    } else {
+      return r\rMail('message', $a, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty');
+    }
   }
 
   public function tellIn($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_IN);}
