@@ -886,13 +886,20 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
     $range = join(t(' and '), $descs);
   }
   extract(just('return', $a->j_stats()));
+
+  list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
+  return compact(ray('messages unit range return ourEmail')) + r\balAndCred($a);
+}
+
+/**
+ * Return an account's balance and credit line, formatted.
+ */
+function balAndCred($a) {
   $balance = u\fmtAmt($a->balance);
   $creditLine = $a->underage ? t('disabled')
-  : (u\fmtAmt(-$a->floor)
-    . ($a->debt ? t(' (based on your monthly activity)') : t(' disabled (sign in and see Settings / Advanced)')));
-  // (<%a>click here</a> to enable it)', '_a', 
-  list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
-  return compact(ray('messages unit range balance creditLine return ourEmail'));
+  : ($a->debt ? u\fmtAmt(-$a->floor) . t(' (based on your monthly activity)') 
+  : t('disabled (sign in and see Settings / Preferences / Advanced)')); // (<%a>click here</a> to enable it)', '_a', 
+  return compact(ray('balance creditLine'));
 }
 
 /**
