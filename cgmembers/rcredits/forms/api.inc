@@ -21,7 +21,7 @@ function api($arg = null) {
   global $mya;
   global $channel;
 
-  $params = $_POST ?: $_GET;
+  $params = $_REQUEST;
 
   if (is_array($arg) or nni($params, 'request')) { // SMP interface uses /api with no explicit endpoints
     $channel = TX_API;
@@ -47,6 +47,7 @@ function api($arg = null) {
     }
     return exitJson('', X_OK);
   }
+
 
   fixVersion($params);
   if (!$ok = authOk($arg, $params)) return; // return is for testing -- any error triggers exitJust()
@@ -84,7 +85,7 @@ function accounts($params) {
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
     $isCo = $a->co;
-    if ($a->stepsLeft($isCo ? 'co' : 'card')) continue; // no using app without card permission
+    if ($a->stepsLeft($isCo ? 'co' : 'app')) continue; // no using app without card permission
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
