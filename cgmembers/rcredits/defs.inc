@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61g'; // software version
+const R_VERSION = '3.61h'; // software version
 const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -483,6 +483,7 @@ const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:c
 const S_ONESTEP = 1 + 64; // "only the signup and agreement steps have been done" (just the first page) -- items/bits 0 and 6 in S_ALL
 const S_PERSON = 'signup agree verifyid photo contact preferences donate fund verifyemail';
 const S_CARD = S_PERSON;
+const S_APP = 'signup agree verifyid photo contact preferences verifyemail'; // donate and fund didn't use to be required, so don't require them now for app use
 const S_CO = 'signup fund contact backing photo donate company crumbs verifyemail';
 const S_SELL = S_CARD . ' ssn crumbs'; // keep this for when an individual member goes over the limit for not filing 1099K
 const S_VOTE = S_CARD . ' backing work invite proxies'; // add comment

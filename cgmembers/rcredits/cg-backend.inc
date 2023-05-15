@@ -1311,17 +1311,16 @@ function roundupDonations($uids, $start, $end) {
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
 function accountChoices($a, $perm = B_READ, $crit = 1) {
-  global $mya;
   if (!$a) return FALSE;
 
   $res[$aid = $a->agentId] = $a->agentA->bestName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
   $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $crit AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
 
-  if ($mya and $mya->admRegion) {
-    $admWhere = $mya->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
+  if ($a->admRegion) {
+    $admWhere = $a->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $admWhere UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
-  } elseif ($mya and $mya->admin) {
+  } elseif ($a->admin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
