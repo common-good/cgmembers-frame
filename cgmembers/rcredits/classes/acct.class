@@ -862,7 +862,8 @@ EOF;
     $topic = $topic 
     ?: (nni($subs, 'topic') 
     ?: (nni($GLOBALS['topics'], $index) 
-    ?: (strlen($subbedIndex) <= TOPIC_MAXEN ? $subbedIndex : (substr($subbedIndex, 0, TOPIC_MAXEN) . '...')))); // index should never be used literally (wrong language) but more importantly never fail
+    ?: (strlen($subbedIndex) <= TOPIC_MAXEN ? $subbedIndex 
+    : (substr(str_ireplace(t('he %PROJECT system'), t('he system'), $subbedIndex), 0, TOPIC_MAXEN) . '...')))); // index should never be used literally (wrong language) but more importantly never fail
     $subs['topic'] = tr($topic, $subs);
     $testMessages[] = compact(ray('uid index subs topic type'));
 
