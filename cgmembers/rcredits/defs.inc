@@ -739,6 +739,7 @@ const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));
+const TOPIC_MAXEN = 46; // long enough for "The Common Good System has submitted a request"
 
 $GLOBALS['emailSubjects'] = array(
   'gift-report' => t('You have a donation'),
@@ -751,16 +752,16 @@ $GLOBALS['emailSubjects'] = array(
   'partner-solar1end' => t('Your Community Solar sign-up is complete'),
   'partner-report' => t('Solar Signup COMPLETE'),
   'partner-solar1report' => t('Solar Signup COMPLETE'),
-  'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
-  'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
-//  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
-  'password-reset' => t('New %PROJECT PASSWORD'),
-  'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
-  'notices' => t('%PROJECT Notices for %qid %todayDesc'),
-  'message' => t('%PROJECT %topic'),
+  'verify' => t('NEXT STEP: Verify your email address.'),
+  'verify-co' => t('NEXT STEP: Verify your company email address.'),
+//  'verify-trial' => t('NEXT STEP: Verify your company email address.'),
+  'password-reset' => t('New PASSWORD'),
+  'tell-staff' => t('STAFF ALERT: %topic'),
+  'notices' => t('Notices for %qid %todayDesc'),
+  'message' => t('%topic'),
   'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'renew-backing' => t('your %PROJECT backing is ready to renew'),
-  'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
+  'confirm-post' => t('Confirm your post to Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),
   'post-notice' => t('recent Offers & Needs near you'),
