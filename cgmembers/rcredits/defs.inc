@@ -197,6 +197,8 @@ const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member 
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 
+const SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSeU-o-xtwa9u2rl4MlH_z8VrvBMUGWV4MkGBIsGfstnCNl57w/viewform?usp=sf_link'; // individual survey
+const CO_SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSem8Z0qDMa4Uwf7jF5UIXIVoEKigFK73Bf_p2vclDbiVX8L6Q/viewform?usp=sf_link'; // company survey
 const LOCUS_CITYST = -1; // means locus is city/st (so don't use lat/lon)
 const LOCUS_PARTZIP = -2; // means locus is partial or whole zipcode (so don't use lat/lon)
 const LOCUS_BAD = -3; // means locus is bad format
