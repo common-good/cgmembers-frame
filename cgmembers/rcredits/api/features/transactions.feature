@@ -23,8 +23,8 @@ Setup:
 
 Scenario: The app asks to charge a customer
   When app posts "transactions" with:
-  | deviceId | amount | actorId  | otherId | description | created | proof                        | offline |*
-  | devC     | 123    | L6VMDCC0 | K6VMDCB | stuff       | %now    | L6VMDCC0123.00K6VMDCBccB%now | false   |
+  | deviceId | amount | actorId  | otherId | description | created | proof                        | offline | version |*
+  | devC     | 123    | L6VMDCC0 | K6VMDCB | stuff       | %now    | L6VMDCC0123.00K6VMDCBccB%now | false   | 4.0.0   |
   Then we reply "ok" with JSON:
   | ok    | message                   |*
   | true  | You charged Bea Two $123. |

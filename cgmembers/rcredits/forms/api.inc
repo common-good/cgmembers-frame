@@ -21,7 +21,7 @@ function api($arg = null) {
   global $mya;
   global $channel;
 
-  $params = $_REQUEST;
+  $params = $_POST ?: $_GET; // don't use $_REQUEST unless we fix the tests to handle it
 
   if (is_array($arg) or nni($params, 'request')) { // SMP interface uses /api with no explicit endpoints
     $channel = TX_API;
