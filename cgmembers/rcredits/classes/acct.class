@@ -858,14 +858,18 @@ EOF;
     $subs['uid'] = $uid = $a->id;
     u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
     $subs['todayDesc'] = fmtDt(now());
-    $topic = $topic ?: (nni($subs, 'topic') ?: (nni($GLOBALS['topics'], $index) ?: $index)); // index should never be used literally (wrong language) but more importantly never fail
+    $subbedIndex = tr($index, $subs); // in case we use it for 
+    $topic = $topic 
+    ?: (nni($subs, 'topic') 
+    ?: (nni($GLOBALS['topics'], $index) 
+    ?: (strlen($subbedIndex) <= TOPIC_MAXEN ? $subbedIndex : (substr($subbedIndex, 0, TOPIC_MAXEN) . '...')))); // index should never be used literally (wrong language) but more importantly never fail
     $subs['topic'] = tr($topic, $subs);
     $testMessages[] = compact(ray('uid index subs topic type'));
 
     if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
 
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
-    $message = tr($index, $subs);
+    $message = $subbedIndex;
     $created = now();
     if ($type and $notices = ray($a->notices) and $notices[$type] == SEND_NOW) $type = ''; // immediate when no type or explicitly immediate
     if (test()) f('t.output', t('Actual %thing [%index] to %fullName: %message', 'thing index fullName message', $type ? t('notice') : t('message'), $index, $a->fullName, $message));

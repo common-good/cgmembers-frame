@@ -274,13 +274,11 @@ EOF;
     $purpose = $toMe ? $e2->description : $e1->description;
     $why = ray(R_WHYS)[$tx->goods];
 
-    list ($balance, $creditLine) = ($getMyBal and ($me->can(B_BUY))) ? [u\fmtAmt($me->balance), u\fmtAmt(-$me->floor)] : [NULL, NULL]; // was avail(FOR_GOODS)
-    if (!$me->can(B_DEBT)) $creditLine = t('disabled');
-    
+    $balAndCred = ($getMyBal and ($me->can(B_BUY))) ? r\balAndCred($me) : ray('balance creditLine', NULL, NULL);
 
-    return ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom balance creditLine otherUid myName otherName short success',  // . ' role'
+    return $balAndCred + ray('created createdDpy xid role why payerPurpose payeePurpose toMe amount tofrom otherUid myName otherName short success',  // . ' role'
                $tx->created, fmtDt($tx->created), $tx->xid, $role, $why, $e1->description,
-               $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $creditLine, $otherA->id, $me->fullName,
+               $e2->description, $toMe, u\fmtAmt($amount), $tofrom, $otherA->id, $me->fullName,
                $otherA->fullName, u\fmtAmt($shortfall), TRUE);
   }
 

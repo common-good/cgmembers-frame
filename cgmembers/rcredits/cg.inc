@@ -307,7 +307,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
-    $subs += (array) $toA->account(); // this omits any special fields or special formatting
+    $subs += r\balAndCred($toA) + (array) $toA->account(); // this omits any special fields or special formatting (except balance and creditLine)
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3

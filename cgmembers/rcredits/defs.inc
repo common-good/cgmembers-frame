@@ -736,6 +736,7 @@ const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));
+const TOPIC_MAXEN = 46; // long enough for "The Common Good System has submitted a request"
 
 $GLOBALS['emailSubjects'] = array(
   'gift-report' => t('You have a donation'),
