@@ -311,7 +311,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
-    $subs['surveyLink'] = $toA->co ? BIZ_SURVEY_LINK : SURVEY_LINK;
+    $subs['surveyLink'] = $toA->co ? CO_SURVEY_LINK : SURVEY_LINK;
     if ($toA->closed and $index != 'password-reset') return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
