@@ -61,7 +61,7 @@ if ($mya and $mya->admin) {
        
   1 . t('Company profiles') =>
     "SELECT LEFT(FROM_UNIXTIME(activated), 10) AS since, fullName, CONCAT(city, ', ', abbreviation) AS location,
-       IF(c.coFlags&(1<<:CO_SPONSORED), 'FS', '') AS FS,
+       IF(c.coFlags&(1<<:CO_SPONSORED), 'FS', '') AS FS, IF(c.coFlags & (1<<:CO_PRIVATE), 'private', '') AS private,
        c.website, c.selling,
        GROUP_CONCAT(i.industry SEPARATOR ', ') AS industries
        
@@ -82,6 +82,16 @@ if ($mya and $mya->admin) {
      ORDER BY c.fullName',
   
   1 . t('Income & Expense Report') => '/sadmin/iereport',
+  
+  1 . t('Fiscal Sponsorships') =>
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, x.total AS GiftsLast90Days
+      FROM users u 
+      LEFT JOIN u_company c USING (uid) 
+      LEFT JOIN (SELECT uid2 AS uid, SUM(amt) AS total 
+        FROM txs t 
+        WHERE t.created IS NULL OR t.created >:NOW-90*:DAY_SECS GROUP BY uid
+      ) x USING (uid) 
+      WHERE coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
   
   1 . t('Major Gifts') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, u2.name AS `to`,
