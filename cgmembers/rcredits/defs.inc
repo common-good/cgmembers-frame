@@ -487,6 +487,7 @@ const S_PERSON = 'signup agree verifyid photo contact preferences donate fund ve
 const S_CARD = S_PERSON;
 const S_APP = 'signup agree verifyid photo contact preferences verifyemail'; // donate and fund didn't use to be required, so don't require them now for app use
 const S_CO = 'signup fund contact backing photo donate company crumbs verifyemail';
+const S_COAPP = 'signup contact backing photo company crumbs verifyemail';
 const S_SELL = S_CARD . ' ssn crumbs'; // keep this for when an individual member goes over the limit for not filing 1099K
 const S_VOTE = S_CARD . ' backing work invite proxies'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
