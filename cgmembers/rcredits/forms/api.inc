@@ -34,6 +34,7 @@ function api($arg = null) {
    * Endpoints (always POST): accounts, identity, idPhoto, latest, info, transactions, comments, lostPassword, test
    */
   $channel = TX_APP;
+  unset($params['q']); // Drupal adds this
   u\loga('in:' . $arg, $params);
   setHeaders();
   if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
@@ -429,8 +430,10 @@ function badTx($a, $info, $z) {
   global $mya;
   extract(just('offline amount created', $info, NULL));
   
+  $badFlds = 'version deviceId actorId otherId amount description created proof offline problem';
   $info['offline'] = (int) $offline;  
-  db\insert('tx_bads', $info);
+  $info['problem'] = $z->msg;
+  db\insert('tx_bads', just($badFlds, $info));
   
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
   $dpy = ray('name amount created by', $a ? $a->fullName : t('UNKNOWN'), u\fmtAmt($amount), fmtDt($created), $by);
