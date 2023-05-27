@@ -76,7 +76,7 @@ function formSponsor_validate($form, &$sta) {
 function formSponsor_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
-  $dbFlds = 'contact fullName legalName federalId coType email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut';
+  $dbFlds = 'contact fullName legalName federalId coType coFlags email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut';
   extract(just('comments source2 ' . $dbFlds, $sta['input'], NULL));
   
   if ($comments or $federalId) {
@@ -99,9 +99,10 @@ function formSponsor_submit($form, &$sta) {
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
   $flags = u\bit(B_NONUDGE) | u\bit(B_CO);
-  $fullName = PROJECT . t(' FBO ') . $fullName;
+//  $fullName = PROJECT . t(' FBO ') . $fullName;
   $legalName = CGF_LEGALNAME;
   $federalId = CGF_EIN;
+  $coFlags = u\bit(CO_SPONSORED);
   $subs = compact(ray($dbFlds)) + ($mya ? [] : ['NEW ORG!' => 1]);
   $subs['to'] = 'partnerships@' . CG_DOMAIN;
   $subs['state'] = r\realState($state);
