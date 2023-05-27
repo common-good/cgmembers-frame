@@ -6,7 +6,7 @@ lock "~> 3.16.0"
 set :application, "cgmembers-frame"
 set :repo_url, "git@github.com:common-good/cgmembers-frame.git"
 
-# Default branch is :master
+# Default branch is :develop, Main branch is :main
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
 # Default deploy_to directory is /var/www/my_app_name

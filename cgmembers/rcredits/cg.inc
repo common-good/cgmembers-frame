@@ -461,7 +461,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $to = nni($subs, 'to', R_ADMIN_EMAIL);
   $message = t($index, $subs);
   foreach (ray(NOLOG_FLDS) as $k) unset($subs[$k]); // secret stuff
-  ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
   $tellCOA = $uid == 1 ? $mya : ($uid == 0 ? NULL : r\acct($uid));
   $keyUid = nni($subs, 'uid');
@@ -473,13 +472,14 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 100 ? strip_tags($index) : '';
-  $message .= u\seeAssoc($subs);
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];
-  $info = compact(ray('email topic message keyAcct currentAcct chan noFrame')) + $subs;
+  $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
+  ksort($subs); // put the keys in a predictable order, for testing and easy reading
+  $body = u\seeAssoc($subs);
+  $info = $subs + compact('body');
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
-  $info['topic'] .= t(' (to admin)');
   if ($email != $to) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }

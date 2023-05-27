@@ -33,7 +33,7 @@ set :local_user, "new"
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/new/cgmembers-frame"
-set :branch, "master"
+set :branch, "main"
 set :tmp_dir, "/home/new/tmp"
 
 # Custom SSH Options
