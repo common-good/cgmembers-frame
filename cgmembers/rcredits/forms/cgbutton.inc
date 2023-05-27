@@ -13,8 +13,6 @@ use CG\Db as db;
 function formCGButton($form, &$sta, $args = '') {
   global $mya, $base_url;
 
-  $fbo = ($mya->legalName == r\acct(CGID)->legalName); // fiscal sponsoring
-
   $title = t('Create a CGPay Link/Button');
   $subtext = t(<<< X
     <p>Create a link or button to paste into your website or emails for customers to pay you through %PROJECT. If you need more complex functionality, use instead %advanced with your company code: %code</p>

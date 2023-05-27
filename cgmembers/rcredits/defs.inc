@@ -444,7 +444,7 @@ const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account 
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
-const CO_SPONSORED = 2; // fiscally sponsored by CG (name should start with "Common Good" or "Common Good FBO ", should have CG's EIN, and maybe CO_PRIVATE)
+const CO_SPONSORED = 2; // fiscally sponsored by CG (should have CG's EIN, and maybe CO_PRIVATE if it has another CG account)
 
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
