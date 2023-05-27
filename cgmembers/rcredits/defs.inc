@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61g'; // software version
+const R_VERSION = '3.61h'; // software version
 const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -197,6 +197,8 @@ const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member 
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 
+const SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSeU-o-xtwa9u2rl4MlH_z8VrvBMUGWV4MkGBIsGfstnCNl57w/viewform?usp=sf_link'; // individual survey
+const CO_SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSem8Z0qDMa4Uwf7jF5UIXIVoEKigFK73Bf_p2vclDbiVX8L6Q/viewform?usp=sf_link'; // company survey
 const LOCUS_CITYST = -1; // means locus is city/st (so don't use lat/lon)
 const LOCUS_PARTZIP = -2; // means locus is partial or whole zipcode (so don't use lat/lon)
 const LOCUS_BAD = -3; // means locus is bad format
@@ -483,7 +485,9 @@ const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, fund, contact, agree:c
 const S_ONESTEP = 1 + 64; // "only the signup and agreement steps have been done" (just the first page) -- items/bits 0 and 6 in S_ALL
 const S_PERSON = 'signup agree verifyid photo contact preferences donate fund verifyemail';
 const S_CARD = S_PERSON;
+const S_APP = 'signup agree verifyid photo contact preferences verifyemail'; // donate and fund didn't use to be required, so don't require them now for app use
 const S_CO = 'signup fund contact backing photo donate company crumbs verifyemail';
+const S_COAPP = 'signup contact backing photo company crumbs verifyemail';
 const S_SELL = S_CARD . ' ssn crumbs'; // keep this for when an individual member goes over the limit for not filing 1099K
 const S_VOTE = S_CARD . ' backing work invite proxies'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
@@ -735,6 +739,7 @@ const A_VLIST = 'ach makeVAdmin printChecks seeSsn ten99 v'; // admin operations
 
 const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));
+const TOPIC_MAXEN = 46; // long enough for "The Common Good System has submitted a request"
 
 $GLOBALS['emailSubjects'] = array(
   'gift-report' => t('You have a donation'),
@@ -747,16 +752,16 @@ $GLOBALS['emailSubjects'] = array(
   'partner-solar1end' => t('Your Community Solar sign-up is complete'),
   'partner-report' => t('Solar Signup COMPLETE'),
   'partner-solar1report' => t('Solar Signup COMPLETE'),
-  'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
-  'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
-//  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
-  'password-reset' => t('New %PROJECT PASSWORD'),
-  'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
-  'notices' => t('%PROJECT Notices for %qid %todayDesc'),
-  'message' => t('%PROJECT %topic'),
+  'verify' => t('NEXT STEP: Verify your email address.'),
+  'verify-co' => t('NEXT STEP: Verify your company email address.'),
+//  'verify-trial' => t('NEXT STEP: Verify your company email address.'),
+  'password-reset' => t('New PASSWORD'),
+  'tell-staff' => t('STAFF ALERT: %topic'),
+  'notices' => t('Notices for %qid %todayDesc'),
+  'message' => t('%topic'),
   'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'renew-backing' => t('your %PROJECT backing is ready to renew'),
-  'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
+  'confirm-post' => t('Confirm your post to Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),
   'post-notice' => t('recent Offers & Needs near you'),

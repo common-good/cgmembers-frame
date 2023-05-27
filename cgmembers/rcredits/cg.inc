@@ -307,10 +307,11 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
-    $subs += (array) $toA->account(); // this omits any special fields or special formatting
+    $subs += r\balAndCred($toA) + (array) $toA->account(); // this omits any special fields or special formatting (except balance and creditLine)
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
+    $subs['surveyLink'] = $toA->co ? CO_SURVEY_LINK : SURVEY_LINK;
     if ($toA->closed and $index != 'password-reset') return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
@@ -460,7 +461,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $to = nni($subs, 'to', R_ADMIN_EMAIL);
   $message = t($index, $subs);
   foreach (ray(NOLOG_FLDS) as $k) unset($subs[$k]); // secret stuff
-  ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
   $tellCOA = $uid == 1 ? $mya : ($uid == 0 ? NULL : r\acct($uid));
   $keyUid = nni($subs, 'uid');
@@ -472,13 +472,14 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 100 ? strip_tags($index) : '';
-  $message .= u\seeAssoc($subs);
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];
-  $info = compact(ray('email topic message keyAcct currentAcct chan noFrame')) + $subs;
+  $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
+  ksort($subs); // put the keys in a predictable order, for testing and easy reading
+  $body = u\seeAssoc($subs);
+  $info = $subs + compact('body');
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
-  $info['topic'] .= t(' (to admin)');
   if ($email != $to) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }

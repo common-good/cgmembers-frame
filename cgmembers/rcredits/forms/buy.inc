@@ -62,6 +62,7 @@ function charge($args) {
         $t = now() - nni($coRay, 'now', 0);
         if ($t < 0 or $t > AUTHCODE_TIMEOUT) {
           if (strihas(nni($_SERVER, 'HTTP_USER_AGENT'), 'bot')) exit('link is out of date');
+          unset($coRay['r']); // work around guzzleHttp bug (try including chr(181) in an email)
           r\tellAdmin('co code timeout', compact(ray('code t')) + $coRay + $args + $_SERVER);
           return w\softErr('co code timeout'); // error for customer
         }
