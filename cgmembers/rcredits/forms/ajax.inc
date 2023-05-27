@@ -54,6 +54,12 @@ function ajax($args = NULL) {
       unset($DBTX);
       return ajaxMsg(t('Done!'));
       
+    case 'delAux': // delete an auxiliary transaction
+      extract(just('id', $data));
+      if (!$id0 = db\get('id', 'tx_entries', 'id=:id AND entryType=:E_AUX', compact('id'))) return ajaxErr(t('That is not an auxiliary transaction.'));
+      db\del('tx_entries', 'ABS(id)=:id', compact('id'), TRUE);
+      return ajaxMsg(t('Done!'));
+      
     case 'qBtn': // question mark help button
       include_once R_ROOT . '/help-scraps.inc';
       return ajaxRet(helpScrap($data['topic']));

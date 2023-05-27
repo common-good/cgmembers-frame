@@ -35,9 +35,16 @@ function doit(what, vs) {
     break;
     
   case 'txdetail':
-    $('.form-item-reversesXid .suffix a').click(function () {
+    $('.form-item-reversesXid .suffix .buttino').click(function () {
       post('delPair', {xid:vs['xid']}, function (j) {
         report(j, function () {if (j.ok) location.href = vs['url'];});
+      });
+    });
+    $('.form-item-submit .suffix .buttino').click(function () {
+      yesno('Are you sure (deletion cannot be undone)?', function () {
+        post('delAux', {id:vs['eid']}, function (j) {
+          report(j, function () {if (j.ok) location.href = vs['url'];});
+        });
       });
     });
     break;
