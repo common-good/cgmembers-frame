@@ -31,7 +31,7 @@ Setup:
   | .ZZC | refund,r4usd |
   And these "u_relations":
   | main | agent | num | permission |*
-  | .ZZC | .ZZA  |   1 | scan       |
+  | .ZZC | .ZZA  |   1 | sell       |
   | .ZZC | .ZZB  |   2 | refund     |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |

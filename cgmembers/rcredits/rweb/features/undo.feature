@@ -33,7 +33,7 @@ Scenario: A member reverses a payment from someone
 Scenario: A member reverses a payment to someone
   Given these "u_relations":
   | main | other | permission |*
-  | .ZZC | .ZZB  | scan       |
+  | .ZZC | .ZZB  | sell       |
   And these "txs":
   | xid | amt  | uid1 | uid2 | agt1 | agt2 | purpose | actorId | actorAgentId |*
   |   3 | -123 | .ZZA | .ZZC | .ZZA | .ZZB | labor   | .ZZC    | .ZZB         |
@@ -55,7 +55,7 @@ Scenario: A member reverses a payment to someone
 Scenario: A customer reverses a refund from a store
   Given these "u_relations":
   | main | other | permission |*
-  | .ZZC | .ZZB  | scan       |
+  | .ZZC | .ZZB  | sell       |
   And these "txs":
   | xid | amt  | uid1 | uid2 | agt1 | agt2 | purpose | actorId | actorAgentId |*
   |   3 | -123 | .ZZA | .ZZC | .ZZA | .ZZB | refund  | .ZZC    | .ZZB         |

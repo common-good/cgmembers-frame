@@ -14,11 +14,11 @@ Setup:
 Scenario: Member has an employee, confirmed
   Given these "u_relations":
   | main | agent | permission   | employee | owner | draw |*
-  | .ZZA | .ZZD  | scan         | 1          | 1       | 0    |
+  | .ZZA | .ZZD  | sell         | 1          | 1       | 0    |
   When member ".ZZA" visits page "settings/relations"
   Then we show "Relations" with:
   | other      | Draw | Employee | Family | Permission |
-  | Dee Four   | No   | Yes          | Yes     | %can_scan  |
+  | Dee Four   | No   | Yes          | Yes     | %can_sell  |
 
 Scenario: Member has an employee, unconfirmed
   Given these "u_relations":
@@ -102,7 +102,7 @@ Scenario: It's complicated
   | .ZZA | .ZZC  |   0 | buy        | 0        | 0       |
   | .ZZA | .ZZD  |   0 | manage     | 1        | 1       |
   | .ZZB | .ZZA  |   0 |            | 1        | 0       |
-  | .ZZC | .ZZA  |   1 | scan       | 1        | 0       |
+  | .ZZC | .ZZA  |   1 | sell       | 1        | 0       |
   | .ZZC | .ZZD  |   1 | manage     | 1        | 0       |
   | .ZZD | .ZZA  |   0 |            | 0        | 0       |
   When member ".ZZA" visits page "settings/relations"
@@ -129,8 +129,8 @@ Scenario: It's complicated
   When member "C:D" visits page "settings/relations"
   Then we show "Relations" with:
   | other   | Employee | Owns | Permission  |
-  | Abe One | Yes      | No   | %can_scan |
-#  | Abe One | Yes          | No   | %can_scan | request Cashier Card |
+  | Abe One | Yes      | No   | %can_sell |
+#  | Abe One | Yes          | No   | %can_sell | request Cashier Card |
 
 Scenario: A member adds a relation
 # This test fails (but works fine). Dunno why.
@@ -153,7 +153,7 @@ Scenario: A member tries to add a relation with self
 Scenario: A member tries to add a relation again
   Given these "u_relations":
   | main | agent | permission | employee | owner |*
-  | .ZZA | .ZZB  | scan       | 1        | 1       |
+  | .ZZA | .ZZB  | sell       | 1        | 1       |
   When member ".ZZA" completes relations form with values:
   | newPerson |*
   | Bea Two   |

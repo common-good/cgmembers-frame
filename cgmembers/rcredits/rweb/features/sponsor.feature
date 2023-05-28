@@ -58,17 +58,17 @@ Scenario: A non-member applies for fiscal sponsorship
   Then we say "status": "got application|meanwhile join"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
-  | fullName   | %PROJECT FBO Bread Co   |
+  | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
   | contact    | Jane Dough |
-  | fullName   | %PROJECT FBO Bread Co   |
+  | fullName   | Bread Co   |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    |  |
+  | coFlags    | sponsored |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
   | country    | US |
@@ -123,17 +123,17 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
-  | fullName   | %PROJECT FBO Bread Co   |
+  | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
   | contact    | Jane Dough |
-  | fullName   | %PROJECT FBO Bread Co   |
+  | fullName   | Bread Co   |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    |  |
+  | coFlags    | sponsored |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
   | country    | US |
@@ -192,17 +192,17 @@ Scenario: A signed-in company applies for fiscal sponsorship
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Bea Two |**
-  | fullName   | %PROJECT FBO Cor Pub |
+  | fullName   | Cor Pub |
   | to         | partnerships@%CG_DOMAIN |
   # etc
   And members:
   | uid        | .AAA |**
   | contact    | Bea Two |
-  | fullName   | %PROJECT FBO Cor Pub |
+  | fullName   | Cor Pub |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    |  |
+  | coFlags    | sponsored |
   | phone      | 413-987-6543 |
   | email      | c@ |
   | country    | US |
@@ -219,7 +219,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   Given members:
   | uid        | .ZZF |**
   | contact    | Bea Two |
-  | fullName   | %PROJECT FBO Far Co |
+  | fullName   | Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,ok |
@@ -269,7 +269,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   And members:
   | uid        | .ZZF |**
   | contact    | Bea Two |
-  | fullName   | %PROJECT FBO Far Co |
+  | fullName   | Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,member,ok,ided |

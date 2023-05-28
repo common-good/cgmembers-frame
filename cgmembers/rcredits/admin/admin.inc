@@ -162,7 +162,7 @@ function makeTestAccounts($print = FALSE) {
       $CID = strtoupper("$cid:$id");
       $coA = a($hd . $cid);
       $coA->setDftAppCans();
-      $perm = $id == 'b' ? B_SCAN : B_MANAGE;
+      $perm = $id == 'b' ? B_SELL : B_MANAGE;
       if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
       $a->update('cardCode2', $cardCode2 = "98765$id");
       foreach (ray(S_CO) as $k) $coA->stepDone($k); // this gets done twice when there are 2 agents for a company, but no harm
@@ -410,14 +410,14 @@ EOF;
       $role = $owner ? t('owned by')
         : ($draw ? t('drawn on by')
            : ($permission >= B_MANAGE ? t('managed by')
-              : (($permission >= B_SCAN or $employee) ? t('employs')
+              : (($permission >= B_SELL or $employee) ? t('employs')
                  : ($permission >= B_READ ? t('readable by')
                     : t('probably employs')))));
     } else {
       $role = $owner ? t('owns')
         : ($draw ? t('draws from')
            : ($permission >= B_MANAGE ? t('manages')
-              : (($permission >= B_SCAN or $employee) ? t('works for')
+              : (($permission >= B_SELL or $employee) ? t('works for')
                  : ($permission >= B_READ ? t('can read')
                     : ($customer ? t('buys from')
                        : t('probably works for'))))));

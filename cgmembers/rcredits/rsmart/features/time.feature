@@ -23,8 +23,8 @@ Setup:
   | .ZZC | refund,r4usd |
   And these "u_relations":
   | main | agent | num | permission | rCard |*
-  | .ZZC | .ZZA  |   1 | scan       |       |
-  | .ZZC | .ZZB  |   2 | scan       | yes   |
+  | .ZZC | .ZZA  |   1 | sell       |       |
+  | .ZZC | .ZZB  |   2 | sell       | yes   |
 
 Scenario: The device asks for the time
   When agent ".ZZC" on device "devC" asks for the time

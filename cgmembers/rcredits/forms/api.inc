@@ -194,6 +194,7 @@ function latest($params) {
  */
 function transactions($params) {
   global $allowDupTxs;
+  global $scanned; $scanned = true;
   
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';

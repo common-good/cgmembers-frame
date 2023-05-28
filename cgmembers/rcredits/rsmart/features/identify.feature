@@ -33,7 +33,7 @@ Setup:
   And these "u_relations":
   | main | agent | num | permission | rCard |*
   | .ZZC | .ZZA  |   1 | buy        | yes   |
-  | .ZZC | .ZZB  |   2 | scan       | yes   |
+  | .ZZC | .ZZB  |   2 | sell       | yes   |
   | .ZZC | .ZZD  |   3 | read       |       |
   | .ZZF | .ZZE  |   1 | buy        |       |
 
