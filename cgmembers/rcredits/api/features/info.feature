@@ -47,10 +47,10 @@ Scenario: The app asks for recent transactions
   |   6 |    -90 | K6VMDCC   | Coco Co | theta       | %now-1d |
   |   5 |     78 | K6VMDCF   | For Co  | epsil       | %now-2d |
   |   4 |    -56 | K6VMDCB   | Bea Two | delta       | %now-3d |
-  |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
+#  |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
   When app posts "info" with:
-  | version | deviceId | actorId | lastTx  |*
-  | 400     | devA     | K6VMDCA | %now-7d |
+  | version | deviceId | actorId | count  |*
+  | 400     | devA     | K6VMDCA | 3      |
   Then we reply "ok" with JSON values:
   | balance | surtxs  | txs  |*1
   | 920     | %surtxs | %txs |
@@ -63,19 +63,19 @@ Scenario: The app asks for recent transactions with a missing parameter
 
 Scenario: The app asks for recent transactions with a bad actorId
   When app posts "info" with:
-  | version | deviceId | actorId | lastTx  |*
-  | 400     | devC     | K6VMDCX | %now-7d |
+  | version | deviceId | actorId | count |*
+  | 400     | devC     | K6VMDCX | 3     |
   Then we reply "unauth"
 
-Scenario: The app asks for recent transactions with a bad date
+Scenario: The app asks for recent transactions with a bad count
   When app posts "info" with:
-  | version | deviceId | actorId | lastTx   |*
+  | version | deviceId | actorId | count    |*
   | 400     | devC     | K6VMDCC | whatever |
   Then we reply "syntax" with: "?"
 
-Scenario: The app asks for recent transactions with a date out of range
+Scenario: The app asks for recent transactions with a count out of range
   When app posts "info" with:
-  | version | deviceId | actorId | lastTx  |*
-  | 400     | devC     | K6VMDCC | %now+9d |
+  | version | deviceId | actorId | count  |*
+  | 400     | devC     | K6VMDCC | -1     |
   Then we reply "syntax" with: "?"
 

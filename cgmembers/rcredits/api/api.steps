@@ -131,8 +131,8 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE info TheAppAsksForRecentTransactions
  *     MAKE info TheAppAsksForRecentTransactionsWithAMissingParameter
  *     MAKE info TheAppAsksForRecentTransactionsWithABadActorId
- *     MAKE info TheAppAsksForRecentTransactionsWithABadDate
- *     MAKE info TheAppAsksForRecentTransactionsWithADateOutOfRange
+ *     MAKE info TheAppAsksForRecentTransactionsWithABadCount
+ *     MAKE info TheAppAsksForRecentTransactionsWithACountOutOfRange
  *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToPayACustomer
  *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
@@ -217,8 +217,8 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
  *     TEST info TheAppAsksForRecentTransactionsWithAMissingParameter
- *     TEST info TheAppAsksForRecentTransactionsWithABadDate
- *     TEST info TheAppAsksForRecentTransactionsWithADateOutOfRange
+ *     TEST info TheAppAsksForRecentTransactionsWithABadCount
+ *     TEST info TheAppAsksForRecentTransactionsWithACountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
