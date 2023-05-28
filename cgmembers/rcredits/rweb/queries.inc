@@ -84,9 +84,11 @@ if ($mya and $mya->admin) {
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
   1 . t('Fiscal Sponsorships') =>
-    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, x.total AS GiftsLast90Days
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, 
+      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS fee, x.total AS GiftsLast90Days
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
+      LEFT JOIN tx_rules ru ON ru.payee=u.uid
       LEFT JOIN (SELECT uid2 AS uid, SUM(amt) AS total 
         FROM txs t 
         WHERE t.created IS NULL OR t.created >:NOW-90*:DAY_SECS GROUP BY uid

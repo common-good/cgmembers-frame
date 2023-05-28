@@ -34,6 +34,7 @@ function api($arg = null) {
    * Endpoints (always POST): accounts, identity, idPhoto, latest, info, transactions, comments, lostPassword, test
    */
   $channel = TX_APP;
+  unset($params['q']); // Drupal adds this
   u\loga('in:' . $arg, $params);
   setHeaders();
   if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
@@ -193,7 +194,7 @@ function latest($params) {
  */
 function transactions($params) {
   global $allowDupTxs;
-  if (!$_POST) return getTxs($params); // the GET endpoint instead of the POST
+  global $scanned; $scanned = true;
   
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
@@ -270,7 +271,7 @@ function transactions($params) {
 }
 
 /**
- * POST /info (CQP, lastTx)
+ * POST /info (CQP, count)
  *   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
  *
  * Retrieve recent transactions and related data from the server.
@@ -279,8 +280,8 @@ function transactions($params) {
 function info($params) {
   global $mya;
   
-  foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-  if (!is_numeric($lastTx) or $lastTx > now()) return exitJust(X_SYNTAX);
+  foreach (ray('count') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+  if (!is_numeric($count) or $count < 1) return exitJust(X_SYNTAX);
 
   foreach (ray('balance crumbs roundup') as $k) $$k = $mya->$k;
   $surtxs = (array) db\get('SUM(amount) AS amount, SUM(`portion`) AS `portion`', 'tx_rules', '`from`=:myid AND action=:ACT_SURTX AND payeeType=:REF_ANYCO', ray('myid', $mya->id));
@@ -290,7 +291,7 @@ function info($params) {
   $toMe = 'uid2 IN (:myUids)';
   $fromMe = 'uid1 IN (:myUids)';
   $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
-  $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) AND created>:lastTx", compact(ray('myUids lastTx')));
+  $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
 
   foreach ($txs as $i => $tx) {
     extract((array) $tx);
@@ -429,8 +430,10 @@ function badTx($a, $info, $z) {
   global $mya;
   extract(just('offline amount created', $info, NULL));
   
+  $badFlds = 'version deviceId actorId otherId amount description created proof offline problem';
   $info['offline'] = (int) $offline;  
-  db\insert('tx_bads', $info);
+  $info['problem'] = $z->msg;
+  db\insert('tx_bads', just($badFlds, $info));
   
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
   $dpy = ray('name amount created by', $a ? $a->fullName : t('UNKNOWN'), u\fmtAmt($amount), fmtDt($created), $by);

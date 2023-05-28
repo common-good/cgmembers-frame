@@ -115,10 +115,8 @@ Scenario: A company supplies company information
   | Employees       | |
   | Annual Gross    | |
   | Website         | ourpub.co |
-  | Tips            | |
   | Founded         | |
   | Describe        | |
-  | App permissions | |
   | Nudge Every     | |
 
   When member "C:A" completes form "settings/company" with values:
@@ -132,9 +130,7 @@ Scenario: A company supplies company information
   | founded     | %mdY-9y |
   | website     | example.com |
   | description | really good ale |
-  | can         | 0=>0, 1=>2 |
   | staleNudge  | 8 |
-  | tips        | 1 |
   Then members have:
   | uid         | .ZZC |**
   | fullName    | Our Pub  |
@@ -146,7 +142,7 @@ Scenario: A company supplies company information
   | website     | example.com |
   | description | really good ale |
   | staleNudge  | 8 |
-  | coFlags     | private,tip,charge |
+  # should be | coFlags     | private | but not until everyone's using our node.js app
   And we show "Share When You Receive" with:
   | Crumbs |
   And we say "status": "info saved|step completed"

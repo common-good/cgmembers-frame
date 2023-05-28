@@ -21,7 +21,9 @@ function formCEFBilling($form, &$sta, $month = '') {
 function showMo($month) {
   
   $sqlTitle = t('CEF Hours By Task ' . $month);
-  $dt = fmtDt(strtotime("1$month"), 'Y-m');
+  $dt0 = strtotime("1$month");
+  $dt9 = u\plusMonths(1, $dt0);
+  $dt = fmtDt($dt0, 'Y-m');
   
   $sql = <<<X
     SELECT CONCAT(
@@ -32,18 +34,17 @@ function showMo($month) {
   ) AS TaskName,
 
   IFNULL(ts.class, tsp.class) AS `Class.`,
-  REPLACE(MID(FROM_UNIXTIME(MIN(IFNULL(start0, :NOW))), 1, 10), '-', '') AS Start,
-  REPLACE(MID(FROM_UNIXTIME(MAX(IFNULL(stop9, 0))), 1, 10), '-', '') AS Stop,
-  ROUND(SUM(hours), 2) AS Hours,
+  ROUND(SUM(secs)/3600, 2) AS Hours,
+  ROUND(SUM(toDate)/3600, 2) AS ToDate,
   ROUND(SUM(ts.estimate)/3600, 2) AS Estimate,
   ROUND(2 * SUM(ts.estimate)/3600, 2) AS MinCap
 
   FROM (SELECT
     task AS taskid,
-    MIN(IFNULL(start, :NOW)) AS start0,
-    MAX(IFNULL(stop, 0)) AS stop9,
-    SUM(stop-start)/3600 AS hours
-    FROM cu_times
+    SUM(cu0.stop-cu0.start) AS secs,
+    cu2.secs AS toDate
+    FROM cu_times  cu0 
+    JOIN (SELECT task, SUM(stop-start) AS secs FROM cu_times WHERE stop<$dt9 GROUP BY task) cu2 USING (task)
     WHERE MID(FROM_UNIXTIME(stop), 1, 7)='$dt'
     GROUP BY task
   ) tsum
@@ -58,8 +59,15 @@ function showMo($month) {
   AND IFNULL(ts.name, '') NOT LIKE '%Staff and Outreach Partners still cannot create subscribers%'
   AND CONCAT(IFNULL(tsp.tags, ''), ' ', IFNULL(ts.tags, '')) NOT LIKE '%unbillable%' 
   GROUP BY IFNULL(tsp.id, ts.id)
-  ORDER BY Start
+  ORDER BY TaskName
 X;
+
+/*
+    FROM_UNIXTIME(MIN(IFNULL(start, :NOW))) AS start0,
+    FROM_UNIXTIME(MAX(IFNULL(stop, 0))) AS stop0,
+  CONCAT_WS('/', MID(start0, 6, 2), MID(start0, 9, 2)) AS Start,
+  CONCAT_WS('/', MID(stop0, 6, 2), MID(start0, 9, 2)) AS Stop,
+*/
 
   $info = compact(ray('sql sqlTitle'));
 

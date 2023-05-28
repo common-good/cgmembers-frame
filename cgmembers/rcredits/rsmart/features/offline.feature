@@ -27,7 +27,7 @@ Setup:
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | buy        |
-  | .ZZC | .ZZB  |   2 | scan       |
+  | .ZZC | .ZZB  |   2 | sell       |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
   And these "txs": 

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61h'; // software version
+const R_VERSION = '3.61i'; // software version
 const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -444,7 +444,7 @@ const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account 
 // Company Account flags (bits)
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
-const CO_SPONSORED = 2; // fiscally sponsored by CG (name should start with "Common Good" or "Common Good FBO ", should have CG's EIN, and maybe CO_PRIVATE)
+const CO_SPONSORED = 2; // fiscally sponsored by CG (should have CG's EIN, and maybe CO_PRIVATE if it has another CG account)
 
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
@@ -565,14 +565,14 @@ const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city
 const B_RELATED = 100; // has a relationship record
 const B_NONE = 100; // no access
 const B_READ = 101; // can view Transaction History
-const B_SCAN = 102; // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
+const B_SELL = 102; // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
 const B_REFUND = 103; // can undo transactions and make refunds or trade cash at point of sale
-const B_SELL = 104; // can send invoices (or scan or view)
+const B_UNUSED = 104; // 
 const B_BUY = 105; // can make purchase for the account (or sell or scan or view)
 const B_MANAGE = 106; // can manage all aspects of the account
 const B_JOINT = 107; // make this a joint account (subsuming the other, with permission) -- no companies!
-$GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept %PROJECT card payments'), t('give refunds & give USD for %RCREDITS'), t('send invoices'), t('make purchases'), t('manage account'), t('joint account'));
-const B_PERMISSIONS = 'related read scan refund sell buy manage joint';
+$GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept payments'), t('give refunds'), t('---'), t('make purchases'), t('manage account'), t('joint account'));
+const B_PERMISSIONS = 'related read sell refund unused buy manage joint';
 
 // Canonic strings
 define('S_REFUND', t('refund'));

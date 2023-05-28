@@ -16,8 +16,8 @@ Setup:
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | buy        |
-  | .ZZC | .ZZB  |   2 | scan       |
-  | .ZZF | .ZZA  |   1 | scan       |
+  | .ZZC | .ZZB  |   2 | sell       |
+  | .ZZF | .ZZA  |   1 | sell       |
 
 Scenario: Device requests a bad op
   When agent "C:A" asks device "devC" for op %random with: ""

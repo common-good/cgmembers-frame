@@ -16,7 +16,7 @@ Scenario: The app asks to initialize the test data
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZPC | .ZPA  |   1 | manage     |
-  | .ZPC | .ZPB  |   2 | scan       |
+  | .ZPC | .ZPB  |   2 | sell       |
   | .ZPG | .ZPF  |   1 | manage     |
   And member ".ZPA" has "card" steps done: "all"
   And count "txs" is 0

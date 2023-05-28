@@ -235,7 +235,7 @@ function identify($args) {
       if (test() or $version >= 230) return posErr('bad agent', [], $companyInfo); 
       r\tellAdmin('bad code in identify op: ' . $err, compact(ray('member code')));
     }
-    if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
+    if (!$a->can(B_SELL)) return posErr('agent cannot scan', [], $companyInfo);
 
     list ($person, $company) = $mya->co 
     ? [$a->proSe ? '' : $a->agentA->fullName, $mya->fullName] 
@@ -450,7 +450,7 @@ function getCompanyInfo() {
   $descriptions = explode("\n", $mya->selling) ?: ['?'];
   
   if ($mya->co and !$mya->trialco) { // normal company with agent
-    $can = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+    $can = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
          | ($mya->can(B_REFUND) ? u\bit(CO_UNDO) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
          | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
          | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
