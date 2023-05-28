@@ -24,7 +24,7 @@ Setup:
   And these "u_relations":
   | main | agent | permission | rCard |*
   | .ZZC | .ZZA  | buy        |       |
-  | .ZZC | .ZZB  | scan       |       |
+  | .ZZC | .ZZB  | sell       |       |
   | .ZZC | .ZZD  | read       |       |
   | .ZZC | .ZZE  | buy        | yes   |
   | .ZZA | .ZZB  | joint      |       |

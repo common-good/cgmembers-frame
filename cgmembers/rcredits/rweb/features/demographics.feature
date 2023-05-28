@@ -40,7 +40,7 @@ Setup:
   | .ZZD   | .ZZB  |        2 |
   And these "u_relations":
   | main | agent | permission | employee | owner | draw |*
-  | .ZZC | .ZZA  | scan       |        Y |     0 |    0 |
+  | .ZZC | .ZZA  | sell       |        Y |     0 |    0 |
   | .ZZC | .ZZB  | manage     |          |       |      |
   | .ZZC | .ZZD  |            |          |       |      |
   And these "tx_timed":

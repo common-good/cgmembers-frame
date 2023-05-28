@@ -23,7 +23,7 @@ Setup:
   | .ZZC | refund,r4usd |
   And these "u_relations":
   | reid | main | agent | num | permission |*
-  | .ZZA | .ZZC | .ZZA  |   1 | scan       |
+  | .ZZA | .ZZC | .ZZA  |   1 | sell       |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |

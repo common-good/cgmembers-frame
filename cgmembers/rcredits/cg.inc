@@ -1312,7 +1312,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   }
   list ($myAccess, $otherAccess) = u\order($taking xor $neg, B_SELL, B_BUY);
   list ($myWhat, $otherWhat) = u\order($taking xor $neg, t('sales'), t('purchases'));
-  if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
+  if ($scanned and $taking and $neg) list ($myAccess, $myWhat) = array(B_REFUND, t('refunds'));
   if (!$a1->can($myAccess)) return be\txRet(FALSE, "no perm", ray('what', $myWhat));
   if ((!$a2->can($otherAccess)) and (!$invoicing or $a2->closed)) {
     return be\txRet(FALSE, 'other no perm', ray('otherName what', $a2->agentA->fullName, $otherWhat));

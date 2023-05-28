@@ -565,14 +565,14 @@ const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city
 const B_RELATED = 100; // has a relationship record
 const B_NONE = 100; // no access
 const B_READ = 101; // can view Transaction History
-const B_SCAN = 102; // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
+const B_SELL = 102; // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
 const B_REFUND = 103; // can undo transactions and make refunds or trade cash at point of sale
-const B_SELL = 104; // can send invoices (or scan or view)
+const B_UNUSED = 104; // 
 const B_BUY = 105; // can make purchase for the account (or sell or scan or view)
 const B_MANAGE = 106; // can manage all aspects of the account
 const B_JOINT = 107; // make this a joint account (subsuming the other, with permission) -- no companies!
-$GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept %PROJECT card payments'), t('give refunds & give USD for %RCREDITS'), t('send invoices'), t('make purchases'), t('manage account'), t('joint account'));
-const B_PERMISSIONS = 'related read scan refund sell buy manage joint';
+$GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept payments'), t('give refunds'), t('---'), t('make purchases'), t('manage account'), t('joint account'));
+const B_PERMISSIONS = 'related read sell refund unused buy manage joint';
 
 // Canonic strings
 define('S_REFUND', t('refund'));

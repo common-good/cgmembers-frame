@@ -25,7 +25,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   if (!r\cook('scanner')) {
     if (!$mya) return goFirst('signin'); // sign in if no scanner
-    $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:scan', ray('myid scan', $mya->id, r\perm(B_SCAN)));
+    $accts = db\keyed('uid,fullName', 'u_relations r JOIN users u ON u.uid=r.main', 'other=:myid AND permission>=:sell', ray('myid sell', $mya->id, r\perm(B_SELL)));
     if ($accts) return chooseScanner($accts, $dom ? "$dom/$code" : '');
     $scannerA = $mya;
     r\setCook('scanner', $mya->mainQid); // proSe with no other accounts, first time, so set scanner and stay signed in

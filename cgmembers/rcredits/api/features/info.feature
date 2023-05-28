@@ -16,7 +16,7 @@ Setup:
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZPC | .ZPA  |   1 | buy        |
-  | .ZPC | .ZPB  |   2 | scan       |
+  | .ZPC | .ZPB  |   2 | sell       |
   | .ZPF | .ZPA  |   1 | manage     |
   And these "tx_rules":
   | id | action | from | to   | payer | payeeType | amount | portion |*
