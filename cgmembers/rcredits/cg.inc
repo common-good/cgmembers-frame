@@ -309,9 +309,12 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $to = [$toEmail => $toA->fullName];
     $subs += r\balAndCred($toA) + (array) $toA->account(); // this omits any special fields or special formatting (except balance and creditLine)
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
-    $subs['shortName'] = $toA->name;
-    $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
-    $subs['surveyLink'] = $toA->co ? CO_SURVEY_LINK : SURVEY_LINK;
+    
+    $shortName = $toA->shortName;
+    $zip3 = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
+    $surveyLink = $toA->co ? CO_SURVEY_LINK : SURVEY_LINK;
+    u\preray(compact(ray('shortName zip3 surveyLink')), $subs);
+    
     if ($toA->closed and $index != 'password-reset') return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint

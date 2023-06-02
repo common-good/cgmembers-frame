@@ -11,7 +11,7 @@ Setup:
   | uid  | fullName   | email | cc  | cc2  | floor | flags             | helper |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt | 0      |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt | 0      |
-  | .ZZC | Corner Pub | c@    | ccC |      |     0 | ok,co,confirmed   | .ZZA   |
+  | .ZZC | Corner Pub | c@    | ccC |      |   -30 | ok,co,confirmed   | .ZZA   |
   | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed      | 0      |
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |  -250 | ok,secret,roundup,debt | .ZZD   |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,co,confirmed   | 0      |
@@ -60,8 +60,8 @@ Scenario: A cashier asks to charge someone, paying with credit line
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | from   | Bea Two   |
   And we message "charged you" to member ".ZZB" with subs:
-  | created | otherName  | amount | payerPurpose |*
-  | %now    | Corner Pub | $100   | food         |
+  | created | otherName  | amount | payerPurpose | balance |*
+  | %now    | Corner Pub | $100   | food         |   $-100 |
   And balances:
   | uid  | balance |*
   | ctty |    -500 |
