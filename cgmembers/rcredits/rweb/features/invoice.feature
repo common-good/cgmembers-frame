@@ -6,10 +6,10 @@ SO I can buy and sell stuff.
 Setup:
   Given members:
   | uid  | fullName | floor | flags             | risks   | bankAccount  |*
-  | .ZZA | Abe One  |     0 | ok,confirmed      |         |              |
+  | .ZZA | Abe One  |   -10 | ok,confirmed      |         |              |
   | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              |
-  | .ZZC | Our Pub  |     0 | ok,confirmed,co   | hasBank | %T_BANK_ACCT |
-  | .ZZD | Dee Four |     0 |                   |         |              |
+  | .ZZC | Our Pub  |   -30 | ok,confirmed,co   | hasBank | %T_BANK_ACCT |
+  | .ZZD | Dee Four |     0 | debt              |         |              |
   And these "u_relations":
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
@@ -116,8 +116,8 @@ Scenario: A member confirms request to charge a not-yet member
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZD | .ZZA | labor |
   And we message "invoiced you" to member ".ZZD" with subs:
-  | otherName | amount | purpose |*
-  | Abe One   | $100   | labor   |
+  | otherName | amount | purpose | balance | creditLine                          |*
+  | Abe One   | $100   | labor   |      $0 | $0 (based on your monthly activity) |
 
   When member ".ZZD" visits page "handle-invoice/nvid=1"
   Then we show "Confirm Payment" with:

@@ -1038,7 +1038,8 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   if ($status == TX_PENDING) {
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     $subs1 = ray('myName otherName otherEmail otherPhone _a1 reply', 
-      $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee) + $subs2;
+      $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee);
+    $subs1 += r\balAndCred($payerA) + $subs2;
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
