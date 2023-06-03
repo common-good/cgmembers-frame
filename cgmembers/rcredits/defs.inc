@@ -282,6 +282,7 @@ const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to 
 const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
 const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
 const TICKLE_DELAYED = 6 * 7; // number of days to wait after activation, before followup if no gift or no CGC
+const ALERT_DELAY = 5; // number of seconds to wait before rechecking db for a new invoice
 const OFTENS = 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)';
 const OFX_TX_FLDS = 'trnType dtPosted trnAmt fitId name memo';
 const OFTENS_SECS = ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS];

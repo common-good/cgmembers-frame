@@ -160,19 +160,31 @@ function idPhoto($params) {
 }
 
 /**
- * POST /latest
- * Return very short information about latest information of interest to the app.
- * @param int $lastTx: Unixtime of last tx initiated by the device
- * @return {version, txCount, msg}
+ * POST /alerts
+ * Initiate a Server-Sent-Events connection
+ * Sleep until there is a transaction request
+ * @return the request as an event
  */
-function latest($params) {
-  global $mya;
-  foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+function alerts($params) {
+  global $mya; $myid = $mya->id; $jid = $mya->jid;
 
-  $version = APP_VERSION;
-  $txCount = db\count('txs', '(uid1 IN (:uids) OR uid2 IN (:uids)) AND created>:lastTx', ray('uids, lastTx', $mya->uids, $lastTx));
-  $msg = NULL; // a way to communicate with app user(s)
-  return exitJson(compact(ray('version txCount msg')));
+  while (true) { // Loop until the client closes the stream or a new invoice is found
+    if (connection_aborted()) exit(); // client lost interest (but will try again)
+    if ($row = db\row('tx_requests', '(payer IN (:uids) OR payee IN (:uids)) AND state=:TX_PENDING AND ORDER BY created', compact('myid'))) {
+      extract(just('amount payer payee purpose created', $row));
+      $toMe = $mya->isMe($payee);
+      $a = r\acct($toMe ? $payer : $payee);
+      $name = $a->fullName;
+      $accountId = qr\url($a, 'main');
+      $description = $purpose;
+      if (!$toMe) $amount = -$amount;
+      header('Content-Type: text/event-stream'); // Set file mime type event-stream
+      header('Cache-Control: no-cache');
+      return exitJson(compact(ray('amount accountId name description created toMe')), 'OK');
+      flush(); // force sending data to client
+    }  
+    sleep(ALERT_DELAY); // Wait for the next message / event
+  }
 }
   
 /**
