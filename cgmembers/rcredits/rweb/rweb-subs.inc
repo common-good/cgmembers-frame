@@ -928,7 +928,7 @@ function boxId($code, $a, $version = NULL) {
  */
 function boxIdCheck($code, $a) {
   if (!$row = db\row('r_boxes', compact('code'))) return NULL;
-  extract((array) $row[0]);
+  extract((array) $row);
 // nope. might be several accounts on this device  u\EXPECT($uid == $a->id, 'actor mismatch in deviceId');
   return $id;
 }
