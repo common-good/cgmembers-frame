@@ -166,24 +166,28 @@ function idPhoto($params) {
  * @return the request as an event
  */
 function alerts($params) {
-  global $mya; $myid = $mya->id; $jid = $mya->jid;
+  global $mya; $uids = $mya->uids;
+
+  header('Content-Type: text/event-stream'); // Set file mime type event-stream
+  header('Cache-Control: no-cache');
 
   while (true) { // Loop until the client closes the stream or a new invoice is found
     if (connection_aborted()) exit(); // client lost interest (but will try again)
-    if ($row = db\row('tx_requests', '(payer IN (:uids) OR payee IN (:uids)) AND state=:TX_PENDING AND ORDER BY created', compact('myid'))) {
-      extract(just('amount payer payee purpose created', $row));
+      
+      /*
+    if ($row = db\row('tx_requests', '(payer IN (:uids) OR payee IN (:uids)) AND status=:TX_PENDING ORDER BY created', compact('uids'))) {
+      extract(just('amount payer payee purpose created', (array) $row));
       $toMe = $mya->isMe($payee);
       $a = r\acct($toMe ? $payer : $payee);
       $name = $a->fullName;
       $accountId = qr\url($a, 'main');
       $description = $purpose;
       if (!$toMe) $amount = -$amount;
-      header('Content-Type: text/event-stream'); // Set file mime type event-stream
-      header('Cache-Control: no-cache');
-      return exitJson(compact(ray('amount accountId name description created toMe')), 'OK');
+      echo 'data: ' . json_encode(compact(ray('amount accountId name description created toMe')));
       flush(); // force sending data to client
-    }  
+    }
     sleep(ALERT_DELAY); // Wait for the next message / event
+    */
   }
 }
   
@@ -233,7 +237,6 @@ function transactions($params) {
   }
 
   if (!$proofOk and !$proofOkUndo) { // bad proof
-    flog(compact(ray('testProofWanted testProofWantedUndo')));
     r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
     if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $gotProof");
     return exitJust(t('bad proof'), X_SYNTAX);
@@ -513,7 +516,6 @@ function authOk($arg, $params) {
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
     if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
-///    flog('deviceId=' . $deviceId);
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {
