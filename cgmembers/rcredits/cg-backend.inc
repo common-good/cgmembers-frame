@@ -1309,19 +1309,20 @@ function roundupDonations($uids, $start, $end) {
  * @param acct $a: the account for which to find related accounts
  * @param int $perm: $a's minimum permissions to include an account in the list
  * @param string $where: additional criteria
+ * @param bool $noAdmin: if true, ignore admin permissions
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
-function accountChoices($a, $perm = B_READ, $crit = 1) {
+function accountChoices($a, $perm = B_READ, $where = 1, $noAdmin = FALSE) {
   if (!$a) return FALSE;
 
   $res[$aid = $a->agentId] = $a->agentA->bestName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $crit AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
+  $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $where AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
 
-  if ($a->admRegion) {
+  if ($a->admRegion and !$noAdmin) {
     $admWhere = $a->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $admWhere UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
-  } elseif ($a->admin) {
+  } elseif ($a->admin and !$noAdmin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
