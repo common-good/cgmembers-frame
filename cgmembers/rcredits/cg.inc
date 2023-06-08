@@ -483,7 +483,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $info = $subs + compact('body');
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
-  if ($email != $to) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }
 
