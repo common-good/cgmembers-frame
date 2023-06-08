@@ -48,7 +48,7 @@ define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
 define('PGP_KEY', config('pgpKey'));
 define('DKIM_PRIVATE', PGP_KEY);
-define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
+define('R_INVITE_KEY', basename(strstr(nni($_SERVER, 'REQUEST_URI'), '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
@@ -677,7 +677,8 @@ const TX_AJAX = 7;
 const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
 const TX_API = 9;
 const TX_HACK = 10;
-const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack';
+const TX_SOCKET = 11; // app websocket switchboard
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket';
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC

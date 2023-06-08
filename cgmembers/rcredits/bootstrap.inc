@@ -2583,7 +2583,7 @@ function ip_address() {
   $ip_address = &drupal_static(__FUNCTION__);
 
   if (!isset($ip_address)) {
-    $ip_address = $_SERVER['REMOTE_ADDR'];
+    $ip_address = nni($_SERVER, 'REMOTE_ADDR');
 
     if (getV('reverse_proxy', 0)) {
       $reverse_proxy_header = getV('reverse_proxy_header', 'HTTP_X_FORWARDED_FOR');
