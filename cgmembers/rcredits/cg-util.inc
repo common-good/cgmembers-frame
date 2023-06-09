@@ -11,6 +11,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Testing as t;
+use Websocket as ws;
 
 const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
 const HEX_CHARS = '0123456789abcdef';
@@ -1758,6 +1759,20 @@ function _GET($ray = NULL) {
     $T_GET = $ray;
   }
   return $T_GET;
+}
+
+/**
+ * Send a message to our websocket to pass on to the appropriate app user.
+ */
+function tellApp($actorA, $otherA, $action, $amount, $description, $created, $note = '') {
+  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+  $client = new ws\Client("ws://localhost:8081");
+  $op = 'tell';
+  $deviceId = R_WORD; // tell our websocket to loop for each mobile device for otherA
+  $actorId = qr\url($actorA, 'main');
+  $otherId = qr\url($otherA, 'main');
+  $msg = json_encode(compact(ray('op deviceId actorId otherId action amount description created note')));
+  $client->text($msg);
 }
 
 /**

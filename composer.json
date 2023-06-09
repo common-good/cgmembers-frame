@@ -14,6 +14,7 @@
     "tecnickcom/tcpdf": "^6.4",
     "robmorgan/phinx": "^0.12.10",
     "wildbit/postmark-php": "^4.0",
-    "textalk/websocket": "^1.6"
+    "textalk/websocket": "^1.6",
+    "cboden/ratchet": "^0.4.4"
   }
 }

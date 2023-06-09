@@ -35,10 +35,12 @@ class WebSocketsServer implements MessageComponentInterface {
 
   public function onMessage(ConnectionInterface $from, $msg) {
     if (!$ray = json_decode($msg)) return er("Bad JSON message: $msg", $from);
-    extract(just('op actorId deviceId otherId message id v', $ray));
+    extract(just('op deviceId actorId otherId action amount description created note', $ray, NULL));
     switch ($op) {
       case 'connect': $map[$actorId] = $from; break;
-      case 'tell': $map[$otherId]->send(compact(ray('actorId message id v'))); break;
+      case 'tell': $map[$otherId]->send(compact(ray('actorId action amount description created note'))); break;
+      case 'confirm': case 'deny':
+        // mark the invoice AND tell the other
       default: return er('Bad op: ' . pr($op), $from);
     }
   }
