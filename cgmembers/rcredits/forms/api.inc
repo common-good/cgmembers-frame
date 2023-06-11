@@ -160,6 +160,22 @@ function idPhoto($params) {
 }
 
 /**
+ * POST /confirm
+ * Confirm or deny an invoice
+ */
+function confirm($params) {
+  global $mya;
+  require_once R_ROOT . '/forms/handle-invoice.inc';
+  extract(just('id yesno whyNot', $params, NULL));
+
+  if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
+  if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
+  if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
+  
+  handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], NULL, $whyNot, $inv);
+}
+
+/**
  * POST /alerts
  * Initiate a Server-Sent-Events connection
  * Sleep until there is a transaction request
