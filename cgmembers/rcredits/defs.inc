@@ -35,6 +35,8 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 
 $base_url = config('baseUrl');
+
+$requestUri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : NULL; // can't use nni() yet
 define('GEOCODE_KEY', config('geocodeKey'));
 define('BASE_URL', $base_url);
 define('LOCAL_URL', config('localUrl', $base_url));
@@ -48,7 +50,7 @@ define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
 define('PGP_KEY', config('pgpKey'));
 define('DKIM_PRIVATE', PGP_KEY);
-define('R_INVITE_KEY', basename(strstr(nni($_SERVER, 'REQUEST_URI'), '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
+define('R_INVITE_KEY', basename(strstr($requestUri, '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));

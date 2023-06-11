@@ -838,7 +838,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
     } else {
       $notices = $positive ? ($tx->taking ? ['re-charged you', 'you re-charged'] : ['you refunded', 'refunded you']) : ['refunded you', 'you refunded'];
       $did = $positive ? ($tx->taking ? 're-charged' : 'refunded') : ($goods ? 'refunded' : 'credited'); // positive is double reverse
-      $appMsg = $toMe ? ($goods ? t('refunded') : t('credited')) : t('re-charged')
+      $appMsg = $toMe ? ($goods ? t('refunded') : t('credited')) : t('re-charged');
     }
   } else u\FAIL("unknown type: '$type'.");
 
@@ -934,9 +934,9 @@ EOF;
       $absValue = min($price - $rebates, $absValue); // don't refund more than is being spent (food fund especially)
       if ($absValue <= 0) continue;
       $rebates += $absValue;
-    } else { // stepup -- any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
+    } else { // everything else is an auxiliary transaction
       list ($type, $desc) = [E_AUX, $purpose];
-      $stepups += $absValue;
+      if ($from == $buyer->id) $stepups += $absValue; // stepup -- anything else from the buyer is a donation of some sort
     }
 
     if ($test) continue;

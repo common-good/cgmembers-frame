@@ -81,6 +81,8 @@ class Tx {
     case 'a2': return r\acct($tx->uid2, $tx->agt2);
     case 'amt1': return $tx->e1->amount;
     case 'amt2': return $tx->e2->amount;
+    case 'for1': return $tx->e1->description;
+    case 'for2': return $tx->e2->description;
     case 'taking': return ($tx->actorId == $tx->uid2);
 
     case 'otherId': return $tx->otherEntry->uid;
