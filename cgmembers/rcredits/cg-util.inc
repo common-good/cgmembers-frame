@@ -1764,7 +1764,7 @@ function _GET($ray = NULL) {
 /**
  * Send a message to our websocket to pass on to the appropriate app user.
  */
-function tellApp($actorA, $otherA, $action, $amount, $description, $created, $note = '') {
+function tellApp($action, $actorA, $otherA, $amount, $description, $created, $note = '') {
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
   $client = new ws\Client("ws://localhost:8081");
   $op = 'tell';
