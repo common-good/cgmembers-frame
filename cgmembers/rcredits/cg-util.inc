@@ -11,7 +11,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Testing as t;
-use Websocket as ws;
+use CG\QR as qr;
 
 const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
 const HEX_CHARS = '0123456789abcdef';
@@ -1765,8 +1765,9 @@ function _GET($ray = NULL) {
  * Send a message to our websocket to pass on to the appropriate app user.
  */
 function tellApp($action, $actorA, $otherA, $amount, $description, $created, $note = '') {
-  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-  $client = new ws\Client("ws://localhost:8081");
+//  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+  require_once DRUPAL_ROOT . '/../vendor/textalk/websocket/lib/Client.php'; // previous line mysteriously fails
+  $client = new \Websocket\Client('ws://localhost:8081');
   $op = 'tell';
   $deviceId = R_WORD; // tell our websocket to loop for each mobile device for otherA
   $actorId = qr\url($actorA, 'main');
