@@ -842,7 +842,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
     }
   } else u\FAIL("unknown type: '$type'.");
 
-  if ($mya and $appMsg == 'paid') { // only for payments for now (and requests -- see be\invoice())
+  if ($mya and in($appMsg, 'charged paid')) { // only for payments for now (and requests -- see be\invoice())
     $otherA = $toMe ? $tx->a1 : $tx->a2;
     u\tellApp($appMsg, $mya, $otherA, abs($tx->amt2), $tx->for2, $tx->created);
   }

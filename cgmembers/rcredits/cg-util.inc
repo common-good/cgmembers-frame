@@ -1764,16 +1764,28 @@ function _GET($ray = NULL) {
 /**
  * Send a message to our websocket to pass on to the appropriate app user.
  */
-function tellApp($action, $actorA, $otherA, $amount, $description, $created, $note = '') {
-//  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-  require_once DRUPAL_ROOT . '/../vendor/textalk/websocket/lib/Client.php'; // previous line mysteriously fails
-  $client = new \Websocket\Client('ws://localhost:8081');
+function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
+  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+  require_once R_ROOT . '/cg-qr.inc';
+
   $op = 'tell';
-  $deviceId = R_WORD; // tell our websocket to loop for each mobile device for otherA
+  $deviceId = bin2hex(R_WORD); // tell our websocket to loop for each mobile device for otherA (json_encode fails without bin2hex)
   $actorId = qr\url($actorA, 'main');
   $otherId = qr\url($otherA, 'main');
-  $msg = json_encode(compact(ray('op deviceId actorId otherId action amount description created note')));
-  $client->text($msg);
+  $name = $actorA->fullName;
+  $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
+  $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+
+  set_error_handler(function() { /* ignore warnings (and errors) */ });
+  try {
+    $sp = new \Paragi\PhpWebsocket\Client($url, SOCKET_PORT);
+    $sp->write($msg);
+//    echo "Server responded with: " . $sp->read();
+    $sp->close();
+  } catch (\Paragi\PhpWebsocket\ConnectionException | Exception $e) {
+    flog(t('PHPWebsocket error: ') . $e->getMessage());
+  }
+  restore_error_handler();
 }
 
 /**

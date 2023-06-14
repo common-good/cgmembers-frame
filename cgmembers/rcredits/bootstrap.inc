@@ -1375,7 +1375,7 @@ function fullQid($q) {
 
   $logDir = LOG_DIR . ray(TX_CHANNELS)[$chan];
   foreach ([LOG_DIR, $logDir] as $dir) if (!is_dir($dir)) {
-    if ($chan == TX_CRON) r\tellAdmin(t('You may need to create %dir by hand', compact('dir')));
+    if (in($chan, [TX_CRON, TX_SOCKET])) r\tellAdmin(t('You may need to create %dir by hand', compact('dir')));
     mkdir($dir, 0775);
     u\EXPECT(is_dir($dir), 'directory creation failed: ' . $dir);
   }

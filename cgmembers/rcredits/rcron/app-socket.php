@@ -48,21 +48,28 @@ class WebSocketsServer implements MessageComponentInterface {
   public function onError(ConnectionInterface $conn, \Exception $e) {return er($e->getMessage());}
 
   public function onMessage(ConnectionInterface $from, $msg) {
-    $from-send('got ' . pr($msg) . ' -- hello!');
-    if (!$ray = json_decode($msg)) return er("Bad JSON message: $msg", $from);
-    if (!$ok = w\authOk('appSocket', $ray)) return;
-    extract(just('op deviceId actorId otherId', $ray, NULL));
+    if (!$ray = json_decode($msg)) return er("Bad JSON message: " . pr($msg), $from);
+    extract(just('op deviceId actorId otherId name action amount purpose note', $ray, NULL)); // op, deviceId, and actorId are always required
+    if ($deviceId != bin2hex(R_WORD) and !w\authOk('appSocket', $ray, TRUE)) return;
     
     switch ($op) {
-      case 'connect': $map[$actorId] = $from; break;
-      case 'tell': $map[$otherId]->send(just('actorId action amount description created note', $ray)); break;
+      case 'connect': $this->map[$actorId] = $from; break;
+      case 'tell':
+        if (!$to = nni($this->map, $otherId)) return;
+        $what = t('%amt for %what', 'amt what', u\fmtAmt($amount), $purpose);
+        $subs = ray('name action what note', $name, $action, $what, $note);
+        $message = $action == 'request' ? t('%name asks you to pay %what. Okay?', $subs)
+        : ($action == 'denied' ? t('%name has denied your request to pay %what, because "%note".', $subs)
+        : t('%name %action you %what.', $subs)); // paid or charged
+        $to->send(json_encode(compact(ray('message action note'))));
+        break;
       default: return er('Bad op: ' . pr($op), $from);
     }
   }
 }
 
 echo 'Running app websocket switchboard...';
-$server = IoServer::factory(new HttpServer(new WsServer(new WebSocketsServer())), 8081);
+$server = IoServer::factory(new HttpServer(new WsServer(new WebSocketsServer())), SOCKET_PORT);
 $server->run();
 
 function er($msg, $conn) {
