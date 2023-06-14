@@ -111,7 +111,7 @@ function handleInvoice($op, $payAmount, $always, $whyNot, $info) {
   
   if ($op == 'pay' and !$whyNot) {
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds
+      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
       db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
@@ -134,4 +134,5 @@ function handleInvoice($op, $payAmount, $always, $whyNot, $info) {
   } else $msg = ''; // default: canceled
 
   say($msg ?: 'nothing done', $ok ? '' : 'ERR');
+  return $ok;
 }

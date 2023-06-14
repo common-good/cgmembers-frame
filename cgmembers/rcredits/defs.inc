@@ -103,8 +103,8 @@ const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these t
 const DEV_ONLY_MSG = 'only on development machine';
 const DEMO_CTTY = -2; // uid of demo community on demo server
 
-$host = strtolower(@$_SERVER['HTTP_HOST']);
-if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
+$host = strtolower(@$_SERVER['HTTP_HOST']); // expect proper host unless running app-socket or cron
+if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS

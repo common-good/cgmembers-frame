@@ -160,53 +160,22 @@ function idPhoto($params) {
 }
 
 /**
- * POST /confirm
+ * POST /confirms
  * Confirm or deny an invoice
  */
-function confirm($params) {
+function confirms($params) {
   global $mya;
-  require_once R_ROOT . '/forms/handle-invoice.inc';
+  require_once R_ROOT . '/forms/handleinvoice.inc';
   extract(just('id yesno whyNot', $params, NULL));
 
   if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
   if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
   if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
   
-  handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], NULL, $whyNot, $inv);
+  if (!$ok = handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], NULL, $whyNot, $inv)) return exitJust(X_DENIED);
+  exitJson('', X_OK);
 }
 
-/**
- * POST /alerts
- * Initiate a Server-Sent-Events connection
- * Sleep until there is a transaction request
- * @return the request as an event
- */
-function alerts($params) {
-  global $mya; $uids = $mya->uids;
-
-  header('Content-Type: text/event-stream'); // Set file mime type event-stream
-  header('Cache-Control: no-cache');
-
-  while (true) { // Loop until the client closes the stream or a new invoice is found
-    if (connection_aborted()) exit(); // client lost interest (but will try again)
-      
-      /*
-    if ($row = db\row('tx_requests', '(payer IN (:uids) OR payee IN (:uids)) AND status=:TX_PENDING ORDER BY created', compact('uids'))) {
-      extract(just('amount payer payee purpose created', (array) $row));
-      $toMe = $mya->isMe($payee);
-      $a = r\acct($toMe ? $payer : $payee);
-      $name = $a->fullName;
-      $accountId = qr\url($a, 'main');
-      $description = $purpose;
-      if (!$toMe) $amount = -$amount;
-      echo 'data: ' . json_encode(compact(ray('amount accountId name description created toMe')));
-      flush(); // force sending data to client
-    }
-    sleep(ALERT_DELAY); // Wait for the next message / event
-    */
-  }
-}
-  
 /**
  * Create the requested transaction.
  * @param int $version: app version number
@@ -505,28 +474,13 @@ function photoReturn($pic) {
 }
 
 /**
- * Return the company acct.
- * @param string $device: the app user's device ID, first 50 chars.
- * @param string $err: (returned) error message, if any
- * @return: the agent's company acct object (NULL if error)
- */
-function getA($device) {
-  if (!$uid = db\get('uid', 'r_boxes', 'code=:device ORDER BY access DESC', compact('device'))) return NULL;
-  if (!$mya = r\acct($uid)) return NULL; // bad agent
-//  if (r\foreignServer(r\uidRegion($mya->agentId))) return NULL; // wrong server for agent
-  if (!$mya->ok) return NULL; // company inactive
-  return $mya; // don't log in
-//  if (!$mya->proSe) r\setAcct($mya->agentId); // get agent first, if not proSe
-//  return r\setAcct($mya);
-}
-
-/**
  * Check the validity of a specified deviceId and actorId.
  * @param string $arg: the endpoint
  * @param assoc $params: the parameters
+ * @param bool $noBox: if true, don't bother with a boxId (important for appSocket)
  * @return <ok>
  */
-function authOk($arg, $params) {
+function authOk($arg, $params, $noBox = FALSE) {
   global $mya, $boxId;
 
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
@@ -536,10 +490,9 @@ function authOk($arg, $params) {
       // accept it when testing
     } else {
       if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
-///    debug($nm);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
+    if (!$noBox) $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;
