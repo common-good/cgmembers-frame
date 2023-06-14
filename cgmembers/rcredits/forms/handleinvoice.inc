@@ -96,41 +96,43 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  $hidFlds = 'ret nvid payer payee purpose created data amount';
-  extract(just('whyNot always amount payAmount toMe ', $sta['input'], NULL));
-  extract(just($hidFlds, hidFlds($sta, 'hid')));
+  extract(just('whyNot always payAmount', $sta['input'], NULL));
 
+  $hidInfo = hidFlds($sta, 'hid');
+  handleInvoice(op($sta), $payAmount, $always, $whyNot, $hidInfo);
+  return w\go($hidInfo['ret']);
+}
+
+function handleInvoice($op, $payAmount, $always, $whyNot, $info) {
+  extract(just('nvid payer payee purpose created data amount', $info));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
-  $payeeName = $toA->fullName;
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, fmtDt($created), $purpose, $whyNot);
-
-  $op = op($sta);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $whyNot);
   $ok = TRUE; // messages default to status, rather than error
-
+  
   if ($op == 'pay' and !$whyNot) {
-    if ($fromA->ok) {
-      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds
-    } else {
+    if ($fromA->ok) { // if payer account is active
+      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
+    } else { // if payer account is not active yet
       db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
     }
-    
     if ($always) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
-      $msg .= '|' . t('auto pay on', compact('payeeName'));
+      $msg .= '|' . t('auto pay on', just('payeeName', $subs));
     }
-  } elseif ($op == 'cancel') {
+  } elseif ($op == 'cancel') { // only payee can cancel
     if (db\get('status', 'tx_requests', compact('nvid')) >= TX_PAID) return go('history/pending-to', tr('inv already paid'), 'err'); // bad timing
     db\del('tx_requests', 'nvid', $nvid);
-    if ($toMe) $fromA->tellOut('invoice withdrawn', $subs);
+    $fromA->tellOut('invoice withdrawn', $subs);
     $msg = 'invoice cancel done';
   } elseif ($op == 'deny' or $whyNot) {
     $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     $toA->tell('invoice denied', $subs);
+    u\tellApp('denied', $fromA, $toA, $amount, $purpose, $created, $whyNot);
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 
   say($msg ?: 'nothing done', $ok ? '' : 'ERR');
-  return w\go($ret);
+  return $ok;
 }

@@ -1706,6 +1706,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
+ *     TEST fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
@@ -2424,6 +2425,7 @@ function nextCaptchaIs($ca) {
  * in: MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberChargesAMember
+ *     MAKE fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo AMemberPaysASponsoredOrganization
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship

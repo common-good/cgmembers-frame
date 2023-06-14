@@ -22,6 +22,7 @@ define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'production');
 /**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
 
+const SOCKET_PORT = 8081; // app websocket port
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
 const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
@@ -35,6 +36,8 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 
 $base_url = config('baseUrl');
+
+$requestUri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : NULL; // can't use nni() yet
 define('GEOCODE_KEY', config('geocodeKey'));
 define('BASE_URL', $base_url);
 define('LOCAL_URL', config('localUrl', $base_url));
@@ -48,7 +51,7 @@ define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
 define('PGP_KEY', config('pgpKey'));
 define('DKIM_PRIVATE', PGP_KEY);
-define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
+define('R_INVITE_KEY', basename(strstr($requestUri, '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
@@ -100,8 +103,8 @@ const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these t
 const DEV_ONLY_MSG = 'only on development machine';
 const DEMO_CTTY = -2; // uid of demo community on demo server
 
-$host = strtolower(@$_SERVER['HTTP_HOST']);
-if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
+$host = strtolower(@$_SERVER['HTTP_HOST']); // expect proper host unless running app-socket or cron
+if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
@@ -282,6 +285,7 @@ const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to 
 const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
 const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
 const TICKLE_DELAYED = 6 * 7; // number of days to wait after activation, before followup if no gift or no CGC
+const ALERT_DELAY = 30; // number of seconds to wait before rechecking db for a new invoice
 const OFTENS = 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)';
 const OFX_TX_FLDS = 'trnType dtPosted trnAmt fitId name memo';
 const OFTENS_SECS = ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS];
@@ -676,7 +680,8 @@ const TX_AJAX = 7;
 const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
 const TX_API = 9;
 const TX_HACK = 10;
-const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack';
+const TX_SOCKET = 11; // app websocket switchboard
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket';
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC

@@ -20,7 +20,7 @@ set_error_handler('handleError');
 
 timer_start('page');
 
-$uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
+$uri = 'I' . nni($_SERVER, 'REQUEST_URI'); // handle scanned rCard URIs
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
 define('URI', $_SERVER['REQUEST_URI']);
 define('PAGE', basename(URI));

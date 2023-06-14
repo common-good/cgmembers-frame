@@ -172,7 +172,10 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
   return $res;
 }
 
-function row($table, $where = '1', $subs = []) {return rows('*', $table, $where, $subs);}
+function row($table, $where = '1', $subs = []) {
+  $row = rows('*', $table, $where, $subs);
+  return $row ? $row[0] : NULL;
+}
 
 /**
  * Return an array of matching data.
