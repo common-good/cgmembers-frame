@@ -68,7 +68,7 @@ Scenario: A non-member applies for fiscal sponsorship
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    | sponsored |
+  | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
   | country    | US |
@@ -133,7 +133,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    | sponsored |
+  | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
   | country    | US |
@@ -202,7 +202,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co nonudge |
-  | coFlags    | sponsored |
+  | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | c@ |
   | country    | US |
@@ -223,7 +223,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,ok |
-  | coFlags    | sponsored |
+  | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | f@ |
   | country    | US |
@@ -273,7 +273,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
   | flags      | co,member,ok,ided |
-  | coFlags    | sponsored |
+  | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | f@ |
   | country    | US |
