@@ -160,6 +160,19 @@ function idPhoto($params) {
 }
 
 /**
+ * POST /latest (app relB depends on this, so keep it around until release C takes effect for all users)
+ * Return very short information about latest information of interest to the app.
+ * @param int $lastTx: Unixtime of last tx initiated by the device
+ * @return {version, txCount, msg}
+ */
+function latest($params) {
+  $version = APP_VERSION;
+  $txCount = 0;
+  $msg = NULL; // a way to communicate with app user(s)
+  return exitJson(compact(ray('version txCount msg')));
+}
+
+/**
  * POST /confirms
  * Confirm or deny an invoice
  */
