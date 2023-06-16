@@ -181,6 +181,15 @@ Scenario: A sponsored member charges a member
   | xid | created | amount | payer | payee | purpose | taking | relType | rel | cat2        |*
   |   1 | %today  |    100 | .ZZB  | .ZZC  | grant   | 0      | I       | 1   | D-FBO       |
 
+Scenario: A member pays a sponsored member everything they have
+  When member ".ZZB" submits "tx/pay" with:
+  | op  | fbo | who  | amount | purpose|*
+  | pay |   0 | .ZZC |    250 | my all |
+  Then these "txs":
+  | eid | xid | created | amount | payer | payee | purpose  | taking | cat2        |*
+  |   1 |   1 | %today  |    250 | .ZZB  | .ZZC  | my all   | 0      | D-FBO       |
+  |   3 |   1 | %today  |  12.50 | .ZZC  | cgf   | %FS_NOTE | 0      | FS-FEE      |
+
 Scenario: A sponsored member views their transaction history
   Given these "txs":
   | xid | payer      | payee | amount | purpose | cat2        | type     | agt2 |*

@@ -48,7 +48,7 @@ global $tStrings; $tStrings = array(
   'nothing done' => t('Nothing was done.'),
   'nothing undone' => t('Nothing undone.'),
   'event' => t('Account %fullName (%qid) is now %status.'),
-  'approved' => t('<p>Your account has been approved!</p>'),
+  'approved' => t('<p>Your account has been approved! Visit cgpay.CommonGood.earth on your phone, to install our CGPay mobile app. Or sign in to your account Dashboard and click "Print Your Card" to print yourself a %PROJECT card.</p>'),
 //  'must confirm' => t('<b>NOTE:</b> (a) your membership must be approved by %inviterName OR (b) you must buy from or sell to %inviterName as your first transaction OR (c) your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
 //  'must confirm uninvited' => t('<b>NOTE:</b> Your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
 //  'suggest card' => t('You have done the minimum necessary to have a %PROJECT account, but you could have much more. Sign in at %CG_DOMAIN and click "Get Card" on your Dashboard page to complete a few extra steps, to get a %PROJECT payment card, be eligible to receive automatic rebates from participating merchants, and have a voice in the %PROJECT democracy (deciding together what gets funded in your community).'),
@@ -232,7 +232,7 @@ EOF
   'voter tentative' => t('<h3>Your Account Setup Is Complete!</h3>A staff member will approve your account shortly.'),
   'co tentative' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon. A staff member will approve your account shortly.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments.</p><p>Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
 
-  'member ok' => t('<h3>You Completed the Minimum Signup</h3><p>You can now pay and receive payments using the <%a>CGPay mobile app</a> or website.</p><p>But you have a few more steps before you can participate in %PROJECT decisions. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
+  'member ok' => t('<h3>You Completed the Minimum Signup</h3><p>You can now pay and receive payments using the <%a>CGPay mobile app</a> or website (or click "Print Your Card" below to print yourself a %PROJECT card).</p><p>But you have a few more steps before you can participate in %PROJECT decisions. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
 //  'card ok' => t('<h3>Your %PROJECT card will arrive in the mail within about a week.</h3><p>Meanwhile, you can send and receive payments online or use our web app (<%a>%APP_URL</a>) on your phone for in-person transactions! There are just a few more steps to become a voting member of your %PROJECT community.</p><p>Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
   'voter ok' => t('<h3>Your Account Setup Is Complete!</h3>'),
   'co ok' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments. Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),

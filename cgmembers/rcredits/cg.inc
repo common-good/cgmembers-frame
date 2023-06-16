@@ -152,7 +152,7 @@ function badUnpaidInv($nvid, &$inv = '') {
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'tx_requests', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['deleted']) return 'inv is canceled';
-  if ($inv['status'] >= TX_PAID) return 'inv already paid';
+  if ($inv['status'] >= TX_PAID) return FALSE; // invoice already paid
   return FALSE;
 }
 
@@ -483,7 +483,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $info = $subs + compact('body');
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
-  if ($email != $to) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }
 

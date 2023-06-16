@@ -809,33 +809,43 @@ function advanceCredit($for, $buyer, $seller, $credit) {
  * @return a txRet object
  */
 function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
-  global $testLink;
+  global $testLink, $channel;
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
   if ($tx->xid < 0) return txRet(TRUE, '', []); // no notices for setup transactions during testing
 
   $goods = ($tx->goods == FOR_GOODS);
   $positive = ($tx->amt2 > 0); // transaction amount is positive (normal)
+  $toMe = ($mya and $mya->id == $tx->uid2);
 
   if ($type == 'charge') {
     $notices = $goods ? ($positive ? ['charged you', 'you charged'] : ['refunded you', 'you refunded'])
     : u\order($positive, 'you got cash', 'you gave cash');
     $did = $positive ? t('charged') : ($goods ? t('refunded') : t('credited'));
+    $appMsg = $positive ? t('charged') : ($goods ? t('refunded') : t('credited'));
   } elseif ($type == 'draw') {
     $notices = ['drew from you', 'you drew'];
     $did = ''; // no real-time report from here
+    $appMsg = $toMe ? '' : t('drew from');
   } elseif (in($type, 'payment, invoice payment')) {
     $notices = ['you paid', 'paid you'];
     $did = t('paid');
+    $appMsg = 'paid';
   } elseif ($type == 'undo') {
     if ($tx->otherA->isBank()) {
       $notices = ['', 'bank tx canceled'];
       $did = t('reversed');
+      $appMsg = '';
     } else {
       $notices = $positive ? ($tx->taking ? ['re-charged you', 'you re-charged'] : ['you refunded', 'refunded you']) : ['refunded you', 'you refunded'];
       $did = $positive ? ($tx->taking ? 're-charged' : 'refunded') : ($goods ? 'refunded' : 'credited'); // positive is double reverse
+      $appMsg = $toMe ? ($goods ? t('refunded') : t('credited')) : t('re-charged');
     }
   } else u\FAIL("unknown type: '$type'.");
 
+  if ($mya and in($appMsg, 'charged paid')) { // only for payments for now (and requests -- see be\invoice())
+    $otherA = $toMe ? $tx->a1 : $tx->a2;
+    u\tellApp($appMsg, $mya, $otherA, abs($tx->amt2), $tx->for2, $tx->created);
+  }
   list ($tell1, $tell2) = u\order($positive, 'tellOut', 'tellIn');
 
   foreach ([1,2] as $i) { // notify both parties (from=1 then to=2)
@@ -924,9 +934,9 @@ EOF;
       $absValue = min($price - $rebates, $absValue); // don't refund more than is being spent (food fund especially)
       if ($absValue <= 0) continue;
       $rebates += $absValue;
-    } else { // stepup -- any surtx not coming back to buyer (from seller or sponsor) is a donation of some sort
+    } else { // everything else is an auxiliary transaction
       list ($type, $desc) = [E_AUX, $purpose];
-      $stepups += $absValue;
+      if ($from == $buyer->id) $stepups += $absValue; // stepup -- anything else from the buyer is a donation of some sort
     }
 
     if ($test) continue;
@@ -1041,10 +1051,11 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
       $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee);
     $subs1 += r\balAndCred($payerA) + $subs2;
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
+    u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);
-      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $subs1 + $info);
+      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
     }
   }
 
@@ -1309,19 +1320,20 @@ function roundupDonations($uids, $start, $end) {
  * @param acct $a: the account for which to find related accounts
  * @param int $perm: $a's minimum permissions to include an account in the list
  * @param string $where: additional criteria
+ * @param bool $noAdmin: if true, ignore admin permissions
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
-function accountChoices($a, $perm = B_READ, $crit = 1) {
+function accountChoices($a, $perm = B_READ, $where = 1, $noAdmin = FALSE) {
   if (!$a) return FALSE;
 
   $res[$aid = $a->agentId] = $a->agentA->bestName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
-  $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $crit AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
+  $sqlNormal = "SELECT r.main AS id, u.fullname FROM u_relations r LEFT JOIN users u ON u.uid=r.main WHERE $where AND r.other=:aid AND r.permission>=" . r\perm($perm); // normal selection SQL
 
-  if ($a->admRegion) {
+  if ($a->admRegion and !$noAdmin) {
     $admWhere = $a->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $admWhere UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
-  } elseif ($a->admin) {
+  } elseif ($a->admin and !$noAdmin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w

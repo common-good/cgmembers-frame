@@ -692,7 +692,7 @@ function doRelations($info) {
     $mainA->newRelation($info);
     if (nn($rCard) == 'yes') {
       if (!$agtA->cardCode2) r\acct($main, $other)->makeCardCode();
-      if (!nn($memberIdCalled)) r\Web\printCard($main, $other, TRUE); // make a Company Agent rCard
+      if (!nn($memberIdCalled)) r\Web\printCard(0, $main, $other, TRUE); // make a Company Agent rCard
       $memberIdCalled = TRUE;
     }
     return TRUE;

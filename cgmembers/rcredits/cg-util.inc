@@ -11,6 +11,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
 use CG\Testing as t;
+use CG\QR as qr;
 
 const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
 const HEX_CHARS = '0123456789abcdef';
@@ -1758,6 +1759,33 @@ function _GET($ray = NULL) {
     $T_GET = $ray;
   }
   return $T_GET;
+}
+
+/**
+ * Send a message to our websocket to pass on to the appropriate app user.
+ */
+function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
+  require_once DRUPAL_ROOT . '/../vendor/autoload.php';
+  require_once R_ROOT . '/cg-qr.inc';
+
+  $op = 'tell';
+  $deviceId = bin2hex(R_WORD); // tell our websocket to loop for each mobile device for otherA (json_encode fails without bin2hex)
+  $actorId = qr\url($actorA, 'main');
+  $otherId = qr\url($otherA, 'main');
+  $name = $actorA->fullName;
+  $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
+  $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+
+  set_error_handler(function() { /* ignore warnings (and errors) */ });
+  try {
+    $sp = new \Paragi\PhpWebsocket\Client($url, SOCKET_PORT);
+    $sp->write($msg);
+//    echo "Server responded with: " . $sp->read();
+    $sp->close();
+  } catch (\Paragi\PhpWebsocket\ConnectionException | Exception $e) {
+    flog(t('PHPWebsocket error: ') . $e->getMessage());
+  }
+  restore_error_handler();
 }
 
 /**

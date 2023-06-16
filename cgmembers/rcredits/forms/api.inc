@@ -81,7 +81,7 @@ function accounts($params) {
   w\updateFlood($sta, $success, $err, TRUE);
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   
-  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK')) return exitJust(X_NOTFOUND);
+  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
@@ -160,21 +160,35 @@ function idPhoto($params) {
 }
 
 /**
- * POST /latest
+ * POST /latest (app relB depends on this, so keep it around until release C takes effect for all users)
  * Return very short information about latest information of interest to the app.
  * @param int $lastTx: Unixtime of last tx initiated by the device
  * @return {version, txCount, msg}
  */
 function latest($params) {
-  global $mya;
-  foreach (ray('lastTx') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-
   $version = APP_VERSION;
-  $txCount = db\count('txs', '(uid1 IN (:uids) OR uid2 IN (:uids)) AND created>:lastTx', ray('uids, lastTx', $mya->uids, $lastTx));
+  $txCount = 0;
   $msg = NULL; // a way to communicate with app user(s)
   return exitJson(compact(ray('version txCount msg')));
 }
+
+/**
+ * POST /confirms
+ * Confirm or deny an invoice
+ */
+function confirms($params) {
+  global $mya;
+  require_once R_ROOT . '/forms/handleinvoice.inc';
+  extract(just('id yesno whyNot', $params, NULL));
+
+  if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
+  if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
+  if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
   
+  if (!$ok = handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], NULL, $whyNot, $inv)) return exitJust(X_DENIED);
+  exitJson('', X_OK);
+}
+
 /**
  * Create the requested transaction.
  * @param int $version: app version number
@@ -221,7 +235,6 @@ function transactions($params) {
   }
 
   if (!$proofOk and !$proofOkUndo) { // bad proof
-    flog(compact(ray('testProofWanted testProofWantedUndo')));
     r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
     if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $gotProof");
     return exitJust(t('bad proof'), X_SYNTAX);
@@ -474,42 +487,25 @@ function photoReturn($pic) {
 }
 
 /**
- * Return the company acct.
- * @param string $device: the app user's device ID, first 50 chars.
- * @param string $err: (returned) error message, if any
- * @return: the agent's company acct object (NULL if error)
- */
-function getA($device) {
-  if (!$uid = db\get('uid', 'r_boxes', 'code=:device ORDER BY access DESC', compact('device'))) return NULL;
-  if (!$mya = r\acct($uid)) return NULL; // bad agent
-//  if (r\foreignServer(r\uidRegion($mya->agentId))) return NULL; // wrong server for agent
-  if (!$mya->ok) return NULL; // company inactive
-  return $mya; // don't log in
-//  if (!$mya->proSe) r\setAcct($mya->agentId); // get agent first, if not proSe
-//  return r\setAcct($mya);
-}
-
-/**
  * Check the validity of a specified deviceId and actorId.
  * @param string $arg: the endpoint
  * @param assoc $params: the parameters
+ * @param bool $noBox: if true, don't bother with a boxId (important for appSocket)
  * @return <ok>
  */
-function authOk($arg, $params) {
+function authOk($arg, $params, $noBox = FALSE) {
   global $mya, $boxId;
 
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
     if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
-///    flog('deviceId=' . $deviceId);
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {
       if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
-///    debug($nm);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
+    if (!$noBox) $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;

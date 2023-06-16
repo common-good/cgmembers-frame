@@ -68,6 +68,7 @@ function formDashboard($form, &$sta, $args = '') {
   $deposits = $mya->id == CGID ? lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   $reopen = $mya->closed ? lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
   $comment = lnk('/help', t('Comment, question, or suggestion'));
+  if ($mya->ok) $card = lnk('', t('Print Your Card'), 'printCard');
   
   if (r\cook('scanner')) { // only advance app links for now
     $showAdvanced = lnk('', t('Advanced Links'), clas('showAdvanced'));
@@ -76,7 +77,7 @@ function formDashboard($form, &$sta, $args = '') {
   } else $showAdvanced = $frontCamera = $disconnect = NULL;
   
   if ($mya->member and !$mya->closed) {
-    foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits showAdvanced frontCamera disconnect') as $k) if ($$k) $shortcuts[] = $$k;
+    foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits showAdvanced frontCamera disconnect card') as $k) if ($$k) $shortcuts[] = $$k;
     $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
   } else $shortcuts = NULL;
 
@@ -109,7 +110,7 @@ function formDashboard($form, &$sta, $args = '') {
     $creditLine = $choiceList = NULL;
   }
   
-  jsx('dashboard', 'payDesc chargeDesc', t('Pay'), t('Charge'));
+  jsx('dashboard', 'payDesc chargeDesc carded', t('Pay'), t('Charge'), $mya->carded);
   $dashboard = fieldSet('dashboard', compact(ray('endorse title acct buttons balance creditLine continue special shortcuts')), BARE);
   $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
 

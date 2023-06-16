@@ -30,6 +30,7 @@ function formSponsor($form, &$sta, $args = '') {
   $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees does the organization have?')], dft($isCo ? $mya->employees : ''));
   $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks (not the dollar amount) you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
   $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments (not the dollar amount) you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
+  $helper = hidFld(UID_SUPER);
   
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
   
@@ -76,12 +77,12 @@ function formSponsor_validate($form, &$sta) {
 function formSponsor_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
-  $dbFlds = 'contact fullName legalName federalId coType coFlags email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut';
+  $dbFlds = 'contact fullName legalName federalId coType coFlags email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut helper';
   extract(just('comments source2 ' . $dbFlds, $sta['input'], NULL));
   
   if ($comments or $federalId) {
     if ($federalId) $comments = "EIN: $federalId. $comments";
-    $notes = $comments ? (r\stampNote($comments) . ($mya ? $mya->notes : '')) : '';
+    $notes = $comments ? r\stampNote($comments) : '';
   }
 
   if (!isset($contact)) { // using company data
@@ -103,6 +104,7 @@ function formSponsor_submit($form, &$sta) {
   $legalName = CGF_LEGALNAME;
   $federalId = CGF_EIN;
   $coFlags = u\bit(CO_SPONSORED);
+  if ($coType != CO_NONPROFIT) $coFlags |= u\bit(CO_FLIP); // make sure it gets a donate button on our promo site (not a buy credit button)
   $subs = compact(ray($dbFlds)) + ($mya ? [] : ['NEW ORG!' => 1]);
   $subs['to'] = 'partnerships@' . CG_DOMAIN;
   $subs['state'] = r\realState($state);
