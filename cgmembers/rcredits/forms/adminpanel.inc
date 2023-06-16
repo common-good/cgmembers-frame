@@ -118,15 +118,7 @@ function formAdminPanel_submit($form, &$sta) {
   
   if ($a and $op == 'printId') {
     if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
-    if ($make) {
-      $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
-      $a->makeCardCode(); // this changes photo filename
-      if (file_exists($oldFile)) {
-        $newFile = $a->photoFilename(TRUE);
-        rename($oldFile, $newFile);
-      }
-    }
-    return w\go('print-rcard/' . $a->id . ($a->co ? "/$a->agentId" : ''));
+    return w\go("print-rcard/$make/$a->id" . ($a->co ? "/$a->agentId" : ''));
   } elseif ($a and $op == 'fsRule') { // make fiscal sponsorship surtx rule (defaults to 5%)
     if (!$a->co) return err(t('That account is not a company, so it cannot be sponsored.'));
     $info = ray('action payerType payeeType payee from to', ACT_SURTX, REF_ANYBODY, REF_ACCOUNT, $a->id, MATCH_PAYEE, CGID);

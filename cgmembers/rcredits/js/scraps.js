@@ -220,6 +220,12 @@ function doit(what, vs) {
     break;
     
   case 'dashboard':
+    $('#printCard').click(function () {
+      if (vs['carded']) {
+        yesno('Cancel previous card?', function () {printCard(1)}, function () {printCard('')});
+      } else printCard(0);
+      return false;
+    });
     $('.frontCamera, .disconnect').parent().hide();
     $('.showAdvanced').click(function () {
       $(this).parent().hide().next().css('margin-top', '10px');
@@ -1017,3 +1023,4 @@ function confirmTip(vs, val) {
 }
 function yesGo(url, msg) {yesno(msg, function () {location.href=url;}); return false;} // false cancels click and leaves it to yesno()
 function goPage(page) {location.href = baseUrl + page;}
+function printCard(cancelPrevious) { goPage('/print-rcard/' + cancelPrevious); }

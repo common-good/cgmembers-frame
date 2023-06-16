@@ -29,7 +29,7 @@ function formPrintCards($form, &$sta, $args = '') {
     $addr .= "<br>$city, $st $zip";
     $nm = lnk("$base_url/change-account/acct=$uid", $a->fullName);
     $gift = strstr($a->giftsDesc() . '<br>', '<br>', TRUE); // ignore total gifts and last gift
-    $btn = $a->co ? a\showRelations($a) : btn("/print-rcard/$a->id", 'Card');
+    $btn = $a->co ? a\showRelations($a) : a\cardLink($a->id);
 
     $ph = "$qid<br>$ph";
     $addr = "$nm<br>$addr";

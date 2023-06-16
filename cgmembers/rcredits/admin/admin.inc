@@ -747,7 +747,7 @@ function showInactive() {
   }
 }
 
-function cardLink($link) {return spinLink("/print-rcard/$link", t('Card'), '', 'primary', 'xs', w\away());}
+function cardLink($link, $make = FALSE) {return spinLink("/print-rcard/$make/$link", t('Card'), '', 'primary', 'xs', w\away());}
 function photoLink($recrop = 0) {return spinLink("/settings/photo/recrop=$recrop", $recrop ? t('Recrop Photo') : t('Photo'), '', 'primary', 'xs');}
 
 function nextMember($id = 0) {

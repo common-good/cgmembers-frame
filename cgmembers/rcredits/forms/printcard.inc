@@ -14,16 +14,26 @@ require_once R_ROOT . '/forms/showqr.inc'; // for qrUrl()
 
 /**
  * Print an ID card
- * @param mixed $id: qid or uid of account to make a card for
+ * @param bool $cancelPrev: true if we need to cancel an old card (by setting a new cardCode)
+ * @param mixed $id: qid or uid of account to make a card for (only for admins)
  * @param mixed $agent: qid or uid of agent
  * @param bool $retroactive: create the id regardless of permissions (used only in testing)
  */
-function printCard($id, $agent = '', $retroactive = FALSE) {
+function printCard($cancelPrev = FALSE, $id = '', $agent = '', $retroactive = FALSE) {
   global $mya;
   
-  $a = r\acct($id, $agent);
-  $cttyErr = (!$mya or (!$mya->admRegion and $a->community != $mya->community));
-  if (!$a or ($cttyErr and !$retroactive)) u\FAIL('No such account ID: ' . $id . ':' . $agent);
+  $adminOk = ($mya and $mya->admPrintCards and ($mya->admRegion or $a->community == $mya->community));
+  $a = ($adminOk and $id) ? r\acct($id, $agent) : $mya;
+  if (!$a) return $adminOk ? u\FAIL('No such account ID: ' . $id . ':' . $agent) : softErr(t('You must be signed in to print your %PROJECT card.'));
+
+  if ($cancelPrev) {
+    $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
+    $a->makeCardCode(); // this changes photo filename
+    if (file_exists($oldFile)) {
+      $newFile = $a->photoFilename(TRUE);
+      rename($oldFile, $newFile);
+    }
+  }
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)
@@ -68,7 +78,6 @@ function printCard($id, $agent = '', $retroactive = FALSE) {
   $pdf->ScaleXY(100 * 3.375 / $wCard); // widen to page width (for extra resolution)
 
   $pdf->Image(R_ROOT . "/images/idcard/$bg.png", $m, $m, $wCard, $hCard, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
-  //  $pdf->Image($photo, $m+$mPhoto, $m+$mPhoto, $wPhoto, $wPhoto*4/3, '', '', 'L', true);
   $pdf->Image($photo, $xPhoto, $yPhoto, $wPhoto, $hPhoto, '', '', 'L', true);
   $pdf->Rect($xPhoto, $yPhoto, $wPhoto, $hPhoto, 'D'); // x, y, w, h, style, border, fill
   $pdf->say(PROJECT, $xProj, $yProj, '', '', "18;Arial MT Medium;color:white;", 'L');
@@ -86,10 +95,6 @@ function printCard($id, $agent = '', $retroactive = FALSE) {
   if (NOT_PRODUCTION) $pdf->say(t('TEST'), $xTest, $m+$hCard-.19, .5, '', '6.5;color:darkred', 'C');
 
   $pdf->StopTransform();
-/*  if (now() < strtotime('6/20/2017')) {
-    $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
-  } else */
-  if ($mya and $mya->admPrintCards) $a->setBit(B_CARDED);
+  if ($mya) $a->setBit(B_CARDED);
   if (test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
-//  if (now() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
