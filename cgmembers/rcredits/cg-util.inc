@@ -1765,6 +1765,7 @@ function _GET($ray = NULL) {
  * Send a message to our websocket to pass on to the appropriate app user.
  */
 function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
+  if ($otherA->co and $otherA->proSe) return; // don't try to contact a company without an agent
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
   require_once R_ROOT . '/cg-qr.inc';
 

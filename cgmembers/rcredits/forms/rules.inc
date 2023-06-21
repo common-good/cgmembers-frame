@@ -37,8 +37,6 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $dtDesc = [t('mm/dd/yyyy')];
   $maxDesc = t('Leave empty for no max.');
   
-  jsx('rules');
-  
   $payer = textFld(t('When Payer:'), $payeDesc, dft($payer));
   $payerType = radiosFld(REQ . t('Payer Type:'), '', dft($payerType), ray(REF_LIST));
   $payee = textFld(t('Pays Payee:'), $payeDesc, dft($payee));
