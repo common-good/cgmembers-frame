@@ -629,8 +629,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($crid) db\update('tx_credits', ray('id xid', $crid, $xid));
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
   
-  unset($DBTX);
-  
   // Notify both parties by email about any completed transaction
   $res = sendNotifications($actorA, $type, $tx, $shortfall);
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
@@ -652,6 +650,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
   }
   
+  unset($DBTX);
+
   return $res;
 }
 

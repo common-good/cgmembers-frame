@@ -262,6 +262,7 @@ function transactions($params) {
     $z = be\sendNotifications($mya, $type, r\Tx::read($xid), 0, FALSE); // fake the message from existing transaction
     $message = $z->msg;
   } else { // transaction doesn't exist (yet)
+    $DBTX = \db_transaction();
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
     $message = $selfhelp ? 'selfhelp tx' : $z->msg;
     if ($z->ok) {
@@ -278,6 +279,7 @@ function transactions($params) {
       be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
       be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
     }  
+    unset($DBTX);
   }
   
   return exitJson(ray('ok message', $z->ok, $message), X_OK);
