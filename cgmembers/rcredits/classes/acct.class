@@ -1876,6 +1876,7 @@ X;
     if ($payeeA->legalName != CGF_LEGALNAME) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
     $shortfall = NULL;
 
+    $DBTX = \db_transaction();
     if ($a->ok) {
       for ($i = 0; ; $i++) { // try again if getting funds is likely to help
         $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
@@ -1889,6 +1890,8 @@ X;
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
     $a->getFunds($shortfall > 0 ? $shortfall : $amount, t('to cover your payment request #%nvid', $z2->subs));
+    unset($DBTX);
+    
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
   }
 
