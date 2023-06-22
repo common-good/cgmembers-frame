@@ -68,7 +68,7 @@ function formDashboard($form, &$sta, $args = '') {
   $deposits = $mya->id == CGID ? lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   $reopen = $mya->closed ? lnk('/scraps/reopen', t('Ask for your account to be reopened')) : '';
   $comment = lnk('/help', t('Comment, question, or suggestion'));
-  if ($mya->ok) $card = lnk('', t('Print Your Card'), 'printCard');
+  $card = $mya->ok ? lnk('', t('Print Your Card'), 'printCard') : NULL;
   
   if (r\cook('scanner')) { // only advance app links for now
     $showAdvanced = lnk('', t('Advanced Links'), clas('showAdvanced'));

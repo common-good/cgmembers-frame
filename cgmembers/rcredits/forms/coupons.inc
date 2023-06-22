@@ -170,12 +170,13 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   switch ($type) {
   case 'redeem': 
     $fromA = r\acct($from);
-
     $amount = db\get('amount', 'tx_rules', ['id' => $ruleId]);
+    $DBTX = \db_transaction();
     $z = be\transfer('payment', $fromA, r\acct($to), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
     u\EXPECT($z->ok, t('failed forced gift redemption by %who for rule %ruleId', 'who ruleId', $mya->fullName, $ruleId));
     $mya->update('giftPot', ($mya->giftPot ?: 0) + $amount);
     db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // mark this used
+    unset($DBTX);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
 
   case 'gift':

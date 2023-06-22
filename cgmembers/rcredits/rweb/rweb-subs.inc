@@ -591,7 +591,10 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   if ($id == 'add') {
     $orig = array_fill_keys(ray($flds), NULL);
   } elseif ($id and $del) {
-    db\del($tnm, $idFld, $id);
+    $DBTX = \db_transaction();
+    db\del($tnm, $idFld, $id, TRUE); // override in case this is tx_entries
+    if ($tnm == 'tx_entries') db\del($tnm, $idFld, -$id, TRUE);
+    unset($DBTX);
     say(t('Record #%id deleted', compact('id')));
     $ret = go($url);
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
