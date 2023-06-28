@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61j'; // software version
+const R_VERSION = '3.61k'; // software version
 const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -150,6 +150,7 @@ const EMAIL_DOMAIN = CG_DOMAIN; // replace this with CG_DOMAIN when ready
 const SYS_EMAIL = 'system@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const APP_URL = 'cg4.us/pay';
+const APP_SOCKET_URL = R_ROOT . '/rcron/app-socket.php';
 
 define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
 define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
