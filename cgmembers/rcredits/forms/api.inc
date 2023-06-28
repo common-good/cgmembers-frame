@@ -297,6 +297,8 @@ function info($params) {
   
   foreach (ray('count') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!is_numeric($count) or $count < 1) return exitJust(X_SYNTAX);
+  
+  r\launchWebsocket();
 
   foreach (ray('balance crumbs roundup') as $k) $$k = $mya->$k;
   $surtxs = (array) db\get('SUM(amount) AS amount, SUM(`portion`) AS `portion`', 'tx_rules', '`from`=:myid AND action=:ACT_SURTX AND payeeType=:REF_ANYCO', ray('myid', $mya->id));
