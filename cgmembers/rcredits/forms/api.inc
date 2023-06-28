@@ -130,7 +130,8 @@ function identity($params) {
   $name = $a->fullName;
   $agent = $a->proSe ? '' : $a->agentA->fullName;
   $location = $a->location();
-  $limit = round(PHP_INT_MAX - $a->shortfall(FOR_GOODS, PHP_INT_MAX, FALSE, $mya), 2);
+  $big = 999999999;
+  $limit = round($big - $a->shortfall(FOR_GOODS, $big, FALSE, $mya), 2);
   if ($limit > 0) $limit = round($limit - be\handleSurTx($zot, obj(), $a, $mya, $limit, FALSE, TRUE), 2);
   $creditLine = 0 - $a->floor; // "0 -" to prevent -0
   $avgs = r\averageBalance($a->id, today(u\plusMonths(-6))); // based on 6 months even if member is new
