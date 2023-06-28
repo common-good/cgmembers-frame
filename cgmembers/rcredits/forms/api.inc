@@ -394,16 +394,10 @@ function testops($params) {
       }
       
     case 'update':
-    flog($params);
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
-      // for users (the only choice for now)
-      $uid0 = db\get('uid', 'users', ray('name', 'abeone'));
-      foreach ($ray as $i => $row) {
-        $row->uid = $uid0 + ord($row->uid) - ord("A");
-        db\update($table, (array) $row, 'uid');
-      }
+      foreach ($ray as $i => $row) db\update($table, (array) $row, 'uid');
       break;
       
     default: return exitJust(X_SYNTAX);
