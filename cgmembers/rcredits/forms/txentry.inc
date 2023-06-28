@@ -31,7 +31,7 @@ function formTxEntry($form, &$sta, $args = '') {
   $relatedId = intFld(t('Related ID:'), '', dft($relatedId));
   $relType = textFld(t('Rel Type:'), t('I or nothing'), dft($relType));
   $entryType = selectFld(REQ . t('Type:'), '', dft($entryType), ray(E_TYPES));
-  $amount = numFld(REQ . t('Amount:'), '', dft($amount ?: 0) + vmin(0));
+  $amount = numFld(REQ . t('Amount:'), '', dft($amount ?: 0) + vmin(PHP_INT_MIN));
   $description = textFld(REQ . t('Description:'), '', dft($description));
   
   $id = hidFld($id);
@@ -48,7 +48,8 @@ function formTxEntry_validate($form, &$sta) {
   }
   if (!$agentUid) $agentUid = $uid;
   
-  foreach (ray('amount xid rule relatedId') as $k) if ($$k and $err = u\badAmount($$k, '>0', $k == 'amount' ? 2 : 0)) return say("$err ($k)", $k);
+  if ($amount and $err = u\badAmount($amount, '', 2)) return say("$err (amount)", 'amount');
+  foreach (ray('xid rule relatedId') as $k) if ($$k and $err = u\badAmount($$k, '>0', 0)) return say("$err ($k)", $k);
 
   u\preRay(compact(ray('uid agentUid amount')), $sta['input']);
 }
