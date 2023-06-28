@@ -388,7 +388,9 @@ function testops($params) {
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'txs')) return exitJust(X_SYNTAX);
       try {
-        return exitJson(db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid"), X_OK);
+        $rows = db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid");
+        $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
+        return exitJson($rows, X_OK);
       } catch (\Exception $er) {
         return exitJust(X_SYNTAX);
       }
