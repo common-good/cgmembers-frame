@@ -305,6 +305,49 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   return $ok;
 }
 
+function undel($tnm, $where, $subs = [], $override = FALSE) {
+  if (strhas($tnm, '_all')) return u\FAIL('Retry the recovery, omitting "_all".');
+  foreach (ray('tx_hdrs tx_entries') as $t) if ($tnm == $t) {
+    u\EXPECT($override, t('you may recover transactions only from txs or txs2'));
+  }
+  
+  if (is_array($where)) {
+    u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
+    u\zWhereSubs($where, $subs);
+  } elseif (!is_array($subs)) { list ($where, $subs) = ["`$where`=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
+  
+  if (is_numeric($where)) return u\FAIL(t('Wrong syntax for call to db\undel')); // don't accidentally delete all records in a table
+  
+  $DBTX = \db_transaction();
+  $ok = TRUE;
+  
+  if (in($tnm, DELETED_BY_VIEW)) {
+    $q = db\q("UPDATE {$tnm}_all SET deleted=NULL WHERE (deleted IS NOT NULL) AND $where", $subs);
+    if ($tnm == 'tx_entries') { // deleting an entry changes the balance, so fix the wentNeg dates
+      $q = db\q("SELECT uid, amount FROM {$tnm}_all WHERE deleted IS NULL AND $where", $subs);
+      while ($row = $q->fetchAssoc()) be\balChange($row);
+    }
+    
+  } elseif ($isTxs2 = u\starts($tnm, 'txs2') or in($tnm, TRACK_DELETED)) {
+    $xtnm = in($tnm, 'users') ? "x_$tnm" : ($isTxs2 ? 'x_txs2' : preg_replace('/^._/', 'x_', $tnm));
+    $cols = '`' . join('`,`', cols($tnm)) . '`';
+    $q = db\q("INSERT INTO $tnm SELECT $cols FROM $xtnm WHERE $where", $subs);
+    if ($q->rowCount() > 0 and $isTxs2) { // need to delete related txs records as well as txs2 records
+      if ($xids = db\col('xid', $tnm, $where, $subs)) $ok = db\undel('txs', 'xid IN (:xids)', compact('xids'));
+    }
+    if ($ok) db\q("DELETE FROM $xtnm WHERE $where ORDER BY DELETED DESC LIMIT 1", $subs);
+    
+  } elseif ($tnm == 'txs' or u\starts($tnm, 'txs_')) {
+    if ($xids = db\col('xid', 'txs_all', $where, $subs)) foreach (ray('tx_entries tx_hdrs') as $allTnm) {
+      $ok = $ok and db\undel($allTnm, 'xid IN (:xids)', compact('xids'), (bool) 'OVERRIDE');
+    }
+    
+  } else return u\FAIL(t('Cannot undelete from table ') . $tnm);
+ 
+  unset($DBTX);
+  return $ok;
+}
+
 function hasField($table, $field) {return hasCol($table, $field);}
 function hasCol($table, $field) {global $db_name; return db\exists('INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME=:field', compact(ray('db_name table field')));}
 function cols($table, $except = '') {global $db_name; return db\col('COLUMN_NAME', 'INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME<>:except', compact(ray('table db_name except')));}

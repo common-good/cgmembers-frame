@@ -194,19 +194,20 @@ function testAcctLine($key, $info) { // used only by makeTestAccounts() - DO NOT
  * @param int $oldUid: record ID of the account to change or delete
  * @param int $newUid: the new record ID to give the account (defaults to next available)
  * @param bool $unusable: whether to mark the old account record ID as unusuable
- * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount)
+ * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount); -1 means undelete
  * @return TRUE if successful else NULL
  */
 function deleteUid($oldUid) {return a\changeUid($oldUid, 0, FALSE, TRUE);}
+function unDeleteUid($oldUid) {return a\changeUid($oldUid, 0, FALSE, -1);}
 
 function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
+  $undelete = ($delete === -1);
+  $change = !$delete;
+  $delete = ($delete === TRUE);
+  
   global $mya;
   if (is_object($oldUid)) $oldUid = $oldUid->id;
-  if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
-  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
-  $nm = $a->fullName;
-  $oldQid = r\qid($oldUid);
-
+  
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
     'admins:uid:D',
@@ -289,6 +290,22 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   
   $DBTX = \db_transaction();
 
+  if ($undelete) {
+    $uid = $oldUid;
+    if (!db\undel('u_company', compact('uid'))) return dbtxErr($DBTX);
+    if (!db\undel('u_photo', compact('uid'))) return dbtxErr($DBTX);
+    if (!db\undel('u_shout', compact('uid'))) return dbtxErr($DBTX);
+    if (!db\undel('u_relations', ray('main', $uid))) return dbtxErr($DBTX);
+    if (!db\undel('u_relations', ray('other', $uid))) return dbtxErr($DBTX);
+    if (!db\undel('users', compact('uid'))) return dbtxErr($DBTX);
+    return w\say(t('Recovered!'));
+  }
+   
+  if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
+  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
+  $nm = $a->fullName;
+  $oldQid = r\qid($oldUid);
+  
   if ($delete) {
     foreach (ray('jid helper') as $fnm) db\q("UPDATE users SET $fnm=0 WHERE $fnm=:oldUid", compact('oldUid')); // don't leave a hanging partner or helper
     db\q('UPDATE people SET uid=NULL WHERE uid=:oldUid', compact('oldUid'));
@@ -300,7 +317,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     $newUid = r\serverUid(); // Seedpack uid
   }
 
-  if (!$delete and !$newUid) {
+  if ($change and !$newUid) {
     $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityId();
     $newUid = r\Acct::nextId($region);
   }
@@ -319,23 +336,29 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
   }
 
-  if ($unusable and !$delete) {
+  if ($change and $unusable) {
     list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
     db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
   }
   
   unset($DBTX); // commit
 
-  if (!$delete) {
+  if ($change) {
     $newQid = r\qid($newUid);
     foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
       foreach (glob("$dir/$oldQid.*") as $flnm) rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
     }
   }
 
-  if ($mya and $mya->admChangeUid) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
+  if ($mya and $mya->admChangeUid) {
+    $what = $change ? t('changed to ') . $newUid 
+    : ($delete ? t('deleted') : t('recovered'));
+    w\say(t('Success. Account %nm has been %what.', compact(ray('nm what'))));
+  }
   return TRUE;
 }
+
+function dbtxErr($DBTX, $msg = 'FAILED') {$DBTX->rollback(); return w\say($msg);}
 
 /**
  * Return a list of signup steps remaining for the given account.
