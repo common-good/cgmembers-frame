@@ -1,6 +1,6 @@
 Feature: Joint
 AS a member
-I WANT to join my rCredits account to someone else's
+I WANT to join my account to my partner's
 SO we can share our finances, as for a typical "joint account" at a bank.
 
 Setup:
@@ -16,7 +16,34 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A member requests a joint account
+Scenario: A member asks to create a joint account by clicking a link on the Dashboard page
+  When member ".ZZA" visits "prejoin"
+  Then we show "Create a Joint Account" with:
+  | Already member? | No | Yes |
+  | Account         |||
+  | Go              |||
+
+Scenario: A member asks to join an existing account
+  When member ".ZZA" submits "prejoin" with:
+  | old | account |*
+  |   1 | newzzb  |
+  Then these "u_relations":
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
+  And we say "status": "join request success"
+  And we show "You: Abe One"
+  And we message "join accounts" to member ".ZZB" with subs:
+  | name    | _atag |*
+  | Abe One | ?     |
+
+Scenario: A member asks to join to self
+  When member ".ZZA" submits "prejoin" with:
+  | old | account |*
+  |   1 | newzza  |
+  Then we say "error": "no self join"
+  And we show "Create a Joint Account"
+
+Scenario: A member requests a joint account from the relations page
   Given these "u_relations":
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | none       |        0 |     0 |    0 |
@@ -145,17 +172,3 @@ Scenario: A member requests two joins at once
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
-
-Scenario: A member creates a joint account by clicking a link on the Dashboard page
-  When member ".ZZA" completes form "prejoin" with values:
-  | old | account |*
-  |   1 | .ZZB    |
-  Then these "u_relations":
-  | main | agent | permission | employee | owner | draw |*
-  | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
-  And we say "status": "join request success"
-#  And we notice "join accounts" to member ".ZZB" with subs:
-#  | name    | _atag |*
-#  | Abe One | ?     |
-
-

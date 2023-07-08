@@ -130,7 +130,8 @@ function identity($params) {
   $name = $a->fullName;
   $agent = $a->proSe ? '' : $a->agentA->fullName;
   $location = $a->location();
-  $limit = round(PHP_INT_MAX - $a->shortfall(FOR_GOODS, PHP_INT_MAX, FALSE, $mya), 2);
+  $big = 999999999;
+  $limit = round($big - $a->shortfall(FOR_GOODS, $big, FALSE, $mya), 2);
   if ($limit > 0) $limit = round($limit - be\handleSurTx($zot, obj(), $a, $mya, $limit, FALSE, TRUE), 2);
   $creditLine = 0 - $a->floor; // "0 -" to prevent -0
   $avgs = r\averageBalance($a->id, today(u\plusMonths(-6))); // based on 6 months even if member is new
@@ -297,6 +298,8 @@ function info($params) {
   
   foreach (ray('count') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
   if (!is_numeric($count) or $count < 1) return exitJust(X_SYNTAX);
+  
+  r\launchWebsocket();
 
   foreach (ray('balance crumbs roundup') as $k) $$k = $mya->$k;
   $surtxs = (array) db\get('SUM(amount) AS amount, SUM(`portion`) AS `portion`', 'tx_rules', '`from`=:myid AND action=:ACT_SURTX AND payeeType=:REF_ANYCO', ray('myid', $mya->id));
@@ -386,22 +389,18 @@ function testops($params) {
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'txs')) return exitJust(X_SYNTAX);
       try {
-        return exitJson(db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid"), X_OK);
+        $rows = db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid");
+        $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
+        return exitJson($rows, X_OK);
       } catch (\Exception $er) {
         return exitJust(X_SYNTAX);
       }
       
     case 'update':
-    flog($params);
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
-      // for users (the only choice for now)
-      $uid0 = db\get('uid', 'users', ray('name', 'abeone'));
-      foreach ($ray as $i => $row) {
-        $row->uid = $uid0 + ord($row->uid) - ord("A");
-        db\update($table, (array) $row, 'uid');
-      }
+      foreach ($ray as $i => $row) db\update($table, (array) $row, 'uid');
       break;
       
     default: return exitJust(X_SYNTAX);

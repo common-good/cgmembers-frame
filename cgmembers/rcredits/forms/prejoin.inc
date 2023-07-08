@@ -27,9 +27,10 @@ function formPrejoin_validate($form, &$sta) {
   
   extract(just('old account', $sta['input']));
   if ($old) {
-    if (!$account) return say(t('You must give the other person\'s account ID.'), 'account');
-    if (!$oldA = r\acct(trim(strtoupper($account))) or !$oldA->ok) return say('not an account', 'account');
-    if ($oldA->co) return say(t('You cannot join a company account.'), 'account');
+    if (!$account) return err(t('You must give the other person\'s account ID.'), 'account');
+    if (!$oldA = r\acct(trim(strtoupper($account))) or !$oldA->ok) return err('not an account', 'account');
+    if ($oldA->id == $mya->id) return err('no self join', 'account');
+    if ($oldA->co) return err(t('You cannot join a company account.'), 'account');
     $sta['input']['account'] = $oldA->id;
   }
 }

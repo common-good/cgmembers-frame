@@ -150,6 +150,7 @@ const EMAIL_DOMAIN = CG_DOMAIN; // replace this with CG_DOMAIN when ready
 const SYS_EMAIL = 'system@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 const APP_URL = 'cg4.us/pay';
+const APP_SOCKET_URL = R_ROOT . '/rcron/app-socket.php';
 
 define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
 define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');

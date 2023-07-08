@@ -44,8 +44,7 @@ include_once R_ROOT . '/rcron/rcron-subs.inc';
  * Execute a cron run when called.
  */
 function run() {
-  $appSocket = R_ROOT . '/rcron/app-socket.php';
-  exec("nohup setsid php $appSocket > /dev/null 2>&1 &"); // launch inter-mobile communications (it checks if it's already running); "php" must be lowercase
+//  r\launchWebsocket();
   global $channel; $channel = TX_CRON; // set this even if called from PHP window by admin
 
   ignore_user_abort(TRUE); // Allow execution to continue even if the request gets canceled.
