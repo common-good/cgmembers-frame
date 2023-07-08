@@ -84,7 +84,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
- *     MAKE joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -152,7 +151,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     MAKE signin AMemberSignsInWithEmailOnTheMemberSite
@@ -411,7 +410,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
+ *     TEST joint AMemberAsksToJoinToSelf
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -513,6 +513,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invite AMemberInvites
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
+ *     TEST joint AMemberAsksToJoinToSelf
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -611,6 +613,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -1198,7 +1201,7 @@ function statisticsGetSet($time) {
  *     MAKE guest Setup
  *     MAKE invest Setup
  *     MAKE invoice AMemberApprovesInvoicesForevermore
- *     TEST joint AMemberRequestsAJointAccount
+ *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
@@ -1470,6 +1473,7 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
@@ -1744,11 +1748,11 @@ function weScripWithSubs($script, $args = []) {
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     BOTH invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     BOTH joint AMemberRequestsAJointAccount
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
+ *     BOTH joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     BOTH joint AMemberRequestsTwoJoinsAtOnce
- *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
  *     BOTH pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -2193,7 +2197,7 @@ function memberStepsUpWith($id, $rows) {
 /**
  * member (ARG) visits (ARG) and selects (ARG): (ARG) for (ARG)
  *
- * in: MAKE joint AMemberRequestsAJointAccount
+ * in: MAKE joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     MAKE joint AMemberRequestsTwoJoinsAtOnce
  */
 function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
@@ -2344,6 +2348,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
+ *     MAKE joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
@@ -2427,6 +2432,8 @@ function nextCaptchaIs($ca) {
  *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo AMemberPaysASponsoredOrganization
+ *     MAKE joint AMemberAsksToJoinAnExistingAccount
+ *     MAKE joint AMemberAsksToJoinToSelf
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship

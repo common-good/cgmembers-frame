@@ -530,6 +530,7 @@ EOF
   'account number mismatch' => t('You must have mistyped your account number once. Try again.'),
   'yes or no' => t('You must answer Yes or No.'),
   'too many joins' => t('You can join to only one other account.'),
+  'no self join' => t('You cannot join your account to itself.'),
   'maybe not cash' => t('If you are actually reimbursing someone or paying them for goods or services (for example, employee labor), choose a different button under "For".'),
   'link expired' => t('That link has expired.'),
   'login failed' => t('Your attempt to sign in failed. Click the "Forgot password" link if you need a new password.'),
