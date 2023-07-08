@@ -470,7 +470,7 @@ $links
 </div>
 <span class="copyright">$copyright &copy; $year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, $nonprofit</span><br/>
 %CGF_POSTALADDR<br/>
-%CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
+%CGF_PHONE (messages) &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <span class="no-print"><br>IP: %ip
 $helpModal</span>
 X

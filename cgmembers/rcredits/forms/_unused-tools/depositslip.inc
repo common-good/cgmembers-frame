@@ -50,7 +50,7 @@ function depositDetails($args) {
             <b>%CGF_LEGALNAME<br>
             dba %BANK_DBA</b><br>
             %CGF_POSTALADDR<br>
-            %CGF_PHONE<br>
+            %CGF_PHONE (messages)<br>
             <br>
             <br>
             <b>%bankName</b><br>
