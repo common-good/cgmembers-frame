@@ -1738,7 +1738,9 @@ X;
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
 
     $id = db\get('id', 'admins', compact('uid'));
-    db\updateOrInsert('admins', ray('id uid vKeyE can', $id, $uid, $vKeyE, adminCanBit('v')));
+    $can = db\get('can', 'admins', compact('uid'));
+    $can |= r\adminCanBit('v');
+    db\updateOrInsert('admins', compact(ray('id uid vKeyE can')));
     $pw = u\b64encode($vKeyPw);
 
     return $showQr ? qr\html($pw, '', t('%PROJECT SuperAdmin')): $pw;
