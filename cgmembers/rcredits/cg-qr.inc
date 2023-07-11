@@ -74,15 +74,20 @@ function generate($data, $logo, $text) {
  */
 function url($a, $type = 'card') {
   $qo = $a->qo;
-  $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
+  if ($a->co and $a->proSe) {
+    u\EXPECT($type == 'main', 'only simple qrUrl allowed for proSe companies');
+    $cardCode = $agentCode = '';
+  } else {
+    $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
+    $agentCode = u\n2a(u\a2n($qo->agentCode()), -1, 36)
+  }
   $regLen = strlen($region = u\n2a(u\a2n($qo->region), -1, 36));
   $tailLen = strlen($tail = u\n2a(u\a2n($qo->tail), $regLen > 3 ? -4 : -2, 36));
-  $agentCode = ($a->co and $a->proSe) ? '' : $qo->agentCode(); // make sure proSe companies don't try to create an agentCode
-  $codeLen = $agentCode ? strlen($agentCode = u\n2a(u\a2n($agentCode), -1, 36)) : 0;
+  $agtCodeLen = strlen($agentCode);
+  u\EXPECT($agtCodeLen < 4, 'agentCode too long: ' . $qo->agentCode);
   $i = array_search($regLen . $tailLen, ray('12 13 22 23 32 33 34 44 45'));
   u\EXPECT($i !== FALSE, 'bad piece lengths in qo->qr mainQid=' . $qo->mainQid);
-  u\EXPECT($codeLen < 4, 'agentCode too long: ' . $qo->agentCode);
-  $fmt = u\n2a($i * 4 + $codeLen, 1, 36);
+  $fmt = u\n2a($i * 4 + $agtCodeLen, 1, 36);
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
 //  $testFlag = isPRODUCTION ? '-A' : '.'; // test mode indicator for short version (-A only while transitioning from old app (3/2023))
   if ($type == 'short') u\FAIL('short QR url is deprecated'); // return "$fmt$region$tail$agentCode$cardCode$testFlag";
