@@ -334,7 +334,7 @@ function recur($template) {
   $created = now();
   if ($shouldStart > now()) return; // don't pay or charge until the right date and time
 
-  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring donation from a non-member
+  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring payment from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
     if (!$res = db\get('bankAccount,isSavings,payee', 'txs2 t2 JOIN txs_noreverse t USING(xid)', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY t2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
@@ -358,6 +358,7 @@ function recur($template) {
     $data = compact('created');
     if ($flags) foreach (ray(TX_FLAGS) as $k) if (!strhas($k, 'u') and u\getBit($flags, $k)) $data[$k] = TRUE;
 
+    $DBTX = \db_transaction();
     if ($action == 'pay') {
       if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
@@ -382,7 +383,8 @@ function recur($template) {
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
     if ($period == PER_1) r\endRule('tm', $id);
-
+    
+    unset($DBTX);
   }
   
 }
