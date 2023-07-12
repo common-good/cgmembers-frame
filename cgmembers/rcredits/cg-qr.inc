@@ -79,7 +79,7 @@ function url($a, $type = 'card') {
     $cardCode = $agentCode = '';
   } else {
     $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
-    $agentCode = u\n2a(u\a2n($qo->agentCode()), -1, 36);
+    $agentCode = $a->proSe ? '' : u\n2a(u\a2n($qo->agentCode()), -1, 36);
   }
   $regLen = strlen($region = u\n2a(u\a2n($qo->region), -1, 36));
   $tailLen = strlen($tail = u\n2a(u\a2n($qo->tail), $regLen > 3 ? -4 : -2, 36));
