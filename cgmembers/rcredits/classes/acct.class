@@ -1882,7 +1882,7 @@ X;
     if ($a->ok) {
       for ($i = 0; ; $i++) { // try again if getting funds is likely to help
         $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
-        if ($z->ok) return $z;
+        if ($z->ok) {unset($DBTX); return $z;}
         if ($i > 0 or !$shortfall = nni($z->subs, 'shortfall') or $shortfall > $a->creditLine) break; // try just once to fill shortfall
         $shortfall -= $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
         if ($a->avail($goods) < $amount) break;
