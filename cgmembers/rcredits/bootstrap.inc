@@ -1084,6 +1084,12 @@ function test($testing = NULL) {
 
 function sceneId() {global $sceneTest; return $sceneTest ? "$sceneTest->module/$sceneTest->feature/$sceneTest->name" : '';}
 
+function tCrasher($spot = NULL) { // crash if called from a specific function or spot
+  global $testCrash; // set this to cause a crash
+  if (!$spot) $spot = funcName(1);
+  if ($spot == $testCrash) zot(); // cause a crash
+}
+
 /**
  * Translates a string to the current language, with replacements. 
  * tr() replaces parameters without translation -- until transaction is implemented, t() and tr() do the same thing.
@@ -1284,6 +1290,16 @@ function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return 
 function nni($ray, $i, $else = '') {return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;} // same as nn but for indexed value
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
+function funcName($offset = 0) {
+  $trace = debug_backtrace()[1 + $offset];
+  extract(just('class function', $trace, NULL));
+  $nm = str_replace('\\', '.', $function);
+  if ($class) $nm = basename($class) . '::' . $nm;
+  if (substr_count($nm, '.') == 1) return str_replace('CG.', 'r.', $nm);
+  foreach (funcNickName() as $k => $v) $map["$v."] = "$k.";
+  $map['CG.'] = '';
+  return strtr($nm, $map);
+}
 
 /**
  * Return the current time (or hypothetical current time for testing).
@@ -1446,9 +1462,10 @@ function f($func) {
  * @param string $func: a function name of the form x.func, where x is an abbreviated namespace
  * @return the intended function name
  */
-function funcNickname($func) {
-  list ($n, $func) = explode('.', $func);
+function funcNickname($func = '') {
   $funcs = array_combine(ray('r w s u be db qr t p a cr y v i'), ray(' Web Smart Util Backend DB QR Testing SMS Admin Cron Special Vote Install'));
+  if (!$func) return $funcs;
+  list ($n, $func) = explode('.', $func);
   return 'CG\\' . ($funcs[$n] ? $funcs[$n] . '\\' : '') . $func;
 }
 
