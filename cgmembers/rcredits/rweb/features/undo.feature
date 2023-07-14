@@ -143,3 +143,17 @@ Scenario: An administrator reverses a non-member ACH in
   | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
   |   5 | 4   | %UID_OUTER | .ZZC  | -100   | grant    |             | D-FBO       | %E_OUTER |
   |   6 | 4   | .ZZC       | cgf   | -5     | sponsor  | D-FBO       | FS-FEE      | %E_AUX   |
+
+# Rule: Reversal of an invoice payment sets the invoice status to Pending
+
+Scenario: An administrator reverses an invoice payment
+  Given these "tx_requests":
+  | nvid | status | payer | payee | amount | purpose |*
+  | 3    | 5      | .ZZB  | .ZZC  | 123    | stuff   |
+  And these "txs":
+  | eid | xid | payer | payee | amount | purpose | relType | relatedId |*
+  |   3 | 5   | .ZZB  | .ZZC  | 123    | stuff   | I       | 3         |
+  When member "C:1" visits "history/transactions/period=365&undo=5"
+  Then these "tx_requests":
+  | nvid | status      | payer | payee | amount | purpose |*
+  | 3    | %TX_PENDING | .ZZB  | .ZZC  | 123    | stuff   |
