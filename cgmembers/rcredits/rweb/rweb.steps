@@ -1816,6 +1816,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH undo AnAdministratorReversesABankTransferIn
  *     BOTH undo AnAdministratorReversesABankTransferOut
  *     BOTH undo AnAdministratorReversesANonmemberACHIn
+ *     BOTH undo AnAdministratorReversesAnInvoicePayment
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -2363,6 +2364,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE undo AnAdministratorReversesABankTransferIn
  *     MAKE undo AnAdministratorReversesABankTransferOut
  *     MAKE undo AnAdministratorReversesANonmemberACHIn
+ *     MAKE undo AnAdministratorReversesAnInvoicePayment
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 

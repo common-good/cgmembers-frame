@@ -85,7 +85,7 @@ if ($mya and $mya->admin) {
   
   1 . t('Fiscal Sponsorships') =>
     "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, 
-      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS fee, x.total AS GiftsLast90Days
+      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x.total AS GiftsLast90Days, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
       LEFT JOIN tx_rules ru ON ru.payee=u.uid

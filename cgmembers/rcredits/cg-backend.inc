@@ -364,6 +364,7 @@ function reverse($xid, $mya) {
     $newE->xid = NULL;  // new entry belongs to reversing transaction
     $newE->amount = -$oldE->amount;
     $newTx->entries[] = $newE;
+    if ($oldE->relType == 'I') db\update('tx_requests', ray('nvid status', $oldE->relatedId, TX_PENDING), 'nvid');
   }
   
   if (r\isBank($newTx->uid1)) foreach ([0, 1] as $i) $newTx->entries[$i]->description = t('bank transfer adjustment');
