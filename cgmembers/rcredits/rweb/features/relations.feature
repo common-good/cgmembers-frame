@@ -17,8 +17,8 @@ Scenario: Member has an employee, confirmed
   | .ZZA | .ZZD  | sell         | 1          | 1       | 0    |
   When member ".ZZA" visits page "settings/relations"
   Then we show "Relations" with:
-  | other      | Draw | Employee | Family | Permission |
-  | Dee Four   | No   | Yes          | Yes     | %can_sell  |
+  | other      | Draw | Employee | Family | Permission |      |
+  | Dee Four   | No   | Yes      | Yes    | %can_sell  | %DEL |
 
 Scenario: Member has an employee, unconfirmed
   Given these "u_relations":
@@ -83,12 +83,14 @@ Scenario: Member has access to employee account
 Scenario: Member company has relations
   Given these "u_relations":
   | main | agent | num | permission | employee | owner |*
-  | .ZZC | .ZZA  |   1 | manage     | 1          | 1        |
+  | .ZZC | .ZZA  |   1 | manage     | 1        | 1     |
   When member "C:A" visits page "settings/relations"
   Then we show "Relations" with:
   | other   | Employee | Owns | Permission     |
-  | Abe One | Yes          | Yes  | manage account |
+  | Abe One | Yes      | Yes  | manage account |
 #  | Abe One | Yes          | Yes  | manage account | request Common Good Card |
+  And without:
+  | %DEL |
   When member ".ZZA" visits page "settings/relations"
   Then we show "Relations" with:
   | other      | Employee | Family | Permission   |
@@ -107,18 +109,18 @@ Scenario: It's complicated
   | .ZZD | .ZZA  |   0 |            | 0        | 0       |
   When member ".ZZA" visits page "settings/relations"
   Then we show "Relations" with:
-  | other      | Employee | Family | Permission  |
-  | Bea Two    | Yes          | Yes     | %can_sell   |
-  | Corner Pub | --           | No      | --          |
-  | Dee Four   | Yes          | Yes     | %can_manage |
+  | other      | Employee | Family | Permission  |      |
+  | Bea Two    | Yes      | Yes    | %can_sell   | %DEL |
+  | Corner Pub | --       | No     | --          | %DEL |
+  | Dee Four   | Yes      | Yes    | %can_manage | %DEL |
   When member ".ZZB" visits page "settings/relations"
   Then we show "Relations" with:
   | other   | Employee | Family | Permission |
-  | Abe One | Yes          | No      | %can_none  |
+  | Abe One | Yes      | No     | %can_none  |
   When member ".ZZD" visits page "settings/relations"
   Then we show "Relations" with:
   | other   | Employee | Family | Permission |
-  | Abe One | No           | No      | %can_none  |
+  | Abe One | No       | No     | %can_none  |
   And with:
   |~Header  |
   | Family |
@@ -128,8 +130,8 @@ Scenario: It's complicated
   
   When member "C:D" visits page "settings/relations"
   Then we show "Relations" with:
-  | other   | Employee | Owns | Permission  |
-  | Abe One | Yes      | No   | %can_sell |
+  | other   | Employee | Owns | Permission |
+  | Abe One | Yes      | No   | %can_sell  |
 #  | Abe One | Yes          | No   | %can_sell | request Cashier Card |
 
 Scenario: A member adds a relation
