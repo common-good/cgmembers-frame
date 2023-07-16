@@ -174,6 +174,7 @@ const BARE = '-'; // marks bare (unwrapped) fields -- no div wrapper around them
 const NBSP = '&nbsp;'; // non-breaking space
 const DASH = '&mdash;';
 const R_BULLET = '&#8226;'; // bullet in emails (where CSS is difficult)
+const DEL = '&cross;'; // symbol for delete record
 const STATS_GRAIN = 10; // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));
 const COMPANY_FREEZE = FALSE; // companies cannot spend rewards yet
