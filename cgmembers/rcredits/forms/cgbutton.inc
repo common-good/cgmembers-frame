@@ -37,7 +37,7 @@ X
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
-  jsx('cgbutton', ray('qid forVals selling style showCcOk', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, !isPRODUCTION or in($mya->mainQid, 'NYAAVV NYAAVU')));
+  jsx('cgbutton', ray('qid forVals selling style showCcOk', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, !$mya->sponsored and (!isPRODUCTION or in($mya->mainQid, 'NEWCBR NYAAVV NYAAVU')))); // accept credit card payments for some non-sponsored organizations
   
   return cgform(compact(ray('title subtext for item amount credit ccOk text expires button example size html')));
 }

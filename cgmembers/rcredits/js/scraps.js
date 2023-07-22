@@ -449,7 +449,7 @@ function doit(what, vs) {
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
       var credit = (fer == forStoreCredit || fer == forGiftCredit);
-      $('.form-item-ccOk').toggle(vs['showCcOk'] == 1 && fer != forGift) // all gifts can be by CC, so don't show that option
+      $('.form-item-ccOk').toggle(vs['showCcOk'] == 1);
       ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
       $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)

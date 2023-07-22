@@ -1414,7 +1414,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .form-item-amtChoice select {max-width:200px; font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
 #frm-rules .form-item-period,
 #frm-donate .form-item-period {display:block;}
-#frm-donate #edit-logo img {max-height:140px; max-width:100%;}
+#frm-donate #edit-logo img,
+#frm-cgpay #edit-logo img {max-height:140px; max-width:100%;}
 #frm-donate .form-item-fullName {margin-top:50px;}
 #frm-donate #edit-title,
 #frm-donate .radio {margin-bottom:0;}
