@@ -2089,6 +2089,8 @@ function drupal_bootstrap() {
   _drupal_bootstrap_variables();
   require_once R_ROOT . '/cg-strings.inc';
   require_once R_ROOT . '/cg-db.inc'; // must be after _drupal_bootstrap_variables
+  define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rather than in defs.inc)
+  
   require_once R_ROOT . '/classes/acct.class';
   require_once R_ROOT . '/classes/qo.class';
   require_once R_ROOT . '/cg.inc';
