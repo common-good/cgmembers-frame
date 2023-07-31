@@ -456,7 +456,7 @@ function formPosts_validate($form, &$sta) {
  */
 function formPosts_submit($form, &$sta) {
   $input = just(POST_FLDS . ' frm pid location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type message method pid zip location', $input), NULL);
+  extract(just('frm email type message method pid zip location', $input, NULL));
   extract(frmBools($frm)); // make code a little easier to read
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
