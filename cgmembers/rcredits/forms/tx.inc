@@ -22,7 +22,7 @@ function formTx($form, &$sta, $type, $args = '') {
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
   $opDesc = $pay ? $payDesc : $chargeDesc;
   
-  $selling = explode("\n", $mya->selling);
+  $selling = explode("\n", $mya->selling ?: '');
   $purpose = $purpose ?: ($charge ? nni($selling, 0) : '');
   
   focusOn($who ? 'amount' : 'who');

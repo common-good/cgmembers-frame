@@ -22,6 +22,7 @@ class TxHistory implements TxProcessor {
   private $count = 0;
   private $runBalance = 0;
   private $baseUrl = NULL;
+  public $buttons;
   
   public function __construct($uids, $baseUrl) {
     $this->uids = $uids;

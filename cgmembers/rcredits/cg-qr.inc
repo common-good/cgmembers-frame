@@ -109,8 +109,8 @@ function acct($qr, $requireCode) {
   if ($count <= 2) { // abbreviated format (for QRs displayed by app) - <fmt><region><acct><agent><cardCode><type><counter>
     if (!preg_match('/^[0-9A-Z]{3,}/', $qr)) return NULL;
     $fmt = $qr[0]; // one radix 36 digit representing format (field lengths)
-    $i = (int) u\a2n($fmt, 36) / 4;
-    if (!$regionLen = (int) substr(REGION_LENS, $i, 1)) return NULL;
+    $i = intval(u\a2n($fmt, 36) / 4);
+    if (!$regionLen = intval(substr(REGION_LENS, $i, 1))) return NULL;
 
     $region = substr($qr, 1, $regionLen);
     $isTestCard = strhas($qr, '.'); // ignore -A on temporary QRs generated in spring 2023
@@ -151,7 +151,7 @@ function qrUnfmt($region, $tail, $isTestCard) {
   if (!preg_match('/[0-9A-Z]/', $fmt)) return NULL;
   $i = (int) u\a2n($fmt, 36);
   $agentLen = $i % 4;
-  $acctLen = substr(ACCT_LENS, $i / 4, 1);
+  $acctLen = substr(ACCT_LENS, intval($i / 4), 1);
 
   if ($acctLen == 6 or strlen($tail) < 1 + $acctLen + $agentLen) return NULL;
 

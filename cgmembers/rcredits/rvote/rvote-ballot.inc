@@ -149,7 +149,7 @@ EOF;
 
 //  $types = ray('Investment Loan Incentive Grant Other');
 
-  if (is_numeric(trim(mb_substr($sponsor, 0, 3)))) $sponsor = mb_substr($sponsor, 3);
+  if (is_numeric(trim(mb_substr(nn($sponsor), 0, 3)))) $sponsor = mb_substr($sponsor, 3);
   foreach (ray(RECOVERY_OPTS) as $i => $v) if (u\getBit($recovery, $i)) $ways[] = $v;
   
   $rows = [
@@ -181,7 +181,7 @@ EOF;
   ];
   
   $f = 0;
-  foreach ($rows as $k => $v) $extra['f' . $f++] = w\item(strtr($v, ["\n" => "<br>\n", '  ' => '&nbsp; ']), $k);
+  foreach ($rows as $k => $v) $extra['f' . $f++] = w\item(strtr(nn($v), ["\n" => "<br>\n", '  ' => '&nbsp; ']), $k);
 
   return $extra;
 }
@@ -249,7 +249,7 @@ EOF;
 //      $grade = round((20*$suitable + 20*$doable + 15*$mgmt + 10*$eval + 5*$cope + 2.5*$sponsor + 2.5*$local + 5*$goodType + 2.5*$goodTime1 + 2.5*$goodTime2 + 5*$rightAmt + 5*$rightPct) / 95); // should include 5*committed percent and divide by 100
       $grade0 = $grade;
       $gradeVal = number_format($grade / 100 / 3, 3);
-      $gradeLtr = $grades[max(0, $grade) / 100];
+      $gradeLtr = $grades[intval(max(0, $grade) / 100)];
       $grade = w\popHelp("$gradeVal ($gradeLtr)", $gs);
       $amount = u\fmtAmt($amount);
       $atag = w\atag("/prox/page=ProposalReport&p=$id");
@@ -261,7 +261,7 @@ EOF;
       $rowClass = 'row';
     } else $rowClass = 'row head';
     
-    $list[round($grade0, 4) * 10000 + (mt_rand() / mt_getrandmax())] = <<<EOF
+    $list[intval(round($grade0, 4) * 10000 + (mt_rand() / mt_getrandmax()))] = <<<EOF
 <div class="$rowClass">
   <div class="project-name col col-xs-8">$project ($count)<br>$who</div>
   <div class="amount-categories col col-xs-2">$amount<br>$categories</div>

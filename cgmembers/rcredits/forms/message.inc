@@ -40,7 +40,7 @@ function formMessage($form, &$sta, $args = '') {
 function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message secret expires', $sta['input'], NULL));
   if (strhas($to, '@') and !strhas($to, ' @ ') and empty($secret) and !gotFile()) return say(t('If you know the member\'s email address, don\'t use this form unless you\'re including an encrypted message or file &mdash; just send them an email.'), 'to'); // !strhas is needed to accept results of autocomplete
-  if ($expires < 0 or $expires > MAX_FILE_DAYS or ((strlen($secret) or gotFile()) and $expires == 0)) return say(t('Expires must be greater than zero and less than %MAX_FILE_DAYS.'), 'expires');
+  if ($expires < 0 or $expires > MAX_FILE_DAYS or ((strlen(nn($secret)) or gotFile()) and $expires == 0)) return say(t('Expires must be greater than zero and less than %MAX_FILE_DAYS.'), 'expires');
 
   if (gotFile()) {
     $flnm = microtime(TRUE) + DAY_SECS * $expires;
@@ -60,10 +60,10 @@ function formMessage_submit($form, &$sta) {
   $uid = whoId($sta);
   $a = r\acct($uid);
   
-  if ($fileData = unserialize($fileData) or strlen($secret)) { // encrypted file and/or message
+  if ($fileData = unserialize(nn($fileData)) or strlen(nn($secret))) { // encrypted file and/or message
     $at = now() + DAY_SECS * $expires;
     $ray = ray('qid from exp', $a->mainQid, $fromQid, $at);
-    if (strlen($secret)) $ray += compact('secret');
+    if (strlen(nn($secret))) $ray += compact('secret');
     if ($fileData) $ray += just('path name type size', $fileData);
 
     $message .= t('<p>Secret: <%a>click here</a>.<sup>*</sup></p>', '_a', atag(MSG_URL0 . u\cryRay($ray)));

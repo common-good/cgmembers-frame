@@ -25,7 +25,7 @@ function formCGPay($form, &$sta, $args = '') {
   if (!nn($coA)) return; // softErr
   
   $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  $verb = in(ucwords(nn($verb)), $verbs) ? ucwords($verb) : t('Pay');
   if ($verb == t('Donate')) u\setDft($s_item, t('donation'));
 
   $suffix = t(' to ') . $coA->fullName;

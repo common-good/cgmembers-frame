@@ -1,4 +1,9 @@
 <?php
+use CG as r;
+use CG\Util as u;
+use CG\Db as db;
+
+require_once R_ROOT . '/cg-db.inc';
 
 /**
  * @file
@@ -125,13 +130,14 @@ function lock_acquire($name, $timeout = 30.0) {
     // We always want to do this code at least once.
     do {
       try {
-        db_insert('semaphore')
+	    db\insert('semaphore', ray('name value expire', $name, _lock_id(), $expire), 'name');
+        /* db_insert('semaphore')
           ->fields(array(
             'name' => $name,
             'value' => _lock_id(),
             'expire' => $expire,
           ))
-          ->execute();
+          ->execute(); */
         // We track all acquired locks in the global variable.
         $locks[$name] = TRUE;
         // We never need to try again.
@@ -174,11 +180,13 @@ function lock_may_be_available($name) {
     // We check two conditions to prevent a race condition where another
     // request acquired the lock and set a new expire time. We add a small
     // number to $expire to avoid errors with float to string conversion.
-    return (bool) db_delete('semaphore')
+    $subs = ray('name value expire', $name, $lock['value'], 0.0001 + $expire);
+    return db\del('semaphore', 'name=:name AND value=:value AND expire<=:expire', $subs);
+    /*return (bool) db_delete('semaphore')
       ->condition('name', $name)
       ->condition('value', $lock['value'])
       ->condition('expire', 0.0001 + $expire, '<=')
-      ->execute();
+      ->execute();*/
   }
   return FALSE;
 }
@@ -264,9 +272,10 @@ function lock_release_all($lock_id = NULL) {
   if (empty($lock_id)) {
     $lock_id = _lock_id();
   }
-  db_delete('semaphore')
+  db\del('semaphore', 'value', $lock_id);
+/*  db_delete('semaphore')
     ->condition('value', $lock_id)
-    ->execute();
+    ->execute();*/
 }
 
 /**

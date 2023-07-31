@@ -51,7 +51,7 @@ function formInvestRate($form, &$sta, $args = '') {
     $value = item(u\fmtAmt($shares * $price), t('Value:'));
     $shares = item(u\fmtAmt($shares), t('Club\'s stake:'));
     if ($mya->iclub) {
-      foreach (ray('good patronage') as $k) ${$k . 's'} = number_format(db\avg($k, 'r_ratings', compact('vestid')));
+      foreach (ray('good patronage') as $k) ${$k . 's'} = number_format(db\avg($k, 'r_ratings', compact('vestid')) ?: 0);
       $goodsMed = (int) db\med('good', 'r_ratings', compact('vestid'));
       $goods = item(t('%goods (med %goodsMed)', compact(ray('goods goodsMed'))), t('Common Goodness:'));
       $patronages = item($patronages, t('Patronage:'));

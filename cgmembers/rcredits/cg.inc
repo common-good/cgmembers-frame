@@ -303,18 +303,17 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   $subs['site'] = BASE_URL;
   $subs['orgPhone'] = CGF_PHONE;
   extract(just('subject body noFrame sms cc pseudo', $subs));
-  
+
   if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
     $subs += r\balAndCred($toA) + (array) $toA->account(); // this omits any special fields or special formatting (except balance and creditLine)
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
-    
     $shortName = $toA->shortName;
-    $zip3 = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
+    $zip = $toA->zip; // must be separate from substr (PHP 8.2 bug)
+    $zip3 = substr(nn($zip), 0, 2); // temporarily show a wider region than zip3
     $surveyLink = $toA->co ? CO_SURVEY_LINK : SURVEY_LINK;
     u\preray(compact(ray('shortName zip3 surveyLink')), $subs);
-    
     if ($toA->closed and $index != 'password-reset') return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
@@ -326,7 +325,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   
   $testEmails[] = compact(ray('index toEmail subs'));
 
-  if (!is_array($reply = $reply0) and !is_object($reply0) and !strpos($reply0, '@')) {
+  if (!is_array($reply = $reply0) and !is_object($reply0) and !strpos(nn($reply0), '@')) {
     $reply = (!nn($reply0) or $reply0 == 'region') ? [CGF_EMAIL => PROJECT] // standard
       : ($reply0 == 'ctty' ? $toA->cttyA : r\acct($reply0)); // get account object
   }
@@ -337,7 +336,6 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $k = "%$k0";
     $resubs[$k] = $v;
   }
-
   $subject = u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%');
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
   
@@ -352,7 +350,6 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     t\output('Actual (in rMail) ' . pr($erInfo), 'email'); // output whether or not testing
     if (isDEV or $toEmailSimple != R_ADMIN_EMAIL) return TRUE; // allow emails to admin from non-production servers
   }
-
 
   try { // catch Mailer errors
     require_once DRUPAL_ROOT . '/../vendor/autoload.php';
@@ -481,7 +478,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
   $body = u\seeAssoc($subs);
   $info = $subs + compact('body');
-
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
   return FALSE;
 }
@@ -496,7 +492,8 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
 function tellCAdmin($index, $subs = [], $uid = NULL) {
   global $mya;
   if (!$uid) $uid = $mya ? $mya->id : nni($subs, 'loserId');
-  return tellAdmin($index, $subs, $uid);
+  $res = tellAdmin($index, $subs, $uid);
+  return $res;
 }
 
 /**
@@ -534,19 +531,19 @@ function iCardAcct($code0, &$iCode = NULL) {
 /**
  * Set a cookie
  * @param string $key: name of cookie
- * @param string $value: value of cookie
+ * @param string $value: value of cookie (NULL is converted to '')
  * @param int $expires: time when cookie expires (defaults to never -- about 1000 years from now) 0=end of session
  * @param bool $raw: <suppress URL-encoding>
  * @return: the value
  */
-function setCook($key, $value, $expires = NULL, $raw = FALSE) {
+function setCook($key, $value = '', $expires = NULL, $raw = FALSE) {
   u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
   if (isset($value)) $_COOKIE[$key] = $value; else unset($_COOKIE[$key]); // make it available also before going to a new page
   if (test()) return $value;
 
   u\setDft($expires, COOK_NO_EXPIRE);
   $func = $raw ? 'setrawcookie' : 'setcookie';
-  $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
+  $res = $func($key, nn($value), (int) $expires, '/'); // make it easy (fails without '/')
   u\EXPECT($res, 'cookie failed');
   return $value;
 }
@@ -1062,7 +1059,7 @@ X;
      'SUM(IF(u.community=u2.community, 0, amt))']
   : ["SUM(IF(NOT (u.$cttyCrit) AND u2.$cttyCrit, amt, 0))\n",
      "SUM(IF(u.$cttyCrit AND NOT (u2.$cttyCrit), -amt, 0))\n"];
-  foreach (ray('cgIn cgOut') as $k) $sql .= "${$k} AS $k,\n";
+  foreach (ray('cgIn cgOut') as $k) $sql .= "{${$k}} AS $k,\n";
   
   foreach (ray('p2b:01,b2b:11,b2p:10,p2p:00') as $k => $v) { // make x2x selectors
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';

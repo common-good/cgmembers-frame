@@ -42,7 +42,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
 
   if (!$mya) return softErr(tr('no page permission', 'page', t('Community Data'))); // only members get to see standard queries
 
-  if ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr($qName, 1))) {
+  if ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr(nn($qName), 1))) {
     if (substr($sql2, 0, 1) == '/') return go($sql2);
     $title = t('Query Results');
     $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2

@@ -576,6 +576,11 @@ function variable_initialize($conf = []) {
 function getV($name, $default = NULL) {
   global $conf;
   return isset($conf[$name]) ? $conf[$name] : $default;
+  /*
+  if (isset($conf[$name])) return $conf[$name];
+  $v = db\get('value', 'variables', compact('name')); // needed in some tests
+  if (is_null($v)) return $default;
+  return unserialize($v); */
 }
 function variable_get($nm, $dft = NULL) {return getV($nm, $dft);} // for legacy Drupal
 
@@ -1280,7 +1285,7 @@ function in($what, $list) {return raypos($list, $what) !== FALSE;}
  */
 function strhas($string, $what, $insensitive = FALSE) {
   $func = $insensitive ? 'mb_stripos' : 'mb_strpos';
-  return ($func($string, $what) !== FALSE);
+  return ($func(nn($string), $what) !== FALSE);
 }
 function strihas($string, $what) {return strhas($string, $what, TRUE);}
 function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots easier to type, and parallel to strhas
@@ -1563,9 +1568,13 @@ function format_string($string, array $args = array()) {
  * @see drupal_validate_utf8()
  * @ingroup sanitization
  */
-function plain($text) {return is_array($text) ? (array_walk($text, function (&$s) {$s = plain($s);}) ? $text : NULL) : htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
+function plain($text) {
+  return is_array($text)
+  ? (array_walk($text, function (&$s) {$s = plain($s);}) ? $text : NULL)
+  : htmlspecialchars(nn($text), ENT_QUOTES, 'UTF-8');
+}
 function check_plain($text) {return plain($text);}
-function unplain($text) {return htmlspecialchars_decode($text, ENT_QUOTES);} // reverse \check_plain
+function unplain($text) {return htmlspecialchars_decode(nn($text), ENT_QUOTES);} // reverse \check_plain
 
 /**
  * Checks whether a string is valid UTF-8.
@@ -1893,7 +1902,8 @@ function drupal_base64_encode($string) {
  */
 function drupal_random_bytes($count)  {
   // $random_state does not use drupal_static as it stores random bytes.
-  static $random_state, $bytes;
+  // static $random_state;
+  static $bytes = '';
 
   $missing_bytes = $count - strlen($bytes);
 

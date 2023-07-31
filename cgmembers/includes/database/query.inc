@@ -1325,6 +1325,8 @@ class MergeQuery extends Query implements QueryConditionInterface {
    * @var boolean
    */
   protected $needsUpdate = FALSE;
+  
+  public $condition; // added by CG 7/26/2023 for PHP 8.1
 
   /**
   * Constructs a MergeQuery object.
@@ -1679,6 +1681,8 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
    * The identifier of the query placeholder this condition has been compiled against.
    */
   protected $queryPlaceholderIdentifier;
+  
+  public $stringVersion; // added by CG 7/26/2023 for PHP 8.1
 
   /**
    * Constructs a DataBaseCondition object.
@@ -1697,6 +1701,7 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
    * size of its conditional array minus one, because one element is the the
    * conjunction.
    */
+  #[\ReturnTypeWillChange]
   public function count() {
     return count($this->conditions) - 1;
   }

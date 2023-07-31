@@ -447,7 +447,7 @@ function badTx($args, $account, $msg, $subs = []) {
 function getCompanyInfo() {
   global $mya; 
   
-  $descriptions = explode("\n", $mya->selling) ?: ['?'];
+  $descriptions = explode("\n", $mya->selling ?: '') ?: ['?'];
   
   if ($mya->co and !$mya->trialco) { // normal company with agent
     $can = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
