@@ -96,7 +96,7 @@ function menu($submenu = '') {
     'community/covid' => ['call', t('COVID-19 Response'), 'Covid', ANY],
     
     'co' => ['norm', t('Company'), 'Co', 'manage co'],
-    'co/cgbutton' => ['sub', t('Create CGPay Button'), 'CGButton 1', 'manage', '', t(), 'unchecked'],
+    'co/cgbutton' => ['sub', t('Create CGPay Button'), 'CGButton 1', 'co manage', '', t(), 'unchecked'],
     'co/coupons' => ['sub', t('Discount / Gift Certificates'), 'Coupons 2', 'manage', '', t(), 'usd'],
     'co/accredit' => ['sub', t('Give a Customer Credit'), 'Accredit', 'manage', '', t(), 'hand-right'],
     'co/relations' => ['sub', t('Authorized Users'), 'Relations 2', 'manage -depends', '', t(), 'magnet'],
