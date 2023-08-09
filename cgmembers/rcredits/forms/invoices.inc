@@ -94,7 +94,7 @@ EOF;
       $status = t('paid') . " (Tx#$xid)";
     } else {
       $statuses = ray(TX_STATUSES);
-      $data = unserialize($data);
+      $data = unserialize(nn($data));
       $status = $status1 = ucfirst($statuses[$status0]);
       if ($status0 == TX_DENIED) $status = tags('a', w\popHelp($status, t('Reason: ') . nni($data, 'whyNot')));
     }

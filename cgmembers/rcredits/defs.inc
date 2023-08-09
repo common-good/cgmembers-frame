@@ -13,7 +13,7 @@ global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
 $configFlnm = SHARED_DIR . '/config/config.json';
-$configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
+$configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)

@@ -80,6 +80,7 @@ EOF;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
+    u\setDft($notes, '');
     foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
     $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
     list ($type, $color) = !$activated 

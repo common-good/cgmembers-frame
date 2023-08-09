@@ -23,7 +23,7 @@ X
   u\ry('P', $mya->emailCode) );
   
   $forVals = t('Donation,Purchase,Store Credit,Gift of Store Credit');
-  $selling = explode("\n", $mya->selling)[0];
+  $selling = explode("\n", $mya->selling ?: '')[0];
 
   $for = radiosFld(t('Purpose:'), '', dft(0), ray($forVals)); // default to gift
   $item = textFld(t('Item:'), [t('Item being sold'), t('Short description of item purchased (leave blank to let customer specify).')], dft($selling));
