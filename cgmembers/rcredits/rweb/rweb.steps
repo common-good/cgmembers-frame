@@ -161,7 +161,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
- *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE stepup AMembersRulesComeIntoPlay
@@ -244,6 +243,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
  *     MAKE cardself Setup
+ *     MAKE ccpay Setup
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -325,6 +325,10 @@ function members($list) {return t\members($list);}
  *     TEST card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     TEST card AMemberUndoesACharge
  *     TEST cardself AMemberCardIsCharged
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     TEST ccpay AMemberDonatesToACcokOrganization
+ *     TEST ccpay AMemberPaysACcokOrganization
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -450,7 +454,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberRegistersBadZip
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
- *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
@@ -463,7 +466,11 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST fbo ANonmemberDonatesToASponsoredMember
+ * in: TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     TEST ccpay AMemberDonatesToACcokOrganization
+ *     TEST ccpay AMemberPaysACcokOrganization
+ *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
@@ -557,6 +564,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST card AMemberUndoesACharge
  *     TEST card AMemberAddsATip
  *     TEST cardself AMemberCardIsCharged
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -781,6 +789,7 @@ function withoutOptions($options) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST ccpay Setup
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -1232,6 +1241,7 @@ function membersHave($list) {return t\membersHave($list);}
  * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
@@ -1676,6 +1686,11 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH card AMemberAddsATip
  *     MAKE cardself Setup
  *     TEST cardself AMemberCardIsCharged
+ *     MAKE ccpay Setup
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     TEST ccpay AMemberDonatesToACcokOrganization
+ *     TEST ccpay AMemberPaysACcokOrganization
  *     MAKE cgpay Setup
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -1919,6 +1934,9 @@ function memberIsUnconfirmed($id) {
  * in: TEST accredit AMemberTriesToBuyCreditWithCredit
  *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     TEST ccpay AMemberDonatesToACcokOrganization
+ *     TEST ccpay AMemberPaysACcokOrganization
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
@@ -2341,6 +2359,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberUndoesACharge
  *     MAKE card AMemberAddsATip
  *     MAKE cardself AMemberScansTheirCard
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
@@ -2354,7 +2373,6 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
- *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE undo AMemberReversesAPaymentFromSomeone
@@ -2391,6 +2409,9 @@ function weFirstThen($first, $then) {
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
  *     MAKE cardself AMemberCardIsCharged
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     MAKE ccpay AMemberDonatesToACcokOrganization
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
@@ -2414,6 +2435,8 @@ function withQR($url) {
  * next captcha is (ARG)
  *
  * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByACH
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
@@ -2429,7 +2452,8 @@ function nextCaptchaIs($ca) {
 /**
  * member (ARG) submits (ARG) with: (ARG)
  *
- * in: MAKE fbo ANonmemberDonatesToASponsoredMember
+ * in: MAKE ccpay AMemberPaysACcokOrganization
+ *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE fbo AMemberPaysASponsoredMemberEverythingTheyHave
@@ -2446,7 +2470,8 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
 /**
  * return URL (ARG)
  *
- * in: TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ * in: TEST ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  */
@@ -2464,7 +2489,8 @@ function returnURL($url) {
 /**
  * var (ARG) encrypts: (ARG)
  *
- * in: MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ * in: MAKE ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE nosignin AMemberDonatesFromAnEmailLink
@@ -2494,6 +2520,9 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  * button code (ARG) for: (ARG)
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByCreditCard
+ *     MAKE ccpay ANonmemberDonatesToACcokOrganizationByACH
+ *     MAKE ccpay AMemberDonatesToACcokOrganization
  *     MAKE cgpay AMemberClicksACGPayButton
  *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID

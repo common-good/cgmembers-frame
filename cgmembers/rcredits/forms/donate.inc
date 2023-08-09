@@ -9,7 +9,7 @@ use CG\Db as db;
 include_once R_ROOT . '/forms/ccpay.inc';
 
 /*
-  Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account.
+  Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account or a CCOK account.
 */
 function formDonate($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
@@ -34,6 +34,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $recursId = $amtChoice = NULL;
   $isCG = ($coA->id == CGID);
   $fbo = $coA->sponsored;
+  $ccok = ($fbo or $coA->ccok);
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
   
   if ($isCG and $mya) {
