@@ -149,10 +149,10 @@ if ($mya and $mya->admin) {
   1 . t('CEF Billing') => 'cef-billing',
   
   1 . t('App Users') =>
-    "SELECT u.fullName, MAX(b.version) AS version, FROM_UNIXTIME(MAX(h.created)) AS lastTx, u.IS_CO AS isCo
+    "SELECT u.fullName, MAX(b.version) AS version, FROM_UNIXTIME(MAX(h.created)) AS lastTx, IF(u.:IS_CO, 'co', '') AS isCo
      FROM users u JOIN tx_hdrs h ON h.actorId=u.uid
      JOIN r_boxes b USING(uid)
-     WHERE h.created>:NOW-2*:YEAR_SECS AND b.version IS NOT NULL AND u.:IS_CO
+     WHERE h.created>:NOW-2*:YEAR_SECS AND b.version IS NOT NULL
      GROUP BY uid
      ORDER BY isCo DESC, version, fullName",
       
