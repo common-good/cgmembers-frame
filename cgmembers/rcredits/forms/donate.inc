@@ -60,7 +60,8 @@ function formDonate($form, &$sta, $args = NULL) {
     $options = btnOpt('', t('repeat'), 'btn-repeat') . $options;
     $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
     $subtext = t('Make a tax-deductible contribution of any amount to support %coName.', compact('coName'));
-    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
+    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
+    $subtext = "<p>$subtext</p>";
   }
 
   $options = item($options);
