@@ -1446,7 +1446,7 @@ function n2english($num, $tri = 0) {
   $tens = ray(ENGLISH_TENS);
   $lions = ray(ENGLISH_LIONS);
   $r = floor($num / 1000); // chunk the number, ...rxyy
-  $x = ($num / 100) % 10;
+  $x = intval($num / 100) % 10;
   $y = $num % 100;
 
   $res = ''; // the result
@@ -1513,7 +1513,7 @@ function plusMonths($n, $time = NULL) {
 function median($ray) {
   sort($ray);
   if (!$len = count($ray)) return NULL;
-  $mid = (int) $len / 2;
+  $mid = intval($len / 2);
   $v = $ray[$mid];
   $v2 = nni($ray, $mid + 1);
   return (($len & 2) and is_numeric($v) and is_numeric($v2)) ? ($v + $v2) / 2 : $v;
@@ -1583,7 +1583,7 @@ function parseUp($s) {
 
   $pd = new \Parsedown();
   $pd->setSafeMode(TRUE);
-  return strtr($pd->text($s), ["\\\n" => "<br>", '\\' => "<br>"]);
+  return strtr($pd->text(nn($s)), ["\\\n" => "<br>", '\\' => "<br>"]);
 }
 
 /*
@@ -1903,7 +1903,7 @@ function pry($data) {return ry('P', $data);}
 function dePry($code) {return u\dery('P', $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
-function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
+function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', nn($phone));}
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists
 function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}
 function getContents($url) {return file_get_contents($url, FALSE, stream_context_create(['ssl' => ray('verify_peer verify_peer_name', FALSE, FALSE)]));}

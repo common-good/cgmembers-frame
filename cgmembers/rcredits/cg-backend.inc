@@ -417,7 +417,7 @@ function payInvoice($nvid, $payAmount = NULL) {
   u\setDft($payAmount, $amount);
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
-  $data = unserialize($data);
+  $data = unserialize(nn($data));
   extract(just('api request shid for', $data, NULL));
 
   $DBTX = \db_transaction();

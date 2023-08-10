@@ -25,6 +25,7 @@ class optTotals {
   public $mandatory;
   public $result; // funded, vetoed, or not funded
   public $funds = -999; // amount funded
+  public $mj;
 
   public function __construct($thisid, $opts) {
     foreach($opts as $optid) $this->prefs[$optid] = 0;

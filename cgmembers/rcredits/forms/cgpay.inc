@@ -25,7 +25,7 @@ function formCGPay($form, &$sta, $args = '') {
   if (!nn($coA)) return; // softErr
   
   $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  $verb = in(ucwords(nn($verb)), $verbs) ? ucwords($verb) : t('Pay');
   if ($verb == t('Donate')) u\setDft($s_item, t('donation'));
 
   $suffix = t(' to ') . $coA->fullName;
@@ -79,10 +79,11 @@ function formCGPay($form, &$sta, $args = '') {
     if (!$mya) $option = t('or <big><%a>Sign up!</a></big>', '_a', atag('/signup')) . nn($option2);
   }
   
+  $logo = logoFld($coA);
   $subtext = "<h4>$subtext</h4>";
   $submit = submit($verb, '', 'md', w\suffix(nn($option)));
 
-  $info = compact(ray('subtext amount amtDpy itemDpy item for qid pass submit'));
+  $info = compact(ray('logo subtext amount amtDpy itemDpy item for qid pass submit'));
   foreach (ray(CGPAY_VARS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
 
   return cgform($info);

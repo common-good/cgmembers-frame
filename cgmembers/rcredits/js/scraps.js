@@ -449,7 +449,7 @@ function doit(what, vs) {
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
       var credit = (fer == forStoreCredit || fer == forGiftCredit);
-      $('.form-item-ccOk').toggle(vs['showCcOk'] == 1 && fer != forGift) // all gifts can be by CC, so don't show that option
+      $('.form-item-ccOk').toggle(vs['showCcOk'] == 1);
       ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
       $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)
@@ -519,18 +519,23 @@ function doit(what, vs) {
     if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
     var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
     var ach = $('#ach'); ach.hide();
-    $('#edit-payhow-1').click(function () {
-      ach.hide(); coverCCFee.show(); 
-      if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
-      $('.btn-repeat, .form-item-period').hide();
-    });
-    $('#edit-payhow-0').click(function () {ach.show(); coverCCFee.hide();});
+    if ($('#edit-payhow-0').length) {
+      $('#edit-payhow-1').click(function () {
+        ach.hide(); coverCCFee.show(); 
+        if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
+        $('.btn-repeat, .form-item-period').hide();
+      });
+      $('#edit-payhow-0').click(function () {ach.show(); coverCCFee.hide();});
+    } else if ($('#edit-fullname').length) { // non-member donating to non-FS org, so CC only and no repeats
+      $('.btn-repeat').hide();
+    }
     
     $('.btn-repeat').click(function () {
       $(this).hide();
       $('.form-item-period').show();
       $('#edit-period').val('month').focus();
     });
+
     $('.btn-honor').click(function () {
       $(this).hide();
       $('.form-item-honor').show();

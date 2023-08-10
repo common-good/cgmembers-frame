@@ -295,7 +295,9 @@ abstract class DatabaseConnection extends PDO {
    * @var array
    */
   protected $prefixReplace = array();
-
+  
+  public $query_string; // added by CG for PHP 8.1 7/26/2023
+  
   function __construct($dsn, $username, $password, $driver_options = array()) {
     // Initialize and prepare the connection prefix.
     $this->setPrefix(isset($this->connectionOptions['prefix']) ? $this->connectionOptions['prefix'] : '');
@@ -701,14 +703,14 @@ abstract class DatabaseConnection extends PDO {
     }
     catch (PDOException $e) {
       if ($options['throw_exception']) {
-        // Add additional debug information.
+        /* invalid in PHP 8.1 (CG 7/26/2023) // Add additional debug information.
         if ($query instanceof DatabaseStatementInterface) {
           $e->query_string = $stmt->getQueryString();
         }
         else {
           $e->query_string = $query;
         }
-        $e->args = $args;
+        $e->args = $args;*/
         throw $e;
       }
       return NULL;
@@ -990,6 +992,7 @@ abstract class DatabaseConnection extends PDO {
    * @return
    *   TRUE if we're currently in a transaction, FALSE otherwise.
    */
+  #[\ReturnTypeWillChange]
   public function inTransaction() {
     return ($this->transactionDepth() > 0);
   }
@@ -1030,6 +1033,7 @@ abstract class DatabaseConnection extends PDO {
    *
    * @see DatabaseTransaction::rollback()
    */
+  #[\ReturnTypeWillChange]
   public function rollback($savepoint_name = 'drupal_transaction') {
     if (!$this->supportsTransactions()) {
       return;
@@ -1291,6 +1295,7 @@ abstract class DatabaseConnection extends PDO {
    *
    * @see DatabaseTransaction
    */
+  #[\ReturnTypeWillChange]
   public function commit() {
     throw new DatabaseTransactionExplicitCommitNotAllowedException();
   }
@@ -2150,6 +2155,7 @@ class DatabaseStatementBase extends PDOStatement implements DatabaseStatementInt
     $this->setFetchMode(PDO::FETCH_OBJ);
   }
 
+  #[\ReturnTypeWillChange]
   public function execute($args = array(), $options = array()) {
     if (isset($options['fetch'])) {
       if (is_string($options['fetch'])) {
@@ -2289,22 +2295,27 @@ class DatabaseStatementEmpty implements Iterator, DatabaseStatementInterface {
 
   /* Implementations of Iterator. */
 
+  #[\ReturnTypeWillChange]
   public function current() {
     return NULL;
   }
 
+  #[\ReturnTypeWillChange]
   public function key() {
     return NULL;
   }
 
+  #[\ReturnTypeWillChange]
   public function rewind() {
     // Nothing to do: our DatabaseStatement can't be rewound.
   }
 
+  #[\ReturnTypeWillChange]
   public function next() {
     // Do nothing, since this is an always-empty implementation.
   }
 
+  #[\ReturnTypeWillChange]
   public function valid() {
     return FALSE;
   }

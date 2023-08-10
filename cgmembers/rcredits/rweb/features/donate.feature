@@ -94,7 +94,7 @@ Scenario: A member makes a new recurring donation
   And these "tx_timed":
   | id | start     | from | to  | amount | period | end  |*
   | 1  | %today-1d | .ZZA | cgf |     25 | year   | %now |
-  | 2  | %today    | .ZZA | cgf |     10 | month  | %NIL |
+  | 2  | %today    | .ZZA | cgf |     10 | month  | %NUL |
 
 Scenario: A member makes a new recurring donation of zero
   Given these "tx_timed":

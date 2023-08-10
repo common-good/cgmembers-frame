@@ -89,7 +89,7 @@ function fixData(&$info, $direct = FALSE) {
   $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
-  if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos($v, '@') !== FALSE) {
+  if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
@@ -171,7 +171,7 @@ X
  */
 function fixIdFld($v) {
   if (strhas($v, '@')) return r\acct(t\fixEmail($v))->id; // sometimes an email identifies an account ($$k not $v)
-  if (preg_match('/^!?(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) return t\uid($v);
+  if (preg_match('/^!?(\.|[A-Z]{3})[A-Z]{3}$/', nn($v)) or in($v, SPECIAL_IDS)) return t\uid($v);
   return $v;
 }
 
@@ -776,7 +776,7 @@ function notice($notice, $id, $subs = []) {
 
   $uid = uid($id);
   if (is_array($subs)) foreach ($subs as $key => $value) {
-      if (preg_match('/^\$(.*)(r|us)?$/U', $value, $matches)) {
+      if (preg_match('/^\$(.*)(r|us)?$/U', nn($value), $matches)) {
       list ($num, $currency) = array($matches[1], nn($matches[2]));
         if ($currency == 'us') $currency = 'u';
         $subs[$key] = u\fmtAmt($num, 's$' . $currency);
@@ -1172,7 +1172,7 @@ function findEmail($index, $email, $subs) {
       $t_toEmail = fixEmail($t_toEmail);
 ///     debug(compact(ray('t_index index t_toEmail email')));
       if ($t_index == $index and $t_toEmail == $email) {
-        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = tr(strtr(strip_tags($v), $map));
+        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = tr(strtr(strip_tags(nn($v)), $map));
         if (isset($t_subs['site'])) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
@@ -1256,7 +1256,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
-function hitServer($op, $info = [], $agent, $device = '', $version = 230) {
+function hitServer($op, $info = [], $agent = NULL, $device = '', $version = 230) {
   global $rposResult;
   if ($agent) $agent = fullQid2($agent);
   extract(just('amount member code created proof goods', $info));
@@ -1437,7 +1437,6 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
     $validate = FALSE;
     $formSta['confirm'] = TRUE;
   }
-
   $values = t\POST($values);
   if (!$form = t\pageForm($page)) return FALSE; // probably access error
   $sta = $formSta; $formSta = NULL; // don't let $formSta influence other forms that get invoked
@@ -1448,12 +1447,11 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   foreach ($form as $key => $field) if (substr($key, 0, 1) != '#') {
     if (isset($field['#value'])) $dfts[$key] = $field['#value'];
   }
-
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
-  if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
+  if ($i = strpos(nn($testConfirmation), $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
@@ -1480,7 +1478,6 @@ function pageForm($page) {
 
   $lastPage = $page;
   $result = \menu_execute_active_handler($page, 'test');
-
   if (is_numeric($result)) {
     $result = $result == MENU_NOT_FOUND ? 'not found'
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
@@ -1635,7 +1632,7 @@ function objEq($desc, $want, $got) {
 function eq($desc, $want, $got, $id = NULL, $list = '', $offBy = 0) {
   global $testVars;
   foreach (ray('want got') as $k) fixTestVars($$k);
-  $want = str_replace('\\n', "\n", $want);
+  $want = str_replace('\\n', "\n", nn($want));
   if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
   if ($want == '?') return TRUE;
   if (is_array($want)) list ($want, $got) = [pr($want), pr($got)];

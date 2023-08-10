@@ -2221,8 +2221,8 @@ function url($path = NULL, array $options = array()) {
     // before any / ? or #. Note: we could use url_is_external($path) here, but
     // that would require another function call, and performance inside url() is
     // critical.
-    $colonpos = strpos($path, ':');
-    $options['external'] = ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && drupal_strip_dangerous_protocols($path) == $path);
+    $colonpos = strpos(nn($path), ':'); // nn() added by CG 7/27/2023
+    $options['external'] = ($colonpos !== FALSE && !preg_match('![/?#]!', substr(nn($path), 0, $colonpos)) && drupal_strip_dangerous_protocols($path) == $path); // nn() added by CG 7/27/2023
   }
 
   // Preserve the original path before altering or aliasing.
@@ -2292,7 +2292,7 @@ function url($path = NULL, array $options = array()) {
   }
 
   $base = $options['absolute'] ? $options['base_url'] . '/' : base_path();
-  $prefix = empty($path) ? rtrim($options['prefix'], '/') : $options['prefix'];
+  $prefix = empty($path) ? rtrim(nni($options, 'prefix'), '/') : $options['prefix']; // nni CG 7/27/2023
 
   // With Clean URLs.
   if (!empty($GLOBALS['conf']['clean_url'])) {

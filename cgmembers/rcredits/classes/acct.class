@@ -1615,7 +1615,7 @@ X;
     $a = $this;
     if (!$address = $a->address) return FALSE;
     $q = db\q('SELECT uid FROM users WHERE :IS_OK AND uid<>:id AND zip=:zip', ray('id zip', $a->id, $a->zip));
-    while ($row = $q->fetchAssoc()) if (r\acct($row['uid'])->address = $address) return TRUE;
+    while ($row = $q->fetchAssoc()) if (r\acct($row['uid'])->address == $address) return TRUE;
     return FALSE;      
   }
 

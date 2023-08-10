@@ -963,8 +963,10 @@ class SelectQuery extends Query implements SelectQueryInterface {
    * The FOR UPDATE status
    */
   protected $forUpdate = FALSE;
+  
+  public $alterTags; // added by CG 7/27/2023 for PHP 8.1
 
-  public function __construct($table, $alias = NULL, DatabaseConnection $connection, $options = array()) {
+  public function __construct($table, $alias = NULL, DatabaseConnection $connection = NULL, $options = array()) { // CG added $connection = NULL
     $options['return'] = Database::RETURN_STATEMENT;
     parent::__construct($connection, $options);
     $this->where = new DatabaseCondition('AND');

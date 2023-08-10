@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61m'; // software version
+const R_VERSION = '3.61n'; // software version
 const APP_VERSION = 40100; // 4.1.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -13,7 +13,7 @@ global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
 $configFlnm = SHARED_DIR . '/config/config.json';
-$configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
+$configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
@@ -174,6 +174,7 @@ const BARE = '-'; // marks bare (unwrapped) fields -- no div wrapper around them
 const NBSP = '&nbsp;'; // non-breaking space
 const DASH = '&mdash;';
 const R_BULLET = '&#8226;'; // bullet in emails (where CSS is difficult)
+const DEL = '&cross;'; // symbol for delete record
 const STATS_GRAIN = 10; // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));
 const COMPANY_FREEZE = FALSE; // companies cannot spend rewards yet
@@ -451,12 +452,13 @@ const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
 const CO_SPONSORED = 2; // fiscally sponsored by CG (should have CG's EIN, and maybe CO_PRIVATE if it has another CG account)
 
+const CO_CCOK = 12; // (temporary) we accept credit card payments for this company
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add (deprecated -- remove once most companies, including Mesa Verde, switch to new app, v4.2 and up)
-const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,,private,atm,,,,,,,,,,,,,,,fast,tip';
+const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,ccok,private,atm,,,,,,,,,,,,,,,fast,tip';
 
 const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21 (remove this and related features once no companies are using our Android app)
 const CO_CHARGE = 0;

@@ -26,7 +26,7 @@ function formInvest($form, &$sta, $args = '') {
   if ($mya->iclub) { // the club itself
     if ($res = db\get('-SUM(request) AS reqTot, SUM(IF(request<0, 1, 0)) AS reqCount, SUM(stake) AS stakes', 'r_stakes', compact('clubid'))) {
       extract($res);
-      $reqCount = number_format($reqCount);
+      $reqCount = number_format($reqCount ?: 0);
     } else $reqTot = $reqCount = $stakes = 0;
     
     $btnList = btn("/invest/list/clubqid=$clubqid", t('List'));
@@ -190,7 +190,7 @@ function myShareOfClub($myid, $clubid, &$myStake = '', &$totalStakes = '', $tota
 X;
   if (!$res = db\q($sql, compact(ray('myid clubid')))->fetchAssoc()) return 0;
   extract($res);
-  return abs($totalFairShares) > .005 ? round($memberFairShare / $totalFairShares, 2) : 0;
+  return abs($totalFairShares ?: 0) > .005 ? round($memberFairShare / $totalFairShares, 2) : 0;
 }
 
 /**

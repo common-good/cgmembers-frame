@@ -245,7 +245,7 @@ function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
   extract($extra);
   
   // Stuff to do AFTER extracting $extra
-  if (!$a) $subtext .= t('<p>%PROJECT members save time: <%aMember class="loud">go here instead</a>.</p>', '_aMember', atag(nn($cgPayLink))); // nn() for fbo test
+  if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test
   
   foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
   return $form;

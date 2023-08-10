@@ -37,7 +37,7 @@ Scenario: A non-member applies for fiscal sponsorship
   | Checks Out    |
   | Comments      |
   | Submit        |
-  
+
   When member "?" submits "co/sponsor" with:
   | contact    | Jane Dough |**
   | fullName   | Bread Co   |
@@ -152,7 +152,7 @@ Scenario: A signed-in company applies for fiscal sponsorship without manage perm
 
 Scenario: A signed-in company applies for fiscal sponsorship
   Given members have:
-  | uid | .ZZC |**
+  | uid        | .ZZC |**
   | phone      | 413-987-6543 |
   | email      | c@ |
   | country    | US |

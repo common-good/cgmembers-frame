@@ -147,6 +147,14 @@ if ($mya and $mya->admin) {
       FROM users u WHERE activated BETWEEN $qtrDt1 AND $qtrDt2",
       
   1 . t('CEF Billing') => 'cef-billing',
+  
+  1 . t('App Users') =>
+    "SELECT u.fullName, MAX(b.version) AS version, FROM_UNIXTIME(MAX(h.created)) AS lastTx, IF(u.:IS_CO, 'co', '') AS isCo
+     FROM users u JOIN tx_hdrs h ON h.actorId=u.uid
+     JOIN r_boxes b USING(uid)
+     WHERE h.created>:NOW-2*:YEAR_SECS AND b.version IS NOT NULL
+     GROUP BY uid
+     ORDER BY isCo DESC, version, fullName",
       
   2 . t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 

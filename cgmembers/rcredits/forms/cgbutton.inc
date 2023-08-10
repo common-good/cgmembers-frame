@@ -23,7 +23,7 @@ X
   u\ry('P', $mya->emailCode) );
   
   $forVals = t('Donation,Purchase,Store Credit,Gift of Store Credit');
-  $selling = explode("\n", $mya->selling)[0];
+  $selling = explode("\n", $mya->selling ?: '')[0];
 
   $for = radiosFld(t('Purpose:'), '', dft(0), ray($forVals)); // default to gift
   $item = textFld(t('Item:'), [t('Item being sold'), t('Short description of item purchased (leave blank to let customer specify).')], dft($selling));
@@ -37,7 +37,7 @@ X
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
-  jsx('cgbutton', ray('qid forVals selling style showCcOk', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, !isPRODUCTION or in($mya->mainQid, 'NYAAVV NYAAVU')));
+  jsx('cgbutton', ray('qid forVals selling style showCcOk', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE, !$mya->sponsored and (!isPRODUCTION or in($mya->mainQid, 'NEWCBR NYAAVV NYAAVU')))); // accept credit card payments for some non-sponsored organizations
   
   return cgform(compact(ray('title subtext for item amount credit ccOk text expires button example size html')));
 }

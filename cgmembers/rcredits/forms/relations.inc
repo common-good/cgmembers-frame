@@ -71,12 +71,14 @@ EOF;
 
     if ($co or $otherCo or !$mya->ok or !$a->ok) unset($permissions[r\perm(B_JOINT)]); // no joint accounts with a company or nonmember
     $perm = $otherPerson ? dropdown('permission', $permission, $permissions, $ii) : R_NONE;
-    $delete = btn('', '&cross;', 'default', '', ray('name', "delete-$ii"));
+    $delete = btn('', DEL, 'default', '', ray('name', "delete-$ii"));
     
     $rows[] = $showCustomers
     ? [$fullName, $drawn, $employee, $owner, $perm, $customer, $delete] // what to show on screen
     : [$fullName, $drawn, $employee, $owner, $perm, $delete];
   }
+  
+  if ($mya->co and count($rows) == 1) unset($rows[0][count($rows[0]) - 1]); // don't allow deletion of the last relation of a company
   
   $aExact = "a href=\"$base_url/help/payment-exchanges\"";
   $_aInvite = atag('/community/invite');

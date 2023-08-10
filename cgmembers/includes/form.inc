@@ -1511,7 +1511,7 @@ function form_execute_handlers($type, &$form, &$form_state) {
       $file = R_ROOT . strtolower("/forms/$formName.inc");
       if (file_exists($file)) include_once $file; // cg 2018-05-14
       foreach ($form_state['input'] as $k => $v) {
-        if (nn($form[$k]['#type']) == 'textfield' and !is_array($form_state['input'][$k])) $form_state['input'][$k] = trim($v);
+        if (nn($form[$k]['#type']) == 'textfield' and !is_array($form_state['input'][$k])) $form_state['input'][$k] = trim(nn($v));
       }
       $function($form, $form_state);
     }

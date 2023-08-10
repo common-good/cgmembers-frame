@@ -9,7 +9,7 @@ use CG\Db as db;
 include_once R_ROOT . '/forms/ccpay.inc';
 
 /*
-  Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account.
+  Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account or a CCOK account.
 */
 function formDonate($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
@@ -34,6 +34,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $recursId = $amtChoice = NULL;
   $isCG = ($coA->id == CGID);
   $fbo = $coA->sponsored;
+  $ccok = ($fbo or $coA->ccok);
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
   
   if ($isCG and $mya) {
@@ -59,7 +60,8 @@ function formDonate($form, &$sta, $args = NULL) {
     $options = btnOpt('', t('repeat'), 'btn-repeat') . $options;
     $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
     $subtext = t('Make a tax-deductible contribution of any amount to support %coName.', compact('coName'));
-    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
+    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
+    $subtext = "<p>$subtext</p>";
   }
 
   $options = item($options);

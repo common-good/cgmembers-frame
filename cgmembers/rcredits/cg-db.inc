@@ -14,7 +14,6 @@ use CG\Web as w;
 require_once __DIR__ . '/cg-util.inc';
 
 define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_stats'); // don't log deletions from these files
-define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rather than in defs.inc)
 
 /**
  * Do a database query with easy substitutions.
