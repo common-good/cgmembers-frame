@@ -1430,7 +1430,7 @@ function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
 
 function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
-function logoFld($a) {return $a->hasLogo ? item(logoHtml($a)) : NULL;}
+function logoFld($a, $suffix = '') {return ($a->hasLogo or $suffix) ? item(logoHtml($a) . $suffix) : NULL;}
 function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid . '?' . now()) : '';}
 
 /**
