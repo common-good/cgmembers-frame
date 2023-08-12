@@ -517,15 +517,21 @@ function doit(what, vs) {
     hideComment();
     $('.form-item-honor, .form-item-payHow span').hide();
     if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
-    var coverCCFee = $('.form-item-coverCCFee'); coverCCFee.hide();
+    var coverCCFee = $('.form-item-coverCCFee');
     var ach = $('#ach'); ach.hide();
     if ($('#edit-payhow-0').length) {
+      coverCCFee.hide();
       $('#edit-payhow-1').click(function () {
-        ach.hide(); coverCCFee.show(); 
+        ach.hide();
+        coverCCFee.show(); 
         if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
         $('.btn-repeat, .form-item-period').hide();
       });
-      $('#edit-payhow-0').click(function () {ach.show(); coverCCFee.hide();});
+      $('#edit-payhow-0').click(function () {
+        ach.show();
+        coverCCFee.hide();
+        $('.btn-repeat, .form-item-period').show();
+      });
     } else if ($('#edit-fullname').length) { // non-member donating to non-FS org, so CC only and no repeats
       $('.btn-repeat').hide();
     }

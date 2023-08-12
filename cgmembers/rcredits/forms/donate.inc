@@ -52,7 +52,9 @@ function formDonate($form, &$sta, $args = NULL) {
     } else $recurOnly = $noOneTime = '';
 
     $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-    $subtext = t('<p>By opening a %PROJECT account, you are partnering with us to create a %PROJECT Economy. Most members choose to make a tax-deductible donation%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', $recurOnly, nn($replaces), $amountTip) . $noOneTime;
+    $special = ($isCG and $target = $coA->target) ? t('<p>We currently need to raise %amt over the next few months to carry us through an important one-time transition.</p>', 'amt', u\fmtAmt($target)) : '';
+    
+    $subtext = t('<p>By opening a %PROJECT account, you are partnering with us to create a %PROJECT Economy. Most members choose to make a tax-deductible donation%recurOnly. %replaces %amountTip</p>%special<p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip _special', $recurOnly, nn($replaces), $amountTip, $special) . $noOneTime;
     $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
     jsx('amtChoice');
 
@@ -66,7 +68,11 @@ function formDonate($form, &$sta, $args = NULL) {
 
   $options = item($options);
     
-  $logo = logoFld($coA);
+  if ($coA->target) {
+    $value = db\sum('amt', 'txs', 'uid2=:uid AND :IS_GIFT AND created>=:dt', ray('uid dt', $coA->id, $coA->targetStart));
+    $therm = img(R_PATH . "/images/thermometer/?unit=none&max=$coA->target&value=%value");
+  } else $therm = '';
+  $logo = logoFld($coA, $therm);
   $title = t('Donate to ') . $coA->bestName;
 
   $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($isCG ? PER_YEAR : PER_1), $oftens);
