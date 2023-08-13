@@ -26,6 +26,7 @@ function formDonate($form, &$sta, $args = NULL) {
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
     extract(just('coA s_amount', $ray, NULL));
     if (!nn($coA)) return; // softErr
+    if ($mya and $mya->id == $coA->id) return softErr(t('Donating to yourself is not permitted.'));
   } else $coA = r\acct(CGID); // vanilla CG donation page
   
   jsx('donate');
@@ -36,7 +37,10 @@ function formDonate($form, &$sta, $args = NULL) {
   $isCG = ($coA->id == CGID);
   $fbo = $coA->sponsored;
   $ccok = ($fbo or $coA->ccok);
+  $target = $coA->target + 0;
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
+
+  $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months to carry us through an important one-time transition.</p>', 'amt', u\fmtAmt($target)) : '';
   
   if ($isCG and $mya) {
     if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
@@ -53,7 +57,7 @@ function formDonate($form, &$sta, $args = NULL) {
     } else $recurOnly = $noOneTime = '';
 
     $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-    $special = ($isCG and $target = $coA->target) ? t('<p>We currently need to raise %amt over the next few months to carry us through an important one-time transition.</p>', 'amt', u\fmtAmt($target)) : '';
+    debug(compact(ray('isCG target')));
     
     $subtext = t('<p>By opening a %PROJECT account, you are partnering with us to create a %PROJECT Economy. Most members choose to make a tax-deductible donation%recurOnly. %replaces %amountTip</p>%special<p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip _special', $recurOnly, nn($replaces), $amountTip, $special) . $noOneTime;
     $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
@@ -62,17 +66,16 @@ function formDonate($form, &$sta, $args = NULL) {
   } else { // sponsored (or other member company accepting donations) or not signed in
     $options = btnOpt('', t('repeat'), 'btn-repeat') . $options;
     $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
-    $subtext = t('Make a tax-deductible contribution of any amount to support %coName.', compact('coName'));
-    if ($isCG or $fbo) $subtext .= ' ' . t('For donations of stock, <%aStock>contact us</a>.', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
-    $subtext = "<p>$subtext</p>";
+    $subtext = t('<p>Make a tax-deductible contribution of any amount to support %coName.</p>', compact('coName')) . $special;
+    if ($isCG or $fbo) $subtext .= ' ' . t('<p>For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
   }
 
   $options = item($options);
     
-  if ($coA->target) {
+  if ($target) {
     $where = '(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND :IS_GIFT AND created>=:dt';
     extract(db\get('SUM(1) AS count, SUM(amt) AS value', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: ray('count value', 0, 0));
-    $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$coA->target&value=$value&count=$count");
+    $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$target&value=$value&count=$count");
   } else $therm = '';
   $logo = logoFld($coA, $therm);
   $title = t('Donate to ') . $coA->bestName;
@@ -188,7 +191,7 @@ function therm($args) {
   */
   $thermDir = R_ROOT . '/images/thermometer';
   $font = "$thermDir/Poppins Medium 500.ttf";
-  extract(just('max value count', $args, 0));
+  foreach (ray('max value count') as $k) $$k = nni($args, $k) ?: 0; // convert empty string to 0
 
   $unit = ' $';
 
