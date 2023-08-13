@@ -161,6 +161,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
+ *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE stepup AMembersRulesComeIntoPlay
@@ -454,6 +455,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberRegistersBadZip
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
@@ -2373,6 +2375,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
+ *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE undo AMemberReversesAPaymentFromSomeone
