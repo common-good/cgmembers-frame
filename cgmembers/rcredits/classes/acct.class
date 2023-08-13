@@ -1957,7 +1957,7 @@ X;
   
   private function hasVSecure($fld) {return (nni($this->vsecure, $fld, '') !== '');}
 
-  public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
+  public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);} // same account
   public function codeHash() {return u\hash($this->cardCode());}
   public function o($k) {return $this->{'o_' . $k};}
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
