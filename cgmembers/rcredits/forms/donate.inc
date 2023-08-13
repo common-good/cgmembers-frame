@@ -70,7 +70,8 @@ function formDonate($form, &$sta, $args = NULL) {
   $options = item($options);
     
   if ($coA->target) {
-    $value = db\sum('amt', 'txs', 'uid2=:uid AND :IS_GIFT AND created>=:dt', ray('uid dt', $coA->id, $coA->targetStart)) ?: 0;
+    $where = '(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND :IS_GIFT AND created>=:dt';
+    $value = db\sum('amt', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: 0;
     $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$coA->target&value=$value");
   } else $therm = '';
   $logo = logoFld($coA, $therm);
