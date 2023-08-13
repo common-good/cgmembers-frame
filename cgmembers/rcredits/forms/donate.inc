@@ -71,8 +71,8 @@ function formDonate($form, &$sta, $args = NULL) {
     
   if ($coA->target) {
     $where = '(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND :IS_GIFT AND created>=:dt';
-    $value = db\sum('amt', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: 0;
-    $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$coA->target&value=$value");
+    extract(db\get('SUM(1) AS count, SUM(amt) AS value', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: ray('count value', 0, 0));
+    $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$coA->target&value=$value&count=$count");
   } else $therm = '';
   $logo = logoFld($coA, $therm);
   $title = t('Donate to ') . $coA->bestName;
@@ -164,6 +164,7 @@ function submitCG($sta) {
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();
 }
 
+const IMG_W = 350;
 const IMG_H = 220;
 const BULB_X0 = 24;
 const BULB_Y0 = 5;
@@ -174,8 +175,8 @@ const TXT_X = 56; // left edge of text
 const FONT_SIZE = 16; // font-size in pixels
 const MAX_FONT_SIZE = .85 * FONT_SIZE; // smaller max
 const MAX_Y = 1.4 * MAX_FONT_SIZE;
-const MAX_TEXT = 'target: ';
-const VAL_TEXT = ' so far';
+define('MAX_TEXT', 'target: ');
+define('VAL_TEXT', ' so far');
   
 /**
  * Return a thermometer image.
@@ -187,12 +188,11 @@ function therm($args) {
   */
   $thermDir = R_ROOT . '/images/thermometer';
   $font = "$thermDir/Poppins Medium 500.ttf";
-  extract(just('max value', $args, 0));
+  extract(just('max value count', $args, 0));
 
   $unit = ' $';
 
-  $imgW = 60 + .7 * FONT_SIZE * max(strlen(MAX_TEXT . '$,' . $max), strlen(VAL_TEXT . '$,' . $value));
-  $img = imagecreateTrueColor($imgW, IMG_H);
+  $img = imagecreateTrueColor(IMG_W, IMG_H);
 
   $white = imagecolorallocate ($img, 255, 255, 255);
   $black = imagecolorallocate ($img, 0, 0, 0);
@@ -217,12 +217,13 @@ function therm($args) {
   $y = BULB_Y9 - $newH;
   imagecopyresampled($img, $bar, BULB_X0, $y, 0, 0, $barW, $newH, $barW, $barH); 
   Imagedestroy($bar);
+  $count = t(' (%cnt gifts)', 'cnt', number_format($count));
 
   if ($y > MAX_Y + MAX_FONT_SIZE/2) imagettftext ($img, MAX_FONT_SIZE, 0, TXT_X+4, MAX_Y - 4, $black, $font, MAX_TEXT . $unit . number_format($max)); // the max
   if ($y <= MAX_Y + FONT_SIZE/2) {
-      imagettftext ($img, FONT_SIZE, 0, TXT_X, MAX_Y, $blue, $font, $unit . number_format($value) . '!!'); // Current > Max
+      imagettftext ($img, FONT_SIZE, 0, TXT_X, MAX_Y, $blue, $font, $unit . number_format($value) . $count . '!!'); // Current > Max
   } elseif ($value > 0) {
-    imagettftext ($img, FONT_SIZE, 0, TXT_X, $y+FONT_SIZE/2, $blue, $font, $unit. number_format($value) . VAL_TEXT);  // Current < Max
+    imagettftext ($img, FONT_SIZE, 0, TXT_X, $y+FONT_SIZE/2, $blue, $font, $unit. number_format($value) . VAL_TEXT . $count);  // Current < Max
   }
 
   if ($value > $max) {
