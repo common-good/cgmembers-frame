@@ -104,6 +104,69 @@ Scenario: A non-member donates to a sponsored member
   | fromEmail   | d@example.com        |
   | note        |                      |
 
+Scenario: A non-member donates to Common Good
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "cgf:A" visits "tx/charge"
+  Then we show "Charge" with:
+  | Full Name   | |
+  | Postal Addr | |
+  | City        | |
+  | State       | |
+  | Zip         | |
+  | Amount      | |
+  | For         | |
+  | Category    | |
+  And without:
+  | Member      | Non-member |
+  
+  When member "cgf:A" visits "tx/charge"
+  Then we show "Charge" with:
+  | Member      | Non-member |
+  | Full Name   | |
+  | Postal Addr | |
+  When member "cgf:A" submits "tx/charge" with:
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-FBO       |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  # choice between Pay and Charge gets set in JS
+  And we say "status": "info saved"
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
+  And these "txs2":
+  | xid | payee | amount | completed | deposit | pid |*
+  | 1   | cgf   | 100    | %now      | %now    | 1   |
+  And these "people":
+  | pid | fullName | address | city | state | zip   |*
+  | 1   | Dee Forn | 4 Fr St | Fton | MA    | 01004 |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |      95 |
+  | cgf  |       5 |
+  And we email "thanks-nonmember" to member "d@" with subs:
+  | fullName     | Dee Forn        |**
+  | date         | %mdY            |
+  | coName       | Our Pub         |
+  | coPostalAddr | 3 C, C, FR      |
+  | coPhone      | +1 333 333 3333 |
+  | amount       | $100            |
+  | noFrame      | 1               |
+  And we email "gift-report" to member "cgf" with subs:
+  | amount      | $100                 |**
+  | date        | %mdY                 |
+  | fromName    | Dee Forn             |
+  | fromAddress | 4 Fr St, Fton, MA 01004 |
+  | fromPhone   |                      |
+  | fromEmail   | d@example.com        |
+  | note        |                      |
+
 Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
   Then we show "Pay" with:

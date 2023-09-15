@@ -62,8 +62,9 @@ function api($arg = null) {
  * @param string $identifier: qd (abbreviated qid) or email
  * @param string password: account password
  * @return a JSON hash:
- *   accounts: an array of assocs: for each account accessible from the given account: [accountId, deviceId, name]
+ *   accounts: an array of assocs: for each account accessible from the given account: [accountId, cardCode, deviceId, name]
  *   where accountId is what will be stored on the device to identify the account associated with it
+ *         cardCode is the card security code (for use with websockets, hashed, while we wait for wss:// to work more easily)
  *         deviceId is a unique identifier for this device associated with this account
  *         name is the name (fullName) on the account
  */
@@ -71,14 +72,20 @@ function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
-  if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
-  if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
-  
-  if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
-  $a = r\acct($myid);
-  $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
-  if (!$success) return exitJust($err, X_NOTFOUND);
-  w\updateFlood($sta, $success, $err, TRUE);
+
+  if ($identifier == 'getCardCodes' and $code = $password) { // repairing older data
+     if (!$myid = db\get('uid', 'r_boxes', compact('code'))) return exitJust(X_UNAUTH);
+     $a = r\acct($myid);
+  } else {
+    if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
+    if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
+    $a = r\acct($myid);
+    
+    if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
+    $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
+    if (!$success) return exitJust($err, X_NOTFOUND);
+    w\updateFlood($sta, $success, $err, TRUE);
+  }
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   
   if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
@@ -88,12 +95,14 @@ function accounts($params) {
     $isCo = $a->co;
     if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
     $accountId = qr\url($a, 'main'); // r\acct($uid)
+    $cardCode = $a->cardCode();
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
-    $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
+    $accounts[] = compact(ray('accountId cardCode deviceId qr isCo name selling'));
   }
+
   if (!nn($accounts)) return exitJust(X_NOTFOUND);
   
   return exitJson(compact(ray('accounts')), X_OK);
