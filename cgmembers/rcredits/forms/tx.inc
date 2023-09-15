@@ -14,7 +14,7 @@ function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args, ''));
   global $mya;
 
-  $fbo = ($mya->sponsored or $mya->id == CGID);
+  $fbo = ($mya->sponsored or $mya->id == CGID or $mya->id == r\serverUid());
   $hasCats = r\hasCats($mya->uid) ?: 0;
 
   $pay = in($type, 'pay both');

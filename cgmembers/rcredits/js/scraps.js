@@ -251,7 +251,7 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
-      if (vs['fbo'] == 1 && pay) {
+      if (vs['fbo'] == 1 && !pay) {
         cat.attr('required', 'required');
       } else {
         cat.removeAttr('required');
