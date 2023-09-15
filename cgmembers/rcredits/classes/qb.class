@@ -15,6 +15,8 @@ const MAX_QCNT = 0; // maximum number of txs to send (whether testing or not)
 const CC_PCT = .0199; // credit card processor percentage fee
 const CC_PT = .49; // credit card processor per-transaction fee
 
+const QB_TYPES = 'Bank, Other Current Assets, Accounts Receivable, Fixed Assets, Other Assets, Credit Card, Accounts Payable, Other Current Liabilities, Long Term Liabilities, Equity, Income, Cost of Goods Sold, Expenses, Other Income, Other Expense'; // not yet used
+
 // https://help.developer.intuit.com/s/error-resolver
 
 /**
@@ -125,7 +127,37 @@ class QB {
     $this->setRefreshToken($token, $realmId);
     return w\sayEmpty('QBO Refresh Token has been set.');
   }
-  
+
+  /**
+   * Create a financial account.
+   * @return the account object.
+   */
+  public function createAccount($name, $qbParentId, $qbType, $description = '') {
+    foreach (ray('name qbType') as $k) if (!$$k) return w\err(t('Field %k is required.', compact($k)));
+    $this->refresh();
+//    if ($res = $this->ds->query("SELECT * FROM Account WHERE Name='$name'", 1, 1)) return w\err('Account %name already exists.', compact('name'));
+    $info = ray('Name AccountType', $name, $qbType);
+    $res = $this->ds->query("SELECT * FROM Account WHERE Name='UNUSED'", 1, 1);
+    if ($res and $acctObj = $res[0]) {
+      foreach ($info as $k => $v) $acctObj->$k = $v;
+    } else {      
+      $qbAcct = qbFacades\Account::Create($info);
+      $acctObj = $this->ds->Add($qbAcct);
+    }
+    
+    if ($error = $this->ds->getLastError()) {
+/**/  echo "The Status code is: " . $error->getHttpStatusCode() . "\n";
+/**/  echo "The Helper message is: " . $error->getOAuthHelperError() . "\n";
+/**/  echo "The Response message is: " . $error->getResponseBody() . "\n";
+/**/  die('in qb.class');
+    }
+    
+//    $res = $this->ds->query(tr("SELECT * FROM Account WHERE Id='%id'", $acctObj->Id), 1, 1))
+    if ($qbParentId) $acctObj->ParentRef = $qbParentId;
+    $acctObj->Description = $description;
+    return $this->ds->Update($acctObj);
+  }
+
   /**
    * Return a list of active Income and Expense accounts, keyed by id.
    */   
@@ -420,6 +452,53 @@ X;
     }
     if ($flds != '*') foreach ($rows as $i => $row) $rows[$i] = just($flds, $row); // QBO API doesn't handle field list
     return $rows;
+  }
+
+  /**
+   * Create a QB account for a new fiscal sponsee.
+   */
+  public function makeSponsee($name0, $qid) {
+    $name = $name0 . ' ..' . substr($qid, -3);
+    $qbAcct = $this->createAccount($name, r\qbCat('SPONSORED'), 'Bank', tr('FBO %name0 (fiscal sponsorship)', compact('name0')));
+    $this->updateAccts();
+    $id = db\get('id', 'tx_cats', 'externalId=:qbId', ray('qbId', $qbAcct->Id));
+    db\update('tx_cats', ray('id category show nick', $id, 'A: Sponsored: ' . $name, TRUE, $qid));
+  }
+
+  /**
+   * Import QB accounts into tx_cats.
+   */
+  public function updateAccts() {
+    $qbAccts = $this->getAccounts();
+    $id = 0; // tracks each record as we insert or update it
+    $redo = !db\exists('tx_cats');
+    if (!$redo and $diff = array_diff(db\col('externalId', 'tx_cats', '`show`'), array_keys($qbAccts))) { // if we deleted accounts in QBO, unshow them here
+      db\q('UPDATE tx_cats SET `show`=0 WHERE externalId IN (:diff)', compact('diff'));
+      err(t('These cats have been deleted in QBO, so they have been hidden here too: ') . join(', ', $diff));
+    }
+      
+    foreach ($qbAccts as $externalId => $category) {
+      list ($category, $description) = explode("\t", $category);
+      $info = compact(ray('externalId category' . ($description ? ' description' : '')));
+      if ($redo) { // building tx_cats from scratch (don't do this on production db!!)
+        $id += 100;
+        db\insert('tx_cats', $info + compact('id'), 'id');
+      } else { // updating tx_cats from QBO
+        if ($id0 = db\get('id', 'tx_cats', compact('externalId'))) { // category alread exists here, so just update it
+          $id = $id0;
+          db\update('tx_cats', $info + compact('id'), 'id');
+        } else { // category doesn't exists here yet, so choose an id for it (ideally alphabetical) and insert
+          if ($nextId = db\min('id', 'tx_cats', 'id>:id', compact('id'))) {
+            $id = round(($id + $nextId) / 2, 0);
+            if (db\exists('tx_cats', compact('id'))) {
+              $id = db\max('id', 'tx_cats') + 1;
+              say(t('Maybe change id (order) of new category "%category" (temporary id %id) to be roughly alphabetical before using it.', compact(ray('id category'))));
+            }
+          } else $id = round($id + 100, -2);
+          db\insert('tx_cats', $info + compact('id'), 'id');
+        }
+      }
+    }
   }
 
 }
