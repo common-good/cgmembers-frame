@@ -68,7 +68,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admMakeVAdmin) $makeVKeyE = submi(t('Make vKeyE'));
   if ($mya->admMakeVAdmin or $mya->admPrintCards) $make2 = boxFld('make', t('Make:'));
   if ($mya->admPrintCards) $printId = submi(t('Print ID'));
-  if ($mya->admMakeRules) $fsRule = submi(t('Set Sponsorship Fee'));
+  if ($mya->admMakeRules) $fsRule = submi(t('Set up Sponsorship'));
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
 
   //  $connectBank = submi(t('Connect Bank'));
@@ -119,7 +119,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($a and $op == 'printId') {
     if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
     return w\go("print-rcard/$make/$a->id" . ($a->co ? "/$a->agentId" : ''));
-  } elseif ($a and $op == 'fsRule') { // make fiscal sponsorship surtx rule (defaults to 5%)
+  } elseif ($a and $op == 'fsRule') { // make fiscal sponsorship surtx rule (defaults to 5%) and create QB account
     if (!$a->co) return err(t('That account is not a company, so it cannot be sponsored.'));
     $info = ray('action payerType payeeType payee from to', ACT_SURTX, REF_ANYBODY, REF_ACCOUNT, $a->id, MATCH_PAYEE, CGID);
     if ($id = db\get('id', 'tx_rules', u\where($info) . " AND amount=0 AND purpose LIKE '%sponsorship fee%' AND IFNULL(end, :NOW+1) > :NOW", $info)) {
@@ -129,7 +129,13 @@ function formAdminPanel_submit($form, &$sta) {
     db\insert('tx_rules', $info);
     $a->setBit(B_OK); $a->setBit(B_CONFIRMED);
     $a->setCoBit(CO_SPONSORED);
-    say(t('A sponsorship fee rule has been added for %nm.', 'nm', $a->bestName));
+    $nm = $a->bestName;
+    say(t('A sponsorship fee rule has been added for %nm.', compact('nm')));
+    
+    require_once R_ROOT . '/classes/qb.class';
+    $qb = new \QB(QBO_CREDS, FALSE);
+    $qb->makeSponsee($nm, $a->mainQid);
+    say(t('Made a QB account for %nm.', compact('nm'));
   } elseif ($op == 'askForAppData') {
     $a->update('getAppData appData', '!report', []);
     say(t('Request for app data sent to ') . $a->fullName);
