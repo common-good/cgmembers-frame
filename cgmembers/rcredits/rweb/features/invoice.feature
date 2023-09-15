@@ -19,7 +19,7 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A member confirms request to charge another member
+Scenario: A member approves an invoice
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
@@ -97,7 +97,29 @@ Scenario: A member makes partial payments
   |  2  | %mdy | Abe One | labor (CG inv#1 final)   | 90.00  |  -100.00 |
   |  1  | %mdy | Abe One | labor (CG inv#1 partial) | 10.00  |   -10.00 |
 
-Scenario: A member confirms request to charge another member who has a bank account
+Scenario: A member overpays an invoice
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |       110 | .ZZB  | .ZZA  | labor   | %today  |
+  Then we say "status": "report tx|left on invoice" with subs:
+  | did    | otherName | amount | remaining |*
+  | paid   | Abe One   | $110   | $-10      |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   1 | %today  |    110 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+  And these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | 1           |    100 | .ZZB  | .ZZA  | labor |
+  
+  When member ".ZZB" visits page "history/transactions/period=15"
+  Then we show "Transaction History" with:
+  | Tx# | Date | Name    | Purpose                     | Amount | Balance |
+  |  1  | %mdy | Abe One | labor (CG inv#1 - overpaid) | 110.00 | -110.00 |
+  
+Scenario: A member who has a bank account approves an invoice
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Our Pub | 100    | %FOR_GOODS | stuff   |

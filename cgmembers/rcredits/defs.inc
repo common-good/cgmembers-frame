@@ -660,7 +660,8 @@ const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
 const B_DIRECTACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire';
+const B_OVERPAID = 22; // overpayment of invoice
+const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
