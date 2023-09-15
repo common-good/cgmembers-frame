@@ -667,6 +667,7 @@ function exitJust($s = '', $status = X_GOT) {
 
   header('HTTP/1.1 ' . $status);
   $logS = $s = pr($s);
+  if (u\starts($logS, '[{"uid":')) $logS = ''; // don't log account choices
   foreach (ray('quality = 50, png;base64, gd-jpeg, JFIF, JPEG, PNG') as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
   u\loga('exit', "($status) " . $logS);
 /**/  if (!empty($s)) echo $s;

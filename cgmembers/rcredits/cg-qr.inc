@@ -78,6 +78,7 @@ function url($a, $type = 'card') {
     u\EXPECT($type == 'main', 'only simple qrUrl allowed for proSe companies');
     $cardCode = $agentCode = '';
   } else {
+    if ($a->admin and !r\relation(1, $a)) $a = r\acct($a->id); // don't treat admin as a real relation
     $cardCode = $a->cardCode() ?: $a->makeCardCode(); // first time printing company card
     $agentCode = $a->proSe ? '' : u\n2a(u\a2n($qo->agentCode()), -1, 36);
   }
