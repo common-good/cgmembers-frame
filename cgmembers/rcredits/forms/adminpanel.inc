@@ -135,7 +135,7 @@ function formAdminPanel_submit($form, &$sta) {
     require_once R_ROOT . '/classes/qb.class';
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->makeSponsee($nm, $a->mainQid);
-    say(t('Made a QB account for %nm.', compact('nm'));
+    say(t('Made a QB account for %nm.', compact('nm')));
   } elseif ($op == 'askForAppData') {
     $a->update('getAppData appData', '!report', []);
     say(t('Request for app data sent to ') . $a->fullName);
