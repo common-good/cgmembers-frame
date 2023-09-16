@@ -1774,6 +1774,8 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
   require_once R_ROOT . '/cg-qr.inc';
 
+  if (isDEMO) r\launchWebsocket(); // cron doesn't start this on demo server and we need it for regression tests
+
   $op = 'tell';
   $deviceId = bin2hex(R_WORD); // json_encode fails without bin2hex
   $actorId = qr\url($actorA, 'main');
