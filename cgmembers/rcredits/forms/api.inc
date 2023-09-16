@@ -211,7 +211,7 @@ function confirms($params) {
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
  * @param bool $offline: <transaction was processed offline and stored for later upload>
- * @param bool $pending: invoice, rather than creating a transaction
+ * @param bool $pending: if true, invoice rather than creating a transaction
  * @param numeric $tip: amount of tip or empty
  * @return {$xid, $message}
  *
@@ -224,11 +224,11 @@ function transactions($params) {
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
-  $flds = 'version deviceId actorId otherId amount description created offline pending';
+  $flds = 'version deviceId actorId otherId amount description created offline';
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
-  extract(just('proof tip', $params, NULL));
+  extract(just('pending proof tip', $params, NULL)); // maybe require pending param later (requires change to most tests)
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
-  $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for error
+  foreach (ray('pending offline') as $k) $params[$k] = $$k = ($$k == 'true'); // make these bool, modify params for error
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
