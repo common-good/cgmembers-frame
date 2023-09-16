@@ -30,9 +30,9 @@ Setup:
 Scenario: A member signs in to the app for a list of accounts to choose from
   Given next random code is "whatever"
   And var "accounts" is JSON:
-  | accountId | deviceId | qr   | isCo  | name    | selling |*
-  | K6VMDCA   | whatever | ?    | false | Abe One | %NUL    |
-  | L6VMDCC0  | whatever | ?    | true  | Coco Co | [bags]  |
+  | accountId | cardCode | deviceId | qr   | isCo  | name    | selling |*
+  | K6VMDCA   | ccA      | whatever | ?    | false | Abe One | %NUL    |
+  | L6VMDCC0  | ccA2     | whatever | ?    | true  | Coco Co | [bags]  |
   When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       | Aa1      |

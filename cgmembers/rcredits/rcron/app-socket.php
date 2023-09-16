@@ -1,11 +1,15 @@
 <?php
 use CG\Util as u;
 use CG\Web as w;
+use CG\DB as db;
+use CG\QR as qr;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
+use React\Socket\Server;
+use React\Socket\SecureServer;
 
 /**
  * @file
@@ -28,7 +32,7 @@ define('DRUPAL_ROOT', __DIR__ . '/../..');
 require_once __DIR__ . '/../bootstrap.inc';
 require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL); // boot before including rcron.inc
-require_once R_ROOT . '/forms/api.inc'; // for authOk()
+require_once R_ROOT . '/cg-qr.inc';
 
 global $channel; $channel = TX_SOCKET; // set this even if called from PHP window by admin (must be after bootstrapping)
 ignore_user_abort(TRUE); // Allow execution to continue even if the request gets canceled.
@@ -38,7 +42,7 @@ $original_session_saving = \drupal_save_session(); // Prevent session informatio
 $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
 $GLOBALS['user'] = \drupal_anonymous_user();
 
-class WebSocketsServer implements MessageComponentInterface {
+class MyWSSServer implements MessageComponentInterface {
   protected $clients;
   protected $map; // maps account IDs to connections
   
@@ -47,14 +51,25 @@ class WebSocketsServer implements MessageComponentInterface {
   public function onClose(ConnectionInterface $conn) {$this->clients->detach($conn);}
   public function onError(ConnectionInterface $conn, \Exception $e) {return er($e->getMessage());}
 
+  /**
+   * Handle an incoming message.
+   * @param conn $from: what connection the message came in on
+   * @param string $msg: JSON-encoded message
+   */
   public function onMessage(ConnectionInterface $from, $msg) {
-    if (!$ray = json_decode($msg)) return er("Bad JSON message: " . pr($msg), $from);
+    if (!$ray = json_decode($msg)) return er(t('Bad JSON message: ') . pr($msg), $from);
+///    flog('app socket got: ' . pr($ray));
     extract(just('op deviceId actorId otherId name action amount purpose note', $ray, NULL)); // op, deviceId, and actorId are always required
-    if ($deviceId != bin2hex(R_WORD) and !w\authOk('appSocket', $ray, TRUE)) return;
+    if (!$a = qr\acct($actorId, FALSE)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
+    if (!$a->ok) return er(t('%uid is not an active account.', 'uid', $a->id), $from);
+    $ok = ( ($deviceId == bin2hex(R_WORD))
+    or (db\get('uid', 'r_boxes', ray('code', $deviceId)) == $a->id)
+    or ($deviceId == 'dev' . $a->fullName[0] and !isPRODUCTION) ); // for example devA)
+    if (!$ok) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
     
     switch ($op) {
       case 'connect': $this->map[$actorId] = $from; break;
-      case 'tell':
+      case 'tell': // currently this comes only from u/tellApp()
         if (!$to = nni($this->map, $otherId)) return;
         $what = t('%amt for %what', 'amt what', u\fmtAmt($amount), $purpose);
         $subs = ray('name action what note', $name, $action, $what, $note);
@@ -63,16 +78,32 @@ class WebSocketsServer implements MessageComponentInterface {
         : t('%name %action you %what.', $subs)); // paid or charged
         $to->send(json_encode(compact(ray('message action note'))));
         break;
-      default: return er('Bad op: ' . pr($op), $from);
+      default: return er(t('Bad op: ') . $op, $from);
     }
   }
 }
 
-echo 'Running app websocket switchboard...';
-$server = IoServer::factory(new HttpServer(new WsServer(new WebSocketsServer())), SOCKET_PORT);
-$server->run();
+try {
+  set_error_handler(function () { exit(); }, E_WARNING); // ignore warning about "Address already in use"
+  flog('Running app websocket switchboard...');
+  $loop = \React\EventLoop\Factory::create();
+  $websockets = new Server('0.0.0.0:' . SOCKET_PORT, $loop);
+  restore_error_handler();
+  
+  $secure_websockets = new SecureServer($websockets, $loop, [
+      'local_cert' => '/etc/pki/tls/certs/commongood.earth.pem',
+      'local_pk' => '/etc/pki/tls/private/commongood.earth.key',
+      'verify_peer' => false,
+  ]);
+
+  $app = new HttpServer(new WsServer(new MyWSSServer()));
+  $server = new IoServer($app, $secure_websockets, $loop);
+  $server->run();
+} catch (\Exception $er) {
+  flog("App socket overall er: " . $er->message());
+}
 
 function er($msg, $conn) {
-  echo "An error has occurred: $msg\n";
+/**/ flog("App socket error: $msg\n");
   $conn->close();
 }

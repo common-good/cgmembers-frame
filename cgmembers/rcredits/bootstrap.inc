@@ -667,6 +667,7 @@ function exitJust($s = '', $status = X_GOT) {
 
   header('HTTP/1.1 ' . $status);
   $logS = $s = pr($s);
+  if (u\starts($logS, '[{"uid":')) $logS = ''; // don't log account choices
   foreach (ray('quality = 50, png;base64, gd-jpeg, JFIF, JPEG, PNG') as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
   u\loga('exit', "($status) " . $logS);
 /**/  if (!empty($s)) echo $s;
@@ -1380,7 +1381,8 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 function fullQid($q) {
   global $channel;
   if (is_numeric($q) or !$q) return $q;
-  if (strlen($q) == 1 and !is_numeric($q)) $q = '.ZZ' . $q;
+  if ($q == 'cgf') $q = '.AAB';
+  if (strlen($q) == 1) $q = '.ZZ' . $q;
   if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
   u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in u_relations: $q");
   return $q;

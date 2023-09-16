@@ -84,16 +84,17 @@ if ($mya and $mya->admin) {
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
   1 . t('Fiscal Sponsorships') =>
-    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, 
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
       IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x.total AS GiftsLast90Days, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
+      LEFT JOIN r_states s ON s.id=u.state
       LEFT JOIN tx_rules ru ON ru.payee=u.uid
       LEFT JOIN (SELECT uid2 AS uid, SUM(amt) AS total 
         FROM txs t 
         WHERE t.created IS NULL OR t.created >:NOW-90*:DAY_SECS GROUP BY uid
       ) x USING (uid) 
-      WHERE coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
+      WHERE u.:IS_OK AND coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
   
   1 . t('Major Gifts') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, u2.name AS `to`,

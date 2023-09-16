@@ -755,14 +755,14 @@ function employees() {
  *   relation(field, main, other, where, subs) OR
  *   relation(field, where, subs)
  *   relation(field, reid)
- *   relation(field, qid)
+ *   relation(field, acct)
  * @param string $field: what field value(s) to return (see varieties at db\get())
  * @param int $main: uid of main account
  * @param int $other: uid of other (agent) account (changed to zero if same as main)
  * @param string $where: SQL criteria
  * @param assoc $subs: criteria parameters
  * @param int $reid: relations record id
- * @param string $qid: QID for a compound account
+ * @param string $acct: the compound account
  */
 function relation($field, $main, $other = [], $where = 'TRUE', $subs = []) {
   if (is_numeric($main)) {
@@ -783,10 +783,9 @@ function relation($field, $main, $other = [], $where = 'TRUE', $subs = []) {
     }
   } elseif ($other) { // where, subs
     list ($where, $subs) = [$main, $other];
-  } else { // qid
-    $a = r\acct($qid = $main);
+  } elseif (is_object($a = $main)) { // acct
     list ($where, $subs) = [ray('main other', $a->id, $a->agentId), []];
-  }
+  } else u\FAIL('bad arg#2 in relation');
   return db\get($field, 'u_relations', $where, $subs);
 }
 

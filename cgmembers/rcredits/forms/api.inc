@@ -62,8 +62,9 @@ function api($arg = null) {
  * @param string $identifier: qd (abbreviated qid) or email
  * @param string password: account password
  * @return a JSON hash:
- *   accounts: an array of assocs: for each account accessible from the given account: [accountId, deviceId, name]
+ *   accounts: an array of assocs: for each account accessible from the given account: [accountId, cardCode, deviceId, name]
  *   where accountId is what will be stored on the device to identify the account associated with it
+ *         cardCode is the card security code (for use with websockets, hashed, while we wait for wss:// to work more easily)
  *         deviceId is a unique identifier for this device associated with this account
  *         name is the name (fullName) on the account
  */
@@ -71,14 +72,20 @@ function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
-  if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
-  if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
-  
-  if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
-  $a = r\acct($myid);
-  $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
-  if (!$success) return exitJust($err, X_NOTFOUND);
-  w\updateFlood($sta, $success, $err, TRUE);
+
+  if ($identifier == 'getCardCodes' and $code = $password) { // repairing older data
+     if (!$myid = db\get('uid', 'r_boxes', compact('code'))) return exitJust(X_UNAUTH);
+     $a = r\acct($myid);
+  } else {
+    if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
+    if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
+    $a = r\acct($myid);
+    
+    if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
+    $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
+    if (!$success) return exitJust($err, X_NOTFOUND);
+    w\updateFlood($sta, $success, $err, TRUE);
+  }
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   
   if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
@@ -88,12 +95,14 @@ function accounts($params) {
     $isCo = $a->co;
     if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
     $accountId = qr\url($a, 'main'); // r\acct($uid)
+    $cardCode = $a->cardCode();
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
-    $accounts[] = compact(ray('accountId deviceId qr isCo name selling'));
+    $accounts[] = compact(ray('accountId cardCode deviceId qr isCo name selling'));
   }
+
   if (!nn($accounts)) return exitJust(X_NOTFOUND);
   
   return exitJson(compact(ray('accounts')), X_OK);
@@ -202,6 +211,7 @@ function confirms($params) {
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
  * @param bool $offline: <transaction was processed offline and stored for later upload>
+ * @param bool $pending: if true, invoice rather than creating a transaction
  * @param numeric $tip: amount of tip or empty
  * @return {$xid, $message}
  *
@@ -216,9 +226,9 @@ function transactions($params) {
 
   $flds = 'version deviceId actorId otherId amount description created offline';
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
-  extract(just('proof tip', $params, NULL));
+  extract(just('pending proof tip', $params, NULL)); // maybe require pending param later (requires change to most tests)
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
-  $params['offline'] = $offline = ($offline == 'true'); // make offline bool, modify params for error
+  foreach (ray('pending offline') as $k) $params[$k] = $$k = ($$k == 'true'); // make these bool, modify params for error
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
@@ -250,7 +260,6 @@ function transactions($params) {
     } else $info['amt'] = -$amount; // look for original amount (the correction of point of view above also reverses the sign)
     if ($xid = db\get('xid', 'txs', $info)) { // see if original transaction exists
       $z = be\posUndo($mya, $xid, TRUE);
-      debug($z);
       if (!$z->ok) return badTx($a, $params, $z);
     } // else nothing to do (pretend we deleted it)
     return exitJson(ray('ok message', TRUE, $amount > 0 ? t('reversal invoiced') : t('deleted')), X_OK); // message is ignored by app
@@ -261,29 +270,29 @@ function transactions($params) {
   // new transaction
   if ($xid = db\get('xid', 'txs', $info)) { // transaction exists
     $z = be\sendNotifications($mya, $type, r\Tx::read($xid), 0, FALSE); // fake the message from existing transaction
-    $message = $z->msg;
+  } elseif ($pending) { // individual charging, so create an invoice
+      $z = be\invoice($mya, $a, $amount, $description, $goods, compact(ray('created offline'))); // ... $repeats ? $recursId : NULL
   } else { // transaction doesn't exist (yet)
     $DBTX = \db_transaction();
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
-    $message = $selfhelp ? 'selfhelp tx' : $z->msg;
     if ($z->ok) {
       if (!$offline and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
+      if ($tip > 0) {
+        include_once R_ROOT . '/classes/tx.class';
+        $pct = number_format(100 * $tip / $amount, 1);
+        $tx = r\Tx::read($z->subs['xid']);
+        list ($a1, $a2) = u\order($type == 'payment', $mya, $a);
+        be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
+        be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
+      }  
     } else { // failed to create transaction
       if ($offline) return badTx($a, $params, $z);
     }
 
-    if ($tip > 0) {
-      include_once R_ROOT . '/classes/tx.class';
-      $pct = number_format(100 * $tip / $amount, 1);
-      $tx = r\Tx::read($z->subs['xid']);
-      list ($a1, $a2) = u\order($type == 'payment', $mya, $a);
-      be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
-      be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
-    }  
     unset($DBTX);
   }
   
-  return exitJson(ray('ok message', $z->ok, $message), X_OK);
+  return exitJson(ray('ok message', $z->ok, $selfhelp ? 'selfhelp tx' : $z->msg), X_OK);
 }
 
 /**

@@ -117,10 +117,12 @@ EOF;
  * Expects t=txs, i=tx_requests
  */
 function specialTxFlds() {
-  list ($finalTxt, $partTxt) = [t('final'), t('partial')];
+  list ($finalTxt, $partTxt, $overTxt) = [t('final'), t('partial'), t('overpaid')];
   return <<< X
     IF(t.relType='I' AND NOT i.:IS_SELF, t.rel, NULL) AS nvid, 
-    IF(t.:IS_PARTIAL, IF(t.xid=i.status, ' $finalTxt', ' $partTxt'), '') AS part
+    IF(t.xid=i.status, 
+      CONCAT(IF(t.:IS_PARTIAL, ' $finalTxt', ''), IF(t.:IS_OVERPAID, ' - $overTxt', '')),
+      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part
 X;
 }
 
@@ -425,11 +427,12 @@ function payInvoice($nvid, $payAmount = NULL) {
   if ($cat) $extra += ray('cat', r\hasCats($payer) ? [$cat, NULL] : [NULL, $cat]);
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
+  if ($payAmount > invRemains($nvid)) $extra['overpaid'] = 1;
   if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
-    if ($payAmount == $amount or !invRemains($nvid)) { // == is for efficiency
+    if ($payAmount >= $amount or !invRemains($nvid)) { // == is for efficiency
       db\update('tx_requests', ray('nvid status', $nvid, $z->subs['xid']), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
@@ -865,7 +868,7 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
 
   $msg = 'report tx';
   
-  if ($tx->flags & u\bit(B_PARTIAL) and $nvid = $tx->entries[0]->relatedId) { // invoice payment or retraction
+  if ($tx->flags & (u\bit(B_PARTIAL) | u\bit(B_OVERPAID)) and $nvid = $tx->entries[0]->relatedId) { // invoice payment or retraction
     if ($left = be\invRemains($nvid)) {
       $msg .= '|left on invoice';
       $myArgs += ray('remaining', u\fmtAmt($left));

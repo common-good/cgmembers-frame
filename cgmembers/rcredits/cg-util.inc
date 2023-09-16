@@ -100,7 +100,11 @@ function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
   }
   return nn($res) ? join(' ', $res) : '';
 }
-function ssnAddr($v) {return ucWords(mb_strtolower(nn($v->address) . ', ' . nn($v->city) . ', ' . nn($v->state) . ' ' . nn($v->zip)));}
+
+function ssnAddr($v) {
+  foreach (ray('address city state zip') as $k) if (is_array($v->$k)) $v->$k = reset($v->$k); // this happened once (city was an empty array) 
+  return ucWords(mb_strtolower(nn($v->address) . ', ' . nn($v->city) . ', ' . nn($v->state) . ' ' . nn($v->zip)));
+}
 
 /**
  * Say whether the given postal code is bad.
@@ -1765,30 +1769,74 @@ function _GET($ray = NULL) {
  * Send a message to our websocket to pass on to the appropriate app user.
  */
 function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
-  return;
   if ($otherA->co and $otherA->proSe) return; // don't try to contact a company without an agent
+  if ($otherA->co and $action == 'request') return; // don't ask companies questions
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
   require_once R_ROOT . '/cg-qr.inc';
 
+  if (isDEMO) r\launchWebsocket(); // cron doesn't start this on demo server and we need it for regression tests
+
   $op = 'tell';
-  $deviceId = bin2hex(R_WORD); // tell our websocket to loop for each mobile device for otherA (json_encode fails without bin2hex)
+  $deviceId = bin2hex(R_WORD); // json_encode fails without bin2hex
   $actorId = qr\url($actorA, 'main');
-  $otherId = qr\url($otherA, 'main');
+  $otherId = qr\url($otherA, 'main'); // note: this will notify only the device that most recently pressed Pay or Charge
   $name = $actorA->fullName;
+  
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
   $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+//  textalk/websocket
+  $client = new \WebSocket\Client("wss://$url:" . SOCKET_PORT);
+  $client->send($msg);
+  $client->close();
+  /*
+  echo $client->receive(); 
+  $client->onMessage(function ($message) {
+/// echo "Received message: $message\n";
+  }); */
+}
 
-  set_error_handler(function() { /* ignore warnings (and errors) */ });
+  /* ratchet/pawl
+  // Ratchet fails (both with and without $loop) (never connects)
+  /*
+  $loop = \React\EventLoop\Factory::create();
+  
+  flog('about to Ratchet', TX_SOCKET);
+  \Ratchet\Client\connect("wss://$url:" . SOCKET_PORT, [], [], $loop)->then(function($conn) {
+    $conn->on('message', function($msg) use ($conn) {
+///      flog("Received socket message: {$msg}\n", TX_SOCKET);
+      $conn->close();
+    });
+///    flog('telling socket: ' . $msg, TX_SOCKET);
+    $conn->send($msg);
+    $conn->close();
+  }, function ($e) use ($loop) {
+//* / flog("Could not connect: {$e->getMessage()}\n", TX_SOCKET);
+    $loop->stop();
+  });
+}*/
+
+// Paragi
+/*  $context = stream_context_create(['ssl' => [
+    'local_cert' => '/etc/pki/tls/certs/commongood.earth.pem',
+    'local_pk' => '/etc/pki/tls/private/commongood.earth.key',
+    'verify_peer' => false,
+  ]]);
+
+//  set_error_handler(function() { }); // ignore warnings (and errors)
+
   try {
-    $sp = new \Paragi\PhpWebsocket\Client($url, SOCKET_PORT);
+    $sp = new \Paragi\PhpWebsocket\Client('wss://' . $url, SOCKET_PORT);
+    // construction with $url, SOCKET_PORT, NULL, $err, 10, $context) fails -- context is required to be boolean (bug in Paragi)
+///    debug('telling socket: ' . $msg);
     $sp->write($msg);
 //    echo "Server responded with: " . $sp->read();
     $sp->close();
   } catch (\Paragi\PhpWebsocket\ConnectionException | Exception $e) {
-    flog(t('PHPWebsocket error: ') . $e->getMessage());
+//* / flog(t('PHPWebsocket error: ') . $e->getMessage(), TX_SOCKET);
   }
-  restore_error_handler();
-}
+//  restore_error_handler();
+}*/
+
 
 /**
  * Return the next business day (avoiding U.S. holidays) after the given time

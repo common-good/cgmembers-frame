@@ -1887,7 +1887,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
     if ($one === '' or mb_substr($one, 0, 1) == '~') continue; // ignore ~labels
     if (strhas($one, '%')) $one = tr($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
-    $i = mb_strpos($model, $one, $xi = $i);
+    $i = $i > mb_strlen($model) ? FALSE : mb_strpos($model, $one, $xi = $i);
 ///    debug("one=$one i=$i xi=$xi");
     if ($i === FALSE) {
       if (nn($formOut['hasDate']) and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y

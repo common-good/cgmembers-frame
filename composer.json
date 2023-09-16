@@ -15,6 +15,8 @@
     "robmorgan/phinx": "^0.12.10",
     "wildbit/postmark-php": "^4.0",
     "cboden/ratchet": "^0.4.4",
-    "paragi/php-websocket-client": "^1.0"
+    "paragi/php-websocket-client": "^1.0",
+    "ratchet/pawl": "^0.4.1",
+    "textalk/websocket": "^1.6"
   }
 }
