@@ -108,7 +108,7 @@ Scenario: A non-member donates to Common Good
   Given members have:
   | uid  | flags    |*
   | .ZZA | ok,admin |
-  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  And member ".ZZA" has admin permissions: "seeAccts manageAccts chargeFrom nonmemberTx"
   When member "cgf:A" visits "tx/charge"
   Then we show "Charge" with:
   | Full Name   | |
@@ -116,20 +116,18 @@ Scenario: A non-member donates to Common Good
   | City        | |
   | State       | |
   | Zip         | |
-  | Amount      | |
+  | Phone       | |
+  | Email       | |
+  | Amount      | donation |
   | For         | |
+  | Method      | |
   | Category    | |
-  And without:
+  And with:
   | Member      | Non-member |
-  
-  When member "cgf:A" visits "tx/charge"
-  Then we show "Charge" with:
-  | Member      | Non-member |
-  | Full Name   | |
-  | Postal Addr | |
+
   When member "cgf:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-FBO       |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | isGift | purpose | comment | cat         |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | 1      | grant   |         | D-FBO       |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
@@ -137,7 +135,7 @@ Scenario: A non-member donates to Common Good
   And we say "status": "info saved"
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
+  |   1 | 1   | %UID_OUTER | cgf   | 100    | grant    |             | D-FBO       | %E_OUTER |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | cgf   | 100    | %now      | %now    | 1   |
@@ -148,14 +146,14 @@ Scenario: A non-member donates to Common Good
   | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
-  | .ZZC |      95 |
-  | cgf  |       5 |
-  And we email "thanks-nonmember" to member "d@" with subs:
+  | .ZZC |       0 |
+  | cgf  |     100 |
+  And we email "cggift-thanks-nonmember" to member "d@" with subs:
   | fullName     | Dee Forn        |**
   | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
+  | coName       | %PROJECT        |
+  | coPostalAddr | %CGF_POSTALADDR |
+  | coPhone      | %CGF_PHONE      |
   | amount       | $100            |
   | noFrame      | 1               |
   And we email "gift-report" to member "cgf" with subs:
