@@ -58,10 +58,14 @@ class MyWSSServer implements MessageComponentInterface {
    */
   public function onMessage(ConnectionInterface $from, $msg) {
     if (!$ray = json_decode($msg)) return er(t('Bad JSON message: ') . pr($msg), $from);
+///    flog('app socket got: ' . pr($ray));
     extract(just('op deviceId actorId otherId name action amount purpose note', $ray, NULL)); // op, deviceId, and actorId are always required
     if (!$a = qr\acct($actorId, FALSE)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
     if (!$a->ok) return er(t('%uid is not an active account.', 'uid', $a->id), $from);
-    if ($deviceId != bin2hex(R_WORD) and db\get('uid', 'r_boxes', ray('code', $deviceId)) != $a->id) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
+    $ok = ( ($deviceId == bin2hex(R_WORD))
+    or (db\get('uid', 'r_boxes', ray('code', $deviceId)) == $a->id)
+    or ($deviceId == 'dev' . $a->fullName[0] and !isPRODUCTION) ); // for example devA)
+    if (!$ok) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
     
     switch ($op) {
       case 'connect': $this->map[$actorId] = $from; break;
