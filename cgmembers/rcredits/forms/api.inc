@@ -211,6 +211,7 @@ function confirms($params) {
  * @param int $created: Unixtime the transaction was processed on the device
  * @param string $proof: SHA256 hash of actorId + amount (with exactly two digits after the decimal point) + otherId + security code + created.
  * @param bool $offline: <transaction was processed offline and stored for later upload>
+ * @param bool $pending: invoice, rather than creating a transaction
  * @param numeric $tip: amount of tip or empty
  * @return {$xid, $message}
  *
@@ -223,7 +224,7 @@ function transactions($params) {
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
-  $flds = 'version deviceId actorId otherId amount description created offline';
+  $flds = 'version deviceId actorId otherId amount description created offline pending';
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
   extract(just('proof tip', $params, NULL));
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
@@ -259,7 +260,6 @@ function transactions($params) {
     } else $info['amt'] = -$amount; // look for original amount (the correction of point of view above also reverses the sign)
     if ($xid = db\get('xid', 'txs', $info)) { // see if original transaction exists
       $z = be\posUndo($mya, $xid, TRUE);
-      debug($z);
       if (!$z->ok) return badTx($a, $params, $z);
     } // else nothing to do (pretend we deleted it)
     return exitJson(ray('ok message', TRUE, $amount > 0 ? t('reversal invoiced') : t('deleted')), X_OK); // message is ignored by app
@@ -270,29 +270,29 @@ function transactions($params) {
   // new transaction
   if ($xid = db\get('xid', 'txs', $info)) { // transaction exists
     $z = be\sendNotifications($mya, $type, r\Tx::read($xid), 0, FALSE); // fake the message from existing transaction
-    $message = $z->msg;
+  } elseif ($pending) { // individual charging, so create an invoice
+      $z = be\invoice($mya, $a, $amount, $description, $goods, compact(ray('created offline'))); // ... $repeats ? $recursId : NULL
   } else { // transaction doesn't exist (yet)
     $DBTX = \db_transaction();
     $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created offline')));
-    $message = $selfhelp ? 'selfhelp tx' : $z->msg;
     if ($z->ok) {
       if (!$offline and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
+      if ($tip > 0) {
+        include_once R_ROOT . '/classes/tx.class';
+        $pct = number_format(100 * $tip / $amount, 1);
+        $tx = r\Tx::read($z->subs['xid']);
+        list ($a1, $a2) = u\order($type == 'payment', $mya, $a);
+        be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
+        be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
+      }  
     } else { // failed to create transaction
       if ($offline) return badTx($a, $params, $z);
     }
 
-    if ($tip > 0) {
-      include_once R_ROOT . '/classes/tx.class';
-      $pct = number_format(100 * $tip / $amount, 1);
-      $tx = r\Tx::read($z->subs['xid']);
-      list ($a1, $a2) = u\order($type == 'payment', $mya, $a);
-      be\txEntryPair($entries, $tx, $tip, [$a1, $a2], t('tip (%pct%)', compact('pct')), E_AUX);
-      be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
-    }  
     unset($DBTX);
   }
   
-  return exitJson(ray('ok message', $z->ok, $message), X_OK);
+  return exitJson(ray('ok message', $z->ok, $selfhelp ? 'selfhelp tx' : $z->msg), X_OK);
 }
 
 /**
