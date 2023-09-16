@@ -3,8 +3,8 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61o'; // software version
-const APP_VERSION = 40100; // 4.1.0
+const R_VERSION = '3.61p'; // software version
+const APP_VERSION = 40200; // 4.2.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
