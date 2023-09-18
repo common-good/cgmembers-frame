@@ -208,7 +208,7 @@ function forCash($for) {
 
 /**
  * Return an alphabetic representation of the given non-negative integer.
- * A is the zero digit, B is 1, etc.
+ * Unless base is 16 or 36, A is the zero digit, B is 1, etc.
  * @param int $n: the integer to represent
  * @param int $len: the length of the string to return
  *   <=0 means length >=-$len
@@ -233,7 +233,7 @@ function n2a($n, $len, $base = 26) {
 
 /**
  * Return the numeric equivalent of the given alphabetic string. 
- * In base 27 to 35, zeros are understood as Os (so "1" comes after "Z").
+ * In base 27 to 35, As are understood as Os (so "1" comes after "Z").
  * @see n2a
  */
 function a2n($string, $base = 26) {
@@ -1785,9 +1785,11 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
   $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
 //  textalk/websocket
+  set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
   $client = new \WebSocket\Client("wss://$url:" . SOCKET_PORT);
   $client->send($msg);
   $client->close();
+  restore_error_handler();
   /*
   echo $client->receive(); 
   $client->onMessage(function ($message) {
