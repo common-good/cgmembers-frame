@@ -209,7 +209,8 @@ class Acct {
       case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
       case 'url': return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
       case 'lastTx': return $a->lastTx();
-      case 'legalNameDpy': return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
+      case 'achName': return str_replace('_', ' ', ($a->sponsored and !$a->ourown) ? $a->fullName : $a->legalName); // for ACHs, including u\parseName of names like Jay di_Fiori
+      // NOTE: when money comes into a sponsored account, the account belongs to CG (legalName). When money goes out, the account belongs to the sponsored entity (fullName).
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
       case 'hasFid': return $a->hasVSecure('federalId');

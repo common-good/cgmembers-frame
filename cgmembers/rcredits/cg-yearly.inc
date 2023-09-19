@@ -185,7 +185,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
       err1099($a->fullName . t(' does not have a social security number.'));
       return 0; // might be better to just skip it and send admin a message (to get most of the reporting done)
     }
-    $acctFields = ray('nm qid co addr ein txCount', u\asciiOnly($a->legalNameDpy), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId, $txCount);
+    $acctFields = ray('nm qid co addr ein txCount', u\asciiOnly($a->legalName), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId, $txCount);
     putRec(recB($type, $year, $acctFields, $amount, $created, $for, $mod, nni($badNames, $id), nni($badTINs, $id)));
   }
   return $bCount;
