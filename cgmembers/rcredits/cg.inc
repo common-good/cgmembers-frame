@@ -481,6 +481,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $body = u\seeAssoc($subs);
   $info = $subs + compact('body');
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
+  $tellingAdmin = 0;
   return FALSE;
 }
 
