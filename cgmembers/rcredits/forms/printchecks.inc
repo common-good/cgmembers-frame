@@ -75,9 +75,9 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
-    //    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
-    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, BANK_DBA, $escrow] // from bank to escrow
-    : [PROJECT . ' (' . CGF_LEGALNAME . ')', CGF_POSTALADDR, CGF_PHONE, $escrow, $a->legalNameDpy, $bankAccount]; //e2b
+    //    ? [$a->achName, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
+    ? [$a->achName, $a->postalAddr, $a->phone, $bankAccount, BANK_DBA, $escrow] // from bank to escrow
+    : [PROJECT . ' (' . CGF_LEGALNAME . ')', CGF_POSTALADDR, CGF_PHONE, $escrow, $a->achName, $bankAccount]; //e2b
   $memo = $amount > 0 ? t('for %RCREDITS') : t('for DEPOSIT to account #') . substr($toAcct, 4 + 9);
 
   list ($signature, $belowLine) = $amount > 0 

@@ -104,7 +104,7 @@ function url($a, $type = 'card') {
  * @return NULL on error, else the account.
  */
 function acct($qr, $requireCode) {
-  $parts = preg_split('[/\\.-]', $qr);
+  $parts = preg_split('~[/\\.-]~', $qr);
   $count = count($parts);
   
   if ($count <= 2) { // abbreviated format (for QRs displayed by app) - <fmt><region><acct><agent><cardCode><type><counter>

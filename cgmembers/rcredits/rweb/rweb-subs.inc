@@ -716,7 +716,7 @@ function signedBy() {
   $signerA = ($mya->admin or ($mya->co and $mya->proSe))
   ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) 
   : $mya->agentA;
-  return textFld(REQ . t('Signed:'), $behalf . t('Type your full legal name here ') . "($signerA->legalName)", dft($mya->admManageAccts ? $signerA->legalNameDpy : ''));
+  return textFld(REQ . t('Signed:'), $behalf . t('Type your full legal name here ') . "($signerA->legalName)", dft($mya->admManageAccts ? $signerA->legalName : ''));
 }
 
 /**
@@ -724,7 +724,7 @@ function signedBy() {
  */
 function badSignature(&$sta) {
   global $mya;
-  $legalName = r\agent()->legalNameDpy;
+  $legalName = r\agent()->legalName;
   if (!$mya->admManageAccts and strcasecmp(trim($sta['input']['signedBy']), $legalName) != 0) return say('bad signature', compact('legalName'), 'signedBy');
 }  
   

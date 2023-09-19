@@ -46,7 +46,7 @@ Scenario: A company signs up
   | phone     | 413-253-0004 |
   | email     | d@           |
   | selling   | fish         |
-  | sellCg    | 1            |
+  | sellCG    | 1            |
   | coType    | LLC          |
   Then members:
   | uid       | .AAA         |**
@@ -59,7 +59,7 @@ Scenario: A company signs up
   | email     | d@           |
   | selling   | fish         |
   | coType    | LLC          |
-#  | coFlags   | sellcg       |
+#  | coFlags   | sellCG       |
   And these "u_relations":
   | main | other | permission | otherNum |*
   | .AAA | .ZZA  | manage     | 1        |

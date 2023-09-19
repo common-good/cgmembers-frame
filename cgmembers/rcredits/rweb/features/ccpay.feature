@@ -8,7 +8,7 @@ Setup:
   | uid  | fullName | phone        | address | city  | state  | zip | country  | postalAddr | floor | flags              | coFlags   | emailCode |*
   | .ZZA | Abe One  | +13013013001 | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt  |           |           |
   | .ZZB | Bea Two  |              | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |  -250 | ok,confirmed,debt  |           |           |
-  | .ZZC | Our Pub  | +13333333333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | ccok      | Cc3       |
+  | .ZZC | Our Pub  | +13333333333 | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co    | ccOk      | Cc3       |
   And these "u_relations":
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -21,7 +21,7 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A non-member donates to a ccok organization by credit card
+Scenario: A non-member donates to a ccOk organization by credit card
   Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
@@ -77,7 +77,7 @@ Scenario: A non-member donates to a ccok organization by credit card
   | coName | Our Pub |**
 
 # ACH is not allowed, but in case it ever is:
-Scenario: A non-member donates to a ccok organization by ACH
+Scenario: A non-member donates to a ccOk organization by ACH
   Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
@@ -114,7 +114,7 @@ Scenario: A non-member donates to a ccok organization by ACH
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
-Scenario: A member donates to a ccok organization
+Scenario: A member donates to a ccOk organization
   Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
@@ -146,7 +146,7 @@ Scenario: A member donates to a ccok organization
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
 
-Scenario: A member pays a ccok organization
+Scenario: A member pays a ccOk organization
   When member ".ZZA" submits "tx/pay" with:
   | op  | who     | amount | purpose | period | periods | isGift |*
   | pay | Our Pub | 123    | gift    | month  | 1       | 1      |
