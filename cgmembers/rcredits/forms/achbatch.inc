@@ -83,7 +83,7 @@ X;
       $id = $pid;
     } else { // member account transfer
       $a = r\acct($payee);
-      $name = u\asciiOnly($a->legalName);
+      $name = u\asciiOnly($a->achName);
       $id = $a->mainQid;
     }
     $id .= '-' . $xid;

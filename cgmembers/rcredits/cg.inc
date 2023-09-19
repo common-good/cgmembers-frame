@@ -455,7 +455,9 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  * @return FALSE;
  */
 function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
-  global $mya, $channel;
+  global $mya, $channel, $tellingAdmin;
+  
+  $tellingAdmin = nn($tellingAdmin, 0) + 1; if ($tellingAdmin > 2) return; // don't loop (for example because log file is missing)
 /**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
   $to = nni($subs, 'to', R_ADMIN_EMAIL);
@@ -479,6 +481,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $body = u\seeAssoc($subs);
   $info = $subs + compact('body');
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
+  $tellingAdmin = 0;
   return FALSE;
 }
 
@@ -1517,15 +1520,22 @@ function hasCats($uid) {return in($uid, catUids());}
 
 /**
  * Return an array of record IDs of all accounts owned by CG whose transactions get categorized.
+ * That is, CG itself plus all sponsored accounts (internal and external), 
+ * omitting the collection buckets (BUCKET_UIDS), which get dumped into CG.
  */
 function catUids() {
-  $ray = db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)'); // get the fiscally sponsored account IDs
-  $ray = array_merge($ray, [CGID, r\serverUid(), r\qo('NEWAIN')->id]); // NEWAIN is 457 retirement account
-  return $ray; // cache this someday?
+  return array_merge([CGID], db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)')); // cache this someday?
 }
 
-function cgUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of all accounts owned by CG (called in queries.inc)
-function justCgUids() {return array_merge([CGID, r\serverUid(), r\qo('NEWAZV')->id], BUCKET_UIDS);} // uids of all non-sponsored accounts owned by CG (called in queries.inc) - NEWAZV is Food Fund
+function cgIncomeUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of all accounts owned by CG (called in queries.inc)
+
+/**
+ * Return an array of record IDs of all accounts whose income AND expenses belong to CG (the EIN and legalName should be CG's).
+ * CG, NEWAZV, NEWAIN, and NEWCBQ should be marked as "ourOwn"
+ */
+function cgsOwnUids() {
+  return array_merge(db\col('uid', 'u_company', 'coFlags&(1<<:CO_OUROWN)'), BUCKET_UIDS);
+}
 
 /**
  * Return the appropriate exchange fee for the given transaction description and amount.

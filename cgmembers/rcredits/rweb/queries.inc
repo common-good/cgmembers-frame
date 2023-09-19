@@ -26,8 +26,8 @@ if ($mya and $mya->admin) {
   $fy0 = strtotime('-1 year', $fy9) + 1;
   $y9 = strtotime('January 1') - 1;
   $y0 = strtotime('-1 year', $y9) + 1;
-  $cgUids = join(',', r\cgUids());
-  $justCgUids = join(',', r\justCgUids());
+  $cgIncomeUids = join(',', r\cgIncomeUids());
+  $cgsOwnUids = join(',', r\cgsOwnUids());
   $qtrDt1 = u\qtrDt($qtrDt2 = u\qtrDt() - 1);
   $perMo = ':MONTH_SECS/LEAST(:NOW-u.activated, 6*:MONTH_SECS)';
   
@@ -47,15 +47,15 @@ if ($mya and $mya->admin) {
        ROUND($perMo * COUNT(IF(h.created < :NOW-1*:MONTH_SECS, 0, ABS(e.amount))), 2) AS `tx last mo`, 
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.entryType=:E_REBATE, -e.amount, 0))), 2) AS `rebates/mo`,
        ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(other.cat=$fsFeeCat, GREATEST(-e.amount, 0), 0))), 2) AS `FS fees/mo`,
-       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0))), 2) AS `to CG/mo`,
-       ROUND(SUM(IF(otherUid IN ($justCgUids), GREATEST(-e.amount, 0), 0)), 2) AS `to CG ever`,
+       ROUND($perMo * SUM(IF(h.created < :NOW-6*:MONTH_SECS, 0, IF(otherUid IN ($cgsOwnUids), GREATEST(-e.amount, 0), 0))), 2) AS `to CG/mo`,
+       ROUND(SUM(IF(otherUid IN ($cgsOwnUids), GREATEST(-e.amount, 0), 0)), 2) AS `to CG ever`,
        LEFT(FROM_UNIXTIME(MAX(h.created)), 10) AS lastTx
        
        FROM tx_hdrs h JOIN tx_entries e USING (xid) 
          JOIN users u USING (uid) 
          LEFT JOIN r_states s ON s.id=u.state
          JOIN (SELECT id, uid AS otherUid, entryType, cat FROM tx_entries) other ON other.id=-e.id
-       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($justCgUids, :UID_OUTER, :UID_BANK)
+       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($cgsOwnUids, :UID_OUTER, :UID_BANK)
        GROUP BY e.uid
        ORDER BY `to CG/mo` DESC, `sales/mo` DESC",
        
@@ -70,7 +70,7 @@ if ($mya and $mya->admin) {
          LEFT JOIN r_states s ON s.id=u.state
          LEFT JOIN r_user_industries ui USING (uid)
          LEFT JOIN r_industries i USING (iid)
-       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($justCgUids, :UID_OUTER, :UID_BANK)
+       WHERE u.:IS_CO AND u.:IS_OK AND u.uid NOT IN ($cgsOwnUids, :UID_OUTER, :UID_BANK)
        GROUP BY uid
        ORDER BY u.fullName",
   
@@ -106,7 +106,7 @@ if ($mya and $mya->admin) {
       LEFT JOIN users u2 ON u2.uid=t.uid2
       LEFT JOIN people p ON p.pid=t2.pid AND p.pid>0
       LEFT JOIN r_states s ON s.id=IF(p.pid IS NULL, u.state, p.state)
-      WHERE t.created BETWEEN $y0 AND $y9 AND t.uid2 IN ($justCgUids) AND t.uid1 NOT IN ($justCgUids)
+      WHERE t.created BETWEEN $y0 AND $y9 AND t.uid2 IN ($cgsOwnUids) AND t.uid1 NOT IN ($cgsOwnUids)
       AND t.cat2 NOT BETWEEN 1150 AND $fsFeeCat
       GROUP BY name
       HAVING gifts>=99
@@ -122,7 +122,7 @@ if ($mya and $mya->admin) {
       LEFT JOIN users u ON u.uid=t.uid1 
       LEFT JOIN people p ON p.pid=t2.pid AND p.pid>0
       LEFT JOIN r_states s ON s.id=IF(p.pid IS NULL, u.state, p.state)
-      WHERE t.created BETWEEN $fy0 AND $fy9 AND t.uid2 IN ($cgUids) AND t.uid1 NOT IN ($cgUids)
+      WHERE t.created BETWEEN $fy0 AND $fy9 AND t.uid2 IN ($cgIncomeUids) AND t.uid1 NOT IN ($cgIncomeUids)
       GROUP BY name
       HAVING over999>=:SUBSTANTIAL_GIFT OR marked
       ORDER BY giftTotal DESC
@@ -164,7 +164,7 @@ if ($mya and $mya->admin) {
      SUM(IF(u.balance>=0, 1, 0)) AS posCount,
      SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
      FROM users u LEFT JOIN users c ON c.uid=u.community 
-     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT :CANONIC AND u.uid NOT IN ($cgUids)
+     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT :CANONIC AND u.uid NOT IN ($cgIncomeUids)
      GROUP BY c.fullName",
   
   2 . t('Most Trusted Members') => 

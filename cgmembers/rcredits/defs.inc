@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61p'; // software version
+const R_VERSION = '3.61q'; // software version
 const APP_VERSION = 40200; // 4.2.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -451,14 +451,15 @@ const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account 
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
 const CO_SPONSORED = 2; // fiscally sponsored by CG (should have CG's EIN, and maybe CO_PRIVATE if it has another CG account)
+const CO_OUROWN = 3; // this non-sponsored account belongs to CG
 
-const CO_CCOK = 12; // (temporary) we accept credit card payments for this company
+const CO_CCOK = 12; // (temporary) we accept credit card payments for this non-sponsored company
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add (deprecated -- remove once most companies, including Mesa Verde, switch to new app, v4.2 and up)
-const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,ccok,private,atm,,,,,,,,,,,,,,,fast,tip';
+const CO_FLAGS = 'sellCG,flip,sponsored,ourOwn,,,,,,,,,ccOk,private,atm,,,,,,,,,,,,,,,fast,tip';
 
 const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21 (remove this and related features once no companies are using our Android app)
 const CO_CHARGE = 0;

@@ -83,9 +83,10 @@ class MyWSSServer implements MessageComponentInterface {
   }
 }
 
+/**/ echo $startMsg = 'Running app websocket switchboard...'; // in case we run this from the command line
+
 try {
   set_error_handler(function () { exit(); }, E_WARNING); // ignore warning about "Address already in use"
-  flog('Running app websocket switchboard...');
   $loop = \React\EventLoop\Factory::create();
   $websockets = new Server('0.0.0.0:' . SOCKET_PORT, $loop);
   restore_error_handler();
@@ -99,8 +100,9 @@ try {
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
   $server->run();
+  /**/ flog($startMsg);
 } catch (\Exception $er) {
-  flog("App socket overall er: " . $er->message());
+/**/ flog("App socket overall er: " . $er->message());
 }
 
 function er($msg, $conn) {
