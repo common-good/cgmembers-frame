@@ -451,8 +451,9 @@ const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account 
 const CO_SELLCG = 0; // company sells Common Good credit
 const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
 const CO_SPONSORED = 2; // fiscally sponsored by CG (should have CG's EIN, and maybe CO_PRIVATE if it has another CG account)
+const CO_OUROWN = 3; // this non-sponsored account belongs to CG
 
-const CO_CCOK = 12; // (temporary) we accept credit card payments for this company
+const CO_CCOK = 12; // (temporary) we accept credit card payments for this non-sponsored company
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
