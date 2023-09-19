@@ -459,7 +459,7 @@ const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than
 
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add (deprecated -- remove once most companies, including Mesa Verde, switch to new app, v4.2 and up)
-const CO_FLAGS = 'sellcg,flip,sponsored,,,,,,,,,,ccok,private,atm,,,,,,,,,,,,,,,fast,tip';
+const CO_FLAGS = 'sellCG,flip,sponsored,ourOwn,,,,,,,,,ccOk,private,atm,,,,,,,,,,,,,,,fast,tip';
 
 const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21 (remove this and related features once no companies are using our Android app)
 const CO_CHARGE = 0;

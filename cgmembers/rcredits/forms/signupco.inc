@@ -64,14 +64,14 @@ X
   $zip = zipFld();
 
   $selling = textFld(t('Selling:'), [t('Products'),t('Enter a <b>VERY SHORT</b> transaction description (for example "food") for when you make a sale. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($mya->selling) + maxlen(SELLING_MAXLEN));
-  $sellCg = boolFld(t('Sell Credit:'), t('Do you want to accept customer cash in exchange for your %PROJECT credit (recommended)?'), 1);
+  $sellCG = boolFld(t('Sell Credit:'), t('Do you want to accept customer cash in exchange for your %PROJECT credit (recommended)?'), 1);
 
   $midtext = t('<h3>%PROJECT Agreement</h3><p>I commit this company to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', '_a', 'a id="show-agreement"');
   extract(just('agreement details', formAgreement($form, $sta)));
   $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext coType fullName legalName email zip phone selling sellCg founded federalId midtext agreement submit args agentQid')));
+  return cgform(compact(ray('title subtext coType fullName legalName email zip phone selling sellCG founded federalId midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
@@ -99,7 +99,7 @@ function formSignupCo_validate($form, &$sta) {
 function formSignupCo_submit($form, &$sta) {
   
   $dbFields = 'coType selling fullName legalName email flags phone federalId founded zip state helper';
-  extract(just($dbFields . ' sellCg agentQid args', $sta['input'], NULL));
+  extract(just($dbFields . ' sellCG agentQid args', $sta['input'], NULL));
   extract(just('code', nn($args, []), NULL));
 
   signout(TRUE);
@@ -116,7 +116,7 @@ function formSignupCo_submit($form, &$sta) {
   r\setAcct($newA->id, $sta);
   
   foreach (ray(CO_APP_DFTS) as $i) $newA->setCoBit(APP_CANS + $i);
-  if ($sellCg) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $newA->setCoBit($k);
+  if ($sellCG) foreach ([CO_SELLCG, APP_CANS + CO_R4USD, APP_CANS + APP_CAN_BITS + CO_R4USD] as $k) $newA->setCoBit($k);
 
   list ($myid, $name) = [$newA->id, $newA->name];  
   $qid = $newA->qid;

@@ -1531,7 +1531,7 @@ function cgIncomeUids() {return array_merge(catUids(), BUCKET_UIDS);} // uids of
 
 /**
  * Return an array of record IDs of all accounts whose income AND expenses belong to CG (the EIN and legalName should be CG's).
- * CG, NEWAZV, NEWAIN, and NEWCBQ should be marked as "ourown"
+ * CG, NEWAZV, NEWAIN, and NEWCBQ should be marked as "ourOwn"
  */
 function cgsOwnUids() {
   return array_merge(db\col('uid', 'u_company', 'coFlags&(1<<:CO_OUROWN)'), BUCKET_UIDS);

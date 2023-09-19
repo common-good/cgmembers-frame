@@ -111,7 +111,7 @@ Scenario: A member runs a query about Positive and Negative
   When member ".ZZB" runs query "Positive and Negative Balance Totals"
   Then we show "" with:
   | community                | negCount | negativeBalTotal | posCount | positiveBalTotal |
-  | Common Good Western Mass | 0        | 0.00             | 3        | 5,945.00         |
+  | Common Good Western Mass | 0        | 0.00             | 4        | 5,945.00         |
 
 Scenario: A member runs a query about Balances
   When member ".ZZA" runs query "Company and Member Balances and Credit Lines"
