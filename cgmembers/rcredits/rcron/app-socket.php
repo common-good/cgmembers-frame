@@ -63,7 +63,15 @@ class MyWSSServer implements MessageComponentInterface {
     if (!$ok) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
     
     switch ($op) {
-      case 'connect': $this->map[$actorId] = $from; break;
+      case 'connect': 
+//        $firstTime = empty($oldFrom = nni($this->map, $actorId));
+        $this->map[$actorId] = $from; 
+/*        $action = $note = '';
+        $message = t('You are now connected to the socket switchboard (account %actorId).', compact('actorId'));
+        if ($firstTime) $from->send(json_encode(compact(ray('message action note')))); 
+        flog(t('firstTime=') . ($firstTime ? 1 : 0));
+        */
+        break;
       case 'tell': // currently this comes only from u/tellApp()
         if (!$to = nni($this->map, $otherId)) return;
         $what = t('%amt for %what', 'amt what', u\fmtAmt($amount), $purpose);
@@ -78,10 +86,10 @@ class MyWSSServer implements MessageComponentInterface {
   }
 }
 
-/**/ echo $startMsg = 'Running app websocket switchboard...'; // in case we run this from the command line
+/**/ echo $startMsg = fmtDt() . ' ' . fmtTime() . t(" Restarting app websocket switchboard...\n"); // in case we run this from the command line
 
 try {
-  set_error_handler(function () { exit(); }, E_WARNING); // ignore warning about "Address already in use"
+  set_error_handler(function () { exit("Warning: that port (probably the switchboard) is already running.\n"); }, E_WARNING); // ignore warning about "Address already in use"
   $loop = \React\EventLoop\Factory::create();
   $websockets = new Server('0.0.0.0:' . SOCKET_PORT, $loop);
   restore_error_handler();
@@ -94,8 +102,8 @@ try {
 
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
-  $server->run();
   /**/ flog($startMsg);
+  $server->run();
 } catch (\Exception $er) {
 /**/ flog("App socket overall er: " . $er->message());
 }
