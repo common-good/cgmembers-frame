@@ -73,7 +73,7 @@ function accounts($params) {
 
   foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
 
-  if ($identifier == 'getCardCodes' and $code = $password) { // repairing older data
+  if ($identifier == 'getCardCodes' and $code = substr($password, 0, DEVICE_MAXLEN)) { // repairing older data
      if (!$myid = db\get('uid', 'r_boxes', compact('code'))) return exitJust(X_UNAUTH);
      $a = r\acct($myid);
   } else {
