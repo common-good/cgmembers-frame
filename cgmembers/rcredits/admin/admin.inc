@@ -114,13 +114,12 @@ function makeTestAccounts($print = FALSE) {
   ];
 
   $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
-  $hd = 'newzp'; // prefix for account letter
   
   foreach ($testAccts as $id => $vs) {
     $d = (ord($id) - ord("a") + 1);
     $ID = strtoupper($id);
     extract(array_combine(ray('co fullName'), $vs));
-    $uid = t\uid(strtoupper("$hd$id"));
+    $uid = t\uid(strtoupper(TEST_QID_HD . $id));
     $testUids[] = $uid;
     
     $name = u\shortName($fullName);
@@ -141,8 +140,8 @@ function makeTestAccounts($print = FALSE) {
     if (!$a->co) a\photoFromFile($a);
 
     $selling = 'null';
-    if ($id == 'c') a($hd . 'c')->update('selling', $selling = "groceries\ngifts\nsundries");
-    if ($id == 'g') a($hd . 'g')->update('selling', $selling = 'hardware');
+    if ($id == 'c') a(TEST_QID_HD . 'c')->update('selling', $selling = "groceries\ngifts\nsundries");
+    if ($id == 'g') a(TEST_QID_HD . 'g')->update('selling', $selling = 'hardware');
     
     if ($print) {
       $isCo = $co ? 'true' : 'false';
@@ -156,11 +155,11 @@ function makeTestAccounts($print = FALSE) {
   }
   
   foreach (str_split('abdefhi') as $id) { // the individual accounts
-    $a = a("$hd$id");
+    $a = a(TEST_QID_HD . $id);
     if (in($id, 'a b f')) {
       $cid = $id == 'f' ? 'g' : 'c';
       $CID = strtoupper("$cid:$id");
-      $coA = a($hd . $cid);
+      $coA = a(TEST_QID_HD . $cid);
       $coA->setDftAppCans();
       $perm = $id == 'b' ? B_SELL : B_MANAGE;
       if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
