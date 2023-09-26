@@ -1,7 +1,5 @@
 <?php
 use CG\Util as u;
-use CG\Web as w;
-use CG\DB as db;
 use CG\QR as qr;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
@@ -30,16 +28,14 @@ use React\Socket\SecureServer;
  */
 define('DRUPAL_ROOT', __DIR__ . '/../..');
 require_once __DIR__ . '/../bootstrap.inc';
+require_once DRUPAL_ROOT . '/rcredits/boot.inc';
 require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL); // boot before including rcron.inc
+require_once R_ROOT . '/cg-util.inc';
 require_once R_ROOT . '/cg-qr.inc';
 
 global $channel; $channel = TX_SOCKET; // set this even if called from PHP window by admin (must be after bootstrapping)
 ignore_user_abort(TRUE); // Allow execution to continue even if the request gets canceled.
 set_time_limit(0);
-$original_session_saving = \drupal_save_session(); // Prevent session information from being saved while cron is running.
-\drupal_save_session(FALSE);
-$original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
 $GLOBALS['user'] = \drupal_anonymous_user();
 
 class MyWSSServer implements MessageComponentInterface {
@@ -58,13 +54,12 @@ class MyWSSServer implements MessageComponentInterface {
    */
   public function onMessage(ConnectionInterface $from, $msg) {
     if (!$ray = json_decode($msg)) return er(t('Bad JSON message: ') . pr($msg), $from);
-///    flog('app socket got: ' . pr($ray));
+    flog('app socket got: ' . pr($ray));
     extract(just('op deviceId actorId otherId name action amount purpose note', $ray, NULL)); // op, deviceId, and actorId are always required
-    if (!$a = qr\acct($actorId, FALSE)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
-    if (!$a->ok) return er(t('%uid is not an active account.', 'uid', $a->id), $from);
-    $ok = ( ($deviceId == bin2hex(R_WORD))
-    or (db\get('uid', 'r_boxes', ray('code', $deviceId)) == $a->id)
-    or ($deviceId == 'dev' . $a->fullName[0] and !isPRODUCTION) ); // for example devA)
+    if (!$qid = qr\qid($actorId)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
+    $ok = ( ($deviceId == bin2hex(R_WORD)) // called from u\tellApp
+    or (!isPRODUCTION and $deviceId == 'dev' . substr($qid, -1)) // testing (for example devA)
+    or ($x = u\decryPGP(u\b64decode($deviceId), 'public') and strstr($x, '/', TRUE) == $qid) );
     if (!$ok) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
     
     switch ($op) {
