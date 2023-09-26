@@ -98,12 +98,25 @@ function url($a, $type = 'card') {
 }
 
 /**
- * Interpret a CG card QR code (from an actual card or an abbreviated one from our app).
+ * Interpret a CG card QR code as an account (from an actual card or an abbreviated one from our app).
  * @param string $qr: the QR code to interpret
  * @param bool $requireCode: require card code (code is also required if supplied!)
  * @return NULL on error, else the account.
  */
 function acct($qr, $requireCode) {
+  if (!$qid = qid($qr, $cardCode)) return NULL; // cardCode is returned
+  if (!$a = r\acct($qid)) return NULL;
+  if (($requireCode or !empty($cardCode)) and $cardCode != $a->cardCode()) return NULL;
+  return r\acct($qid);
+}
+
+/**
+ * Interpret a CG card QR code (from an actual card or an abbreviated one from our app).
+ * @param string $qr: the QR code to interpret
+ * @param string $cardCode: (RETURNED) the cardCode part of the QR
+ * @return NULL on error, else the account's QID.
+ */
+function qid($qr, &$cardCode = '') {
   $parts = preg_split('~[/\\.-]~', $qr);
   $count = count($parts);
   
@@ -140,11 +153,9 @@ function acct($qr, $requireCode) {
       */
   } else return NULL;
 
-  if ($unfmt) extract($unfmt); else return NULL;
-
-  if (!$a = r\acct($qid)) return NULL;
-  if (($requireCode or !empty($cardCode)) and $cardCode != $a->cardCode()) return NULL;
-  return r\acct($qid);
+  if ($unfmt) extract($unfmt); else return NULL; // extracts qid, cardCode, co (qid without the agent), and isAgent (opposite of proSe)
+  
+  return $qid;
 }
 
 function qrUnfmt($region, $tail, $isTestCard) {
