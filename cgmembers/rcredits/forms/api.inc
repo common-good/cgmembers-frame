@@ -71,9 +71,9 @@ function api($arg = null) {
 function accounts($params) {
   global $nextCode; // tests usurp generated device code, using this instead
 
-  foreach (ray('identifier password') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
+  foreach (ray('identifier password version') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
 
-  if ($identifier == 'getCardCodes' and $code = $password) { // repairing older data
+  if ($identifier == 'getCardCodes' and $code = substr($password, 0, DEVICE_MAXLEN)) { // repairing older data
      if (!$myid = db\get('uid', 'r_boxes', compact('code'))) return exitJust(X_UNAUTH);
      $a = r\acct($myid);
   } else {
@@ -96,7 +96,8 @@ function accounts($params) {
     if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $cardCode = $a->cardCode();
-    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP(now() . "/$name", 'private')); // prove to customer who they're dealing with
+    $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
+    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP($toCry, 'private')); // prove to customer who they're dealing with when offline
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
@@ -469,12 +470,15 @@ function badTx($a, $info, $z) {
 /**
  * Decode the device code using a public key from the appropriate server (just this one for now).
  * @param string $device: the b64encoded encrypted device code received from the device
- * @return: an adequate abbreviation of $device (FALSE if error)
+ * @return: $device decoded into [qid, time, fullName] (FALSE if error) -- if app was set up pre 40200, returns [time, fullName]
  */
 function decodeDevice($device) {
-  if (test() and $device == 'whatever') return FALSE;
-  if (FALSE) if (!test() and !u\decryPGP(u\b64decode($device), 'public')) return FALSE; // temporarily disabled while figuring out how to do ssl public encryption from JS or switch to GPG
-  return substr($device, 0, DEVICE_MAXLEN);
+  if (test()) {
+    if (!preg_match('/^dev[A-Z]$/', $device)) return FALSE;
+    $qid = TEST_QID_HD . substr($device, -1, 1);
+    $x = "$qid/12345/" . r\acct($qid)->fullName;
+  } elseif (!$x = u\decryPGP(u\b64decode($device), 'public')) return FALSE; // but we don't know yet how to do ssl public decryption from node.js
+  return explode('/', $x, 3);
 }
 
 /**
@@ -500,7 +504,7 @@ function photoReturn($pic) {
  * Check the validity of a specified deviceId and actorId.
  * @param string $arg: the endpoint
  * @param assoc $params: the parameters
- * @param bool $noBox: if true, don't bother with a boxId (important for appSocket)
+ * @param bool $noBox: if true, don't bother with a boxId
  * @return <ok>
  */
 function authOk($arg, $params, $noBox = FALSE) {
@@ -512,7 +516,8 @@ function authOk($arg, $params, $noBox = FALSE) {
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {
-      if (!$nm = decodeDevice($deviceId)) return exitJust(X_UNAUTH);
+      list ($qid, $two, $three) = decodeDevice($deviceId); // pre 40200 app had just time/fullName (now qid/time/fullName)
+      if ($qid != $mya->mainQid and $two != $mya->fullName) return exitJust(X_UNAUTH);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     if (!$noBox) $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there

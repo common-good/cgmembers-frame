@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61q'; // software version
+const R_VERSION = '3.61r'; // software version
 const APP_VERSION = 40200; // 4.2.0
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
@@ -27,6 +27,7 @@ const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewher
 const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
+const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total

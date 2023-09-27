@@ -14,6 +14,7 @@ use CG\Web as w;
 function formPhp($form, &$sta, $res = '') {
   $res = item($res, BARE);
   $code = areaFld(BARE, '', dft(getV('code')));
+///  $code = str_replace('href', 'hruf', $code); // needed occasionally if we type something that looks like a hack
   $submit = t('Execute Code');
   return cgform(compact('res', 'code', 'submit'), 'wide nolabs');
 }

@@ -12,6 +12,7 @@ Setup:
   | .ZPF | For Co   | +20006 | f@    | ccF |      | co     |      | Fton | FL    | 1000    |
   And these "r_boxes":
   | uid  | code |*
+  | .ZPA | devA |
   | .ZPC | devC |
   And these "u_relations":
   | main | agent | num | permission |*
@@ -35,7 +36,7 @@ Scenario: The app asks to charge a customer
 Scenario: The app asks to pay a customer
   When app posts "transactions" with:
   | deviceId | amount | actorId | otherId | description | created | proof                        | pending | offline |*
-  | devC     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   | false   |
+  | devA     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   | false   |
   Then we reply "ok" with JSON:
   | ok    | message                |*
   | true  | You paid Bea Two $123. |
@@ -63,7 +64,7 @@ Scenario: The app asks to undo a payment to a customer
   | 1   | .ZPA    | .ZPA | .ZPB | 123 | stuff | %now0   |       |
   When app posts "transactions" with:
   | deviceId | amount | actorId | otherId | description | created | proof                         | pending | offline |*
-  | devC     | 123    | K6VMDCA | K6VMDCB | stuff       | %now0   | K6VMDCA-123.00K6VMDCBccB%now0 | false   | false   |
+  | devA     | 123    | K6VMDCA | K6VMDCB | stuff       | %now0   | K6VMDCA-123.00K6VMDCBccB%now0 | false   | false   |
   Then we reply "ok" with JSON:
   | ok    | message           |*
   | true  | reversal invoiced |
@@ -86,7 +87,7 @@ Scenario: The app asks to charge a customer and add a tip
 Scenario: The app asks to pay a customer and add a tip
   When app posts "transactions" with:
   | deviceId | amount | actorId | otherId | description | created | proof                        | pending | offline | tip  |*
-  | devC     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   | false   | 2.34 |
+  | devA     | -123   | K6VMDCA | K6VMDCB | stuff       | %now    | K6VMDCA-123.00K6VMDCBccB%now | false   | false   | 2.34 |
   Then we reply "ok" with JSON:
   | ok    | message                |*
   | true  | You paid Bea Two $123. |
