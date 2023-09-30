@@ -97,6 +97,7 @@ function accounts($params) {
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $cardCode = $a->cardCode();
     $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
+    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP($toCry, 'private')); // prove to customer who they're dealing with when offline
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);
@@ -516,7 +517,7 @@ function authOk($arg, $params, $noBox = FALSE) {
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {
-      list ($qid, $two, $three) = decodeDevice($deviceId); // pre 40200 app had just time/fullName (now qid/time/fullName)
+      list ($qid, $two) = decodeDevice($deviceId); // pre 40200 app had just time/fullName (now qid/time/fullName)
       if ($qid != $mya->mainQid and $two != $mya->fullName) return exitJust(X_UNAUTH);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
