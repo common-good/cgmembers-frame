@@ -38,7 +38,7 @@ function showMo($month) {
   ROUND(SUM(toDate)/3600, 2) AS ToDate,
   ROUND(SUM(ts.estimate)/3600, 2) AS Estimate,
   ts.cap AS Cap,
-  IF(ROUND(SUM(toDate)/3600, 2) > ts.cap, ROUND(SUM(toDate)/3600, 2) - ts.cap, '') AS Over
+  IF(ROUND(SUM(toDate)/3600, 2) > ts.cap, ROUND(SUM(toDate)/3600, 2) - ts.cap, '') AS `Over`
 
   FROM (SELECT
     task AS taskid,
