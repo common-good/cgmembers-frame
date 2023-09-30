@@ -99,19 +99,19 @@ EOF
     return cgform(compact(ray('title subtext summary list posttext')));
   
   } else {
-    $title = t('Your Form 1099-K');
+    $title = t('Your Form 1099-K (%y)', 'y', date('Y')-1);
     $row = be\get1099('K', $mya->id, $ending);
     extract(just('gross noCard txCount', $row));
     // if (r\no1099k($gross, $txCount, $mya->st))
+    $jointTxt = $mya->jid ? t(' Your partner in the joint account receives a separate 1099-K.') : '';
     $subtext = t(<<<EOF
     <p>As a Payment Settlement Entity (PSE), the %PROJECT system is required to report (to the IRS and to state government) the total %PROJECT payments made to you in the past calendar year (on Form 1099-K) &mdash; unless the total is below a certain threshold. This page provides you with that information even if your total is below the threshold ($600 in Massachusetts and Vermont; $20,000 everywhere else).</p>
-    <p class="loud">YOU are not required to file Forms 1099-K. So the information on this page is for just for your information.</p>
+    <p class="loud">The IRS does not require you to file Form 1099-K, but some state governments do.</p>
     <p>The purpose of 1099-K is to report payment card transaction totals, not total income. So don't worry if some of the total listed here is something other than income (such as reimbursements or selling something at a loss). Also, you may receive a Form W2 or 1099-MISC from your employer or customers for some of the same money. Take care not to over-report your income by counting things twice.</p>
+    <p>This report is for %nm (account %acct).%jointTxt</p>
 EOF
-    );
+    , 'nm acct jointTxt', $mya->legalName, $mya->mainQid, $jointTxt);
     
-    if ($mya->jid) $subtext .= t('<p>This report applies only to one of the participants in this joint account. Your partner in the joint account receives a separate 1099-K.</p>');
-
     $txCount = item(number_format($txCount), t('Payments (count):'));
     $gross = item(u\fmtAmt($gross, '$'), t('Total:'));
     $noCard = item(u\fmtAmt($noCard, '$'), t('Paid Online:'));
