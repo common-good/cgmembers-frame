@@ -78,6 +78,7 @@ class Clickup {
    *   for example, 'SELECT DISTINCT parent AS task FROM cu_tasks WHERE parent IS NOT NULL'
    */
   public function updateTasks($start = NOW - DAY_SECS, $end = NOW) {
+    $classOpts = NULL;
     $sql = is_int($start) ? 'SELECT DISTINCT task FROM cu_times tm LEFT JOIN cu_tasks ts ON ts.id=tm.task WHERE stop BETWEEN :start AND :end' : $start;
     $q = db\q($sql, is_int($start) ? compact(ray('start end')) : []);
     while ($row = $q->fetch()) if (!strhas($id = $row->task, '#')) { // don't look for tasks that don't exist in ClickUp
@@ -90,22 +91,27 @@ class Clickup {
       $list = is_object($list) ? $list->id : MISC_LIST;
 /// if (!is_object($$k)) die('non object in task: ' . pr($o));
       $tags = $tags ? join(',', $this->just1('name', $tags)) : '';
-      if ($custom_fields and $fld = nni($custom_fields, 0) and $opts = nni($fld->type_config, 'options')) {
-        $opts = $this->just1('name', $opts);
-        $i = nni($fld, 'value', NULL);
-        $class = isset($i) ? $opts[$i] : NULL;
-      } else $class = NULL;
-      $info = compact(ray('id list name parent class tags priority status')) + ray('estimate spent closed', $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
+      $class = $cap = NULL;
+      foreach ($custom_fields ?: [] as $fld) {
+        $value = nni($fld, 'value', NULL);
+        if ($fld->name == 'Cap') {
+          $cap = $value;
+        } elseif ($fld->name == 'Class') {
+          if (!$classOpts) $classOpts = $this->just1('name', nni($fld->type_config, 'options'));
+          $class = nni($classOpts, $value);
+        }
+      }
+      $info = compact(ray('id list name parent class cap tags priority status')) + ray('estimate spent closed', $time_estimate / 1000, $time_spent / 1000, $date_closed / 1000);
       db\updateOrInsert('cu_tasks', $info);
     }
 
     w\say(t('Done'));
   }
-  
+
   /**
    * Get all time entries in the given range of date/times.
    */
-  public function getTimes($start, $end) {
+  public function getTimes($start, $end = NOW) {
     foreach ($this->getTeam() as $member) $team[] = $member->user->id;
     $args['assignee'] = join(',', $team);
     foreach (ray('start end') as $k) $args[$k . '_date'] = $$k * 1000;
@@ -128,6 +134,6 @@ class Clickup {
   public function getOtherLists($space) {$q = $this->get("space/$space/list", ray('archived', 'true')); return $q ? $q->lists : [];}
   public function getTask($task) {return $this->get("task/$task", ray('include_subtasks', TRUE));}
 
-  public function just1($k, $ray) {foreach ((array) $ray as $one) $res[] = nni((array) $one, $k); return nn($res, []);}
+  public function just1($k, $ray) {foreach ((array) $ray ?: [] as $one) $res[] = nni((array) $one, $k); return nn($res, []);}
   
 }
