@@ -39,7 +39,7 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
 
         } else { // admin password
           post('vKeyPw', {vKeyPw:result}, function (j) {
-            location.href = ('' + document.location).replace(/scan-qr.*/, '') + 'sadmin/panel/code=' + j.code;
+            location.href = ('' + document.location).replace(/scan-qr.*/, '') + 'sadmin/panel/codePw=' + j.codePw;
             throw '';
           });
 

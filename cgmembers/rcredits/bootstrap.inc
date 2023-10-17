@@ -653,7 +653,7 @@ function variable_del($nm) {return delV($nm);} // for legacy Drupal
  * @return (only for tests): NULL
  * @see also t\getExitMsg()
  */
-function exitJust($s = '', $status = X_GOT) {
+function exitJust($s = '', $status = X_GOT, $toLog = NULL) {
   if (is_numeric($s)) {
     $status = (int) $s;
     $s = nni(ray(t('%X_SYNTAX:Syntax error, %X_UNAUTH:Authorization required, %X_FORBIDDEN:Forbidden, %X_NOTFOUND:Not found, %X_DENIED:Request denied, %X_TOOMANY:Too many attempts. Try again later?')), $status);
@@ -666,7 +666,8 @@ function exitJust($s = '', $status = X_GOT) {
   }
 
   header('HTTP/1.1 ' . $status);
-  $logS = $s = pr($s);
+  $s = pr($s);
+  $logS = is_null($toLog) ? $s : pr($toLog);
   if (u\starts($logS, '[{"uid":')) $logS = ''; // don't log account choices
   foreach (ray('quality = 50, png;base64, gd-jpeg, JFIF, JPEG, PNG') as $k) $logS = strstr($logS . $k, $k, TRUE); // don't show images
   u\loga('exit', "($status) " . $logS);
@@ -674,7 +675,7 @@ function exitJust($s = '', $status = X_GOT) {
   exit($status);
 }
 function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
-function exitJson($message, $status = X_GOT) {return exitJust(json_encode(is_array($message) ? $message : compact('message')), $status);}
+function exitJson($message, $status = X_GOT) {return exitJust(u\jsonize(is_array($message) ? $message : compact('message')), $status, u\noSecrets($message));}
 
 /**
  * Return the account to scan from. Also set $boxId.

@@ -1575,7 +1575,7 @@ function strUnscramble($s, $key) {return strScramble($s, $key, TRUE);}
  */
 function noSecrets($ray) {
   global $channel;
-  foreach ($ray as $k => $v) if (in($k, NOLOG_FLDS) and !($k == 'data' and $channel == TX_AJAX)) $ray[$k] = '(?)';
+  foreach ($ray as $k => $v) if (in($k, NOLOG_FLDS)) $ray[$k] = '(?)';
   return $ray;
 }
 

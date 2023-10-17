@@ -60,14 +60,14 @@ function errorResponse($op, $userId, $error, $status = 'BAD') {
   $op .= '-response';
   $response = compact(ray('op userId error status'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  return exitJust(u\jsonize($response));
+  return exitJson($response);
 }
 
 function okResponse($op, $userId, $responses, $status = 'OK') {
   $op .= '-response';
   $response = compact(ray('op userId status responses'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  return exitJust(u\jsonize($response));
+  return exitJson($response);
 }
 
 function validateUserIds($userId, $requests) {

@@ -64,7 +64,7 @@ function ajax($args = NULL) {
       include_once R_ROOT . '/help-scraps.inc';
       return ajaxRet(helpScrap($data['topic']));
     
-    case 'vKeyPw': return ajaxRet(ray('code', u\cryRay(just('vKeyPw', $data))));
+    case 'vKeyPw': return ajaxRet(ray('codePw', u\cryRay(just('vKeyPw', $data))));
   
     case 'ssn': // verify member's SSN
       if ($mya) $mya->ssnCheck();
@@ -183,7 +183,7 @@ function ajaxErr($msg) {return ajaxMsg($msg, 0);}
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data0, $ok = 1) {
   $data = u\jsonize($data0 + compact('ok'));
-  if (!isset($data0['which'])) u\loga('ajax', $data); // don't log hundreds of choices
+  if (!isset($data0['which'])) u\loga('ajax', $data0); // don't log hundreds of choices (log data0 so secrets are hidden)
   exit($data);
 }
 function relPermErr($message, $reid, $v0) {

@@ -15,13 +15,13 @@ include_once R_ROOT . '/admin/admin-web.inc';
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
 function formAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid code', $args, NULL));
+  extract(just('qid codePw', $args, NULL));
   global $mya;
 
   if (!$mya or !$mya->admin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
   
-  if ($code) { // called from scanqr.js
-    extract(just('vKeyPw', u\decryRay($code), NULL));
+  if ($codePw) { // called from scanqr.js
+    extract(just('vKeyPw', u\decryRay($codePw), NULL));
     if ($vKeyPw) superSignin($vKeyPw);
   }
 
