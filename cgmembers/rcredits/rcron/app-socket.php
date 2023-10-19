@@ -13,6 +13,7 @@ use React\Socket\SecureServer;
  * @file
  * Switchboard to route messages from one instance of the CGPay app to another.
  * Most obviously: "I request that you pay me $x for whatever." (and the yes/no response)
+ * Run in crontab with: */5 * * * * php /home/new/cgmembers-frame/current/cgmembers/rcredits/rcron/app-socket.php  > /dev/null 2>&1 &
  *
  * Parameters for messaging:
  *   op deviceId actorId otherId action amount description created note
