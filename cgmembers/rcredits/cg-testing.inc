@@ -278,7 +278,7 @@ function fixEmail($email) {
 
 function memberScansAdminCard($id, $vKeyPw) {
   global $testOnly; if ($testOnly) return FALSE;
-  return t\memberVisitsPage($id, 'sadmin/panel/code=' . u\cryRay(compact('vKeyPw')));
+  return t\memberVisitsPage($id, 'sadmin/panel/codePw=' . u\cryRay(compact('vKeyPw')));
 }
 
 function doRecords($list, $thing) {

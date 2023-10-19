@@ -38,7 +38,16 @@ Scenario: A brand new recurring payment can be completed
   Then count "txs" is 2
   And count "txs2" is 0
   And count "tx_requests" is 0
-
+  
+Scenario: A new recurring payment is not to be completed yet
+  Given these "tx_timed":
+  | action | start      | from | to   | amount | period | purpose |*
+  | pay    | %tomorrow | .ZZA | .ZZB |     10 | week   | pmt     |
+  Then count "txs" is 1
+  When cron runs "recurs"
+  Then count "txs" is 1
+  And count "tx_requests" is 0
+Skip
 Scenario: A recurring sweep can be completed
   Given these "tx_timed":
   | id | action | start      | from | to   | amount | period | purpose |*

@@ -18,48 +18,52 @@ function formCEFBilling($form, &$sta, $month = '') {
   return cgform(monthChoices(t('CEF Billing'), 'sadmin/cef-billing', ray('subtext start end', $subtext, -13, -1)));
 }
 
-function showMo($month) {
+function showMo($month, $dt9 = '') {
   
+  if ($dt9) { // alternate syntax: (dt1, dt9) but always whole months
+    $dt0 = $month;
+    $month = fmtDt($dt0, 'MMM yyyy') . t(' to ') . fmtDt($dt9-1, 'MMM yyyy');
+  } else {
+    $dt0 = strtotime("1$month");
+    $dt9 = u\plusMonths(1, $dt0);
+  }
   $sqlTitle = t('CEF Hours By Task ' . $month);
-  $dt0 = strtotime("1$month");
-  $dt9 = u\plusMonths(1, $dt0);
-  $dt = fmtDt($dt0, 'Y-m');
+  
+  // NOTE: both the subtasks and parent tasks must billable -- so we check for unbillable twice below
   
   $sql = <<<X
-    SELECT CONCAT(
-    '<', 'a href="https://app.clickup.com/t/', IFNULL(tsp.id, ts.id), '" target="_blank">',
-    IFNULL(tsp.name, ts.name), ' (', IFNULL(ts.status, ''), ')', 
-    IF(tsp.tags <> '' OR ts.tags <> '', CONCAT(' [', TRIM(CONCAT(IFNULL(tsp.tags, ''), ' ', IFNULL(ts.tags, ''))), ']'), ''),
+  SELECT CONCAT(
+    '<', 'a href="https://app.clickup.com/t/', ts.id, '" target="_blank">',
+    ts.name, ' (', IFNULL(ts.status, ''), ')', 
+    IF(ts.tags='', '', CONCAT(' [', IFNULL(ts.tags, ''), ']')),
     '</a>'
   ) AS TaskName,
 
-  IFNULL(ts.class, tsp.class) AS `Class.`,
+  IFNULL(ts.class, ts.class) AS `Class.`,
   ROUND(SUM(secs)/3600, 2) AS Hours,
-  ROUND(SUM(toDate)/3600, 2) AS ToDate,
-  ROUND(SUM(ts.estimate)/3600, 2) AS Estimate,
+  ROUND(SUM(secsToDate)/3600, 2) AS ToDate,
+  ROUND(ts.estimate/3600, 2) AS Estimate,
   ts.cap AS Cap,
-  IF(ROUND(SUM(toDate)/3600, 2) > ts.cap, ROUND(SUM(toDate)/3600, 2) - ts.cap, '') AS `Over`
+  IF(ROUND(SUM(secsToDate)/3600, 2) > ts.cap, LEAST(ROUND(SUM(secs)/3600, 2), ROUND(SUM(secsToDate)/3600, 2) - ts.cap), '') AS `Over`
 
-  FROM (SELECT
-    task AS taskid,
-    SUM(cu0.stop-cu0.start) AS secs,
-    cu2.secs AS toDate
-    FROM cu_times  cu0 
-    JOIN (SELECT task, SUM(stop-start) AS secs FROM cu_times WHERE stop<$dt9 GROUP BY task) cu2 USING (task)
-    WHERE MID(FROM_UNIXTIME(stop), 1, 7)='$dt'
-    GROUP BY task
+  FROM (
+    SELECT IFNULL(ts.parent,ts.id) AS tsk, 
+    stop-start AS secsToDate,
+    IF(stop<$dt0, 0, stop-start) AS secs
+    FROM cu_times tm JOIN cu_tasks ts ON ts.id=tm.task
+    WHERE stop<$dt9 AND IFNULL(ts.tags, '') NOT LIKE '%unbillable%' 
+    AND IFNULL(ts.name, '') NOT LIKE '%Staff and Outreach Partners still cannot create subscribers%'
   ) tsum
 
-  JOIN cu_tasks ts ON ts.id=tsum.taskid
-  LEFT JOIN cu_tasks tsp ON tsp.id=ts.parent
+  JOIN cu_tasks ts ON ts.id=tsum.tsk
   JOIN cu_lists ls ON ls.id=ts.list 
   JOIN cu_folders f ON f.id=ls.folder 
   WHERE f.name='CEF' 
-  AND IFNULL(tsp.name, '') NOT LIKE '%Feature #2%'
-  AND IFNULL(tsp.name, '') NOT LIKE 'Payments Issues%'
-  AND IFNULL(ts.name, '') NOT LIKE '%Staff and Outreach Partners still cannot create subscribers%'
-  AND CONCAT(IFNULL(tsp.tags, ''), ' ', IFNULL(ts.tags, '')) NOT LIKE '%unbillable%' 
-  GROUP BY IFNULL(tsp.id, ts.id)
+  AND IFNULL(ts.name, '') NOT LIKE '%Feature #2%'
+  AND IFNULL(ts.name, '') NOT LIKE 'Payments Issues%'
+  AND IFNULL(ts.tags, '') NOT LIKE '%unbillable%' 
+  GROUP BY ts.id
+  HAVING Hours<>'0.00'
   ORDER BY TaskName
 X;
 

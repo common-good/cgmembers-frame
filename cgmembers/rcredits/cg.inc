@@ -1625,4 +1625,4 @@ function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}
 function qbCat($id) {return db\get('externalId', 'tx_cats', ray(is_numeric($id) ? 'id' : 'nick', $id));}
 function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, $set);}
 function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for Promo Team')); return r\rMail('tell-staff', 'info@' . CG_DOMAIN, compact(ray('topic body')), $reply);}
-function launchWebsocket() {exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications (it checks if it's already running); "php" must be lowercase
+function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications for testing (it checks if it's already running); "php" must be lowercase. But this has to run as a root cron job instead (edit with crontab -e).
