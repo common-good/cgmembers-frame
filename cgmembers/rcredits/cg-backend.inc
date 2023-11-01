@@ -96,10 +96,10 @@ EOF;
     
     foreach ($entries as $j => $entry) {
       if ($j == 0) { // use values extracted above to handle special names for first entry in a tx
-        $entry['name'] = $banking ? '--'
-        : (in($uid, BUCKET_UIDS) ? t('various') // (first entry in tx)
-        : (($type == E_OUTER and $pid) ? db\get('fullName', 'people', compact('pid')) . t(' (non-member)') // (first entry in tx)
-        : $name ));
+        $entry['name'] = $banking ? '--' // bank transfer
+        : (in($uid, BUCKET_UIDS) ? (in(CGID, $uids) ? w\lnk("/change-account/acct=$uid", t('various')) : PROJECT) // CG
+        : (($type == E_OUTER and $pid) ? db\get('fullName', 'people', compact('pid')) . t(' (non-member)') // non-member
+        : $name )); // normal
       }
 
       $description = txDesc($entry);
