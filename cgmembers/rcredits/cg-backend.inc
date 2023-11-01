@@ -993,7 +993,7 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
     $coA->tellIn($report, $subs);
 
     $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
     if ($member) {
       $a->tellOut("$type-thanks-member", $subs);
     } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);

@@ -135,6 +135,7 @@ Scenario: A member donates to a ccOk organization
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
+  | noFrame      |                 |
   And we email "gift-report" to member ".ZZC" with subs:
   | amount       | $123 monthly         |**
   | date         | %mdY                 |
