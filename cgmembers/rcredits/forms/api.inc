@@ -234,7 +234,7 @@ function transactions($params) {
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
-    return $offline ? badTx($a, $params, obj('msg', $err)) : postErr($err); // proof is proof enough (no cardCode needed)
+    return $offline ? badTx($a, $params, $err) : postErr($err); // proof is proof enough (no cardCode needed)
   }
   $cardCode = $a->cardCode();
   if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
@@ -263,7 +263,7 @@ function transactions($params) {
     } else $info['amt'] = -$amount; // look for original amount (the correction of point of view above also reverses the sign)
     if ($xid = db\get('xid', 'txs', $info)) { // see if original transaction exists
       $z = be\posUndo($mya, $xid, TRUE);
-      if (!$z->ok) return badTx($a, $params, $z);
+      if (!$z->ok) return badTx($a, $params, $z->msg);
     } // else nothing to do (pretend we deleted it)
     return exitJson(ray('ok message', TRUE, $amount > 0 ? t('reversal invoiced') : t('deleted')), X_OK); // message is ignored by app
   }  
@@ -289,7 +289,7 @@ function transactions($params) {
         be\insertTxes($entries, $tx->xid); // no balance checking (make this always go through!!)
       }  
     } else { // failed to create transaction
-      if ($offline) return badTx($a, $params, $z);
+      if ($offline) return badTx($a, $params, $z->msg);
     }
 
     unset($DBTX);
@@ -452,21 +452,21 @@ function getAcct($cardId, $requireCode = TRUE, &$err = '') {
 /**
  * Tell the device owner about a failed background transaction
  */
-function badTx($a, $info, $z) {
+function badTx($a, $info, $msg) {
   global $mya;
   extract(just('offline amount created', $info, NULL));
   
   $badFlds = 'version deviceId actorId otherId amount description created proof offline problem';
   $info['offline'] = (int) $offline;  
-  $info['problem'] = $z->msg;
+  $info['problem'] = $msg;
   db\insert('tx_bads', just($badFlds, $info));
   
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
   $dpy = ray('name amount created by', $a ? $a->fullName : t('UNKNOWN'), u\fmtAmt($amount), fmtDt($created), $by);
 //    $mya->tell("bad forced tx|$message", $info);
-  r\tellAdmin("bad forced tx|$z->msg", $info + $dpy);
+  r\tellAdmin("bad forced tx|$msg", $info + $dpy);
   
-  return postErr($z->msg); // offline transactions are always accepted
+  return postErr($msg); // offline transactions are always accepted
 }
 
 /**
