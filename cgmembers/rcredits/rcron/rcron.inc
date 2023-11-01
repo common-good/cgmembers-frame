@@ -341,7 +341,7 @@ function recur($template) {
     extract($res);
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
-    $type = w\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
+    $type = r\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
     $info = compact(ray('amount purpose created')) + ray('explicit completed recursId deposit gift', FALSE, now(), $id, 0, TRUE);
     be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
