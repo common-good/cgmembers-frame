@@ -1521,7 +1521,7 @@ function hasCats($uid) {return in($uid, catUids());}
 /**
  * Return an array of record IDs of all accounts owned by CG whose transactions get categorized.
  * That is, CG itself plus all sponsored accounts (internal and external), 
- * omitting the collection buckets (BUCKET_UIDS), which get dumped into CG.
+ * omitting the collection buckets (BUCKET_UIDS minus CGID), which get dumped into CG.
  */
 function catUids() {
   return array_merge([CGID], db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)')); // cache this someday?

@@ -241,9 +241,8 @@ const UID_OUTER = 255; // bank transfers to or from nonmembers (check, ACH, CC, 
 const UID_BANK = 256; // current Community Fund bank account
 
 const UID_CANON9 = 511; // maximum canonic account (admin/dollar pool, placeholders,...)
-const BUCKET_UIDS = [UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS];
 const EXTERNAL_UIDS = [UID_OUTER, UID_BANK]; // omit these when totaling balances to figure overall Dollar Pool Liability
-const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9;
+const CANONIC = 'BETWEEN 0 AND ' . UID_CANON9; // see definition of BUCKET_UIDS in bootstrap.inc
 define('STEPUP_PURPOSE', t('donation'));
 define('STORE_CREDIT', t('store credit'));
 

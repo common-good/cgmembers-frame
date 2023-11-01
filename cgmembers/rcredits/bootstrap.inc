@@ -2092,7 +2092,8 @@ function drupal_bootstrap() {
   _drupal_bootstrap_variables();
   require_once R_ROOT . '/cg-strings.inc';
   require_once R_ROOT . '/cg-db.inc'; // must be after _drupal_bootstrap_variables
-  define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rather than in defs.inc)
+  define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here, after cg-db.inc, rather than in defs.inc)
+  define('BUCKET_UIDS', [CGID, UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS]); // accounts that get dumped into CGID
   
   require_once R_ROOT . '/classes/acct.class';
   require_once R_ROOT . '/classes/qo.class';

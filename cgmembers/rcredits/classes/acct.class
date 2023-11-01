@@ -382,7 +382,7 @@ class Acct {
     $phone = u\fmtPhone($phone, '-');
     $co = $co ? 'co' : ' ';
     $maxGift = db\max('amt', 'txs', 'uid1 IN (:uids) AND uid2=:CGID', compact('uids')) ?: ''; // was :IS_GIFT but old recurring donations don't have that
-    $pastYear = db\sum('amt', 'txs', 'uid1 IN (:uids) AND (uid2=:CGID OR uid2 IN :BUCKET_UIDS) AND created>:yearAgo', ray('uids yearAgo', $uids, strtotime('-1 year'))) ?: '';
+    $pastYear = db\sum('amt', 'txs', 'uid1 IN (:uids) AND uid2 IN :BUCKET_UIDS AND created>:yearAgo', ray('uids yearAgo', $uids, strtotime('-1 year'))) ?: '';
     $months = (now() - $a->created) / MONTH_SECS;
     $investor = $a->iclubq;
     $invitees = db\count('r_invites', 'inviter IN (:uids)', compact('uids')) ?: '';
