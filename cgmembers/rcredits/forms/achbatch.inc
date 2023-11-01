@@ -65,7 +65,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 
   $sql = <<< X
     SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
-    WHERE ($where) AND ABS(amount)<$maxAch AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
+    WHERE ($where) AND ABS(amount)<=$maxAch AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $tot = 0;
