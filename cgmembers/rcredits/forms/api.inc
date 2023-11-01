@@ -238,7 +238,8 @@ function transactions($params) {
   }
   $cardCode = $a->cardCode();
   if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
-  if (!is_numeric($created) or $created < now() - 30 * DAY_SECS or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
+  if (!is_numeric($created) or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
+  if ($created < now() - 90 * DAY_SECS) return badTx($a, $params, t('transaction date too far in the past'));
 
   foreach (['', 'Undo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
     $proofAmt = number_format($uq ? -$amount : $amount, 2, '.', '');
