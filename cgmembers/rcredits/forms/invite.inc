@@ -118,7 +118,7 @@ function endorse($mya, $quote, $edit) {
   if ($mya->shouter) $buttons = btn('/community/invite/edit=1', t('Edit Yours'));
 
   $title = t('Endorse / Invite People');
-  $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement (you can also add your own words after you click Yes):</p><h5>%SHOUT_TEXT<br><small>&mdash; (your name here, along with many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
+  $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community and the common good.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement (you can also add your own words after you click Yes):</p><h5>%SHOUT_TEXT<br><small>&mdash; (your name here, along with many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
   
   $sawVideo = boolFld(REQ . t('Saw Video?'), '', $edit ? $sawVideo : 0, NULL, clas('mlab-left'));
   $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1, NULL, clas('mlab-left'));
