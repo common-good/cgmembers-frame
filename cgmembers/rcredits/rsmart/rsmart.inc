@@ -49,7 +49,7 @@ define('R_TRANSIENCE', 60); // number of seconds for device's transient QR to be
 require_once __DIR__ . '/../cg-strings.inc';
 
 $GLOBALS['tStrings'] += array(
-  'old app' => t("IMPORTANT: Your app needs updating.\n\nMake sure your latest transactions are uploaded before you uninstall this old version. Then search for \"CGPay Goood\" in the Google Play Store to download the new app."),
+  'old app' => t("IMPORTANT: Your app needs updating.\n\nMake sure your latest transactions are uploaded before you uninstall this old version. Then visit \"cgpay.commongood.earth\" to download the new app."),
   'bad proof' => t('That transaction is not valid.'),
   'bad member' => t('That is not a valid account. The customer used a lost, stolen, or fraudulent %PROJECT card.'),
 //  'card deactivated' => t('The %PROJECT card has been de-activated.'),

@@ -150,7 +150,9 @@ Scenario: The app asks to charge a customer with a date out of range
   When app posts "transactions" with:
   | deviceId | amount | actorId | otherId | description | created | proof                       | pending | offline |*
   | devC     | 123    | K6VMDCC | K6VMDCB | stuff       | 123     | K6VMDCC123.00K6VMDCBccB%now | false   | false   |
-  Then we reply "syntax" with: "?"
+  Then we reply "ok" with JSON:
+  | ok    | message                              |*
+  | false | transaction date too far in the past |
 
 Scenario: The app asks to charge a customer with a bad proof
   When app posts "transactions" with:

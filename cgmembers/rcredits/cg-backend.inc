@@ -96,10 +96,10 @@ EOF;
     
     foreach ($entries as $j => $entry) {
       if ($j == 0) { // use values extracted above to handle special names for first entry in a tx
-        $entry['name'] = $banking ? '--'
-        : (in($uid, BUCKET_UIDS) ? t('various') // (first entry in tx)
-        : (($type == E_OUTER and $pid) ? db\get('fullName', 'people', compact('pid')) . t(' (non-member)') // (first entry in tx)
-        : $name ));
+        $entry['name'] = $banking ? '--' // bank transfer
+        : (in($uid, BUCKET_UIDS) ? (in(CGID, $uids) ? w\lnk("/change-account/acct=$uid", t('various')) : PROJECT) // CG
+        : (($type == E_OUTER and $pid) ? db\get('fullName', 'people', compact('pid')) . t(' (non-member)') // non-member
+        : $name )); // normal
       }
 
       $description = txDesc($entry);
@@ -638,7 +638,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks(w\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+    be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
   }
   
   foreach ([$actorA, $otherA] as $a) {
@@ -993,7 +993,7 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
     $coA->tellIn($report, $subs);
 
     $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', 1, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
     if ($member) {
       $a->tellOut("$type-thanks-member", $subs);
     } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);

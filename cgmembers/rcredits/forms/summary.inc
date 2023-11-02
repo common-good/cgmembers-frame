@@ -380,7 +380,7 @@ function adminSummary() {
       $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
 
       if (!$mya->co) {
-        if ($mya->admV or !$mya->hasId) {
+        if ($mya->hasDob ? $mya->admV : !$mya->hasId) { // only show DOB if we have it and can show it. Get it if we don't have an ID yet.
           $dob = $mya->hasDob ? item(fmtDt($mya->dob), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
           $dob = rendA('dob', $dob);
         }

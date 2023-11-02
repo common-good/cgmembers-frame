@@ -12,7 +12,7 @@ use CG\Testing as t;
 
 $agt = nni($_SERVER, 'HTTP_USER_AGENT');
 /**/ if (preg_match('/msie [1-7][^0]/i', $agt)) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
-foreach (ray('MJ12Bot PetalBot AhrefsBot SEMrushBot DotBot MauiBot Barkrowler') as $k) if (strihas($agt, $k)) exit('creepy crawly');
+foreach (ray('MJ12Bot PetalBot AhrefsBot SEMrushBot DotBot MauiBot Barkrowler Bytespider') as $k) if (strihas($agt, $k)) exit('creepy crawly');
 
 const VERSION = '7.34'; // The current Drupal version.
 const THEME = 'rcredits'; // The only theme we use.
@@ -2092,7 +2092,8 @@ function drupal_bootstrap() {
   _drupal_bootstrap_variables();
   require_once R_ROOT . '/cg-strings.inc';
   require_once R_ROOT . '/cg-db.inc'; // must be after _drupal_bootstrap_variables
-  define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rather than in defs.inc)
+  define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here, after cg-db.inc, rather than in defs.inc)
+  define('BUCKET_UIDS', [CGID, UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS]); // accounts that get dumped into CGID
   
   require_once R_ROOT . '/classes/acct.class';
   require_once R_ROOT . '/classes/qo.class';

@@ -338,6 +338,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
   }
   $subject = u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%');
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
+  $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
   
   // log
   $whoDpy = nn($toA) ? $toA->mainQid : (is_array($to) ? reset($to) . ' <' . key($to) . '>' : "<$to>");
@@ -1521,7 +1522,7 @@ function hasCats($uid) {return in($uid, catUids());}
 /**
  * Return an array of record IDs of all accounts owned by CG whose transactions get categorized.
  * That is, CG itself plus all sponsored accounts (internal and external), 
- * omitting the collection buckets (BUCKET_UIDS), which get dumped into CG.
+ * omitting the collection buckets (BUCKET_UIDS minus CGID), which get dumped into CG.
  */
 function catUids() {
   return array_merge([CGID], db\col('uid', 'u_company', 'coFlags&(1<<:CO_SPONSORED)')); // cache this someday?
@@ -1626,3 +1627,4 @@ function qbCat($id) {return db\get('externalId', 'tx_cats', ray(is_numeric($id) 
 function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, $set);}
 function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for Promo Team')); return r\rMail('tell-staff', 'info@' . CG_DOMAIN, compact(ray('topic body')), $reply);}
 function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications for testing (it checks if it's already running); "php" must be lowercase. But this has to run as a root cron job instead (edit with crontab -e).
+function ccGiftType($coId) {return in($coId, BUCKET_UIDS) ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}

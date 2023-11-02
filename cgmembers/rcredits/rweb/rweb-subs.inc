@@ -2409,5 +2409,4 @@ function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('top
 function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
-function ccGiftType($coId) {return $coId == CGID ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
 function tweakSta(&$sta, $info) {$sta['input'] = array_filter($info + $sta['input'], function ($x) {return isset($x);});} // ignores null values, updates input

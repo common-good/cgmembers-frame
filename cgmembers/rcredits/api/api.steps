@@ -165,6 +165,7 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST transactions TheAppAsksToChargeACustomerAndAddATip
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherId
+ *     TEST transactions TheAppAsksToChargeACustomerWithADateOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
@@ -223,7 +224,6 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($w
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
- *     TEST transactions TheAppAsksToChargeACustomerWithADateOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadProof
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {

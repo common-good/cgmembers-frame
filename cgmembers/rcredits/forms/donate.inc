@@ -125,7 +125,7 @@ function formDonate_submit($form, &$sta) {
   $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? CC_FEE / 100 : 0));
   $sta['input']['amount'] = round($amount + $feeCovered, 2);
 
-  return submitNonMemberPayment($sta, w\ccGiftType($coId), compact('feeCovered'));
+  return submitNonMemberPayment($sta, r\ccGiftType($coId), compact('feeCovered'));
 }
 
 /**
@@ -161,7 +161,7 @@ function submitCG($sta) {
 
     $nm = $mya->fullName;
     if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    be\thanks(w\ccGiftType($coId), TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
+    be\thanks(r\ccGiftType($coId), TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();
