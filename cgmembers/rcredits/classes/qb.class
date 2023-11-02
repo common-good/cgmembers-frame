@@ -215,7 +215,7 @@ class QB {
 
       if ($banking) {
         if (r\acct($uid2)->sponsored) $description .= ': ' . strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
-      } else $description .= " [$name]";
+      } else $description = strip_tags("$description [$name]"); // strip hyperlinked "various" transactions dumping buckets into CGID
 
       $info = ray('DocNumber PrivateNote TxnDate', "cg#$xid", $description, fmtDt($created, 'yyyy-MM-dd'));
       $qbTx = new qbData\IPPJournalEntry($info);
