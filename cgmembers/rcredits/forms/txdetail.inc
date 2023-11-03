@@ -39,7 +39,7 @@ function formTxDetail($form, &$sta, $args = '') {
   list ($me, $you) = u\order($toMe, 2, 1);
 
   $sql = <<< X
-    SELECT t.created, t.channel, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
+    SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
       uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
@@ -76,7 +76,10 @@ X;
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));
-  $chan = item(ray(TX_CHANNELS)[$channel], t('Channel:'));
+  
+  $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
+  $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
+  $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
   $nmMe = item($meA->fullName, $wayMe);
 
   if ($mya->admEditTx) {
