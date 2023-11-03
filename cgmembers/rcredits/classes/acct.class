@@ -196,6 +196,7 @@ class Acct {
       case 'mainQid': return $a->qo->mainQid;
       case 'phoneDash': return u\fmtPhone($a->phone, '-');
       case 'st': return r\realState($a->state, $a->country);
+      case 'mainA': return r\acct($a->id);
       case 'agentA': return r\acct($a->agentId);
       case 'proSe': return ($a->id == $a->agentId);
       case 'qid': return $a->qo->qid;
