@@ -178,6 +178,7 @@ function makeTestAccounts($print = FALSE) {
   
   db\del('txs', 'uid1 IN (:testUids) OR uid2 IN (:testUids)', compact('testUids'));
   db\del('txs2', 'payee IN (:testUids)', compact('testUids'));
+  db\del('tx_requests', 'payee IN (:testUids)', compact('testUids'));
   db\q('UPDATE users SET balance=9999 WHERE uid IN (:testUids)', compact('testUids'));
   
   if ($channel == TX_WEB) w\say(t('Done!'));

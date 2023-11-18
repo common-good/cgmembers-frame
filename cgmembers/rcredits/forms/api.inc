@@ -129,7 +129,8 @@ function myQr($a) {
  *   agent: the name of the person acting on behalf of a company (empty for an individual account)
  *   location: the account’s city, state
  *   limit: the maximum amount this account can be charged at this time
- *   selling: the device owner's list of transaction descriptions
+ *   selling: the account's list of transaction descriptions
+ *   isell: the device owner's list of transaction descriptions
  */
 function identity($params) {
   global $mya;
@@ -149,9 +150,10 @@ function identity($params) {
   $avgBalance = round($avgs[0], 2);
   $trustRatio = round($a->trust / (db\avg('trust', 'users', ':IS_OK AND NOT :IS_CO') ?: 1), 2);
   $since = (int) $a->activated;
-  $selling = explode("\n", $mya->selling);
+  $selling = explode("\n", $a->selling);
+  $isell = explode("\n", $mya->selling);
 
-  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling')));
+  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling isell')));
 }
 
 /**
@@ -176,9 +178,10 @@ function idPhoto($params) {
  * Return very short information about latest information of interest to the app.
  * @param int $lastTx: Unixtime of last tx initiated by the device
  * @return {version, txCount, msg}
+ * DELETE this function after 1/1/2024
  */
 function latest($params) {
-  $version = APP_VERSION;
+  $version = 40201;
   $txCount = 0;
   $msg = NULL; // a way to communicate with app user(s)
   return exitJson(compact(ray('version txCount msg')));
@@ -226,7 +229,7 @@ function transactions($params) {
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
-  $flds = 'version deviceId actorId otherId amount description created offline';
+  $flds = 'version deviceId actorId otherId amount description created offline'; // proof is proof enough (no cardCode needed)
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
   extract(just('pending proof tip', $params, NULL)); // maybe require pending param later (requires change to most tests)
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
@@ -234,23 +237,26 @@ function transactions($params) {
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
-    return $offline ? badTx($a, $params, $err) : postErr($err); // proof is proof enough (no cardCode needed)
+    return $offline ? badTx($a, $params, $err) : postErr($err);
   }
   $cardCode = $a->cardCode();
   if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
   if (!is_numeric($created) or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
   if ($created < now() - 90 * DAY_SECS) return badTx($a, $params, t('transaction date too far in the past'));
 
-  foreach (['', 'Undo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
-    $proofAmt = number_format($uq ? -$amount : $amount, 2, '.', '');
-    $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $cardCode . $created); // cardCode is not a parameter, but it is hashed into the proof
+  $anyProof = FALSE;
+  foreach (['', 'Undo', 'Pay', 'PayUndo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
+    $proofAmt = number_format(in($uq, 'Undo PayUndo') ? -$amount : $amount, 2, '.', '');
+    $proofCode = u\starts($uq, 'Pay') ? '' : $cardCode;
+    $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $proofCode . $created); // cardCode is not a parameter, but it is hashed into the proof
     ${"proofOk$uq"} = ($proof == $proofWanted);
+    $anyProof |= ${"proofOk$uq"};
 ///    debug(compact(ray('proofAmt proofWanted gotProof proof ' . "testProofWanted$uq proofOk$uq")));
   }
 
-  if (!$proofOk and !$proofOkUndo) { // bad proof
-    r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
-    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $gotProof");
+  if (!$anyProof) { // bad proof
+    r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo testProofWantedPay testProofWantedPayUndo actorId amount otherId cardCode created offline')));
+    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo or $testProofWantedPay or $testProofWantedPayUndo, got: $gotProof");
     return exitJust(t('bad proof'), X_SYNTAX);
   }
   
@@ -300,7 +306,7 @@ function transactions($params) {
 
 /**
  * POST /info (CQP, count)
- *   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
+ *   -> {balance, surtxs, txs: [{pending, extra, xid, amount, accountId, name, description, created}, …]}
  *
  * Retrieve recent transactions and related data from the server.
  *
@@ -318,16 +324,27 @@ function info($params) {
   $surtxs += compact(ray('crumbs roundup'));
 
   $myUids = $mya->uids;
+
+  $toMe = 'payee IN (:myUids)';
+  $fromMe = 'payer IN (:myUids)';
+  $flds = "1 AS pending, 0 AS extra, 0 AS xid, IF($toMe, amount, -amount) AS amount, IF($toMe, payer, payee) AS other, IF($toMe, payee, payer) AS agent, purpose AS description, created";
+  $invs = db\rows($flds, 'tx_requests', "($toMe OR $fromMe) AND status=:TX_PENDING ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+
   $toMe = 'uid2 IN (:myUids)';
   $fromMe = 'uid1 IN (:myUids)';
-  $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
-  $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+  $flds = "0 AS pending, aux.extra, xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
+  $table = "txs LEFT JOIN (SELECT xid, SUM(IF($toMe, amt, -amt)) AS extra FROM txs WHERE ($toMe OR $fromMe) AND type<>:E_PRIME) aux USING(xid)";
+  $txs0 = db\rows($flds, $table, "($toMe OR $fromMe) AND type=:E_PRIME ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+  
+  $txs = array_merge($invs, $txs0);
 
   foreach ($txs as $i => $tx) {
     extract((array) $tx);
-    $a = r\acct($tx->other, $tx->agent);
+    $a = r\acct($other, $agent);
     $accountId = qr\url($a, 'main');
     $name = $a->fullName;
+    $pending = (bool) +$pending;
+// SAVE THIS CODE for when tx details are requested
 //    $agent = $a->proSe ? '' : $a->agentA->fullName;
 //    $location = $a->location();
 //    $photo = $a->hasPhoto ? $a->photo : file_get_contents($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
@@ -335,7 +352,7 @@ function info($params) {
 //    $avatar = ''; // dies    $avatar = base64_encode(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36)); // always 36 high (best if height is a multiple of 12)
 //    $since = $a->created;
 //    $txs[$i] = (array) $txs[$i];
-    $txs[$i] = compact(ray('xid, amount, accountId, name, description, created'));
+    $txs[$i] = compact(ray('pending, extra, xid, amount, accountId, name, description, created'));
   }
   
   return exitJson(compact(ray('balance surtxs txs')), X_OK);
