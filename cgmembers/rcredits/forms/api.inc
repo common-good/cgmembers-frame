@@ -178,9 +178,10 @@ function idPhoto($params) {
  * Return very short information about latest information of interest to the app.
  * @param int $lastTx: Unixtime of last tx initiated by the device
  * @return {version, txCount, msg}
+ * DELETE this function after 1/1/2024
  */
 function latest($params) {
-  $version = APP_VERSION;
+  $version = 40201;
   $txCount = 0;
   $msg = NULL; // a way to communicate with app user(s)
   return exitJson(compact(ray('version txCount msg')));

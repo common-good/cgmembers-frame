@@ -29,8 +29,8 @@ Scenario: The app asks to identify a customer
   | deviceId | actorId | otherId    |*
   | devC     | K6VMDCC | K6VMDCBccB |
   Then we reply "got" with JSON:
-  | name    | agent | location | limit | creditLine | avgBalance | trustRatio | since    | selling |*
-  | Bea Two |       | Bton, MA |     0 |          0 |          0 |          0 | %now0-2w | [stuff] |
+  | name    | agent | location | limit | creditLine | avgBalance | trustRatio | since    | selling | isell   |*
+  | Bea Two |       | Bton, MA |     0 |          0 |          0 |          0 | %now0-2w | []      | [stuff] |
   
 Scenario: The app asks to identify a customer without an identifier  
   When app posts "identity" with:
