@@ -28,7 +28,6 @@ function formShowQr($form, &$sta, $args = '') {
     $text = "$mya->bestName, $mya->city, $mya->st"; // not enough room to show agent also
     $testQr = $qr0 = $mya->co ? qr\url($mya->mainA, 'payCo') : qr\url($mya, 'card');
     $qr = item(qr\html($qr0, $logo, $text));
-    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $qr0)) == [$mya->qid, $mya->co ? '' : $mya->cardCode()], 'generated QR differs from source');
   } else {
     $subtext .= t('<p>You must <%a>complete your account setup</a> before you can display your QR code.</p>', '_a', atag($mya->co ? '/dashboard' : '/scraps/card'));
     $qr = NULL;

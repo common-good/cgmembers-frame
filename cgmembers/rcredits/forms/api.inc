@@ -129,7 +129,8 @@ function myQr($a) {
  *   agent: the name of the person acting on behalf of a company (empty for an individual account)
  *   location: the account’s city, state
  *   limit: the maximum amount this account can be charged at this time
- *   selling: the device owner's list of transaction descriptions
+ *   selling: the account's list of transaction descriptions
+ *   isell: the device owner's list of transaction descriptions
  */
 function identity($params) {
   global $mya;
@@ -149,9 +150,10 @@ function identity($params) {
   $avgBalance = round($avgs[0], 2);
   $trustRatio = round($a->trust / (db\avg('trust', 'users', ':IS_OK AND NOT :IS_CO') ?: 1), 2);
   $since = (int) $a->activated;
-  $selling = explode("\n", $mya->selling);
+  $selling = explode("\n", $a->selling);
+  $isell = explode("\n", $mya->selling);
 
-  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling')));
+  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling isell')));
 }
 
 /**
