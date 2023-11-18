@@ -305,7 +305,7 @@ function transactions($params) {
 
 /**
  * POST /info (CQP, count)
- *   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
+ *   -> {balance, surtxs, txs: [{pending, extra, xid, amount, accountId, name, description, created}, …]}
  *
  * Retrieve recent transactions and related data from the server.
  *
@@ -323,16 +323,27 @@ function info($params) {
   $surtxs += compact(ray('crumbs roundup'));
 
   $myUids = $mya->uids;
+
+  $toMe = 'payee IN (:myUids)';
+  $fromMe = 'payer IN (:myUids)';
+  $flds = "1 AS pending, 0 AS extra, 0 AS xid, IF($toMe, amount, -amount) AS amount, IF($toMe, payer, payee) AS other, IF($toMe, payee, payer) AS agent, purpose AS description, created";
+  $invs = db\rows($flds, 'tx_requests', "($toMe OR $fromMe) AND status=:TX_PENDING ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+
   $toMe = 'uid2 IN (:myUids)';
   $fromMe = 'uid1 IN (:myUids)';
-  $flds = "xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
-  $txs = db\rows($flds, 'txs', "($toMe OR $fromMe) ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+  $flds = "0 AS pending, aux.extra, xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
+  $table = "txs LEFT JOIN (SELECT xid, SUM(IF($toMe, amt, -amt)) AS extra FROM txs WHERE ($toMe OR $fromMe) AND type<>:E_PRIME) aux USING(xid)";
+  $txs0 = db\rows($flds, $table, "($toMe OR $fromMe) AND type=:E_PRIME ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
+  
+  $txs = array_merge($invs, $txs0);
 
   foreach ($txs as $i => $tx) {
     extract((array) $tx);
-    $a = r\acct($tx->other, $tx->agent);
+    $a = r\acct($other, $agent);
     $accountId = qr\url($a, 'main');
     $name = $a->fullName;
+    $pending = (bool) +$pending;
+// SAVE THIS CODE for when tx details are requested
 //    $agent = $a->proSe ? '' : $a->agentA->fullName;
 //    $location = $a->location();
 //    $photo = $a->hasPhoto ? $a->photo : file_get_contents($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
@@ -340,7 +351,7 @@ function info($params) {
 //    $avatar = ''; // dies    $avatar = base64_encode(u\alterImg(imagecreatefromstring($photo), $a->co ? 48 : 27, 36)); // always 36 high (best if height is a multiple of 12)
 //    $since = $a->created;
 //    $txs[$i] = (array) $txs[$i];
-    $txs[$i] = compact(ray('xid, amount, accountId, name, description, created'));
+    $txs[$i] = compact(ray('pending, extra, xid, amount, accountId, name, description, created'));
   }
   
   return exitJson(compact(ray('balance surtxs txs')), X_OK);
