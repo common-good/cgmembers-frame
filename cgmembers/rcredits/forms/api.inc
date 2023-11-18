@@ -228,7 +228,7 @@ function transactions($params) {
   global $mya, $boxId, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
-  $flds = 'version deviceId actorId otherId amount description created offline';
+  $flds = 'version deviceId actorId otherId amount description created offline'; // proof is proof enough (no cardCode needed)
   foreach (ray($flds) as $k) if (!$$k = nni($params, $k)) return exitJust(t('missing parameter "%k"', compact('k')), X_SYNTAX);
   extract(just('pending proof tip', $params, NULL)); // maybe require pending param later (requires change to most tests)
   if (substr($description, -1, 1) == '!') $allowDupTxs = TRUE; // avoid preventing reruns of tests
@@ -236,23 +236,26 @@ function transactions($params) {
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
   if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
-    return $offline ? badTx($a, $params, $err) : postErr($err); // proof is proof enough (no cardCode needed)
+    return $offline ? badTx($a, $params, $err) : postErr($err);
   }
   $cardCode = $a->cardCode();
   if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
   if (!is_numeric($created) or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
   if ($created < now() - 90 * DAY_SECS) return badTx($a, $params, t('transaction date too far in the past'));
 
-  foreach (['', 'Undo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
-    $proofAmt = number_format($uq ? -$amount : $amount, 2, '.', '');
-    $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $cardCode . $created); // cardCode is not a parameter, but it is hashed into the proof
+  $anyProof = FALSE;
+  foreach (['', 'Undo', 'Pay', 'PayUndo'] as $uq) { // for the tx and its Undo (proof of Undo tx matches the original transaction's proof)
+    $proofAmt = number_format(in($uq, 'Undo PayUndo') ? -$amount : $amount, 2, '.', '');
+    $proofCode = u\starts($uq, 'Pay') ? '' : $cardCode;
+    $proofWanted = u\hash(${"testProofWanted$uq"} = $actorId . $proofAmt . $otherId . $proofCode . $created); // cardCode is not a parameter, but it is hashed into the proof
     ${"proofOk$uq"} = ($proof == $proofWanted);
+    $anyProof |= ${"proofOk$uq"};
 ///    debug(compact(ray('proofAmt proofWanted gotProof proof ' . "testProofWanted$uq proofOk$uq")));
   }
 
-  if (!$proofOk and !$proofOkUndo) { // bad proof
-    r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo actorId amount otherId cardCode created offline')));
-    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo, got: $gotProof");
+  if (!$anyProof) { // bad proof
+    r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo testProofWantedPay testProofWantedPayUndo actorId amount otherId cardCode created offline')));
+    if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo or $testProofWantedPay or $testProofWantedPayUndo, got: $gotProof");
     return exitJust(t('bad proof'), X_SYNTAX);
   }
   
