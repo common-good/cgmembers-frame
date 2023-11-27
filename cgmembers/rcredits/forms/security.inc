@@ -20,15 +20,17 @@ function formSecurity($form, &$sta, $arg = '') {
   . ' ' . btn("$base_url/settings/photo", t('photo'));
   
   $title = t('Security Information');
+  
+  $mfa = boolFld(t('Multifactor:'), t('Use multi-factor authentication?'), $mya->canMfa);
   $change = item($btns, t('Change:'));
   
   $disAdmin = ($mya->admin and !$mya->proSe) ? disabled() : [];
   $questionDesc = t('Type a question no one but you could guess the answer to.');
-  $question = $mya->co ? NULL : textFld(t('Question:'), [t('Choose a security question'), $questionDesc], required($mya->question) + $disAdmin);
-  $answer = $mya->co ? NULL : textFld(t('Answer:'), [t('The answer to that question')], required($mya->answer) + $disAdmin);
+  $question = $mya->co ? NULL : textFld(REQ . t('Question:'), [t('Choose a security question'), $questionDesc], dft($mya->question) + $disAdmin);
+  $answer = $mya->co ? NULL : textFld(REQ . t('Answer:'), [t('The answer to that question')], dft($mya->answer) + $disAdmin);
 
   $submit = submit();
-  $form = compact(ray('title change question answer submit'));
+  $form = compact(ray('title mfa change question answer submit'));
 
   return cgform($form);
 }
@@ -40,13 +42,11 @@ function formSecurity_validate($form, &$sta) {
 
 function formSecurity_submit($form, &$sta) {
   global $mya;
-  $info = just('question answer', $sta['input']);
+  $info = just('mfa question answer', $sta['input']);
 
-  foreach ($info as $k => $v) if ($v == R_ON_FILE or $v == nni($form[$k], '#default_value')) unset($info[$k]); // don't change if on file or unchanged
+  foreach (just('question answer', $info) as $k => $v) if ($v == R_ON_FILE or $v == nni($form[$k], '#default_value')) unset($info[$k]); // don't change if on file or unchanged
 
-  if (!empty($info)) {
-    if (!$mya->update($info)) return say('info not saved', 'ERR');
-  }
+  $mya->update($info);
 
   say('info saved');
 }

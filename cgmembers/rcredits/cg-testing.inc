@@ -171,7 +171,7 @@ X
  */
 function fixIdFld($v) {
   if (strhas($v, '@')) return r\acct(t\fixEmail($v))->id; // sometimes an email identifies an account ($$k not $v)
-  if (preg_match('/^!?(\.|[A-Z]{3})[A-Z]{3}$/', nn($v)) or in($v, SPECIAL_IDS)) return t\uid($v);
+  if (preg_match('/^!?\.[A-Z]{3}$/', nn($v)) or in($v, SPECIAL_IDS)) return t\uid($v);
   return $v;
 }
 
@@ -1424,6 +1424,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   
   fixTestVars($page);
   $values = nni($values, 0, []);
+  fixTestVars($values);
   global $testOp; $testOp = nni($values, 'op');
 
   global $formSta, $lastGo;
@@ -2181,9 +2182,10 @@ function getExitMsg(&$status = NULL) {
 }
 
 function fixTestVars(&$parm) {
-  global $testVars; 
+  global $testVars, $nextCode; 
+  $testVars['nextCode'] = $nextCode;
   if (is_array($parm)) foreach ($parm as $k => $v) fixTestVars($parm[$k]);
-  foreach (nn($testVars, []) as $k => $v) if (!is_array($v)) $parm = str_replace("%$k", $v, $parm);
+  foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace("%$k", $v, $parm);
 }
 
 function itsLater() {return timeIs(now() + 1);}

@@ -272,6 +272,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invoice Setup
  *     MAKE joint Setup
  *     MAKE message Setup
+ *     MAKE mfa Setup
  *     MAKE nosignin Setup
  *     MAKE pale Setup
  *     MAKE partnersignup Setup
@@ -421,6 +422,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
  *     TEST message AMemberSendsAMessageToAnotherMember
+ *     TEST mfa AMemberTypesTheWrongNonce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -528,6 +530,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST invite AMemberInvites
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
+ *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -631,6 +634,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST mfa AMemberVisitsTheMemberSite
+ *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -912,6 +917,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE mfa AMemberVisitsTheMemberSite
  *     MAKE nosignin AMemberDonatesFromAnEmailLink
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -969,6 +975,9 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE cgpay Setup
+ *     MAKE mfa Setup
+ *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ *     TEST mfa AMemberTypesTheWrongNonce
  *     MAKE partnersignup Setup
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -1257,6 +1266,7 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
+ *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -1265,6 +1275,8 @@ function membersHave($list) {return t\membersHave($list);}
 function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $lastGo;
+
+  t\fixTestVars($page);
   $far = 'goto=' . urlencode($page);
   $lastGo = preg_replace('/&tm=[0-9]+/', '', $lastGo); // ignore time, when redirecting to promo site
   $res = (strhas($lastGo, $far) or in($lastGo, "$page /$page $far"));
@@ -1367,7 +1379,8 @@ function aMemberPostsToWithValues($page, $values) {return memberConfirmsFormWith
 /**
  * member (ARG) is logged in
  *
- * in: TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
+ * in: TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signup AMemberSignsUp
@@ -1377,7 +1390,9 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
 /**
  * next random code is (ARG)
  *
- * in: MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ * in: MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ *     MAKE mfa AMemberTypesTheWrongNonce
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE signin AMemberAsksForANewPasswordForUsername
  *     MAKE signin AMemberAsksForANewPasswordForAccountID
  *     MAKE signin AMemberAsksForANewPasswordForEmail
@@ -2434,6 +2449,8 @@ function weFirstThen($first, $then) {
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
+ *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ *     MAKE mfa AMemberTypesTheWrongNonce
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2511,11 +2528,16 @@ function returnURL($url) {
  *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
+ *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ *     MAKE mfa AMemberTypesTheWrongNonce
  *     MAKE nosignin AMemberDonatesFromAnEmailLink
  */
 function varEncrypts($var, $ray) {
   global $testOnly, $testVars;
-  $want = u\cryRay($ray[0]);
+  $ray = $ray[0];
+  t\fixData($ray);
+  t\fixTestVars($ray);
+  $want = u\cryRay($ray);
   return $testOnly ? t\eq(t('test Var'), nni($testVars, $var)) : ($testVars[$var] = $want);
 }
 
@@ -2592,4 +2614,14 @@ function memberIsSignedOut() {
   global $testOnly, $mya;
   if (!$testOnly) w\signout(TRUE);
   return !$mya;
+}
+
+/**
+ * member (ARG) completes (ARG) with values: (ARG)
+ *
+ * in: 
+ */
+function memberCompletesWithValues($arg1, $arg2) {
+  global $testOnly;
+  todo;
 }

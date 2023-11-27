@@ -19,7 +19,7 @@ $flagHelp = array(
   'depends' => t('Account is a dependent account (individual or business). Can\'t change settings. FederalId is sponsor\'s.'),
   'bankOk' => t('The member\'s connected bank account has been verified.'),
   'contactable' => t('It\'s okay for members to contact this member about their calling.'),
-// u13
+  'mfa' => t('Use multi-factor authentication.'),
 // u14
   'partner' => t('The account is a signup partner.'),
   'paper' => t('Will not accept electronic statements.'),

@@ -19,5 +19,5 @@ Scenario: Ajax suggestWho
   | uid     | nm                                      |*
   | .ZZB    | Bea Two @ Bton, ME                      |
   | .AAB    | Common Good @ Ashfield, MA              |
-  | !NEWAAA | Common Good Western Mass @ Ashfield, MA |
+  | !.AAA   | Common Good Western Mass @ Ashfield, MA |
   | .ZZC    | Cor Pub @ Cton, CA                      |
