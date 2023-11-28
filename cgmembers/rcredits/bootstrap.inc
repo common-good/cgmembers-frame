@@ -1382,6 +1382,7 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 function fullQid($q) {
   global $channel;
   if (is_numeric($q) or !$q) return $q;
+  if (substr($q, 0, 2) == '!.') return '!' . fullQid(substr($q, 1));
   if ($q == 'cgf') $q = '.AAB';
   if (strlen($q) == 1) $q = '.ZZ' . $q;
   if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;

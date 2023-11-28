@@ -35,6 +35,8 @@ Scenario: A non-member applies for fiscal sponsorship
   | Employees     |
   | Checks In     |
   | Checks Out    |
+  | Oversight     |
+  | Justice       |
   | Comments      |
   | Submit        |
 
@@ -54,12 +56,17 @@ Scenario: A non-member applies for fiscal sponsorship
   | employees  | 9 |
   | checksIn   | 30 |
   | checksOut  | 40 |
+  | oversight  | people |
+  | justice    | everyone is welcome |
   | comments   | cool! |
   Then we say "status": "got application|meanwhile join"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
   | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
+  # etc
+  | oversight  | people |
+  | justice    | everyone is welcome |
   # etc
   And members:
   | uid        | .AAA |**
@@ -100,6 +107,8 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | Employees     |
   | Checks In     |
   | Checks Out    |
+  | Oversight     |
+  | Justice       |
   | Comments      |
   | Submit        |
 
@@ -119,12 +128,17 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | employees  | 9 |
   | checksIn   | 30 |
   | checksOut  | 40 |
+  | oversight  | people |
+  | justice    | everyone is welcome |
   | comments   | cool! |
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
   | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
+  # etc
+  | oversight  | people |
+  | justice    | everyone is welcome |
   # etc
   And members:
   | uid        | .AAA |**
@@ -170,6 +184,8 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | Employees     | 9 |
   | Checks In     | |
   | Checks Out    | |
+  | Oversight     | |
+  | Justice       | |
   | Comments      | |
   | Submit        | |
   And without:
@@ -188,12 +204,17 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | employees  | 9 |
   | checksIn   | 30 |
   | checksOut  | 40 |
+  | oversight  | people |
+  | justice    | everyone is welcome |
   | comments   | cool! |
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Bea Two |**
   | fullName   | Cor Pub |
   | to         | partnerships@%CG_DOMAIN |
+  # etc
+  | oversight  | people |
+  | justice    | everyone is welcome |
   # etc
   And members:
   | uid        | .AAA |**
@@ -247,6 +268,8 @@ Scenario: A fiscally sponsored applicant updates its settings
   | Employees       | 9         |
   | Checks In       | 30        |
   | Checks Out      | 40        |
+  | Oversight       |           |
+  | Justice         |           |
   | Update          |           |
   And without:
   | Your Name     |

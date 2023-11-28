@@ -30,6 +30,8 @@ function formSponsor($form, &$sta, $args = '') {
   $employees = intFld(REQ . t('Employees:'), [t('Employee count'), t('How many employees does the organization have?')], dft($isCo ? $mya->employees : ''));
   $checksIn = intFld(REQ . t('Checks In:'), [t('Monthly incoming checks'), t('Number of donation checks (not the dollar amount) you expect to receive in a typical month.')], dft($isCo ? $mya->checksIn : ''));
   $checksOut = intFld(REQ . t('Checks Out:'), [t('Number of outgoing checks'), t('Number of payments (not the dollar amount) you expect to make in a typical month.')], dft($isCo ? $mya->checksOut : ''));
+  $oversight = textFld(REQ . t('Oversight:'), [t('Oversight'), t('What sort of oversight and accountability do you have?')]);
+  $justice = textFld(REQ . t('Justice:'), [t('Social justice practices'), t('What are your social justice policies or practices?')]);
   $helper = hidFld(UID_SUPER);
   
   $comments = areaFld(t('Comments:'), [t('(optional)')]);
@@ -53,7 +55,7 @@ function formSponsor($form, &$sta, $args = '') {
 
   $submit = ($mya and $mya->sponsored) ? t('Update') : t('Submit');
   
-  return cgform(compact(ray('title subtext contact fullName phone email country zip federalId coType source mission activities gross employees checksIn checksOut comments submit')));
+  return cgform(compact(ray('title subtext contact fullName phone email country zip federalId coType source mission activities gross employees checksIn checksOut oversight justice comments submit')));
 }
 
 function formSponsor_validate($form, &$sta) {
@@ -78,7 +80,7 @@ function formSponsor_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   $dbFlds = 'contact fullName legalName federalId coType coFlags email flags phone zip country notes source city state latitude longitude mission activities gross employees checksIn checksOut helper';
-  extract(just('comments source2 ' . $dbFlds, $sta['input'], NULL));
+  extract(just('comments source2 oversight justice ' . $dbFlds, $sta['input'], NULL));
   
   if ($comments or $federalId) {
     if ($federalId) $comments = "EIN: $federalId. $comments";
@@ -105,7 +107,7 @@ function formSponsor_submit($form, &$sta) {
   $federalId = CGF_EIN;
   $coFlags = u\bit(CO_SPONSORED);
   if ($coType != CO_NONPROFIT) $coFlags |= u\bit(CO_FLIP); // make sure it gets a donate button on our promo site (not a buy credit button)
-  $subs = compact(ray($dbFlds)) + ($mya ? [] : ['NEW ORG!' => 1]);
+  $subs = compact(ray("$dbFlds oversight justice")) + ($mya ? [] : ['NEW ORG!' => 1]);
   $subs['to'] = 'partnerships@' . CG_DOMAIN;
   $subs['state'] = r\realState($state);
   $subs['coType'] = ray(CO_TYPES)[$coType];

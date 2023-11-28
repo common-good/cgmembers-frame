@@ -32,6 +32,6 @@ Scenario: A non-member expresses interest
   | fullName | phone        | email | zip   | source | amount | comments |*
   | Dee Four | 413-628-0004 | d@    | 01004 | news   | 123.45 | good!    |
   Then members:
-  | uid    | fullName | name    | flags           | phone       | email | zip   | source | iintent | notes               |*
-  | NEWAAA | Dee Four | deefour | nonudge, iclubq | 14136280004 | d@    | 01004 | news   | 123.45  | %dmy  self: good!\n |
+  | uid  | fullName | name    | flags           | phone       | email | zip   | source | iintent | notes               |*
+  | .AAA | Dee Four | deefour | nonudge, iclubq | 14136280004 | d@    | 01004 | news   | 123.45  | %dmy  self: good!\n |
   

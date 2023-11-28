@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61s'; // software version
+const R_VERSION = '3.61t'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -519,7 +519,7 @@ const B_NONUDGE = 9; // don't send reminders
 const B_NOSEARCH = 10; // user wants to be not findable by other members, by phone or email
 const B_DEPENDS = 11; // dependent account (can't change settings, federalId is sponsor's)
 const B_BANKOK = 12; // connected bank account has been verified
-const B_u13 = 13; // 
+const B_MFA = 13; // use multi-factor authentication
 const B_u14 = 14; // 
 const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
 const B_PARTNER = 16; // is a signup partner
@@ -539,8 +539,8 @@ const B_INFLUENCER = 29; // is a disqualified person (has significant influence 
 const B_ADMIN = 30; // is an administrator (has a record in the admins table)
 
 const B_MAX = 62; // maximum bit number
-const B_ADMINABLE = 'member confirmed carded nonudge partner iclubq influencer cgc invites rewardy noneg'; // for admin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
+const B_ADMINABLE = 'member confirmed carded nonudge mfa partner iclubq influencer cgc invites rewardy noneg'; // for admin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk mfa u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags
@@ -770,6 +770,7 @@ $GLOBALS['emailSubjects'] = array(
   'message' => t('%topic'),
   'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'renew-backing' => t('your %PROJECT backing is ready to renew'),
+  'confirm-signin' => t('Your One-time Passcode'),
   'confirm-post' => t('Confirm your post to Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),

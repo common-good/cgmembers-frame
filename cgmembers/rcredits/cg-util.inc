@@ -1023,7 +1023,7 @@ function putDown($line) {csv($line, '');}
  */
 function randomString($len = 16, $choices = '') {
   global $nextCode;
-  if (test() and nn($nextCode) and in($choices, ' lower upper word')) return $nextCode;
+  if (test() and nn($nextCode) and in($choices, ' lower upper digits word')) return $nextCode;
 
   $lower = 'abcdefghijklmnopqrstuvwxyz';
   $upper = strtoupper($lower);

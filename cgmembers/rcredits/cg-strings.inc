@@ -311,6 +311,7 @@ EOF
   // error messages
   'no deactivate' => t('You cannot de-activate an account with a non-zero balance.'),
   'bad login' => t('We couldn\'t find an account with that information. Please try again or <%a>ask for a new password</a>.'),
+  'bad nonce' => t('That code is incorrect.'),
   'search forbidden' => t('You need to be signed in to refer to a member account.'),
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
   'no paypal cancel' => t('We apologize. this form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
