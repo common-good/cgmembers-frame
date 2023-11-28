@@ -212,6 +212,7 @@ class Acct {
       case 'lastTx': return $a->lastTx();
       case 'achName': return str_replace('_', ' ', ($a->sponsored and !$a->ourOwn) ? $a->fullName : $a->legalName); // for ACHs, including u\parseName of names like Jay di_Fiori
       // NOTE: when money comes into a sponsored account, the account belongs to CG (legalName). When money goes out, the account belongs to the sponsored entity (fullName).
+      case 'trustCook': return "trust-$a->mainQid"; // cookie name of device trust
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
       case 'hasFid': return $a->hasVSecure('federalId');

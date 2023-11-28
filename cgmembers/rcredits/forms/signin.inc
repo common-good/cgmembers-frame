@@ -38,10 +38,9 @@ function formSignin($form, &$sta, $arg = '') {
   $pw2 = hidFld(nn($pw2) ?: ''); // extra password for admins
   $vKeyE = hidFld(nn($vKeyE) ?: ''); // extra password for admins
   
-  $trust = boxFld('trust', NBSP, t('Trust this device'), nni($_COOKIE, 'trust'));
   $then = hidFld($then);
   $submit = t('Sign in');
-  $form = compact(ray('title qid pass pw2 vKeyE trust submit subtext then'));
+  $form = compact(ray('title qid pass pw2 vKeyE submit subtext then'));
 
   $form['external_input'] = hidFld(serialize(nni($sta, 'input'))); // pass this to rweb_user_login
 
@@ -57,7 +56,7 @@ function formSignin($form, &$sta, $arg = '') {
  * @param string $type: 'acct', 'pw', or 'both' -- what parameters to check
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
-  extract(just('qid pass pw2 vKeyE trust mfa gotNonce then', $sta['input'], NULL));
+  extract(just('qid pass pw2 vKeyE mfa gotNonce trust then', $sta['input'], NULL)); // mfa/gotNonce/trust are from mfa()
 
   if ($mfa) { // second page of signin (MFA)
     if (!$ray = u\decryRay($mfa)) return err(t('There was a problem with that page request.'));
@@ -68,7 +67,10 @@ function formSignin_validate($form, &$sta, $type = 'both') {
       $sta['retry'] = $retry + 1;
       return err('bad nonce', 'gotNonce');
     }
-    $a = r\acct($uid); // for super signin below
+    $a = r\acct($uid);
+    r\setCook($a->trustCook, $trust ? 1 : 0);
+    $sta['input']['uid'] = $uid;
+    
   } else { // first page of signin
     if ($qid == 'admin' or (isDEV and $qid == 'root')) $qid = 'AAAAAA'; // root is so password managers can handle phpMyAdmin (user root) AND this
     if (isDEV and $qid == 'admin' and !r\acct(1)) {
@@ -82,10 +84,9 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
     w\updateFlood($sta, $success, $err); // should be before pw2 and vKeyE checks
     if (!$success) return say($err, 'qid');
-    if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor
+    $sta['input']['uid'] = $uid;
+    if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
-
-  $sta['input']['uid'] = $uid; // must be after if($mfa)
 
   if ($a->id == UID_SUPER) { // almost never used except for development/testing. phase out?
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
@@ -102,7 +103,6 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   
   if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
     r\setCryptCook('qid', $a->mainQid, NULL);
-    r\setCook('trust', $a->admin ? 0 : ($trust ? 1 : 0));
   }
   
   return TRUE; // TRUE is used by formBuy()
@@ -113,7 +113,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
-  extract(just('then uid mfa', $sta['input'], NULL));
+  extract(just('then uid', $sta['input'], NULL));
 
   $mya = r\setAcct($uid, $sta);
   $agt = strtolower($mya->qid);
@@ -131,15 +131,20 @@ function mfa($mfa, $then) {
   $title = t('Confirm');
   $subtext = t('To be sure it is really you signing in, we sent you a confirmation code by email. Copy it into the box below.') . '<br>&nbsp;';
   $gotNonce = intFld(REQ . t('Passcode:'));
+  $trust = boxFld('trust', NBSP, t('Trust this device'), 0); // if we get here, trust is off, so default to No
+
   $submit = submit(t('Submit'));
 
   $mfa = hidFld($mfa);
   $then = hidFld($then);
   
-  return cgform(compact(ray('title subtext gotNonce submit mfa then')));
+  return cgform(compact(ray('title subtext gotNonce trust submit mfa then')));
 }
 
 function preMFA($uid, $then) {
+  $a = r\acct($uid);
+  if (r\cook($a->trustCook)) return; // this device is trusted for this account, so don't do MFA
+
   $nonce = u\randomString(8, 'digits') . ''; // tests get confused unless this is a string
   r\rMail('confirm-signin', $uid, compact('nonce'));
   $uid = $uid . ''; // tests get confused unless this is a string

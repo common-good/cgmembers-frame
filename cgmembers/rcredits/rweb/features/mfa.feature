@@ -27,11 +27,12 @@ Scenario: A member signs in with account ID on the member site with MFA
   Then we redirect to "signin/mfa=%mfa"
   And we show "Confirm" with:
   | Passcode |
+  | Trust this device |
   And member is logged out
   
   When member "?" completes "signin/mfa=%mfa" with:
-  | uid  | mfa  | then | gotNonce |*
-  | .ZZA | %mfa |      | 987654   |
+  | uid  | mfa  | then | gotNonce | trust |*
+  | .ZZA | %mfa |      | 987654   |       |
   Then member ".ZZA" is logged in
   And we show "You: Abe One"
 
@@ -44,7 +45,7 @@ Scenario: A member types the wrong nonce
   | qid  | pass |*
   | .ZZA | a1   |
   And member "?" completes "signin/mfa=%mfa" with:
-  | uid  | mfa  | then | gotNonce |*
-  | .ZZA | %mfa |      | 999999   |
+  | uid  | mfa  | then | gotNonce | trust |*
+  | .ZZA | %mfa |      | 999999   |       |
   Then member is logged out
   And we say "error": "bad nonce"
