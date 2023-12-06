@@ -327,7 +327,7 @@ function info($params) {
 
   $toMe = 'payee IN (:myUids)';
   $fromMe = 'payer IN (:myUids)';
-  $flds = "1 AS pending, 0 AS extra, 0 AS xid, IF($toMe, amount, -amount) AS amount, IF($toMe, payer, payee) AS other, IF($toMe, payee, payer) AS agent, purpose AS description, created";
+  $flds = "1 AS pending, 0 AS extra, 0 AS xid, IF($toMe, amount, -amount) AS amount, IF($toMe, payer, payee) AS other, IF($toMe, payer, payee) AS agent, purpose AS description, created";
   $invs = db\rows($flds, 'tx_requests', "($toMe OR $fromMe) AND status=:TX_PENDING ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
 
   $toMe = 'uid2 IN (:myUids)';
@@ -344,6 +344,7 @@ function info($params) {
     $accountId = qr\url($a, 'main');
     $name = $a->fullName;
     $pending = (bool) +$pending;
+    $extra = +$extra; // 0 not NULL
 // SAVE THIS CODE for when tx details are requested
 //    $agent = $a->proSe ? '' : $a->agentA->fullName;
 //    $location = $a->location();
