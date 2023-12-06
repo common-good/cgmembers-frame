@@ -53,7 +53,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
-  $cat = $mya->sponsored ? fboCatFld('', 'OUT') : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
+  $cat = ($mya->sponsored and !in($mya->id, r\cgsOwnUids()))? fboCatFld('', 'OUT') : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
