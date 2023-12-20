@@ -31,7 +31,7 @@ function formGet($form, &$sta, $args = '') {
     . t('<p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aSettings', atag('/settings/fund'));
 
   $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
-  foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
+  if ($mya->id != CGID) foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
     $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
     $avail = min($avail, $limit - $sofar);
   }
@@ -57,11 +57,10 @@ function formGet($form, &$sta, $args = '') {
   : t('You have no pending bank transfer requests.');
   $waiting = item($waiting, t('Pending:'));
 
-
-  $avail = hidFld($avail);
   $balance = u\fmtAmt($mya->balance);
   $credit = u\fmtAmt(-$mya->floor);
-  $cashoutable = u\fmtAmt(max(0, min($mya->balance, $avail)));
+  $cashoutable = u\fmtAmt($mya->id == CGID ? $avail : max(0, min($mya->balance, $avail)));
+  $avail = hidFld($avail);
  
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
   $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->admin ? t(' (no limit for admin)') : ''));
@@ -83,7 +82,7 @@ function formGet_validate($form, &$sta) {
 // (this is unnecessary)  if ($amount > R_MAX_DAILY_EXCHANGE) return say('max daily usd', 'amount');
   if (op($sta) == 'get') return;
   
-  if ($amount > ($mya->admin ? round($mya->balance, 2) : $avail)) {
+  if ($amount > ($mya->admin ? max($avail, round($mya->balance, 2)) : $avail)) {
     $max = u\fmtAmt($avail);
     $extra = $mya->cttyRewardy ? '|short cash help' : '';
     return say('short put' . $extra, compact('max'), 'amount');

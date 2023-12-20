@@ -20,20 +20,27 @@ Setup:
   | .ZPF | .ZPA  |   1 | manage     |
   And these "tx_rules":
   | id | action | from | to   | payer | payeeType | amount | portion |*
-  |  1 | surtx  | .ZPA | .ZPC | .ZPA  | anyCo     |      0 |    0.03 |
-  |  2 | surtx  | .ZPA | .ZPC | .ZPA  | anyCo     |      4 |    1.23 |
+  |  1 | surtx  | .ZPA | cgf  | .ZPA  | anyCo     |      0 |    0.25 |
+  |  2 | surtx  | .ZPA | .ZPF | .ZPA  | anyCo     |      4 |       0 |
   And these "txs":
-  | xid | created | amount | uid1 | uid2 | agt2 | purpose |*
-  |   1 | %now-6d |     12 | .ZPA | .ZPC | .ZPB | alpha   |
-  |   2 | %now-5d |     23 | .ZPB | .ZPC | .ZPC | beta    |
-  |   3 | %now-4d |     34 | .ZPC | .ZPF | .ZPF | gamma   |
-  |   4 | %now-3d |     56 | .ZPA | .ZPB | .ZPB | delta   |
-  |   5 | %now-2d |     78 | .ZPF | .ZPA | .ZPA | epsil   |
-  |   6 | %now-1d |     90 | .ZPA | .ZPC | .ZPC | theta   |
+  | eid | xid | created | amount | uid1 | uid2 | agt2 | purpose |*
+  |   1 |   1 | %now-6d |     12 | .ZPA | .ZPC | .ZPB | alpha   |
+  |   2 |   2 | %now-5d |     23 | .ZPB | .ZPC | .ZPC | beta    |
+  |   3 |   3 | %now-4d |     34 | .ZPC | .ZPF | .ZPF | gamma   |
+  |   4 |   4 | %now-3d |     56 | .ZPA | .ZPB | .ZPB | delta   |
+  |   5 |   5 | %now-2d |     78 | .ZPF | .ZPA | .ZPA | epsil   |
+  |   6 |   6 | %now-1d |    900 | .ZPA | .ZPC | .ZPC | theta   |
+  And these "txs":
+  | eid | xid | created | amount | uid1 | uid2 | agt2 | purpose | type   |*
+  |   7 |   6 | %now-1d |      4 | .ZPA | .ZPF | .ZPF | gift    | %E_AUX |
+  |   8 |   6 | %now-1d |    225 | .ZPA | cgf  | cgf  | gift    | %E_AUX |
+  And these "tx_requests":
+  | nvid | created | amount | payer | payee | purpose |*
+  |    1 | %now-7d |     45 |  .ZPB | .ZPA  | lunch   |
   Then balances:
   | uid  | balance |*
-  | .ZPA |     920 |
-  | .ZPC |    3091 |
+  | .ZPA |    -119 |
+  | .ZPC |    3901 |
 
 # GET /info (version, deviceId, actorId, lastTx)
 #   -> {balance, surtxs, txs: [{xid, amount, accountId, name, description, created}, …]}
@@ -41,19 +48,20 @@ Setup:
 Scenario: The app asks for recent transactions
   Given var "surtxs" is JSON:
   | amount | portion | crumbs | roundup |*1
-  |      4 |    1.26 |      0 |    true |
+  |      4 |    0.25 |      0 |    true |
   And var "txs" is JSON:
-  | xid | amount | accountId | name    | description | created |*
-  |   6 |    -90 | K6VMDCC   | Coco Co | theta       | %now-1d |
-  |   5 |     78 | K6VMDCF   | For Co  | epsil       | %now-2d |
-  |   4 |    -56 | K6VMDCB   | Bea Two | delta       | %now-3d |
-#  |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
+  | pending | extra   | xid | amount | accountId | name    | description | created |*
+  |       1 |       0 |   0 |     45 | K6VMDCB   | Bea Two | lunch       | %now-7d |
+  |         | -229.00 |   6 |   -900 | K6VMDCC   | Coco Co | theta       | %now-1d |
+  |         |       0 |   5 |     78 | K6VMDCF   | For Co  | epsil       | %now-2d |
+  |         |       0 |   4 |    -56 | K6VMDCB   | Bea Two | delta       | %now-3d |
+#  |         |       0 |   1 |    -12 | L6VMDCC1  | Coco Co | alpha       | %now-6d |
   When app posts "info" with:
   | version | deviceId | actorId | count  |*
   | 400     | devA     | K6VMDCA | 3      |
   Then we reply "ok" with JSON values:
   | balance | surtxs  | txs  |*1
-  | 920     | %surtxs | %txs |
+  | -119    | %surtxs | %txs |
 
 Scenario: The app asks for recent transactions with a missing parameter
   When app posts "info" with:

@@ -658,6 +658,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST queries AMemberRunsAQueryAboutTransactionTotals
  *     TEST queries AMemberRunsAQueryAboutBusinessIncome
  *     TEST queries AMemberRunsAQueryAboutPositiveAndNegative
+ *     TEST queries AMemberRunsAQueryAboutCompanyVolumeChange
  *     TEST queries AMemberRunsAQueryAboutBalances
  *     TEST queries AMemberRunsAQueryAboutActualDonations
  *     TEST queries AMemberRunsAQueryAboutExpectedMemberDonations
@@ -1816,6 +1817,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE preferences Setup
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE queries Setup
+ *     MAKE queries AMemberRunsAQueryAboutCompanyVolumeChange
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -1987,6 +1989,7 @@ function countIs($what, $count) {return t\count($what, $count);}
  *     MAKE queries AMemberRunsAQueryAboutTransactionTotals
  *     MAKE queries AMemberRunsAQueryAboutBusinessIncome
  *     MAKE queries AMemberRunsAQueryAboutPositiveAndNegative
+ *     MAKE queries AMemberRunsAQueryAboutCompanyVolumeChange
  *     MAKE queries AMemberRunsAQueryAboutBalances
  *     MAKE queries AMemberRunsAQueryAboutActualDonations
  *     MAKE queries AMemberRunsAQueryAboutExpectedMemberDonations

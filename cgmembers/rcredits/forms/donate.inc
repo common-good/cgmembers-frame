@@ -40,7 +40,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $target = $coA->target + 0;
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
 
-  $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months to carry us through an important one-time transition.</p>', 'amt', u\fmtAmt($target)) : '';
+  $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months to support our planned merger with <%a>The Truth Telling Project</a>.</p>', '_a amt', atag('https://thetruthtellingproject.org/'), u\fmtAmt($target)) : '';
   
   if ($isCG and $mya) {
     if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
@@ -57,9 +57,8 @@ function formDonate($form, &$sta, $args = NULL) {
     } else $recurOnly = $noOneTime = '';
 
     $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-    debug(compact(ray('isCG target')));
     
-    $subtext = t('<p>By opening a %PROJECT account, you are partnering with us to create a %PROJECT Economy. Most members choose to make a tax-deductible donation%recurOnly. %replaces %amountTip</p>%special<p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip _special', $recurOnly, nn($replaces), $amountTip, $special) . $noOneTime;
+    $subtext = t('<p>Hello, %name. Thank you for considering partnering with us to create a %PROJECT Economy, by making a tax-deductible donation.</p><p>Most members choose to donate%recurOnly. %replaces %amountTip</p>%special<p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'name recurOnly replaces amountTip _special', $mya->bestName, $recurOnly, nn($replaces), $amountTip, $special) . $noOneTime;
     $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
     jsx('amtChoice');
 
