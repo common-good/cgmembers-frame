@@ -156,6 +156,27 @@ if ($mya and $mya->admin) {
      WHERE h.created>:NOW-2*:YEAR_SECS AND b.version IS NOT NULL
      GROUP BY uid
      ORDER BY isCo DESC, version, fullName",
+     
+  2 . t('Company Volume Change') => // &#8734; and &infin; fail for infinity symbol
+   "SELECT fullName, FORMAT(last,2) AS pastWeek$, cnt, FORMAT(prev,2) AS prev6Avg$, FORMAT(cnt6,0) AS cnt6,
+       IF(change0=:PHP_INT_MAX, '!', CONCAT(IF(last<prev, '', '+'), FORMAT(change0, 0), '%')) AS `change`
+    FROM (
+      SELECT u.uid, u.flags, u.fullName, q0.last, q0.prev, q0.cnt, q0.cnt6,
+        IF(prev>0, 100*(last/prev - 1), :PHP_INT_MAX) AS change0
+      FROM (
+        SELECT uid2 AS uid,
+          SUM(IF(created < :NOW - :WEEK_SECS, 0, amt)) AS last,
+          SUM(IF(created < :NOW - :WEEK_SECS, amt, 0))/6 AS prev,
+          SUM(IF(created < :NOW - :WEEK_SECS, 0, 1)) AS cnt,
+          SUM(IF(created < :NOW - :WEEK_SECS, 1, 0)) AS cnt6
+        FROM txs WHERE created >= :NOW - 7*:WEEK_SECS AND amt>0
+        GROUP BY uid
+      ) q0 JOIN users u USING(uid)
+    ) q1
+    WHERE :IS_CO AND :IS_OK AND uid NOT :CANONIC AND uid>0
+    HAVING cnt6>=6 OR cnt>cnt6/6
+    ORDER BY change0
+    " . t('~Past 7 days income volume compared to the preceding 6 weeks. Companies with meaningless results are omitted.'),
       
   2 . t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 

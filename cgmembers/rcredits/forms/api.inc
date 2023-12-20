@@ -97,7 +97,7 @@ function accounts($params) {
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $cardCode = $a->cardCode();
     $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
-    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
+///    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
     $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP($toCry, 'private')); // prove to customer who they're dealing with when offline
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);

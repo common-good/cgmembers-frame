@@ -36,7 +36,7 @@ Setup:
   |  45 | %today-4m |   1100 | .ZZC  | .ZZA  | usd F   | 1      |
   |  46 | %today-3m |    240 | .ZZA  | .ZZB  | what G  | 0      |
   |  47 | %today-2w |     50 | .ZZB  | .ZZC  | cash P  | 0      |
-  |  48 | %today-1w |    120 | .ZZA  | .ZZC  | this Q  | 1      |
+  |  48 | %today-8d |    120 | .ZZA  | .ZZC  | this Q  | 1      |
   |  49 | %today-6d |    100 | .ZZA  | .ZZB  | cash V  | 0      |
   Then balances:
   | uid  | balance |*
@@ -112,6 +112,15 @@ Scenario: A member runs a query about Positive and Negative
   Then we show "" with:
   | community                | negCount | negativeBalTotal | posCount | positiveBalTotal |
   | Common Good Western Mass | 0        | 0.00             | 4        | 5,945.00         |
+
+Scenario: A member runs a query about Company Volume Change
+  Given these "txs":
+  | xid | created   | amount | payer | payee | purpose | taking |*
+  |  49 | %today-3d |   2.83 | .ZZA  | .ZZC  | special | 0      |
+  When member ".ZZB" runs query "Company Volume Change"
+  Then we show "Past 7 days income volume" with:
+  | fullName   | pastWeek$ | cnt | prev6Avg$ | cnt6 | change |
+  | Corner Pub | 2.83      | 1   | 28.33     | 2    | -90%  |
 
 Scenario: A member runs a query about Balances
   When member ".ZZA" runs query "Company and Member Balances and Credit Lines"
