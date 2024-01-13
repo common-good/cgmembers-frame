@@ -333,7 +333,7 @@ function info($params) {
   $toMe = 'uid2 IN (:myUids)';
   $fromMe = 'uid1 IN (:myUids)';
   $flds = "0 AS pending, aux.extra, xid, IF($toMe, amt, -amt) AS amount, IF($toMe, uid1, uid2) AS other, IF($toMe, agt1, agt2) AS agent, IF($toMe, for2, for1) AS description, created";
-  $table = "txs LEFT JOIN (SELECT xid, SUM(IF($toMe, amt, -amt)) AS extra FROM txs WHERE ($toMe OR $fromMe) AND type<>:E_PRIME) aux USING(xid)";
+  $table = "txs LEFT JOIN (SELECT xid, SUM(IF($toMe, amt, -amt)) AS extra FROM txs WHERE ($toMe OR $fromMe) AND type<>:E_PRIME GROUP BY xid) aux USING(xid)"; // "GROUP BY xid" is required on some systems (eg production but not demo)
   $txs0 = db\rows($flds, $table, "($toMe OR $fromMe) AND type=:E_PRIME ORDER BY created DESC LIMIT $count", compact(ray('myUids count'))); // somehow :count doesn't work in LIMIT
   
   $txs = array_merge($invs, $txs0);
