@@ -33,8 +33,10 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  * Return FALSE (meaning error in returns from callers) unless a color is specified.
  */
 function output($msg, $color = 'error') {
-  global $wholeModule;
-  if (!isPRODUCTION and !nn($wholeModule)) \drupal_set_message(color($msg, $color)); // make sure we don't do this on production
+  global $wholeModule, $channel;
+
+  $debugFunc = $channel == TX_AJAX ? 'flog' : '\\drupal_set_message';
+  if (!isPRODUCTION and !nn($wholeModule)) $debugFunc(color($msg, $color)); // make sure we don't do this on production
   return $color == 'error' ? FALSE : TRUE;
 }
 function err($msg) { return t\output($msg); }

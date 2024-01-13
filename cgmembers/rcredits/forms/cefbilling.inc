@@ -6,6 +6,20 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+/**
+ * Display a list of links to monthly CEF Billing reports.
+ *
+ * Before running one of those reports, update our clickup data starting with the earliest month of interest:
+
+  require_once R_ROOT . '/classes/clickup.class';
+  $cu = new \Clickup();
+  $start = strtotime('1oct2023'); // nobody should be adding or editing any times before that
+  $end = NOW;
+  $cu->updateTimes($start, $end);
+  $cu->updateTasks($start, NOW); // no harm in adding all possible tasks
+  $cu->updateTasks("SELECT '2c0auxt' AS task"); // add parent tasks
+  $cu->updateTasks('SELECT DISTINCT parent AS task FROM cu_tasks WHERE parent IS NOT NULL'); // add parent tasks
+*/
 function formCEFBilling($form, &$sta, $month = '') {
   global $mya;
   $myid = $mya->id;

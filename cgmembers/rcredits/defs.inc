@@ -557,14 +557,14 @@ const B_ADMIN_BITS = 'member:cgc,confirmed:up,co:co,u3:invites,ided:rewardy,refi
 const R_CTTY_BENE = 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+grants+loans+invests+fines+tradeOut'; // benefit (ever) to the community (fines and givebacks are negative)
 
 // Relationship flags
-const B_EMPLOYEE = 0; // is employed by main account
-const B_OWNER = 1; // owns the main account
-const B_CUSTOMER = 2; // is a customer of main account
-const B_AUTOPAY = 3; // preapproves any invoice from main account
-const B_r4 = 4; //  by main account
-const B_r5 = 5; //  by main account
-const B_r6 = 6; //  by main account
-const B_DRAW = 7; // can draw funds from main account (same number as B_DRAWS in the users table)
+const B_EMPLOYEE = 0; // other is employed by main account
+const B_OWNER = 1; // other owns the main account
+const B_CUSTOMER = 2; // other is a customer of main account
+const B_AUTOPAY = 3; // other preapproves any invoice from main account
+const B_r4 = 4; // 
+const B_r5 = 5; // 
+const B_r6 = 6; // 
+const B_DRAW = 7; // other can draw funds from main account (same number as B_DRAWS in the users table)
 const REL_FLAGS = 'employee owner customer autopay r4 r5 r6 draw';
 const REL_FLDS = 'main other otherNum permission code';
 const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city2 state2 zip2 partner partnerCode customer source qid country postalAddr'; // pseudo-fields typically stored in data field

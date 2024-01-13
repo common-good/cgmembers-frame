@@ -56,7 +56,7 @@ function ajax($args = NULL) {
       
     case 'delAux': // delete an auxiliary transaction
       extract(just('id', $data));
-      if (!$id0 = db\get('id', 'tx_entries', 'id=:id AND entryType=:E_AUX', compact('id'))) return ajaxErr(t('That is not an auxiliary transaction.'));
+      if (!$id0 = db\get('id', 'tx_entries', 'id=:id AND entryType IN (:E_AUX, :E_REBATE, :E_XFEE)', compact('id'))) return ajaxErr(t('That is not an auxiliary transaction.'));
       db\del('tx_entries', 'ABS(id)=:id', compact('id'), TRUE);
       return ajaxMsg(t('Done!'));
       
