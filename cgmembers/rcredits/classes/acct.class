@@ -904,21 +904,20 @@ EOF;
   }
   
   /**
-   * Remove all joins and join requests, except with the specified account record ID (if any).
-   * @param acct $except: the joined account record ID for which NOT to delete join requests
+   * Remove all joins and join requests, except with the specified account (if any).
+   * @param acct $but: account record ID for which NOT to delete a join or join requests
    */
-  function unjoinAllBut($except = FALSE) {
+  function unjoinAllBut($but = FALSE) {
     $a = $this;
-    
-    $sql = 'UPDATE u_relations SET permission=:manage WHERE permission=:joint AND main=:id';
-    $subs = ray('manage joint id', r\perm(B_MANAGE), r\perm(B_JOINT), $a->id);
+
+    $sql = 'DELETE FROM u_relations WHERE permission=:joint AND :id IN (main, other)';
+    $subs = ray('joint id', r\perm(B_JOINT), $a->id);
 
     $DBTX = \db_transaction();
-    if ($jid = $a->jid AND $jid != $except) { // unravel a consummated join
+    if ($jid = $a->jid AND $jid != $but) { // unravel a consummated join
       $b = r\acct($jid); // ignore param (actual joined account will be unjoined and any join requests zapped)
       foreach ([$a, $b] as $ai) {
         $ai->update1('jid minimum', 0, max($a->o_minimum, $b->o_minimum));
-        //        $ai->setBit(B_JOINED, FALSE);
       }
 
       $a->redoBal();
@@ -927,13 +926,13 @@ EOF;
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
         $diff = $a->balance - $b->balance;
         if ($xfr = round($diff / 2, 2)) {
-          $z = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
+          $z = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]); // this sometimes generates a warning to staff
           u\EXPECT($z->ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
         }
       }
-    } elseif ($except) {
-      $sql .= ' AND other<>:except';
-      $subs += compact('except');
+    } elseif ($but) {
+      $sql .= ' AND :but NOT IN (main, other)';
+      $subs += compact('but');
     }
     
     db\logSql(compact(ray('sql subs')));
