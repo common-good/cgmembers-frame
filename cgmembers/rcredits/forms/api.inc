@@ -342,7 +342,7 @@ function info($params) {
     extract((array) $tx);
     $a = r\acct($other, $agent);
     $accountId = qr\url($a, 'main');
-    $name = $a->fullName;
+    $name = $a->bestName;
     $pending = (bool) +$pending;
     $extra = +$extra; // 0 not NULL
 // SAVE THIS CODE for when tx details are requested
