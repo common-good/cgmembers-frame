@@ -687,6 +687,7 @@ const TX_API = 9;
 const TX_HACK = 10;
 const TX_SOCKET = 11; // app websocket switchboard
 const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket';
+const BACK_CHANNELS = [TX_APP, TX_CRON, TX_AJAX, TX_API, TX_SOCKET]; // channels with no browser
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
