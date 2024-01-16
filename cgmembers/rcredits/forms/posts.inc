@@ -240,7 +240,7 @@ X
   $mi = fmtDist($dist, $zip);
   if ($mi) $mi = " ($mi mi)";
   $state = r\realState($state);
-  $location = "$city, $state$mi<br>";
+  $location = "$city, $state$mi";
 
   if ($admin) {
     list ($userSince, $phone) = [fmtDt($userSince), u\fmtPhone($phone)];
@@ -357,7 +357,7 @@ function confirm($op, $thing, $code) {
   $ray = u\decryRay($code);
 
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
-  extract(just($idnm . ' location', $ray, NULL));
+  extract(just($idnm, $ray, NULL));
   $idSub = compact($idnm);
   $successUrl = POSTPAGE . (nni($_COOKIE, 'radius') ? '/op=top' : '');
 
@@ -377,8 +377,8 @@ function confirm($op, $thing, $code) {
       r\setCook(VIPID, $pid);
 
       if ($thing == 'message') {
-        extract(db\get('postid,message,displayName,email', 'messages m JOIN people p ON pid=sender', compact('id')));
-        postMsg($message, $displayName, $email, $location, $postid);      
+        extract(db\get('postid,message,displayName,email,city,state', 'messages m JOIN people p ON pid=sender', compact('id')));
+        postMsg($message, $displayName, $email, "$city, $state", $postid);      
         return go($successUrl, 'message success');
       } else { // post
         if ($already) {
