@@ -1119,9 +1119,17 @@ function notices() {
 X;
   queueEach('postNotices1', $sql);
   
+  $sql = <<< X
+    SELECT p.postid, p.item, pp.fullName, pp.email, p.created + 365*:DAY_SECS AS dt, 
+    FLOOR((p.created + 365*:DAY_SECS - :NOW) / :DAY_SECS) AS grace
+    FROM posts p JOIN people pp USING(pid)
+    WHERE p.end IS NULL HAVING grace IN (8, 5)
+X;
+
+  queueEach('postExpires1', $sql);
   queueNext();
 }
-
+  
 function notice1($item) {
   extract(just('uid notices timeForW timeForM', $item));
 
@@ -1145,6 +1153,20 @@ function notice1($item) {
   db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
 }
 
+
+/**
+ * Send a notice about posts that are about to expire.
+ */
+function postExpires1($item) {
+  extract(just('postid,fullName,email,dt,grace,item', $item, NULL));
+
+  $to = [$email => $fullName];
+  $dt = fmtDt($dt);
+  $code = w\getEmailCode(compact('postid')); // code for recipient to cancel post
+  $noFrame = TRUE;
+  r\rMail('post-expires', $to, compact(ray('fullName item dt code grace noFrame')));
+}
+
 /**
  * Send a notice about recent posts to the given person.
  * The person's notices field is a string of comma-delimited lines, each one in the form:
@@ -1159,6 +1181,8 @@ function postNotices1($item) {
   require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
   extract(just('fields timeForW timeForM', $item, NULL));
   extract(just($fields, $item, NULL));
+  
+  db\q('UPDATE posts SET end=:NOW WHERE end IS NULL AND created<:NOW-:YEAR_SECS');
   
   $posts = '';
   $radius = NEIGHBOR_MAX; // report everything within this many miles
