@@ -257,18 +257,7 @@ function oneAcct($item) {
 //        f('a.deleteUid', $a->id);
     }
   }
-  
-  if ($a->jid) {
-    if (!db\exists('users', 'uid=:jid1 AND jid=:uid1', ray('jid1 uid1', $a->jid, $a->id))) r\tellAdmin('Orphaned joint account: ' . $a->fullName);
-    if (r\relation('permission', $a->uid, $a->jid) != r\perm(B_JOINT)
-        or r\relation('permission', $a->jid, $a->uid) != r\perm(B_JOINT)) r\tellAdmin('bad relation', $item);
-
-    if ($a->masterA->hasBank xor $a->masterA->risk('hasBank')) {
-      $a->setRisk('hasBank', $a->masterA->hasBank);
-      r\tellAdmin('hasBank was set wrong', $item);
-    }
-  }
-  
+ 
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 

@@ -314,7 +314,7 @@ EOF
   'bad nonce' => t('That code is incorrect.'),
   'search forbidden' => t('You need to be signed in to refer to a member account.'),
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
-  'no paypal cancel' => t('We apologize. this form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
+  'no paypal cancel' => t('We apologize. This form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
   'categorize txs' => t('You must resolve uncategorized transactions before exporting to QBO.'),
   'auto bankout nsf' => t('Your %when transfer of %amount to your bank account failed because you have an available balance of only %avail. The system will try again tomorrow.'),
   'button expired' => t('That button has expired.'),

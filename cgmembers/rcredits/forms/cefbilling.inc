@@ -17,7 +17,6 @@ use CG\Db as db;
   $end = NOW;
   $cu->updateTimes($start, $end);
   $cu->updateTasks($start, NOW); // no harm in adding all possible tasks
-  $cu->updateTasks("SELECT '2c0auxt' AS task"); // add parent tasks
   $cu->updateTasks('SELECT DISTINCT parent AS task FROM cu_tasks WHERE parent IS NOT NULL'); // add parent tasks
 */
 function formCEFBilling($form, &$sta, $month = '') {
