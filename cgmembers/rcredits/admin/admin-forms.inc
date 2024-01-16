@@ -60,7 +60,8 @@ function deleteAccount($uid) {
  * Check database sanity.
  */
 function checkSanity() {
-  be\checkSanity();
+  require R_ROOT . '/cg-sanity.inc';
+  \CG\Sanity\checkSanity();
   say('Sanity check complete');
   return w\go('sadmin');
 }
