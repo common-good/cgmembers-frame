@@ -42,6 +42,7 @@ function formQBO($form, &$sta, $args = '') {
     case 'txs': 
       if (db\exists('tx_entries JOIN tx_hdrs USING (xid)', 'uid IN (:uids) AND cat IS NULL AND created>:start', ray('uids start', r\catUids(), strtotime('7/1/2021')))) return go('sadmin/set-cats', tr('categorize txs'), 'err');
       $qb->sendBankTxs();
+      $qb->sendTxs(); // this is needed if bankTxs are up to date, but some txs have been added
       return go('sadmin/panel');
     
     case 'table': say(pr($qb->getRows($flds ?: 'Id', $tnm, '', 10))); break;
