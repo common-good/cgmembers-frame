@@ -891,9 +891,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .form-item-submit .btn-default {margin:0 0 0 30px;}
 #tx #edit-title h3,
 #frm-rules #edit-title h3 {display:inline-block; margin-right:30px;}
+#tx {display:none;}
 
 /* Dashboard */
-#tx {display:none;}
 #frm-dashboard #endorse {position: absolute; z-index:4; top: 160px; right: 0; bottom: 0; left: 0;}
 #frm-dashboard #endorse>div {
   display:block;
@@ -959,6 +959,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-summary #edit-topButtons a {margin:0 10px 3px 0;}
 /*#frm-summary .admin #user-picture {position:fixed; top:80px; right:50%; z-index:99;}*/
 #frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
+#frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
+#frm-summary .admin #edit-accountName table {margin-top:10px;}
+#frm-summary .admin #edit-accountName table td:first-child {padding-left:0}
+#frm-summary .admin #edit-accountName table td:last-child {text-align:right;}
 
 #frm-summary .form-type-item {margin-bottom:5px;}
 #frm-summary .form-item-adminable .control-data,

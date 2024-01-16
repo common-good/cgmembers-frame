@@ -45,7 +45,10 @@ function formSummary($form, &$sta) {
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
 
   $title = item(t('Account Summary'), '', suffix($buttons));
-  $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
+
+  $suffix = in($mya->id, $cgIds = r\cgIncomeUids()) ? idsLinked($cgIds) : '';
+  $accountName = item($mya->j_fullName . $suffix, t('Name:'));
+
   $address = $mya->admin 
   ? item(($mya->trialco ? $mya->contact : $mya->postalAddr). NBSP
     . btn('', 'c', 'default', '', clas('copyAddr')) . '<br>'
@@ -555,3 +558,23 @@ function giftsToDate() {
 }
 
 function stFld($dft) {return selectFld(BARE, t(''), dft($dft), ['' => t('state')] + db\keyed('abbreviation,abbreviation', 'r_states', 'country_id IN (:US_COUNTRY_ID, :CA_COUNTRY_ID) ORDER BY abbreviation'));}
+
+function idsLinked($cgIds) {
+  global $mya;
+
+  $ids = db\col('uid', 'users', 'uid IN (:cgIds) ORDER BY uid=:CGID DESC, uid IN :BUCKET_UIDS DESC, fullName', compact('cgIds'));
+
+  $rows = "<br>\n<table>\n";
+
+  foreach ($ids as $uid) {
+    $a = r\acct($uid);
+    $star = (in($uid, BUCKET_UIDS) and $uid != CGID) ? '*' : '';
+    $name = $uid == $mya->id ? "<b>$a->bestName</b>$star" : w\lnk("/change-account/acct=$uid", $a->bestName) . $star;
+    $balance = u\fmtAmt($a->balance);
+    $rows .= "<tr><td>$a->mainQid</td><td>$name</td><td>$balance</td></tr>\n";
+  }
+  
+  $rows .= '</table>';
+  
+  return $rows;
+}
