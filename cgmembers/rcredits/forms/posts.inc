@@ -378,6 +378,7 @@ function confirm($op, $thing, $code) {
 
       if ($thing == 'message') {
         extract(db\get('postid,message,displayName,email,city,state', 'messages m JOIN people p ON pid=sender', compact('id')));
+        $state = r\realState($state);
         postMsg($message, $displayName, $email, "$city, $state", $postid);      
         return go($successUrl, 'message success');
       } else { // post
@@ -462,7 +463,7 @@ function formPosts_validate($form, &$sta) {
  */
 function formPosts_submit($form, &$sta) {
   $input = just(POST_FLDS . ' frm pid location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type message method pid zip location', $input, NULL));
+  extract(just('frm email type message method pid zip location city state', $input, NULL));
   extract(frmBools($frm)); // make code a little easier to read
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
@@ -531,6 +532,7 @@ function formPosts_submit($form, &$sta) {
       postMsg($message, $fromName, $email, $location, $postid);
     } else {
       extract(db\get('type,item', 'posts', compact('postid')));
+      $location = $city . ', ' . r\realState($state);
       emailLink('message', compact('id'), $created, $type, $item, $pid, compact('location'));
     }
   }
@@ -549,7 +551,8 @@ function formPosts_submit($form, &$sta) {
  * @param assoc $extra: other values to encode in emailed link
  */
 function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
-  $code = w\getEmailCode($idSub, $extra);
+  global $testCode;
+  $testCode = $code = w\getEmailCode($idSub, $extra);
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];

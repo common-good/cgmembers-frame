@@ -306,7 +306,7 @@ X;
 
     $processorNick = $uid2 == CGID ? 'PROCESSOR' : 'FBO-PROCESSOR'; // QBO makes automatic PayPal reconciliation impossible, so we lose little by separating these
 
-    if ($uid1 == UID_OUTER and $noBank and (!$cat1 or $cat1 = r\nick2cat($processorNick))) { // no bank account in the CG system and payer category not set yet (because UID_OUTER is not owned by CG)
+    if ($uid1 == UID_OUTER and $noBank and $cat1 != CAT_CG2CG and (!$cat1 or $cat1 = r\nick2cat($processorNick))) { // no bank account in the CG system and payer category not set yet (because UID_OUTER is not owned by CG)
       if (u\getBit($flags, B_CC)) { // payment by cc
         $ccFee = u\sign($amt) * round(CC_PT + CC_PCT * abs($amt), 2); // add a couple lines for the processing fees CG pays
         u\EXPECT($uid2 == CGID or db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc'))));
@@ -319,11 +319,14 @@ X;
     foreach ([2, 1] as $i) if ($e["cat$i"]) { // do recipient first (if you change this, fix how $amt negation is handled)
       if ($i == 1) $amt = -$amt; // payer loses the amount
       foreach (ray('uid cat') as $k) $$k = $e["$k$i"];
-      $uidNick = ($uid == UID_OUTER) ? 'POOL' : r\acct($uid)->mainQid; // UID_OUTER only when called from sendCCTx()
+      $uidNick = ($uid == UID_OUTER) 
+      ? ($cat == CAT_CG2CG ? r\acct(UID_BANK)->mainQid : 'POOL') // CC not allowed for loans
+      : r\acct($uid)->mainQid; // UID_OUTER only when called from sendCCTx()
+
       $this->addJLine($qbTx, $uidNick, -$amt, $desc);
-      $this->addJLine($qbTx, $cat, $amt, $desc);
+      if ($cat != CAT_CG2CG) $this->addJLine($qbTx, $cat, $amt, $desc);
     }
-    
+
     if (isset($ccFee)) { // save the CC processor fees for AFTER the main transaction
       $this->addJLine($qbTx, 'TX-FEE', -$ccFee, $desc);
       $this->addJLine($qbTx, 'PROCESSOR', $ccFee, $desc); // fees CG pays for CC processing do not affect dollar pool liability, so post them to the normal processor account

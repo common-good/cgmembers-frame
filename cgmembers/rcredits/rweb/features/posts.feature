@@ -296,17 +296,17 @@ Scenario: Someone enters personal data after replying to an offer
   | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed |*
   | 5   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      |
   And we email "confirm-message" to member "b@c.d" with subs:
-  | fullName | item | date | thing   | code | noFrame | what     |*
-  | Bea Two  | fish | %mdY | message |    ? |       1 | an offer |
+  | fullName | item | date | thing   | code     | noFrame | what     |*
+  | Bea Two  | fish | %mdY | message | TESTCODE |       1 | an offer |
   And we say "status": "confirm by email" with subs:
   | thing | message |**
 
-  When someone visits "community/posts/op=confirm&thing=message&code=%code" where code is:
-  | id | created | location                      |*
-  | 1  | %now    | Greenfield, MA 01301 (0.2 mi) |
+  When someone visits "community/posts/op=confirm&thing=message&code=TESTCODE"
+#  | id | created | location                      |*
+#  | 1  | %now    | Greenfield, MA 01301 (0.2 mi) |
   Then we email "post-message" to member "a@b.c" with subs:
-  | fullName | item | date | thing | message      | fromLocation                  | noFrame | fromName | type  | code |*
-  | Abe One  | fish | %mdY | post  | Hello there! | Greenfield, MA 01301 (0.2 mi) |       1 | Bea      | offer | ?    |
+  | fullName | item | date | thing | message      | fromLocation   | noFrame | fromName | type  | code |*
+  | Abe One  | fish | %mdY | post  | Hello there! | Greenfield, MA |       1 | Bea      | offer | ?    |
   And we say "status": "message sent"
 
 Scenario: Someone confirmed sends a message and posts again

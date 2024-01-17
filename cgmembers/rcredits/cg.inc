@@ -1525,7 +1525,7 @@ function hasCats($uid) {return in($uid, catUids());}
  * omitting the collection buckets (BUCKET_UIDS minus CGID), which get dumped into CG.
  */
 function catUids() {
-  return array_merge(db\col('uid', 'u_company', 'coFlags&((1<<:CO_SPONSORED) | (1<<:CO_OUROWN))')); // cache this someday?
+  return array_merge([CGID], db\col('uid', 'u_company', 'coFlags&((1<<:CO_SPONSORED) | (1<<:CO_OUROWN))')); // cache this someday?
 }
 
 function cgIncomeUids() {return array_merge(BUCKET_UIDS, catUids());} // uids of all accounts owned by CG (called in queries.inc)
