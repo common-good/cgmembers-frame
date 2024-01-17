@@ -17,10 +17,10 @@ function checkSanity() {
 }
 
 function txHdrs() {
-  $xids = db\rows('xid', 'tx_hdrs');
-  foreach ($xids as $xidO) {
-    $xid = $xidO->xid;
-    $tx = r\Tx::read($xid);
+  $xids = db\col('xid', 'tx_hdrs');
+  foreach ($xids as $xid) {
+    if (!$tx = r\Tx::read($xid) or !$tx->entries) {sanityErr("Tx $xid has no entries."); continue;}
+
     foreignKeyCheck('Tx', $xid, 'actorId', 'users', 'uid', $tx);
     foreignKeyCheck('Tx', $xid, 'actorAgentId', 'users', 'uid', $tx);
     foreignKeyCheck('Tx', $xid, 'boxId', 'r_boxes', 'id', $tx);
@@ -28,13 +28,9 @@ function txHdrs() {
     if (($tx->flags & ~u\bit(ray(TX_FLAGS))) != 0) { sanityErr("Tx $xid flags has extraneous bits set"); }
     if (!in_array($tx->goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS])) { sanityErr("Tx $xid goods is bad: $tx->goods"); }
 
-    if ($tx->entries) {
-      $total = 0;
-      foreach ($tx->entries as $entry) {
-        $total += $entry->amount;
-      }
-      if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
-    } else sanityErr("Tx $xid has no entries");
+    $total = 0;
+    foreach ($tx->entries as $entry) $total += $entry->amount;
+    if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
   }
 }
 
@@ -62,7 +58,7 @@ function txEntries() {
   }
 // odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }
 
-  if ($id = db\get('id', 'tx_entries e JOIN tx_hdrs h USING (xid)', 'uid IN (:uids) AND created>:dt1 AND (cat IS NULL OR cat=0)', ray('uids dt1', r\catUids(), strtotime('7/1/2021')))) sanityErr("Transaction entry #$id has no accounting category (cat).");
+  if ($id = db\get('id', 'tx_entries e JOIN tx_hdrs h USING (xid)', 'uid IN (:uids) AND created>:dt1 AND (cat IS NULL OR cat=0)', ray('uids dt1', r\cgIncomeUids(), strtotime('7/1/2021')))) sanityErr("Transaction entry #$id has no accounting category (cat).");
 }
 
 function txDisputes() {
