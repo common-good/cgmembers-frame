@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61t'; // software version
+const R_VERSION = '3.61u'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -444,6 +444,7 @@ const CO_CLUB = 9;
 const CO_CUSTODIAN = 12;
 
 const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
+const CAT_CG2CG = -1; // category for transferring from one CG-owned CG account to another
 const FBO_IN_HDR = 'I: Donations: Sponsored: '; // how sponsored account income categories begin
 const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account expense categories begin
 

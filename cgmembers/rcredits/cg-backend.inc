@@ -717,6 +717,8 @@ function setCat(&$txes, $tx, $i) {
 
   if ($type == E_AUX and strhas($for, FS_NOTE)) {
     $nick = $in ? 'FS-FEE' : 'D-FBO';
+  } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
+    $nick = 'CG2CG';
   } elseif ($in and $type == E_XFEE) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
@@ -725,6 +727,8 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($in and $iA->sponsored) {
       $nick = $type == E_AUX ? 'D-FBO-STEPUP' : 'D-FBO';
+  } elseif ($in and $iA->ourOwn) {
+      $nick = strhas($iA->fullName, t('Loan Fund')) ? $iA->mainQid : 'D-FBO';
   } elseif ($in and $gift) {
     if ($j_uid == UID_STEPUPS) {
       $nick = 'D-STEPUP';
@@ -749,8 +753,6 @@ function setCat(&$txes, $tx, $i) {
   } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
     $cats = db\col('DISTINCT cat1', 'txs', "relType='I' AND type<>:E_OUTER AND uid2=:j_uid AND cat1 IS NOT NULL AND created>:NOW-2*:MONTH_SECS", compact('j_uid'));
     if (count($cats) == 1) return $txes[$i]->cat = $cats[0];
-  } elseif (r\hasCats($j_uid)) { // transfer from one CG-owned CG account to another
-    $nick = $iA->mainQid;
   }
 
   $txes[$i]->cat = $nick ? (r\nick2cat($nick) ?: NULL) : NULL; // inner ?: is for dev machine where sponsored account has no QBO account

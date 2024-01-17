@@ -202,7 +202,7 @@ class Acct {
       case 'qid': return $a->qo->qid;
       case 'uids': return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
       case 'adminCans': return db\get('can', 'admins', $uidSub);
-      case 'bestName': return in($a->id, BUCKET_UIDS) ? $a->name : str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
+      case 'bestName': return (in($a->id, BUCKET_UIDS) and $a->id != CGID) ? $a->name : str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
       case 'isCtty': return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
       case 'isRegion': return (substr($a->name, -1, 1) == '.');
       case 'region': return r\uidRegion($a->id);
