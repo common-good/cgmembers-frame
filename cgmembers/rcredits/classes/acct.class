@@ -202,7 +202,7 @@ class Acct {
       case 'qid': return $a->qo->qid;
       case 'uids': return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
       case 'adminCans': return db\get('can', 'admins', $uidSub);
-      case 'bestName': return str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
+      case 'bestName': return in($a->id, BUCKET_UIDS) ? $a->name : str_replace(PROJECT . t(' FBO '), '', $a->shortName ?: $a->fullName);
       case 'isCtty': return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
       case 'isRegion': return (substr($a->name, -1, 1) == '.');
       case 'region': return r\uidRegion($a->id);
@@ -910,7 +910,7 @@ EOF;
   function unjoinAllBut($but = FALSE) {
     $a = $this;
 
-    $sql = 'DELETE FROM u_relations WHERE permission=:joint AND :id IN (main, other)';
+    $where = 'permission=:joint AND :id IN (main, other)';
     $subs = ray('joint id', r\perm(B_JOINT), $a->id);
 
     $DBTX = \db_transaction();
@@ -931,12 +931,11 @@ EOF;
         }
       }
     } elseif ($but) {
-      $sql .= ' AND :but NOT IN (main, other)';
+      $where .= ' AND :but NOT IN (main, other)';
       $subs += compact('but');
     }
     
-    db\logSql(compact(ray('sql subs')));
-    db\q($sql, $subs); // zap one or more joins (or requested joins) for this account
+    db\del('u_relations', $where, $subs); // zap one or more joins (or requested joins) for this account
     unset($DBTX);
   }
 

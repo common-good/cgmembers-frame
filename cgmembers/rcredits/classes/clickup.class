@@ -61,7 +61,7 @@ class Clickup {
         } else list ($list_id, $taskid) = [MISC_LIST, "inlist#unknown"];
         db\updateOrInsert('cu_tasks', ray('id name list', $taskid, t('Unknown Task ') . $taskid, $list_id));
       } else $taskid = $task->id;
-      if (!is_object($user)) die("user=$user");
+/**/  if (!is_object($user)) die("user=$user");
       db\updateOrInsert('cu_times', ray('id task member start stop', $id, $taskid, $user->id, round($start / 1000), round($end / 1000)));
     }
     w\say(t('Done'));
@@ -117,7 +117,7 @@ class Clickup {
     foreach (ray('start end') as $k) $args[$k . '_date'] = $$k * 1000;
     $args += ray('include_task_tags include_location_names', FALSE, FALSE);
     $o = $this->get("team/$this->team/time_entries", $args);
-    if (!is_object($o) or !isset($o->data)) die('bad times: ' . pr($o)); // usually a Clickup error message
+/**/if (!is_object($o) or !isset($o->data)) die('bad times: ' . pr($o)); // usually a Clickup error message
     return $o ? $o->data : [];
   }
   

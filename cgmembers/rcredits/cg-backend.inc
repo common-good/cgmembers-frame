@@ -721,6 +721,8 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
     $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
+  } elseif ($in and $iA->mainQid == 'NEWAIN') { // 457 retirement (!!!Must come before $iA->sponsored test)
+    $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($in and $iA->sponsored) {
       $nick = $type == E_AUX ? 'D-FBO-STEPUP' : 'D-FBO';
   } elseif ($in and $gift) {
@@ -744,8 +746,6 @@ function setCat(&$txes, $tx, $i) {
     $nick = 'TO-ORG';
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
-  } elseif ($out and $iA->mainQid == 'NEWAIN') { // 457 retirement
-    $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
     $cats = db\col('DISTINCT cat1', 'txs', "relType='I' AND type<>:E_OUTER AND uid2=:j_uid AND cat1 IS NOT NULL AND created>:NOW-2*:MONTH_SECS", compact('j_uid'));
     if (count($cats) == 1) return $txes[$i]->cat = $cats[0];
@@ -1487,122 +1487,6 @@ function usdTxFollowup($xid, $report = TRUE) {
 }
 
 /**
- * Check the sanity of the database.
- * This currently only checks the tables added or modified in the transaction reformatting.
- */
-function checkSanity() {
-  // Check transactions and their associated entries
-  $xids = db\rows('xid', 'tx_hdrs');
-  foreach ($xids as $xidO) {
-    $xid = $xidO->xid;
-    $tx = r\Tx::read($xid);
-    foreignKeyCheck('Tx', $xid, 'actorId', 'users', 'uid', $tx);
-    foreignKeyCheck('Tx', $xid, 'actorAgentId', 'users', 'uid', $tx);
-    foreignKeyCheck('Tx', $xid, 'boxId', 'r_boxes', 'id', $tx);
-    foreignKeyCheck('Tx', $xid, 'reversesXid', 'tx_hdrs', 'xid', $tx);
-    if (($tx->flags & ~u\bit(ray(TX_FLAGS))) != 0) { sanityErr("Tx $xid flags has extraneous bits set"); }
-    if (!in_array($tx->goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS])) { sanityErr("Tx $xid goods is bad: $tx->goods"); }
-
-    if ($tx->entries) {
-      $total = 0;
-      foreach ($tx->entries as $entry) {
-        $total += $entry->amount;
-      }
-      if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
-    } else sanityErr("Tx $xid has no entries");
-  }
-  
-  if ($eids = db\lst('id', 'tx_hdrs LEFT JOIN tx_entries_all e USING(xid)', 'e.deleted')) sanityErr(t('These entries are deleted from non-deleted headers and must be deleted lest the txs table include them!: ') . $eids);
-  
-  if ($eids = db\lst('id', 'tx_entries JOIN tx_hdrs_all h USING(xid)', 'h.deleted OR h.created IS NULL')) sanityErr(t('These entries are orphaned from their deleted or missing headers and should be deleted: ') . $eids);
-
-  // Check all entries
-  $entryIds = db\rows('id', 'tx_entries');
-  $total = 0;
-  foreach ($entryIds as $entryIdO) {
-    $entryId = $entryIdO->id;
-    $entry = r\TxEntry::read($entryId);
-    foreignKeyCheck('TxEntry', $entryId, 'xid', 'tx_hdrs', 'xid', $entry);
-    foreignKeyCheck('TxEntry', $entryId, 'uid', 'users', 'uid', $entry);
-    foreignKeyCheck('TxEntry', $entryId, 'agentUid', 'users', 'uid', $entry);
-    if ($entry->entryType > count(ray(E_TYPES))) sanityErr("TxEntry $entryId entryType is invalid: $entry->entryType");
-
-    if (!empty($entry->rule)) {
-      foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry);
-    }
-    
-    $total += $entry->amount;
-  }
-// odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }
-
-  if ($id = db\get('id', 'tx_entries e JOIN tx_hdrs h USING (xid)', 'uid IN (:uids) AND created>:dt1 AND (cat IS NULL OR cat=0)', ray('uids dt1', r\catUids(), strtotime('7/1/2021')))) sanityErr("Transaction entry #$id has no accounting category (cat).");
-
-  // Check txs2
-  $txids = db\rows('txid', 'txs2');
-  foreach ($txids as $txidO) {
-    $txid = $txidO->txid;
-    $info = db\get('*', 'txs2', compact('txid'));
-    if ($info['xid']) {
-      $amount = $info['completed'] ? $info['amount'] : 0;
-      if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'uid'=>$info['payee'], 'amount'=>$amount]))
-        or (!db\exists('tx_hdrs', ['xid'=>$info['xid']]))) { // tx date need not match usd dates
-        sanityErr("txs2 $txid has an xid, but has no corresponding transaction or the transaction doesn't match");
-      }
-      if (!$info['amount']) sanityErr("txs2 $txid has an associated transaction, but a zero amount");
-    } elseif ($info['amount'] + 0) sanityErr("txs2 $txid has an amount but has no associated tx_hdr");
-  }
-
-  // Check r_usd2
-  $ids = db\rows('id', 'r_usd2');
-  foreach ($ids as $idO) {
-    $id = $idO->id;
-    $info = db\get('*', 'r_usd2', ['id'=>$id]);
-    if (!empty($info['xid'])) {
-      if (!empty($info['completed'])) {
-        if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'amount'=>$info['amount']]))
-            or (!db\exists('tx_hdrs', ['xid'=>$info['xid'], 'created'=>$info['completed']]))) {
-          sanityErr("r_usd2 $id is completed, but the xid doesn't match a tx_entry");
-        }
-      } else {
-        sanityErr("r_usd2 $id is not marked completed, but has an associated tx_hdr");
-      }
-    } else {
-      if (!empty($info['completed'])) {
-        sanityErr("r_usd2 $id is marked completed, but has no associated tx_hdr");
-      }
-    }
-  }
-
-  // Check tx_disputes
-  $ids = db\rows('id', 'tx_disputes');
-  foreach ($ids as $idO) {
-    $id = $idO->id;
-    $info = db\get('*', 'tx_disputes', ['id'=>$id]);
-    foreignKeyCheck('tx_disputes', $id, 'xid', 'tx_hdrs', 'xid', $info);
-    foreignKeyCheck('tx_disputes', $id, 'uid', 'users', 'uid', $info);
-    if (!in_array($info['status'], [DS_OPEN, DS_ACCEPTED, DS_DENIED])) {
-      $status = $info['status'];
-      sanityErr("tx_disputes $id status field is invalid: $status");
-    }
-  }
-
-  // Check tx_requests */
-  $nvids = db\rows('nvid', 'tx_requests');
-  foreach ($nvids as $nvidO) {
-    $nvid = $nvidO->nvid;
-    $info = db\get('*', 'tx_requests', ['nvid'=>$nvid]);
-    if ($info['status'] > 0) {
-      foreignKeyCheck('tx_requests', $nvid, 'status', 'tx_hdrs', 'xid', $info);
-      foreignKeyCheck('tx_requests', $nvid, 'payer', 'txs', 'uid1', $info);
-      foreignKeyCheck('tx_requests', $nvid, 'payee', 'txs', 'uid2', $info);
-    }
-    foreignKeyCheck('tx_requests', $nvid, 'payer', 'users', 'uid', $info);
-    foreignKeyCheck('tx_requests', $nvid, 'payee', 'users', 'uid', $info);
-  }
-
-}
-
-/**
  * Handle balance changes for an account.
  * @param assoc $info: assoc containing the uid and how much it just changed
  */
@@ -1620,23 +1504,5 @@ function balChange($info) {
 //  if ($uid > 0) f('cr.queue', $amount > 0 ? 'payRequests' : 'getFunds1', compact('uid'), TRUE); // TRUE keeps this from looping in tests
 }
 
-/**
- * Make sure the given field in the given table is what's expected.
- * @param string $prefix: table being checked
- * @param string $ref: key of record being checked
- * @param string $field: name of field being checked
- * @param string $table: table that should have a record with that field's value as its key
- * @param string $keyFld: that table's key field name
- * @param assoc $info: object or array with the desired value in its member indexed by $field
- */
-function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $info) {
-  if (empty($info)) return sanityErr("$prefix $ref record is empty!");
-  $keyVal = ((array) $info)[$field];
-  if (!empty($keyVal) and !db\exists($table, [$keyFld=>$keyVal])) {
-    sanityErr("$prefix $ref $field refers to non-existent $table record $keyVal");
-  }
-}
-
-function sanityErr($s) {w\say("Sanity error: " . $s, 'err');}
 function invPayments($nvid) {return db\sum('amt', 'txs', "relType='I' AND rel=:nvid", compact('nvid'));}
 function invRemains($nvid) {return round(db\get('amount', 'tx_requests', compact('nvid')) - invPayments($nvid), 2);}

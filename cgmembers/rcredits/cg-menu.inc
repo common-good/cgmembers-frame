@@ -170,11 +170,11 @@ function menu($submenu = '') {
     'sadmin/rules' => ['sub', t('Rules'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/timed' => ['sub', t('Timed'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/people' => ['sub', t('People'), 'People 2', 'admMutualAid'],
-    'sadmin/check-sanity' => ['sub', 'Check database consistency', '0', 'admCode', 'checkSanity'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
 
+    'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admCode', 'checkSanity'],
     'sadmin/set-cats' => ['call', t('Set Accounting Categories'), 'SetCats', 'admEditTx'],
     'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admSeeTxInfo'],
     'sadmin/deposit-details' => ['call', t('Deposit Details'), 'DepositDetails 2', 'admSeeDeposits'],

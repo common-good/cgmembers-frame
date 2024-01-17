@@ -205,7 +205,7 @@ function postInputFlds($dfts = []) {
   
   $dft = isset($radius) ? dft(u\fmtAmt($radius, 's')) : [];
   $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], $dft + suffix(t(' miles')));
-  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
+  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time). If you leave this blank, the post will end in one year.')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
   return compact(ray(POST_INPUT_FLDS));
 }
@@ -240,7 +240,7 @@ X
   $mi = fmtDist($dist, $zip);
   if ($mi) $mi = " ($mi mi)";
   $state = r\realState($state);
-  $location = "$city, $state$mi<br>";
+  $location = "$city, $state$mi";
 
   if ($admin) {
     list ($userSince, $phone) = [fmtDt($userSince), u\fmtPhone($phone)];
@@ -357,7 +357,7 @@ function confirm($op, $thing, $code) {
   $ray = u\decryRay($code);
 
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
-  extract(just($idnm . ' location', $ray, NULL));
+  extract(just($idnm, $ray, NULL));
   $idSub = compact($idnm);
   $successUrl = POSTPAGE . (nni($_COOKIE, 'radius') ? '/op=top' : '');
 
@@ -377,8 +377,8 @@ function confirm($op, $thing, $code) {
       r\setCook(VIPID, $pid);
 
       if ($thing == 'message') {
-        extract(db\get('postid,message,displayName,email', 'messages m JOIN people p ON pid=sender', compact('id')));
-        postMsg($message, $displayName, $email, $location, $postid);      
+        extract(db\get('postid,message,displayName,email,city,state', 'messages m JOIN people p ON pid=sender', compact('id')));
+        postMsg($message, $displayName, $email, "$city, $state", $postid);      
         return go($successUrl, 'message success');
       } else { // post
         if ($already) {
@@ -418,11 +418,17 @@ function formPosts_validate($form, &$sta) {
     $chgFlds = 'locus latitude longitude zip';
     
   } elseif ($frmPost or $frmEditpost) {
-    extract(just('end email cat radius service exchange emergency type', $input, NULL));
+    extract(just('end email cat radius service exchange emergency type postid', $input, NULL));
+
+    if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end'); // must precede if (...$end <= now())
+    if ($frmEditpost and $end and $end <= now()) { // ending the post
+      db\update('posts', ray('end postid', now(), $postid), 'postid'); // don't change anything, just mark it ended
+      return w\go(POSTPAGE . '/op=top', t('Your post is ended.'));
+    }
+
     $type = ray(POST_TYPES)[typeNum($type)]; // convert to text (typeNum() is for tests -- no effect in production)
     if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
-    if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end');
     if ($frmPost and !emailOkay($email, TRUE)) return;
     foreach (ray('service exchange emergency') as $k) $$k = (int) $$k;
     $chgFlds = 'email radius end service exchange emergency type';
@@ -481,7 +487,7 @@ function formPosts_submit($form, &$sta) {
   $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
   if (admin(vip('zip'))) $confirmed = 1;
   $created = now();
-  $err = FALSE;
+  $err = $ended = FALSE;
   
   if ($frmPost or $frmEditpost) {
     extract($info = just(POST_FLDS . ' postid', $input, NULL));
@@ -502,6 +508,7 @@ function formPosts_submit($form, &$sta) {
 
     if ($confirmed) {
       if ($frmEditpost and $end and $end <= now()) {
+        $ended = TRUE;
         say(t('Your post is ended.'));
       } else say(tr('post will appear', 'when', $private ? t('when it is approved') : t('immediately')));
     } else emailLink('post', compact('postid'), $created, $type, $item, $pid);
@@ -528,7 +535,7 @@ function formPosts_submit($form, &$sta) {
     }
   }
      
-  w\go(POSTPAGE . '/op=top', 'info saved');
+  return w\go(POSTPAGE . '/op=top', $ended ? '' : 'info saved');
 }
 
 /**

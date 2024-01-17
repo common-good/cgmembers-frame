@@ -775,7 +775,7 @@ function doit(what, vs) {
     });
     $('.form-item-end a').click(function () {
       $('#edit-end').attr('type', 'text').val(new Date(Date.now()).toLocaleString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'}).split(',')[0]);
-      $('#edit-submit').focus();
+      $('#edit-submit').click();
     });
     break;
 

@@ -687,6 +687,7 @@ const TX_API = 9;
 const TX_HACK = 10;
 const TX_SOCKET = 11; // app websocket switchboard
 const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket';
+const BACK_CHANNELS = [TX_APP, TX_CRON, TX_AJAX, TX_API, TX_SOCKET]; // channels with no browser
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
@@ -775,6 +776,7 @@ $GLOBALS['emailSubjects'] = array(
   'confirm-post' => t('Confirm your post to Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),
+  'post-expires' => t('Your Offers & Needs post is expiring!'),
   'post-notice' => t('recent Offers & Needs near you'),
 );
 foreach (ray(' gift- cggift- fbo-') as $k) foreach(ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
