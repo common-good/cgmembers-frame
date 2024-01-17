@@ -14,7 +14,7 @@ Scenario: member wants to sign up another member and succeeds
   
   Then the response op is "sign-up-users-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status | cgId |*
-  | 378   | OK     | .AAA |
+  | 378   | OK     | NEWAAA |
 
 Scenario: member wants to sign up several members all of which succeed
   Given member ".ZZC" with password "33333" sends "sign-up-users" requests:
@@ -25,6 +25,6 @@ Scenario: member wants to sign up several members all of which succeed
 
   Then the response op is "sign-up-users-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status | cgId | error |*
-  | 378   | OK     | .AAA | ?     |
-  | 379   | OK     | .AAC | ?     |
-  | 380   | OK     | .AAD | ?     |
+  | 378   | OK     | NEWAAA | ?     |
+  | 379   | OK     | NEWAAC | ?     |
+  | 380   | OK     | NEWAAD | ?     |
