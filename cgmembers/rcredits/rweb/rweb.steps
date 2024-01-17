@@ -2138,6 +2138,7 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     MAKE posts SomeoneViewsTheDetailsOfATip
  *     MAKE posts SomeoneRepliesToAnOffer
+ *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE posts SomeoneVisitsACommunitysPostsPage
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
@@ -2183,7 +2184,6 @@ function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
  *
  * in: MAKE aacc SomeoneCompletesACreditCardDonation
  *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
- *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
 function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
