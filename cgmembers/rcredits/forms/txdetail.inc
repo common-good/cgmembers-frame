@@ -125,6 +125,7 @@ function formTxDetail_submit($form, &$sta) {
   if (empty($input['cat'])) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
+  if ($input['cat'] == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
 
   $info['id'] = -$eidMe;
   $info['amount'] = -$amount;

@@ -444,6 +444,7 @@ const CO_CLUB = 9;
 const CO_CUSTODIAN = 12;
 
 const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
+const CAT_CG2CG = -1; // category for transferring from one CG-owned CG account to another
 const FBO_IN_HDR = 'I: Donations: Sponsored: '; // how sponsored account income categories begin
 const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account expense categories begin
 
