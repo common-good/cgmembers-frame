@@ -30,6 +30,13 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'panel':
+    $('.form-item-closeBooks a').click(function () {
+      var dt = $('#edit-closebooks').val();
+      if (dt) location.href = baseUrl + '/sadmin/panel/op=close&dt=' + dt;
+    });
+    break;
+    
   case 'query':
     $('.form-item-list a.xid').click(function () {location.href = baseUrl + '/history/transaction/xid=' + $(this).text();});
     break;

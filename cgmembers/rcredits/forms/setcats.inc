@@ -29,7 +29,7 @@ function formSetCats($form, &$sta, $args = '') {
   } elseif ($reshow) {
     $rows = svar('catsList') ?: [];
   } else {
-    $start = dateFld(REQ . t('Starting Date:'), '', dft(strtotime('-1 month', u\monthDay1())));
+    $start = dateFld(REQ . t('Starting Date:'), '', dft(getV(VAR_SETCAT_DT0, strtotime('-1 month', u\monthDay1()))));
     $submit = t('Set Cats');
     return cgForm(compact(ray('title start submit')));
   }
