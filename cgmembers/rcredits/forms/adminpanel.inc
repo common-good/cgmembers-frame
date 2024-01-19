@@ -15,10 +15,15 @@ include_once R_ROOT . '/admin/admin-web.inc';
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
 function formAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid codePw', $args, NULL));
+  extract(just('qid codePw op dt', $args, NULL));
   global $mya;
 
   if (!$mya or !$mya->admin) hack('panel: ' . ($mya ? $mya->fullName : 'no one'));
+  
+  if ($op == 'close') {
+    setV(VAR_CLOSE_BOOKS, strtotime($dt));
+    say(t('Books are now closed through %dt.', compact('dt')));
+  }
   
   if ($codePw) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($codePw), NULL));
@@ -88,8 +93,11 @@ function formAdminPanel($form, &$sta, $args = '') {
   $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsRule');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
+  
+  $closeBooks = dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close'))));
+  jsx('panel');
 
-  return cgform(compact(ray('title lnkScanQr do acctSet')));
+  return cgform(compact(ray('title lnkScanQr do acctSet closeBooks')));
 }
 
 function formAdminPanel_submit($form, &$sta) {

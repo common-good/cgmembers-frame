@@ -1235,10 +1235,12 @@ function just($these, $info, $default = NULL) {
 /**
  * Parse the URL query string into an array.
  * @param string $q: the query string
- * @return an associative array of "GET" parameters.
+ * @return an associative array of "GET" parameters or an unserialized array.
  */
 function urlq2ray($q) {
   if (!is_string($q)) return (array) $q;
+  if (preg_match('/^[ao]:\d/', $q)) return unserialize($q);
+  
   $s = mb_strpos($q, urlencode('=')) ? urldecode($q) : $q;
   $s = str_replace('\u003d', '=', $s);
   $s = str_replace('\u0026', '&', $s);
@@ -1294,7 +1296,12 @@ function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots eas
 
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
-function nni($ray, $i, $else = '') {return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;} // same as nn but for indexed value
+function nni($ray, $i, $else = '') {
+  if (!is_array($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
+  return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;
+} // same as nn but for indexed value
+
+
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
 function funcName($offset = 0) {

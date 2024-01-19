@@ -22,19 +22,21 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$uids = db\get('uid1,uid2', 'txs t', $where, $subs)) return softErr('no such tx'); // for now just show main transaction
-  extract($uids);
+  if (!$orig = db\get('*', 'txs t', $where, $subs)) return softErr('no such tx'); // for now just show main transaction
+  extract(just('uid1,uid2', $orig));
   
-  if (in_array($myid, $uids)) {
-    $uid = $uid1 == $myid ? $uid2 : $uid1; // set $uid to other account
-  } else {
+  if ($myid == $uid1) {
+    $uid = $uid2; // set $uid to other account
+  } elseif ($myid == $uid2) {
+    $uid = $uid1; // set $uid to other account
+  } else { // not my transaction, so choose me and you however is easy
     if (!$mya->admRegion) return softErr(t('That transaction is not one of yours.'));
     $uid = r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
          : (r\hasCats($uid2) ? $uid1
          : ($uid1 == UID_OUTER ? $uid1 
          : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
   }
-  $a = r\acct($uid); // not "in" either account, so choose me and you however is easy
+  $a = r\acct($uid);
   $toMe = ($uid == $uid1);
   list ($me, $you) = u\order($toMe, 2, 1);
 
@@ -100,32 +102,49 @@ X;
 
   $return = hidFld($return);
   $back = item(w\backButton());
+  $orig = hidFld($orig);
 
-  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan recursId reversesXid entryType submit back toMe xid eid return')));
+  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan recursId reversesXid entryType submit back toMe xid eid return orig')));
 }
 
 function formTxDetail_validate($form, &$sta) {
-  extract(just($fields = 'created amount recursId reversesXid', $sta['input'])); // no default!! (see next line)
+  global $mya;
+  extract(just($fields = 'created amount recursId reversesXid orig', $sta['input'])); // no default!! (see next line)
   foreach (ray('recursId reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
-
+  
   if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 48 * MONTH_SECS, tomorrow())) return say($err, 'created');
+  if ($mya->admEditTx and min($created, nni($orig, 'created')) < getV(VAR_CLOSE_BOOKS)) return err(t('You cannot change this transaction without first changing the "close books" date.'));
+  
   if ($amount and $err = u\badAmount($amount, '!=0')) return say($err, 'amount');
   tweakSta($sta, compact(ray($fields)));
 }
 
 function formTxDetail_submit($form, &$sta) {
+  global $mya;
   $input = $sta['input'];
-  extract(just('amount toMe forSame eid return', $input));
+  extract(just('amount toMe forSame eid return cat orig created xid', $input));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
   
   $DBTX = \db_transaction();
   if ($hInfo = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
+  if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
 
   $info = just('entryType amount description cat', $input, NULL);
   if (empty($input['cat'])) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
-  if ($input['cat'] == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
+  if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
+  
+  extract(just('cat uid1 uid2 flags', $orig), EXTR_PREFIX_ALL, 'o');
+  if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
+    and ($cat != $o_cat or $created != $o_created)
+    and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
+    
+    db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
+    $qb = new \QB(QBO_CREDS, FALSE);
+    $qb->delQbTx("cg#$xid"); // delete this xid from QBO
+    setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
+  }
 
   $info['id'] = -$eidMe;
   $info['amount'] = -$amount;

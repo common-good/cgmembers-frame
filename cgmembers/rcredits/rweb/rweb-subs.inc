@@ -609,7 +609,10 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
 
 function NEWitem($value, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('value') + $other);}
 function item($markup, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('markup') + $other);}
-function hidFld($value = '', $other = []) {return fld('hidden', '', '', compact('value') + $other);}
+function hidFld($value = '', $other = []) {
+  if (is_array($value) or is_object($value)) $value = serialize($value);
+  return fld('hidden', '', '', compact('value') + $other);
+}
 function NEWtextFld($label = '', $desc = '', $other = []) {return fld('text', $label, $desc, $other);}
 
 function fileFld($label = '', $desc = '', $extra = []) {return fld('file', $label, $desc, $extra + ray('enctype', 'multipart/form-data'));}

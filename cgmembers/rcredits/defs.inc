@@ -445,6 +445,8 @@ const CO_CUSTODIAN = 12;
 
 const DONATION_CATS = [1, 2]; // donation categories in cat field of tx_entries
 const CAT_CG2CG = -1; // category for transferring from one CG-owned CG account to another
+const VAR_SETCAT_DT0 = 'setCatDt0'; // suggested starting date for setCats
+const VAR_CLOSE_BOOKS = 'closeBooks'; // our QBO accounting is closed through this date
 const FBO_IN_HDR = 'I: Donations: Sponsored: '; // how sponsored account income categories begin
 const FBO_OUT_HDR = 'E: Sponsored Project Expenses: '; // how sponsored account expense categories begin
 

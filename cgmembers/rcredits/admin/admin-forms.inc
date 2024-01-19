@@ -104,7 +104,7 @@ function formHandy($form, &$sta) {
 
   $links = [
     'sadmin/check-sanity|Check database integrity|Sanity Check|ok',
-    'sadmin/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
+    'sadmin/util/reset-menu|Rebuild menus based on cg-menu.inc.|Redo MENUS|menu-hamburger',
     'sadmin/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'sadmin/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
     'sadmin/variables|Edit and delete site variables.|Variables|copy',
