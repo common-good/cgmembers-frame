@@ -1297,7 +1297,7 @@ function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots eas
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
 function nni($ray, $i, $else = '') {
-  if (!is_array($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
+  if (!is_array($ray) and !is_object($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
   return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;
 } // same as nn but for indexed value
 
