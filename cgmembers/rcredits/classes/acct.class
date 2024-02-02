@@ -712,7 +712,7 @@ class Acct {
     // no going into debt without permission
     if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
-      if ($a->id == CGID) $floor = min($floor, -CG_LOAN_LIMIT); // allow CG to transfer money to bank account from a zero CG balance
+      if ($a->ourOwn) $floor = min($floor, -CG_LOAN_LIMIT); // allow CG to transfer money to bank account from a zero CG balance
     } else {$floor = $a->floor;}
 
     return round($a->balance - $floor, 2);
