@@ -239,6 +239,7 @@ function menu($submenu = '') {
     'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
+    'cef' => ['call', t('CEF Dashboard'), 'CEF 1', ANY],
 
     'get' => ['call', t('Bank'), 'Get 1', 'manage ok'],
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
