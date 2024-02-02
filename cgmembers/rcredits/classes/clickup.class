@@ -125,7 +125,18 @@ class Clickup {
     static $cnt = 0; $cnt++;
     $hdrs['Authorization'] = $this->token;
     if ($cnt > 100) {$cnt = 0; sleep(61);}
-    return json_decode(u\post(self::API . "/v2/$uri", $args, t('Unable to get time entries'), $hdrs, 'GET'));
+    return json_decode(u\get(self::API . "/v2/$uri", $args, 'raw', $hdrs));
+  }
+  
+  private function put($uri, $args = []) {
+    static $cnt = 0; $cnt++;
+    $hdrs['Authorization'] = $this->token;
+    if ($cnt > 100) {$cnt = 0; sleep(61);}
+    return json_decode(u\post(self::API . "/v2/$uri", $args, 'raw', $hdrs));
+  }
+  
+  public function addAssignees($task, $who) {
+    return $this->put("task/$task", ray('assignees', ray('add', $who)));
   }
   
   public function getTeam() {static $members; return nn($members) ?: ($members = $this->get('team')->teams[0]->members);}
