@@ -95,9 +95,10 @@ function formAdminPanel($form, &$sta, $args = '') {
   $acctSet = fieldSet('acctSet', $acctSet);
   
   $closeBooks = dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close'))));
+  $goTx = intFld(t('Edit tx#:'), '', suffix(btn('', t('Go'))));
   jsx('panel');
 
-  return cgform(compact(ray('title lnkScanQr do acctSet closeBooks')));
+  return cgform(compact(ray('title lnkScanQr do acctSet closeBooks goTx')));
 }
 
 function formAdminPanel_submit($form, &$sta) {
