@@ -29,7 +29,7 @@ global $tStrings; $tStrings = array(
   'report funding' => t("You successfully %did %amount to %otherName."),
   'balance unchanged' => t('Your balance is unchanged, pending payment.'),
   'denial done' => t('The invoice has been marked "denied".'),
-  'invoice cancel done' => t('The payment request has been canceled.'),
+  'invoice done' => t('The payment request has been %done.'),
   'prev gift canned' => t('Your previous recurring gift has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
@@ -84,6 +84,7 @@ global $tStrings; $tStrings = array(
   'paid you' => t('<b>Received:</b> %otherName paid you <b>%amount</b> for "%payeePurpose".'),
   'paid you linked' => t('<b>Received:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'paid you'
   'you invoiced' => t('<p><b>Invoice:</b> You invoiced %otherName %amount for "%purpose".</p>'),
+  'you will be paid' => t('<p><b>Invoice:</b> %otherName initiated a bank transfer for payment of %amount to you for "%purpose". The payment will go through once the transfer has completed.</p>'),
   'invoiced you' => t('<p><b>Invoice:</b> %otherName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %otherName</i> at %otherEmail or %otherPhone.</p>'), // can't separate out 'invoice concerns'
   'you gave cash' => t('<b>Credit:</b> You traded %amount USD for %amount of %PROJECT credit from %otherName.'),
   'drew from you' => t('<b>Transfer:</b> %otherName drew %amount from your account automatically.'),
@@ -110,7 +111,7 @@ global $tStrings; $tStrings = array(
   <blockquote>%created %amount for "%purpose"</blockquote>
   <p>Reason given: "%reason". You may want to contact the customer directly, to resolve any dispute.</p>'),
   
-  'invoice withdrawn' => t('<p><b>Invoice WITHDRAWN:</b> %payeeName has withdrawn the following invoice:</p>
+  'invoice withdrawn' => t('<p><b>Invoice CLOSED:</b> %payeeName has %done the following invoice:</p>
   <blockquote>%created %amount for "%purpose"</blockquote>'),
   
   'charge disputed' => t('<p><b>Charge DISPUTED:</b> Your customer %otherName disputes the following charge:</p>

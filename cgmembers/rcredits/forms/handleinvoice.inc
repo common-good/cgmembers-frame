@@ -7,6 +7,8 @@ use CG\Util as u;
 use CG\Db as db;
 use CG\Testing as t;
 
+const ACT_CANCEL = 1; // radio button to cancel invoice
+
 /**
  * Approve, Pay (in part or in full), cancel, deny, or reverse a pending payment, possibly by clicking a link without signing in (from rDo).
  * If no user is signed in, $args must include the do code (to prevent mischief)
@@ -26,7 +28,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
   if ($err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
   extract(just('nvid amount payer payee purpose created data status flags', $inv));
   
-  if ($mya and !in($mya->id, [$payer, $payee])) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+  if ($mya and !in($payer, $mya->uids) 
+    and !(in($payee, $mya->uids) and !$code)) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   if (!$mya) { // not signed in (might have changed in previous line)
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
     if (!$code) return go('/signin'); // probably admin browser refresh (but timed out)
@@ -37,15 +40,29 @@ function formHandleInvoice($form, &$sta, $args = '') {
   }
 
   $subs = ray('amount what date', u\fmtAmt($amount), $purpose, fmtDt($created));
-  $toMe = ($mya and $mya->id == $payee); // toMe means payment is to me
+  $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
 
-  if ($toMe) { // cancel or reverse a payment request TO me (reversing currently has no effect, because already-paid invoices just get an error message)
-    list ($verb, $explain) = $status < TX_PAID ? [t('Cancel'), ''] : [t('Reverse'), t(' (by creating an offsetting negative invoice and paying it back)')];
+  if ($toMe and $status < TX_PAID) { // unpaid invoice (cancel or close)
+    $title = t('Close Invoice');
+    $subs['who'] = r\acct($payer)->fullName;
+    $subtext = t('Handle invoice #%nvid (%date) charging %who %amount for %what.', $subs);
+    $action = radiosFld(REQ . t('Action:'), '', dft(0), ray(t('mark paid, cancel')));
+
+    $data = unserialize(nn($data)) ?: [];
+    $dft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
+    $reason = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($dft));
+
+    $close = submit(t('Close'));
+    jsx('back-button');
+  } elseif ($toMe) { // reverse a payment request TO me (reversing currently has no effect, because already-paid invoices just get an error message)
+  /*
+    list ($verb, $explain) = [t('Reverse'), t(' (by creating an offsetting negative invoice and paying it back)')];
     $title = $verb . '?';
     $subs += ray('who explain', r\acct($payer)->fullName, $explain);
     $subtext = $verb . t(' %date invoice charging %who %amount for %what%explain?', $subs);
     $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     jsx('back-button');
+    */
   } else { // approving or denying a requested payment FROM me
     $a = r\acct($payer);
     $title = t('Confirm Payment');
@@ -80,7 +97,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always pay denySet cancel toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always pay action reason denySet close cancel toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -96,20 +113,20 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  extract(just('whyNot always payAmount', $sta['input'], NULL));
+  extract(just('reason whyNot always payAmount', $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $always, $whyNot, $hidInfo);
+  handleInvoice(op($sta), $payAmount, $always, $reason ?: $whyNot, $hidInfo);
   return w\go($hidInfo['ret']);
 }
 
-function handleInvoice($op, $payAmount, $always, $whyNot, $info) {
+function handleInvoice($op, $payAmount, $always, $reason, $info) {
   extract(just('nvid payer payee purpose created data amount', $info));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $whyNot);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to status, rather than error
   
-  if ($op == 'pay' and !$whyNot) {
+  if ($op == 'pay' and !$reason) {
     if ($fromA->ok) { // if payer account is active
       extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
@@ -120,16 +137,20 @@ function handleInvoice($op, $payAmount, $always, $whyNot, $info) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
       $msg .= '|' . t('auto pay on', just('payeeName', $subs));
     }
-  } elseif ($op == 'cancel') { // only payee can cancel
+  } elseif ($op == 'close') { // only payee can cancel
     if (db\get('status', 'tx_requests', compact('nvid')) >= TX_PAID) return go('history/pending-to', tr('inv already paid'), 'err'); // bad timing
-    db\del('tx_requests', 'nvid', $nvid);
-    $fromA->tellOut('invoice withdrawn', $subs);
-    $msg = 'invoice cancel done';
-  } elseif ($op == 'deny' or $whyNot) {
-    $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
+    list ($status, $done) = $action == ACT_CANCEL 
+    ? [TX_CANCELED, t('canceled')] 
+    : [TX_PAID, t('marked PAID')];
+    $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
+    db\update('tx_requests', compact(ray('status data nvid')), 'nvid');
+    $fromA->tellOut('invoice withdrawn', $subs + compact('done'));
+    $msg = tr('invoice done', compact('done'));
+  } elseif ($op == 'deny' or $reason) {
+    $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     $toA->tell('invoice denied', $subs);
-    u\tellApp('denied', $fromA, $toA, $amount, $purpose, $created, $whyNot);
+    u\tellApp('denied', $fromA, $toA, $amount, $purpose, $created, $reason);
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 

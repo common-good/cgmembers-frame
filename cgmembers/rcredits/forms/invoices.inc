@@ -66,7 +66,7 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
 
   $rows = [];
   list ($me, $yu) = u\order($toMe, 'payee', 'payer');
-  $where = ":uid=i.$me AND i.created BETWEEN :starting AND :ending";
+  $where = "i.$me IN (:uids) AND i.created BETWEEN :starting AND :ending";
 
   $sql = <<<EOF
     SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
@@ -80,7 +80,7 @@ EOF;
 //    ORDER BY (i.status=:TX_PENDING OR i.status=:TX_APPROVED) DESC, nvid DESC
 
   global $mya;
-  $q = db\q($sql, ray('uid starting ending', $mya->id, $starting, $ending));
+  $q = db\q($sql, ray('uids starting ending', $mya->uids, $starting, $ending));
 ///   debug(compact('sql','starting','ending', 'mya'));
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
@@ -88,22 +88,24 @@ EOF;
     $row = array($nvid, fmtDt($created, $download ? 'yyyy-MM-dd' : DATE_FMT), $other, $purpose, $amount);
     
     $do = "$url&nvid=$nvid&do";
+    $data = unserialize(nn($data)) ?: [];
+    $reason = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 
-    if ($status0 > 1) {
-//      $button1 = $button2 = $button3 = '';
-      $status = t('paid') . " (Tx#$xid)";
+    if ($status0 >= TX_PAID) {
+      $status = t('paid');
+      if ($status0 > TX_PAID) $status .= " (Tx#$xid)"; // xid=TX_PAID always has a reason unless the first tx was invoiced
     } else {
       $statuses = ray(TX_STATUSES);
-      $data = unserialize(nn($data));
       $status = $status1 = ucfirst($statuses[$status0]);
-      if ($status0 == TX_DENIED) $status = tags('a', w\popHelp($status, t('Reason: ') . nni($data, 'whyNot')));
     }
+
+    if ($reason) $status = tags('a', w\popHelp($status, t('Reason: ') . $reason));
 
 //    $buttons = "<div class='txs-buttons'><div>$button1</div><div>$button2</div><div>$status</div></div>";
     $buttons = "<div class='txs-buttons'>$status</div>";
     
     $row[] = $download
-    ? ($status0 == TX_DENIED ? $status1 . tr(' (%whyNot)', 'whyNot', nni($data, 'whyNot')) : $status)
+    ? ($status0 == TX_DENIED ? $status1 . tr(' (%reason)', compact('reason')) : $status)
     : $buttons;
     $rows[] = $row;
   }

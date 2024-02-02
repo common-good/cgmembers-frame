@@ -667,7 +667,8 @@ const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
 
-// Invoice status (txid >= TX_PAID if paid)
+// Invoice status (>= TX_PAID if paid, equal to the final payment xid)
+const TX_CANCELED = -5; // payee canceled the invoice
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator
