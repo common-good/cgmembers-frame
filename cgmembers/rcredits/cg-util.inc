@@ -468,6 +468,7 @@ This function uses the ignore_errors context parameter. Without this set (the de
 When using POST with REST, take care: PHP's HTTP redirection handler will drop your POST payload if the endpoint issues a redirect. If you experience problems using POST with the function below, it might be due to redirects. Most of the POST calls I've run into issue redirects if the URL is missing a trailing '/' character. In other words, if you experience problems where it seems like your parameters are not being sent in, try appending a '/' to the end of the URL and try it again.
  */
 function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $method = 'POST', $request_format = 'url') {
+  global $postResponse; // make this available for debugging from outside
   if (test()) { global $testHit; $testHit = compact('url', 'content'); }
   
   $ignore_errors = TRUE;
@@ -490,18 +491,18 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   
   if ($fp = fopen($url, 'rb', FALSE, $context)) {
     /// $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']); // for debugging
-    $response = stream_get_contents($fp);
-  } else $response = FALSE;
+    $postResponse = stream_get_contents($fp);
+  } else $postResponse = FALSE;
 
-  if ($response === FALSE) {
+  if ($postResponse === FALSE) {
     r\tellAdmin("$method $url failed");
     return FALSE;
   }
   
-  $result = $responseFormat == 'xml' ? simplexml_load_string($response)
-    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($response))
-    : ($response) );
-  EXPECT(!is_null($result), "$method $url returned error: $response");
+  $result = $responseFormat == 'xml' ? simplexml_load_string($postResponse)
+    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($postResponse))
+    : ($postResponse) );
+  EXPECT(!is_null($result), "$method $url returned error: $postResponse");
   return $result;
 }
 
