@@ -203,7 +203,7 @@ function postInputFlds($dfts = []) {
   
   $emergency = boolFld(t('Emergency:'), t('This is an emergency need or applies only in an emergency.'), dft($emergency ? 1 : 0));
   
-  $dft = isset($radius) ? dft(u\fmtAmt($radius, 's')) : [];
+  $dft = isset($radius) ? dft(u\fmtAmt($radius, 'b0')) : [];
   $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], $dft + suffix(t(' miles')));
   $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time). If you leave this blank, the post will end in one year.')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
