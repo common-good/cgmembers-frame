@@ -92,7 +92,7 @@ function fixData(&$info, $direct = FALSE) {
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
-      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
+      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", nn($var), $v);
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   

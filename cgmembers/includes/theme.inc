@@ -414,7 +414,7 @@ class ThemeRegistry Extends DrupalCacheArray {
     return array_fill_keys(array_keys($this->completeRegistry), NULL);
   }
 
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     // Since the theme registry allows for theme hooks to be requested that
     // are not registered, just check the existence of the key in the registry.
     // Use array_key_exists() here since a NULL value indicates that the theme
@@ -422,7 +422,7 @@ class ThemeRegistry Extends DrupalCacheArray {
     return array_key_exists($offset, $this->storage);
   }
 
-  public function offsetGet($offset) {
+  public function offsetGet($offset): mixed {
     // If the offset is set but empty, it is a registered theme hook that has
     // not yet been requested. Offsets that do not exist at all were not
     // registered in hook_theme().

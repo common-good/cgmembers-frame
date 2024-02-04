@@ -1059,7 +1059,7 @@ function badName(&$name) {
   return FALSE;
 }
 
-define("CTYPE_PRINT_UNICODE_PATTERN", "~^[\pL\pN\s\"\~". preg_quote("!#$%&'()*+,-./:;<=>?@[\]^_`{|}´") ."]+$~u");
+define("CTYPE_PRINT_UNICODE_PATTERN", "~^[\pL\pN\s\"\~". preg_quote("!#$%&'()*+,-./:;<=>?@[\]^_`{|}ï¿½") ."]+$~u");
 function ctype_print_unicode($input) {
     return preg_match(CTYPE_PRINT_UNICODE_PATTERN, $input);
 }
@@ -1703,7 +1703,7 @@ function lastRecur($start, $number, $units) {
  */
 function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
   $sql = <<< EOF
-    (CASE $rulesTnm.${role}Type
+    (CASE $rulesTnm.{$role}Type
      WHEN :REF_ANYBODY THEN TRUE
      WHEN :REF_ACCOUNT THEN $role = $uid
      WHEN :REF_ANYCO THEN (SELECT :IS_CO FROM users WHERE uid=$uid)
@@ -1795,8 +1795,7 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
     flog(t('Error in tellApp: ') . $e->getMessage());
   }
   restore_error_handler();
-  /*
-  echo $client->receive(); 
+  /*  echo $client->receive(); 
   $client->onMessage(function ($message) {
 /// echo "Received message: $message\n";
   }); */
@@ -1912,7 +1911,7 @@ function log($message, $type = 'state', $info = []) {return u\loga($type, compac
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
 function dejsonize($s, $retRay = TRUE) {return json_decode($s, $retRay);}
-function redash($s) {return str_replace('—', '&mdash;', $s);}
+function redash($s) {return str_replace('ï¿½', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
 function lpad($s, $n) {return str_pad(substr($s, 0, $n), $n, '0', STR_PAD_LEFT);}

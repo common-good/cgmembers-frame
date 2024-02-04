@@ -160,14 +160,14 @@ abstract class DrupalCacheArray implements ArrayAccess {
   /**
    * Implements ArrayAccess::offsetExists().
    */
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     return $this->offsetGet($offset) !== NULL;
   }
 
   /**
    * Implements ArrayAccess::offsetGet().
    */
-  public function offsetGet($offset) {
+  public function offsetGet($offset): mixed {
     if (isset($this->storage[$offset]) || array_key_exists($offset, $this->storage)) {
       return $this->storage[$offset];
     }
@@ -179,14 +179,14 @@ abstract class DrupalCacheArray implements ArrayAccess {
   /**
    * Implements ArrayAccess::offsetSet().
    */
-  public function offsetSet($offset, $value) {
+  public function offsetSet($offset, $value): void {
     $this->storage[$offset] = $value;
   }
 
   /**
    * Implements ArrayAccess::offsetUnset().
    */
-  public function offsetUnset($offset) {
+  public function offsetUnset($offset): void {
     unset($this->storage[$offset]);
   }
 
@@ -1297,7 +1297,7 @@ function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots eas
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
 function nni($ray, $i, $else = '') {
-  if (!is_array($ray) and !is_object($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
+  if (is_string($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
   return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;
 } // same as nn but for indexed value
 
