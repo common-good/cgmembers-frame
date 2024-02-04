@@ -35,7 +35,7 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  * Example for 1099-NEC and 1099-R (get amounts from QBO and/or CG)
  *
  * Get lines for each contractor (or retiring employee for 1099-R) on production server with:
-     foreach (ray('aka nevabj etc') as $qid) { // these can also be numeric account IDs
+     foreach (ray('aka NEVABJ etc') as $qid) { // uppercase if 5 letters, these can also be numeric account IDs
        $a = a($qid); $co = $a->co ? 1 : 0;
        e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
      }
