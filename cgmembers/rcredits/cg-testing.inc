@@ -2187,8 +2187,9 @@ function fixTestVars(&$parm) {
   global $testVars, $nextCode, $testCode; 
 
   $testVars['nextCode'] = $nextCode;
-  if (is_array($parm)) foreach ($parm as $k => $v) fixTestVars($parm[$k]);
-  foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', $testCode, str_replace("%$k", $v, $parm));
+  if (is_array($parm)) {
+    foreach ($parm as $k => $v) fixTestVars($parm[$k]);
+  } else foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', nn($testCode), str_replace("%$k", nn($v), $parm));
 }
 
 function itsLater() {return timeIs(now() + 1);}
