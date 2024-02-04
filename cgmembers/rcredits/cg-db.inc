@@ -36,7 +36,17 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   }
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
-  return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), $retId ? ray('return', \Database::RETURN_INSERT_ID) : []);
+
+  $sql = u\SUBS($sql);
+  $subs = u\prefixKeys(':', $subs);
+  $opts = $retId ? ray('return', \Database::RETURN_INSERT_ID) : [];
+
+  $res = \db_query($sql, $subs, $opts);
+  if (is_null($res)) {
+    global $dbERR; // PDOException set in database.inc
+    if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
+    u\FAIL(t('Database error'));
+  } else return $res;
 }
 
 /**
