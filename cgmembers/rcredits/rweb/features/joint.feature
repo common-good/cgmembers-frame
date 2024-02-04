@@ -5,11 +5,11 @@ SO we can share our finances, as for a typical "joint account" at a bank.
 
 Setup:
   Given members:
-  | uid  | fullName   | acctType    | flags                     | minimum | created   |*
-  | .ZZA | Abe One    | personal    | ok,member,confirmed,ided  |     100 | %today-6m |
-  | .ZZB | Bea Two    | personal    | ok,confirmed,ided         |      50 | %today-6m |
-  | .ZZC | Corner Pub | corporation | ok,confirmed,ided,co      |       0 | %today-6m |
-  | .ZZD | Dee Four   | personal    | ok,confirmed,ided         |       0 | %today-6m |
+  | uid  | fullName | acctType    | flags                     | minimum | created   |*
+  | .ZZA | Abe One  | personal    | ok,member,confirmed,ided  |     100 | %today-6m |
+  | .ZZB | Bea Two  | personal    | ok,confirmed,ided         |      50 | %today-6m |
+  | .ZZC | Cor Pub  | corporation | ok,confirmed,ided,co      |       0 | %today-6m |
+  | .ZZD | Dee Four | personal    | ok,confirmed,ided         |       0 | %today-6m |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -63,11 +63,11 @@ Scenario: A member requests a joint account from the relations page
   | .ZZB | .ZZA |       0 |
   
   When member ".ZZA" confirms form "tx/pay" with values:
-  | op  | who        | amount | goods      | purpose |*
-  | pay | Corner Pub |     20 | %FOR_GOODS | stuff   |
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Cor Pub |     20 | %FOR_GOODS | stuff   |
   And member ".ZZB" confirms form "tx/pay" with values:
-  | op  | who        | amount | goods      | purpose |*
-  | pay | Corner Pub |    300 | %FOR_GOODS | crud    |
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Cor Pub |    300 | %FOR_GOODS | crud    |
 
 Scenario: A joined account slave member requests a new minimum
   Given members have:
@@ -124,7 +124,7 @@ Scenario: A joined account member looks at transaction history and summary
   And with:
   | Tx# | Date    | Name       | Purpose   |  Amount |  Balance | Action |
   |   4 | %mdy    | --         | to bank   | -100.00 | 1,850.00 |        |
-  |  18 | %mdy-1d | Corner Pub | labor     |  100.00 | 1,950.00 |        |
+  |  18 | %mdy-1d | Cor Pub | labor     |  100.00 | 1,950.00 |        |
   |  17 | %mdy-2d | Dee Four   | cash      |   50.00 | 1,850.00 |        |
 #  | 16  | %mdy-1w | Abe One    | usd      | 500.00  |   500.00 |  +0    |
   |   3 | %mdy-2w | --         | from bank |  400.00 | 1,800.00 |        |
@@ -172,3 +172,38 @@ Scenario: A member requests two joins at once
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
+
+Scenario: A member with a joined account views invoices
+  Given these "u_relations":
+  | main | agent | permission |*
+  | .ZZA | .ZZB  | joint      |
+  | .ZZB | .ZZA  | joint      |
+  And members have:
+  | uid  | jid  | balance |*
+  | .ZZA | .ZZB | 200     |
+  | .ZZB | .ZZA | 0       |
+  And these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %now-1d | %TX_PENDING |    100 | .ZZA  | .ZZC  | drink |
+  When member ".ZZB" visits "history/pending-from"
+  Then we show "Pending Payments FROM You" with:
+  | Inv# | Date    | Name    | Purpose | Amount | Status |
+  | 1    | %mdY-1d | Cor Pub | drink   | 100.00 | OPEN   |
+
+  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+  Then we show "Confirm Payment" with:
+  | ~question     | Pay $100 to Cor Pub for drink |
+  | Amount to Pay | 100     |
+  | ~             | Pay     |
+  | Reason        |         |
+  | ~             | Dispute |
+
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |       100 | .ZZA  | .ZZC  | drink   | %now    |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | relType | rel |*
+  |   1 | %now  |    100 | .ZZA  | .ZZC  | drink   | I       | 1   |
+  And these "tx_requests":
+  | nvid | created | status | amount | payer | payee | for   |*
+  |    1 | %now-1d | 1      |    100 | .ZZA  | .ZZC  | drink |

@@ -32,11 +32,11 @@ Scenario: A member approves an invoice
 
   When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
-  | ~question | Pay $100 to Abe One for labor |
+  | ~question     | Pay $100 to Abe One for labor |
   | Amount to Pay | 100 |
-  | ~ | Pay |
-  | Reason ||
-  | ~ | Dispute |
+  | ~             | Pay |
+  | Reason        |     |
+  | ~             | Dispute |
 
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
