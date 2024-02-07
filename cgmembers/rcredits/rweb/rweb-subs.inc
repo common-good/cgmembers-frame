@@ -600,7 +600,7 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
   } else {
-    $list = a\showQuery($tnm, "$idFld $order", '*', 'uid', $url);
+    $list = a\showQuery($tnm, "$idFld $order", '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
   
