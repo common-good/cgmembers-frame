@@ -36,7 +36,7 @@ function formAgreement($form, &$sta) {
 <ol>
   <li><b>Who.</b> I make this agreement with all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; especially with Members and Member Organizations in my <%aCGC>%PROJECT Community</a>.</li>
   <li><b>Community control.</b> I understand we can use the Common Good System, as a democratic community, to reclaim control of our local economy for the common good. I am willing to participate with other Members to do that, and to support other communities to do the same.</li>
-  <li><b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a>, so my community has more money to invest while I use my credit for purchases.</li>
+  <li><b>Investing together.</b> I understand whenever I put money in my %PROJECT account, there is more money in the <%aDollar-Pool>Dollar Pool</a>, so my community has more money to invest while I use my %PROJECT credit for purchases.</li>
   <li><b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more &mdash; partly by money in the Dollar Pool and partly by Members and Member Organizations.</li>
   <li><b>Accepting payments.</b> I will accept %PROJECT credit as payment, <%aWithout-Limit>without limit or surcharge</a>.</li>
   <li><b>Account Balance.</b> If I spend more than the balance in my %PROJECT account, resulting in a negative balance, I will bring my balance up to zero or more within 30 days.</li>
