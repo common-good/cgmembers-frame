@@ -1796,54 +1796,7 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
     flog(t('Error in tellApp: ') . $e->getMessage());
   }
   restore_error_handler();
-  /*  echo $client->receive(); 
-  $client->onMessage(function ($message) {
-/// echo "Received message: $message\n";
-  }); */
 }
-
-  /* ratchet/pawl
-  // Ratchet fails (both with and without $loop) (never connects)
-  /*
-  $loop = \React\EventLoop\Factory::create();
-  
-  flog('about to Ratchet', TX_SOCKET);
-  \Ratchet\Client\connect("wss://$url:" . SOCKET_PORT, [], [], $loop)->then(function($conn) {
-    $conn->on('message', function($msg) use ($conn) {
-///      flog("Received socket message: {$msg}\n", TX_SOCKET);
-      $conn->close();
-    });
-///    flog('telling socket: ' . $msg, TX_SOCKET);
-    $conn->send($msg);
-    $conn->close();
-  }, function ($e) use ($loop) {
-//* / flog("Could not connect: {$e->getMessage()}\n", TX_SOCKET);
-    $loop->stop();
-  });
-}*/
-
-// Paragi
-/*  $context = stream_context_create(['ssl' => [
-    'local_cert' => '/etc/pki/tls/certs/commongood.earth.pem',
-    'local_pk' => '/etc/pki/tls/private/commongood.earth.key',
-    'verify_peer' => false,
-  ]]);
-
-//  set_error_handler(function() { }); // ignore warnings (and errors)
-
-  try {
-    $sp = new \Paragi\PhpWebsocket\Client('wss://' . $url, SOCKET_PORT);
-    // construction with $url, SOCKET_PORT, NULL, $err, 10, $context) fails -- context is required to be boolean (bug in Paragi)
-///    debug('telling socket: ' . $msg);
-    $sp->write($msg);
-//    echo "Server responded with: " . $sp->read();
-    $sp->close();
-  } catch (\Paragi\PhpWebsocket\ConnectionException | Exception $e) {
-//* / flog(t('PHPWebsocket error: ') . $e->getMessage(), TX_SOCKET);
-  }
-//  restore_error_handler();
-}*/
-
 
 /**
  * Return the next business day (avoiding U.S. holidays) after the given time
