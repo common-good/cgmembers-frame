@@ -319,9 +319,10 @@ X;
     foreach ([2, 1] as $i) if ($e["cat$i"]) { // do recipient first (if you change this, fix how $amt negation is handled)
       if ($i == 1) $amt = -$amt; // payer loses the amount
       foreach (ray('uid cat') as $k) $$k = $e["$k$i"];
-      $uidNick = $uid == UID_OUTER 
+
+      $uidNick = $uid == UID_OUTER // UID_OUTER only when called from sendCCTx()
       ? ($cat == CAT_CG2CG ? r\acct(UID_BANK)->mainQid : 'POOL') // CC not allowed for loans
-      : (r\hasCats($qid = r\acct($uid)->mainQid) ? $qid : 'LOANFUND'); // UID_OUTER only when called from sendCCTx()
+      : (((r\hasCats($uid) or $uid == UID_BANK) and $qid = r\acct($uid)->mainQid) ? $qid : 'LOANFUND');
 
       $this->addJLine($qbTx, $uidNick, -$amt, $desc);
       if ($cat != CAT_CG2CG) $this->addJLine($qbTx, $cat, $amt, $desc);
