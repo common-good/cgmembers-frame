@@ -2300,9 +2300,23 @@ function weHitWith($url, $args) {
  */
 function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
-  if (!$actual = t\getExitMsg()) return FALSE;
-/**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return t\eq('show', $what, '' . $actual);
+  global $channel; $chan0 = $channel;
+
+  $channel = TX_WEB; // allow messages to be seen
+  $actual = t\getExitMsg(); 
+  
+  if ($actual) {
+  /**/  db\del('test', "type='echo'"); // reset for subsequent steps
+    $res = t\eq('show', $what, '' . $actual);
+    if (!$res) {
+      $what = pr(json_decode($what));
+      $actual = pr(json_decode('' . $actual));
+      if ($what or $actual) $res = t\eq('JSON(show)', $what, $actual);
+    }
+  } else $res = FALSE;
+  
+  $channel = $chan0;
+  return $res;
 }
 
 /**
