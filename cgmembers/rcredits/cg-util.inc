@@ -763,6 +763,7 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
 ///  flog(compact(ray('w0 h0 w h x1 y1 cropW cropH angle bX bY')));
   
   if ($w0 != $w or $h0 != $h) { // resize
+    $w = round($w); $h = round($h); // required for PHP8
     $img1 = imagecreatetruecolor($w, $h); // resize the original image to size of editor
     imagecopyresampled($img1, $img0, 0, 0, 0, 0, $w, $h, $w0, $h0);
   } else $img1 = $img0;
