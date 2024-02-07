@@ -783,7 +783,7 @@ $GLOBALS['emailSubjects'] = array(
   'post-expires' => t('Your Offers & Needs post is expiring!'),
   'post-notice' => t('recent Offers & Needs near you'),
 );
-foreach (ray(' gift- cggift- fbo-') as $k) foreach(ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
+foreach (ray(' gift- cggift- fbo-') as $k) foreach (ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
 
 $GLOBALS['topics'] = array( // topics for 'message' email
   'confirm invite' => t('Confirm invitation to %otherName'),

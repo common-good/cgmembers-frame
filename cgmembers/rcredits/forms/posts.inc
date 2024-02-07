@@ -315,7 +315,7 @@ X;
 function getWho($args) {
   mb_parse_str($args, $ray);
   $info = []; // needed if $args/$ray is empty
-  foreach(just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
+  foreach (just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
 
   jsx('post-who', ray('moderateZips', MODERATE_ZIPS));
@@ -734,7 +734,7 @@ function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}
 function postRet($msg) {return r\acct() ? softErr($msg) : doSay($msg);}
 function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
-function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
+function frmBools($frm) {foreach (ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
 function myLocus() {global $mya; return ($mya and $mya->agentA->stepIsDone('contact')) ? $mya->location(TRUE) : '';}
 function typeName($type, $n) {return ray(constant("POST_TYPE_NAMES$n"))[typeNum($type)];}
 function typeNum($type) {return is_numeric($type) ? $type : array_search($type, ray(POST_TYPES));}

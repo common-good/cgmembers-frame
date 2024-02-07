@@ -1090,7 +1090,7 @@ EOF;
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, nni(r\allSteps(), $step));}
   public function stepsDone($task) {
-    foreach(ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
+    foreach (ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
     return TRUE;
   }
   public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}

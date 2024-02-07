@@ -582,11 +582,11 @@ function hasStepsDone($id, $task, $steps) {
   if (!$testOnly) {
     $a->update('steps', 0);
     $a->setTask($task);
-    foreach(ray($steps) as $k) $a->stepDone($k);
+    foreach (ray($steps) as $k) $a->stepDone($k);
   } else {
     if ($steps0 != 'all' and $a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
   }
-  foreach(ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
+  foreach (ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
   return TRUE;  
 }
 
@@ -1785,7 +1785,7 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-/**/  foreach(ray(TX_CHANNELS) as $chan => $zot) u\deleteFile(flog('', $chan));
+/**/  foreach (ray(TX_CHANNELS) as $chan => $zot) u\deleteFile(flog('', $chan));
   u\deleteFile(SQL_LOG);
 
   $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up');
@@ -2189,7 +2189,7 @@ function fixTestVars(&$parm) {
   $testVars['nextCode'] = $nextCode;
   if (is_array($parm)) {
     foreach ($parm as $k => $v) fixTestVars($parm[$k]);
-  } else foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', nn($testCode), str_replace("%$k", nn($v), $parm));
+  } else foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', nn($testCode), str_replace("%$k", nn($v), nn($parm)));
 }
 
 function itsLater() {return timeIs(now() + 1);}

@@ -146,7 +146,7 @@ function formStepUp_submit($form, &$sta) {
 
   foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule or template for the amount
     $xly = $xlys[$i];
-    foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = nni($input, "$v-$xly-$uid") ?: NULL;
+    foreach (ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = nni($input, "$v-$xly-$uid") ?: NULL;
     $pct = strhas($period, 'pct');
     $matchFlds = 'amount,portion,amtMax'; // fields user can adjust from time to time
     $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);

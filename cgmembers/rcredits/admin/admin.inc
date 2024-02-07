@@ -527,7 +527,7 @@ function ssnShow($a) {
   $counties = [];
   $addresses = nn($d['addresses']['address']) ?: [];
   if (nni($addresses, 'lastname')) $addresses = [$addresses];
-  foreach($addresses as $rec) {
+  foreach ($addresses as $rec) {
     $rec = (object) $rec;
     $rows[] = array($rec->datereported ? fmtDt(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? fmtDt(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
     if (now() - strtotime(pr($rec->datereported)) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;

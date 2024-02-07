@@ -625,7 +625,7 @@ function specialhdrs($question_type) {
   $ans = jscript('ballot.js');
   if($question_type == 'B') {
     $ans .= "<link rel='stylesheet' type='text/css' href='$rUrl/images/rvote/inc/slider.css' />";
-    foreach(array('sliderutil.js', 'slider.js', 'questionB.js', 'overview.js') as $one) $ans .= jscript($one);
+    foreach (array('sliderutil.js', 'slider.js', 'questionB.js', 'overview.js') as $one) $ans .= jscript($one);
   } else $ans .= jscript('questionM.js') ;
 
   return $ans;
