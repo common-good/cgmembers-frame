@@ -36,8 +36,8 @@ function formFollowup($form, &$sta, $args = []) {
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
   if ($mya->admPrintCards) {
-    $wantsCardP = 0; foreach(ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
-    $wantsCardCo = 0; foreach(ray(S_CO) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
+    $wantsCardP = 0; foreach (ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
+    $wantsCardCo = 0; foreach (ray(S_CO) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
     $wantsCardQ = "IF(:IS_CO, $wantsCardCo, $wantsCardP)";
     $sql = <<<X
       SELECT DISTINCT u.uid

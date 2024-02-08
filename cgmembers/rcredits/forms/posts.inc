@@ -203,7 +203,7 @@ function postInputFlds($dfts = []) {
   
   $emergency = boolFld(t('Emergency:'), t('This is an emergency need or applies only in an emergency.'), dft($emergency ? 1 : 0));
   
-  $dft = isset($radius) ? dft(u\fmtAmt($radius, 's')) : [];
+  $dft = isset($radius) ? dft(u\fmtAmt($radius, 'b0')) : [];
   $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], $dft + suffix(t(' miles')));
   $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time). If you leave this blank, the post will end in one year.')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
@@ -315,7 +315,7 @@ X;
 function getWho($args) {
   mb_parse_str($args, $ray);
   $info = []; // needed if $args/$ray is empty
-  foreach(just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
+  foreach (just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
 
   jsx('post-who', ray('moderateZips', MODERATE_ZIPS));
@@ -734,7 +734,7 @@ function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}
 function postRet($msg) {return r\acct() ? softErr($msg) : doSay($msg);}
 function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
-function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
+function frmBools($frm) {foreach (ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
 function myLocus() {global $mya; return ($mya and $mya->agentA->stepIsDone('contact')) ? $mya->location(TRUE) : '';}
 function typeName($type, $n) {return ray(constant("POST_TYPE_NAMES$n"))[typeNum($type)];}
 function typeNum($type) {return is_numeric($type) ? $type : array_search($type, ray(POST_TYPES));}

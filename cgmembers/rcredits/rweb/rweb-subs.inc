@@ -600,7 +600,7 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
   } else {
-    $list = a\showQuery($tnm, "$idFld $order", '*', 'uid', $url);
+    $list = a\showQuery($tnm, "$idFld $order", '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
   
@@ -777,7 +777,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!(nni($formSta, 'confirm')) and !in($function, NOLOG_FORMS)) {
     $path = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
     $logit = TRUE;
-    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($path, $k)) {
+    foreach (ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($path, $k)) {
       if ($i >= 2) return hack(t('blog attack'));
       $logit = FALSE;
     }
@@ -1951,7 +1951,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
 
   $vs = compact(ray('success accts funds velocity usd txs topPct'));
 
-  foreach($charts as $k => $help) {
+  foreach ($charts as $k => $help) {
     $one = "<div id=\"onechart\" class=\"onechart ct-chart ct-golden-section\"></div>";
 //    if (count($charts) > 1) $one = "<a href=\"$base_url/help/$help/qid=$ctty\">$one</a>";
     $charts[$k] = "<div>$one</div>";

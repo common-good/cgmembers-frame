@@ -15,6 +15,7 @@ use CG\Web as w;
 const EOL = "\r\n"; // must be two characters long (make sure download doesn't change it)
 const STATE_CODE = '25'; // Massachusetts code, for combined Federal/State filing
 const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
+const TCC = '90MD6'; // our TCC identifier assigned by the IRS
 
 /**
  * Create 1099-B, K, NEC, or R reports for the IRS as a downloadable file to be uploaded to the IRS FIRE site.
@@ -35,7 +36,7 @@ const AMT_COUNT = 18; // number of amount fields (as of reporting year 2021)
  * Example for 1099-NEC and 1099-R (get amounts from QBO and/or CG)
  *
  * Get lines for each contractor (or retiring employee for 1099-R) on production server with:
-     foreach (ray('aka nevabj etc') as $qid) { // these can also be numeric account IDs
+     foreach (ray('aka NEVABJ etc') as $qid) { // uppercase if 5 letters, these can also be numeric account IDs
        $a = a($qid); $co = $a->co ? 1 : 0;
        e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
      }
@@ -194,7 +195,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
 function recT($year, $testMode) {
   //$region = r\acct(r\serverUid());
   $prior = pad(($year < date('Y') - 1) ? 'P' : '', 1); // P for prior year data, else ' '
-  $TCC = '08C20';
+  $TCC = TCC;
   $testing = pad($testMode, 1);
   $foreign = pad(FALSE, 1); // 1 for foreign
   $coName = $transmitterName = pad(strtoupper(CGF_LEGALNAME), 80);

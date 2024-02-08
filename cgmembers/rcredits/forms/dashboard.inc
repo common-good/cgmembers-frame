@@ -142,7 +142,7 @@ function choiceListFld() {
 X
   ));
     
-  foreach($choices0 as $one) {
+  foreach ($choices0 as $one) {
     list ($dir, $task, $title, $text) = explode(':', trim($one));
 
     if ($dir == 'community' or $task == 'reopen') {

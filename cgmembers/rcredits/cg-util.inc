@@ -468,6 +468,7 @@ This function uses the ignore_errors context parameter. Without this set (the de
 When using POST with REST, take care: PHP's HTTP redirection handler will drop your POST payload if the endpoint issues a redirect. If you experience problems using POST with the function below, it might be due to redirects. Most of the POST calls I've run into issue redirects if the URL is missing a trailing '/' character. In other words, if you experience problems where it seems like your parameters are not being sent in, try appending a '/' to the end of the URL and try it again.
  */
 function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $method = 'POST', $request_format = 'url') {
+  global $postResponse; // make this available for debugging from outside
   if (test()) { global $testHit; $testHit = compact('url', 'content'); }
   
   $ignore_errors = TRUE;
@@ -490,18 +491,18 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   
   if ($fp = fopen($url, 'rb', FALSE, $context)) {
     /// $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']); // for debugging
-    $response = stream_get_contents($fp);
-  } else $response = FALSE;
+    $postResponse = stream_get_contents($fp);
+  } else $postResponse = FALSE;
 
-  if ($response === FALSE) {
+  if ($postResponse === FALSE) {
     r\tellAdmin("$method $url failed");
     return FALSE;
   }
   
-  $result = $responseFormat == 'xml' ? simplexml_load_string($response)
-    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($response))
-    : ($response) );
-  EXPECT(!is_null($result), "$method $url returned error: $response");
+  $result = $responseFormat == 'xml' ? simplexml_load_string($postResponse)
+    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($postResponse))
+    : ($postResponse) );
+  EXPECT(!is_null($result), "$method $url returned error: $postResponse");
   return $result;
 }
 
@@ -762,6 +763,7 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
 ///  flog(compact(ray('w0 h0 w h x1 y1 cropW cropH angle bX bY')));
   
   if ($w0 != $w or $h0 != $h) { // resize
+    $w = round($w); $h = round($h); // required for PHP8
     $img1 = imagecreatetruecolor($w, $h); // resize the original image to size of editor
     imagecopyresampled($img1, $img0, 0, 0, 0, 0, $w, $h, $w0, $h0);
   } else $img1 = $img0;
@@ -1058,7 +1060,7 @@ function badName(&$name) {
   return FALSE;
 }
 
-define("CTYPE_PRINT_UNICODE_PATTERN", "~^[\pL\pN\s\"\~". preg_quote("!#$%&'()*+,-./:;<=>?@[\]^_`{|}´") ."]+$~u");
+define("CTYPE_PRINT_UNICODE_PATTERN", "~^[\pL\pN\s\"\~". preg_quote("!#$%&'()*+,-./:;<=>?@[\]^_`{|}ï¿½") ."]+$~u");
 function ctype_print_unicode($input) {
     return preg_match(CTYPE_PRINT_UNICODE_PATTERN, $input);
 }
@@ -1702,7 +1704,7 @@ function lastRecur($start, $number, $units) {
  */
 function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
   $sql = <<< EOF
-    (CASE $rulesTnm.${role}Type
+    (CASE $rulesTnm.{$role}Type
      WHEN :REF_ANYBODY THEN TRUE
      WHEN :REF_ACCOUNT THEN $role = $uid
      WHEN :REF_ANYCO THEN (SELECT :IS_CO FROM users WHERE uid=$uid)
@@ -1784,65 +1786,18 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
   $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+
 //  textalk/websocket
-  set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
+/**/ set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
   try {
     $client = new \WebSocket\Client("wss://$url:" . SOCKET_PORT);
     $client->send($msg);
     $client->close();
   } catch (\Exception $e) {
-    flog(t('Error in tellApp: ') . $e->getMessage());
+/**/ flog(t('Error in tellApp: ') . $e->getMessage());
   }
   restore_error_handler();
-  /*
-  echo $client->receive(); 
-  $client->onMessage(function ($message) {
-/// echo "Received message: $message\n";
-  }); */
 }
-
-  /* ratchet/pawl
-  // Ratchet fails (both with and without $loop) (never connects)
-  /*
-  $loop = \React\EventLoop\Factory::create();
-  
-  flog('about to Ratchet', TX_SOCKET);
-  \Ratchet\Client\connect("wss://$url:" . SOCKET_PORT, [], [], $loop)->then(function($conn) {
-    $conn->on('message', function($msg) use ($conn) {
-///      flog("Received socket message: {$msg}\n", TX_SOCKET);
-      $conn->close();
-    });
-///    flog('telling socket: ' . $msg, TX_SOCKET);
-    $conn->send($msg);
-    $conn->close();
-  }, function ($e) use ($loop) {
-//* / flog("Could not connect: {$e->getMessage()}\n", TX_SOCKET);
-    $loop->stop();
-  });
-}*/
-
-// Paragi
-/*  $context = stream_context_create(['ssl' => [
-    'local_cert' => '/etc/pki/tls/certs/commongood.earth.pem',
-    'local_pk' => '/etc/pki/tls/private/commongood.earth.key',
-    'verify_peer' => false,
-  ]]);
-
-//  set_error_handler(function() { }); // ignore warnings (and errors)
-
-  try {
-    $sp = new \Paragi\PhpWebsocket\Client('wss://' . $url, SOCKET_PORT);
-    // construction with $url, SOCKET_PORT, NULL, $err, 10, $context) fails -- context is required to be boolean (bug in Paragi)
-///    debug('telling socket: ' . $msg);
-    $sp->write($msg);
-//    echo "Server responded with: " . $sp->read();
-    $sp->close();
-  } catch (\Paragi\PhpWebsocket\ConnectionException | Exception $e) {
-//* / flog(t('PHPWebsocket error: ') . $e->getMessage(), TX_SOCKET);
-  }
-//  restore_error_handler();
-}*/
-
 
 /**
  * Return the next business day (avoiding U.S. holidays) after the given time
@@ -1911,7 +1866,7 @@ function log($message, $type = 'state', $info = []) {return u\loga($type, compac
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
 function dejsonize($s, $retRay = TRUE) {return json_decode($s, $retRay);}
-function redash($s) {return str_replace('—', '&mdash;', $s);}
+function redash($s) {return str_replace('ï¿½', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
 function lpad($s, $n) {return str_pad(substr($s, 0, $n), $n, '0', STR_PAD_LEFT);}

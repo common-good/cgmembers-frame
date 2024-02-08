@@ -336,7 +336,7 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
     $L = $gotLines[$i];
     $detail = $L->JournalEntryLineDetail;
     $gotRay = [$L->Amount, $detail->PostingType, $detail->AccountRef];
-    $wantRay = ray($wantRay0 = $lines[(int) $i / 2][$i & 1]); // conceptually the index is just $i, but we specify them in pairs
+    $wantRay = ray($wantRay0 = $lines[(int) floor($i / 2)][$i & 1]); // conceptually the index is just $i, but we specify them in pairs
     $w2 = $wantRay[2];
     $map0 = $w2[0] == '.' ? ray($w2, t\uid($w2)) : ray(tr('cgf:%CGID, fund:%UID_BANK')); // in the tests, any nickname starting with '.' is an account abbreviation
     foreach ($map0 as $k => $v) $map[$k] = r\acct($v)->mainQid;

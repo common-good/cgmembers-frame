@@ -97,7 +97,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
   $netAssets = $assetTotal - $liabilityTotal;
   $posttext = $netAssets < 0 ? t('* Common Good Earth is backing this shortfall (but no new grants or investments) until the Backing Promises have a chance to catch up.') : NULL;
   
-  foreach($assetFlds + $liabilityFlds as $k => $v) {
+  foreach ($assetFlds + $liabilityFlds as $k => $v) {
     list ($label, $help) = explode('~', $v);
     $$k = item(u\fmtAmt($$k, '$'), w\popHelp($label, $help));
   }

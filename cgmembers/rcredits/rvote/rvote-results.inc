@@ -18,7 +18,7 @@ function showResults($eid, $noProxies = FALSE) {
   $ans = '';
   if (nn($quids)) {
     $ctty = v\event('ctty', $eid);
-    foreach($quids as $i => $k) $ans .= showResult($ctty, $i + 1, $k, $noProxies, TRUE);
+    foreach ($quids as $i => $k) $ans .= showResult($ctty, $i + 1, $k, $noProxies, TRUE);
   }
   return $ans;
 }
@@ -209,7 +209,7 @@ function tallyResults($voters, $qtype, $qbudget, $qminveto, $opts, $skipoptid=''
   foreach ($opts as $optid) $tot[$optid] = new optTotals($optid, $opts);  // get empty total objects
   $optlist = join(',', $opts);
 
-  foreach($voters as $voter=>$weight) { // foreach voter
+  foreach ($voters as $voter=>$weight) { // foreach voter
     tallyVoter($tot, $voter, $qtype, $optlist, $weight); // tally this voter's ballot on this question
   }
     
@@ -233,7 +233,7 @@ function tallyResults($voters, $qtype, $qbudget, $qminveto, $opts, $skipoptid=''
       if(substr($badtot->result, 0, strlen(FUNDED)) != FUNDED) $badtot->funds = 0; // vetoed or underfunded
       if(count($opts) > 1) {
         $newtot = tallyResults($voters, $qtype, $qbudget - $badtot->funds, $qminveto, $opts, $badtot->id); // refigure w/o vetoed/misfunded opt
-        foreach($newtot as $one) $one->raw = $tot[$one->id]->raw; // put back the original grades
+        foreach ($newtot as $one) $one->raw = $tot[$one->id]->raw; // put back the original grades
         $newtot[] = $badtot; // tack the handled option back on (last)
       }
     } elseif (!$badtot->funds) $badtot->result = 'unfunded';
@@ -324,13 +324,13 @@ EOF;
  */
 function score($tot, $qtype, $qbudget, $qminveto) {
   $totalGrades = 0;
-  foreach(array_keys($tot) as $i) {
+  foreach (array_keys($tot) as $i) {
     $toti = &$tot[$i];
     if($toti->weight) $toti->grade /= $toti->weight; // get average grade for this option
     $totalGrades += $toti->grade; // and total of averages
   }
 
-  foreach(array_keys($tot) as $i) {
+  foreach (array_keys($tot) as $i) {
     $score[$i] = $qtype == 'M'
     ? scoreM($tot, $i)
     : scoreB($tot[$i], $qbudget, $qminveto, count($tot), $totalGrades);
@@ -344,7 +344,7 @@ function scoreM(&$tot, $i) {
 
   $toti = &$tot[$i];
 
-  foreach(array_keys($tot) as $j) $toti->prefdifs[$j] = nni($toti->prefs, $j, 0) - nni($tot[$j]->prefs, $i, 0); // get difs
+  foreach (array_keys($tot) as $j) $toti->prefdifs[$j] = nni($toti->prefs, $j, 0) - nni($tot[$j]->prefs, $i, 0); // get difs
   $toti->minprefdif = min($toti->prefdifs);
   $toti->sumprefdif = array_sum($toti->prefdifs);
   return $toti->minprefdif + (($toti->vetos  + $toti->grade / 30) / ($votesAll+1) + $toti->sumprefdif) / ($votesAll+1);
@@ -464,7 +464,7 @@ function tallyVote(&$tot, $quType, $info, $weight, $vetoWeight, &$voterGrades) {
   
   // Pairwise comparisons for multiple choice (Condorcet)
   if($quType == 'M') {
-    foreach($voterGrades as $otheropt => $othergrade) if($othergrade != $grade) { // for each other option already tallied
+    foreach ($voterGrades as $otheropt => $othergrade) if($othergrade != $grade) { // for each other option already tallied
       list ($i, $j) = u\order($grade < $othergrade, $otheropt, $option); // i is preferred to j
       if ($grade != BLANKGRADE and $othergrade != BLANKGRADE) { // ignore blanks
         $tot[$i]->prefs[$j] = nni($tot[$i]->prefs, $j, 0) + $weight;
@@ -486,7 +486,7 @@ function tallyVote(&$tot, $quType, $info, $weight, $vetoWeight, &$voterGrades) {
 function getDetails($eid) {
   list($quids, $qutypes) = getQuestions($eid); 
   $ans = '';
-  if (@$quids) foreach($quids as $i => $question) $ans .= getQuestionDetail($question, $i + 1);
+  if (@$quids) foreach ($quids as $i => $question) $ans .= getQuestionDetail($question, $i + 1);
   return $ans;
 }
 */

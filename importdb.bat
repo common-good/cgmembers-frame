@@ -1,2 +1,2 @@
-%SqlPath% -uroot -ppass<db\import-%1.sql
+MYSQL -uroot -ppass<db\import-%1.sql
 

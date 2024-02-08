@@ -131,7 +131,7 @@ EOF;
   }
 
   private function guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
-    foreach(ray('xid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
+    foreach (ray('xid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
 
     $return = u\pry($this->baseUrl);
     if (is_numeric($xid)) $xid = w\lnk(BASE_URL . "/history/transaction/xid=$xid&return=$return", $xid, ['title' => t('Details')]);

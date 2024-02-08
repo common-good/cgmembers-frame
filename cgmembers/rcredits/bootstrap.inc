@@ -160,14 +160,14 @@ abstract class DrupalCacheArray implements ArrayAccess {
   /**
    * Implements ArrayAccess::offsetExists().
    */
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     return $this->offsetGet($offset) !== NULL;
   }
 
   /**
    * Implements ArrayAccess::offsetGet().
    */
-  public function offsetGet($offset) {
+  public function offsetGet($offset): mixed {
     if (isset($this->storage[$offset]) || array_key_exists($offset, $this->storage)) {
       return $this->storage[$offset];
     }
@@ -179,14 +179,14 @@ abstract class DrupalCacheArray implements ArrayAccess {
   /**
    * Implements ArrayAccess::offsetSet().
    */
-  public function offsetSet($offset, $value) {
+  public function offsetSet($offset, $value): void {
     $this->storage[$offset] = $value;
   }
 
   /**
    * Implements ArrayAccess::offsetUnset().
    */
-  public function offsetUnset($offset) {
+  public function offsetUnset($offset): void {
     unset($this->storage[$offset]);
   }
 
@@ -1108,7 +1108,7 @@ function tCrasher($spot = NULL) { // crash if called from a specific function or
  *   Multiple message indices are separated by '|'.
  *   But if the string starts with '|', discard it and treat all vertical bars as simple characters.
  */
-function t($s = '', $subs0 = []) {
+function t($s = '', $subs0 = [], $etc = NULL) {
   global $language, $channel, $tStrings;
   static $custom_strings;
   
@@ -1183,7 +1183,7 @@ function rayy($args, $n = 0) {
  * @param mixed $value1,...: arbitrary values
  */
 function ray($s = '', $value1 = NULL) {
-  if ($s === '') return [];
+  if (nn($s) === '') return [];
   if (func_num_args() > 1) { // multi-argument call -- return an associative array
     $args = func_get_args();
     $keys = ray(array_shift($args));
@@ -1297,7 +1297,8 @@ function rayhas($ray, $what) {return array_key_exists($what, $ray);} // lots eas
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
 function nni($ray, $i, $else = '') {
-  if (!is_array($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
+  if (is_string($ray) and preg_match('/^[ao]:\d/', $ray)) $ray = unserialize($ray);
+  if (!is_int($i)) $i = '' . $i;
   return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;
 } // same as nn but for indexed value
 

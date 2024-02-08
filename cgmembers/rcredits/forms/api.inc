@@ -150,8 +150,8 @@ function identity($params) {
   $avgBalance = round($avgs[0], 2);
   $trustRatio = round($a->trust / (db\avg('trust', 'users', ':IS_OK AND NOT :IS_CO') ?: 1), 2);
   $since = (int) $a->activated;
-  $selling = explode("\n", $a->selling);
-  $isell = explode("\n", $mya->selling);
+  $selling = explode("\n", $a->selling ?: '');
+  $isell = explode("\n", $mya->selling ?: '');
 
   return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling isell')));
 }

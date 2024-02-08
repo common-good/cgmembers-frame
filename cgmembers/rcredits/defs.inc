@@ -87,7 +87,7 @@ define('SLOGAN', t('Tools for a new economy&trade;'));
 const BANK_DBA = PROJECT;
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 const PROJECT_LOGO = 'logo80.png';
-const CG_LOAN_LIMIT = 50000; // maximum amount CG can pay out or transfer to its bank account from a zero CG balance
+const CG_LOAN_LIMIT = 50000; // maximum amount CG can pay out or transfer to its bank account from a zero (or negative) CG balance
 
 const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert';
 //const SCRIPTS = 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'; // all possible scripts, in order (after SCRIPTS_TOP)
@@ -667,7 +667,8 @@ const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
 
-// Invoice status (txid >= TX_PAID if paid)
+// Invoice status (>= TX_PAID if paid, equal to the final payment xid)
+const TX_CANCELED = -5; // payee canceled the invoice
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator
@@ -782,7 +783,7 @@ $GLOBALS['emailSubjects'] = array(
   'post-expires' => t('Your Offers & Needs post is expiring!'),
   'post-notice' => t('recent Offers & Needs near you'),
 );
-foreach (ray(' gift- cggift- fbo-') as $k) foreach(ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
+foreach (ray(' gift- cggift- fbo-') as $k) foreach (ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
 
 $GLOBALS['topics'] = array( // topics for 'message' email
   'confirm invite' => t('Confirm invitation to %otherName'),

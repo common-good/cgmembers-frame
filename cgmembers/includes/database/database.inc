@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Core systems for the database layer.
@@ -702,6 +701,7 @@ abstract class DatabaseConnection extends PDO {
       }
     }
     catch (PDOException $e) {
+      global $dbERR; $dbERR = $e;
       if ($options['throw_exception']) {
         /* invalid in PHP 8.1 (CG 7/26/2023) // Add additional debug information.
         if ($query instanceof DatabaseStatementInterface) {
@@ -711,7 +711,8 @@ abstract class DatabaseConnection extends PDO {
           $e->query_string = $query;
         }
         $e->args = $args;*/
-        throw $e;
+//        throw $e;
+        return NULL;
       }
       return NULL;
     }

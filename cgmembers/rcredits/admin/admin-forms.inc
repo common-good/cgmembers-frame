@@ -85,9 +85,7 @@ function util($arg) {
     } else { a\setupBasicAccounts(); }
     break;
   case 'clear':
-    foreach (ray('cache cache_bootstrap cache_form cache_menu sessions') as $table) {
-      db\q("TRUNCATE TABLE $table");
-    }
+    a\clearCache();
     break;
   case 'php':
     w\go('devel/php');

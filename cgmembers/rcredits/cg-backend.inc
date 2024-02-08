@@ -1051,9 +1051,9 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId reversesXid cat'));
   $nvid = db\insert('tx_requests', $info, 'nvid');
-  $payeeA->tell('you invoiced', $subs2);
 
   if ($status == TX_PENDING) {
+    $payeeA->tell('you invoiced', $subs2);
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     $subs1 = ray('myName otherName otherEmail otherPhone _a1 reply', 
       $payerA->fullName, $payeeA->fullName, $payeeA->email, u\fmtPhone($payeeA->phone), $link, $payee);
@@ -1064,7 +1064,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
       $z = be\payInvoice($nvid);
       if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
-    }
+    } else { $payeeA->tell('you will be paid', $subs2); }
   }
 
   $msg = 'report tx';

@@ -183,7 +183,6 @@ function menu($submenu = '') {
     'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'admSeeChanges'],
     'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'admReconcile'],
     'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'admReconcile'],
-    'rcredits/util' => ['call', 'Util', '2', 'admCode', 'util'], // remove this after 6/1/2022
     'sadmin/util' => ['call', 'Util', '2', 'admCode', 'util'],
     'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'admDeleteAcct', 'deleteAccount'],
     'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'admCode'],
@@ -239,6 +238,7 @@ function menu($submenu = '') {
     'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
+    'cef' => ['call', t('CEF Dashboard'), 'CEF 1', ANY],
 
     'get' => ['call', t('Bank'), 'Get 1', 'manage ok'],
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app

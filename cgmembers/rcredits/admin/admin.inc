@@ -96,7 +96,7 @@ function setupBasicAccounts() {
  */
 function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
-  if (isPRODUCTION or (!isDEV and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  if (isPRODUCTION) return w\say(t('Make test accounts only on staging, testing, demo, or dev'), 'err'); // protects even if constant not set
   require_once R_ROOT . '/cg-qr.inc';
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
@@ -527,7 +527,7 @@ function ssnShow($a) {
   $counties = [];
   $addresses = nn($d['addresses']['address']) ?: [];
   if (nni($addresses, 'lastname')) $addresses = [$addresses];
-  foreach($addresses as $rec) {
+  foreach ($addresses as $rec) {
     $rec = (object) $rec;
     $rows[] = array($rec->datereported ? fmtDt(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? fmtDt(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
     if (now() - strtotime(pr($rec->datereported)) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
@@ -1051,3 +1051,5 @@ function cloneA($oldA) {
   }
    
  */
+
+function clearCache() {foreach (ray('cache cache_bootstrap cache_form cache_menu sessions semaphore') as $table) db\q("TRUNCATE TABLE $table");}

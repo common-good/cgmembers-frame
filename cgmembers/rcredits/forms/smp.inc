@@ -108,7 +108,7 @@ function signUpUser($userId, $request) {
 
 function generateInvoices($userId, $requests) {
   $responses = [];
-  foreach($requests as $request) $responses[] = generateInvoice($request);
+  foreach ($requests as $request) $responses[] = generateInvoice($request);
   return okResponse('generate-invoices', $userId, $responses);
 }
 
@@ -144,7 +144,7 @@ function generateInvoice($request) {
 }
 
 function makePayments($userId, $requests) {
-  foreach($requests as $request) $responses[] = makePayment($request);
+  foreach ($requests as $request) $responses[] = makePayment($request);
   return okResponse('make-payments', $userId, nn($responses));
 }
 
@@ -180,7 +180,7 @@ function makePayment($request) {
 
 function getInvoiceStatus($userId, $requests) {
   $responses = [];
-  foreach($requests as $request) {
+  foreach ($requests as $request) {
     $responses[] = getOneInvoiceStatus($request);
   }
   return okResponse('get-invoice-status', $userId, $responses);

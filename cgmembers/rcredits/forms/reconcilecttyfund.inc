@@ -36,7 +36,7 @@ function formReconcileCttyFund_validate($form, &$sta) {
     if (!$ofxBal[$i] = ofxData('balAmt dtAsOf', $s)) return w\say(t('No bank balance amount found in file #%i.', $subs), 'file1');
     if (!$txs[$i] = ofxData(OFX_TX_FLDS, $s, TRUE)) return w\say(t('No transactions found in file #%i.', $subs), 'file1');
     
-    foreach (ray('acct dts ofxBal') as $k) foreach(${$k}[$i] as $k2 => $v2) ${$k2 . $i} = $v2; // bankId2, etc.
+    foreach (ray('acct dts ofxBal') as $k) foreach (${$k}[$i] as $k2 => $v2) ${$k2 . $i} = $v2; // bankId2, etc.
   }
 
   if (nni($acct, 2)) {

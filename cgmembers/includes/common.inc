@@ -5080,7 +5080,7 @@ function drupal_json_output($var = NULL) {
   drupal_add_http_header('Content-Type', 'application/json');
 
   if (isset($var)) {
-    echo drupal_json_encode($var);
+/**/ echo drupal_json_encode($var);
   }
 }
 

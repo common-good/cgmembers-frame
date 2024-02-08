@@ -92,7 +92,7 @@ function fixData(&$info, $direct = FALSE) {
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
-      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
+      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", nn($var), $v);
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   
@@ -582,11 +582,11 @@ function hasStepsDone($id, $task, $steps) {
   if (!$testOnly) {
     $a->update('steps', 0);
     $a->setTask($task);
-    foreach(ray($steps) as $k) $a->stepDone($k);
+    foreach (ray($steps) as $k) $a->stepDone($k);
   } else {
     if ($steps0 != 'all' and $a->task != $task) return t\output("Wrong task. Wanted $task, got $a->task.");
   }
-  foreach(ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
+  foreach (ray($steps) as $k) if (!$a->stepIsDone($k)) return FALSE;
   return TRUE;  
 }
 
@@ -1785,7 +1785,7 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-/**/  foreach(ray(TX_CHANNELS) as $chan => $zot) u\deleteFile(flog('', $chan));
+/**/  foreach (ray(TX_CHANNELS) as $chan => $zot) u\deleteFile(flog('', $chan));
   u\deleteFile(SQL_LOG);
 
   $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up');
@@ -2187,8 +2187,9 @@ function fixTestVars(&$parm) {
   global $testVars, $nextCode, $testCode; 
 
   $testVars['nextCode'] = $nextCode;
-  if (is_array($parm)) foreach ($parm as $k => $v) fixTestVars($parm[$k]);
-  foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', $testCode, str_replace("%$k", $v, $parm));
+  if (is_array($parm)) {
+    foreach ($parm as $k => $v) fixTestVars($parm[$k]);
+  } else foreach ($testVars as $k => $v) if (!is_array($v)) $parm = str_replace('TESTCODE', nn($testCode), str_replace("%$k", nn($v), nn($parm)));
 }
 
 function itsLater() {return timeIs(now() + 1);}
