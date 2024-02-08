@@ -12,7 +12,7 @@
 define('DRUPAL_ROOT', getcwd());
 require_once __DIR__ . '/rcredits/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-if (R_VERSION != getv('version')) {
+if (R_VERSION != getv('version', '')) {
   \menu_rebuild();
   setv('version', R_VERSION);
 }

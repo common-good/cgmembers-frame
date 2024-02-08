@@ -96,7 +96,7 @@ function setupBasicAccounts() {
  */
 function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
-  if (isPRODUCTION or (!isDEV and !isDEMO)) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  if (isPRODUCTION) return w\say(t('Make test accounts only on staging, testing, demo, or dev'), 'err'); // protects even if constant not set
   require_once R_ROOT . '/cg-qr.inc';
 
   if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community

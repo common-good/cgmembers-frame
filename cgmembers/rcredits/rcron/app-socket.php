@@ -55,7 +55,7 @@ class MyWSSServer implements MessageComponentInterface {
    */
   public function onMessage(ConnectionInterface $from, $msg) {
     if (!$ray = json_decode($msg)) return er(t('Bad JSON message: ') . pr($msg), $from);
-    flog('app socket got: ' . pr($ray));
+/**/ flog('app socket got: ' . pr($ray));
     extract(just('op deviceId actorId otherId name action amount purpose note', $ray, NULL)); // op, deviceId, and actorId are always required
     if (!$qid = qr\qid($actorId)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
     $ok = ( ($deviceId == bin2hex(R_WORD)) // called from u\tellApp
@@ -69,9 +69,8 @@ class MyWSSServer implements MessageComponentInterface {
         $this->map[$actorId] = $from; 
 /*        $action = $note = '';
         $message = t('You are now connected to the socket switchboard (account %actorId).', compact('actorId'));
-        if ($firstTime) $from->send(json_encode(compact(ray('message action note')))); 
-        flog(t('firstTime=') . ($firstTime ? 1 : 0));
-        */
+        if ($firstTime) $from->send(json_encode(compact(ray('message action note')))); */
+///        flog(t('firstTime=') . ($firstTime ? 1 : 0));
         break;
       case 'tell': // currently this comes only from u/tellApp()
         if (!$to = nni($this->map, $otherId)) return;
@@ -103,7 +102,7 @@ try {
 
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
-  /**/ flog($startMsg);
+/**/ flog($startMsg);
   $server->run();
 } catch (\Exception $er) {
 /**/ flog("App socket overall er: " . $er->message());

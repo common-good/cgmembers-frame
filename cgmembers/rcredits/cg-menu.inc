@@ -183,7 +183,6 @@ function menu($submenu = '') {
     'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'admSeeChanges'],
     'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'admReconcile'],
     'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'admReconcile'],
-    'rcredits/util' => ['call', 'Util', '2', 'admCode', 'util'], // remove this after 6/1/2022
     'sadmin/util' => ['call', 'Util', '2', 'admCode', 'util'],
     'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'admDeleteAcct', 'deleteAccount'],
     'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'admCode'],

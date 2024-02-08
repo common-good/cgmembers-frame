@@ -1786,14 +1786,15 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
   $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+
 //  textalk/websocket
-  set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
+/**/ set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
   try {
     $client = new \WebSocket\Client("wss://$url:" . SOCKET_PORT);
     $client->send($msg);
     $client->close();
   } catch (\Exception $e) {
-    flog(t('Error in tellApp: ') . $e->getMessage());
+/**/ flog(t('Error in tellApp: ') . $e->getMessage());
   }
   restore_error_handler();
 }
