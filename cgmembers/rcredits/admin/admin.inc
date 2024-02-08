@@ -1051,3 +1051,5 @@ function cloneA($oldA) {
   }
    
  */
+
+function clearCache() {foreach (ray('cache cache_bootstrap cache_form cache_menu sessions semaphore') as $table) db\q("TRUNCATE TABLE $table");}
