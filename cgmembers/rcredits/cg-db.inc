@@ -45,7 +45,10 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   if (is_null($res)) {
     global $dbERR; // PDOException set in database.inc
 /**/ if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
-    u\FAIL(t('Database error'));
+//    \lock_release_all();
+//    f('a.clearCache');
+//    die('Database error');
+//    u\FAIL(t('Database error'));
   } else return $res;
 }
 
