@@ -303,7 +303,7 @@ function adminSummary() {
       $blist[] = $k0 = $k;
       $class = (in($k, $adminable) and $mya->admManageAccts) ? '' : 'noEdit';
       if ($mya->isCtty) $k = strtr($k, ray(B_ADMIN_BITS));
-      $dpy = w\popHelp($k, $flagHelp[$k0], '#', '', 'click');
+      $dpy = w\popHelp($k, $flagHelp[$k0], '', '', 'click');
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
     }
     $adminable = bitsFld(t('Bits:'), $mya->flags, 'b', join(' ', $blist), $aliases);
@@ -315,7 +315,7 @@ function adminSummary() {
       foreach (ray(CO_FLAGS) as $i => $k) if ($k) {
         if (u\getBit($mya->coFlags, $i)) u\setBit($dft, count($coList));
         $coList[] = $k;
-        $dpy = popHelp($k, nni($coHelp, $k), '#', '', 'click');
+        $dpy = popHelp($k, nni($coHelp, $k), '', '', 'click');
         $aliases[$k] = "<div class=\"$class\">$dpy</div>";
       }
       $coFlags = bitsFld(t('Co Flags:'), $dft, '', join(' ', $coList), $aliases);
@@ -330,7 +330,7 @@ function adminSummary() {
     foreach ($riskBits as $k) {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
       if (!isset($risksEditable[$k]) or !$mya->admManageAccts) $class .= ' noEdit';
-      $dpy = w\popHelp($k, nni($riskHelp, $k), '#', '', 'click');
+      $dpy = w\popHelp($k, nni($riskHelp, $k), '', '', 'click');
       $aliases[$k] = "<div class=\"$class\">$dpy</div>";
     }
     $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
@@ -340,7 +340,7 @@ function adminSummary() {
     foreach (ray(A_LIST) as $k) if (!preg_match('/^u\\d+$/', $k)) { // ignore undefined bits
       $adminCans[] = $k0 = $k;
       $class = $mya->admMakeVAdmin ? '' : ((in($k, A_VLIST) or !$mya->admMakeAdmin) ? 'noEdit' : '');
-      $dpy = w\popHelp($k, $cansHelp[$k0], '#', '', 'click');
+      $dpy = w\popHelp($k, $cansHelp[$k0], '', '', 'click');
       $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
     }
 
