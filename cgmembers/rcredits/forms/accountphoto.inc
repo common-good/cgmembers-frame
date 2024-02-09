@@ -33,7 +33,7 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
     $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   } else { $photo = NULL; }
 
-  if (strlen($photo) and $qr) { // add borders for embedding in QR code
+  if (!empty($photo) and $qr) { // add borders for embedding in QR code
     $im = imagecreatefromstring($photo);
     list ($w0, $h0) = [imagesx($im), imagesy($im)];
     $im = u\alterImg($im, $w0, $h0, 0, 0, $w0 * QR_PHOTO_BW, $h0 * QR_PHOTO_BW);
@@ -41,5 +41,5 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   }
 
   header("Content-type: image/jpeg");
-  return exitJust(strlen($photo) ? $photo : \file_get_contents(R_ROOT . "/images/icons/$dftImgFlnm"));
+  return exitJust(!empty($photo) ? $photo : \file_get_contents(R_ROOT . "/images/icons/$dftImgFlnm"));
 }
