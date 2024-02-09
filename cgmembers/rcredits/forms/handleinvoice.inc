@@ -54,7 +54,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
     $close = submit(t('Close'));
     jsx('back-button');
-  } elseif ($toMe) { // reverse a payment request TO me (reversing currently has no effect, because already-paid invoices just get an error message)
+  } elseif ($toMe) { // handle an already-paid request for payment TO me
+    return go($ret, t('Request #%nvid is already paid.', compact('nvid')));
   /*
     list ($verb, $explain) = [t('Reverse'), t(' (by creating an offsetting negative invoice and paying it back)')];
     $title = $verb . '?';
@@ -113,14 +114,14 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  extract(just('reason whyNot always payAmount', $sta['input'], NULL));
+  extract(just('reason whyNot always payAmount action', $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $always, $reason ?: $whyNot, $hidInfo);
+  handleInvoice(op($sta), $payAmount, $always, $reason ?: $whyNot, $action, $hidInfo);
   return w\go($hidInfo['ret']);
 }
 
-function handleInvoice($op, $payAmount, $always, $reason, $info) {
+function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
   extract(just('nvid payer payee purpose created data amount', $info));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
