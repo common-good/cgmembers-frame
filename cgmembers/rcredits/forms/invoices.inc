@@ -15,17 +15,17 @@ include_once __DIR__ . '/../cg-txs.inc';
  */
 function formInvoices($form, &$sta, $ptf, $args = '') {
   $toMe = ($ptf == 'to');
-  w\downloadCheck('history/invoices-' . $ptf);
+  w\downloadCheck('history/pending-' . $ptf);
 
   extract(just('period starting ending download downloaded states nvid do', $args, NULL));
 
   $choices = array(t('open'), t('paid'), t('denied'));
-  extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$ptf", $choices, '0,1,2')));
+  extract(just('dateRange url starting ending states', dateRange($args, "history/pending-$ptf", $choices, '0,1,2')));
   
   $list = item(pendingList($toMe, $starting, $ending, $states, $url, $download)); // must precede starting & ending
 
   $title = $toMe ? t('Pending Payments TO You') : t('Pending Payments FROM You');
-  $subtext = t('Click on a row to edit or delete a pending payment (paid requests are listed last).');
+  $subtext = t('Click a row to edit or cancel a pending payment or mark it PAID (paid requests are listed last).');
   $ptf = hidFld($ptf);
 
   //simple advanced
@@ -39,7 +39,7 @@ function formInvoices($form, &$sta, $ptf, $args = '') {
 function formInvoices_validate($form, &$sta) {w\dateRangeValidate($sta, FALSE);}
 
 function formInvoices_submit($form, &$sta) {
-  dateRangeRedirect('history/invoices-' . $sta['input']['ptf'], $sta);
+  dateRangeRedirect('history/pending-' . $sta['input']['ptf'], $sta);
 }
 
 /**
@@ -48,9 +48,9 @@ function formInvoices_submit($form, &$sta) {
  */
 function pendingList($toMe, $starting, $ending, $states, $url, $download) {
   global $mya;
-  $headHelp = t('Invoice number,Date created,Who is to be paid,What is the payment for,Total amount,Click a row to change the status of the request');
+  $headHelp = t('Request number,Date created,Who is to be paid,What is the payment for,Total amount,Click a row to change the status of the request');
   $classes = ray('nvid date name purpose amount buttons');
-  $headers = t('Inv#,Date,Name,Purpose,Amount,Status');
+  $headers = t('Req#,Date,Name,Purpose,Amount,Status');
   $headHelp = array_combine($classes, ray($headHelp));
 
   $header = array_combine($classes, ray($headers)); // make splices and additions easy and clear
@@ -86,8 +86,9 @@ EOF;
     extract($tx);
     if (!$download) $amount = number_format($amount, 2);
     $row = array($nvid, fmtDt($created, $download ? 'yyyy-MM-dd' : DATE_FMT), $other, $purpose, $amount);
+// (no way to use this yet) $handleable[$nvid] = ($status0 < TX_PAID);
     
-    $do = "$url&nvid=$nvid&do";
+//    $do = "$url&nvid=$nvid&do";
     $data = unserialize(nn($data)) ?: [];
     $reason = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 

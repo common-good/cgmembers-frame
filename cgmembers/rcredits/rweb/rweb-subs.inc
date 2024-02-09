@@ -2114,10 +2114,11 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
  * @param string $href: where to go on click (defaults to nowhere)
  * @param string $class: html class(es)
  * @param string $trigger: how to trigger the popup (click|hover|focus|manual)
+ *                         defaults to hover; click always works as well
  */
 function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
-  $trigger = $trigger ?: ($href == '#' ? 'click hover' : 'click hover');
-  list ($href, $tag) = ($href and $href != '#') ? [" href=\"$href\"", 'a'] : ['', 'span'];
+  $trigger = $trigger ?: 'hover';
+  list ($href, $tag) = $href ? [" href=\"$href\"", 'a'] : ['', 'span'];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
   return "<$tag$href$class type=\"button\" data-toggle=\"popover\" data-placement=\"bottom\" data-trigger=\"$trigger\" data-content=\"$help\" title=\"$text\">$text</$tag>";
