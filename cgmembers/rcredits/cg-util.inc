@@ -16,7 +16,7 @@ use CG\QR as qr;
 const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
 const HEX_CHARS = '0123456789abcdef';
 const MOBILE_REGEX = '/\b(?:a(?:ndroid|vantgo)|b(?:lackberry|olt|o?ost)|cricket|docomo|hiptop|i(?:emobile|p[ao]d)|kitkat|m(?:ini|obi)|palm|(?:i|smart|windows )phone|symbian|up\.(?:browser|link)|tablet(?: browser| pc)|(?:hp-|rim |sony )tablet|w(?:ebos|indows ce|os))/i'; // thanks to Justin DoCanto et al.: https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device-in-php
-const PGP_TRASH_LEN = 30; // do not change this, without re-encrypting everything encrypted with its previous value
+const PP_TRASH_LEN = 30; // do not change this, without re-encrypting everything encrypted with its previous value
 // NOTE: whether this number is 0 or 200 makes ZERO difference in the strlen of the encrypted value. 30 is plenty
 
 
@@ -775,10 +775,10 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
   }
 
   if ($cropW or $cropH) { // crop
-    $img2 = imagecreatetruecolor($cropW, $cropH); // area to crop image into
+    $img2 = imagecreatetruecolor(round($cropW), round($cropH)); // area to crop image into
     if ($bX or $bY) imagefill($img2, 0, 0, imagecolorallocate($img2, 255, 255, 255)); // white borders
     $cropW -= $bX; $cropH -= $bY;
-    imagecopyresampled($img2, $img1, $bX / 2, $bY / 2, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
+    imagecopyresampled($img2, $img1, round($bX/2), round($bY/2), round($x1), round($y1), round($cropW), round($cropH), round($cropW), round($cropH));
   } else $img2 = $img1;
 
   return $img2;
@@ -815,15 +815,14 @@ function decryRay($code) {
 /**
  * Perform the given type of encryption (or decryption).
  * @param char $type: purpose of the encryption / decryption, as follows (each has its own methods, password, and IV):
- *   R regional admin private key for very secure data (the key is encrypted on the admin's flash drive)
+ *   R regional admin private key for very secure data (the key is encrypted on the admin's flash drive and/or saved as a QR code on paper or on a separate device)
  *   V very secure data (SSNs, etc.)
  *   S standard secure data
  *   P searchable data (last step of encryption is b64)
  *   C cookie
  *   H photo
- *   D device (PGP then b64)
  *   M secret message (maintains length)
- * Each of an encryption type's methods is: xor, rot, scram, b64, pgp, or any standard AES method
+ * Each of an encryption type's methods is: xor, rot, scram, b64, pp (for type "V" only), or any standard AES method
  * Only the first 16 bytes of an IV for an AES method. Otherwise the IV can be any length.
  *
  * @param string $data: the data to be encrypted / decrypted
@@ -831,15 +830,13 @@ function decryRay($code) {
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
  * @throws BadCry
- * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
+ * TEST with foreach (ray('C H P R S V') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
   global $cryHows, $mya;
   
   if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
   if (is_numeric($data)) $data = strval($data);
-  
-  if ($type == 'D') return FAIL("use cryPGP not cry('D')"); //return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
   
   if ($de) {
     if (!u\starts($data, CRYPT_FLAG . $type)) throw new \BadCry('encrypted value must begin with crypt flag');
@@ -872,13 +869,13 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
       case 'rot': $data = strRotate($data, min(PHP_INT_MAX, hexdec(bin2hex(substr($pw, 0, 4)))) * ($de ? -1 : 1)); break;
       case 'scram': $data = strScramble($data, $pw . $iv, $de); break;
       case 'b64': $data = $de ? u\b64decode($data) : u\b64encode($data); break; // final encrypt step if present
-      case 'pgp':
+      case 'pp':
         if ($de) { // decrypt with supplied private key
           $success = openssl_private_decrypt($data, $res, u\fmtKey($vKey, 'PRIVATE')) ? $res : FALSE;
 ///          if (!$success) die(print_r(debug_backtrace(), -1));
-          $data = $success ? substr_replace($res, '', -PGP_TRASH_LEN) : '';
+          $data = $success ? substr_replace($res, '', -PP_TRASH_LEN) : '';
         } else { // encrypt with public key
-          $data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
+          $data .= openssl_random_pseudo_bytes(PP_TRASH_LEN); // add randomness
           $success = openssl_public_encrypt($data, $res, u\fmtKey($pw, 'PUBLIC')) ? $res : FALSE;
           $data = $res;
         }
@@ -887,7 +884,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
     }
   }
 
-  return $de ? $data : (CRYPT_FLAG . $type . nn($nonce) . $data);
+  return $de ? $data : (CRYPT_FLAG . strtoupper($type) . nn($nonce) . $data); // strtoupper is for the rare day when we change the passwords (for example in a\anonymize())
 }
 
 /**
@@ -902,7 +899,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 function crypted($type, $s = NULL) {
   if (func_num_args() == 1) {
     if (strlen($type) < strlen(CRYPT_FLAG) + 1) return FALSE;
-    list ($type, $s) = [$type[strlen(CRYPT_FLAG)], $type];
+    list ($type, $s) = [nni($type, strlen(CRYPT_FLAG)), $type];
     if (!$type or !strhas('PSV', $type)) return FALSE;
     return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
@@ -917,28 +914,28 @@ function decry($type, $data, $pwInstead = '') {
 }
 
 /**
- * Encrypt / Decrypt with our PGP key pair.
- * Test with $cry = u\cryPGP('success', 'private'); debug (u\decryPGP($cry, 'public'));
+ * Encrypt / Decrypt with our public/private key pair.
+ * Test with $cry = u\cryPP('success', 'private'); debug (u\decryPP($cry, 'public'));
  * @param string $data: what to encrypt
  * @param bool $porp: "private" or "public" - which key to use
  * @param string $trash: (RETURNED) the randomness added before encryption
  */
-function cryPGP($data, $porp, &$trash = '') {
-  if (!$trash) $trash = openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
-  return cryPGP0('en', $data . $trash, $porp, $res) ? $res : '';
+function cryPP($data, $porp, &$trash = '') {
+  if (!$trash) $trash = openssl_random_pseudo_bytes(PP_TRASH_LEN); // add randomness
+  return cryPP0('en', $data . $trash, $porp, $res) ? $res : '';
 }
 
 /**
- * Decrypt with our PGP key pair (for testing at least).
+ * Decrypt with our public/private key pair (for testing at least).
  */
-function decryPGP($data, $porp) {
-  $success = cryPGP0('de', $data, $porp, $res);
+function decryPP($data, $porp) {
+  $success = cryPP0('de', $data, $porp, $res);
   return $success ? substr_replace($res, '', -30) : '';
 }
 
-function cryPGP0($way, $data, $porp, &$res = '') {
+function cryPP0($way, $data, $porp, &$res = '') {
   $func = "openssl_{$porp}_{$way}crypt";
-  $k = u\fmtKey(u\unfmtKey(PGP_KEY), 'PRIVATE');
+  $k = u\fmtKey(u\unfmtKey(PRIVATE_KEY), 'PRIVATE');
   return $func($data, $res, $porp == 'private' ? $k : u\pubKey($k)) ? $res : FALSE; // die here if bad $porp
 }
 
@@ -968,7 +965,10 @@ function pubKey($k) {
   return openssl_pkey_get_details(openssl_pkey_get_private($k))['key'];
 }
 
-// NEW encryption
+/**
+ * NEW encryption
+ * called only in u\cry() to handle any AES encryption/decryption
+ */
 function crypt($data, $how, $key, $iv, $decrypt = FALSE) {
   if (empty($data)) return FALSE;
   u\EXPECT(compact(ray('data how key iv')), 'string string string string');
@@ -1154,12 +1154,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   $coods = @$matches[0]->coordinates;
   $coods = [$coods->y, $coods->x];
   */
-  try {
+  if (isPRODUCTION) try {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
   if (!nn($res) or !$res = u\dejsonize($res, FALSE) or !is_object($res)) {
-    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)), compact('res'));
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag(nn($url))), compact('res'));
     return $none;
   }
 

@@ -98,7 +98,7 @@ function accounts($params) {
     $cardCode = $a->cardCode();
     $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
 ///    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
-    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPGP($toCry, 'private')); // prove to customer who they're dealing with when offline
+    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
 //    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
     $qr = myQr($a);
     $selling = $isCo ? explode("\n", $a->selling) : NULL;
@@ -497,7 +497,7 @@ function decodeDevice($device) {
     if (!preg_match('/^dev[A-Z]$/', $device)) return FALSE;
     $qid = TEST_QID_HD . substr($device, -1, 1);
     $x = "$qid/12345/" . r\acct($qid)->fullName;
-  } elseif (!$x = u\decryPGP(u\b64decode($device), 'public')) return FALSE; // but we don't know yet how to do ssl public decryption from node.js
+  } elseif (!$x = u\decryPP(u\b64decode($device), 'public')) return FALSE; // but we don't know yet how to do ssl public decryption from node.js
   return explode('/', $x, 3);
 }
 

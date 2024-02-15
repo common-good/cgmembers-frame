@@ -221,11 +221,11 @@ function therm($args) {
   Imagedestroy($bar);
   $count = t(' (%cnt gifts)', 'cnt', number_format($count));
 
-  if ($y > MAX_Y + MAX_FONT_SIZE/2) imagettftext ($img, MAX_FONT_SIZE, 0, TXT_X+4, MAX_Y - 4, $black, $font, MAX_TEXT . $unit . number_format($max)); // the max
+  if ($y > MAX_Y + MAX_FONT_SIZE/2) imagettftext ($img, MAX_FONT_SIZE, 0, round(TXT_X+4), round(MAX_Y-4), $black, $font, MAX_TEXT . $unit . number_format($max)); // the max
   if ($y <= MAX_Y + FONT_SIZE/2) {
-      imagettftext ($img, FONT_SIZE, 0, TXT_X, MAX_Y, $blue, $font, $unit . number_format($value) . $count . '!!'); // Current > Max
+      imagettftext ($img, FONT_SIZE, 0, TXT_X, round(MAX_Y), $blue, $font, $unit . number_format($value) . $count . '!!'); // Current > Max
   } elseif ($value > 0) {
-    imagettftext ($img, FONT_SIZE, 0, TXT_X, $y+FONT_SIZE/2, $blue, $font, $unit. number_format($value) . VAL_TEXT . $count);  // Current < Max
+    imagettftext ($img, FONT_SIZE, 0, TXT_X, round($y+FONT_SIZE/2), $blue, $font, $unit. number_format($value) . VAL_TEXT . $count);  // Current < Max
   }
 
   if ($value > $max) {

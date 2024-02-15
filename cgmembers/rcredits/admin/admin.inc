@@ -21,7 +21,7 @@ use CG\QR as qr;
  * called from installation and test setup
  * To prepare for export for developers, f('t.clear');
  */
-function setupBasicAccounts() {
+function setupBasicAccounts($withEIN = TRUE) {
   $keys = ray('uid community name fullName email country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
@@ -34,7 +34,7 @@ function setupBasicAccounts() {
     if (!$hasServer) continue;
     //    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
     if ($uid = db\get('uid', 'users', "name=CONCAT(:region, '.')", compact('region'))) {
-      r\acct($uid)->update(compact(ray('zips federalId flags')));
+      r\acct($uid)->update(compact(ray('zips flags' . ($withEIN ? ' federalId' : ''))));
     } else {
       $fullName = $fullName ?: db\get('name', 'r_states', 'abbreviation=:st', compact('st'));
       $email = u\shortName($fullName) . '@' . CG_DOMAIN;
@@ -45,7 +45,7 @@ function setupBasicAccounts() {
       $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       list ($address, $city, $zot1, $zot2) = u\parseAddr($postalAddr); // don't overwrite state or zip
-      $info += compact(ray('postalAddr address city state federalId activated'));
+      $info += compact(ray('postalAddr address city state activated' . ($withEIN ? ' federalId' : '')));
       $serverA = new r\Acct($info);
       $serverA->update(compact('zips'));
     }
@@ -78,6 +78,7 @@ function setupBasicAccounts() {
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
+  if ($withEIN) $cgf->update('federalId', CGF_EIN);
   $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
 
@@ -847,40 +848,117 @@ function randRouting() {return db\get('route', 'r_banks', 'LENGTH(route)=9');}
 function wordName($len = 1) {return ucwords(u\randPass($len));}
 
 /**
- * Randomize personal data in all accounts (for staging site).
+ * Randomize personal data in all accounts (for staging site). Here's how:
+ * A. Make sure you have a current backup of the database and the database is disabled
+ *     (that is, no possible changes by web interface, donation links, or app API -- except by you).
+ * B. If you are downloading the anonymized data to give to someone for development or analysis, prepare to re-encrypt.
+ *   - Back up cgAdmin.html. In that file, change the relevant vKeyPw default value to match the one for localhost (the development value).
+ *   - Add new values in config/config.json for each encryption type. Use the same letters, except lowercase: c, h, p, r, s, v.
+ *       Copy these values from misc/config-models/config.json (without overwriting the current values), then lowercase "C", "H", etc.
+ *       Remember to adjust for JSON format (no comma after last object member).
+ * C. Sign in as admin (not by scanning your SuperAdmin QR code), by clicking the link in cgAdmin.html.
+ *   - Select PHP on the Admin menu. Enter the following in the box and press "Execute Code":
+ *
+ *        f('a.anonymize');
+ *
+ *   - Replace the PHP box contents with the following two lines and press "Execute Code":
+ *
+ *        $k = <key>;
+ *        a(1)->makeVKeyE($k, <pw>, FALSE);
+ *          
+ *     where <key> is the entire contents of misc/devkeys/v.privk, surrounded by quotes. 
+ *     and <pw> is the default value of vKeyPw in misc/config-models/cgAdmin-dev.html, surrounded by quotes.
+ *          
+ *   - Change the default value of vKeyPw in cgAdmin.html (on your flash drive) to match the value of <pw> above.
+ *
+ * D. Sign out. Delete (or back up) the old encryption values and change the new ones to uppercase (c=>C, h=>H, etc.)
+ *
+ * E. Sign in as admin again by clicking the button in cgAdmin.html. Rerun the same code as above.
+ *
+ * F. Run the encryption tests on the PHP page as follows:
+ * 
+ *       foreach (ray('C H P R S V') as $k) {
+ *         $v = u\cry($k, 'Success!');
+ *         debug("k=$k " . u\deCry($k, $v));
+ *       }
  */
 function anonymize() {
   if (isPRODUCTION) return;
+  if (!t\deCryVok()) return w\softErr(t('You must scan yourself in as a Superadmin before anonymizing.'));
+  global $channel; $channel = TX_WEB;
+  global $cryHows;
   
-  $uids = db\col('uid', 'users', 'uid>:UID_CANON9 AND uid<>:CGID ORDER BY fullName');
+  $uids = db\col('uid', 'users', 'uid<0 or uid=1 or uid>:UID_CANON9 ORDER BY fullName');
   foreach ($uids as $uid) {
     $a = r\acct($uid);
-    $fullName = wordName(3) . ' ' . randomName()[0] . '. ' . wordName();
-    if ($a->co) $fullName = wordName() . ' Co';
-    $legalName = mt_rand(1,100) < 90 ? $fullName : (wordName() . strstr($fullName, ' '));
-    $name = u\shortName($fullName);
-    $email = mb_strtolower(randomName()) . '@example.com';
-    $address = mt_rand(1, 9999) . ' ' . wordName() . ' St.';
-    $city = wordName();
+
+    // first, the fields shared with the people table
+
+    $email = $a->email ? (mb_strtolower(randomName()) . '@example.com') : NULL;
+    $phone = $a->phone ? ('+1' . mt_rand(2, 9) . randDigits(9)) : NULL;
+    $address = $a->address ? (mt_rand(1, 9999) . ' ' . wordName() . ' St.') : NULL;
+    $city = $a->city ? wordName() : NULL;
+    $latitude = $longitude = 0;
+
+    if ($uid != CGID) {
+      foreach (ray('fullName legalName name shortName') as $k) $$k = $a->$k;
+    } else {
+      $fullName = $a->co ? (wordName() . ' Co') : wordName(2);
+      $legalName = mt_rand(1,100) < 90 ? $fullName : (wordName() . ' ' . randomName()[0] . '. ' . strstr($fullName, ' '));
+      $name = u\shortName($fullName);
+      $shortName = $a->shortName ? strstr($fullName, ' ', TRUE) : '';
+    }
+    $federalId = in($uid, r\catUids()) ? $a->federalId : ($a->hasFid ? randDigits(9) : ''); // don't change basic CG-owned account data
+    
     $postalAddr = $a->risk('poBox') ? 'PO Box ' . mt_rand(1, 99999) : $address;
     $postalAddr .= ", $a->st $a->zip";
     $signedBy = $a->signedBy ? $fullName : '';
-    $latitude = $longitude = 0;
-    $dob = mktime(0, 0, 0, mt_rand(1,12), mt_rand(1,31), date('Y') - mt_rand(18, 100));
-    $phone = '+1' . mt_rand(2, 9) . randDigits(9);
-    $federalId = $a->federalId == '000000000' ? $a->federalId : ($a->federalId ? randDigits(9) : '');
-    if ($a->bankAccount) {
+    $yob = date('Y') - mt_rand(18, 100);
+    $dob = mktime(0, 0, 0, mt_rand(1,12), mt_rand(1,31), $yob);
+    $faxetc = '';
+    if ($a->hasBank) {
       $bankAccount = 'USkk' . randRouting() . randDigits(10);
       $last4bank = substr($bankAccount, -4, 4);
     } $bankAccount = $last4bank = '';
-    $notes = $photo = $appData = $ssnData = '';
     $pin = randDigits(4);
     $snap = $a->snap ? randDigits() : '';
-    foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer') as $k) $$k = u\randomString();
-    $a->update(compact(ray($randStrings . ' fullName legalName name email address city postalAddr signedBy latitude longitude dob phone federalId bankAccount last4bank notes photo appData ssnData pin snap')));
+    foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer smtPass idProof') as $k) $$k = u\randomString(12, 'word');
+    foreach (ray($empties = 'notes photo appData ssnData partnerInfo') as $k) $$k = '';
+    $a->update(compact(ray("$randStrings $empties fullName legalName name shortName email address city postalAddr signedBy latitude longitude dob yob phone faxetc federalId bankAccount last4bank pin snap")));
+    
+    if (nni($cryHows, 'p')) { // if new encryption methods exist
+      foreach (ray('secure vsecure') as $k) $$k = $a->$k;
+      foreach ($vsecure as $k => $v) if (u\crypted('V', $v)) $vsecure[$k] = CRYPT_FLAG . 'V' . substr(u\cry('v', u\deCry('V', $v)), strlen(CRYPT_FLAG) + 1);
+      foreach (ray('email phone') as $k) if (isset($$k)) $$k = CRYPT_FLAG . 'P' . substr(u\cry('p', $$k), strlen(CRYPT_FLAG) + 1);;
+      foreach (ray('secure vsecure') as $k) $$k = CRYPT_FLAG . 'S' . substr(u\cry('s', serialize($$k)), strlen(CRYPT_FLAG) + 1);;
+      db\update('users', compact(ray('uid email phone secure vsecure')), 'uid');
+    }
   }
+  
+  $flds = 'pid,source,displayName,fullName,email,phone,address,city,latitude,longitude';
+  $q = db\q("SELECT $flds FROM people ORDER BY fullName");
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $source = $displayName = '';
+    
+    $email = $email ? (mb_strtolower(randomName()) . '@example.com') : NULL;
+    $phone = $phone ? ('+1' . mt_rand(2, 9) . randDigits(9)) : NULL;
+    $address = $address ? (mt_rand(1, 9999) . ' ' . wordName() . ' St.') : NULL;
+    $city = $city ? wordName() : NULL;
+    $latitude = $longitude = 0;
+    $fullName = wordName(2);
+
+    db\update('people', compact(ray($flds)), 'pid');
+  }
+  
   db\q('UPDATE txs2_bank SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
-  db\q('DELETE FROM r_changes WHERE created>=:NOW');
+  db\q('UPDATE r_invites SET email=NULL');
+  db\q("UPDATE u_company JOIN users USING(uid) SET contact=NULL, website=CONCAT(name, '@example.com')");
+  foreach (ray('admins cache cache_bootstrap cache_form cu_folders cu_lists cu_members cu_spaces cu_tasks cu_times legacy_x_invoices legacy_x_txs messages r_changes x_company x_photos x_relations x_shout x_txs2 x_users') as $k) db\q("TRUNCATE $k");
+  
+  if (nni($cryHows, 'p')) { 
+    w\say(t('Done anonymizing! Make a note of these instructions: change config.json to use the new encryptions, execute "$k = KEY; a(1)->makeVKeyE($k, VKEYPW, FALSE);" with appropriate values for KEY and VKEYPW, set vKeyPw to the same VKEYPW in cgAdmin.html, then sign out and sign back in. Execute the PHP again. Verify that accounts have random cardCode, email, phone, and dob.'));
+  } else w\say(t('Done anonymizing! Same encryption used.'));
 }
 
 /**

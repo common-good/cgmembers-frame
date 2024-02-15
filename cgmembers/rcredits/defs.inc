@@ -49,8 +49,8 @@ define('CG_SMTP_TLS', config('cgSmtpTls', 'tls'));
 define('CG_SMTP_PORT', config('cgSmtpPort', 587));
 define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
-define('PGP_KEY', config('pgpKey'));
-define('DKIM_PRIVATE', PGP_KEY);
+define('PRIVATE_KEY', config('privk'));
+define('DKIM_PRIVATE', PRIVATE_KEY);
 define('R_INVITE_KEY', basename(strstr($requestUri, '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
@@ -64,7 +64,7 @@ foreach (explode(' ', 'name driver host port user pass salt word encryption') as
 
 define('R_SALTY_PASSWORD', $db_pass);
 define('R_WORD', hex2bin($db_word));
-$cryHows = (array) $db_encryption;
+$cryHows = (array) $db_encryption; // used only in u\cry()
 
 unset($configRay); // don't leave this hanging around
 
@@ -153,8 +153,6 @@ const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get ma
 const APP_URL = 'cg4.us/pay';
 const APP_SOCKET_URL = R_ROOT . '/rcron/app-socket.php';
 
-define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
-define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
 const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
@@ -193,7 +191,7 @@ const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
 const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (not balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
-const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
+const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon asymmetrically-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app

@@ -8,7 +8,7 @@
 strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we expect)
  
 global $base_url, $base_path, $base_root, $styleNonce;
-global $databases, $drupal_hash_salt, $cryHows;
+global $databases, $drupal_hash_salt;
 global $cookie_domain, $is_https, $base_secure_url, $base_insecure_url;
 global $CGdomain;
 

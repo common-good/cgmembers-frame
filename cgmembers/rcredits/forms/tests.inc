@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Admin as a;
 
 include_once R_ROOT . '/admin/admin.inc';
 include_once R_ROOT . '/cg-testing.inc';
@@ -24,7 +25,7 @@ function formTests($form, &$sta) {
 
   if (!getv('cgf_uid')) {
     a\setupBasicAccounts();
-    return go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
+    return go('/tests/?' . nni($_GET, 'QUERY_STRING'), t('redirecting after setting up basic accounts'), 'err');
   }
 
   include_once DRUPAL_ROOT . '/gherkin/test.php'; // some inline code and functions

@@ -596,7 +596,7 @@ function handleAppMsg($data0) {
  * @return: an adequate abbreviation of $device (FALSE if error)
  */
 function decodeDevice($device) {
-  if (!test() and !u\decryPGP(u\b64decode($device), 'public')) return FALSE;
+  if (!test() and !u\decryPP(u\b64decode($device), 'public')) return FALSE;
   return substr($device, 0, DEVICE_MAXLEN);
 }
 
@@ -616,7 +616,7 @@ function badDevice(&$device, $signin, $version) {
   if (!$device) { // no device specified, set it up
     if ($version < 230) return posErr('old app');
     if (!$signin) return posErr('missing device'); // can't do anything but time or identify without device
-    $device = nn($nextCode) ?: u\b64encode(u\cryPGP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
+    $device = nn($nextCode) ?: u\b64encode(u\cryPP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
   }
 
   $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there

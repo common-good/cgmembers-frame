@@ -1,0 +1,8 @@
+values to use with devkeys/anon.privk, for TESTING anonymization of data (a\anonymize()):
+
+      "c": ["xor b64", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "h": ["aes-256-ctr", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "r": ["rot scram", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "p": ["xor b64", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "s": ["scram", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "v": ["scram pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwq0n8TS5Sk_mk5FSvN-jC7nQ_kTwgLgOXdqy8fHY0ts9_XEcGEk7V5mTpFw9j0cg20pKZmY1Hmm-MBpqw0yekhNS5Y-ShmOUYQCO6qXeaW7Hs_7iKL2WzF2e7El3pIhel16IFAc_YdHvGNu22dzx79O-SyZXNtZRrRqY9pd8NUugxVFyM8soaG6H3AYOAO3mBwsGYipZOPakg7vgdieYfm79NI5hb5flv44kWzg2uiAr_e0lsdHOJxd0A6BbXXDC0p4rH5zyL3VfePgAJxwY3jQBFdhqr2dzIIqpRGtSiZjlAF6iysA4oQvXFDZRWnXHZvTQkuWKEHlb0qMThgE7gQIDAQAB", "NDEyMzQ1Njc4OWFiY2RlZmdo"]
