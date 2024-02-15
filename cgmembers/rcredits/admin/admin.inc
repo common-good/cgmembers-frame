@@ -21,7 +21,7 @@ use CG\QR as qr;
  * called from installation and test setup
  * To prepare for export for developers, f('t.clear');
  */
-function setupBasicAccounts() {
+function setupBasicAccounts($withEIN = TRUE) {
   $keys = ray('uid community name fullName email country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
@@ -34,7 +34,7 @@ function setupBasicAccounts() {
     if (!$hasServer) continue;
     //    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
     if ($uid = db\get('uid', 'users', "name=CONCAT(:region, '.')", compact('region'))) {
-      r\acct($uid)->update(compact(ray('zips federalId flags')));
+      r\acct($uid)->update(compact(ray('zips flags' . ($withEIN ? ' federalId' : ''))));
     } else {
       $fullName = $fullName ?: db\get('name', 'r_states', 'abbreviation=:st', compact('st'));
       $email = u\shortName($fullName) . '@' . CG_DOMAIN;
@@ -45,7 +45,7 @@ function setupBasicAccounts() {
       $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       list ($address, $city, $zot1, $zot2) = u\parseAddr($postalAddr); // don't overwrite state or zip
-      $info += compact(ray('postalAddr address city state federalId activated'));
+      $info += compact(ray('postalAddr address city state activated' . ($withEIN ? ' federalId' : '')));
       $serverA = new r\Acct($info);
       $serverA->update(compact('zips'));
     }
@@ -78,6 +78,7 @@ function setupBasicAccounts() {
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
+  if ($withEIN) $cgf->update('federalId', CGF_EIN);
   $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
 
