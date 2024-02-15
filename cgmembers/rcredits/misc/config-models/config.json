@@ -21,11 +21,10 @@
     "encryption": {
       "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "M": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "P": ["rot b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "R": ["rot scram", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "S": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "V": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"]
+      "V": ["xor pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09IkU4lBUI34yeoeXusX SeA+FeQLM0pjWhFIFmkENPRsm+/SiQQvw/3wzlrlRad2tL95ShbMqNziW2/4cA3F inf6DeBYmapnYQdtxRzjUWkDPloh4qlr9h9gjVK2CllfpJrMadpwWV/Oj0H53Vw6 OCWZDoVHmAAeK3Ocuxs/OedkVSqRpTLbDX+pG73OActtDjkQ2Iydz9dv35Sj9ASF 9BpkBGFQbTfUgIFyjD1xPW1lA2XBMtHgib+X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2i B6NXQIwKoMe/6Gx6UxvZeacheI++fW97qYiioH57r/iy8sC/BUt8ZFATQbn0Uv/9 uwIDAQAB", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
     }
   },
   "privk":

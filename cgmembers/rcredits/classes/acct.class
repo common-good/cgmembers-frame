@@ -296,10 +296,10 @@ class Acct {
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = nni($set, $field);
         if ($k == 'vsecure') {
-          if (u\crypted('V', $result)) $result = u\decry('V', $result);
-          elseif (!t\deCryVok()) u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
-        }
-        return $result; // must be separate line from $a->set (PHP bug)
+          if (u\crypted('V', $result) and t\deCryVok()) return u\decry('V', $result);
+          u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
+          return $result;
+        } else return $result;
       }
     }
     
@@ -1734,7 +1734,7 @@ X;
     if (!$vKey) return t('No private key given or available.');
     require_once R_ROOT . '/forms/showqr.inc'; // for qrHtml()
     
-    $vKeyPw = $vKeyPw ? u\b64decode($vKeyPw) : openssl_random_pseudo_bytes(32);
+    $vKeyPw = $vKeyPw ? u\b64decode($vKeyPw) : openssl_random_pseudo_bytes(51);
 //    if (isDEV) setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
 
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);

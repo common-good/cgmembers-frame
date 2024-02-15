@@ -2120,7 +2120,8 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/common.inc';
 
   _drupal_bootstrap_full();
-  if (!db\exists('menu_links')) \menu_rebuild();
+  if (isDEV and !db\exists('menu_links')) \menu_rebuild();
+  if (isDEV and !db\exists('users', ray('uid', UID_SUPER))) f('a.setupBasicAccounts');
 
   if ($jsCode and $qid = nni($_GET, 'qid')) {
     r\setAcct(r\acct($qid));

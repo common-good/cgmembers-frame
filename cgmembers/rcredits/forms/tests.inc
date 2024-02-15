@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Admin as a;
 
 include_once R_ROOT . '/admin/admin.inc';
 include_once R_ROOT . '/cg-testing.inc';

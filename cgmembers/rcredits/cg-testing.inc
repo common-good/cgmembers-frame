@@ -988,7 +988,7 @@ function doTxs2($tx) {
 
   if ($testOnly) return verifyRecord('txs2', $tx);
 
-  if (!rayhas($tx, 'bankAccount')) $tx['bankAccount'] = $a->bankAccount; // sometimes we specify %NUL
+  if (!rayhas($tx, 'bankAccount')) $tx['bankAccount'] = nni($a->vsecure, 'bankAccount'); // sometimes we specify %NUL; don't try to deCry
   u\setDft($tx['channel'], $channel0);
   $options = just('pid created completed txid explicit bankAccount isSavings', $tx);
 

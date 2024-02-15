@@ -64,7 +64,7 @@ foreach (explode(' ', 'name driver host port user pass salt word encryption') as
 
 define('R_SALTY_PASSWORD', $db_pass);
 define('R_WORD', hex2bin($db_word));
-$cryHows = (array) $db_encryption;
+$cryHows = (array) $db_encryption; // used only in u\cry()
 
 unset($configRay); // don't leave this hanging around
 
