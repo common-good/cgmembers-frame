@@ -60,7 +60,7 @@ class MyWSSServer implements MessageComponentInterface {
     if (!$qid = qr\qid($actorId)) return er(t('"%actorId" is not a recognized actorId.', compact('actorId')), $from);
     $ok = ( ($deviceId == bin2hex(R_WORD)) // called from u\tellApp
     or (!isPRODUCTION and $deviceId == 'dev' . substr($qid, -1)) // testing (for example devA)
-    or ($x = u\decryPGP(u\b64decode($deviceId), 'public') and strstr($x, '/', TRUE) == $qid) );
+    or ($x = u\decryPP(u\b64decode($deviceId), 'public') and strstr($x, '/', TRUE) == $qid) );
     if (!$ok) return er(t('"%actorId" is not an authorized account.', compact('actorId')), $from); // server sends R_WORD instead of deviceId
     
     switch ($op) {

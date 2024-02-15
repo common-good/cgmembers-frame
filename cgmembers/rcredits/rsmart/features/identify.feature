@@ -44,21 +44,21 @@ Scenario: a cashier signs in
   | 1  | Bea Two | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: Device has no identifier yet
-  Given next code is "Jasper" PGP "private" encrypted
+  Given next code is "Jasper" asymmetrically "private" encrypted
   When agent "" asks device "" to sign in "C:B,ccB2"
   Then we respond with:
   | ok | person  | descriptions    | can          | bad | device    | company    | time |*
   | 1  | Bea Two | this,that,other | refund,r4usd |     | %nextCode | Corner Pub | %now |
 
 Scenario: Device has no identifier yet for an individual
-  Given next code is "Jasper" PGP "private" encrypted
+  Given next code is "Jasper" asymmetrically "private" encrypted
   When agent "" asks device "" to sign in ".ZZA,ccA"
   Then we respond with:
   | ok | person  | descriptions | can | canMgr                                    | bad | device    | person  | time |*
   | 1  | Abe One |              |     | charge,undo,refund,r4usd,usd4r,buy,manage |     | %nextCode | Abe One | %now |
   
 Scenario: Device has no identifier yet for trial company
-  Given next code is "Jasper" PGP "private" encrypted
+  Given next code is "Jasper" asymmetrically "private" encrypted
   When agent "" asks device "" to sign in ".ZZH,ccH"
   Then we respond with:
   | ok | person | descriptions | can                 | canMgr | bad | device    | company | time |*

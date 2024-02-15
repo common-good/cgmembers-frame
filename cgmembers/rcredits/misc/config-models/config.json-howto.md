@@ -29,14 +29,14 @@ Each of the elements under encryption provides parameters for exncryption servin
 
 Each of these elements is an array of [method, password, vector]:
 
-*method*   a space-delimited list of encryption methods: xor, rot, scram, b64, pgp, or any openssl_get_cipher_methods string.
+*method*   a space-delimited list of encryption methods: xor, rot, scram, b64, pp (for "V" only), or any openssl_get_cipher_methods string.
 *password* an arbitrary base64url-encoded password, at least 32 characters long
 *vector*   an arbitrary base64url-encoded initialization vector, at least 16 characters long
 
 And of these values (method, password, vector) can instead be single character meaning copy values from that other element.
 For example, ["S", "whatever", "whatever"] means use the same method as for "S" encryption.
 The last method in the list for "C" and "P" must be b64.
-For maximum security, the method list for "V" (but no other) should include pgp.
+For maximum security, the method list for "V" should include pp.
 
 ### SMTP
 

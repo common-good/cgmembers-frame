@@ -1212,7 +1212,7 @@ function noEmailTo($email) {
  */
 function cryNextCode($phrase, $type = 'private') {
   global $testOnly; if ($testOnly) return FALSE;
-  global $nextCode, $testVars; $testVars['nextCode'] = $nextCode = u\b64encode(u\cryPGP($phrase, $type));
+  global $nextCode, $testVars; $testVars['nextCode'] = $nextCode = u\b64encode(u\cryPP($phrase, $type));
   return TRUE;
 }
 
