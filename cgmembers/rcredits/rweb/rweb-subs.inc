@@ -98,6 +98,22 @@ function goFar($url, $params = '') {
 }
 
 /**
+ * Do periodic stuff that only superAdmin can do.
+ * @param acct $mya: current account (not global $mya because we might be signing in)
+ * @param string $vKeyPw: superAdmin password from QR or flash drive
+ */
+function superSignin($mya, $vKeyPw) {
+  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
+  if (!r\vKey($mya)) return softErr(t('Your admin password is invalid.'));
+  if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+  
+  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
+    $a = r\acct($uid);
+    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+  }
+}
+
+/**
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
  * @param string $types: space-delimited list of acceptable mime types (empty means "any")

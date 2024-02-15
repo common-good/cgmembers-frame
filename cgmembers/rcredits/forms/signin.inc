@@ -88,9 +88,9 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
 
-  if ($a->id == UID_SUPER) { // almost never used except for development/testing. phase out?
+/*  if (!$a->id == UID_SUPER) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
-    if ($pw2 and !$a->pw2) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
+    if (!nni($a->vsecure, 'pw2')) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
     r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
     if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
@@ -100,11 +100,12 @@ function formSignin_validate($form, &$sta, $type = 'both') {
       if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
     }
   }
-  
   if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
     r\setCryptCook('qid', $a->mainQid, NULL);
-  }
+  }*/
   
+  if (($uid == UID_SUPER or $a->admin) and $vKeyPw) superSignin($a, $vKeyPw); // include superAdmin permission if asked
+
   return TRUE; // TRUE is used by formBuy()
 }
 
