@@ -1227,7 +1227,7 @@ function just($these, $info, $default = NULL) {
   if (!is_array($these)) $these = ray($these);
   $res = array_intersect_key($ray, array_flip($these));
   if (func_num_args() > 2) foreach ($these as $i => $k) {
-    if (!array_key_exists($k, $res)) $res[$k] = (is_array($default) and !empty($default)) ? $default[$i] : $default; // allow [] as the default for multiple args
+    if (!array_key_exists($k, $res) or is_null($res[$k])) $res[$k] = (is_array($default) and !empty($default)) ? $default[$i] : $default; // allow [] as the default for multiple args
   }
   return $res;
 }
@@ -2127,6 +2127,7 @@ function drupal_bootstrap() {
     r\setAcct(r\acct($qid));
     return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
   } elseif (!$mya = r\setAcct()) {
+    global $channel; $channel = TX_WEB;
     $qid = nni($_COOKIE, 'trust') ? r\cryptCook('qid') : '';
     if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
   }

@@ -1135,7 +1135,7 @@ EOF;
       if ($password == nn($pass)) return ($a->admin or now() < nn($expires)) ?: !($err = 'pass expired');
     }
 
-    if (!strlen($a->$passFieldName)) return !$err = 'password required';
+    if (!strlen($a->$passFieldName??'')) return !$err = 'password required';
     require_once DRUPAL_ROOT . '/includes/password.inc';
     $hash = \_password_crypt('sha512', $password, $a->$passFieldName);
     return ($hash and $a->$passFieldName == $hash) ?: (!$err = t('bad login', '_a', w\atag('/settings/password')));
@@ -1523,7 +1523,9 @@ X;
    */
   public function setAdminBits($vs) {
     $cans = 0; foreach ($vs ?: [] as $bit) $cans |= u\bit($bit, 'a');
-    db\updateOrInsert('admins', ray('uid can', $this->id, $cans), 'uid');
+    if ($cans) {
+      db\updateOrInsert('admins', ray('uid can', $this->id, $cans), 'uid');
+    } else db\del('admins', 'uid', $this->id);
   }
 
   /**

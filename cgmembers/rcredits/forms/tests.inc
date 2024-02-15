@@ -25,7 +25,7 @@ function formTests($form, &$sta) {
 
   if (!getv('cgf_uid')) {
     a\setupBasicAccounts();
-    return go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
+    return go('/tests/?' . nni($_GET, 'QUERY_STRING'), t('redirecting after setting up basic accounts'), 'err');
   }
 
   include_once DRUPAL_ROOT . '/gherkin/test.php'; // some inline code and functions

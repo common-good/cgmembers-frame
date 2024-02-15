@@ -129,7 +129,7 @@ X;
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
       $img = $a->photoSrc(TRUE) ?: 'images/no-photo-available.jpg'; // works even if site goes down for a second
-      $res .= tr($model, '_name _buttons desc _contact img', "$name$new", $buttons, strtolower($a->shortDesc)
+      $res .= tr($model, '_name _buttons desc _contact img', "$name$new", $buttons, strtolower($a->shortDesc ?? '')
       , $contact, $img) . "\n";
     }
   }

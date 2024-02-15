@@ -117,7 +117,7 @@ EOF;
 /*    if ($weight < PHP_INT_MAX / 2) { // show city and maybe state
       $state = $state == $a->state ? '' : (', ' . r\realState($state));
     } else list ($city, $state) = [t('Top Suggestions'), '']; */
-    if (strtolower($city) != strtolower($cityX)) {
+    if (strtolower(nn($city)) != strtolower(nn($cityX))) {
       if ($cityX) $res .= "</td></tr>\n"; // finish previous line
       $res .= str_replace(' ', '&nbsp;', "<tr><th>$city$state</th><td>");
       $cityX = $city;

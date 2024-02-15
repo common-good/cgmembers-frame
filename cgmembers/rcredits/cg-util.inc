@@ -775,10 +775,10 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
   }
 
   if ($cropW or $cropH) { // crop
-    $img2 = imagecreatetruecolor($cropW, $cropH); // area to crop image into
+    $img2 = imagecreatetruecolor(round($cropW), round($cropH)); // area to crop image into
     if ($bX or $bY) imagefill($img2, 0, 0, imagecolorallocate($img2, 255, 255, 255)); // white borders
     $cropW -= $bX; $cropH -= $bY;
-    imagecopyresampled($img2, $img1, $bX / 2, $bY / 2, $x1, $y1, $cropW, $cropH, $cropW, $cropH);
+    imagecopyresampled($img2, $img1, round($bX/2), round($bY/2), round($x1), round($y1), round($cropW), round($cropH), round($cropW), round($cropH));
   } else $img2 = $img1;
 
   return $img2;
@@ -884,7 +884,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
     }
   }
 
-  return $de ? $data : (CRYPT_FLAG . $type . nn($nonce) . $data);
+  return $de ? $data : (CRYPT_FLAG . strtoupper($type) . nn($nonce) . $data); // strtoupper is for the rare day when we change the passwords (for example in a\anonymize())
 }
 
 /**
@@ -899,7 +899,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 function crypted($type, $s = NULL) {
   if (func_num_args() == 1) {
     if (strlen($type) < strlen(CRYPT_FLAG) + 1) return FALSE;
-    list ($type, $s) = [$type[strlen(CRYPT_FLAG)], $type];
+    list ($type, $s) = [nni($type, strlen(CRYPT_FLAG)), $type];
     if (!$type or !strhas('PSV', $type)) return FALSE;
     return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
@@ -1154,12 +1154,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   $coods = @$matches[0]->coordinates;
   $coods = [$coods->y, $coods->x];
   */
-  try {
+  if (isPRODUCTION) try {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
   if (!nn($res) or !$res = u\dejsonize($res, FALSE) or !is_object($res)) {
-    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)), compact('res'));
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag(nn($url))), compact('res'));
     return $none;
   }
 

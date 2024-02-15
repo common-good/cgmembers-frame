@@ -98,7 +98,8 @@ function _drupal_session_read($sid) {
       }
     }
   } else {
-    $user = db_query("SELECT u.*, s.* FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.sid = :sid", array(':sid' => $sid))->fetchObject();
+    $q = db_query("SELECT u.*, s.* FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.sid = :sid", array(':sid' => $sid));
+    $user = $q ? $q->fetchObject() : NULL;
   }
 
   // We found the client's session record and they are an authenticated,

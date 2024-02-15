@@ -44,7 +44,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   $res = \db_query($sql, $subs, $opts);
   if (is_null($res)) {
     global $dbERR; // PDOException set in database.inc
-/**/ if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
+///   if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
 //    \lock_release_all();
 //    f('a.clearCache');
 //    die('Database error');
@@ -81,7 +81,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   if (!mb_strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
 ///   debug(compact('sql','subs'));
-  $result = db\q($sql, $subs);
+  if (!$result = db\q($sql, $subs)) return NULL;
 
   list ($cnt, $f) = [1, $fieldName];
   while ($cnt) $f = preg_replace('/\\([^\\(\\)]+\\)/', '', $f, -1, $cnt); // ignore commas in functions
