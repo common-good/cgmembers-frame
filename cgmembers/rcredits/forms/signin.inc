@@ -87,22 +87,6 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     $sta['input']['uid'] = $uid;
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
-
-/*  if (!$a->id == UID_SUPER) {
-    $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
-    if (!nni($a->vsecure, 'pw2')) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
-    if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
-    r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
-    if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
-    if ($vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
-      if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
-      r\setCryptCook('vKeyE', $vKeyE, 0);
-      if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
-    }
-  }
-  if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
-    r\setCryptCook('qid', $a->mainQid, NULL);
-  }*/
   
   if (($uid == UID_SUPER or $a->admin) and $vKeyPw) superSignin($a, $vKeyPw); // include superAdmin permission if asked
 

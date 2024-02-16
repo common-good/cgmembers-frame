@@ -296,8 +296,10 @@ class Acct {
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = nni($set, $field);
         if ($k == 'vsecure') {
-          if (u\crypted('V', $result) and t\deCryVok()) return u\decry('V', $result);
-          u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
+          if (u\crypted('V', $result)) {
+            if (t\deCryVok()) return u\decry('V', $result);
+            u\EXPECT(!$a->ok and !$a->activated, t('non-admin trying to deCry %field', compact('field'))); // don't try to decrypt something we can't (admin stands in for super, in tests)
+          }
           return $result;
         } else return $result;
       }
@@ -1737,8 +1739,6 @@ X;
     require_once R_ROOT . '/forms/showqr.inc'; // for qrHtml()
     
     $vKeyPw = $vKeyPw ? u\b64decode($vKeyPw) : openssl_random_pseudo_bytes(51);
-//    if (isDEV) setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
-
     $vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
 
     $id = db\get('id', 'admins', compact('uid'));

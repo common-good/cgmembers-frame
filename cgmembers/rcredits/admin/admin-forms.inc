@@ -19,10 +19,12 @@ include_once R_ROOT . '/admin/admin-web.inc';
  * Log back in to admin automatically (called after testing, in case session got destroyed).
  */
 function formTestResults($form, &$sta, $args = '') {
+  global $channel; $channel = TX_WEB;
   if (!isDEV) return;
   extract(just('top', $args, NULL));
   
-  r\setAcct(1, $sta);
+  r\setAcct(UID_SUPER, $sta);
+  superSignin(a(UID_SUPER));
   test(FALSE);
   jsx('tests');
 

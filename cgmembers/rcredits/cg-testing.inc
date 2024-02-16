@@ -25,8 +25,10 @@ const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suff
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
-define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
+const DOCODE_FLNM = LOG_DIR . 'docode.txt';
+const SAME_TIME = 60 * 20; // number of seconds that make no difference in "same time"
+const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
+const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 
 /**
  * Output the message with the given background color.
@@ -88,7 +90,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE can'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
@@ -120,10 +122,8 @@ function fixData(&$info, $direct = FALSE) {
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
 
-  if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = u\b64decode(<<<X
-YCFSWVhCWnJsUE5QRHFyTWZWZUhybjBnNTdPZDB5aDkyK1R0L29VRVFaZUU0N2F2cm9PWDFPRS9RRG1JQVQrQ2htK1VoREpSS2RUZG1rbG9EQnQwMXZUY1BvcnhJeWxGUUlvd29uNjdBNnJPYUJvQytUNEtIR2JCT2dWd00wMnpmb2w3WW5WeUxnblQ4c0FMWWZVTWRPMG1Oak83NXpkUmhML0hiRUFnSnRvYkUyUVN2azVpRy96SDBGd21aR2JUSTVObzRlb0UwTDBXWExLdUhsSGtaR3FYWVByeFd5K1JWaEpTYjhaUVdlTTNkMFpIcE5mdS9sd2lOejgrS1huTVMzK2xRazE2U2JhZXlEcmYvSzAyYVNDUFlwTUM0Tjk1TzdEUkFqWkgxN2pFRHBFbW5NVmpvMWd0TjFHWmw4cTY4eUtJT2NPN2hrMjJjaTU2UzlEYmFQYkxnbloxZkpvUVhWZXRUV0diV0NrbzBEY3laSWRkcmNYUU5qWGdha0c2ZmgxT3RkRVRTZjRXUEZPeXhZUzBxYmFhWFdmK0FLWVBrRDJiS0ZYZHI0Yk1nb3RvWmtGWnFwTzV1alVDSEluUzBrVkl6UVhGcjZXa0RZVnp0eDE4NEZtbEZEbFFmcmFIa3JJd3dVemZPYzFXRTkzc09LSnc5c0JFbXkwRmVnTmdZWkhVZ01VZjc1czV5VlFac3NJdEdxcnMvb1NwUHFNdXlXcDVvemhNSVhZb3dNN1NWNG4zbkpjQ2hzNHRMQVc3WVBZZjdKWFo1cXlpcGlEaGI1VXJoVm4ycFJHempzQk5sVGVGMWx6aE9KNEp5TmxDNzJJc0lYd2JIckZwdytjUEw2ZUMydDJLbmxYVXJ6UFdpZVNvb3FXbDNqWGkyWUJhVG9XMFo1azBoNkpTZEs2U2FIaUdVTk9uUEZqY2d5VGJsRTJPck15MUhWSitPckZhN3FLRWpjalhNK0pPaUdhK3FCSDQvaURadG9nZEw4NTN6UG1tLy9XK1NWRHFhWUR3dEVaOFFjUXZDNEpWOVhsTG0zeUduMjQvUHhBc0pKd05QdzRyZHMxN3Z5TkEzK2lGRWpKMnUyV3VJRlhRMEV5SFF1eXFvTER2RzNrWlg1Y0lZMi9jRlpYM01BTEN2RklLcEMyeGpaWGtadzlqTlM3OVN1NUYyVjhDZGI4TXFITXZPc3pqbWNRYURNRlJlc2M3b3MwS05TK3Z6czZRYmREb25uR2lPZkFFNVNiWXZUakh2bUdEaDBGUWZhQ3BYcmxVNlcvWVd6WDhZeGJzdEtRMWFZS0Y2bGZDeVFMbGQ0SjdlYU52cTBNNHl4dFRleWQ2SFN1K2p2TjVMeHZ4UWVKN0hwUzdqSUtDdHVUVTBFVTdtNDZTQS9tMktwYVZYVE1mYmN2a1lmUWt6RVBwaGlORi9HVWw1S0dIeS9laTFtZnZyRzE1YUlDM25ZVmoxeVFMRG5LZlZJQ20zeXREdzBuVXcxTjNWanQyL1VPTDkrNmhqcUZLeHd3dXFEN0M4UjRiemtKeTBuOWlGOWlEOW4zN2UzRFhKMDQ0QlVWZ25jOElOVnlYODRFQXQ4QzBUTVhaQ3ZLZE9mVkpQY1RiZ3h2RTNqNkhQZGlHL010eGFFYUJLcWFDV1BmeUZsZ1hKcXQrNHJBTktaSjloN3Y0eldlL0doWDVmU1JTd0xaQWdFNHZNUnRySmdZSTdEOVdHZWNGUzFwWmg0YlRtaXEzSW16QXlYQW5BeGo0MkI4elBCVWdLdTIrNXB5SHVCNFVETnBjUHJlVTNlV2c3byszOUp5UVhxTnIyQ2JtUVdrdENzU2o3ZlQveXJNd3JvajJHVlpPcFJueGY1SGFPTE11NGZvN3hxUCtDYWdJK3p6M3RNMzFUSEpNbmdtNVlxNUhBK2p0b2lVRmZDZk81a2pMeldRNG5JUFlHV24vZHdaTkFPRS9SMkhMTWRaUWNGc2RqSXhkS3RscUJxUlR3UVVLVWVzNGl3dWc0VkhqUittZGl5Z1ovVERraDhrRTdtZmNsTnBYanRLU1RBSFZvSEtxY0hXMzU4VTRxQ3Vmcy8xTCt1ZXo2YmkzUzZ3ZzlJbzdlZ1NWZmxVMkQ3RUpPM1F5VzJjME1TM25vc2t0aFRqMlBLRmZDSEUwZzBtUUp5eEdmaz0
-X
-  );
+  if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = getDevVKeyE();
+  if (nn($vKeyPw) == 'DEV_VKEYPW') $vKeyPw = getDevVKeyPw();
   
   if (isset($can) and !is_array($can)) {
     $newcan = 0; 
@@ -167,6 +167,18 @@ X
 }
 
 /**
+ * Set vKeyE and vKeyPw for admin and optionally for the specified account. Return vKeyPw.
+ * @return vKeyPw
+ */
+function setDevVKey($a = NULL) {
+   $key = file_get_contents(DEV_VPRIVK_FLNM);
+   $pw = getDevVKeyPw();
+   a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
+   if ($a and $a->id != UID_SUPER) $a->makeVKeyE($key, $pw, FALSE);
+   return $pw;
+}
+
+/**
  * Return an account record ID for the given shorthand id field value.
  * @param string $v: shorthand field value
  * @return: interpreted field value
@@ -188,12 +200,16 @@ function adminPerms($id, $perms) {
   return $a->adminCan($perms);
 }
 
-function cookieIs($nm, $v) {
+function cookieIs($nm, $v, $crypt = FALSE) {
   global $testOnly, $box;
 
-  if (!$testOnly) r\setCook($nm, $v);
+  $info = [$nm => $v]; fixData($info); [$nm => $v] = $info;
+  if (!$testOnly) {
+    if ($crypt) r\setCryptCook($nm, u\b64decode($v)); else r\setCook($nm, $v);
+  }
   if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
-  return t\eq("cookie $nm", $v, nni($_COOKIE, $nm));
+  $cookieV = $crypt ? u\b64encode(r\cryptCook($nm)) : r\cook($nm);
+  return t\eq("cookie $nm", $v, $cookieV);
 }
 
 function pdfHas($list) {
@@ -280,7 +296,9 @@ function fixEmail($email) {
 
 function memberScansAdminCard($id, $vKeyPw) {
   global $testOnly; if ($testOnly) return FALSE;
-  return t\memberVisitsPage($id, 'sadmin/panel/codePw=' . u\cryRay(compact('vKeyPw')));
+  $info = compact('vKeyPw');
+  fixData($info);
+  return t\memberVisitsPage($id, 'sadmin/panel/codePw=' . u\cryRay($info));
 }
 
 function doRecords($list, $thing) {
@@ -2202,3 +2220,5 @@ function sameTime($desc, $a, $b) {return t\eq($desc, $a, $b, '', '', SAME_TIME);
 function rewarding() {return a('aab')->cttyA->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
+function getDevVKeyPw() { preg_match("/value='([^']+)'/", file_get_contents(DEV_CONFIG_FLNM), $m); return $m[1]; }
+function getDevVKeyE() { setDevVKey(); return db\get('vKeyE', 'admins', 'uid=:UID_SUPER'); }

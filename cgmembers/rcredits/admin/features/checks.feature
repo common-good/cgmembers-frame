@@ -26,7 +26,7 @@ Scenario: admin prints checks
   | 5002 | .ZZA  |    400 | %today-2w |            0 | %today    |
   | 5003 | .ZZB  |    100 | %today-1d |            0 | %today    |  
   | 5004 | .ZZC  |    300 | %today    |            0 |         0 |
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  And member ".ZZA" scans admin card "DEV_VKEYPW"
   When member ".ZZA" visits page "sadmin/deposits"
   Then we show "Bank Transfers" with:
   | New IN | 3 |

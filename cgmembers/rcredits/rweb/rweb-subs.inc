@@ -100,9 +100,13 @@ function goFar($url, $params = '') {
 /**
  * Do periodic stuff that only superAdmin can do.
  * @param acct $mya: current account (not global $mya because we might be signing in)
- * @param string $vKeyPw: superAdmin password from QR or flash drive
+ * @param string $vKeyPw: superAdmin password from QR or flash drive (defaults to test vKeyPw on dev)
  */
-function superSignin($mya, $vKeyPw) {
+function superSignin($mya, $vKeyPw = '') {
+  if (isDEV and !$vKeyPw and $mya->id == UID_SUPER) {
+    $vKeyPw = empty(db\get('vKeyE', 'admins', 'uid=:UID_SUPER')) ? t\setDevVKey($mya) : t\getDevVKeyPw();
+  }
+  
   r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
   if (!r\vKey($mya)) return softErr(t('Your admin password is invalid.'));
   if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");

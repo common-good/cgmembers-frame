@@ -71,9 +71,10 @@ For maximum security, the method list for "V" should include pp.
 
 ### Customizing the Encryption Keys and Passwords
 
-The example config.json file uses the private/public key pair stored in misc/devkeys/cg.privk (and .pubk) for the "privk" value (Common Good's private key for identifying other devices) and the pair stored in misc/devkeys/v.privk (and .pubk) for "V" encryption. The Common Good system actually uses SSL asymmetric encryption/decryption rather than PGP. For any system using real data, you will need to choose new keys. Here's how:
+The example config.json file uses the private/public key pair stored in misc/devkeys/cg.privk (and .pubk) for the "privk" value (Common Good's private key for identifying other devices) and the pair stored in misc/devkeys/v.privk (and .pubk) for "V" encryption. The Common Good system actually uses SSL asymmetric encryption/decryption rather than PGP. For development, there is no need to change anything. But for any system using real data, you will need to choose new keys. Here's how:
 
-* Install the Common Good system (cgmembers-frame repo) on a development machine.
+## Make new keys
+
 * Open cgmembers/rcredits/misc/makeKey.php in your browser.
 * Set the first text box to the path to openssl.cnf on your system, which, depending on your system, you may find in /apache/bin, /etc/ssl, /etc/openssl, apache\apache2.4.46\conf, somewhere inside your WAMP/XAMPP/LAMP/MAMP package, or in a system library. If you can’t find it, you may need to install openssl using your system’s package manager. 
 * Choose no more than about 2048 bits. 

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61v'; // software version
+const R_VERSION = '3.61w'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -94,9 +94,6 @@ const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstra
 const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scanqr scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 const SCRIPT_MODULES = 'scanqr';
 
-const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must be 16, 24, or 32)
-const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
-const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
 const TRACK_DELETED = 'users u_shout u_company u_photo u_relations txs2'; // remember rows in these tables if we delete them
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of

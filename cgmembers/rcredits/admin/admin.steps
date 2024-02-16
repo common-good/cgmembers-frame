@@ -183,6 +183,7 @@ function membersHave($list) {return t\membersHave($list);}
  */
 function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
   global $testOnly;
+
   require R_ROOT . '/cg-yearly.inc';
 //  t\login($id);
   if ($ten99 != '1099') return t\out('ten99 must be 1099');
@@ -276,18 +277,11 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
 
 /**
- * cryptcookie (ARG) is (ARG)
- *
- * in: 
- */
-function cryptcookieIs($nm, $v) {return t\cookieIs($nm, u\ry('C', $v));}
-
-/**
- * cryptcookie (ARG) is (ARG) decrypted
+ * cryptcookie (ARG) decrypted is (ARG)
  *
  * in: TEST super AnAdminPrintsChecks
  */
-function cryptcookieIsDecrypted($nm, $v) {return cryptcookieIs($nm, u\b64decode($v));}
+function cryptcookieDecryptedIs($nm, $v) {return t\cookieIs($nm, $v, TRUE);}
 
 /**
  * we say (ARG): (ARG) with: (ARG)

@@ -1,3 +1,4 @@
+
 Feature: Super
 AS a SuperAdministrator
 I WANT to do super stuff that normal admins can't do
@@ -19,15 +20,15 @@ Scenario: An admin prints checks
   | 3    | .ZZB  | 123    | %yesterday |
   And member ".ZZA" is signed in
 
-  When member ".ZZA" scans admin card "%DEV_VKEYPW"
-  Then cryptcookie "vKeyPw" is "%DEV_VKEYPW" decrypted
+  When member ".ZZA" scans admin card "DEV_VKEYPW"
+  Then cryptcookie "vKeyPw" decrypted is "DEV_VKEYPW"
 
   When member ".ZZA" visits "sadmin/checks/way=In&date=%yesterday"
   Then we show PDF with:
   | Bea Two | 123.00 | for %PROJECT credit |
 
   Given member ".ZZB" is signed in
-  When member ".ZZB" scans admin card "%DEV_VKEYPW"
+  When member ".ZZB" scans admin card "DEV_VKEYPW"
   Then we say "error": "no page permission" with:
   | page | Panel |**
 
