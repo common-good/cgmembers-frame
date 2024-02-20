@@ -830,7 +830,7 @@ function decryRay($code) {
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
  * @throws BadCry
- * TEST with foreach (ray('C H P R S V') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
+ * TEST with: foreach (ray('C H P R S V') as $k) w\say("k=$k " . u\decry($k, u\cry($k, 'abcd')));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
   global $cryHows, $mya;

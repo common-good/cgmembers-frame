@@ -11,8 +11,10 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
-$configFlnm = SHARED_DIR . '/config/config.json';
+const TEST_ANON = (FALSE and !isPRODUCTION); // set this to TRUE and... (in development) to test a\anonymize() -- then start by recreating the db
+$configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
+
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
@@ -27,6 +29,8 @@ const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
 const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
+const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
+const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
@@ -189,7 +193,7 @@ const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amo
 const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (not balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon asymmetrically-encrypted within Acct::vsecure)
-const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
+const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'; // non-personal encrypted fields (must be complete list)
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend

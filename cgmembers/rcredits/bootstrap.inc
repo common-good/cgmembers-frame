@@ -2121,7 +2121,10 @@ function drupal_bootstrap() {
 
   _drupal_bootstrap_full();
   if (isDEV and !db\exists('menu_links')) \menu_rebuild();
-  if (isDEV and !db\exists('users', ray('uid', UID_SUPER))) f('a.setupBasicAccounts');
+  if (isDEV and !db\exists('users', ray('uid', UID_SUPER))) {
+    f('a.setupBasicAccounts');
+    f('a.makeTestAccounts');
+  }
 
   if ($jsCode and $qid = nni($_GET, 'qid')) {
     r\setAcct(r\acct($qid));

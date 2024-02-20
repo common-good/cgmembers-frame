@@ -1,1 +1,2 @@
-$Env:SqlPath -uroot<db/import-$1.sql
+#!/bin/bash
+mysql<db/import-$1.sql
