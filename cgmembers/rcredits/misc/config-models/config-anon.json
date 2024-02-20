@@ -1,4 +1,5 @@
 {
+  "header": "Anonymization config. Replace cg/config/config.json with this, to test anonymize(). Same vKeyPw for admin as normal, but different key (anon.privk).",
   "stage": "development",
   "baseUrl": "http://localhost/cg/cgmembers",
   "promoUrl": "http://CommonGood.earth",
@@ -19,12 +20,19 @@
     "salt": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "word": "0123456789abcdef0123456789abcdef",
     "encryption": {
-      "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "P": ["rot b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "R": ["rot scram", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "S": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "V": ["xor pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09IkU4lBUI34yeoeXusXSeA-FeQLM0pjWhFIFmkENPRsm-_SiQQvw_3wzlrlRad2tL95ShbMqNziW2_4cA3Finf6DeBYmapnYQdtxRzjUWkDPloh4qlr9h9gjVK2CllfpJrMadpwWV_Oj0H53Vw6OCWZDoVHmAAeK3Ocuxs_OedkVSqRpTLbDX-pG73OActtDjkQ2Iydz9dv35Sj9ASF9BpkBGFQbTfUgIFyjD1xPW1lA2XBMtHgib-X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2iB6NXQIwKoMe_6Gx6UxvZeacheI--fW97qYiioH57r_iy8sC_BUt8ZFATQbn0Uv_9uwIDAQAB", "MDEyMzQ1Njc4OWFiY2RlZmdo"]
+      "c": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "h": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "p": ["rot b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "r": ["rot scram", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "s": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "v": ["xor pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09IkU4lBUI34yeoeXusXSeA-FeQLM0pjWhFIFmkENPRsm-_SiQQvw_3wzlrlRad2tL95ShbMqNziW2_4cA3Finf6DeBYmapnYQdtxRzjUWkDPloh4qlr9h9gjVK2CllfpJrMadpwWV_Oj0H53Vw6OCWZDoVHmAAeK3Ocuxs_OedkVSqRpTLbDX-pG73OActtDjkQ2Iydz9dv35Sj9ASF9BpkBGFQbTfUgIFyjD1xPW1lA2XBMtHgib-X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2iB6NXQIwKoMe_6Gx6UxvZeacheI--fW97qYiioH57r_iy8sC_BUt8ZFATQbn0Uv_9uwIDAQAB", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+
+      "C": ["xor b64", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "H": ["aes-256-ctr", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "R": ["rot scram aes-256-ctr", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "P": ["xor b64", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "S": ["scram", "NDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "NDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "V": ["scram pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09IkU4lBUI34yeoeXusXSeA-FeQLM0pjWhFIFmkENPRsm-_SiQQvw_3wzlrlRad2tL95ShbMqNziW2_4cA3Finf6DeBYmapnYQdtxRzjUWkDPloh4qlr9h9gjVK2CllfpJrMadpwWV_Oj0H53Vw6OCWZDoVHmAAeK3Ocuxs_OedkVSqRpTLbDX-pG73OActtDjkQ2Iydz9dv35Sj9ASF9BpkBGFQbTfUgIFyjD1xPW1lA2XBMtHgib-X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2iB6NXQIwKoMe_6Gx6UxvZeacheI--fW97qYiioH57r_iy8sC_BUt8ZFATQbn0Uv_9uwIDAQAB", "NDEyMzQ1Njc4OWFiY2RlZmdo"]
     }
   },
   "privk":

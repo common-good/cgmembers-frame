@@ -88,7 +88,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
   
-  if (($uid == UID_SUPER or $a->admin) and $vKeyPw) superSignin($a, $vKeyPw); // include superAdmin permission if asked
+  if ($uid == UID_SUPER or ($a->admin and $vKeyPw)) superSignin($a, $vKeyPw); // include superAdmin permission if asked
 
   return TRUE; // TRUE is used by formBuy()
 }

@@ -27,8 +27,6 @@ global $base_path;
 define('BASE_PATH', $base_path);
 const DOCODE_FLNM = LOG_DIR . 'docode.txt';
 const SAME_TIME = 60 * 20; // number of seconds that make no difference in "same time"
-const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
-const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 
 /**
  * Output the message with the given background color.
@@ -171,11 +169,12 @@ function fixData(&$info, $direct = FALSE) {
  * @return vKeyPw
  */
 function setDevVKey($a = NULL) {
-   $key = file_get_contents(DEV_VPRIVK_FLNM);
-   $pw = getDevVKeyPw();
-   a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
-   if ($a and $a->id != UID_SUPER) $a->makeVKeyE($key, $pw, FALSE);
-   return $pw;
+  if (isPRODUCTION) return;
+  $key = file_get_contents(DEV_VPRIVK_FLNM);
+  $pw = getDevVKeyPw();
+  a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
+  if ($a and $a->id != UID_SUPER) $a->makeVKeyE($key, $pw, FALSE);
+  return $pw;
 }
 
 /**
