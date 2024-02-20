@@ -1899,7 +1899,7 @@ function firstGraphDt($ctty) {
  * @param string $period: grain of displayed data (days, weeks, months, or years)
  * @param bool $download: <download month data instead of showing graph>
  * @return: an assoc of chart data for the specified period
- * FOR DEV: http://localhost/cgmembers-frame/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
+ * FOR DEV: http://localhost/cg/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
  */
 function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   global $base_url;

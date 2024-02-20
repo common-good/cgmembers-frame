@@ -1,6 +1,6 @@
 {
   "stage": "development",
-  "baseUrl": "http://localhost/cgmembers-frame/cgmembers",
+  "baseUrl": "http://localhost/cg/cgmembers",
   "promoUrl": "http://CommonGood.earth",
   "coApiUrl": "http://%website/cgapi/%etc",
   "cgfEmail": "adeveloper@example.com",
