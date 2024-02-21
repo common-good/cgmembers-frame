@@ -979,6 +979,9 @@ function anonymize($encrypting = FALSE) {
   if ($encrypting) { 
     $vKeyPw = t\setDevVKey(a(UID_SUPER), TRUE); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
     db\q('DELETE FROM admins'); // should be db\q('DELETE FROM admins WHERE uid<>:UID_SUPER'); (make the previous line work)
+    a(1)->update('pass', '123');
+    $pass = db\get('pass', 'users', 'uid=1');
+    db\q('UPDATE users SET pass=IF(:IS_CO, NULL, :pass) WHERE uid>:UID_CANON9', compact('pass'));
     w\say(t('<h2>Done anonymizing!</h2>
       <p>Change the default vKeyPw in cgAdmin.html on your flash drive to this: "%vKeyPw" (the same as in misc/config-models/cgAdmin-dev.html).</p>
       <p>Change config.json to use the new encryptions, then SIGN OUT and sign back in.</p>
