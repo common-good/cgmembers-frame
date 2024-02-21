@@ -561,28 +561,19 @@ function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if sp
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
- * If no admin is signed in with super permission, return FALSE.
- * @param acct $a: the current account (passed only if signing in) -- defaults to $mya
+ * If no admin is signed in with super permission (or partially signed in -- see w\superSignin()), return FALSE.
  */
-function vKey($a = NULL) {
+function vKey() {
   global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
   $ermsg = t(' Create a new vKeyE and vKeyPw (see acct::makeVKeyE).');
-  u\setDft($a, $mya);
 
-/*  if ($mya->agentId == UID_SUPER) { // old style: admin account only
-
-    if (!$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg . trace()) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
-    if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg . trace()) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
-    return u\decry('R', $vKeyE, $pw);
-  } else { // new style */
-    if (!$a or !$vKeyE = db\get('vKeyE', 'admins', ray('uid', $a->agentId)) or !$vKeyPw = r\cryptCook('vKeyPw')) {
-      $msg = t('missing ') . (nn($vKeyE) ? 'vKeyPw!' : 'vKeyE!');
-      r\tellAdmin($msg . trace());
-      return w\softErr($msg);
-    }
-    return u\decry('R', $vKeyE, $vKeyPw);
-//  }
+  if (!$mya or empty($vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->agentId))) or empty($vKeyPw = r\cryptCook('vKeyPw'))) {
+    $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!');
+    r\tellAdmin($msg . trace());
+    return w\softErr($msg);
+  }
+  return u\decry('R', $vKeyE, $vKeyPw);
 }
 
 /**

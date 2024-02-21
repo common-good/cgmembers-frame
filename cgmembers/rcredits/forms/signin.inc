@@ -88,8 +88,6 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
   
-  if ($uid == UID_SUPER or ($a->admin and $vKeyPw)) superSignin($a, $vKeyPw); // include superAdmin permission if asked
-
   return TRUE; // TRUE is used by formBuy()
 }
 
@@ -98,9 +96,11 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
-  extract(just('then uid', $sta['input'], NULL));
+  extract(just('then uid vKeyPw', $sta['input'], NULL));
 
   $mya = r\setAcct($uid, $sta);
+  if ($uid == UID_SUPER or ($mya->admin and $vKeyPw)) superSignin($vKeyPw); else r\deleteCook('vKeyPw'); // include superAdmin permission if asked
+  
   $agt = strtolower($mya->qid);
   if ($dftAcct = r\cook('dftAcct') and $dftA = r\acct($dftAcct, $uid) and $dftA->can(B_READ)) r\setAcct($dftA->id, $sta);
 

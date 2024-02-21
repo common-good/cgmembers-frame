@@ -27,7 +27,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($codePw) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($codePw), NULL));
-    if ($vKeyPw) superSignin($mya, $vKeyPw);
+    superSignin($vKeyPw);
   }
 
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show

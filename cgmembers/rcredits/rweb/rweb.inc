@@ -269,7 +269,8 @@ function signout($continue = FALSE) {
   
   $from = basename(nni($_SERVER, 'HTTP_REFERER'));
   r\deleteCook('qboRefresh');
-  
+  r\deleteCook('vKeyPw'); // no longer admV, if we ever were
+
   if ($from == 'app' and $continue === 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
   
   if (isDEV and !test()) db\q('TRUNCATE test');
@@ -284,7 +285,6 @@ function signout($continue = FALSE) {
   }
   
   if ($mya and !$mya->admin and !$continue) r\setCook('trust', NULL);
-  r\deleteCook('vKeyPw'); // no longer admV, if we ever were
   r\setAcct(NULL); // but $mya still points to the signed-out account
   r\Acct::_clear(); // empty the acct cache
   
