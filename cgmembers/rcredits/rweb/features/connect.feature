@@ -28,7 +28,7 @@ Scenario: A member connects a bank account during signup
 
   When member ".ZZA" completes form "settings/fund" with values:
   | op      | connect | routingNumber | bankAccount | bankAccount2 | refills | chox |*
-  | Connect |       0 | 211870281     | 1234        | 1234         |       0 |    3 |
+  | Connect |       0 | %DEV_ROUTING  | 1234        | 1234         |       0 |    3 |
   And member ".ZZA" visits page "settings/fund"
   Then we show "Banking Settings" with:
   | Account: | xxxxxx1234 | |
@@ -56,7 +56,7 @@ Scenario: A member connects a bank account later
 
   When member ".ZZA" completes form "settings/fund" with values:
   | op      | connect | routingNumber | bankAccount | bankAccount2 | refills | chox |*
-  | Connect |       1 | 211870281     | 1234        | 1234         |       0 |    2 |
+  | Connect |       1 | %DEV_ROUTING  | 1234        | 1234         |       0 |    2 |
   And member ".ZZA" visits page "settings/fund"
   Then we show "Banking Settings" with:
   | Account: | xxxxxx1234 | |

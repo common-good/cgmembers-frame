@@ -70,7 +70,7 @@ class Acct {
 
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, $region); // negative region to create a community, else regular
-    u\EXPECT($uid != 0, 'zero regionalinsert');
+    u\EXPECT(!empty($uid), 'empty regionalinsert');
     $a->reread(); // set all real fields
     list ($a->id, $a->agentId) = array($uid, $mya ? $mya->agentId : $uid); // finish creating the object
 
@@ -528,10 +528,10 @@ class Acct {
       $sFlds = serialize($sFlds);
       $info[$special] = ($special == 'data' or !$sFlds) ? $sFlds : u\cry('S', $sFlds);
     }
-
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
     if (count($info) == 1 and nni($info, 'uid') == $a->id) return TRUE; // nothing left to do
-    return $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
+    $res = $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
+    return $res;
   }
 
   /**

@@ -24,7 +24,7 @@ function formTestResults($form, &$sta, $args = '') {
   extract(just('top', $args, NULL));
   
   r\setAcct(UID_SUPER, $sta);
-  superSignin(a(UID_SUPER));
+  superSignin();
   test(FALSE);
   jsx('tests');
 

@@ -2647,3 +2647,13 @@ function memberCompletesWithValues($arg1, $arg2) {
   global $testOnly;
   todo;
 }
+
+/**
+ * member (ARG) scans admin card %DEV_VKEYPW
+ *
+ * in: 
+ */
+function memberScansAdminCardVKEYPW($arg1) {
+  global $testOnly;
+  todo;
+}

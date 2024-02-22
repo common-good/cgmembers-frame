@@ -128,7 +128,7 @@ Scenario: A member connects a bank account
   Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences donate"
   When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  | submit | %FUNDBY_BANK | 1    |  %DEV_ROUTING |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
   Then we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And members have:
@@ -296,7 +296,7 @@ Skip - fails in PHP 8.2 (dunno why)
 Scenario: A member registers bad name
   When member "?" confirms form "signup" with values:
   | fullName   | email     | phone        |  zip  | acctType     | cq | ca |*
-  | ™ whatever | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
+  | ï¿½ whatever | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
 # NO  Then we say "error": "illegal char" with subs:
 #  | field    |*
 #  | fullName |

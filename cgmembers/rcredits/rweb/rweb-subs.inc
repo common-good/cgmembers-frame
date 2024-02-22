@@ -105,7 +105,7 @@ function superSignin($vKeyPw = '') {
   global $mya;
 
   if (isDEV and !$vKeyPw and $mya->id == UID_SUPER and empty(db\get('vKeyE', 'admins', 'uid=:UID_SUPER'))) { // set up V-encryption automatically on dev
-    w\say(t('Setting up V-encryption automatically for user "admin" in development environment.')); // say this so we notice if it somehow gets on a non-dev machine
+    if (!test()) w\say(t('Setting up V-encryption automatically for user "admin" in development environment.')); // say this so we notice if it somehow gets on a non-dev machine
     $vKeyPw = t\setDevVKey($mya); // sets up vKeyE
   } elseif (!$vKeyPw) return r\deleteCook('vKeyPw');
   
@@ -1441,7 +1441,7 @@ function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('
 function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
 function fboCatChoices($way) {return db\keyed("id, REPLACE(category, ':FBO_{$way}_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_{$way}_HDR%'");}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
-function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
+function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(DEV_ROUTING) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
   $ssReason = $req ? t('Required by the IRS if you accept more than $600 a year in %PROJECT payments.') : '';

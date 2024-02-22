@@ -38,6 +38,7 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
   'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
+const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
 $base_url = config('baseUrl');
 

@@ -5,7 +5,7 @@ DROP USER IF EXISTS cg_user@localhost;
 FLUSH PRIVILEGES;
 
 CREATE USER cg_user@localhost IDENTIFIED BY 'pass';
-GRANT ALL ON cg.* TO cg_user@localhost;
+GRANT ALL PRIVILEGES ON cg.* TO cg_user@localhost;
 FLUSH PRIVILEGES;
 
 USE cg;
