@@ -11,7 +11,7 @@ Setup:
   And these "admins":
   | uid  | vKeyE     | can                 |*
   | .ZZB | DEV_VKEYE | seeAccts,deleteAcct |
-  And member ".ZZB" scans admin card "%DEV_VKEYPW"
+  And member ".ZZB" scans admin card "DEV_VKEYPW"
   
 # This scene assures that field changes made to users in migrations get made also to x_users
 Scenario: Admin deletes an account

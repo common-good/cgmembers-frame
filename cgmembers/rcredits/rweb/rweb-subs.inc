@@ -98,6 +98,28 @@ function goFar($url, $params = '') {
 }
 
 /**
+ * Do periodic stuff that only superAdmin can do.
+ * @param string $vKeyPw: superAdmin password from QR or flash drive (defaults to test vKeyPw first time on dev)
+ */
+function superSignin($vKeyPw = '') {
+  global $mya;
+
+  if (isDEV and !$vKeyPw and $mya->id == UID_SUPER and empty(db\get('vKeyE', 'admins', 'uid=:UID_SUPER'))) { // set up V-encryption automatically on dev
+    if (!test()) w\say(t('Setting up V-encryption automatically for user "admin" in development environment.')); // say this so we notice if it somehow gets on a non-dev machine
+    $vKeyPw = t\setDevVKey($mya); // sets up vKeyE
+  } elseif (!$vKeyPw) return r\deleteCook('vKeyPw');
+  
+  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0); // this, together with the stored vKeyE in admins, make r\vKey() work
+  if (!r\vKey()) return softErr(t('Your superAdmin password is invalid.'));
+  if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+  
+  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
+    $a = r\acct($uid);
+    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age) -- this is where $mya cannot be NULL
+  }
+}
+
+/**
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
  * @param string $types: space-delimited list of acceptable mime types (empty means "any")
@@ -1419,7 +1441,7 @@ function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('
 function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
 function fboCatChoices($way) {return db\keyed("id, REPLACE(category, ':FBO_{$way}_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_{$way}_HDR%'");}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
-function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(121182056) : []));} // arbitrary acceptable default for development
+function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(DEV_ROUTING) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 function ssnFld($req = REQ, $extra = []) {
   $ssReason = $req ? t('Required by the IRS if you accept more than $600 a year in %PROJECT payments.') : '';
@@ -1879,7 +1901,7 @@ function firstGraphDt($ctty) {
  * @param string $period: grain of displayed data (days, weeks, months, or years)
  * @param bool $download: <download month data instead of showing graph>
  * @return: an assoc of chart data for the specified period
- * FOR DEV: http://localhost/cgmembers-frame/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
+ * FOR DEV: http://localhost/cg/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
  */
 function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   global $base_url;

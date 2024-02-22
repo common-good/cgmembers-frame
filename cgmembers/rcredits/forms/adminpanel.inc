@@ -27,7 +27,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($codePw) { // called from scanqr.js
     extract(just('vKeyPw', u\decryRay($codePw), NULL));
-    if ($vKeyPw) superSignin($vKeyPw);
+    superSignin($vKeyPw);
   }
 
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
@@ -222,24 +222,6 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'relations') return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
   if ($op == 'usd') return say(a\showQuery('txs2', 'created DESC'));
   foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", 'created DESC'));
-}
-
-/**
- * Do periodic stuff that only superAdmin can do.
- */
-function superSignin($vKeyPw) {
-  global $mya, $cryTest;
-  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0);
-  if (u\decry('V', u\cry('V', $cryTest = 'test')) != 'test') {
-    r\deleteCook('vKeyPw');
-    return softErr(t('Your admin password is invalid.'));
-  }
-  u\EXPECT($mya->admV, 'Non-admin scanned superAdmin card: ' . $mya->fullName);
-  
-  foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
-    $a = r\acct($uid);
-    if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
-  }
 }
 
 /**

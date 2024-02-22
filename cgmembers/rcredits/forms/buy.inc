@@ -36,7 +36,7 @@ function formBuy($form, &$sta, $doCode = '') {
 
   $args = just(CGPAY_FLDS, $args, NULL);
 
-  foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v) > CGPAY_MAXLENGTH) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLENGTH));
+  foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v ?? '') > CGPAY_MAXLENGTH) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLENGTH));
 
   $op = nni($args, 'op', 'charge'); // default to "charge"
   if ($op == 'authcode') return w\authcode($args); // eventually move authcode function to this file (check logs)
@@ -71,7 +71,7 @@ function charge($args) {
   }
   
   $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  $verb = in($verb0 = ucwords($verb ?? ''), $verbs) ? $verb0 : t('Pay');
   if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
 
   if ($credit) {

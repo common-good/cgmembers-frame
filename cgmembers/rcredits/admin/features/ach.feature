@@ -31,7 +31,7 @@ Scenario: admin downloads ACH requests
   | 5004 | .ZZC  |    300 | %now    |        0 |         0 |     | USkk21187028103 |
   | 5005 | .ZZC  |     60 | %now    |        0 |         0 |   6 | USkk21187028106 |
   And member ".ZZA" is signed in
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  And member ".ZZA" scans admin card "DEV_VKEYPW"
 
   When member ".ZZA" visits page "sadmin/deposits"
   Then we show "Bank Transfers" with:

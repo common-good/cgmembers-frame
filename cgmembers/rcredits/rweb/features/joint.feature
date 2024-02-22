@@ -187,7 +187,7 @@ Scenario: A member with a joined account views invoices
   |    1 | %now-1d | %TX_PENDING |    100 | .ZZA  | .ZZC  | drink |
   When member ".ZZB" visits "history/pending-from"
   Then we show "Pending Payments FROM You" with:
-  | Inv# | Date    | Name    | Purpose | Amount | Status |
+  | Req# | Date    | Name    | Purpose | Amount | Status |
   | 1    | %mdY-1d | Cor Pub | drink   | 100.00 | OPEN   |
 
   When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"

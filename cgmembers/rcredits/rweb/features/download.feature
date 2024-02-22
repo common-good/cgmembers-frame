@@ -84,7 +84,7 @@ Scenario: A member downloads incoming invoices for the past year
   When member ".ZZA" visits page "history/pending-from/period=365&download=1"
   Then we download "cgPendingFromNEWZZA%todayn-12m-%todayn.csv" with:
   # For example cgInvoicesFrom20120525-20130524.csv
-  | Inv# | Date    | Name    | Purpose | Amount | Status       |*
+  | Req# | Date    | Name    | Purpose | Amount | Status       |*
   |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |
   |    4 | %ymd-5d | Our Pub | wrongly |     99 | Denied ()    |
   |    3 | %ymd-5d | Our Pub | this CF |     80 | paid (Tx#13) |

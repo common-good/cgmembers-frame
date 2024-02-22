@@ -1,6 +1,6 @@
 {
   "stage": "development",
-  "baseUrl": "http://localhost/cgmembers-frame/cgmembers",
+  "baseUrl": "http://localhost/cg/cgmembers",
   "promoUrl": "http://CommonGood.earth",
   "coApiUrl": "http://%website/cgapi/%etc",
   "cgfEmail": "adeveloper@example.com",
@@ -14,21 +14,20 @@
     "driver": "mysql",
     "host": "localhost",
     "port": "3306",
-    "user": "root",
-    "pass": "",
+    "user": "cg_user",
+    "pass": "pass",
     "salt": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "word": "0123456789abcdef0123456789abcdef",
     "encryption": {
       "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "M": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "P": ["rot b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "R": ["rot scram", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "S": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
-      "V": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"]
+      "V": ["xor pp", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09IkU4lBUI34yeoeXusXSeA-FeQLM0pjWhFIFmkENPRsm-_SiQQvw_3wzlrlRad2tL95ShbMqNziW2_4cA3Finf6DeBYmapnYQdtxRzjUWkDPloh4qlr9h9gjVK2CllfpJrMadpwWV_Oj0H53Vw6OCWZDoVHmAAeK3Ocuxs_OedkVSqRpTLbDX-pG73OActtDjkQ2Iydz9dv35Sj9ASF9BpkBGFQbTfUgIFyjD1xPW1lA2XBMtHgib-X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2iB6NXQIwKoMe_6Gx6UxvZeacheI--fW97qYiioH57r_iy8sC_BUt8ZFATQbn0Uv_9uwIDAQAB", "MDEyMzQ1Njc4OWFiY2RlZmdo"]
     }
   },
-  "pgpKey":
+  "privk":
         "MIIEowIBAAKCAQEA09IkU4lBUI34yeoeXusXSeA+FeQLM0pjWhFIFmkENPRsm+/S iQQvw/3wzlrlRad2tL95ShbMqNziW2/4cA3Finf6DeBYmapnYQdtxRzjUWkDPloh 4qlr9h9gjVK2CllfpJrMadpwWV/Oj0H53Vw6OCWZDoVHmAAeK3Ocuxs/OedkVSqR pTLbDX+pG73OActtDjkQ2Iydz9dv35Sj9ASF9BpkBGFQbTfUgIFyjD1xPW1lA2XB MtHgib+X5wrPbdpdkJ4FuVHUBg2VYZXSmZ2iB6NXQIwKoMe/6Gx6UxvZeacheI++ fW97qYiioH57r/iy8sC/BUt8ZFATQbn0Uv/9uwIDAQABAoIBAFWBM4bBFiuFU9N1 /VKFhb4dlhJSHq9SrO5ToYziUX9q11jPI2aJ2Ro9rPIvwPMwGXv2+ugMcgsMNxeA CIJ7HK27pqXpVPqazeZeEFKMSbq4MEYALkOH7nvIyLnjlHZzA2e30SI9ujJpuUEc +dcAfsPhcXpqFK9oBMW3gqII6qndYR1EhPzOVtPqHFAtt/JF5hL/0gGrc99zgxw4 hqDM3CwBh1WwxzaXwvUmzXaMazhiyDr9EwMxPgELN/OQGVXKZjHCY5tfYlttMPk/ Cdm0PPeaG6pdfHVe5IpDQkbxAT/8FKtNpZ/O0fxSEAbPkJ2JcKOdmV8emsTfEmga pt3SKwkCgYEA7KTfvodYi+69+6cKHIghN2NmPULgB+q92YGtt0fx5gwA+SB0/9k+ iUSMqZqUR0qKcDTS0oWbjqjejvBaywGjuWJw72RjHMMASRcrURyHDHAxrFvc9+aB Ffp3f2ygXr8HuXeFBTrQXxZ4FQikpADO0fIq79jtUwemgjSjiJ3xbaUCgYEA5SV9 3gxam5V2azceT6cIAOuDl70QYwtR0tSBKiVRhi/dizfqriiq+9suRNerhvlNYDjD qiwBRQjXlLBu9gjL5Ya+CFngno8RUddH/1QOxMb5zF7Xq0ivrWli+J1aGiyD+dH4 iC9K6msPbV7gunCfMG3TC1O7ukvuxb/Tzky4n98CgYA1SQbMmyNYFwEWek1vkUOR ekNaRgW2IqhvIqEgJQYWG9vYPPO7bIqFVDcsNY9v4hv8GhjiqI0XeXTr0LlQ/uSD 6OOvM/aRUmNtEdeCIx9RsK2uttyxwWiNr2FbAvW1f+RYYc5FGDI1RxTw/4o7F6d6 ZMJAUaNWz+ExbnLoX1AutQKBgQCDKJqK5ndWZo6Jf9sRrIGgRS3lRIqEpo4HJytn fETVkcA1V6Q0W4LC9gndzbSYZUossVENrnJrmUwMB5D7sr1Ce4V6MjeniixXs+m5 89sgNuP0XrUDjW9AyvmjZC2WnbRM4ipniOpQk0cZSx1GmgAEMFiEO0FQuPXKqqoJ g1CJ8QKBgEdd4XvzR2KEQiR1CWpm9dWa8SdMYdKZQoqc14CKfq995y7qsRQHq2LZ qRGF7f/nTWLK+yc19RLyldmT+1mOqUA2XMovp4C283A/1rWfvaa2KOOe3xQiHBFd 6pJe5sDcNfDJm1eptFEc5W4NyqMO1d5ca1IFvtam+rhCS+XtUw9M",
   "geocodeKey": "abc123",
   "postmarkKey": "PostMark Server API Key",

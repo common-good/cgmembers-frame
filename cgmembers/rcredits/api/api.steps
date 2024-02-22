@@ -193,7 +193,7 @@ function varIsJSON($var, $want) {return varIs($var, t\json($want));}
  *
  * in: 
  */
-function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPGP($want, 'public')));}
+function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($want, 'public')));}
 
 /**
  * we reply (ARG) with: (ARG)

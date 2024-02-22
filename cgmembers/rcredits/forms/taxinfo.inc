@@ -101,7 +101,7 @@ EOF
   } else {
     $title = t('Your Form 1099-K (%y)', 'y', date('Y')-1);
     $row = be\get1099('K', $mya->id, $ending);
-    extract(just('gross noCard txCount', $row));
+    extract(just('gross noCard txCount', $row, 0));
     // if (r\no1099k($gross, $txCount, $mya->st))
     $jointTxt = $mya->jid ? t(' Your partner in the joint account receives a separate 1099-K.') : '';
     $subtext = t(<<<EOF

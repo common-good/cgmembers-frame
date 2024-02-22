@@ -563,7 +563,7 @@ function membersHave($list) {return t\membersHave($list);}
 function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $signin = 0) {
   global $testOnly; if ($testOnly) return FALSE;
   list ($member, $code) = t\parseQr($qr);
-  if ($device) $device = u\b64encode(u\cryPGP($device, 'private'));
+  if ($device) $device = u\b64encode(u\cryPP($device, 'private'));
   return t\hitServer('identify', compact(ray('member code pin signin')), $agent, $device);
 }
 
@@ -703,13 +703,13 @@ function countIs($what, $count) {return t\count($what, $count);}
 function agentAsksDeviceToSignIn($agent, $device, $qr) {return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, NULL, 1);}
 
 /**
- * next code is (ARG) PGP (ARG) encrypted
+ * next code is (ARG) asymmetrically (ARG) encrypted
  *
  * in: MAKE identify DeviceHasNoIdentifierYet
  *     MAKE identify DeviceHasNoIdentifierYetForAnIndividual
  *     MAKE identify DeviceHasNoIdentifierYetForTrialCompany
  */
-function nextCodeIsPGPEncrypted($phrase, $type) {return t\cryNextCode($phrase, $type);}
+function nextCodeIsAsymmetricallyEncrypted($phrase, $type) {return t\cryNextCode($phrase, $type);}
 
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)

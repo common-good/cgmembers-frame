@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61v'; // software version
+const R_VERSION = '3.61w'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -11,8 +11,10 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
-$configFlnm = SHARED_DIR . '/config/config.json';
+const TEST_ANON = (FALSE and !isPRODUCTION); // set this to TRUE and... (in development) to test a\anonymize() -- then start by recreating the db
+$configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
+
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
@@ -27,6 +29,8 @@ const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 const TEST_INVITE_KEY = '111';
 const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
+const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
+const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
@@ -34,6 +38,7 @@ const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, pre
   'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
+const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
 $base_url = config('baseUrl');
 
@@ -49,8 +54,8 @@ define('CG_SMTP_TLS', config('cgSmtpTls', 'tls'));
 define('CG_SMTP_PORT', config('cgSmtpPort', 587));
 define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
-define('PGP_KEY', config('pgpKey'));
-define('DKIM_PRIVATE', PGP_KEY);
+define('PRIVATE_KEY', config('privk'));
+define('DKIM_PRIVATE', PRIVATE_KEY);
 define('R_INVITE_KEY', basename(strstr($requestUri, '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
@@ -64,7 +69,7 @@ foreach (explode(' ', 'name driver host port user pass salt word encryption') as
 
 define('R_SALTY_PASSWORD', $db_pass);
 define('R_WORD', hex2bin($db_word));
-$cryHows = (array) $db_encryption;
+$cryHows = (array) $db_encryption; // used only in u\cry()
 
 unset($configRay); // don't leave this hanging around
 
@@ -94,9 +99,6 @@ const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstra
 const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scanqr scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 const SCRIPT_MODULES = 'scanqr';
 
-const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must be 16, 24, or 32)
-const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
-const DEV_ADMIN_PASS = '123'; // admin password when isDEV
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
 const TRACK_DELETED = 'users u_shout u_company u_photo u_relations txs2'; // remember rows in these tables if we delete them
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these tables are actually views on the _all version of
@@ -153,8 +155,6 @@ const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get ma
 const APP_URL = 'cg4.us/pay';
 const APP_SOCKET_URL = R_ROOT . '/rcron/app-socket.php';
 
-define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
-define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
 const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
@@ -193,8 +193,8 @@ const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
 const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (not balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
-const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
-const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
+const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon asymmetrically-encrypted within Acct::vsecure)
+const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'; // non-personal encrypted fields (must be complete list)
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend

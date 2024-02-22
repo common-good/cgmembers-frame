@@ -94,7 +94,7 @@ function volumeChart() {
 }
 
 function recall(chart, ctty) {
-  var myUrl = site.search('cgmembers') > 0 ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
+  var myUrl = site.search('cgmembers') > 0 ? 'http://localhost/cg/cgmembers/rcredits/misc' : 'https://cg4.us';
   window.location = myUrl + '/chart.php?selectable=1&chart=' + chartName + '&ctty=' + ctty + '&site=' + site + '&region=' + region;
 };
 

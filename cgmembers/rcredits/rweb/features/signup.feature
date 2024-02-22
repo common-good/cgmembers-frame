@@ -128,7 +128,7 @@ Scenario: A member connects a bank account
   Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences donate"
   When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  | submit | %FUNDBY_BANK | 1    |  %DEV_ROUTING |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
   Then we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And members have:
@@ -312,5 +312,5 @@ Scenario: A member registers again
   | fullName | email     | phone        |  zip  | acctType     | cq | ca |*
   | Abe Dup  | a@        | 413-253-0002 | 01001 | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "duplicate email|forgot password" with subs:
-  | who     | a                                          |*
-  | Abe One | a href="settings/password/a%40example.com" |
+  | a                                          |*
+  | a href="settings/password/a%40example.com" |

@@ -18,7 +18,7 @@ function formSignin($form, &$sta, $arg = '') {
   if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
   if (isDEV and !test()) db\q('TRUNCATE test');
 
-  extract(just('qid pw2 vKeyE', nni($sta, 'input')));
+  extract(just('qid pw vKeyPw', nni($sta, 'input'), ''));
   if (!isset($qid)) $qid = nni($_GET, 'qid') ?: nni($_GET, 'name'); // allow links to signin (for example from app) -- remove 'name' after 7/1/2021
   if (mb_strlen(str_replace(' ', '', $qid)) >= ICARD_CODELEN_MIN and !strhas($qid, '@')) { // not a qid or email, must be an invitation code
     \drupal_get_messages(); // drop previous errors
@@ -35,12 +35,12 @@ function formSignin($form, &$sta, $arg = '') {
   $_a = atag('/settings/password/' . $qid, tabindex(3)); // uses $qid, so must precede $qid = 
   $passDesc = t('<%a>Reset password</a>', compact('_a'));
   list ($qid, $pass) = w\signinFlds($qid, t('Your account ID or email address'), $passDesc);
-  $pw2 = hidFld(nn($pw2) ?: ''); // extra password for admins
-  $vKeyE = hidFld(nn($vKeyE) ?: ''); // extra password for admins
+  $pass['#default_value'] = $pw;
+  $vKeyPw = hidFld($vKeyPw); // superAdmin password
   
   $then = hidFld($then);
   $submit = t('Sign in');
-  $form = compact(ray('title qid pass pw2 vKeyE submit subtext then'));
+  $form = compact(ray('title qid pass vKeyPw submit subtext then'));
 
   $form['external_input'] = hidFld(serialize(nni($sta, 'input'))); // pass this to rweb_user_login
 
@@ -56,7 +56,7 @@ function formSignin($form, &$sta, $arg = '') {
  * @param string $type: 'acct', 'pw', or 'both' -- what parameters to check
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
-  extract(just('qid pass pw2 vKeyE mfa gotNonce trust then', $sta['input'], NULL)); // mfa/gotNonce/trust are from mfa()
+  extract(just('qid pass vKeyPw mfa gotNonce trust then', $sta['input'], NULL)); // mfa/gotNonce/trust are from mfa()
 
   if ($mfa) { // second page of signin (MFA)
     if (!$ray = u\decryRay($mfa)) return err(t('There was a problem with that page request.'));
@@ -87,23 +87,6 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     $sta['input']['uid'] = $uid;
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
-
-  if ($a->id == UID_SUPER) { // almost never used except for development/testing. phase out?
-    $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
-    if ($pw2 and !$a->pw2) r\acct(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
-    if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
-    r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
-    if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
-    if ($vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
-      if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
-      r\setCryptCook('vKeyE', $vKeyE, 0);
-      if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
-    }
-  }
-  
-  if (!$a->id == UID_SUPER) { // why does this fail for superAdmin? (but who cares?)
-    r\setCryptCook('qid', $a->mainQid, NULL);
-  }
   
   return TRUE; // TRUE is used by formBuy()
 }
@@ -113,9 +96,11 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
-  extract(just('then uid', $sta['input'], NULL));
+  extract(just('then uid vKeyPw', $sta['input'], NULL));
 
   $mya = r\setAcct($uid, $sta);
+  if ($uid == UID_SUPER or ($mya->admin and $vKeyPw)) superSignin($vKeyPw); else r\deleteCook('vKeyPw'); // include superAdmin permission if asked
+  
   $agt = strtolower($mya->qid);
   if ($dftAcct = r\cook('dftAcct') and $dftA = r\acct($dftAcct, $uid) and $dftA->can(B_READ)) r\setAcct($dftA->id, $sta);
 

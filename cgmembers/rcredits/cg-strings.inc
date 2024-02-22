@@ -440,7 +440,7 @@ EOF
   'no relations' => t('There are not yet any relations for this account.'),
   'no devices' => t('Surprisingly, this account has no related devices.'),
   'required field' => t('%field must not be blank.'),
-  'duplicate email' => t('"%who" is already using that email address.'),
+  'duplicate email' => t('Someone is already using that email address (maybe you!).'), // don't say who (avoid that security vulnerability)
   'email plus' => t('If you want to use the same email address for this account, add a plus sign (+) and an arbitrary tag to the local part, for example "%emailTagged".'), // used in user.module
   'forgot password' => t('If you just forgot the password to the other account, <%a>click here</a> to request a new password.'), // used in user.module
   'bad name' => t('That is not a plausible name.'),

@@ -19,7 +19,7 @@ Setup:
 
 Scenario: Admin activates an account
   Given member ".ZZD" has no photo ID recorded
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  And member ".ZZA" scans admin card "DEV_VKEYPW"
   When member "D:A" completes form "sadmin/summary" with values:
   | mediaConx | active | helper  | federalId  | adminable        | tickle | dob      |*
   |         1 |      1 | Bea Two | %R_ON_FILE | member,confirmed |        | %mdy-19y |
@@ -32,7 +32,7 @@ Scenario: Admin activates an account
   
 Scenario: Admin activates an account unconfirmed
   Given member ".ZZD" has no photo ID recorded
-  And member ".ZZA" scans admin card "%DEV_VKEYPW"
+  And member ".ZZA" scans admin card "DEV_VKEYPW"
   And members have:
   | uid  | flags  |*
   | .ZZD | member |

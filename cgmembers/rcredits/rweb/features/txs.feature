@@ -134,7 +134,7 @@ Scenario: Admin reverses a bank transfer
   And these "admins":
   | uid  | vKeyE     | can                    |*
   | .ZZD | DEV_VKEYE | reverseBankTx,seeAccts |
-  When member ".ZZD" scans admin card "%DEV_VKEYPW"
+  When member ".ZZD" scans admin card "DEV_VKEYPW"
   And member "A:D" visits page "history/transactions/period=5"
   And member "A:D" clicks X on transaction 1
   Then these "txs2":

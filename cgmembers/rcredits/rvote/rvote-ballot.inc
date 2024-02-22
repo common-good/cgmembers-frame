@@ -101,8 +101,8 @@ function showProposal($mya, $proposal, &$err = FALSE, $grading = FALSE) {
   $noneErr = t('There are no active proposals to grade in your community.');
   $qcount = count($quids = getProposals($mya));
   if (!$proposal) $proposal = nni($quids, 0);
-  $qnum = array_search($proposal . '', $quids, TRUE); // this works even if the number of elections/proposal changes during grading
-  
+  $qnum = array_search($proposal ?? 0, $quids, TRUE); // this works even if the number of elections/proposal changes during grading
+
   if (!$row = db\get('*', 'r_proposals', 'id=:proposal', compact('proposal'))) return !$err = t('There is no such proposal.');
   
   extract(just('project categories overview purpose systemic where when until how amount recovery budgetTotal budget contingency qualifications evaluation name contact phone email sponsor', $row));
