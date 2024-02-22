@@ -296,7 +296,7 @@ Skip - fails in PHP 8.2 (dunno why)
 Scenario: A member registers bad name
   When member "?" confirms form "signup" with values:
   | fullName   | email     | phone        |  zip  | acctType     | cq | ca |*
-  | ï¿½ whatever | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
+  | ™ whatever | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
 # NO  Then we say "error": "illegal char" with subs:
 #  | field    |*
 #  | fullName |
@@ -312,5 +312,5 @@ Scenario: A member registers again
   | fullName | email     | phone        |  zip  | acctType     | cq | ca |*
   | Abe Dup  | a@        | 413-253-0002 | 01001 | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "duplicate email|forgot password" with subs:
-  | who     | a                                          |*
-  | Abe One | a href="settings/password/a%40example.com" |
+  | a                                          |*
+  | a href="settings/password/a%40example.com" |

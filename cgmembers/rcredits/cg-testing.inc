@@ -424,6 +424,7 @@ function doAccounts($info = []) {
   foreach (ray('acctType cc cc2') as $one) unset($info[$one]); // these are not real fields
 
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
+
   if (nn($picture) and !makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
   if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
@@ -1411,7 +1412,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
       //      output("Actual $table record at $infoK=$infoV: " . pr($actualRow));
       $difs = '';
       foreach ($info as $k => $v) {
-        $v2 = $actualRow[$k];
+        $v2 = nni($actualRow, $k);
         foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
         if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, B_LIST);
         if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $riskRay);
