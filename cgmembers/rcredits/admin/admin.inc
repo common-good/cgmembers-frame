@@ -880,6 +880,15 @@ function wordName($len = 1) {return ucwords(u\randPass($len));}
         
   * F. If you are giving the anonymized data to a developer (internal or external), give them just the database
   *    (the model config.json file in cgmembers/rcredits/misc/config-models/ will work).
+  *
+  * @todo: notices should be anonymized by preg_replace 
+  *   'You (paid|charged|refunded) .* \$' => 'You $1 [someone] $' 
+  *   '> .* (paid|charged|refunded) you \$' => '> [Someone] $1 you $'
+  *   'we emailed you an invoice from .* for \$' => we emailed you an invoice from [someone] for $
+  *   'to pay your invoice from .* \(' => to pay your invoice from [someone] (
+  *   'to .* for \" => to [someone] for "
+  *   'Your friend .* has not' => Your friend [so and so] has not
+  *   Also truncate all the x_... tables
  */
 function anonymize($encrypting = FALSE) {
   if (isPRODUCTION) return;

@@ -923,7 +923,7 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test 
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
-  /// showq($sql, $subs);
+///  showq($sql, $subs); // debug()
   $q = db\q($sql, $subs);
 
   $stepups = $rebates = 0;

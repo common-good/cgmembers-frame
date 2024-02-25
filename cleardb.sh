@@ -1,3 +1,3 @@
-"$Env:SqlPath" -uroot<db/clear-db.sql
+mysql -u root<db/clear-db.sql
 
 

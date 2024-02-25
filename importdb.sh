@@ -1,2 +1,2 @@
 #!/bin/bash
-mysql<db/import-$1.sql
+mysql -u root<db/import-$1.sql
