@@ -10,9 +10,9 @@ use CG\Web as w;
 
 // formats for records in a the NACHA file
 const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
-const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originPrefix:L1, originNum:R9, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7';
+const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, companyId:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7';
 const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'; // Prearranged Payment and Deposit (entry detail)
-const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originPrefix:L1, originNum:R9, auth:L19, reserve:L6, destNum:R8, batchNum:R7';
+const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, companyId:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7';
 const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
 /**
@@ -50,6 +50,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   $fileIdModifier = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9); never send two files on the same day, so this can be static
   $datetime = fmtDt(now(), 'yyMMddHHmm');
   list ($originNum, $originName, $ref) = [CGF_EIN, PROJECT, ''];
+  $companyId = "1" . CGF_EIN;
   
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEHDR))), $ray);
   
