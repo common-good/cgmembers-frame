@@ -162,9 +162,7 @@ const PHONE_PUNC = '\(\) \-\./'; // punctuation commonly found in phone numbers 
 
 const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
 const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s
-const MINIMA1099 = 'X:600/1'; // no 1099-K for gross/txCount under this amount (by state)
-// BEFORE 2022 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
-//const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
+const MIN1099 = 600; // no 1099-K for gross under this amount
 
 const R_NONE = '<span class="none">--</span>'; // how to show an empty field let the tests see null values
 const R_AGREE_0 = 1; // number of the first point in the rCredits Agreement

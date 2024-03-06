@@ -168,7 +168,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
     }
     if ($type == 'K') {
       extract(just('gross noCard st txCount', $row));
-      if (r\no1099k($gross, $txCount, $st)) continue;
+      if (r\no1099k($gross)) continue;
       $created = $for = '';
       $amount = []; // initialize for each payee
       $amount[] = $gross;
