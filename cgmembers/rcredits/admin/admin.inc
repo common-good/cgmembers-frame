@@ -889,6 +889,7 @@ function wordName($len = 1) {return ucwords(u\randPass($len));}
   *   'to .* for \" => to [someone] for "
   *   'Your friend .* has not' => Your friend [so and so] has not
   *   Also truncate all the x_... tables
+  *   Drop legacy... tables
  */
 function anonymize($encrypting = FALSE) {
   if (isPRODUCTION) return;

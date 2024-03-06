@@ -39,8 +39,8 @@ function formDonate($form, &$sta, $args = NULL) {
   $ccOk = ($fbo or $coA->ccOk);
   $target = $coA->target + 0;
   $options = btnOpt('', t('in honor or memory'), 'btn-honor');
-
-  $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months to support our planned merger with <%a>The Truth Telling Project</a>.</p>', '_a amt', atag('https://thetruthtellingproject.org/'), u\fmtAmt($target)) : '';
+// to support our planned merger with <%a>The Truth Telling Project</a>
+  $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months.</p>', '_a amt', atag('https://thetruthtellingproject.org/'), u\fmtAmt($target)) : '';
   
   if ($isCG and $mya) {
     if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
