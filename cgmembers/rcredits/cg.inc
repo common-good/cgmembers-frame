@@ -1448,25 +1448,6 @@ function handleInvestmentRequest($stakeid, &$msg) {
 }
 
 /**
- * Say whether the given annual total of payments received and transactions count are below the threshold
- * required for submitting 1099-K forms in the given state.
- */
-function no1099k($tot, $cnt, $st) {
-  list ($min, $minCnt) = r\minima1099($st);
-  return ($tot < $min or $cnt < $minCnt);
-}
-
-/**
- * Return the thresholds for filing form 1099-K in the given state.
- * @param string $st: 2-letter state abbreviation
- * @return [minimum amount, minimum transaction count]
- */
-function minima1099($st) {
-  $minima = ray(MINIMA1099);
-  return explode('/', nni($minima, $st) ?: $minima['X']);
-}
-
-/**
  * Calculate community gifts ever paid and ever due as of a certain date/time.
  * @param int $end: ending date/time
  * @return the rows (an array of objects)
@@ -1619,3 +1600,4 @@ function setQbOk($xid, $set = TRUE) {return db\setFlag('tx_hdrs', $xid, B_QBOK, 
 function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for Promo Team')); return r\rMail('tell-staff', 'info@' . CG_DOMAIN, compact(ray('topic body')), $reply);}
 function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications for testing (it checks if it's already running); "php" must be lowercase. But this has to run as a root cron job instead (edit with crontab -e).
 function ccGiftType($coId) {return in($coId, BUCKET_UIDS) ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
+function no1099k($tot) { return ($tot < MIN1099); }

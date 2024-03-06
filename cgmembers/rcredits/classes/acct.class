@@ -1927,7 +1927,7 @@ X;
     if ($a->co or $a->hasFid) return FALSE;
     if (!$res = db\get('SUM(amt) AS tot, COUNT(eid) AS cnt', 'txs_noreverse', 'created>:jan1 AND uid2=:myid AND type<>:E_BANK', ray('jan1 myid', strtotime(date('Y-01-01')), $a->id))) return FALSE;    
     extract($res);
-    return !r\no1099k($tot + $amt, $cnt + 1, $a->st);
+    return !r\no1099($tot);
   }
   
   /**

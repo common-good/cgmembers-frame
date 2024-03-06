@@ -29,6 +29,10 @@ function doit(what, vs) {
   }
 
   switch(what) {
+    
+  case 'taxinfo':
+    $('#edit-year').change(function () { location.href = baseUrl + '/history/tax-info/' + $('#edit-year :selected').val(); });
+    break;
 
   case 'panel':
     $('.form-item-closeBooks a').click(function () {

@@ -265,58 +265,6 @@ CREATE TABLE `flood` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `legacy_x_invoices`
---
-
-CREATE TABLE `legacy_x_invoices` (
-  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
-  `nvid` bigint(20) NOT NULL COMMENT 'the unique invoice ID',
-  `status` int(11) NOT NULL DEFAULT -1 COMMENT 'transaction record ID or status (approved, pending, denied, or paid)',
-  `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount to charge',
-  `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
-  `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
-  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this an invoice for real goods and services?',
-  `purpose` longtext DEFAULT NULL COMMENT 'payee''s description',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
-  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
-  `reversesXid` bigint(20) DEFAULT NULL COMMENT 'xid of the transaction this invoice reverses (if any)',
-  `recursId` bigint(20) DEFAULT NULL COMMENT 'related record in tx_rules, for recurring charge (or reversed payment)',
-  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime invoice was created'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits invoices in the region' ROW_FORMAT=DYNAMIC;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `legacy_x_txs`
---
-
-CREATE TABLE `legacy_x_txs` (
-  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
-  `xid` bigint(20) NOT NULL COMMENT 'the unique transaction ID',
-  `serial` int(11) DEFAULT NULL COMMENT 'serial number of related transactions (=xid of first transaction in the group)',
-  `type` tinyint(4) DEFAULT NULL COMMENT 'transaction type (transfer, rebate, etc.)',
-  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this transfer an exchange for real goods and services?',
-  `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount transferred',
-  `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
-  `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
-  `payerAgent` bigint(20) DEFAULT NULL COMMENT 'user id of payer''s agent (who approved this transaction for the payer)',
-  `payeeAgent` bigint(20) DEFAULT NULL COMMENT 'user id of payee''s agent (who approved this transaction for the payee)',
-  `payerFor` varchar(255) DEFAULT NULL COMMENT 'payer''s description',
-  `payeeFor` varchar(255) DEFAULT NULL COMMENT 'payee''s description',
-  `payerTid` int(11) DEFAULT NULL COMMENT 'payer''s transaction ID',
-  `payeeTid` int(11) DEFAULT NULL COMMENT 'payee''s transaction ID',
-  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
-  `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered',
-  `box` int(11) NOT NULL DEFAULT 0 COMMENT 'on what machine was the transaction entered',
-  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was created',
-  `risk` float DEFAULT NULL COMMENT 'suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'list of risk factors'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Record of all rCredits transactions in the region' ROW_FORMAT=DYNAMIC;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `menu_links`
 --
 
@@ -5814,7 +5762,7 @@ INSERT INTO `zips` (`zip`, `type`, `decommissioned`, `primary_city`, `acceptable
 -- Structure for view `ancestors`
 --
 DROP TABLE IF EXISTS `ancestors`;
-
+DROP VIEW IF EXISTS `ancestors`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `ancestors`  AS WITH recursive ancestors AS (SELECT `r_industries`.`iid` AS `base`, `r_industries`.`industry` AS `baseIndustry`, `r_industries`.`iid` AS `iid`, `r_industries`.`industry` AS `industry`, `r_industries`.`parent` AS `parent` FROM `r_industries` UNION ALL SELECT `a`.`base` AS `base`, `a`.`baseIndustry` AS `baseIndustry`, `p`.`iid` AS `iid`, `p`.`industry` AS `industry`, `p`.`parent` AS `parent` FROM (`r_industries` `p` join `ancestors` `a` on(`p`.`iid` = `a`.`parent`))) SELECT `ancestors`.`base` AS `base`, `ancestors`.`baseIndustry` AS `baseIndustry`, `ancestors`.`iid` AS `ancestor`, `ancestors`.`industry` AS `ancestorIndustry` FROM `ancestors`;
 
 -- --------------------------------------------------------
@@ -5823,7 +5771,7 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `ancestors`  AS WITH recurs
 -- Structure for view `descendants`
 --
 DROP TABLE IF EXISTS `descendants`;
-
+DROP VIEW IF EXISTS `descendants`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `descendants`  AS WITH recursive descendants AS (SELECT `r_industries`.`iid` AS `base`, `r_industries`.`industry` AS `baseIndustry`, `r_industries`.`iid` AS `iid`, `r_industries`.`industry` AS `industry` FROM `r_industries` UNION ALL SELECT `d`.`base` AS `base`, `d`.`baseIndustry` AS `baseIndustry`, `c`.`iid` AS `iid`, `c`.`industry` AS `industry` FROM (`r_industries` `c` join `descendants` `d` on(`d`.`iid` = `c`.`parent`))) SELECT `descendants`.`base` AS `base`, `descendants`.`baseIndustry` AS `baseIndustry`, `descendants`.`iid` AS `descendant`, `descendants`.`industry` AS `descendantIndustry` FROM `descendants`;
 
 -- --------------------------------------------------------
@@ -6095,25 +6043,6 @@ ALTER TABLE `flood`
   ADD PRIMARY KEY (`fid`),
   ADD KEY `allow` (`event`,`identifier`,`timestamp`),
   ADD KEY `purge` (`expiration`);
-
---
--- Indexes for table `legacy_x_invoices`
---
-ALTER TABLE `legacy_x_invoices`
-  ADD PRIMARY KEY (`nvid`,`deleted`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`),
-  ADD KEY `status` (`status`);
-
---
--- Indexes for table `legacy_x_txs`
---
-ALTER TABLE `legacy_x_txs`
-  ADD PRIMARY KEY (`xid`,`deleted`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`);
 
 --
 -- Indexes for table `menu_links`
@@ -6668,18 +6597,6 @@ ALTER TABLE `block`
 --
 ALTER TABLE `flood`
   MODIFY `fid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique flood event ID.', AUTO_INCREMENT=2237;
-
---
--- AUTO_INCREMENT for table `legacy_x_invoices`
---
-ALTER TABLE `legacy_x_invoices`
-  MODIFY `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID', AUTO_INCREMENT=952;
-
---
--- AUTO_INCREMENT for table `legacy_x_txs`
---
-ALTER TABLE `legacy_x_txs`
-  MODIFY `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID', AUTO_INCREMENT=103273;
 
 --
 -- AUTO_INCREMENT for table `menu_links`
