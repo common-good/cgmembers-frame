@@ -413,7 +413,7 @@ function adminSummary() {
   $uid = hidFld($uid); // must postcede js (which uses uid)
   w\jsx('adminSummary', 'photoIdSrc', nn($photoIdSrc));
   
-  $bigFields = 'details notes note altId tickle ' . ($mya->ok ? 'adminable coFlags risks adminCans ssnShow' : 'ssnShow adminable coFlags risks');
+  $bigFields = 'details notes note altId tickle ' . ($mya->ok ? 'adminable coFlags risks adminCans ssnShow' : 'ssnShow adminable coFlags risks adminCans');
   $info = []; foreach (ray('noEnter legalName shortName balance active community minimum achMin risk trust mediaConx count back calling donations cgfDonations helper invited invitedBy source tenure moves activity relations signupCo tasks steps proxies proxyFor uid submit') as $k) if (isset($$k)) $info[$k] = $$k;
   return [$info, compact(ray($bigFields))];
 }
