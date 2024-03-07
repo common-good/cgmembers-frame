@@ -29,7 +29,7 @@ function formTaxInfo($form, &$sta, $year = '') {
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
   $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.</p>', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
 
-  $title = t('Your Form 1099-K (%y)', 'y', date('Y')-1);
+  $title = t('Your Form 1099-K') . ($year == $y9 ? t(' (tentative)') : '');
   $row = be\get1099('K', $mya->id, $ending); // last second of relevant year
   extract(just('gross noCard txCount', $row, 0));
   $year = selectFld(t('For calendar year:'), [t('Calendar Year')], dft($year) + clas('short'), array_combine($range, $range));
