@@ -89,9 +89,10 @@ EOF;
         if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers
           $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH'));
           $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'));
-        }
+          $xref = $deposit;
+        } else $xref = '';
 
-      } else $dateDpy = $details = '';
+      } else $dateDpy = $details = $xref = '';
 
       if ($showTxIds) {
         $where = $type == 'bad' ? 'txid<0' : ('txid>0 AND amount' . ($type == 'in' ? '>0' : '<0'));
@@ -107,6 +108,7 @@ EOF;
   <td>$count</td>
   <td>$total</td>
   <td>$details</td>
+  <td>$xref</td>
   $bankTxIds
 </tr>
 EOF;
@@ -114,7 +116,7 @@ EOF;
     }
   }
   $deposits = join("\n", nn($deposits) ?: []);
-  $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th>');
+  $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th><th>cgFund#</th>');
   $header .= $showTxIds ? t('<th>Bank Tx IDs</th>') : '';
   return <<<EOF
 <table id="deposits">

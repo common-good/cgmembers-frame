@@ -91,7 +91,7 @@ function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
  * Handle all appropriate payees for the payer (that is the Common Good regional server).
  * @param string $type: 1099 type
  * @param int $year: year to report
- * @param mixed $sql: selection SQL for 1099-B payee records OR array of rows for 1099-MISC
+ * @param mixed $sql: selection SQL for 1099-B payee records OR array of rows for 1099-MISC or 1099-NEC or 1099-R
  * @param array $totals: (MODIFIED) totals
  * @param char $mod: G=original data, C=corrected data, ''=first time (not correcting anything)
  * @return the number of payee ("B") records.
