@@ -1209,6 +1209,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-adminpanel .form-item-lnkScanQr {margin-bottom:20px;}
 
 /* Admin Deposits */
+#frm-deposits #deposits .btn-xs {font-size:10px;}
 #frm-deposits label {display:none;}
 #frm-deposits .control-label {min-width:150px;} /* can't be more than 153px (dunno why) */
 #frm-deposits .newout {margin-left:50px;}
