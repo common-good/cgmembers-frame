@@ -17,7 +17,7 @@ function formUnsubscribe($form, &$sta, $args = '') {
   if (!u\crypted('P', $code) or !$qid or !$a = r\acct($qid)) {
     $title = t('Unsubscribe');
     $subtext = t('<p>To close your %PROJECT account, please click the "Unsubscribe" link at the bottom of any email from us. 
-      Or send us a message by email or using our <%a>Contact form</a> saying "close my account".</p>
+      Or send us a message by email or use our <%a>Contact form</a> to say "close my account" (be sure to include your account ID).</p>
       <p>Once we have received your request (and confirmed by email, if you use the Contact form), we will delete all your data to the extent permitted by law.</p>
       <p>If you have used your account actively, we will instead deactivate your account, archive it (highly encrypted), 
       wait at least 5 years (as required by law), then delete all personally identifying information.</p>',
