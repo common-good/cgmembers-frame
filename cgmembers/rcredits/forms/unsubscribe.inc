@@ -14,7 +14,18 @@ define('UNSUBSCRIBE_REASONS', t('moved:I have moved or am moving., clueless:I do
 function formUnsubscribe($form, &$sta, $args = '') {
   extract(just('code qid', $args, ''));
 
-  if (!u\crypted('P', $code) or !$qid or !$a = r\acct($qid)) return softErr(t('That is not a valid Unsubscribe link.'));
+  if (!u\crypted('P', $code) or !$qid or !$a = r\acct($qid)) {
+    $title = t('Unsubscribe');
+    $subtext = t('<p>To close your %PROJECT account, please click the "Unsubscribe" link at the bottom of any email from us. 
+      Or send us a message by email or using our <%a>Contact form</a> saying "close my account".</p>
+      <p>Once we have received your request (and confirmed by email, if you use the Contact form), we will delete all your data to the extent permitted by law.</p>
+      <p>If you have used your account actively, we will instead deactivate your account, archive it (highly encrypted), 
+      wait at least 5 years (as required by law), then delete all personally identifying information.</p>',
+      '_a', atag(r\promoLink('about-us/contact-us')));
+    return cgform(compact(ray('title subtext')));
+//    return softErr(t('That is not a valid Unsubscribe link.'));
+  }
+    
   db\q('UPDATE r_invites SET nonudge=:NOW WHERE email=:code', compact('code'));
   if ($a->balance < 0) return softErr(t('You have a negative balance of $%amt. You will need to add funds before closing your %PROJECT account.', 'amt', u\fmtAmt($a->balance)));
   if (db\exists('tx_requests', 'payer=:id AND status=:TX_APPROVED', ray('id', $a->id))) return softErr(t('You have approved one or more payments that you have not yet actually paid. You will need to pay or cancel those before closing your %PROJECT account. Sign in at :CG_DOMAIN and click History, then Pending Payments.'));
