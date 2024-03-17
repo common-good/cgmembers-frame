@@ -23,11 +23,13 @@ const CGPAY_MAXLENGTH = 255; // maximum field length (to prevent bloating our ta
  *   item: name of item being paid for
  *   amount: amount to be paid
  *   return: URL to return to after payment is made
- * Example: pay-with-cg?company=NEWZZC&item=ear+plugs&amount=23&return=http://whatever&cancel=http://whatever&for=gift
+ * Example: cgpay?company=NEWZZC&item=ear+plugs&amount=23&return=http://whatever&cancel=http://whatever&for=gift
  * @param string $doCode: the encrypted code from rDo, if any, or 'done'
  */
 function formBuy($form, &$sta, $doCode = '') {
   if ($doCode == 'done') return []; // shows result message and nothing else
+  
+  if (dirname($_SERVER['REQUEST_URI']) == 'pay-with-cg') return softErr(tr('co code timeout')); // link uses archaic interface
   
   $args = strpos($doCode, '=') ? $doCode 
   : (($doCode . ' ')[0] == 'P' ? u\decryRay($doCode)
@@ -226,7 +228,7 @@ function formBuy_submit($form, &$sta) {
 }
 
 /**
- * Show an error message on the Pay-with-CG page.
+ * Show an error message on the CGPay page.
  * @param string $msg: message to show
  * @param assoc $info: an assoc of parameters for retry, but with info[for0] holding the original value of info[for]
  */
@@ -234,7 +236,7 @@ function buyErr($msg, $info) {
   if ($for0 = nni($info ?: [], 'for0')) $info['for'] = $for0;
   $code = u\cryRay($info + ray('op', 'charge'));
   say($msg, $info, 'err');
-  return w\go("pay-with-cg/$code");
+  return w\go("cgpay/$code");
 }
 
 function fmtAcctId($s) {return trim(strhas($s, '@') ? mb_strtolower($s) : mb_strtoupper($s));}
