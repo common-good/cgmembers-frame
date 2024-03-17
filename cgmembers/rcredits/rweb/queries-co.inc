@@ -16,12 +16,11 @@ use CG\Util as u;
 
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query
 $phone = u\sqlSerialValue('r.data', 6);
-$footnotes = <<<X
+$footnotes = tr('
   <p class="small">
     *&nbsp; = no active %PROJECT account.<br>
     ** = information an account-holder has chosen not to share with you.
-  </p>
-X;
+  </p>');
 $LYdt2 = strtotime('January 1') - 1;
 $LYdt1 = strtotime('1 year ago', $LYdt2 + 1);
 
