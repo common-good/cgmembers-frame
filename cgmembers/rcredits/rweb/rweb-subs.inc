@@ -1667,7 +1667,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   } else $states2 = NULL;
   $showingAdv = ($states != $settings or (nn($ending) and $ending != strtotime('tomorrow') - 1));
   jsx('advanced-dates', compact('showingAdv')); // showing advanced selection
-  u\setDft($period, strpos($url, 'invoice') ? TX_DEFAULT_INV_PERIOD : TX_DEFAULT_PERIOD);
+  u\setDft($period, strpos($url, 'pending') ? TX_DEFAULT_INV_PERIOD : TX_DEFAULT_PERIOD);
   list ($starting, $ending) = rangeDates(nn($period), nn($starting), nn($ending));
   $url = BASE_URL . "/$url/period=$period&starting=$starting&ending=$ending&states=$states";
 

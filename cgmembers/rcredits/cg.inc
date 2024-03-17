@@ -104,7 +104,7 @@ function zipCity($zip, $country = R_COUNTRY_ID) {
   }
   */
 
-  if ($res = db\get('primary_city AS city,state,latitude,longitude', 'zips', ['zip' => substr($zip, 0, 5)])) extract($res);
+  if ($res = db\get('primary_city AS city,state,latitude,longitude', 'zips', ['zip' => substr(nn($zip), 0, 5)])) extract($res);
   return $res ? [$city, r\stateNum($state), $latitude, $longitude] : [NULL, 0, 0, 0];
 }
 

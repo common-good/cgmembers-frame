@@ -922,7 +922,7 @@ function doit(what, vs) {
 
   case 'invoices':
     $('#txlist tr td').not('#txlist tr td:last-child').click(function () {
-      var nvid = $(this).siblings().first().html();
+      var nvid = $(this).parent().children(':first').html();
       location.href = baseUrl + '/handle-invoice/nvid=' + nvid + vs['args'];
     });
     break;

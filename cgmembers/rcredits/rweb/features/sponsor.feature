@@ -21,6 +21,7 @@ Scenario: A non-member applies for fiscal sponsorship
   When member "?" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
   | Your Name     |
+  | Your Position |
   | Organization  |
   | Org Phone     |
   | Org Email     |
@@ -42,6 +43,7 @@ Scenario: A non-member applies for fiscal sponsorship
 
   When member "?" submits "co/sponsor" with:
   | contact    | Jane Dough |**
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
@@ -62,6 +64,7 @@ Scenario: A non-member applies for fiscal sponsorship
   Then we say "status": "got application|meanwhile join"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
   # etc
@@ -71,6 +74,7 @@ Scenario: A non-member applies for fiscal sponsorship
   And members:
   | uid        | .AAA |**
   | contact    | Jane Dough |
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
@@ -93,6 +97,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   When member ".ZZA" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
   | Your Name     |
+  | Your Position |
   | Organization  |
   | Org Phone     |
   | Org Email     |
@@ -114,6 +119,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
 
   When member ".ZZA" submits "co/sponsor" with:
   | contact    | Jane Dough |**
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | phone      | 413-987-6543 |
   | email      | jd@example.com |
@@ -134,6 +140,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Jane Dough |**
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | to         | partnerships@%CG_DOMAIN |
   # etc
@@ -143,6 +150,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   And members:
   | uid        | .AAA |**
   | contact    | Jane Dough |
+  | contactTitle | Director |
   | fullName   | Bread Co   |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
@@ -178,6 +186,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   
   When member "C:B" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
+  | Your Position | |
   | Mission       | |
   | Activities    | |
   | Expected Income | 123456.78 |
@@ -198,7 +207,8 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | Referred By   |
   
   When member "C:B" submits "co/sponsor" with:
-  | mission    | thrive |**
+  | contactTitle | Director |**
+  | mission    | thrive |
   | activities | do stuff |
   | gross      | 123456.78 |
   | employees  | 9 |
@@ -210,6 +220,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   Then we say "status": "got application"
   And we tell admin "Fiscal Sponsorship Application" with subs:
   | contact    | Bea Two |**
+  | contactTitle | Director |
   | fullName   | Cor Pub |
   | to         | partnerships@%CG_DOMAIN |
   # etc
@@ -219,6 +230,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   And members:
   | uid        | .AAA |**
   | contact    | Bea Two |
+  | contactTitle | Director |
   | fullName   | Cor Pub |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
@@ -240,6 +252,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   Given members:
   | uid        | .ZZF |**
   | contact    | Bea Two |
+  | contactTitle | Director |
   | fullName   | Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
@@ -262,6 +275,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | .ZZF | .ZZB  | manage     |
   When member "F:B" visits "co/sponsor"
   Then we show "Fiscal Sponsorship" with:
+  | Your Position   | Director  |
   | Mission         | thrive    |
   | Activities      | do stuff  |
   | Expected Income | 123456.78 |
@@ -292,6 +306,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   And members:
   | uid        | .ZZF |**
   | contact    | Bea Two |
+  | contactTitle | Director |
   | fullName   | Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61x'; // software version
+const R_VERSION = '3.61y'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -184,7 +184,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
-const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact mission activities checksIn checksOut founded target targetStart'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
+const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact contactTitle mission activities checksIn checksOut founded target targetStart'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce lastDup'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank fundBy isSavings refill draws wentNeg lastBounce'; // only in master, for joint accounts
@@ -673,7 +673,7 @@ const TX_DENIED = -2; // invoice rejected by the non-originator
 const TX_PENDING = -1; // charged, waiting for confirmation
 const TX_APPROVED = 0; // invoice is approved but not paid
 const TX_PAID = 1; // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-9:canceled,-4:no such,-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
+define('TX_STATUSES', t('-5:canceled,-4:no such,-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 const TX_SYS = 0;
