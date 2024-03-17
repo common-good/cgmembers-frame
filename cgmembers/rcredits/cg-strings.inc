@@ -255,7 +255,7 @@ EOF
 //  'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
 //  'must be confirmed' => t('An email has been sent to %inviterName, who will need to confirm the invitation before you can use your %PROJECT Account. Or you can do your first rCard transaction with %inviterName as confirmation.'),
 //  'ready to charge' => t('<p>You successfully scanned in as "%agentName" to charge customers on behalf of %companyName.</p><p>Now go back to your scanning app, to scan a customer\'s card. Sign out only when your shift ends.</p>'),
-  'transaction list truncated' => t('There are too many transactions to show all at once, so only the first %TX_MAX_ROWS are shown (choose a different date range to see the rest).'),
+  'transaction list truncated' => t('There are too many transactions to show on screen all at once, so only the first %TX_MAX_ROWS are shown (choose a different date range to see the rest). However, if you download them, all transactions in the range will be included.'),
   'address info' => t('<a1>Click here</a> for address information.'),
   'agent created' => t('The agent account was successfully created.'),
   'phone verified' => t('Your phone number has been verified.'),
@@ -543,7 +543,7 @@ EOF
   'negative saveWeekly' => t('Your discretionary savings are already at their minimum, so your weekly savings addition cannot be negative.'),
   'requires signin' => t('You must be signed in, to use that page. Not a member yet? Consider <a href="%PROMO_URL">signing up!</a>'),
   'too many days' => t('You cannot view more than 18 months at a time on screen (but you can download any period).'),
-  'co code timeout' => t('That form has expired. Go back and try again.'),
+  'co code timeout' => t('That link has expired. Ask the company for a new link?'),
   'old partner link' => t('Sign in with your account ID and password to continue your account set-up.'),
   
   // notices to staff
