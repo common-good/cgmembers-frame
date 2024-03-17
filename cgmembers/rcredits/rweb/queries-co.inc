@@ -16,18 +16,23 @@ use CG\Util as u;
 
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query
 $phone = u\sqlSerialValue('r.data', 6);
-$nosearch = '<p class="small">* = information an account-holder has chosen not to share with you.</p>';
+$footnotes = <<<X
+  <p class="small">
+    *&nbsp; = no active %PROJECT account.<br>
+    ** = information an account-holder has chosen not to share with you.
+  </p>
+X;
 $LYdt2 = strtotime('January 1') - 1;
 $LYdt1 = strtotime('1 year ago', $LYdt2 + 1);
 
 if (in($mya->coType, [CO_NONPROFIT, CO_COOPERATIVE, CO_CLUB])) {
-  $queries = [t('Donations') => 'donations' . t('~<p>Contact information and total donations for each donor.</p>') . $nosearch];
+  $queries = [t('Donations') => 'donations' . t('~<p>Contact information and total donations for each donor.</p>') . $footnotes];
 } else $queries = [];
 
 $queries += [
-  t('Customers') => 'customers' . t('~<p>A list of your customers (anyone who has paid you). Click an account code for a customer statement.</p>') . $nosearch,
+  t('Customers') => 'customers' . t('~<p>A list of your customers (anyone who has paid you). Click an account code for a customer statement.</p>') . $footnotes,
 
-  t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $nosearch,
+  t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $footnotes,
   
   t('Last Year Payments By Payee') => <<< X
     SELECT uid, u.fullName, SUM(amt) AS total, SUM(IF(for1 LIKE '%labor%', amt, 0)) AS laborTotal
