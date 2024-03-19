@@ -5,11 +5,11 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | uid  | fullName | floor | flags             | risks   | bankAccount  |*
-  | .ZZA | Abe One  |   -10 | ok,confirmed      |         |              |
-  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              |
-  | .ZZC | Our Pub  |   -30 | ok,confirmed,co   | hasBank | %T_BANK_ACCT |
-  | .ZZD | Dee Four |     0 | debt              |         |              |
+  | uid  | fullName | floor | flags             | risks   | bankAccount  | phone        |*
+  | .ZZA | Abe One  |   -10 | ok,confirmed      |         |              | +14136280001 |
+  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              | +14136280002 |
+  | .ZZC | Our Pub  |   -30 | ok,confirmed,co   | hasBank | %T_BANK_ACCT | +14136280003 |
+  | .ZZD | Dee Four |     0 | debt              |         |              | +14136280004 |
   And these "u_relations":
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
@@ -161,7 +161,7 @@ Scenario: A member denies an invoice
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason |*
   | deny |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
   Then these "tx_requests":
   | nvid | created | status     | amount | payer | payee | for   |*
@@ -180,7 +180,7 @@ Scenario: A member approves an invoice with insufficient funds
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason |*
   | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |
   Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
@@ -202,7 +202,7 @@ Scenario: A member approves invoices forevermore
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot | always |*
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason | always |*
   | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
   Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
@@ -230,3 +230,57 @@ Scenario: A member approves an invoice to a trusting customer
   | .ZZB |    -100 |
   | .ZZC |       0 |
   
+Scenario: A payee marks an invoice paid manually
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    300 | .ZZB  | .ZZA  | labor |
+  When member ".ZZA" visits "handle-invoice/nvid=1"
+  Then we show "Unpaid Invoice" with:
+  | Handle invoice #1 (%mdY) charging Bea Two $300 for labor ||
+  | Action ||
+  | mark paid | cancel |
+  | Reason ||
+  || Close |
+  
+  When member ".ZZA" confirms form "handle-invoice/nvid=1" with values:
+  | op    | ret | nvid | payAmount | payer | payee | purpose | created | reason | action |*
+  | close |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  | cuz    |      0 |
+  Then these "tx_requests":
+  | nvid | created | status   | amount | payer | payee | for   | reason |*
+  |    1 | %today  | %TX_PAID |    300 | .ZZB  | .ZZA  | labor | cuz    |
+  And we message "invoice withdrawn" to member ".ZZB" with subs:
+  | amount | payerName | payeeName | created | purpose | reason | done        |*
+  | $300   | Bea Two   | Abe One   | %mdY    | labor   | cuz    | marked PAID |
+
+Scenario: A payee cancels an invoice
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    300 | .ZZB  | .ZZA  | labor |
+  When member ".ZZA" confirms form "handle-invoice/nvid=1" with values:
+  | op    | ret | nvid | payAmount | payer | payee | purpose | created | reason | action |*
+  | close |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  | cuz    |      1 |
+  Then these "tx_requests":
+  | nvid | created | status       | amount | payer | payee | for   | reason |*
+  |    1 | %today  | %TX_CANCELED |    300 | .ZZB  | .ZZA  | labor | cuz    |
+  And we message "invoice withdrawn" to member ".ZZB" with subs:
+  | amount | payerName | payeeName | created | purpose | reason | done        |*
+  | $300   | Bea Two   | Abe One   | %mdY    | labor   | cuz    | canceled    |
+
+Scenario: A payee reopens an invoice
+  Given these "tx_requests":
+  | nvid | created | status   | amount | payer | payee | for   | reason |*
+  |    1 | %today  | %TX_PAID |    300 | .ZZB  | .ZZA  | labor | cuz    |
+  When member ".ZZA" visits "handle-invoice/nvid=1"
+  Then we show "Invoice Was Closed Manually" with:
+  | Reopen invoice #1 (%mdY) charging Bea Two $300 for labor? | |
+  | Closed Because | cuz    |
+  |                | Reopen |
+  When member ".ZZA" confirms form "handle-invoice/nvid=1" with values:
+  | op     | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | reopen |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |
+  Then these "tx_requests":
+  | nvid | created | status       | amount | payer | payee | for   | reason |*
+  |    1 | %today  | %TX_PENDING  |    300 | .ZZB  | .ZZA  | labor | cuz    |
+  And we message "invoice reopened|invoiced you" to member ".ZZB" with subs:
+  | amount | otherName | otherEmail    | otherPhone      | payerName | payeeName | created | purpose |*
+  | $300   | Abe One   | a@example.com | +1 413 628 0001 | Bea Two   | Abe One   |%mdY     | labor   |

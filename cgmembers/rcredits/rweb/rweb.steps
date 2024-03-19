@@ -152,6 +152,9 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     MAKE invoice APayeeMarksAnInvoicePaidManually
+ *     MAKE invoice APayeeCancelsAnInvoice
+ *     MAKE invoice APayeeReopensAnInvoice
  *     MAKE joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     MAKE joint AMemberWithAJoinedAccountViewsInvoices
  *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
@@ -632,6 +635,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST invoice APayeeMarksAnInvoicePaidManually
+ *     TEST invoice APayeeReopensAnInvoice
  *     TEST joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AMemberWithAJoinedAccountViewsInvoices
@@ -1514,6 +1519,9 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
+ *     TEST invoice APayeeMarksAnInvoicePaidManually
+ *     TEST invoice APayeeCancelsAnInvoice
+ *     TEST invoice APayeeReopensAnInvoice
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -1797,6 +1805,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     BOTH invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     BOTH invoice APayeeMarksAnInvoicePaidManually
+ *     BOTH invoice APayeeCancelsAnInvoice
+ *     BOTH invoice APayeeReopensAnInvoice
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     BOTH joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -2420,6 +2431,8 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
+ *     MAKE invoice APayeeMarksAnInvoicePaidManually
+ *     MAKE invoice APayeeReopensAnInvoice
  *     MAKE joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
  *     MAKE joint AMemberWithAJoinedAccountViewsInvoices
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR

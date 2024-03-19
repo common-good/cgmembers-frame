@@ -88,7 +88,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info))) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
@@ -117,6 +117,11 @@ function fixData(&$info, $direct = FALSE) {
     }
     $coFlags = $res;
   }
+  if (isset($reason) and rayhas($info, 'nvid') and !rayhas($info, 'op')) {
+    $data = $info['data'] = serialize(compact('reason'));
+    unset($info['reason']);
+  }
+
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
 
@@ -1963,11 +1968,13 @@ function weMessage($index, $id, $subs) {
 
   foreach ($testMessages as $one) {
     extract($one, EXTR_PREFIX_ALL, 't');
+///    debug(compact(ray('t_uid uid t_index index'))); // useful for trim errors
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
       foreach ($subs as $k => $want) if ($want != '?') {
         $got = nni($t_subs, $k);
         if (in($k, R_DATE_FLDS) ? !sameTime($k, $want, $got) : !eq($k, $want, $got))  {
+          output("$k: want $want, got $got");
           $matching = FALSE; break;
         }
       }

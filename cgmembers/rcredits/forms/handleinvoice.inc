@@ -39,20 +39,27 @@ function formHandleInvoice($form, &$sta, $args = '') {
     u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');
   }
 
-  $subs = ray('amount what date', u\fmtAmt($amount), $purpose, fmtDt($created));
+  $subs = ray('nvid amount what date', $nvid, u\fmtAmt($amount), $purpose, fmtDt($created));
   $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
+  $data = unserialize(nn($data)) ?: [];
+  $reasonDft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 
   if ($toMe and $status < TX_PAID) { // unpaid invoice (cancel or close)
-    $title = t('Close Invoice');
+    $title = t('Unpaid Invoice');
     $subs['who'] = r\acct($payer)->fullName;
     $subtext = t('Handle invoice #%nvid (%date) charging %who %amount for %what.', $subs);
     $action = radiosFld(REQ . t('Action:'), '', dft(0), ray(t('mark paid, cancel')));
 
-    $data = unserialize(nn($data)) ?: [];
-    $dft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
-    $reason = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($dft));
+    $reason = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($reasonDft));
 
     $close = submit(t('Close'));
+    jsx('back-button');
+  } elseif ($toMe and in($status, [TX_PAID, TX_CANCELED])) { // manually closed invoiced
+    $title = t('Invoice Was Closed Manually');
+    $subs += ray('who', r\acct($payer)->fullName);
+    $subtext = t('Reopen invoice #%nvid (%date) charging %who %amount for %what?', $subs);
+    $reason = item($reasonDft, t('Closed Because:'));
+    $cancel = submit(t('Reopen'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     jsx('back-button');
   } elseif ($toMe) { // handle an already-paid request for payment TO me
     return go($ret, t('Request #%nvid is already paid.', compact('nvid')));
@@ -88,9 +95,9 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
-      $whyNot = textFld(t('Reason for dispute:'));
+      $reason = textFld(t('Reason for dispute:'));
       $deny = submit(t('Dispute'));
-      $denySet = fieldSet('denySet', compact('whyNot', 'deny'), BARE);
+      $denySet = fieldSet('denySet', compact('reason', 'deny'), BARE);
     }
   }
   
@@ -98,7 +105,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always pay action reason denySet close cancel toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always pay action reason denySet close cancel reopen toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -106,18 +113,18 @@ function formHandleInvoice($form, &$sta, $args = '') {
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('whyNot toMe payAmount', $sta['input'], NULL));
+  extract(just('reason toMe payAmount', $sta['input'], NULL));
   extract(just('amount', hidFlds($sta, 'hid'), NULL));
   $deny = (op($sta) == 'deny');
-  if (!$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
+  if (!$toMe and $deny and !$reason) return say('say why not', 'reason');
   if ($toMe and isset($payAmount) and $err = u\badAmount($payAmount, '>', 2, $amount)) return say($err, 'payAmount');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  extract(just('reason whyNot always payAmount action', $sta['input'], NULL));
+  extract(just('reason always payAmount action', $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $always, $reason ?: $whyNot, $action, $hidInfo);
+  handleInvoice(op($sta), $payAmount, $always, $reason, $action, $hidInfo);
   return w\go($hidInfo['ret']);
 }
 
@@ -147,6 +154,13 @@ function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
     db\update('tx_requests', compact(ray('status data nvid')), 'nvid');
     $fromA->tellOut('invoice withdrawn', $subs + compact('done'));
     $msg = tr('invoice done', compact('done'));
+  } elseif ($op == 'reopen') {
+    db\update('tx_requests', ray('status nvid', TX_PENDING, $nvid), 'nvid');
+    $link = $fromA->doLink('inv', $nvid);
+    $subs += ray('otherName otherEmail otherPhone _a1 reply', 
+      $toA->fullName, $toA->email, u\fmtPhone($toA->phone), $link, $payee);
+    $fromA->tell('invoice reopened|invoiced you', $subs);
+    $msg = tr('inv reopened');
   } elseif ($op == 'deny' or $reason) {
     $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
