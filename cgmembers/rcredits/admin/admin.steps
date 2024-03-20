@@ -385,3 +385,17 @@ function txCatIs($xid, $catNum, $v) {
   if ($testOnly) return (db\get('cat', 'tx_entries', compact('id')) == $cat);
   return db\update('tx_entries', compact(ray('id cat')));
 }
+
+/**
+ * fields of (ARG) match
+ *
+ * in: TEST aaOther DeletedTableFieldsAreAlwaysTheSameAsTheSourceTableFields
+ */
+function fieldsOfMatch($xtnm) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $tnm = str_replace('x_', in($xtnm, 'x_txs2 x_users') ? '' : 'u_', $xtnm);
+  $xFlds = db\cols($xtnm);
+  if (nni($xFlds, 0) != 'deleted') return t\err(t('Missing field "deleted" at start of table ') . $xtnm);
+  array_shift($xFlds);
+  return t\eq("$xtnm fields", db\cols($tnm), $xFlds);
+}

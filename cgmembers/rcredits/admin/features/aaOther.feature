@@ -19,3 +19,11 @@ Scenario: Admin deletes an account
   Then these "x_users":
   | uid  | fullName | deleted |*
   | .ZZD | Dee Four | %now    |
+
+Scenario: Deleted table fields are always the same as the source table fields
+  Then fields of "x_company" match
+  And fields of "x_photo" match
+  And fields of "x_relations" match
+  And fields of "x_shout" match
+  And fields of "x_txs2" match
+  And fields of "x_users" match
