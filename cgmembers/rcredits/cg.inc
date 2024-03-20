@@ -336,7 +336,7 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $k = "%$k0";
     $resubs[$k] = $v;
   }
-  $subject = u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%');
+  $subject = strip_tags(u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%'));
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
   $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
   
@@ -474,7 +474,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $email = $tellCOA ? $tellCOA->cttyA->email : $to; // tell cAdmin if appropriate, else superAdmin
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
-  $topic = mb_strlen($index) < 100 ? strip_tags($index) : '';
+  $topic = mb_strlen($index) < 100 ? $index : '';
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];
   $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
