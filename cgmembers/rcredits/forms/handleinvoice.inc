@@ -44,7 +44,15 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $data = unserialize(nn($data)) ?: [];
   $reasonDft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 
-  if ($toMe and $status < TX_PAID) { // unpaid invoice (cancel or close)
+  if ($toMe and in($status, [TX_PAID, TX_CANCELED])) { // manually closed invoiced
+    $title = t('Invoice Was Closed Manually');
+    $subs += ray('who', r\acct($payer)->fullName);
+    $subtext = t('Reopen invoice #%nvid (%date) charging %who %amount for %what?', $subs);
+    $reason = item($reasonDft, t('Closed Because:'));
+    $reopen = submit(t('Reopen'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
+    jsx('back-button');
+    
+  } elseif ($toMe and $status < TX_PAID) { // unpaid invoice (cancel or close)
     $title = t('Unpaid Invoice');
     $subs['who'] = r\acct($payer)->fullName;
     $subtext = t('Handle invoice #%nvid (%date) charging %who %amount for %what.', $subs);
@@ -54,13 +62,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
     $close = submit(t('Close'));
     jsx('back-button');
-  } elseif ($toMe and in($status, [TX_PAID, TX_CANCELED])) { // manually closed invoiced
-    $title = t('Invoice Was Closed Manually');
-    $subs += ray('who', r\acct($payer)->fullName);
-    $subtext = t('Reopen invoice #%nvid (%date) charging %who %amount for %what?', $subs);
-    $reason = item($reasonDft, t('Closed Because:'));
-    $cancel = submit(t('Reopen'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
-    jsx('back-button');
+    
   } elseif ($toMe) { // handle an already-paid request for payment TO me
     return go($ret, t('Request #%nvid is already paid.', compact('nvid')));
   /*
@@ -129,10 +131,11 @@ function formHandleInvoice_submit($form, &$sta) {
 }
 
 function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
-  extract(just('nvid payer payee purpose created data amount', $info));
+  extract(just('nvid payer payee purpose created data amount', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to status, rather than error
+  $data = ($data ? unserialize($data) : []);
   
   if ($op == 'pay' and !$reason) {
     if ($fromA->ok) { // if payer account is active
@@ -145,28 +148,33 @@ function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
       $msg .= '|' . t('auto pay on', just('payeeName', $subs));
     }
+    
   } elseif ($op == 'close') { // only payee can cancel
     if (db\get('status', 'tx_requests', compact('nvid')) >= TX_PAID) return go('history/pending-to', tr('inv already paid'), 'err'); // bad timing
     list ($status, $done) = $action == ACT_CANCEL 
     ? [TX_CANCELED, t('canceled')] 
     : [TX_PAID, t('marked PAID')];
-    $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
+    $data = serialize(compact('reason') + $data);
     db\update('tx_requests', compact(ray('status data nvid')), 'nvid');
     $fromA->tellOut('invoice withdrawn', $subs + compact('done'));
     $msg = tr('invoice done', compact('done'));
+    
   } elseif ($op == 'reopen') {
-    db\update('tx_requests', ray('status nvid', TX_PENDING, $nvid), 'nvid');
+    unset($data['reason']);
+    db\update('tx_requests', ray('status data nvid', TX_PENDING, serialize($data), $nvid), 'nvid');
     $link = $fromA->doLink('inv', $nvid);
     $subs += ray('otherName otherEmail otherPhone _a1 reply', 
       $toA->fullName, $toA->email, u\fmtPhone($toA->phone), $link, $payee);
     $fromA->tell('invoice reopened|invoiced you', $subs);
     $msg = tr('inv reopened');
+    
   } elseif ($op == 'deny' or $reason) {
     $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     $toA->tell('invoice denied', $subs);
     u\tellApp('denied', $fromA, $toA, $amount, $purpose, $created, $reason);
     $msg = 'denial done';
+    
   } else $msg = ''; // default: canceled
 
   say($msg ?: 'nothing done', $ok ? '' : 'ERR');
