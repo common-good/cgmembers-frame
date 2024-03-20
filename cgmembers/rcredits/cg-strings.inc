@@ -112,7 +112,9 @@ global $tStrings; $tStrings = array(
   <p>Reason given: "%reason". You may want to contact the customer directly, to resolve any dispute.</p>'),
   
   'invoice withdrawn' => t('<p><b>Invoice CLOSED:</b> %payeeName has %done the following invoice:</p>
-  <blockquote>%created %amount for "%purpose"</blockquote>'),
+    <blockquote>%created %amount for "%purpose"</blockquote>'),
+  'invoice reopened' => t('<p><b>Invoice REOPENED:</b> %payeeName has reopened the following invoice:</p>'), // use in combination with 'invoiced you'
+  'inv reopened' => t('The invoice has been reopened.'),
   
   'charge disputed' => t('<p><b>Charge DISPUTED:</b> Your customer %otherName disputes the following charge:</p>
   <blockquote>%created %amount for "%payeePurpose"</blockquote>
