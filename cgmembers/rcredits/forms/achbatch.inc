@@ -19,7 +19,7 @@ const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debi
  * Create an ACH Batch file for all relevant transfer requests.
  * @params string $args: URL argument list including:
  *   date: 0 for pending transfers (the default), unixtime for a redo
- *   way: in or out (defaults to neither, meaning both)
+ *   way: in or out (defaults to neither, meaning both) OR an amount to transfer from or (if <0) to our second bank account
  *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
  *   bank: BSL or Citizens
  */
@@ -27,8 +27,11 @@ function achBatch($args) {
   extract(just('date way mark bank', $args, ''));
 
   u\setDft($date, 0);
-  if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
-  w\achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK); // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  if (is_numeric($way)) {
+    $offshore = $way;
+    $way = '';
+  } elseif ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+  achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, nn($offshore)); // <=:NOW lets us verify with $0 transfers before a scheduled real one
 
   if (test()) return;
 }
@@ -36,7 +39,7 @@ function achBatch($args) {
 /**
  * Create an ACH request file.
  */
-function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
+function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $offshore) {
   global $mya, $testRecs;
   
   $b = r\bankData();
@@ -71,6 +74,7 @@ X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $tot = 0;
   $depositDt = now(); // a single unique time for each batch
+  list ($recType, $addendaFlag) = [6, 0];
 
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
@@ -90,7 +94,6 @@ X;
     $id .= '-' . $xid;
 
     $name = u\asciiOnly($name);
-    list ($recType, $addendaFlag) = [6, 0];
     if (!$bankAccount = u\decry('V', $bankAccount)) {
       if (!$pid and $bankAccount = $a->bankAccount) {
         db\update('txs2', ray('xid bankAccount', $xid, u\cry('V', $bankAccount)), 'xid'); 
@@ -112,6 +115,16 @@ X;
   }
   unset($DBTX);
   
+  if ($offshore) { // add a transfer to or from our "offshore" interest-bearing account
+    $count++;
+    $b2 = r\bankData(BANK_OFFSHORE);
+    $txCode = $offshore < 0 ? 32 : 37;
+    $amount = abs($offshore * 100);
+    [$routing, $account, $id, $name] = [$b2->routing, $b2->account, BANK_OFFSHORE, u\asciiOnly(PROJECT . ' @ ' . BANK_OFFSHORE)];
+    $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
+    $hash += substr($routing, 0, 8);
+  }
+
   if (!$count) return 0;
   
   list ($recType, $auth) = [8, ''];
