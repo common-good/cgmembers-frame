@@ -898,7 +898,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
  */
 function crypted($type, $s = NULL) {
   if (func_num_args() == 1) {
-    if (strlen($type) < strlen(CRYPT_FLAG) + 1) return FALSE;
+    if (strlen(nn($type)) < strlen(CRYPT_FLAG) + 1) return FALSE;
     list ($type, $s) = [mb_substr($type, strlen(CRYPT_FLAG), 1), $type];
     if (!$type or !strhas('PSV', $type)) return FALSE;
     return u\starts($s, CRYPT_FLAG) ? $type : FALSE;

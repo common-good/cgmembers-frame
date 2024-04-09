@@ -1439,7 +1439,7 @@ function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you h
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + ($accts ?: db\keyed('id, category', 'tx_cats', '`show`')));}
 function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
-function fboCatChoices($way) {return db\keyed("id, REPLACE(category, ':FBO_{$way}_HDR', '')", 'tx_cats', "`show` AND category LIKE ':FBO_{$way}_HDR%'");}
+function fboCatChoices($way) {return db\keyed("id, REPLACE(category, ':FBO_{$way}_HDR', '')", 'tx_cats', "`show` AND (category LIKE ':FBO_{$way}_HDR%' OR category LIKE '%Sponsored Donations' OR id=:CAT_CG2CG)");}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(DEV_ROUTING) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
@@ -2143,6 +2143,7 @@ function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
   list ($href, $tag) = $href ? [" href=\"$href\"", 'a'] : ['', 'span'];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
+  foreach (ray('text help') as $k) $$k = htmlentities($$k);
   return "<$tag$href$class type=\"button\" data-toggle=\"popover\" data-placement=\"bottom\" data-trigger=\"$trigger\" data-content=\"$help\" title=\"$text\">$text</$tag>";
 }
 
@@ -2187,6 +2188,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
 
 /**
  * Return an a tag.
+ * @note: to open the link in a new tab, add w\away() to the $extras array
  */
 function atag($href, $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];

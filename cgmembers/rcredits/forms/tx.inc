@@ -14,11 +14,11 @@ function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args, ''));
   global $mya;
 
-  $fbo = ($mya->sponsored or $mya->id == CGID or $mya->id == r\serverUid());
+  $fbo = $mya->sponsored;
   $hasCats = r\hasCats($mya->uid) ?: 0;
 
   $pay = in($type, 'pay both');
-  $charge = (in($type, 'charge both') and (!$fbo or $mya->admNonmemberTx)); // don't show charge button for sponsored org, except to authorized admin
+  $charge = (in($type, 'charge both') and (!$hasCats or $mya->admNonmemberTx)); // don't show charge button for insider org, except to authorized admin
   list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
   $opDesc = $pay ? $payDesc : $chargeDesc;
   
@@ -28,7 +28,7 @@ function formTx($form, &$sta, $type, $args = '') {
   focusOn($who ? 'amount' : 'who');
 
   $mem = $mya->admNonmemberTx ? rentRadios('mem', 0, ray(t('Member Non-member'))) : '';
-  $title = $fbo ? item($opDesc, NBSP, '', suffix($mem)) : $opDesc;
+  $title = $mem ? item($opDesc, NBSP, '', suffix($mem)) : $opDesc;
 
   if ($mya->co) {
     $buttons = $pay ? btnOpt('/tx/pay/payments', t('Upload Payments'), 'w-pay') : '';
@@ -72,15 +72,15 @@ function formTx($form, &$sta, $type, $args = '') {
   jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats methodDft byCheck')));
   
   $paying = hidFld($pay);
-  $fbo = hidFld($fbo);
-  $form = cgform(compact(ray("title buttons who addr amount purpose method ckNumber ckDate cat start periods end advanced submit paying fbo")));
+  $hasCats = hidFld($hasCats);
+  $form = cgform(compact(ray("title buttons who addr amount purpose method ckNumber ckDate cat start periods end advanced submit paying hasCats")));
 
   return $form;
 }
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('amount purpose start end paying fbo who fullName address city state zip phone email ckDate', $sta['input'], NULL);
+  $info = just('amount purpose start end paying who fullName address city state zip phone email ckDate', $sta['input'], NULL);
   extract($info);
 /*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
@@ -102,12 +102,18 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying fbo who fullName address city state zip phone email cat isGift method ckNumber ckDate', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift method ckNumber ckDate', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
   if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat]; // if $paying and !$who, cat is cat2 with a negative amount
 
   if (!$who) return fboTx($input); // non-member transaction by check or direct ACH
-
+/*
+  if (!$who) {
+    if ($mya->sponsored) return fboTx($input); // non-member transaction by check or direct ACH
+    $payerName = $mya->fullName;
+    debug(compact(ray('fullName payerName email amount purpose')));
+  }
+*/
   $uid = whoId($sta);
   $a = r\acct($uid);
   u\setDft($goods, FOR_GOODS);
@@ -168,7 +174,7 @@ function fboTx($input) {
 
   extract($input);
   $state = (int) $state;
-  u\EXPECT($fbo and ($paying or $mya->admNonmemberTx), 'fbo income by non-admin');
+  u\EXPECT($hasCats and ($paying or $mya->admNonmemberTx), 'hasCats income by non-admin');
   $uid = UID_OUTER;
   
   $DBTX = \db_transaction();

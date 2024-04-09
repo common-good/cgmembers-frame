@@ -129,8 +129,8 @@ Scenario: A non-member donates to Common Good
   | op     | fbo | fullName | email | address | city | state | zip   | amount | isGift | purpose | comment | cat         |*
   | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | 1      | grant   |         | D-FBO       |
   Then we scrip "tx" with subs:
-  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
-  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin | hasCats |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 0   | 1     | 1       |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
   And these "txs":

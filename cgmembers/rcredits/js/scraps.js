@@ -262,9 +262,9 @@ function doit(what, vs) {
       $('.form-item-title .suffix').toggle(pay || vs['admin'] == 1);
       $('#tx').show();
       $('#edit-who').focus();
-      if (vs['hasCats'] || (vs['fbo'] == 1 && pay)) {
+      if (vs['fbo'] == 1 ? pay : vs['hasCats']) {
         cat.attr('required', 'required');
-      } else { // category is chosen automatically for incoming
+      } else { // category is chosen automatically for incoming (edit the txdetail, if necessary)
         cat.removeAttr('required');
         cat.parent().parent().hide();
       }
