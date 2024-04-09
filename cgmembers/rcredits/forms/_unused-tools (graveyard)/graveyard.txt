@@ -1,0 +1,12 @@
+/**
+ * Validate a SNAP number.
+ * @param string $snap: the snap number as typed by the user
+ *                      (RETURNED) just the relevant characters (digits and letters)
+ * @return the error message if the number is invalid, else return FALSE.
+ */
+function snapErr(&$snap) {
+  $snap = preg_replace('/[^A-Z\\d]/i', '', nn($snap));
+  $c1 = strlen($snap)? $snap[0] : '';
+  if (!preg_match('/(37|04|06|08|91|92|93|94|96)(\\d{3})(\\d{2})([A-Z\\d]\\d{2,5})/i', $snap, $m) or ($c1 == '9' and $m[3] != '22')) return t('That is not a valid SNAP number.');
+  return FALSE;
+}

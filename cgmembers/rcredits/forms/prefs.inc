@@ -57,7 +57,7 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin secretBal nosearch food debtOk';
+  $advancedFields = 'achMin secretBal nosearch debtOk';
   
 //  $submit = submit(t('Update Preferences'));
   
@@ -68,22 +68,15 @@ EOF
 }
 
 function formPrefs_validate($form, &$sta) {
-  extract(just('food snap', $sta['input'], NULL));
 
-  $food = $food ?: 0;
-  if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
-  snapErr($snap); // just to remove punctuation
-/// (no SNAP checking for now)  if ($snap and $err = snapErr($snap)) return say($err, 'snap');
-  u\preray(compact(ray('food snap')), $sta['input']); // update trimmed percentage
 }
 
 function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('food snap roundup statements nosearch debtOk secretBal', $sta['input'], NULL));
-  $fields = 'food snap';
-  $food /= 100;
+  extract(just('snap roundup statements nosearch debtOk secretBal', $sta['input'], NULL));
+  $fields = 'snap';
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
@@ -95,17 +88,4 @@ function formPrefs_submit($form, $sta) {
   
   $mya->update($info);
   return w\goNextStep('preferences');
-}
-
-/**
- * Validate a SNAP number.
- * @param string $snap: the snap number as typed by the user
- *                      (RETURNED) just the relevant characters (digits and letters)
- * @return the error message if the number is invalid, else return FALSE.
- */
-function snapErr(&$snap) {
-  $snap = preg_replace('/[^A-Z\\d]/i', '', $snap);
-  $c1 = strlen($snap)? $snap[0] : '';
-  if (!preg_match('/(37|04|06|08|91|92|93|94|96)(\\d{3})(\\d{2})([A-Z\\d]\\d{2,5})/i', $snap, $m) or ($c1 == '9' and $m[3] != '22')) return t('That is not a valid SNAP number.');
-  return FALSE;
 }
