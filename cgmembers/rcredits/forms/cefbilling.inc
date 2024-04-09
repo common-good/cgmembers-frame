@@ -77,7 +77,7 @@ function showMo($month, $dt9 = '') {
   AND IFNULL(ts.tags, '') NOT LIKE '%unbillable%' 
   GROUP BY ts.id
   HAVING Hours<>'0.00'
-  ORDER BY TaskName
+  ORDER BY Estimate>0, TaskName
 X;
 
 /*
