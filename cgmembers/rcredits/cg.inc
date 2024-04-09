@@ -724,6 +724,7 @@ function uniqueName($fullName, $info = []) {
  * @return the uid (NULL if unsuccessful)
  */
 function loginString($qid) {
+  if (!$qid) return NULL;
   if (strhas($qid, '@')) {
     $name = '!!!';
     $email = u\cry('P', mb_strtolower($qid));

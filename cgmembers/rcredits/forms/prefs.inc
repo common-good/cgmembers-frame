@@ -17,7 +17,7 @@ function formPrefs($form, &$sta) {
     if ($mya->st == 'MA') $list .= ', HIP';
 //    if ($mya->st == 'VT') $list .= ', XXX';
     $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
-  } else { $snap = $roundup = NULL; }
+  } else { $snap = 0; $roundup = NULL; }
   
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
   $backingLink = lnk('/community/backing', t('change'));
