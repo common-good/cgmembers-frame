@@ -115,7 +115,7 @@ X;
         $qid .= '*'; // mark as no active account
       } else {
         $a = r\acct($uid);
-        $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
+        $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid, w\away());
         if ($a->closed) $qid .= '*'; // mark as no active account
         list ($email, $phone) = $a->nosearch ? ['**', '**'] : [$a->email ?: t('BAD EMAIL'), u\fmtPhone($a->phone, '-')];
         $fullName = $a->fullName;

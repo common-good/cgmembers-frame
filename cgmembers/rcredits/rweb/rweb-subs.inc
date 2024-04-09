@@ -2187,6 +2187,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
 
 /**
  * Return an a tag.
+ * @note: to open the link in a new tab, add w\away() to the $extras array
  */
 function atag($href, $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];
