@@ -2143,6 +2143,7 @@ function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
   list ($href, $tag) = $href ? [" href=\"$href\"", 'a'] : ['', 'span'];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
+  foreach (ray('text help') as $k) $$k = htmlentities($$k);
   return "<$tag$href$class type=\"button\" data-toggle=\"popover\" data-placement=\"bottom\" data-trigger=\"$trigger\" data-content=\"$help\" title=\"$text\">$text</$tag>";
 }
 

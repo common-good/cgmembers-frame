@@ -106,7 +106,7 @@ EOF;
     $buttons = "<div class='txs-buttons'>$status</div>";
     
     $row[] = $download
-    ? ($status0 == TX_DENIED ? $status1 . tr(' (%reason)', compact('reason')) : $status)
+    ? ($status0 == $reason ? "$status1: $reason" : $status)
     : $buttons;
     $rows[] = $row;
   }
