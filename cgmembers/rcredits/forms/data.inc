@@ -26,8 +26,8 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   if ($sql2 = $sql) {
     $title = $sqlTitle ?: t('MySQL Query');
     try {
-      $q = db\adminQ($sql2);
-      if ($q and $rows = $q->fetchAll()) {
+      $q = db\adminQ(preMagic($sql2));
+      if ($q and $rows = postMagic((array) $q->fetchAll())) {
         $hdrs = array_keys((array) $rows[0]);
         foreach ($rows as $i => $row) $rows[$i] = array_values((array) $row);
         $list = w\makeTable($rows, $hdrs);
@@ -46,7 +46,11 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     if (substr($sql2, 0, 1) == '/') return go($sql2);
     $title = t('Query Results');
     $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
-    $report = strhas($sql2, ' ') ? item(w\showRecords(db\q($sql2)->fetchAll())) : getReport($sql2);
+    if (strhas($sql2, ' ')) { // explicit query
+      $q = db\q(preMagic($sql2));
+      $rows = postMagic((array) $q->fetchAll());
+      $report = item(w\showRecords($rows));
+    } else $report = getReport($sql2);
     $form = compact(ray('title subtext report'));
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
@@ -165,4 +169,39 @@ X;
   } elseif ($nm == 'cef-billing') {
     w\go('/sadmin/cef-billing');
   }
+}
+
+/**
+ * Convert magic fields to SQL placeholders.
+ * Magic fields take the form u.something! (for example u.legalName!), where <something> is any pseudofield of the Acct object.
+ * These can only be used for display (not in a WHERE or ORDER BY clause) and not in combination (for example, not u.created+:YEAR_SECS).
+ * Combinations could be implemented if it seems useful.
+ */
+function preMagic($sql) {
+  global $magicFlds; $magicFlds = [];
+  $c = '[A-Za-z0-9]+';
+  return preg_replace_callback("/u\.($c)!( AS `?($c)`?)?/", function ($m) {
+    global $magicFlds; 
+    $fldName = $m[1];
+    $fldNameHdr = nni($m, 3, $fldName);
+    $magicFlds[] = $fldNameHdr;
+    return "CONCAT(u.uid, ':$fldName') AS `$fldNameHdr`";
+  }, $sql);
+}
+
+/**
+ * Convert magic placeholders to user data.
+ */
+function postMagic($rows) {
+  global $magicFlds;
+  if (!$magicFlds) return $rows;
+  
+  foreach ($rows as $i => $row) {
+    foreach ($magicFlds as $k) {
+      [$uid, $fldName] = explode(':', $row->$k);
+      $a = r\acct($uid);
+      $rows[$i]->$k = $a->$fldName;
+    }
+  }
+  return $rows;
 }
