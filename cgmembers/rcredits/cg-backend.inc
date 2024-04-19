@@ -1203,7 +1203,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   } else { // name or qid or empty (empty when called from memberRay)
     list ($where, $subs) = nameCriteria($who);
 
-    if (preg_match('/^([A-Z]+|[a-z]+)$/', $who)) { // all upper or all lower
+    if (preg_match('/^([A-Z]+|[a-z]+|[A-Z][a-z]{5})$/', $who)) { // all upper or all lower or 6 letters with first capitalized (happens on Android mobile)
       $qid = mb_strtoupper(($mya->admin and mb_strlen($who) == 3) ? R_SERVER_ID . $who : $who);
       if (u\isQid($qid) and $a = r\acct($qid)) $where = "($where OR uid=$a->id)";
     }
