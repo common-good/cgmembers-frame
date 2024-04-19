@@ -31,6 +31,7 @@ function achBatch($args) {
     $offshore = $way;
     $way = '';
   } elseif ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+
   achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, nn($offshore)); // <=:NOW lets us verify with $0 transfers before a scheduled real one
 
   if (test()) return;
@@ -39,7 +40,7 @@ function achBatch($args) {
 /**
  * Create an ACH request file.
  */
-function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $offshore) {
+function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $offshore = '') {
   global $mya, $testRecs;
   
   $b = r\bankData();
@@ -119,8 +120,10 @@ X;
     $count++;
     $b2 = r\bankData(BANK_OFFSHORE);
     $txCode = $offshore < 0 ? 32 : 37;
-    $amount = abs($offshore * 100);
-    [$routing, $account, $id, $name] = [$b2->routing, $b2->account, BANK_OFFSHORE, u\asciiOnly(PROJECT . ' @ ' . BANK_OFFSHORE)];
+    $amount = $offshore * 100;
+    if ($amount <= 0) $credits -= $amount; else $debits += $amount;
+    Ramount = abs($amount);
+    [$routing, $account, $id, $name] = [$b2->routing, $b2->acctIn, BANK_OFFSHORE, u\asciiOnly(PROJECT . ' @ ' . BANK_OFFSHORE)];
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
     $hash += substr($routing, 0, 8);
   }
