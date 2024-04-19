@@ -85,16 +85,39 @@ if ($mya and $mya->admin) {
   
   1 . t('Fiscal Sponsorships') =>
     "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
-      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x.total AS GiftsLast90Days, Mission
+      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x1.inLast3m AS GiftsLast3Mo, x2.outLast12m AS ExpenseLast12Mo, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
       LEFT JOIN r_states s ON s.id=u.state
       LEFT JOIN tx_rules ru ON ru.payee=u.uid
-      LEFT JOIN (SELECT uid2 AS uid, SUM(amt) AS total 
+      LEFT JOIN (
+        SELECT IF(amt<0, uid1, uid2) AS uid, SUM(ABS(amt)) AS inLast3m
         FROM txs t 
-        WHERE t.created IS NULL OR t.created >:NOW-90*:DAY_SECS GROUP BY uid
-      ) x USING (uid) 
+        WHERE t.created > :NOW-90*:DAY_SECS GROUP BY uid
+      ) x1 USING(uid)
+      LEFT JOIN (
+        SELECT IF(amt<0, uid2, uid1) AS uid, SUM(ABS(amt)) AS outLast12m
+        FROM txs t 
+        WHERE t.created >:NOW-:YEAR_SECS GROUP BY uid
+      ) x2 USING(uid)
       WHERE u.:IS_OK AND coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
+      
+  1 . t('Fiscal Sponsorships Last FY') =>
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
+      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x2.outLastFY AS ExpenseLastFY, x1.inLastFY AS GiftsLastFY, Mission
+      FROM users u 
+      LEFT JOIN u_company c USING (uid) 
+      LEFT JOIN r_states s ON s.id=u.state
+      LEFT JOIN tx_rules ru ON ru.payee=u.uid
+      LEFT JOIN (
+        SELECT uid2 AS uid, SUM(amt) AS inLastFY
+        FROM txs t WHERE t.created BETWEEN $fy0 AND $fy9 AND uid1<>:UID_BANK GROUP BY uid
+      ) x1 USING(uid)
+      LEFT JOIN (
+        SELECT IF(uid1=:UID_BANK, uid2, uid1) AS uid, SUM(IF(uid1=:UID_BANK, -amt, amt)) AS outLastFY
+        FROM txs t WHERE t.created BETWEEN $fy0 AND $fy9 AND uid2<>:CGID GROUP BY uid
+      ) x2 USING(uid)
+      WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
   1 . t('Major Gifts') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, u2.name AS `to`,
@@ -129,6 +152,12 @@ if ($mya and $mya->admin) {
     ". t('~<p>Total gifts in %PROJECT\'s most recently ended fiscal year (July to June) from Influencers or that exceed $5,000 &mdash; ignoring separate gifts of less than $1,000 as allowed for IRS Form 990 Schedule B: "Include all separate and independent gifts that are $1,000 or more Gifts that are less than $1,000 may be disregarded."</p><p>"marked" means the person is marked in the database as an influencer &mdash; that is, someone who might have significant influence over the affairs of the organization because of their position (including being a board member, former board member, key employee, or relative of such a person). Otherwise the person\'s "influence" is because they donated a lot of money.'),
     // in advance: $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : amt) >= SUBSTANTIAL_GIFT)
     
+  1 . t('Donations to CG last 12mo') =>
+    "SELECT LEFT(FROM_UNIXTIME(x.created), 10), u.fullName, u.email!, x.amt
+     FROM txs_noreverse x JOIN users u ON u.uid=x.uid1
+     WHERE uid2 IN (:CGID, :UID_REGULARS) AND x.:IS_GIFT
+     ORDER BY x.created DESC",  
+  
   1 . t('Food Fund Contributions') =>
     "SELECT COUNT(uid) AS participants, SUM(amt) AS monthly FROM (
       SELECT uid, SUM(food*amt) AS amt, IF(SUM(amt)=0, 0, 1) AS active  
