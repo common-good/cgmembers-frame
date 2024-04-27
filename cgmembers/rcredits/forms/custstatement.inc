@@ -27,8 +27,8 @@ function custStatement($args = []) {
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
   $custUids = empty($a->jid) ? [ $a->id ] : [ $a->id, $a->jid ];
-  $rows = ($way == 'IN') ? getCustTxs([$mya->id], $custUids, 0, now())
-                      : getCustTxs($custUids, [$mya->id], 0, now());
+  $rows = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, now())
+                      : be\getCustTxs($custUids, [$mya->id], 0, now());
   if (count($rows) == 0) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
@@ -109,62 +109,4 @@ function custStatement($args = []) {
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
   $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, fmtDt(now(), 'MM-dd-yyyy'))); //Close and output PDF document
 }
-
-/**
- * Generates an array of transactions between two accounts, with added data, for the given period.
- * @param array $aUids: the uids for member a (normally a business)
- * @param array $bUids: the uids for member b
- * @param unixtime $starting: the starting date/time for the period
- * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
- */
-function getCustTxs($aUids, $bUids, $starting, $ending) {
-  u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
-  // Note that we show the company's tx description, not the customer's  
-  $reverseText = t('reverses tx #');
-  $special = be\specialTxFlds();
-  $invoiced = 'IF (payee IN (:aUids), amount, -amount)';
-  $markedPAID = 'status=:TX_PAID';
-  
-  $sql = <<< X
-    SELECT DISTINCT CONCAT('tx #', xid) AS tid, '' AS reasonData,
-      IF(uid1 IN (:aUids), -amt, amt) AS paid, $special, :E_PRIME AS type,
-      '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
-      IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS description
-    FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
-    LEFT JOIN tx_requests i ON i.nvid=t.rel
-    WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
-       OR (uid2 IN (:aUids) AND uid1 IN (:bUids))
-    UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, data, '') AS reasonData,
-      IF($markedPAID, $invoiced, '') AS paid,
-      NULL AS nvid, NULL AS part, 'inv' AS type,
-      $invoiced AS invoiced,
-      inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
-    FROM tx_requests inv
-    WHERE status <> :TX_CANCELED
-      AND ( (payer IN (:aUids) AND payee IN (:bUids)) 
-         OR (payee IN (:aUids) AND payer IN (:bUids)) )
-    ORDER BY created, paid<>0
-X;
-
-  $q = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
-  u\EXPECT($q, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
-
-  $myBalance = 0.00; //balanceAsOf($aUids[0], $starting);
-  $entries[] = ray('description balance invoiced paid created tid', t('Opening balance'), $myBalance, '', '', '', '');
-  foreach ($q as $row) {
-    $row = (array) $row;
-    extract(just('paid disputed reasonData', $row));
-    unset($row['reasonData']);
-    $myBalance -= $paid ?: 0;
-    $row['balance'] = $myBalance;
-    $disputed = $disputed ? t('(DISPUTED) ') : '';
-    if ($reasonData and $data = unserialize($reasonData)) {
-      $reason = t(' (marked PAID: %reason)', 'reason', nni($data, 'reason'));
-    } else $reason = '';
-    $row['description'] = $disputed . be\txDesc($row) . $reason;
-    $entries[] = $row;
-  }
-
-  return $entries;
-}
+ 

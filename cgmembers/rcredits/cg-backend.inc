@@ -63,7 +63,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
     WHERE $where ORDER BY $order
 EOF;
-  /// showq($sql, ray('uids', join(',', $uids)));
+///  showq($sql, ray('uids', join(',', $uids)));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
@@ -112,6 +112,71 @@ EOF;
 }
 
 /**
+ * Return an array of transactions and invoices between two accounts (the first of which has invoiced the second), for the given period.
+ * @param array $aUids: the uids for member a (normally a business)
+ * @param array $bUids: the uids for member b
+ * @param unixtime $starting: the starting date/time for the period
+ * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
+ */
+function getCustTxs($aUids, $bUids, $starting, $ending) {
+  u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
+  // Note that we show the company's tx description, not the customer's  
+  $reverseText = t('reverses tx #');
+  $special = be\specialTxFlds();
+  $markedPAID = 'status=:TX_PAID';
+  [$fromA, $fromB] = ['uid1 IN (:aUids)', 'uid1 IN (:bUids)'];
+  [$toA, $toB] = ['uid2 IN (:aUids)', 'uid2 IN (:bUids)'];
+  $invoiced = "IF ($toA, amount, -amount)";
+  
+  $sql = <<< X
+    SELECT DISTINCT CONCAT('tx #', xid) AS tid, '' AS reasonData,
+      IF($fromA, -amt, amt) AS paid, $special, :E_PRIME AS type,
+      u.uid, u.fullName AS name, i.status,
+      '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
+      IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF($fromA, for1, for2)) AS description
+    FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
+    LEFT JOIN tx_requests i ON i.nvid=t.rel
+    LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
+    WHERE ($fromA AND $toB) OR ($fromB AND $toA)
+    UNION ALL
+    SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, inv.data, '') AS reasonData,
+      IF($markedPAID, $invoiced, '') AS paid,
+      NULL AS nvid, NULL AS part, NULL AS txCanceled, 'inv' AS type,
+      u.uid, u.fullName AS name, status,
+      $invoiced AS invoiced,
+      inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
+    FROM (SELECT inv0.*, payer AS uid1, payee AS uid2 FROM tx_requests inv0) inv
+    LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
+    WHERE (($fromA AND $toB) OR ($fromB AND $toA))
+    AND NOT inv.:IS_SELF
+    ORDER BY created, paid<>0
+X;
+
+///  showq($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  $q = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  u\EXPECT($q, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
+
+  $myBalance = balanceAsOf($aUids[0], $starting);
+  $entries[] = ray('tid created uid name description balance invoiced paid', '', $starting, '', '', t('Opening balance'), $myBalance, '', '');
+  foreach ($q as $row) {
+    $row = (array) $row;
+    extract(just('paid disputed reasonData status', $row));
+//    unset($row['reasonData']);
+    $myBalance -= $paid ?: 0;
+    $row['balance'] = $myBalance;
+    $disputed = $disputed ? t('(DISPUTED) ') : '';
+    if ($status) $row['status'] = be\statusDesc($status);
+    if ($reasonData and $data = unserialize($reasonData)) {
+      $reason = t(' (marked PAID: %reason)', 'reason', nni($data, 'reason'));
+    } else $reason = '';
+    $row['description'] = $disputed . be\txDesc($row) . $reason;
+    $entries[] = $row;
+  }
+
+  return $entries;
+}
+
+/**
  * Return SQL for nvid, part, and stepup in a tx entry.
  * Don't include invoice number for payApproved requests
  * Expects t=txs, i=tx_requests
@@ -122,7 +187,8 @@ function specialTxFlds() {
     IF(t.relType='I' AND NOT i.:IS_SELF, t.rel, NULL) AS nvid, 
     IF(t.xid=i.status, 
       CONCAT(IF(t.:IS_PARTIAL, ' $finalTxt', ''), IF(t.:IS_OVERPAID, ' - $overTxt', '')),
-      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part
+      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part,
+    (t.relType='I' AND NOT i.:IS_SELF AND (i.status IS NULL OR i.status=:TX_CANCELED)) AS txCanceled
 X;
 }
 
@@ -130,13 +196,14 @@ X;
  * Return a (modified) description for the given transaction entry.
  */
 function txDesc($entry) {
-  extract(just('type reversesXid reversedBy description period periods stepup portion nvid part', $entry, NULL));
+  extract(just('type reversesXid reversedBy description period periods stepup portion nvid part txCanceled', $entry, NULL));
 
   if (in($type, E_PRIMES)) {
     if ($reversesXid) {
       $description .= t(' (reverses tx #%reversesXid)', compact('reversesXid'));
     } else {
       if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+      if ($txCanceled) $part .= t(' -- invoice canceled');
       if ($nvid) $description .= t(' (CG inv#%nvid%part)', compact(ray('nvid part')));
       if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
     }
@@ -144,6 +211,16 @@ function txDesc($entry) {
     if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
   }
   return $description;
+}
+
+/**
+ * Return a description of the given payment request status.
+ */
+function statusDesc($status) {
+  $statuses = ray(TX_STATUSES);
+  if ($status >= TX_PAID) {
+    return t('paid') . ($status > TX_PAID ? " (Tx#$status)" : ''); // xid=TX_PAID always has a reason unless the first tx was invoiced;
+  } else return ucfirst($statuses[$status]);
 }
 
 /**
@@ -158,13 +235,24 @@ function txDesc($entry) {
  * @return TRUE on success, FALSE otherwise.
  */
 function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending=FALSE) {
+  if (strhas(get_class($processor), 'Combo')) {
+    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));
+    $txs = $bUids ? getCustTxs($uids, $bUids, $starting, $ending) : [];
+    unset($txs[0]); // discard opening balance (not relevant for multiple customers)
+    if ($descending) $txs = array_reverse($txs);
+    $processor->hdr();
+    foreach ($txs as $tx) $processor->processEntry($tx);
+    $processor->ftr();
+    return;
+  }
+  
   $txs = getTxs($uids, $starting, $ending);
-
   if ($descending) $txs = array_reverse($txs);
   
   // Now process the transactions
   $processor->hdr();
   $first = TRUE;
+  
   foreach ($txs as $entries) {
     $processor->txnHdr($entries[0], $first ? 'none' : '');
     foreach ($entries as $j => $entry) {
@@ -173,6 +261,7 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
     $processor->txnFtr($entries[0]);
     $first = FALSE;
   }
+  
   $processor->ftr();
 }
 

@@ -122,7 +122,7 @@ function formTxDetail_validate($form, &$sta) {
 function formTxDetail_submit($form, &$sta) {
   global $mya;
   $input = $sta['input'];
-  extract(just('amount toMe forSame eid return cat orig created xid', $input));
+  extract(just('amount toMe forSame eid return cat orig created xid', $input, ''));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
   
   $DBTX = \db_transaction();
@@ -130,14 +130,14 @@ function formTxDetail_submit($form, &$sta) {
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
 
   $info = just('entryType amount description cat', $input, NULL);
-  if (empty($input['cat'])) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
+  if (!$cat) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
   if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
   
   extract(just('cat1 cat2 uid1 uid2 flags created', $orig), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
+    and ($cat != nn($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
     
     db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)

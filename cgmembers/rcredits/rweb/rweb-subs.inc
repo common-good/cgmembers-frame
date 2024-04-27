@@ -1945,7 +1945,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
         $cnt = (float) ${"d_{$k}Count"};
         $cnt = number_format($cnt) . ($cnt ? (' @ ' . u\fmtAmt($v / $cnt) . ' avg') : '');
-        $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
+        $f = ${"d_{$k}"} . " ($cnt)\n$desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }
       array_unshift($x2x, $created);
@@ -2211,8 +2211,8 @@ function btn($href, $text, $style = '', $size = '', $extras = []) {
 function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
-function buttino($href, $text, $style = 'default', $size = '', $extras = []) {
-  return btn($href, $text, $style, '', $extras + clas('buttino'));
+function buttino($href, $text, $style = '', $size = '', $extras = []) {
+  return btn($href, $text, $style ?: 'default', '', $extras + clas('buttino'));
 }
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
 function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'xs', compact('class', 'data'));}
