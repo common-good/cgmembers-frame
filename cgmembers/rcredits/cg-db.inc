@@ -194,7 +194,7 @@ function row($table, $where = '1', $subs = []) {
  */
 function col($field, $table, $where = '1', $subs = []) {
   u\zWhereSubs($where, $subs);
-  return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
+  return db\q("SELECT DISTINCT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
 function lst($field, $table, $where = '1', $subs = [], $joint = ', ') { // lst because "list" is a reserved word
   return join($joint, db\col($field, $table, $where, $subs));
