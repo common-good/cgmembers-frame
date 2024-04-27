@@ -82,7 +82,7 @@ function formGet_validate($form, &$sta) {
 // (this is unnecessary)  if ($amount > R_MAX_DAILY_EXCHANGE) return say('max daily usd', 'amount');
   if (op($sta) == 'get') return;
   
-  if ($amount > ($mya->admin ? max($avail, round($mya->balance, 2)) : $avail)) {
+  if ($mya->id != CGID and $amount > ($mya->admin ? max($avail, round($mya->balance, 2)) : $avail)) {
     $max = u\fmtAmt($avail);
     $extra = $mya->cttyRewardy ? '|short cash help' : '';
     return say('short put' . $extra, compact('max'), 'amount');
