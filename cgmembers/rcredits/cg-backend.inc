@@ -32,37 +32,38 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
 
   extract(just('includeSelfTxs catsOnly', $extra, FALSE));
 
-  $fromMe = 't.uid1 IN (:uids)';
-  $toMe = 't.uid2 IN (:uids)';
+  $fromMe = 'x.uid1 IN (:uids)';
+  $toMe = 'x.uid2 IN (:uids)';
   $where = tr("($fromMe %or $toMe)", 'or', $includeSelfTxs ? 'OR' : 'XOR');
-  $where .= ' AND !(t.amt=0 AND t.type=:E_BANK)'; // hides bank account verifications
-  if (is_integer($starting)) $where .= " AND t.created>=$starting";
-  if (is_integer($ending)) $where .= " AND t.created<=$ending";
+  $where .= ' AND !(x.amt=0 AND x.type=:E_BANK)'; // hides bank account verifications
+  if (is_integer($starting)) $where .= " AND x.created>=$starting";
+  if (is_integer($ending)) $where .= " AND x.created<=$ending";
   if ($catsOnly) {
-    $where .= " AND (t.cat1 IS NOT NULL OR t.cat2 IS NOT NULL OR (t.:IS_CC AND t.uid1=:UID_OUTER)) AND NOT t.:IS_QBOK";
+    $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR (x.:IS_CC AND x.uid1=:UID_OUTER)) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
-    $toMe = "($toMe AND (NOT ($fromMe) OR t.uid2 IN ($catUids)))";
+    $toMe = "($toMe AND (NOT ($fromMe) OR x.uid2 IN ($catUids)))";
   }
   $special = be\specialTxFlds();
-  $order = 't.created, t.xid, t.eid, name';
+  $order = 'x.created, x.xid, x.eid, name';
 
   // tReversed and eReversed refer to the transaction that this transaction reverses.
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction. 
 
-  $sql = <<< EOF
-    SELECT t.*, t2.txid, (t2.bankAccount IS NULL) AS noBank, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
+  $sql = <<< X
+    SELECT x.*, t2.txid, (t2.bankAccount IS NULL) AS noBank, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
-      (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
-      (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
-      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
-    FROM txs t 
-    LEFT JOIN users u ON u.uid=IF($toMe, t.uid1, t.uid2)
-    LEFT JOIN txs2 t2 ON t2.xid=t.xid
-    LEFT JOIN tx_timed tm ON tm.id=t.recursId
-    LEFT JOIN tx_rules ru ON ru.id=t.rule
-    LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
+      (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
+      (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
+      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed
+    FROM txs x
+    LEFT JOIN users u ON u.uid=IF($toMe, x.uid1, x.uid2)
+    LEFT JOIN txs2 t2 ON t2.xid=x.xid
+    LEFT JOIN tx_timed tm ON tm.id=x.recursId
+    LEFT JOIN tx_rules ru ON ru.id=x.rule
+    LEFT JOIN tx_requests i ON i.nvid=x.rel AND x.relType='I'
     WHERE $where ORDER BY $order
-EOF;
+X;
+
 ///  showq($sql, ray('uids', join(',', $uids)));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
@@ -127,28 +128,30 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
   [$fromA, $fromB] = ['uid1 IN (:aUids)', 'uid1 IN (:bUids)'];
   [$toA, $toB] = ['uid2 IN (:aUids)', 'uid2 IN (:bUids)'];
   $invoiced = "IF ($toA, amount, -amount)";
+  $where = "(($fromA AND $toB) OR ($fromB AND $toA)) AND x.created BETWEEN $starting AND $ending";
   
   $sql = <<< X
     SELECT DISTINCT CONCAT('tx #', xid) AS tid, '' AS reasonData,
       IF($fromA, -amt, amt) AS paid, $special, :E_PRIME AS type,
       u.uid, u.fullName AS name, i.status,
-      '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
-      IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF($fromA, for1, for2)) AS description
-    FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
-    LEFT JOIN tx_requests i ON i.nvid=t.rel
+      '' AS invoiced, x.created, (d.status=:DS_OPEN) AS disputed,
+      IF(x.reversesXid, CONCAT('($reverseText', x.reversesXid, ')'), IF($fromA, for1, for2)) AS description
+    FROM txs_prime x LEFT JOIN tx_disputes d USING(xid)
+    LEFT JOIN tx_requests i ON i.nvid=x.rel
     LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
-    WHERE ($fromA AND $toB) OR ($fromB AND $toA)
+    WHERE $where
+    
     UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, inv.data, '') AS reasonData,
+    SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, x.data, '') AS reasonData,
       IF($markedPAID, $invoiced, '') AS paid,
       NULL AS nvid, NULL AS part, NULL AS txCanceled, 'inv' AS type,
       u.uid, u.fullName AS name, status,
       $invoiced AS invoiced,
-      inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
-    FROM (SELECT inv0.*, payer AS uid1, payee AS uid2 FROM tx_requests inv0) inv
+      x.created AS created, status=:TX_DENIED AS disputed, x.`purpose` AS description
+    FROM (SELECT inv0.*, payer AS uid1, payee AS uid2 FROM tx_requests inv0) x
     LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
-    WHERE (($fromA AND $toB) OR ($fromB AND $toA))
-    AND NOT inv.:IS_SELF
+    WHERE $where AND NOT x.:IS_SELF
+  
     ORDER BY created, paid<>0
 X;
 
@@ -165,9 +168,12 @@ X;
     $myBalance -= $paid ?: 0;
     $row['balance'] = $myBalance;
     $disputed = $disputed ? t('(DISPUTED) ') : '';
-    if ($status) $row['status'] = be\statusDesc($status);
+    if (is_numeric($status)) $row['status'] = be\statusDesc($status);
     if ($reasonData and $data = unserialize($reasonData)) {
-      $reason = t(' (marked PAID: %reason)', 'reason', nni($data, 'reason'));
+      $reason = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated
+      $reason = $status == TX_PAID ? t(' (marked PAID: %reason)', compact('reason'))
+      : ($status == TX_CANCELED ? t(' (canceled: %reason)', compact('reason'))
+      : " $reason");
     } else $reason = '';
     $row['description'] = $disputed . be\txDesc($row) . $reason;
     $entries[] = $row;
@@ -184,11 +190,11 @@ X;
 function specialTxFlds() {
   list ($finalTxt, $partTxt, $overTxt) = [t('final'), t('partial'), t('overpaid')];
   return <<< X
-    IF(t.relType='I' AND NOT i.:IS_SELF, t.rel, NULL) AS nvid, 
-    IF(t.xid=i.status, 
-      CONCAT(IF(t.:IS_PARTIAL, ' $finalTxt', ''), IF(t.:IS_OVERPAID, ' - $overTxt', '')),
-      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part,
-    (t.relType='I' AND NOT i.:IS_SELF AND (i.status IS NULL OR i.status=:TX_CANCELED)) AS txCanceled
+    IF(x.relType='I' AND NOT i.:IS_SELF, x.rel, NULL) AS nvid, 
+    IF(x.xid=i.status, 
+      CONCAT(IF(x.:IS_PARTIAL, ' $finalTxt', ''), IF(x.:IS_OVERPAID, ' - $overTxt', '')),
+      IF(x.:IS_PARTIAL, ' $partTxt', '')) AS part,
+    (x.relType='I' AND NOT i.:IS_SELF AND (i.status IS NULL OR i.status=:TX_CANCELED)) AS txCanceled
 X;
 }
 
