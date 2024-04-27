@@ -44,7 +44,7 @@ class TxHistory implements TxProcessor {
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
     $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons);
-    $downBtns = ''; foreach (ray('CSV QBO') as $k) $downBtns .= buttino("$this->baseUrl&download=$k", $k);
+    $downBtns = ''; foreach (ray('CSV QBO') as $k) $downBtns .= buttino("$this->baseUrl&download=$k", $k, '', '', ray('title', t('Download these transactions in %k format.', compact('k'))));
 
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
@@ -56,7 +56,7 @@ class TxHistory implements TxProcessor {
       <a title="Select dates to show"><span class="glyphicon glyphicon-calendar"></span>Dates</a>
     </div>
     <div class="download col-xs-3">
-      <span class="glyphicon glyphicon-download-alt"></span>Download<span title="Download these transactions">$downBtns</span>
+      <span class="glyphicon glyphicon-download-alt"></span>Download<span>$downBtns</span>
     </div>
     <div class="totals col-xs-2">
       <a data-toggle="modal" data-target="#txs-totals" title="Show totals for the selected period"><span class="glyphicon glyphicon-usd"></span>Totals</a>
