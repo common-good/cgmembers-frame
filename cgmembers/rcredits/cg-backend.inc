@@ -112,6 +112,70 @@ EOF;
 }
 
 /**
+ * Return an array of transactions and invoices between two accounts (the first of which has invoiced the second), for the given period.
+ * @param array $aUids: the uids for member a (normally a business)
+ * @param array $bUids: the uids for member b
+ * @param unixtime $starting: the starting date/time for the period
+ * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
+ */
+function getCustTxs($aUids, $bUids, $starting, $ending) {
+  u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
+  // Note that we show the company's tx description, not the customer's  
+  $reverseText = t('reverses tx #');
+  $special = be\specialTxFlds();
+  $markedPAID = 'status=:TX_PAID';
+  [$fromA, $fromB] = ['uid1 IN (:aUids)', 'uid1 IN (:bUids)'];
+  [$toA, $toB] = ['uid2 IN (:aUids)', 'uid2 IN (:bUids)'];
+  $invoiced = "IF ($toA, amount, -amount)";
+  
+  $sql = <<< X
+    SELECT DISTINCT CONCAT('tx #', xid) AS tid, '' AS reasonData,
+      IF($fromA, -amt, amt) AS paid, $special, :E_PRIME AS type,
+      u.uid, u.fullName AS name, i.status,
+      '' AS invoiced, t.created, (d.status=:DS_OPEN) AS disputed,
+      IF(t.reversesXid, CONCAT('($reverseText', t.reversesXid, ')'), IF($fromA, for1, for2)) AS description
+    FROM txs_prime t LEFT JOIN tx_disputes d USING(xid)
+    LEFT JOIN tx_requests i ON i.nvid=t.rel
+    LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
+    WHERE ($fromA AND $toB) OR ($fromB AND $toA)
+    UNION ALL
+    SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, inv.data, '') AS reasonData,
+      IF($markedPAID, $invoiced, '') AS paid,
+      NULL AS nvid, NULL AS part, NULL AS txCanceled, 'inv' AS type,
+      u.uid, u.fullName AS name, status,
+      $invoiced AS invoiced,
+      inv.created AS created, status=:TX_DENIED AS disputed, inv.`purpose` AS description
+    FROM (SELECT inv0.*, payer AS uid1, payee AS uid2 FROM tx_requests inv0) inv
+    LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
+    WHERE (($fromA AND $toB) OR ($fromB AND $toA))
+    AND NOT inv.:IS_SELF
+    ORDER BY created, paid<>0
+X;
+
+///  showq($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  $q = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  u\EXPECT($q, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
+
+  $myBalance = balanceAsOf($aUids[0], $starting);
+  $entries[] = ray('tid created uid name description balance invoiced paid', '', $starting, '', '', t('Opening balance'), $myBalance, '', '');
+  foreach ($q as $row) {
+    $row = (array) $row;
+    extract(just('paid disputed reasonData', $row));
+//    unset($row['reasonData']);
+    $myBalance -= $paid ?: 0;
+    $row['balance'] = $myBalance;
+    $disputed = $disputed ? t('(DISPUTED) ') : '';
+    if ($reasonData and $data = unserialize($reasonData)) {
+      $reason = t(' (marked PAID: %reason)', 'reason', nni($data, 'reason'));
+    } else $reason = '';
+    $row['description'] = $disputed . be\txDesc($row) . $reason;
+    $entries[] = $row;
+  }
+
+  return $entries;
+}
+
+/**
  * Return SQL for nvid, part, and stepup in a tx entry.
  * Don't include invoice number for payApproved requests
  * Expects t=txs, i=tx_requests
