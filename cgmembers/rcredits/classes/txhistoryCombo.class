@@ -1,0 +1,73 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+require_once __DIR__ . '/txprocessor.interface';
+
+/**
+ * @file
+ * Class to generate transaction and invoice history "Combo" download (as CSV).
+ *
+ */
+class TxHistoryCombo implements TxProcessor {
+  private $body = '';
+  private $uids = [];
+  private $dateValue = '';
+  private $count = 0;
+  private $runBalance = 0;
+  private $baseUrl = null;
+  private $totals = [];
+  
+  public function __construct($uids, $baseUrl, $start, $end) {
+    global $mya;
+    $this->uids = $uids;
+    $this->baseUrl = $baseUrl;
+    u\startDown($mya->mainQid . fmtDtRange($start, $end));
+  }
+  
+  /**
+   * Called before the first transaction.
+   */
+  public function hdr() {
+    $csvRow = ray(t('Tx#, Date, ID, Name, Purpose, Invoiced, Payments'));
+    u\csv($csvRow);
+    foreach (ray('invoiced paid') as $k => $fld) $this->totals[$fld] = 0;
+  }
+
+  /**
+   * Called before each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnHdr($info, $extraClass = '') {
+  }
+
+  /**
+   * Called for each entry of a transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function processEntry($info, $parity = NULL) {
+    if (!isset($info['uid'])) die(pr($info));
+    if (in_array($info['uid'], $this->uids)) return;
+    extract(just('tid created uid name description invoiced paid', $info, NULL));
+    $qid = r\acct($uid)->mainQid;
+    u\csv([$tid, fmtDt($created, 'yyyy-MM-dd'), $qid, $name, $description, $invoiced, $paid]);
+    foreach (ray('invoiced paid') as $k => $fld) $this->totals[$fld] += ($$fld ?: 0);
+  }
+
+  /**
+   * Called after each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnFtr($info) {
+  }
+
+  /**
+   * Called after the last transaction.
+   */
+  public function ftr() {
+  }
+}

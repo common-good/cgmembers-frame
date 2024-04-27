@@ -224,13 +224,24 @@ function txDesc($entry) {
  * @return TRUE on success, FALSE otherwise.
  */
 function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending=FALSE) {
+  if (strhas(get_class($processor), 'Combo')) {
+    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));
+    $txs = $bUids ? getCustTxs($uids, $bUids, $starting, $ending) : [];
+    unset($txs[0]); // discard opening balance (not relevant for multiple customers)
+    if ($descending) $txs = array_reverse($txs);
+    $processor->hdr();
+    foreach ($txs as $tx) $processor->processEntry($tx);
+    $processor->ftr();
+    return;
+  }
+  
   $txs = getTxs($uids, $starting, $ending);
-
   if ($descending) $txs = array_reverse($txs);
   
   // Now process the transactions
   $processor->hdr();
   $first = TRUE;
+  
   foreach ($txs as $entries) {
     $processor->txnHdr($entries[0], $first ? 'none' : '');
     foreach ($entries as $j => $entry) {
@@ -239,6 +250,7 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
     $processor->txnFtr($entries[0]);
     $first = FALSE;
   }
+  
   $processor->ftr();
 }
 

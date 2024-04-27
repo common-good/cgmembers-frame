@@ -11,7 +11,6 @@ require_once __DIR__ . '/txprocessor.interface';
 /**
  * @file
  * Class to generate transaction history reports.
- *
  */
 
 class TxHistory implements TxProcessor {
@@ -45,6 +44,7 @@ class TxHistory implements TxProcessor {
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
     $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons);
     $downBtns = ''; foreach (ray('CSV QBO') as $k) $downBtns .= buttino("$this->baseUrl&download=$k", $k, '', '', ray('title', t('Download these transactions in %k format.', compact('k'))));
+    $downBtns .= buttino("$this->baseUrl&download=Combo", 'Combo', '', '', ray('title', t('Download (for this period) all invoices and transactions with invoiced members.')));
 
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">

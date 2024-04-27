@@ -26,11 +26,11 @@ function formTxs($form, &$sta, $args = '') {
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
   $uids = $mya->jid ? [$mya->id, $mya->jid] : [$mya->id];
-  if (!in($download, ' CSV QBO')) return err(t('That is not an allowable download format.')); // note that $download can be empty
+  if (!in($download, ' CSV QBO Combo')) return err(t('That is not an allowable download format.')); // note that $download can be empty
   require_once R_ROOT . "/classes/txhistory$download.class"; // choose the right TxHistory class
   $class = "CG\\Web\\TxHistory$download";
   $processor = new $class($uids, $url, $starting, $ending);
-  be\processTxs($processor, $uids, $starting, $ending, TRUE);
+  be\processTxs($processor, $uids, $starting, $ending, !$download);
 
   if (test() and $download) return;
   if ($download) exit();
