@@ -153,9 +153,9 @@ if ($mya and $mya->admin) {
     // in advance: $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : amt) >= SUBSTANTIAL_GIFT)
     
   1 . t('Donations to CG last 12mo') =>
-    "SELECT LEFT(FROM_UNIXTIME(x.created), 10), u.fullName, u.email!, x.amt
+    "SELECT LEFT(FROM_UNIXTIME(x.created), 10) AS `date`, x.amt, u.fullName, u.email!
      FROM txs_noreverse x JOIN users u ON u.uid=x.uid1
-     WHERE uid2 IN (:CGID, :UID_REGULARS) AND x.:IS_GIFT
+     WHERE uid2 IN (:CGID, :UID_REGULARS) AND x.:IS_GIFT AND x.type=:E_PRIME AND uid1 NOT :CANONIC
      ORDER BY x.created DESC",  
   
   1 . t('Food Fund Contributions') =>
