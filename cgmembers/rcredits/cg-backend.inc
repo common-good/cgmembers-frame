@@ -63,7 +63,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
     LEFT JOIN tx_requests i ON i.nvid=t.rel AND t.relType='I'
     WHERE $where ORDER BY $order
 EOF;
-  /// showq($sql, ray('uids', join(',', $uids)));
+///  showq($sql, ray('uids', join(',', $uids)));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
@@ -186,7 +186,8 @@ function specialTxFlds() {
     IF(t.relType='I' AND NOT i.:IS_SELF, t.rel, NULL) AS nvid, 
     IF(t.xid=i.status, 
       CONCAT(IF(t.:IS_PARTIAL, ' $finalTxt', ''), IF(t.:IS_OVERPAID, ' - $overTxt', '')),
-      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part
+      IF(t.:IS_PARTIAL, ' $partTxt', '')) AS part,
+    (t.relType='I' AND NOT i.:IS_SELF AND (i.status IS NULL OR i.status=:TX_CANCELED)) AS txCanceled
 X;
 }
 
@@ -194,13 +195,14 @@ X;
  * Return a (modified) description for the given transaction entry.
  */
 function txDesc($entry) {
-  extract(just('type reversesXid reversedBy description period periods stepup portion nvid part', $entry, NULL));
+  extract(just('type reversesXid reversedBy description period periods stepup portion nvid part txCanceled', $entry, NULL));
 
   if (in($type, E_PRIMES)) {
     if ($reversesXid) {
       $description .= t(' (reverses tx #%reversesXid)', compact('reversesXid'));
     } else {
       if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+      if ($txCanceled) $part .= t(' -- invoice canceled');
       if ($nvid) $description .= t(' (CG inv#%nvid%part)', compact(ray('nvid part')));
       if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
     }
