@@ -67,6 +67,7 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
   $rows = [];
   list ($me, $yu) = u\order($toMe, 'payee', 'payer');
   $where = "i.$me IN (:uids) AND i.created BETWEEN :starting AND :ending";
+  $order = $download ? 'nvid' : '(i.status>2), nvid DESC';
 
   $sql = <<<EOF
     SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
@@ -75,7 +76,7 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
     LEFT JOIN tx_hdrs t ON t.xid=i.status
     LEFT JOIN tx_entries e ON e.xid=i.status AND e.uid=u.uid
     WHERE ($where)
-    ORDER BY (i.status>2), nvid DESC
+    ORDER BY $order
 EOF;
 //    ORDER BY (i.status=:TX_PENDING OR i.status=:TX_APPROVED) DESC, nvid DESC
 
