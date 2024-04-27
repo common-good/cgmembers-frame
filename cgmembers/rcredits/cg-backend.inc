@@ -160,11 +160,12 @@ X;
   $entries[] = ray('tid created uid name description balance invoiced paid', '', $starting, '', '', t('Opening balance'), $myBalance, '', '');
   foreach ($q as $row) {
     $row = (array) $row;
-    extract(just('paid disputed reasonData', $row));
+    extract(just('paid disputed reasonData status', $row));
 //    unset($row['reasonData']);
     $myBalance -= $paid ?: 0;
     $row['balance'] = $myBalance;
     $disputed = $disputed ? t('(DISPUTED) ') : '';
+    if ($status) $row['status'] = be\statusDesc($status);
     if ($reasonData and $data = unserialize($reasonData)) {
       $reason = t(' (marked PAID: %reason)', 'reason', nni($data, 'reason'));
     } else $reason = '';
@@ -210,6 +211,16 @@ function txDesc($entry) {
     if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
   }
   return $description;
+}
+
+/**
+ * Return a description of the given payment request status.
+ */
+function statusDesc($status) {
+  $statuses = ray(TX_STATUSES);
+  if ($status >= TX_PAID) {
+    return t('paid') . ($status > TX_PAID ? " (Tx#$status)" : ''); // xid=TX_PAID always has a reason unless the first tx was invoiced;
+  } else return ucfirst($statuses[$status]);
 }
 
 /**

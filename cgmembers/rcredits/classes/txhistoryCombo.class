@@ -33,9 +33,8 @@ class TxHistoryCombo implements TxProcessor {
    * Called before the first transaction.
    */
   public function hdr() {
-    $csvRow = ray(t('Tx#, Date, ID, Name, Purpose, Invoiced, Payments'));
+    $csvRow = ray(t('Tx#, Date, Account, Name, Purpose, Invoiced, Payments, Status'));
     u\csv($csvRow);
-    foreach (ray('invoiced paid') as $k => $fld) $this->totals[$fld] = 0;
   }
 
   /**
@@ -52,10 +51,9 @@ class TxHistoryCombo implements TxProcessor {
   public function processEntry($info, $parity = NULL) {
     if (!isset($info['uid'])) die(pr($info));
     if (in_array($info['uid'], $this->uids)) return;
-    extract(just('tid created uid name description invoiced paid', $info, NULL));
+    extract(just('tid created uid name description invoiced paid status', $info, NULL));
     $qid = r\acct($uid)->mainQid;
-    u\csv([$tid, fmtDt($created, 'yyyy-MM-dd'), $qid, $name, $description, $invoiced, $paid]);
-    foreach (ray('invoiced paid') as $k => $fld) $this->totals[$fld] += ($$fld ?: 0);
+    u\csv([$tid, fmtDt($created, 'yyyy-MM-dd'), $qid, $name, $description, $invoiced, $paid, $status]);
   }
 
   /**

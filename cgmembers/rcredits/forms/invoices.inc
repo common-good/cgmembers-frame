@@ -81,28 +81,17 @@ EOF;
 
   global $mya;
   $q = db\q($sql, ray('uids starting ending', $mya->uids, $starting, $ending));
-///   debug(compact('sql','starting','ending', 'mya'));
+
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
     if (!$download) $amount = number_format($amount, 2);
     $row = array($nvid, fmtDt($created, $download ? 'yyyy-MM-dd' : DATE_FMT), $other, $purpose, $amount);
-// (no way to use this yet) $handleable[$nvid] = ($status0 < TX_PAID);
-    
-//    $do = "$url&nvid=$nvid&do";
+    $status = $status1 = be\statusDesc($status0);
+
     $data = unserialize(nn($data)) ?: [];
     $reason = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
-
-    if ($status0 >= TX_PAID) {
-      $status = t('paid');
-      if ($status0 > TX_PAID) $status .= " (Tx#$xid)"; // xid=TX_PAID always has a reason unless the first tx was invoiced
-    } else {
-      $statuses = ray(TX_STATUSES);
-      $status = $status1 = ucfirst($statuses[$status0]);
-    }
-
     if ($reason) $status = tags('a', w\popHelp($status, t('Reason: ') . $reason));
 
-//    $buttons = "<div class='txs-buttons'><div>$button1</div><div>$button2</div><div>$status</div></div>";
     $buttons = "<div class='txs-buttons'>$status</div>";
     
     $row[] = $download
