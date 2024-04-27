@@ -1945,7 +1945,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
         $cnt = (float) ${"d_{$k}Count"};
         $cnt = number_format($cnt) . ($cnt ? (' @ ' . u\fmtAmt($v / $cnt) . ' avg') : '');
-        $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
+        $f = ${"d_{$k}"} . " ($cnt)\n$desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }
       array_unshift($x2x, $created);
