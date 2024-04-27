@@ -122,7 +122,7 @@ X;
     $txCode = $offshore < 0 ? 32 : 37;
     $amount = $offshore * 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
-    Ramount = abs($amount);
+    $amount = abs($amount);
     [$routing, $account, $id, $name] = [$b2->routing, $b2->acctIn, BANK_OFFSHORE, u\asciiOnly(PROJECT . ' @ ' . BANK_OFFSHORE)];
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
     $hash += substr($routing, 0, 8);
