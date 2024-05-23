@@ -169,7 +169,7 @@ function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
     $msg = tr('inv reopened');
     
   } elseif ($op == 'deny' or $reason) {
-    $data = serialize(compact('reason') + ($data ? unserialize($data) : []));
+    $data = serialize(compact('reason') + $data);
     db\update('tx_requests', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     $toA->tell('invoice denied', $subs);
     u\tellApp('denied', $fromA, $toA, $amount, $purpose, $created, $reason);
