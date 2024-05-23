@@ -136,11 +136,11 @@ function formTxDetail_submit($form, &$sta) {
   db\update('tx_entries_all', $info, 'id');
   if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
   
-  extract(just('cat1 cat2 uid1 uid2 flags created', $orig), EXTR_PREFIX_ALL, 'o');
+  extract(just('cat1 cat2 uid1 uid2 flags created', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != nn($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
+    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
-    
+    require_once(R_ROOT . '/classes/qb.class');
     db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->delQbTx("cg#$xid"); // delete this xid from QBO
