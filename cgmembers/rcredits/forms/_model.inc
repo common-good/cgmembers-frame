@@ -19,6 +19,7 @@ function formModel($form, &$sta, $args = '') {
   $choices = ray('this that theOther');
   $radio = radiosFld(REQ . t('Radios:'), t('Details here'), dft(-1), $choices); // no default
   $select = selectFld(REQ . t('Selection:'), t('Details here'), dft(2), $choices);
+  $file = fileFld(t('ID File:'), t('Upload your file here.'));
   $text = textFld(t('Text:'), [t('Hint'), t('Details here')], dft('value'));
   jsx('model', compact('choices'));
 
