@@ -1436,7 +1436,7 @@ function accountChoices($a, $perm = B_READ, $where = 1, $noAdmin = FALSE) {
   if ($a->admRegion and !$noAdmin) {
     $admWhere = $a->admSeeCanonic ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = db\q("SELECT uid AS id, fullName FROM users WHERE $admWhere UNION $sqlNormal ORDER BY (id<0) DESC, $nameOrder", compact('aid'));
-  } elseif ($a->admin and !$noAdmin) {
+  } elseif ($a->admSeeAccts and !$noAdmin) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
