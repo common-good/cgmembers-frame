@@ -18,7 +18,7 @@ function formDashboard($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
   extract(just('stay', $args, NULL));
 
-  if ($mya->admin and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
+  if ($mya->admSeeAccts and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
   
   $special = $endorse = $continue = NULL;
   

@@ -42,7 +42,7 @@ function formTxDetail($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
-      uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid
+      uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid, t.flags
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
@@ -82,6 +82,7 @@ X;
   $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
+  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
   $nmMe = item($meA->fullName, $wayMe);
 
   if ($mya->admEditTx) {
@@ -104,7 +105,7 @@ X;
   $back = item(w\backButton());
   $orig = hidFld($orig);
 
-  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan recursId reversesXid entryType submit back toMe xid eid return orig')));
+  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan flags recursId reversesXid entryType submit back toMe xid eid return orig')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -126,7 +127,7 @@ function formTxDetail_submit($form, &$sta) {
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
   
   $DBTX = \db_transaction();
-  if ($hInfo = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
+  if ($hInfo = just('xid created recursId reversesXid flags', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
 
   $info = just('entryType amount description cat', $input, NULL);
@@ -135,11 +136,11 @@ function formTxDetail_submit($form, &$sta) {
   db\update('tx_entries_all', $info, 'id');
   if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
   
-  extract(just('cat1 cat2 uid1 uid2 flags created', $orig), EXTR_PREFIX_ALL, 'o');
+  extract(just('cat1 cat2 uid1 uid2 flags created', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != nn($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
+    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
-    
+    require_once(R_ROOT . '/classes/qb.class');
     db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->delQbTx("cg#$xid"); // delete this xid from QBO

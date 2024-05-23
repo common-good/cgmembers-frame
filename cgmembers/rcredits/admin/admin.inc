@@ -302,7 +302,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
    
   if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
-  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
+//  if ($mya and $a->id == $mya->id and $delete) return w\say(t('You can\'t delete the uid of an acct while it\'s the current acct.'), 'err');
   $nm = $a->fullName;
   $oldQid = r\qid($oldUid);
   
@@ -354,6 +354,8 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     $what = $change ? t('changed to ') . $newUid 
     : ($delete ? t('deleted') : t('recovered'));
     w\say(t('Success. Account %nm has been %what.', compact(ray('nm what'))));
+    $goto = $undelete ? $uid : ($delete ? $mya->agentId : $newUid);
+    return w\go("change-account/acct=$goto"); // this doesn't work. Instead it signs you out and gives a session timed out message. But close enough for now...
   }
   return TRUE;
 }

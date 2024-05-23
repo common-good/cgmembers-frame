@@ -11,6 +11,7 @@
   #footer {border-top:1px solid #666666; padding-top:8px;}
 }
 
+input[type="file"] {padding-top:9px;}
 .compile {font-size:30px;}
 .compile input {height:30px; width:30px;}
 .more {display:none;}

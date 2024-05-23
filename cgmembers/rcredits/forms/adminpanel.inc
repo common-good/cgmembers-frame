@@ -74,6 +74,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admMakeVAdmin or $mya->admPrintCards) $make2 = boxFld('make', t('Make:'));
   if ($mya->admPrintCards) $printId = submi(t('Print ID'));
   if ($mya->admMakeRules) $fsRule = submi(t('Set up Sponsorship'));
+  if ($mya->admChangeUid) $chgAcctId = submi(t('Change Account ID by Addr'));
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
 
   //  $connectBank = submi(t('Connect Bank'));
@@ -90,7 +91,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
-  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsRule');
+  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsRule chgAcctId');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
   
@@ -128,6 +129,10 @@ function formAdminPanel_submit($form, &$sta) {
   if ($a and $op == 'printId') {
     if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
     return w\go("print-rcard/$make/$a->id" . ($a->co ? "/$a->agentId" : ''));
+    
+  } elseif ($a and $op == 'chgAcctId') { //
+    a\changeUid($a);
+    
   } elseif ($a and $op == 'fsRule') { // make fiscal sponsorship surtx rule (defaults to 5%) and create QB account
     if (!$a->co) return err(t('That account is not a company, so it cannot be sponsored.'));
     $info = ray('action payerType payeeType payee from to', ACT_SURTX, REF_ANYBODY, REF_ACCOUNT, $a->id, MATCH_PAYEE, CGID);
@@ -145,9 +150,11 @@ function formAdminPanel_submit($form, &$sta) {
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->makeSponsee($nm, $a->mainQid);
     say(t('Made a QB account for %nm.', compact('nm')));
+    
   } elseif ($op == 'askForAppData') {
     $a->update('getAppData appData', '!report', []);
     say(t('Request for app data sent to ') . $a->fullName);
+    
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {

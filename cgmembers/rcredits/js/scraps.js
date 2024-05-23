@@ -39,6 +39,7 @@ function doit(what, vs) {
       var dt = $('#edit-closebooks').val();
       if (dt) location.href = baseUrl + '/sadmin/panel/op=close&dt=' + dt;
     });
+    $('.form-item-goTx a').click(function () { location.href = baseUrl + '/history/transaction/xid=' + $('#edit-gotx').val(); });
     break;
     
   case 'query':
