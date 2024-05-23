@@ -104,8 +104,8 @@ function riskLine($q, $descs, &$red = '') {
     if ($riskCount > K_LINES) return FALSE;
   } else {$riskQ = $q; $riskCount = 1;}
   
-  u\setDft($score, '');
-  $score = round($score) + 0; // +0 to avoid "-0"
+  u\setDft($score, 0);
+  $score = round($score + 0); // +0 to avoid "-0" and/or string conversion error
   $red = ($score >= K_RED);
   if ($red and $descs != K_ACCT_RISKS) $score = "<span class=\"risky\">$score</span>"; // don't redden accounts
   if ($score <= K_GREEN) $score = "<span class=\"safe\">$score</span>";

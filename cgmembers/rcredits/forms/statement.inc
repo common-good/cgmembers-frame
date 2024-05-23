@@ -112,6 +112,7 @@ function statement($period = '') {
       extract(just('xid created name description amount banking', $entry));
       if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
       $date = fmtDt($created, 'MMM dd'); // reformat for single month
+      $name = strip_tags($name); // required as of 4/29/4024
       if (mb_strlen($description) > $purposeLenMax + 3) $description = mb_substr($description, 0, $purposeLenMax) . '...';
       
       foreach ($fields as $field) {

@@ -602,6 +602,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   global $scanned, $channel;
 
   if (is_null($goods)) $goods = FOR_GOODS;
+  $amount = $amount + 0; // convert from string (otherwise some functions fail in PHP 8.2)
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
   extract(just('created force boxId rule cat reversesXid method', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
