@@ -477,7 +477,7 @@ X;
     $qbAccts = $this->getAccounts();
     $id = 0; // tracks each record as we insert or update it
     $redo = !db\exists('tx_cats');
-    if (!$redo and $diff = array_diff(db\col('externalId', 'tx_cats', '`show`'), array_keys($qbAccts))) { // if we deleted accounts in QBO, unshow them here
+    if (!$redo and $diff = array_diff(db\col('externalId', 'tx_cats', '`show`'), array_merge([0], array_keys($qbAccts)))) { // if we deleted accounts in QBO, unshow them here ([0] for internal-only)
       db\q('UPDATE tx_cats SET `show`=0 WHERE externalId IN (:diff)', compact('diff'));
       w\err(t('These cats have been deleted in QBO, so they have been hidden here too: ') . join(', ', $diff));
     }
