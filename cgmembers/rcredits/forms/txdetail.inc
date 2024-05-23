@@ -42,7 +42,7 @@ function formTxDetail($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
-      uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid
+      uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid, t.flags
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
@@ -82,6 +82,7 @@ X;
   $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
+  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
   $nmMe = item($meA->fullName, $wayMe);
 
   if ($mya->admEditTx) {
@@ -104,7 +105,7 @@ X;
   $back = item(w\backButton());
   $orig = hidFld($orig);
 
-  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan recursId reversesXid entryType submit back toMe xid eid return orig')));
+  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan flags recursId reversesXid entryType submit back toMe xid eid return orig')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -126,7 +127,7 @@ function formTxDetail_submit($form, &$sta) {
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
   
   $DBTX = \db_transaction();
-  if ($hInfo = just('xid created recursId reversesXid', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
+  if ($hInfo = just('xid created recursId reversesXid flags', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
 
   $info = just('entryType amount description cat', $input, NULL);
