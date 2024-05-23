@@ -5,7 +5,7 @@
 
 var vs = parseUrlQuery($('#script-scraps').attr('src').replace(/^[^\?]+\??/,'').replace('&amp;', '&'));
 args = decodeURIComponent(vs['args']);
-//alert(args);
+///alert(args);
 args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
@@ -30,6 +30,24 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'sign': 
+    $('#edit-file').change(() => {
+      fform('#edit-file').trigger('submit');
+    });
+    break;
+
+  case 'sign2':
+    post('pdf2image', {code:vs['code']}, function (j) {
+      if (j.ok) {
+        $.alert('Success', j.name);
+      } else {
+        $.alert('Error', j.message);
+        that.val(j.v0);
+      }
+    });
+
+    break;
+  
   case 'taxinfo':
     $('#edit-year').change(function () { location.href = baseUrl + '/history/tax-info/' + $('#edit-year :selected').val(); });
     break;
@@ -39,6 +57,7 @@ function doit(what, vs) {
       var dt = $('#edit-closebooks').val();
       if (dt) location.href = baseUrl + '/sadmin/panel/op=close&dt=' + dt;
     });
+    $('.form-item-goTx a').click(function () { location.href = baseUrl + '/history/transaction/xid=' + $('#edit-gotx').val(); });
     break;
     
   case 'query':

@@ -98,7 +98,7 @@ const CG_LOAN_LIMIT = 50000; // maximum amount CG can pay out or transfer to its
 
 const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert';
 //const SCRIPTS = 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'; // all possible scripts, in order (after SCRIPTS_TOP)
-const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scanqr scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
+const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit x/fabric.min scanqr scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 const SCRIPT_MODULES = 'scanqr';
 
 const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies

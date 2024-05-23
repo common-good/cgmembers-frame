@@ -18,6 +18,7 @@ use CG\Db as db;
 
 function ajax($args = NULL) {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
+  flog('top ajax');
   if (!$args) $args = $_POST ?: $_GET; // not u\setDft ($args comes in as FALSE usually)
   extract(just('op sid data', $args, NULL));
 
@@ -35,6 +36,32 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'pdf2image': // return last page of PDF as an image URI
+      extract(just('code', $data));
+      if (!is_array($fileData = u\decryRay($code))) return ajaxErr(t('File data is messed up.'));
+      extract(just('path name', $fileData));
+      $im = new \Imagick();
+      $im->readImage("$pdfFile[last]");
+      $im->setImageFormat('jpeg');
+      $imURI = 'data:image/jpeg;base64,' . base64_encode($im->getImageBlob());
+//      $im->readImage($pdfFile);
+//      $p9 = $im->getNumberImages();
+flog('pdf9');
+      return ajaxRet(compact('path name imURI'));
+      
+/*
+      require DRUPAL_ROOT . '/../vendor/autoload.php'; // make sure PCPDF is loaded
+//      $pdf = new \TCPDF('P', 'mm', 'LETTER', true, 'UTF-8', false);
+      class_exists('TCPDF', true); // trigger Composer's autoloader to load the TCPDF class
+      $pdf = new \FPDI();
+      $p9 = $pdf->getNumPages($path);
+      $pdf->AddPage();
+      $pdf->setSourceFile($path); // also name
+      $tplp9 = $pdf->importPage($p9); // get a template for the last page
+      $pdf->useTemplate($tplp9);
+      $imgStr = $pdf->getImageString();
+*/
+  
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));

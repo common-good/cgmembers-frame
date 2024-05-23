@@ -94,6 +94,8 @@ function menu($submenu = '') {
     'community/chart-data' => ['call', t('Chart Data'), '2', ANY, 'chartData'],
     'community/list' => ['call', t('Community List'), '', ANY, 'cttyList'], // for charts/graphs
     'community/covid' => ['call', t('COVID-19 Response'), 'Covid', ANY],
+    'community/sign' => ['call', t('Sign a Document'), 'Sign 2', 'signedIn'],
+    'signed' => ['call', t('Verify a Signature'), 'Sign 1', ANY],
     
     'co' => ['norm', t('Company'), 'Co', 'manage co'],
     'co/cgbutton' => ['sub', t('Create CGPay Button'), 'CGButton 1', 'co manage', '', t(), 'unchecked'],
