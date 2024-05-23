@@ -12,10 +12,10 @@ use CG\Backend as be;
 
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Endroid\QrCode\ErrorCorrectionLevel;
 //use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
 use Endroid\QrCode\Label\Font\NotoSans;
-use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
 
 function html($data, $logo, $text) {return tr('<img src="%data" />', '_data', generate($data, $logo, $text));}
@@ -35,10 +35,10 @@ function generate($data, $logo, $text) {
 //    ->writerOptions([])
     ->data($data)
     ->encoding(new Encoding('ISO-8859-1'))
-    ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+    ->errorCorrectionLevel(ErrorCorrectionLevel::High)
     ->size(300)
     ->margin(5)
-    ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
+    ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
     ->labelFont(new NotoSans(10));
 //    ->labelAlignment(new LabelAlignmentCenter())
     
