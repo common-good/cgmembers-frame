@@ -1170,4 +1170,17 @@ function cloneA($oldA) {
    
  */
 
+/**
+ * Add fiscal sponsorship fees
+ */
+/*
+$xid = 999999;
+$amt = db\get('amt', 'txs', 'xid=:xid AND type IN :E_PRIMES', compact('xid')) * .05;
+$uid = db\get('uid2', 'txs', 'xid=:xid AND type IN :E_PRIMES', compact('xid'));
+$rule = db\get('id', 'tx_rules', 'payee=:uid', compact('uid')); 
+
+$id = db\insert('tx_entries', ray('xid entryType amount uid agentUid description cat rule', $xid, E_AUX, $amt, CGID, CGID, 'fiscal sponsorship fee (5%)', 1300, $rule));
+db\insert('tx_entries', ray('id xid entryType amount uid agentUid description cat rule', -$id, $xid, E_AUX, -$amt, $uid , $uid , 'fiscal sponsorship fee (5%)', 1200, $rule));
+*/ 
+
 function clearCache() {foreach (ray('cache cache_bootstrap cache_form cache_menu sessions semaphore') as $table) db\q("TRUNCATE TABLE $table");}
