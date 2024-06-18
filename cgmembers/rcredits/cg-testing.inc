@@ -142,7 +142,8 @@ function fixData(&$info, $direct = FALSE) {
   }
    extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
-  foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
+  if (isset($why)) $why = $T->feature == 'unsubscribe' ? explode(',', $why) : tr($why);
+  foreach (ray('error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);

@@ -40,7 +40,7 @@ Scenario: Someone visits the posts page
   | Greenfield, MA |
 
 Scenario: Someone submits a locus
-  When someone confirms "community/posts" with:
+  When someone submits "community/posts" with:
   | locus          | radius | latitude | longitude |*
   | Greenfield, MA | 10     | 0        | 0         |
   Then we show "Offers, Needs, & Tips" with:
@@ -69,7 +69,7 @@ Scenario: Someone posts an offer
   | End |
   | Your Email |
   
-  When someone confirms "community/posts/op=post" with:
+  When someone submits "community/posts/op=post" with:
   | type  | cat  | item | details | emergency | radius | end     | email |*
   | offer | food | fish | big one | 1         | 3      | %mdY+3d | x@    |
   Then we show "Your Information" with:
@@ -85,7 +85,7 @@ Scenario: Someone posts an offer
   And cookie "email" is "x@example.com"
   
 Scenario: Someone enters personal data after posting an offer
-  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=b@c.d&type=offer&service=1&exchange=0" with:
+  When someone submits "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=b@c.d&type=offer&service=1&exchange=0" with:
   | fullName    | Bea Two      |**
   | displayName | Bea          |
   | address     | 2 B St.      |
@@ -129,7 +129,7 @@ Scenario: A member enters data after posting an offer
   | Postal Code |
   | Phone |
 
-  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=e@example.com&type=offer&service=1&exchange=0" with:
+  When someone submits "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=e@example.com&type=offer&service=1&exchange=0" with:
   | displayName | Eve          |**
   | method      | text         |
   Then these "posts":
@@ -154,7 +154,7 @@ Scenario: A member enters data after posting an offer
   And we say "status": "confirm by email" with subs:
   | thing | post |**
 
-Scenario: Someone confirms an offer once, twice
+Scenario: someone submits an offer once, twice
   Given these "posts":
   | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created   | end     |* 
   | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %today-1d | %now+3d |
@@ -185,7 +185,7 @@ Scenario: Someone confirms an offer once, twice
   | End Date:  | %mdY+3d |
   | Update     | |
 
-  When someone confirms "community/posts/op=show&postid=1" with:
+  When someone submits "community/posts/op=show&postid=1" with:
   | type | cat    | item   | details | emergency | radius | end     |*
   | tip  | health | Boston | ASAP    | 1         | 5      | %mdY+5d |
   Then these "posts":
@@ -252,7 +252,7 @@ Scenario: Someone replies to an offer
   Then we show "Offers, Needs, & Tips" with:
   | Greenfield, MA | 100   | Go |
 
-  When someone confirms "community/posts" with:
+  When someone submits "community/posts" with:
   | locus          | radius | latitude | longitude |*
   | Greenfield, MA | 100    | 0        | 0         |
   Then we show "Offers, Needs, & Tips" with:
@@ -262,7 +262,7 @@ Scenario: Someone replies to an offer
   |          | Item    | Details | |
   | food     | !! fish | big one | |
 
-  When someone confirms "community/posts/op=show&postid=1" with:
+  When someone submits "community/posts/op=show&postid=1" with:
   | email | message      |*
   | b@c.d | Hello there! |
   Then we show "Your Information" with:
@@ -280,7 +280,7 @@ Scenario: Someone enters personal data after replying to an offer
   Given these "posts":
   | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end  | confirmed |* 
   | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %now    | %now+3d | 1      |
-  When someone confirms "community/posts/op=who&email=b@c.d&message=Hello there!&postid=1" with:
+  When someone submits "community/posts/op=who&email=b@c.d&message=Hello there!&postid=1" with:
   | displayName | Bea |**
   | fullName    | Bea Two |
   | address     | 2 B St. |
@@ -319,7 +319,7 @@ Scenario: Someone confirmed sends a message and posts again
   And cookie "vipid" is 2
   And cookie "email" is "b@c.d"
 
-  When someone confirms "community/posts/op=show&postid=1" with:
+  When someone submits "community/posts/op=show&postid=1" with:
   | email | message      |*
   | b@c.d | Hello there! |
   
@@ -327,7 +327,7 @@ Scenario: Someone confirmed sends a message and posts again
   | id | postid | sender | message      | created | confirmed |*
   | 1  | 1      | 2      | Hello there! | %now    | 1         |
   
-  When someone confirms "community/posts/op=post" with:
+  When someone submits "community/posts/op=post" with:
   | type | service | cat   | item | details | emergency | exchange | radius | end     | email |*
   | need | 0       | other | bag  | paper   | 0         | 2        | .25    |         | b@c.d |  
 
