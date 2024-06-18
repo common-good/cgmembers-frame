@@ -19,7 +19,7 @@ function formDeposits($form, &$sta, $args = NULL) {
   
   extract(just('reverse', $args, NULL));
   if ($reverse) {
-    if ($reverse < today()) {
+    if ($reverse < today() and !$mya->canCode) {
       err(t('That transfer batch is too old to reverse (before today).'));
     } else {
       $q = db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags & ~(1<<:B_QBOK)), x2.deposit=0, x2.bankTxId=NULL WHERE x2.deposit=:reverse', compact('reverse'));
