@@ -11,6 +11,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
+use CG\QR as qr;
 require_once R_ROOT . '/classes/tx.class';
 require_once R_ROOT . '/classes/txentry.class';
 
@@ -1298,12 +1299,20 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
     $err = tr('unfound', 'who where', t('anyone'), t('with that phone number'));
   } else { // name or qid or empty (empty when called from memberRay)
     list ($where, $subs) = nameCriteria($who);
-
+    $err = tr('unfound', 'who where', $who, t('(Try using their email or phone or, if they are not nearby, add "@" followed by their postal code or city (or city, state))'));
     if (preg_match('/^([A-Z]+|[a-z]+|[A-Z][a-z]{5})$/', $who)) { // all upper or all lower or 6 letters with first capitalized (happens on Android mobile)
       $qid = mb_strtoupper(($mya->admin and mb_strlen($who) == 3) ? R_SERVER_ID . $who : $who);
       if (u\isQid($qid) and $a = r\acct($qid)) $where = "($where OR uid=$a->id)";
     }
-    $err = tr('unfound', 'who where', $who, t('(Try using their email or phone or, if they are not nearby, add "@" followed by their postal code or city (or city, state))'));
+    if (!nn($qid) and mb_strlen($who) > 3 and !strhas($who, ' ')) {
+      include_once R_ROOT . '/cg-qr.inc';
+      if ($qid = qr\qid($who, $cardCode) and $a = r\acct($qid)) {
+        if ($cardCode and $cardCode != $a->cardCode()) {
+          $agt = $a->proSe ? '' : t(' with agent ') . $a->agentId;
+          $err = tr('unfound', 'who where', $who, t('(that is the wrong cardCode for account ID %qid)', compact(ray('qid agt'))));
+        } else $where = "($where OR uid=$a->id)";
+      }
+    }
   }
       
   if ($restrict) $where .= ' AND ' . $restrict;
