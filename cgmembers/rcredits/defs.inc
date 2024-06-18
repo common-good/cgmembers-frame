@@ -281,8 +281,9 @@ const R_EXCHANGE_LIMITS = '1:10000,7:20000,52:80000,365:500000'; // per day, wee
 const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
 const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 //const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)
-const R_CARDCODE_LEN = 14; // length of rCard security code (long to deter easy copying, max 14 for small QR)
-const R_CARD_COST = 5; // cost to order a company or replacement rCard
+const R_CARDCODE_LEN = 14; // length of card security code (long to deter easy copying, max 14 for small QR)
+const R_CARDCODE_MINLEN = 10; // minimum length of any cardCode ever, except in tests
+const R_CARD_COST = 5; // cost (in USD) to order a company or replacement CG Card
 const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to be eligible for a grant
 const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
 const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
