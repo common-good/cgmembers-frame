@@ -196,6 +196,7 @@ function menu($submenu = '') {
     'sadmin/iereport' => ['call', t('Income/Expense Report'), 'IEReport 2', 'admRegion'],
     'sadmin/cef-billing' => ['call', t('CEF Billing'), 'CEFBilling 2', 'read'],
     'sadmin/tx-entry' => ['call', t('TxEntry'), 'TxEntry 2', 'admEditTx'],
+    'sadmin/merge-accounts' => ['call', t('Merge Accounts'), 'MergeAccts', 'admDeleteAcct'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],

@@ -48,6 +48,10 @@ function extraSetup() {
  *     TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  *     MAKE cats Setup
  *     MAKE changes Setup
+ *     MAKE changeUid Setup
+ *     TEST changeUid AdminMergesTwoPersonalAccounts
+ *     TEST changeUid AdminMergesTwoCompanyAccounts
+ *     TEST changeUid VotingDuplicationPreventsMergingAccounts
  *     MAKE checks Setup
  *     MAKE deletion Setup
  *     MAKE super Setup
@@ -72,6 +76,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     TEST cats AdminVisitsTheSetCategoriesPage
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     TEST changes AMemberChangesSomeSettings
+ *     TEST changeUid AdminViewsTheMergePage
  *     TEST checks AdminPrintsChecks
  */
 function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
@@ -141,6 +146,10 @@ function with($content) {return t\weShow($content);}
  *     MAKE cats Setup
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     MAKE changes Setup
+ *     MAKE changeUid Setup
+ *     TEST changeUid AdminMergesTwoPersonalAccounts
+ *     TEST changeUid AdminMergesTwoCompanyAccounts
+ *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
  *     MAKE checks Setup
  *     BOTH checks AdminPrintsChecks
  *     MAKE deletion Setup
@@ -213,7 +222,11 @@ function weDownloadWithRecords($flnm, $fileType, $rows) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST deletion Setup
+ * in: TEST changeUid Setup
+ *     TEST changeUid AdminMergesTwoPersonalAccounts
+ *     TEST changeUid AdminMergesTwoCompanyAccounts
+ *     TEST changeUid VotingDuplicationPreventsMergingAccounts
+ *     TEST deletion Setup
  *     TEST deletion ADeletedbyviewRecordIsDeleted
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
@@ -250,6 +263,7 @@ function memberIsSignedIn($id) {return t\isSignedIn($id);}
  * member (ARG) visits (ARG)
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE changeUid AdminViewsTheMergePage
  *     MAKE super AnAdminPrintsChecks
  *     MAKE super AMemberTriesToDoAnAdminThing
  *     MAKE super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
@@ -296,6 +310,9 @@ function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, 
  * member (ARG) submits (ARG) with: (ARG)
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE changeUid AdminMergesTwoPersonalAccounts
+ *     MAKE changeUid AdminMergesTwoCompanyAccounts
+ *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
  */
 function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -304,6 +321,7 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
  *
  * in: TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     TEST changeUid VotingDuplicationPreventsMergingAccounts
  */
 function weSay($type, $index) {return t\weSayWithSubs($type, $index, array());}
 

@@ -851,7 +851,9 @@ function count($what, $count) {
     case 'tx_hdrs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'txs': return eq($desc, $count, db\count('tx_entries', 'xid > 0') / 2);
     case 'tx_entries': return eq($desc, $count, db\count('tx_entries', 'xid > 0'));
-    default: return eq($desc, $count, db\count((in($what, 'txs2 people') or strhas($what, '_')) ? $what : "r_$what"));
+    default: 
+      $what = (in($what, 'txs2 people admins') or strhas($what, '_')) ? $what : "r_$what";
+      return eq($desc, $count, db\count($what));
   }
 }
 

@@ -76,6 +76,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admMakeRules) $fsRule = submi(t('Set up Sponsorship'));
   if ($mya->admChangeUid) $chgAcctId = submi(t('Change Account ID by Addr'));
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
+  if ($mya->admDeleteAcct) $mergeAccts = submi(t('Merge Accounts'));
 
   //  $connectBank = submi(t('Connect Bank'));
   //  $seeHidden = submi(t('See Hidden'));
@@ -87,7 +88,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts');
+  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -201,6 +202,8 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'makeTestAccts') {
     return a\makeTestAccounts();
+  } elseif ($op == 'mergeAccts') {
+    return w\go('sadmin/merge-accounts');
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
     $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;
