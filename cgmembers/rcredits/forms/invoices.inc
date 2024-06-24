@@ -25,7 +25,8 @@ function formInvoices($form, &$sta, $ptf, $args = '') {
   $list = item(pendingList($toMe, $starting, $ending, $states, $url, $download)); // must precede starting & ending
 
   $title = $toMe ? t('Pending Payments TO You') : t('Pending Payments FROM You');
-  $subtext = t('Click a row to edit or cancel a pending payment or mark it PAID (paid requests are listed last).');
+  $subtext = $toMe ? t('Click a row to edit or cancel a pending payment or mark it PAID (paid requests are listed last).')
+  : t('Click a row to pay or dispute an invoice (paid requests are listed last).');
   $ptf = hidFld($ptf);
 
   //simple advanced

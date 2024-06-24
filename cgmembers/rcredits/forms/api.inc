@@ -15,6 +15,7 @@ include_once R_ROOT . '/cg-qr.inc';
 
 /**
  * API for interaction with CGPay progressive web app (REST interface) and passthrough for SMP api.
+ * https://docs.google.com/document/d/1F-qrSyuwi4nZYuK9blsXafOBZfsXBDuMe8xjtVOrnyk/
  * @param string $arg: the operation
  */
 function api($arg = null) {
@@ -480,7 +481,7 @@ function badTx($a, $info, $msg) {
   db\insert('tx_bads', just($badFlds, $info));
   
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
-  $dpy = ray('name amount created by', $a ? $a->fullName : t('UNKNOWN'), u\fmtAmt($amount), fmtDt($created), $by);
+  $dpy = ray('name account amount created by', $a ? $a->fullName : t('UNKNOWN'), $a ? $a->mainQid : '', u\fmtAmt($amount), fmtDt($created), $by);
 //    $mya->tell("bad forced tx|$message", $info);
   r\tellAdmin("bad forced tx|$msg", $info + $dpy);
   

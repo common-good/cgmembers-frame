@@ -314,6 +314,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE txs Setup
  *     MAKE txs AdminReversesABankTransfer
  *     MAKE undo Setup
+ *     MAKE unsubscribe Setup
  */
 function members($list) {return t\members($list);}
 
@@ -428,7 +429,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST mfa AMemberTypesTheWrongNonce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
@@ -470,6 +471,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
+ *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -649,7 +651,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
  *     TEST posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     TEST posts SomeoneViewsTheDetailsOfATip
@@ -708,6 +710,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
+ *     TEST unsubscribe AMemberClicksAnUnsubscribeLink
  */
 function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\weShowWith($title, $content, $mustBePresent);}
 
@@ -997,6 +1000,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE signupco ACompanySignsUp
  *     MAKE signup AMemberSignsUp
  *     MAKE signup AMemberVerifiesEmail
+ *     MAKE unsubscribe Setup
  */
 function memberIsLoggedOut() {
   global $testOnly, $mya;
@@ -1276,10 +1280,11 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
+ *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1821,7 +1826,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
- *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
+ *     BOTH posts SomeoneSubmitsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     MAKE posts SomeoneViewsTheDetailsOfATip
@@ -2155,22 +2160,24 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE posts SomeoneVisitsACommunitysPostsPage
+ *     MAKE unsubscribe AMemberClicksAnUnsubscribeLink
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
 
 /**
- * someone confirms (ARG) with: (ARG)
+ * someone submits (ARG) with: (ARG)
  *
  * in: MAKE posts SomeoneSubmitsALocus
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     MAKE posts AMemberEntersDataAfterPostingAnOffer
- *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ *     MAKE posts SomeoneSubmitsAnOfferOnceTwice
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
+ *     MAKE unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
-function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
+function someoneSubmitsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
 
 /**
  * cookie (ARG) is (ARG)
@@ -2198,7 +2205,7 @@ function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
  * someone visits (ARG) where code is: (ARG)
  *
  * in: MAKE aacc SomeoneCompletesACreditCardDonation
- *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ *     MAKE posts SomeoneSubmitsAnOfferOnceTwice
  */
 function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -2573,7 +2580,19 @@ function varEncrypts($var, $ray) {
   t\fixData($ray);
   t\fixTestVars($ray);
   $want = u\cryRay($ray);
-  return $testOnly ? t\eq(t('test Var'), nni($testVars, $var)) : ($testVars[$var] = $want);
+  return $testOnly ? t\eq(t('test Var'), nni($testVars, $var), $want) : ($testVars[$var] = $want or true);
+}
+
+/**
+ * var (ARG) Pencrypts: (ARG)
+ *
+ * in: MAKE unsubscribe AMemberClicksAnUnsubscribeLink
+ *     MAKE unsubscribe AMemberFollowsThroughOnUnsubscribing
+ */
+function varPencrypts($var, $ray) {
+  global $testOnly, $testVars;
+  if ($ok = varEncrypts($var, $ray) and !$testOnly) $testVars[$var] = CRYPT_FLAG . $testVars[$var];
+  return $ok;
 }
 
 /**
@@ -2617,7 +2636,8 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
-function buttonCodeFor($var, $args) {  include_once R_ROOT . '/forms/code.inc';
+function buttonCodeFor($var, $args) { 
+  include_once R_ROOT . '/forms/code.inc';
   global $testOnly; if ($testOnly) return FALSE;
   global $testVars;
 

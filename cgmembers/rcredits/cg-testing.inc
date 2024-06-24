@@ -142,7 +142,8 @@ function fixData(&$info, $direct = FALSE) {
   }
    extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
-  foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
+  if (isset($why)) $why = $T->feature == 'unsubscribe' ? explode(',', $why) : tr($why);
+  foreach (ray('error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
@@ -850,7 +851,9 @@ function count($what, $count) {
     case 'tx_hdrs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'txs': return eq($desc, $count, db\count('tx_entries', 'xid > 0') / 2);
     case 'tx_entries': return eq($desc, $count, db\count('tx_entries', 'xid > 0'));
-    default: return eq($desc, $count, db\count((in($what, 'txs2 people') or strhas($what, '_')) ? $what : "r_$what"));
+    default: 
+      $what = (in($what, 'txs2 people admins') or strhas($what, '_')) ? $what : "r_$what";
+      return eq($desc, $count, db\count($what));
   }
 }
 

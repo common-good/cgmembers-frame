@@ -1,6 +1,6 @@
 Common Good Software License (version 2.0)
 
-This software is Copyright © 2020 Society to Benefit Everyone, Inc. dba Common Good®. Common Good reserves all usage rights to all its copyrighted software (the Software), except:
+This software is Copyright © 2024 Society to Benefit Everyone, Inc. dba Common Good®. Common Good reserves all usage rights to all its copyrighted software (the Software), except:
 
    1. Anyone may use Common Good’s websites, free of charge.
    2. Anyone may use, unchanged, any of Common Good’s smartphone apps, free of charge.
