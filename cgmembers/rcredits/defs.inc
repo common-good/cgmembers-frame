@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61z'; // software version
+const R_VERSION = '3.62b'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -114,8 +114,8 @@ const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
 $parts = parse_url($base_url);
-$base_path = @$parts['path'] . '/';
-$base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(nni($parts, 'path', 0))); // everything until first slash after "scheme://"
+$base_path = @$parts['path'] . '/'; // @ has no effect here except when testing
+$base_root = mb_substr($base_url, 0, mb_strlen($base_url) + 1 - mb_strlen($base_path)); // everything until first slash after "scheme://"
 
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 

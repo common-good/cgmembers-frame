@@ -115,8 +115,8 @@ X;
 
 /**
  * Return an array of transactions and invoices between two accounts (the first of which has invoiced the second), for the given period.
- * @param array $aUids: the uids for member a (normally a business)
- * @param array $bUids: the uids for member b
+ * @param array $aUids: the uids for member a (normally a business) -- NULL for all members
+ * @param array $bUids: the uids for member b -- NULL for all members (used for Combo download)
  * @param unixtime $starting: the starting date/time for the period
  * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
  */
@@ -128,7 +128,11 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
   $markedPAID = 'status=:TX_PAID';
   [$fromA, $fromB] = ['uid1 IN (:aUids)', 'uid1 IN (:bUids)'];
   [$toA, $toB] = ['uid2 IN (:aUids)', 'uid2 IN (:bUids)'];
-  $invoiced = "IF ($toA, amount, -amount)";
+  foreach (ray('a b') as $k) {
+    $K = strtoupper($k);
+    if (!${$k . 'Uids'}) ${"from$K"} = ${"to$K"} = 'TRUE';
+  }
+  $amtInvoiced = "IF ($toA, amount, -amount)"; // applies only to invoices
   $where = "(($fromA AND $toB) OR ($fromB AND $toA)) AND x.created BETWEEN $starting AND $ending";
   
   $sql = <<< X
@@ -144,16 +148,16 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
     
     UNION ALL
     SELECT CONCAT('inv #', nvid) AS tid, IF($markedPAID, x.data, '') AS reasonData,
-      IF($markedPAID, $invoiced, '') AS paid,
+      IF($markedPAID, $amtInvoiced, '') AS paid,
       NULL AS nvid, NULL AS part, NULL AS txCanceled, 'inv' AS type,
       u.uid, u.fullName AS name, status,
-      $invoiced AS invoiced,
+      $amtInvoiced AS invoiced,
       x.created AS created, status=:TX_DENIED AS disputed, x.`purpose` AS description
     FROM (SELECT inv0.*, payer AS uid1, payee AS uid2 FROM tx_requests inv0) x
     LEFT JOIN users u ON u.uid=IF($fromA, uid2, uid1)
     WHERE $where AND NOT x.:IS_SELF
   
-    ORDER BY created, paid<>0
+    ORDER BY created, tid, invoiced DESC, paid<>0
 X;
 
 ///  showq($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
@@ -164,12 +168,12 @@ X;
   $entries[] = ray('tid created uid name description balance invoiced paid', '', $starting, '', '', t('Opening balance'), $myBalance, '', '');
   foreach ($q as $row) {
     $row = (array) $row;
-    extract(just('paid disputed reasonData status', $row));
+    extract(just('invoiced paid disputed reasonData status', $row));
 //    unset($row['reasonData']);
     $myBalance -= $paid ?: 0;
     $row['balance'] = $myBalance;
     $disputed = $disputed ? t('(DISPUTED) ') : '';
-    if (is_numeric($status)) $row['status'] = be\statusDesc($status);
+    $row['status'] = !$invoiced ? '' : (is_numeric($status) ? be\statusDesc($status) : $status);
     if ($reasonData and $data = unserialize($reasonData)) {
       $reason = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated
       $reason = $status == TX_PAID ? t(' (marked PAID: %reason)', compact('reason'))
@@ -243,8 +247,8 @@ function statusDesc($status) {
  */
 function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending=FALSE) {
   if (strhas(get_class($processor), 'Combo')) {
-    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));
-    $txs = $bUids ? getCustTxs($uids, $bUids, $starting, $ending) : [];
+// NO    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));
+    $txs = getCustTxs($uids, NULL, $starting, $ending);
     unset($txs[0]); // discard opening balance (not relevant for multiple customers)
     if ($descending) $txs = array_reverse($txs);
     $processor->hdr();

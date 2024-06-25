@@ -906,6 +906,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCombo
  *     MAKE investinterest AMemberExpressesInterest
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -1132,6 +1133,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  * in: TEST download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     TEST download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     TEST download AMemberDownloadsTransactionsForThePastYearAsCombo
  */
 function weDownloadWith($flnm, $rows) {return t\download($flnm, $rows);}
 
@@ -1236,6 +1238,7 @@ function statisticsGetSet($time) {
  *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCombo
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
