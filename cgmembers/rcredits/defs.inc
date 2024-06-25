@@ -115,7 +115,7 @@ global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
-$base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['path'])); // everything until first slash after "scheme://"
+$base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(nni($parts, 'path', 0))); // everything until first slash after "scheme://"
 
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
