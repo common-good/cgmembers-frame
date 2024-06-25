@@ -123,3 +123,22 @@ Scenario: A member downloads incoming invoices for the past year
 #   And with download columns:
 #   | column |*
 #   | Date   |
+
+Scenario: A member downloads transactions for the past year as Combo
+  Given members have:
+  | uid  | fullName |*
+  | ctty | ZZrCred  |
+  When member ".ZZC" visits page "history/transactions/period=365&download=Combo"
+  Then we download "cgNEWZZC%todayn-12m-%todayn.csv" with:
+# For example cgNEWZZC20120525-20130524.csv
+  | Tx#    | Date    | Account | Name    | Purpose            | Invoiced | Payments | Status       |*
+  | tx #25 | %ymd-4m | NEWZZA  | Abe One | usd F              |          |     -100 |              |
+  | tx #26 | %ymd-2w | NEWZZB  | Bea Two | cash P             |          |       50 |              |
+  | inv #2 | %ymd-1w | NEWZZA  | Abe One | this Q             |      120 |          | paid (Tx#12) |
+  | tx #12 | %ymd-1w | NEWZZA  | Abe One | this Q (CG inv#2)  |          |      120 |              |
+  | inv #3 | %ymd-5d | NEWZZA  | Abe One | this CF            |       80 |          | paid (Tx#13) |
+  | inv #4 | %ymd-5d | NEWZZA  | Abe One | (DISPUTED) wrongly |       99 |          | Denied       |
+  | inv #5 | %ymd-5d | NEWZZA  | Abe One | realist            |       12 |          | Approved     |
+  | tx #13 | %ymd-5d | NEWZZA  | Abe One | this CF (CG inv#3) |          |       80 |              |
+  | tx #28 | %ymd-5d | NEWZZA  | Abe One | cash CJ            |          |     -100 |              |
+
