@@ -95,6 +95,11 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     } else {
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
+      $choices = [
+        t('Pull this entire amount from your bank account.'),
+        t('Pay first from your Common Good balance; then from your bank account as needed.'),
+      ];
+      $auto = $a->hasBank ? radiosFld(REQ . NBSP, dft(0), [], $choices) : hidFld(1);
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
       $reason = textFld(t('Reason for dispute:'));
@@ -139,7 +144,7 @@ function handleInvoice($op, $payAmount, $info) {
   
   if ($op == 'pay' and !$reason) {
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $payAmount, $auto))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
       db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
