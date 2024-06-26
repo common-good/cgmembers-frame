@@ -123,15 +123,15 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  extract(just('reason always payAmount action', $sta['input'], NULL));
+  extract(just('payAmount', $input = $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $always, $reason, $action, $hidInfo);
+  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action auto', $input));
   return w\go($hidInfo['ret']);
 }
 
-function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
-  extract(just('nvid payer payee purpose created data amount', $info, NULL));
+function handleInvoice($op, $payAmount, $info) {
+  extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to status, rather than error
