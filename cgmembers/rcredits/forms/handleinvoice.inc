@@ -48,7 +48,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $title = t('Invoice Was Closed Manually');
     $subs += ray('who', r\acct($payer)->fullName);
     $subtext = t('Reopen invoice #%nvid (%date) charging %who %amount for %what?', $subs);
-    $reason = item($reasonDft, t('Closed Because:'));
+    $because = item($reasonDft, t('Closed Because:'));
     $reopen = submit(t('Reopen'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     jsx('back-button');
     
@@ -58,7 +58,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $subtext = t('Handle invoice #%nvid (%date) charging %who %amount for %what.', $subs);
     $action = radiosFld(REQ . t('Action:'), '', dft(0), ray(t('mark paid, cancel')));
 
-    $reason = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($reasonDft));
+    $because = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($reasonDft));
 
     $close = submit(t('Close'));
     jsx('back-button');
@@ -107,7 +107,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always pay action reason denySet close cancel reopen toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always auto pay action because denySet close cancel reopen toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
