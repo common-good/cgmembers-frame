@@ -48,7 +48,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $title = t('Invoice Was Closed Manually');
     $subs += ray('who', r\acct($payer)->fullName);
     $subtext = t('Reopen invoice #%nvid (%date) charging %who %amount for %what?', $subs);
-    $reason = item($reasonDft, t('Closed Because:'));
+    $because = item($reasonDft, t('Closed Because:'));
     $reopen = submit(t('Reopen'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     jsx('back-button');
     
@@ -58,7 +58,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $subtext = t('Handle invoice #%nvid (%date) charging %who %amount for %what.', $subs);
     $action = radiosFld(REQ . t('Action:'), '', dft(0), ray(t('mark paid, cancel')));
 
-    $reason = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($reasonDft));
+    $because = textFld(REQ . t('Reason:'), [t('Reason'), t('If the invoice was paid some other way, describe it here.')], dft($reasonDft));
 
     $close = submit(t('Close'));
     jsx('back-button');
@@ -95,6 +95,11 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     } else {
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
+      $choices = [
+        t('Pull this entire amount from your bank account.'),
+        t('Pay first from your Common Good balance; then from your bank account as needed.'),
+      ];
+      $auto = $a->hasBank ? radiosFld(REQ . NBSP, dft(0), [], $choices) : hidFld(1);
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
       $reason = textFld(t('Reason for dispute:'));
@@ -107,7 +112,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always pay action reason denySet close cancel reopen toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always auto pay action because denySet close cancel reopen toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -123,15 +128,15 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  extract(just('reason always payAmount action', $sta['input'], NULL));
+  extract(just('payAmount', $input = $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $always, $reason, $action, $hidInfo);
+  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action auto', $input));
   return w\go($hidInfo['ret']);
 }
 
-function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
-  extract(just('nvid payer payee purpose created data amount', $info, NULL));
+function handleInvoice($op, $payAmount, $info) {
+  extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to status, rather than error
@@ -139,7 +144,7 @@ function handleInvoice($op, $payAmount, $always, $reason, $action, $info) {
   
   if ($op == 'pay' and !$reason) {
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', be\payInvoice($nvid, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $payAmount, $auto))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
       db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');

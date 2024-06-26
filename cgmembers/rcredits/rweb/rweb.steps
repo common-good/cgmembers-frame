@@ -143,13 +143,16 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE investinterest ANonmemberExpressesInterest
- *     MAKE invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberInvoicesSomeone
+ *     MAKE invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPayments
  *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE invoice AMemberDeniesAnInvoice
- *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     MAKE invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     MAKE invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE invoice APayeeMarksAnInvoicePaidManually
@@ -367,7 +370,8 @@ function members($list) {return t\members($list);}
  *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberOverpaysAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
@@ -423,6 +427,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
  *     TEST message AMemberSendsAMessageToAnotherMember
@@ -633,7 +638,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
  *     TEST invite AMemberInvites
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -838,9 +845,13 @@ function withoutOptions($options) {
  *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice Setup
- *     TEST invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     BOTH invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -922,7 +933,9 @@ function balances($list) {return t\balances($list);}
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
- *     MAKE invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     MAKE invoice AMemberMakesPartialPayments
  *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1245,6 +1258,8 @@ function statisticsGetSet($time) {
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE guest Setup
  *     MAKE invest Setup
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1523,7 +1538,7 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST donate AMemberMakesARecurringDonation
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberInvoicesSomeone
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
@@ -1804,13 +1819,19 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     MAKE invoice Setup
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberInvoicesSomeone
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     TEST invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPayments
  *     BOTH invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     BOTH invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     BOTH invoice APayeeMarksAnInvoicePaidManually
