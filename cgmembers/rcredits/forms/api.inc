@@ -200,8 +200,9 @@ function confirms($params) {
   if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
   if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
   if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
+  $inv['reason'] = $whyNot;
   
-  if (!$ok = handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], NULL, $whyNot, $inv)) return exitJust(X_DENIED);
+  if (!$ok = handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], $inv)) return exitJust(X_DENIED);
   exitJson('', X_OK);
 }
 

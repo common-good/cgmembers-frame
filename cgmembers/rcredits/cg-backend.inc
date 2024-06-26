@@ -509,9 +509,10 @@ function creditPeops($id) {
  * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
  * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
+ * @param bool $auto: don't pull any more from bank than needed
  * @return a txRet object
  */
-function payInvoice($nvid, $payAmount = NULL) {
+function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
@@ -547,14 +548,15 @@ function payInvoice($nvid, $payAmount = NULL) {
       } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
   } else {
-    if ($shortfall = nni($z->subs, 'shortfall')) {
-      $index = 'short invoice' . ($payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund');
-      $subs = ray('short payeeName nvid', u\fmtAmt($shortfall), $payeeA->fullName, $nvid);
+    if ($shortfall = ($auto ? nni($z->subs, 'shortfall') : $payAmount)) {
+      $index = ($auto ? 'short invoice|' : '') . ($payerA->hasBank ? 'expect a transfer' : 'when funded|how to fund');
+      $subs = ray('short payeeName nvid', $auto ? u\fmtAmt($shortfall) : NULL, $payeeA->fullName, $nvid);
       $payerA->tellOut($index, $subs);
       if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid')));
 
       $z->index = $index; // replace short payment message with something more explicit about the invoice
       $z->msg = tr($index, $subs);
+      if (!$auto) $z->ok = TRUE;
       u\preray($subs, $z->subs);
     }
     db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
