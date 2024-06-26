@@ -178,8 +178,8 @@ function who(form, fid, question0, amount, selfErr, restrict, allowNonmember) {
           yesno(j.confirm, function() {setWhoId(j.who, jForm); yesSubmit = true; jForm.submit();}, noSubmit);
         } else {setWhoId(j.who, jForm); yesSubmit = true; jForm.submit();}
       } else which(jForm, fid, j.title, j.which);
-    } else if (allowNonmember == 1 && who.includes('@') && !who.includes(' @') && fid != '#edit-newacct') {
-      var msg = 'The email address (' + who + ') is for a non-member (or for a member with a non-public email address). ' + question.replace('?', '') + ' anyway, with an invitation to join?';
+    } else if (allowNonmember == 1 && nm.includes('@') && !nm.includes(' @') && fid != '#edit-newacct') {
+      var msg = 'The email address (' + nm + ') is for a non-member (or for a member with a non-public email address). ' + question.replace('?', '') + ' anyway, with an invitation to join?';
       yesno(msg, function () {yesSubmit = true; jForm.submit();}, noSubmit);
     } else {noSubmit(); $.alert('', j.message);}
   });
