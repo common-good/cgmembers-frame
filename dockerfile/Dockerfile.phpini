@@ -1,0 +1,5 @@
+FROM ubuntu:latest AS base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli"]

@@ -1,0 +1,30 @@
+FROM ubuntu/apache2
+
+WORKDIR /root/cgmembers_main
+COPY ["setup/apache2.conf", "/etc/apache2/apache2.conf"]
+COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli/php.ini"]
+RUN apt update && apt install -y curl \
+    && apt-get install -y php php-pear php-dev libapache2-mod-php php-xml php-mysql php-fpm php-intl php-mbstring default-mysql-client default-libmysqlclient-dev \
+    && apt-get clean \
+    && apt-get install -y git
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN a2enmod rewrite
+
+RUN apt-get install -y gcc musl-dev make
+
+RUN pecl install xdebug \
+    && echo "zend_extension=$(find /usr/lib/php -name xdebug.so)" > /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.mode=develop,debug" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.start_with_request=yes" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.discover_client_host=0" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini \
+    && echo "xdebug.log=/tmp/xdebug.log" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini
+
+RUN ls -l /usr/bin/git
+WORKDIR /var/www/html/cg/cgmembers
+
+
+WORKDIR /var/www/html
+EXPOSE 80 9003
+CMD ["apachectl", "-D", "FOREGROUND"]

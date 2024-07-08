@@ -7,7 +7,12 @@
 -- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
+-- sql mode previous values: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+
+SET GLOBAL log_bin_trust_function_creators = 1;
+
 START TRANSACTION;
 SET time_zone = "+00:00";
 

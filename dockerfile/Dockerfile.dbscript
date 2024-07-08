@@ -1,0 +1,12 @@
+FROM ubuntu:latest AS base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt update && apt install -y curl \
+    && apt-get install -y php php-mysql php-fpm php-mbstring default-mysql-client default-libmysqlclient-dev
+
+WORKDIR /root/cgmembers_main
+COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli"]
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+CMD cd /root/cgmembers_main && bash recreate.sh

@@ -1,0 +1,5 @@
+FROM ubuntu:latest AS base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+COPY ["xdebug.ini", "/etc/php/8.2/cli/conf.d/xdebug.ini"]

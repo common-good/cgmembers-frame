@@ -1,0 +1,64 @@
+services:
+  cgmembers-mysql:
+    image: mariadb
+    container_name: cgmembers-mysql
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: S7Gh$45%h1t!#
+      MYSQL_DATABASE: cg
+    volumes:
+      - ../dbfiles:/var/lib/mysql
+    healthcheck:
+      test: [
+        "CMD",
+        "healthcheck.sh",
+        "--su-mysql",
+        "--connect",
+        "--innodb_initialized"
+      ]
+      interval: 5s
+      timeout: 20s
+      retries: 30
+    networks:
+      - cgmembers-net
+  cgmembers-execute-db-script:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbscript
+    container_name: cgmembers-execute-db-script
+    volumes:
+      - ../../cgmembers-frame:/root/cgmembers_main
+    depends_on:
+      cgmembers-mysql:
+        condition: service_healthy
+    networks:
+      - cgmembers-net
+  cgmembers-execute-gherkin:
+    build:
+      context: .
+      dockerfile: Dockerfile.gherkin
+    container_name: cgmembers-execute-gherkin
+    volumes:
+      - ../../cgmembers-frame:/root/cgmembers_main
+  cgmembers-apache:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    container_name: cgmembers-apache
+    ports:
+      - "80:80"
+    volumes:
+      - ../../cgmembers-frame:/var/www/html/cg
+      - ../../cgmembers-frame:/root/cgmembers_main
+    depends_on:
+      cgmembers-mysql:
+        condition: service_healthy
+    networks:
+      - cgmembers-net
+
+networks:
+  cgmembers-net:
+    driver: bridge

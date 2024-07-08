@@ -1,0 +1,6 @@
+FROM ubuntu:latest AS base
+
+RUN apt update && apt install -y curl \
+    && apt-get install -y git
+
+CMD ["/usr/bin/git", "clone", "https://github.com/common-good/GherkinForDrupal", "/root/cgmembers_main/cgmembers/gherkin"]

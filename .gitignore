@@ -8,6 +8,8 @@ gherkin/
 log/
 msgs/
 .idea/
+
 db/migrations/migrate.log
 config/config.json
 config/phinx.json
+/dbfiles/*
