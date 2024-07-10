@@ -71,7 +71,7 @@ function pendingList($toMe, $starting, $ending, $states, $url, $download) {
   $order = $download ? 'nvid' : '(i.status>2), nvid DESC';
 
   $sql = <<<EOF
-    SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
+    SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.reversesXid, i.status AS status0, i.data, t.xid
     FROM tx_requests i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN tx_hdrs t ON t.xid=i.status
@@ -87,6 +87,7 @@ EOF;
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
     if (!$download) $amount = number_format($amount, 2);
+    if ($reversesXid) $purpose = '<span class="loud">' . t('Disputing tx#%xid: ', 'xid', $reversesXid) . '</span>' . $purpose;
     $row = array($nvid, fmtDt($created, $download ? 'yyyy-MM-dd' : DATE_FMT), $other, $purpose, $amount);
     $status = $status1 = be\statusDesc($status0);
 
