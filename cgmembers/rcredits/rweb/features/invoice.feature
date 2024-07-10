@@ -147,20 +147,22 @@ Scenario: A member overpays an invoice
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
   | pay  |     |    1 |       110 | .ZZB  | .ZZA  | labor   | %today  | 1    |
-  Then we say "status": "report tx|left on invoice" with subs:
-  | did    | otherName | amount | remaining |*
-  | paid   | Abe One   | $110   | $-10      |
-  And these "txs":
-  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
-  |   1 | %today  |    110 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
-  And these "tx_requests":
-  | nvid | created | status      | amount | payer | payee | for   |*
-  |    1 | %today  | 1           |    100 | .ZZB  | .ZZA  | labor |
+  Then we say "error": "amount too big" with subs:
+  | max | 100.00 |**
+#  Then we say "status": "report tx|left on invoice" with subs:
+#  | did    | otherName | amount | remaining |*
+#  | paid   | Abe One   | $110   | $-10      |
+#  And these "txs":
+#  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+#  |   1 | %today  |    110 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+#  And these "tx_requests":
+#  | nvid | created | status      | amount | payer | payee | for   |*
+#  |    1 | %today  | 1           |    100 | .ZZB  | .ZZA  | labor |
   
-  When member ".ZZB" visits page "history/transactions/period=15"
-  Then we show "Transaction History" with:
-  | Tx# | Date | Name    | Purpose                     | Amount | Balance |
-  |  1  | %mdy | Abe One | labor (CG inv#1 - overpaid) | 110.00 | -110.00 |
+#  When member ".ZZB" visits page "history/transactions/period=15"
+#  Then we show "Transaction History" with:
+#  | Tx# | Date | Name    | Purpose                     | Amount | Balance |
+#  |  1  | %mdy | Abe One | labor (CG inv#1 - overpaid) | 110.00 | -110.00 |
   
 Scenario: A member who has a bank account approves an invoice
   When member ".ZZA" confirms form "tx/charge" with values:

@@ -69,7 +69,7 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   if ($restriction == '!=0' and $amount == 0) return 'zero amount';
 
 //  if (is_null($max)) $max = MAX_AMOUNT;
-  if ($max and abs($amount) > $max) return t('amount too big', compact('max'));
+  if ($max and abs($amount) > $max) return t('amount too big', 'max', number_format($max, $fractionLimit));
   return FALSE;
 }
 
