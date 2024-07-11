@@ -236,7 +236,6 @@ function menu($submenu = '') {
     'scraps' => ['call', 'Scraps', 'Scraps 1', 'signedIn'],
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
-    'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
     'cef' => ['call', t('CEF Dashboard'), 'CEF 1', ANY],
