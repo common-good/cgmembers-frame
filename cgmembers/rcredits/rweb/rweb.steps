@@ -642,7 +642,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST invoice AMemberMakesPartialPayments
- *     TEST invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice APayeeMarksAnInvoicePaidManually
  *     TEST invoice APayeeReopensAnInvoice
@@ -937,7 +936,6 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     MAKE invoice AMemberMakesPartialPayments
- *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -1825,7 +1823,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPayments
- *     BOTH invoice AMemberOverpaysAnInvoice
+ *     MAKE invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
