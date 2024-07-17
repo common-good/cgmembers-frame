@@ -3,10 +3,11 @@ FROM ubuntu:latest AS base
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt update && apt install -y curl \
-    && apt-get install -y php php-mysql php-fpm php-mbstring default-mysql-client default-libmysqlclient-dev
+    && apt-get install -y curl php php-curl php-mysql php-fpm php-mbstring php-xml zip unzip php-zip default-mysql-client default-libmysqlclient-dev \
+    && apt-get install -y git
 
 WORKDIR /root/cgmembers_main
-COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli"]
+COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli/php.ini"]
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-CMD cd /root/cgmembers_main && bash recreate.sh
+CMD /usr/local/bin/composer update && /usr/local/bin/composer install && cd /root/cgmembers_main && bash recreate.sh
