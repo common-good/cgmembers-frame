@@ -482,7 +482,7 @@ X
       <li><b>Money in.</b> The amount of money you moved into the system, minus the amount you moved out (but not less than zero). By using %RCREDITS in place of those funds, as they circulate among %PROJECT members, we can free up that much US Dollars for the community to grant, lend, or invest.</li>
       <li><b>Rewards.</b> The amount of your incentive rewards for buying and selling (if your %PROJECT community offers incentive rewards) &mdash; reflecting the explicit value the community places on your using %RCREDITS for purchases and sales.</li>
       <li><b>Community funding.</b> Your per-capita share of the funds the community has already granted, loaned, or invested. The continued viability of that funding is supported by your participation. (counted as part of social benefits ever, but not in the past month)</li>
-      <li><b>Card fees saved.</b> A percentage (%R_CC_RATE%) of your purchase and sale amounts &mdash; the typical processing fee that businesses pay for credit card purchases. Together with the other party to the transaction, you kept that much money from leaking out of the community to the big banks.</li>
+      <li><b>Card fees saved.</b> A percentage (%CC_RATE%) of your purchase and sale amounts &mdash; the typical processing fee that businesses pay for credit card purchases. Together with the other party to the transaction, you kept that much money from leaking out of the community to the big banks.</li>
     </ul>
     </p>
     <p><b>Control.</b> Of course your participation benefits the community far beyond mere money. The commmunity benefits by all of us together having greater control over our local economy, so we can plan and decide together how to use the power of money to make a better life for everyone.</p>

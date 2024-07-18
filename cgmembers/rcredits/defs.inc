@@ -399,7 +399,8 @@ const AGT_MARK = '-'; // divides main QID from agent code
 //const R_MARKS = '[\\' . R_MEMBER_MARK . '\\' . R_AGENT_MARK . '\\' . R_AGENT_URL_MARK . ']'; // any of those
 const R_ANCIENT_EFT = 10; // how long, at most, an EFT might take (transferring funds to/from bank)
 const R_REQUIRED = ' <span class="form-required" title="This field is required.">*</span>';
-const R_CC_RATE = 2.5; // typical credit card percentage rate
+const CC_SHARE = 0.82; // what fraction of consumer transactions are digital
+const CC_RATE = 2.5; // rough estimate of average credit card fee percentage for consumer purchases
 const R_CODE_LEN = 32; // length of most random identifiers
 const DUPTX_SECS = 3 * MIN_SECS; // number of minutes before a duplicate transaction is allowed
 const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee
