@@ -30,19 +30,21 @@ function formAdminPanel($form, &$sta, $args = '') {
     superSignin($vKeyPw);
   }
 
-  $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
               ];
   
   $title = t('System Administration');
-  
-  $lnkScanQr = item(lnk('/scan-qr', t('Scan SuperAdmin QR')));
 
-  $toSMT = submi(t('To SMT'));
-  $reAuthQBO = submi(t('ReAuthorize QBO'));
-  $inviteeStatus = submi(t('Invitee Status'));
-  $signupCos = submi(t('Connections to Companies'));
+  if ($mya->admSeeSecure) {
+    $lnkScanQr = item(lnk('/scan-qr', t('Scan SuperAdmin QR')));
+
+    $toSMT = submi(t('To SMT'));
+    $reAuthQBO = submi(t('ReAuthorize QBO'));
+    $inviteeStatus = submi(t('Invitee Status'));
+    $signupCos = submi(t('Connections to Companies'));
+  } else $lnkScanQr = $toSMT = $reAuthQBO = $inviteeStatus = $signupCos = NULL;
+  
   $queries = selectFld(t('Query:'), '', '', $queries);
   $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: (svar('adminingAcct') ?: $mya->mainQid)));
   
@@ -50,12 +52,14 @@ function formAdminPanel($form, &$sta, $args = '') {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
   }
 
+  $tables = ($mya->admSeeAccts and $mya->admRegion) // tables to show
+  ? 'users txs usd recurs proxies relations invites admins notices boxes do stats usd nonmembers' : '';
+
   if ($mya->admTen99) $do1099ktest = submi(t('1099-K TEST'));
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
-  if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   $byState = submi('Accts By State');
-  if ($mya->admRegion) $ieReport = submi('IE Report');
+  if ($mya->admRegion and $mya->admEditTx) $ieReport = submi('IE Report');
   if ($mya->admEditTx) {
     $setCats = submi(t('Set Cats'));
     $sendTxs = submi(t('Send to QBO'));
@@ -96,8 +100,8 @@ function formAdminPanel($form, &$sta, $args = '') {
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
   
-  $closeBooks = dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close'))));
-  $goTx = intFld(t('Edit tx#:'), '', suffix(btn('', t('Go'))));
+  $closeBooks = $mya->admReconcile ? dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close')))) : NULL;
+  $goTx = $mya->admSeeTxInfo ? intFld(t('See tx#:'), '', suffix(btn('', t('Go')))) : NULL;
   jsx('panel');
 
   return cgform(compact(ray('title lnkScanQr do acctSet closeBooks goTx')));

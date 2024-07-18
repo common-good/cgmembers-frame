@@ -31,28 +31,32 @@ function formTxDetail($form, &$sta, $args = '') {
     $uid = $uid1; // set $uid to other account
   } else { // not my transaction, so choose me and you however is easy
     if (!$mya->admRegion) return softErr(t('That transaction is not one of yours.'));
-    $uid = r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
+    $uid = in($uid1, EXTERNAL_UIDS) ? $uid1
+         : (r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
          : (r\hasCats($uid2) ? $uid1
-         : ($uid1 == UID_OUTER ? $uid1 
          : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
   }
+
+  $toMe = ($uid == $uid1); // to me if other (uid) is the "from" account
   $a = r\acct($uid);
-  $toMe = ($uid == $uid1);
   list ($me, $you) = u\order($toMe, 2, 1);
+  [$self, $by] = [t('self'), t('by ')];
 
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
-      uAgt.fullName AS agt, uAgt.uid AS agtUid, uMe.uid AS meId, eid, recursId, reversesXid, t.flags
+      uMe.uid AS meId, eid, recursId, reversesXid, t.flags,
+      uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', ' ', agtMe.fullName, ')')) AS meAgt,
+      uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', ' ', agtYou.fullName, ')')) AS youAgt
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
     LEFT JOIN people p ON p.pid=t2.pid
-    LEFT JOIN users uAgt ON uAgt.uid=t.agt$me
+    LEFT JOIN users agtMe ON agtMe.uid=t.agt$me
+    LEFT JOIN users agtYou ON agtYou.uid=t.agt$you
     LEFT JOIN tx_cats c ON c.id=t.cat$me
     WHERE $where
     ORDER BY t.type LIMIT 1
 X;
-
   if (!$tx = db\q($sql, $subs)->fetchAssoc()) return softErr('no such tx'); // for now just show main transaction
   extract($tx);
   $meA = r\acct($meId);
@@ -60,11 +64,11 @@ X;
   list ($fullName, $addr, $phone, $email)
     = ($uid1 == UID_OUTER and $toMe) ? r\pContactInfo($pid) : [$a->fullName, $a->postalAddr, $a->phone, $a->email];
 
-  list ($wayYou, $wayMe) = u\order($toMe, t('From:'), t('To:'));
-///    debug(compact(ray('uids uid1 uid2 uid toMe amt wayYou wayMe youId fullName')));
+  [$youWay, $meWay] = u\order($toMe, t('From:'), t('To:'));
+  [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  $nmYou = item($fullName, $wayYou);
+  $nmYou = item($youNm. $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
@@ -77,13 +81,12 @@ X;
   
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
-  $agt = item($agtUid == $meId ? t('self') : $agt, t('Our Agent:'));
   
   $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
   $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
-  $nmMe = item($meA->fullName, $wayMe);
+  $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
@@ -105,7 +108,7 @@ X;
   $back = item(w\backButton());
   $orig = hidFld($orig);
 
-  return cgform(compact(ray('title created amount nmYou nmMe addr email phone description forSame cat agt chan flags recursId reversesXid entryType submit back toMe xid eid return orig')));
+  return cgform(compact(ray('title created amount description nmYou nmMe addr email phone forSame cat chan flags recursId reversesXid entryType submit back toMe xid eid return orig')));
 }
 
 function formTxDetail_validate($form, &$sta) {
@@ -136,7 +139,7 @@ function formTxDetail_submit($form, &$sta) {
   db\update('tx_entries_all', $info, 'id');
   if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
   
-  extract(just('cat1 cat2 uid1 uid2 flags created', $orig, NULL), EXTR_PREFIX_ALL, 'o');
+  extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
     and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
@@ -147,10 +150,15 @@ function formTxDetail_submit($form, &$sta) {
     setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
   }
 
+  $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
+  if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
+    db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+  }
+
   $info['id'] = -$eidMe;
   $info['amount'] = -$amount;
   unset($info['cat']);
-  if (!$forSame) unset($info['description']); // keep descriptions the same if they were the same before
+  if (!$forSame) unset($info['description']); // don't change the other description if there was a difference already
   db\update('tx_entries_all', $info, 'id');
 
   unset($DBTX);

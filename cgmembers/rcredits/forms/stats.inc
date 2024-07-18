@@ -6,9 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const CC_SHARE = 0.82; // what fraction of consumer transactions are digital
-const CC_RATE = 0.02; // rough estimate of average credit card fees for consumer purchases
-
 /**
  * Show statistics.
  */
@@ -67,7 +64,7 @@ X;
 X;
 
   $res += db\get($flds, 'txs_noreverse', "uid2 NOT $isNotForProfit AND type=:E_PRIME AND amt>0 AND created $when", $timeSubs); // buys
-  $res['ccFeesSaved'] = CC_SHARE * CC_RATE * $res['volume'];
+  $res['ccFeesSaved'] = CC_SHARE * (CC_RATE/100) * $res['volume'];
   
   say(pr($res));
     

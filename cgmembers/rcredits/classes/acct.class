@@ -1190,9 +1190,9 @@ EOF;
     $return = ($years > 0 and nn($avgBalEver, 0) > 0) ? 
       number_format(100 * nn($extraEver) / $avgBalEver / $years, 1)
       : (nn($extraEver, 0) > 0 ? '&infin;' : number_format(100 * R_INFLATION_RATE, 1));
-    $cttyBeneMo = u\fmtAmt(nn($giftsPastMo, 0) + max(0, nn($bankedPastMo, 0)) + nn($benePastMo, 0) * (1 + R_CC_RATE / 100));
+    $cttyBeneMo = u\fmtAmt(nn($giftsPastMo, 0) + max(0, nn($bankedPastMo, 0)) + nn($benePastMo, 0) * (1 + CC_RATE / 100));
 ///       debug(compact(ray('giftsEver bankedEver beneEver')));
-    $cttyBene = u\fmtAmt(nn($giftsEver, 0) + max(0, nn($bankedEver, 0)) + nn($beneEver, 0) * (1 + R_CC_RATE / 100) + r\cttyPaidEver($a->community) / (nn($pAccts) ?: 1));
+    $cttyBene = u\fmtAmt(nn($giftsEver, 0) + max(0, nn($bankedEver, 0)) + nn($beneEver, 0) * (1 + CC_RATE / 100) + r\cttyPaidEver($a->community) / (nn($pAccts) ?: 1));
 
     return compact(ray($fields));
   }
