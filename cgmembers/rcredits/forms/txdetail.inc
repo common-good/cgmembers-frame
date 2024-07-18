@@ -139,7 +139,7 @@ function formTxDetail_submit($form, &$sta) {
   db\update('tx_entries_all', $info, 'id');
   if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
   
-  extract(just('cat1 cat2 uid1 uid2 flags created', $orig, NULL), EXTR_PREFIX_ALL, 'o');
+  extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
     and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
@@ -150,10 +150,15 @@ function formTxDetail_submit($form, &$sta) {
     setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
   }
 
+  $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
+  if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
+    db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+  }
+
   $info['id'] = -$eidMe;
   $info['amount'] = -$amount;
   unset($info['cat']);
-  if (!$forSame) unset($info['description']); // keep descriptions the same if they were the same before
+  if (!$forSame) unset($info['description']); // don't change the other description if there was a difference already
   db\update('tx_entries_all', $info, 'id');
 
   unset($DBTX);
