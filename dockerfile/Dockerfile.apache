@@ -4,7 +4,7 @@ WORKDIR /root/cgmembers_main
 COPY ["setup/apache2.conf", "/etc/apache2/apache2.conf"]
 COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli/php.ini"]
 RUN apt update && apt install -y curl \
-    && apt-get install -y php php-pear php-dev libapache2-mod-php php-xml php-mysql php-fpm php-intl php-mbstring default-mysql-client default-libmysqlclient-dev \
+    && apt-get install -y php php-pear php-dev libapache2-mod-php php-xml php-mysql php-fpm php-intl php-mbstring php-curl php-gd default-mysql-client default-libmysqlclient-dev \
     && apt-get clean \
     && apt-get install -y git
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -26,5 +26,5 @@ WORKDIR /var/www/html/cg/cgmembers
 
 
 WORKDIR /var/www/html
-EXPOSE 80 9003
+EXPOSE 80 8081 9003
 CMD ["apachectl", "-D", "FOREGROUND"]

@@ -43,53 +43,53 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
 /**
  * members: (ARG)
  *
- * in: MAKE grading Setup
- *     MAKE multiplechoice Setup
+ * in: MAKE multiplechoice Setup
+ *     MAKE grading Setup
  */
 function members($list) {return t\members($list);}
 
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE grading Setup
- *     TEST grading AMemberGradesAProposal
- *     MAKE multiplechoice Setup
+ * in: MAKE multiplechoice Setup
  *     TEST multiplechoice AMemberVotes
  *     MAKE multiplechoice AMemberViewsVoteResults
+ *     MAKE grading Setup
+ *     TEST grading AMemberGradesAProposal
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
 /**
  * member (ARG) visits page (ARG)
  *
- * in: MAKE grading AMemberGradesAProposal
- *     MAKE multiplechoice AMemberVotes
+ * in: MAKE multiplechoice AMemberVotes
+ *     MAKE grading AMemberGradesAProposal
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST grading AMemberGradesAProposal
- *     TEST multiplechoice AMemberVotes
+ * in: TEST multiplechoice AMemberVotes
  *     TEST multiplechoice AMemberViewsVoteResults
+ *     TEST grading AMemberGradesAProposal
  */
 function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
 
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE grading AMemberGradesAProposal
- *     MAKE multiplechoice AMemberVotes
+ * in: MAKE multiplechoice AMemberVotes
+ *     MAKE grading AMemberGradesAProposal
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
 /**
  * member (ARG) has (ARG) steps done: (ARG)
  *
- * in: MAKE grading AMemberGradesAProposal
- *     MAKE multiplechoice Setup
+ * in: MAKE multiplechoice Setup
  *     MAKE multiplechoice AMemberViewsVoteResults
+ *     MAKE grading AMemberGradesAProposal
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
 

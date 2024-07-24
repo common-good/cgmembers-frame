@@ -39,15 +39,15 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE accounts Setup
- *     MAKE comments Setup
- *     MAKE idphoto Setup
- *     MAKE identity Setup
- *     MAKE info Setup
+ * in: MAKE identity Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE accounts Setup
+ *     MAKE info Setup
+ *     MAKE comments Setup
  *     MAKE transactions Setup
+ *     MAKE idphoto Setup
  */
 function members($list) {return t\members($list);}
 
@@ -61,14 +61,13 @@ function balances($list) {return t\balances($list);}
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE accounts Setup
- *     MAKE comments Setup
- *     MAKE idphoto Setup
- *     MAKE identity Setup
- *     MAKE info Setup
+ * in: MAKE identity Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE accounts Setup
+ *     MAKE info Setup
+ *     MAKE comments Setup
  *     MAKE transactions Setup
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToPayACustomer
@@ -77,6 +76,7 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToChargeACustomerAndAddATip
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ *     MAKE idphoto Setup
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -105,22 +105,7 @@ function appGetsWith($url, $params, $method = 'get') {
 /**
  * app posts (ARG) with: (ARG)
  *
- * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutAPassword
- *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
- *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
- *     MAKE comments TheAppAsksToSubmitAComment
- *     MAKE comments TheAppAsksToSubmitACommentWithAMissingParameter
- *     MAKE comments TheAppAsksToSubmitACommentWithABadActorId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
- *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
- *     MAKE identity TheAppAsksToIdentifyACustomer
+ * in: MAKE identity TheAppAsksToIdentifyACustomer
  *     MAKE identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
  *     MAKE identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
  *     MAKE identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
@@ -128,11 +113,20 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutAPassword
+ *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
+ *     MAKE accounts AMemberTriesToSignInWithoutABadPassword
  *     MAKE info TheAppAsksForRecentTransactions
  *     MAKE info TheAppAsksForRecentTransactionsWithAMissingParameter
  *     MAKE info TheAppAsksForRecentTransactionsWithABadActorId
  *     MAKE info TheAppAsksForRecentTransactionsWithABadCount
  *     MAKE info TheAppAsksForRecentTransactionsWithACountOutOfRange
+ *     MAKE comments TheAppAsksToSubmitAComment
+ *     MAKE comments TheAppAsksToSubmitACommentWithAMissingParameter
+ *     MAKE comments TheAppAsksToSubmitACommentWithABadActorId
  *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToPayACustomer
  *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
@@ -149,15 +143,21 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE transactions TheAppAsksToChargeACustomerWithADateOutOfRange
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadProof
  *     MAKE transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhoto
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
+ *     MAKE idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
  */
 function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');}
 
 /**
  * we reply (ARG) with JSON: (ARG)
  *
- * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
- *     TEST identity TheAppAsksToIdentifyACustomer
+ * in: TEST identity TheAppAsksToIdentifyACustomer
  *     TEST test TheAppAsksToInitializeTheTestData
+ *     TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToPayACustomer
  *     TEST transactions TheAppAsksToUndoAChargeToACustomer
@@ -198,33 +198,33 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
 /**
  * we reply (ARG) with: (ARG)
  *
- * in: TEST accounts AMemberTriesToSignInWithoutAnIdentifier
- *     TEST accounts AMemberTriesToSignInWithoutAPassword
- *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
- *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
- *     TEST accounts AMemberTriesToSignInWithoutABadPassword
- *     TEST comments TheAppAsksToSubmitACommentWithAMissingParameter
- *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
- *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
- *     TEST identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
+ * in: TEST identity TheAppAsksToIdentifyACustomerWithoutAnIdentifier
  *     TEST identity TheAppAsksToIdentifyACustomerWithABadDeviceIdentifier
  *     TEST identity TheAppAsksToIdentifyACustomerWithABadActorIdentifier
  *     TEST identity TheAppAsksToIdentifyACustomerWithABadSecurityCode
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     TEST accounts AMemberTriesToSignInWithoutAnIdentifier
+ *     TEST accounts AMemberTriesToSignInWithoutAPassword
+ *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
+ *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
+ *     TEST accounts AMemberTriesToSignInWithoutABadPassword
  *     TEST info TheAppAsksForRecentTransactionsWithAMissingParameter
  *     TEST info TheAppAsksForRecentTransactionsWithABadCount
  *     TEST info TheAppAsksForRecentTransactionsWithACountOutOfRange
+ *     TEST comments TheAppAsksToSubmitACommentWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
  *     TEST transactions TheAppAsksToChargeACustomerWithABadProof
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhoto
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoOtherId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithNoActorId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadOtherId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadActorId
+ *     TEST idphoto TheAppAsksToShowACustomerIDPhotoWithBadDeviceId
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -261,9 +261,9 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we reply (ARG)
  *
- * in: TEST comments TheAppAsksToSubmitAComment
+ * in: TEST info TheAppAsksForRecentTransactionsWithABadActorId
+ *     TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
- *     TEST info TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  */
@@ -285,8 +285,8 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
 /**
  * member (ARG) has (ARG) steps done: (ARG)
  *
- * in: MAKE accounts Setup
- *     TEST test TheAppAsksToInitializeTheTestData
+ * in: TEST test TheAppAsksToInitializeTheTestData
+ *     MAKE accounts Setup
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
 
@@ -305,8 +305,8 @@ function testOpWith($op, $args) {
 /**
  * we reply (ARG) with JSON values: (ARG)
  *
- * in: TEST info TheAppAsksForRecentTransactions
- *     TEST test TheAppAsksUsForTransactionData
+ * in: TEST test TheAppAsksUsForTransactionData
+ *     TEST info TheAppAsksForRecentTransactions
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?

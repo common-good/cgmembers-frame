@@ -50,6 +50,7 @@ services:
     container_name: cgmembers-apache
     ports:
       - "80:80"
+      - "8081:8081"
     volumes:
       - ../../cgmembers-frame:/var/www/html/cg
       - ../../cgmembers-frame:/root/cgmembers_main
