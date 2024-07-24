@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.61y'; // software version
+const R_VERSION = '3.62c'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -114,8 +114,8 @@ const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
 $parts = parse_url($base_url);
-$base_path = @$parts['path'] . '/';
-$base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['path'])); // everything until first slash after "scheme://"
+$base_path = @$parts['path'] . '/'; // @ has no effect here except when testing
+$base_root = mb_substr($base_url, 0, mb_strlen($base_url) + 1 - mb_strlen($base_path)); // everything until first slash after "scheme://"
 
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
@@ -216,7 +216,7 @@ const LOCPAT_CITYST = '|^([^,/\\s]+[^,/]+)\\s*[,/]?([a-zA-Z]{2})$|';
 const R_ADMIN_CAN_MANAGE_CTTYS = TRUE; // should be false once communities can manage themselves
 const R_CRON_PERIOD = 5*60; // how many seconds between cron runs (must divide an hour evenly)
 const R_MAX_TASK_TIME = 1*60; // what's the longest a queued cron task might take
-const NOLOG_FLDS = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 codePw vKeyE newPass external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
+const NOLOG_FLDS = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 codePw vKeyE newPass pw external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
 const NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Dashboard Summary Php'; // don't log visits to these forms
 const NOLOG_MSGS = 'co code timeout,foobar'; // don't log saying these messages
 const R_ANON_FORMS = NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'; // no login required
@@ -281,8 +281,9 @@ const R_EXCHANGE_LIMITS = '1:10000,7:20000,52:80000,365:500000'; // per day, wee
 const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
 const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 //const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)
-const R_CARDCODE_LEN = 14; // length of rCard security code (long to deter easy copying, max 14 for small QR)
-const R_CARD_COST = 5; // cost to order a company or replacement rCard
+const R_CARDCODE_LEN = 14; // length of card security code (long to deter easy copying, max 14 for small QR)
+const R_CARDCODE_MINLEN = 10; // minimum length of any cardCode ever, except in tests
+const R_CARD_COST = 5; // cost (in USD) to order a company or replacement CG Card
 const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to be eligible for a grant
 const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
 const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
@@ -398,7 +399,8 @@ const AGT_MARK = '-'; // divides main QID from agent code
 //const R_MARKS = '[\\' . R_MEMBER_MARK . '\\' . R_AGENT_MARK . '\\' . R_AGENT_URL_MARK . ']'; // any of those
 const R_ANCIENT_EFT = 10; // how long, at most, an EFT might take (transferring funds to/from bank)
 const R_REQUIRED = ' <span class="form-required" title="This field is required.">*</span>';
-const R_CC_RATE = 2.5; // typical credit card percentage rate
+const CC_SHARE = 0.82; // what fraction of consumer transactions are digital
+const CC_RATE = 2.5; // rough estimate of average credit card fee percentage for consumer purchases
 const R_CODE_LEN = 32; // length of most random identifiers
 const DUPTX_SECS = 3 * MIN_SECS; // number of minutes before a duplicate transaction is allowed
 const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee

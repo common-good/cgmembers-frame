@@ -193,19 +193,29 @@ function testAcctLine($key, $info) { // used only by makeTestAccounts() - DO NOT
  * Assign the given account a new id (or delete it).
  * @param int $oldUid: record ID of the account to change or delete
  * @param int $newUid: the new record ID to give the account (defaults to next available)
- * @param bool $unusable: whether to mark the old account record ID as unusuable
- * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount); -1 means undelete
+ * @param assoc $variant: one of the following values:
+ *   change: change the uid
+ *   unusable: mark the old account record ID as unusuable
+ *   delete: delete the account rather than giving it a new ID (called by a\deleteAccount)
+ *   undelete: reverse an account deletion
+ *   merge: change references to the old account ID but instead of changing the uid of the account itself, delete the account
  * @return TRUE if successful else NULL
  */
-function deleteUid($oldUid) {return a\changeUid($oldUid, 0, FALSE, TRUE);}
-function unDeleteUid($oldUid) {return a\changeUid($oldUid, 0, FALSE, -1);}
+ 
+const ONE_MERGE = 'admins u_company u_photo r_ratings u_shout';
 
-function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
-  $undelete = ($delete === -1);
-  $change = !$delete;
-  $delete = ($delete === TRUE);
-  
+function deleteUid($oldUid) {return a\changeUid($oldUid, 0, 'delete');}
+function unDeleteUid($oldUid) {return a\changeUid($oldUid, 0, 'undelete');}
+
+function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   global $mya;
+  foreach (ray('change unusable delete undelete merge') as $k) {
+    if ($$k = ($variant == $k)) $gotVariant = TRUE;
+  }
+  if (!nn($gotVariant)) return err(t('"%variant" is not a legal variant for changeUid.', compact('variant')));
+
+  if ($unusable or $merge) $change = TRUE;
+  
   if (is_object($oldUid)) $oldUid = $oldUid->id;
   
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
@@ -288,43 +298,58 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // variable
   );
   
-  $DBTX = \db_transaction();
+  flog(t('Calling changeUid variant "%variant" for oldUid %oldUid.', compact(ray('variant oldUid'))));
 
   if ($undelete) {
     $uid = $oldUid;
+    $DBTX = \db_transaction();
     if (!db\undel('u_company', compact('uid'))) return dbtxErr($DBTX);
     if (!db\undel('u_photo', compact('uid'))) return dbtxErr($DBTX);
     if (!db\undel('u_shout', compact('uid'))) return dbtxErr($DBTX);
     if (!db\undel('u_relations', ray('main', $uid))) return dbtxErr($DBTX);
     if (!db\undel('u_relations', ray('other', $uid))) return dbtxErr($DBTX);
     if (!db\undel('users', compact('uid'))) return dbtxErr($DBTX);
+    unset($DBTX);
     return w\say(t('Recovered!'));
   }
-   
-  if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
+
+  if (!$a = r\acct($oldUid)) return w\err(t('That account does not exist.'));
 //  if ($mya and $a->id == $mya->id and $delete) return w\say(t('You can\'t delete the uid of an acct while it\'s the current acct.'), 'err');
+
+  if ($merge and $qs = db\col('question', 'r_ballots', ray('voter', $oldUid)) 
+    and db\exists('r_ballots', 'voter=:newUid AND question IN (:qs)', compact(ray('newUid qs')))) {
+    return w\err(t('Both of those accounts have voted on the same question, so they cannot be merged.'));
+  }
+
   $nm = $a->fullName;
   $oldQid = r\qid($oldUid);
   
-  if ($delete) {
-    foreach (ray('jid helper') as $fnm) db\q("UPDATE users SET $fnm=0 WHERE $fnm=:oldUid", compact('oldUid')); // don't leave a hanging partner or helper
-    db\q('UPDATE people SET uid=NULL WHERE uid=:oldUid', compact('oldUid'));
-  }
-  
-  if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
-    db\del('users', 'uid', $oldUid);
-    $unusable = $delete = FALSE; // don't actually delete anything except the account record
-    $newUid = r\serverUid(); // Seedpack uid
-  }
-
   if ($change and !$newUid) {
     $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityId();
     $newUid = r\Acct::nextId($region);
   }
 
+  $DBTX = \db_transaction();
+  
+  if ($delete or $merge) {
+    flog(t('. fixing jid and helper'));
+    foreach (ray('jid helper') as $fnm) db\q("UPDATE users SET $fnm=:newUid WHERE $fnm=:oldUid", compact(ray('oldUid newUid'))); // don't leave a hanging joint account partner or helper
+    $pUid = $newUid ?: NULL;
+    flog(t('. fixing people'));
+    db\q('UPDATE people SET uid=:pUid WHERE uid=:oldUid', compact(ray('pUid oldUid')));
+  }
+  
+  if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
+    flog(t('. deleting community account'));
+    db\del('users', 'uid', $oldUid);
+    $unusable = $delete = FALSE; // don't actually delete anything except the account record
+    $newUid = r\serverUid(); // Seedpack uid
+  }
+
   foreach ($subs as $one) {
     list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
+    flog(t('%table: %field', compact(ray('table field'))));
     
     if ($delete) {
       if ($deletable) {
@@ -333,31 +358,80 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
         $DBTX->rollback(); 
         return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
       }
-    } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
-  }
-
-  if ($change and $unusable) {
-    list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
-    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
-  }
-  
-  unset($DBTX); // commit
-
-  if ($change) {
-    $newQid = r\qid($newUid);
-    foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
-      foreach (glob("$dir/$oldQid.*") as $flnm) rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
+    } else { // change
+      if ($merge) merge($table, $field, $oldUid, $newUid);
+      flog(t('. changing old to new'));
+      db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
     }
   }
 
+  if ($unusable) {
+    list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
+    flog(t('. marking account unusable'));
+    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
+  } elseif ($merge) {
+    flog(t('. deleting account'));
+    db\del('users', 'uid', $oldUid);
+  }
+  
+  flog(t('. deleting self-dealing records'));
+  db\q('DELETE FROM u_relations WHERE main=other');
+  db\q('DELETE FROM r_proxies WHERE person=proxy');
+  db\q('DELETE FROM tx_requests WHERE payer=payee');
+  db\q('DELETE FROM r_near WHERE uid1=uid2');
+  foreach (ray('tx_rules tx_timed') as $table) db\q("DELETE FROM $table WHERE `from`=`to` OR (`payer`=`payee` AND payerType=payeeType)");
+  
+  unset($DBTX); // commit (it's okay for this to be before deleting files)
+
+  $newQid = r\qid($newUid);
+  foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
+    foreach (glob("$dir/$oldQid.*") as $flnm) {
+      flog(($delete ? t('deleting ') : t('renaming ')) . $flnm);
+      if ($delete) u\deleteFile($flnm); else rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
+    }
+  }
+  
   if ($mya and $mya->admChangeUid) {
-    $what = $change ? t('changed to ') . $newUid 
-    : ($delete ? t('deleted') : t('recovered'));
+    $what = $merge ? t('merged into ') . $newUid 
+    : ($change ? t('changed to ') . $newUid 
+    : ($delete ? t('deleted') : t('recovered')));
     w\say(t('Success. Account %nm has been %what.', compact(ray('nm what'))));
     $goto = $undelete ? $uid : ($delete ? $mya->agentId : $newUid);
-    return w\go("change-account/acct=$goto"); // this doesn't work. Instead it signs you out and gives a session timed out message. But close enough for now...
+    return w\go("change-account/acct=$goto"); // this doesn't work if deleting current account. Instead it signs you out and gives a session timed out message. But close enough for now...
   }
   return TRUE;
+}
+
+/**
+ * Handle merging the $table record where $field is $oldUid into $table where $field is $newUid.
+ */
+function merge($table, $field, $oldUid, $newUid) {
+  if ($table == 'u_relations' and $field2 = ($field == 'main' ? 'other' : 'main')
+    and $ids = db\col('oldx.reid', "u_relations oldx JOIN u_relations x USING($field2)",
+      "oldx.$field=:oldUid AND x.$field=:newUid", compact(ray('oldUid newUid')))) {
+    flog(t('. deleting old u_relations records'));
+    foreach ($ids as $reid) db\del($table, 'reid', $reid); // keep just the new one
+  } elseif ($table == 'r_proxies' and $field2 = ($field == 'person' ? 'proxy' : 'person')
+    and $ids = db\col('oldx.id', "r_proxies oldx JOIN r_proxies x USING($field2,priority)",
+      "oldx.$field=:oldUid AND x.$field=:newUid", compact(ray('oldUid newUid')))) {
+    flog(t('. deleting old r_proxies records'));
+    foreach ($ids as $id) db\del($table, 'id', $id); // keep just the new one
+  } elseif ($table == 'r_stakes' and $oldRows = db\rows('clubid, stake, request', 'r_stakes', ray('uid', $oldUid))) { // combine (add)
+    flog(t('. combining r_stakes amounts'));
+    foreach ($oldRows as $oldRow) {
+      if ($newRow = db\get('stakeId, stake, request', 'r_stakes', ray('clubid uid', $oldRow->clubid, $newUid))) {
+        extract((array) $newRow);
+        $stake += $oldRow->stake;
+        $request += $oldRow->request;
+      } else $stakeId = NULL;
+      db\updateOrInsert('r_stakes', ray('stakeId stake request', $stakeId, $stake, $request), 'stakeId');
+    }
+    flog(t('. deleting old r_stakes records'));
+    db\del($table, $field, $oldUid);
+  } elseif (in($table, ONE_MERGE) and db\exists($table, ray($field, $newUid))) {
+    flog(t('. deleting old record'));
+    db\del($table, $field, $oldUid); // keep just the new one
+  } // else fall through to change oldUid to newUid
 }
 
 function dbtxErr($DBTX, $msg = 'FAILED') {$DBTX->rollback(); return w\say($msg);}
@@ -1169,5 +1243,18 @@ function cloneA($oldA) {
   }
    
  */
+
+/**
+ * Add fiscal sponsorship fees
+ */
+/*
+$xid = 999999;
+$amt = db\get('amt', 'txs', 'xid=:xid AND type IN :E_PRIMES', compact('xid')) * .05;
+$uid = db\get('uid2', 'txs', 'xid=:xid AND type IN :E_PRIMES', compact('xid'));
+$rule = db\get('id', 'tx_rules', 'payee=:uid', compact('uid')); 
+
+$id = db\insert('tx_entries', ray('xid entryType amount uid agentUid description cat rule', $xid, E_AUX, $amt, CGID, CGID, 'fiscal sponsorship fee (5%)', 1300, $rule));
+db\insert('tx_entries', ray('id xid entryType amount uid agentUid description cat rule', -$id, $xid, E_AUX, -$amt, $uid , $uid , 'fiscal sponsorship fee (5%)', 1200, $rule));
+*/ 
 
 function clearCache() {foreach (ray('cache cache_bootstrap cache_form cache_menu sessions semaphore') as $table) db\q("TRUNCATE TABLE $table");}

@@ -142,7 +142,8 @@ function fixData(&$info, $direct = FALSE) {
   }
    extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
-  foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
+  if (isset($why)) $why = $T->feature == 'unsubscribe' ? explode(',', $why) : tr($why);
+  foreach (ray('error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
@@ -243,12 +244,15 @@ function pdfHas($list) {
  */
 function download($flnm, $wantRecs) {
   global $testOnly;
-  global $testDownload,$testDownloadFlnm;
+  global $testDownload,$testDownloadFlnm; $testDownload0 = $testDownload;
 
   $csv = (mb_substr($flnm, -4) == '.csv');
   if (nn($testDownloadFlnm) != $flnm) return t\output("$testDownloadFlnm <> $flnm");
   if (!is_array($testDownload) or empty($testDownload)) return t\output('testDownload is empty');
-  if (sizeof($testDownload) != sizeof($wantRecs) + ($csv ? 1 : 0)) return t\output(t('Wrong number of rows in download (wanted %want, got %got)', 'want got', sizeof($wantRecs), sizeof($testDownload)));
+  if (sizeof($testDownload) != sizeof($wantRecs) + ($csv ? 1 : 0)) {
+    t\output(pr($testDownload0));
+    return t\output(t('Wrong number of rows in download (wanted %want, got %got)', 'want got', sizeof($wantRecs) + ($csv ? 1 : 0), sizeof($testDownload)));
+  }
   if ($csv) $headers = array_values(array_shift($testDownload));
   
   foreach ($wantRecs as $rowNum => $wantRow) {
@@ -257,7 +261,13 @@ function download($flnm, $wantRecs) {
 
     foreach ($wantRow as $k => $v) {
       $ok = $csv ? t\eq($k, $v, nni($gotRow, $k)) : (empty($v) or strhas($gotRow, $v));
-      if (!$ok) return t\output(t('Missing value #%k: %v, in row #%rowNum: %gotRow', 'k v rowNum gotRow', $k, $v, $rowNum, pr($gotRow)));
+      if (!$ok) {
+        t\output('want: ' . pr($wantRow));
+        t\output('got: ' . pr($gotRow));
+        t\output('want: ' . pr($wantRecs));
+        t\output('got: ' . pr($testDownload0));
+        return t\output(t('Missing value #%k: %v, in row #%rowNum: %gotRow', 'k v rowNum gotRow', $k, $v, $rowNum, pr($gotRow)));
+      }
     }
   }
   return TRUE;
@@ -850,7 +860,9 @@ function count($what, $count) {
     case 'tx_hdrs': return eq($desc, $count, db\count('tx_hdrs', 'xid > 0'));
     case 'txs': return eq($desc, $count, db\count('tx_entries', 'xid > 0') / 2);
     case 'tx_entries': return eq($desc, $count, db\count('tx_entries', 'xid > 0'));
-    default: return eq($desc, $count, db\count((in($what, 'txs2 people') or strhas($what, '_')) ? $what : "r_$what"));
+    default: 
+      $what = (in($what, 'txs2 people admins') or strhas($what, '_')) ? $what : "r_$what";
+      return eq($desc, $count, db\count($what));
   }
 }
 

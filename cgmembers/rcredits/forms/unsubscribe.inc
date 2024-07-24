@@ -57,9 +57,14 @@ function formUnsubscribe_submit($form, &$sta) {
   
   extract($info = just('why comments email qid', $sta['input'], NULL));
 
-  $info['why'] = $why = join(', ', nn($why, []));
+  if ($why) {
+    $whys = ray(UNSUBSCRIBE_REASONS);
+    foreach ($why as $i => $k) $why[$i] = $whys[$k];
+    $info['why'] = $why = join(', ', $why);
+  }
+  
   if ($a = r\acct($qid) and $email == $a->email) {
-    $a->update('notes', r\stampNote('ZAP "' . $why . ': ' . $comments . '"') . $a->notes);
+    $a->update('notes', r\stampNote("ZAP \"$why: $comments\"") . $a->notes);
   } else { $info['fishy'] = t('Might be a hack; email disagrees with account.'); }
   
   r\tellCAdmin(t('%nm unsubscribed (%qid)', 'nm qid', $a->fullName, $qid), $info, $a->id);

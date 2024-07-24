@@ -119,7 +119,7 @@ X;
   if ($offshore) { // add a transfer to or from our "offshore" interest-bearing account
     $count++;
     $b2 = r\bankData(BANK_OFFSHORE);
-    $txCode = $offshore < 0 ? 32 : 37;
+    $txCode = $offshore < 0 ? 22 : 27; // NO: $offshore < 0 ? 32 : 37 (StacyLee says Money Market accounts are treated as checking)
     $amount = $offshore * 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $amount = abs($amount);

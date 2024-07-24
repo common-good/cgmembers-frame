@@ -899,7 +899,10 @@ function doit(what, vs) {
   case 'dispute':
     $('#dispute-it').click(function () {
       $('#denySet').show(); 
-      $('.form-item-pay').hide();
+      $('.form-item-pay, .form-item-always, .form-item-auto').hide();
+    });
+    $('.form-item-always input').click(function () {
+      $('.form-item-auto').toggle(!$(this).prop('checked'));
     });
     break;
 

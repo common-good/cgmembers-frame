@@ -196,6 +196,7 @@ function menu($submenu = '') {
     'sadmin/iereport' => ['call', t('Income/Expense Report'), 'IEReport 2', 'admRegion'],
     'sadmin/cef-billing' => ['call', t('CEF Billing'), 'CEFBilling 2', 'read'],
     'sadmin/tx-entry' => ['call', t('TxEntry'), 'TxEntry 2', 'admEditTx'],
+    'sadmin/merge-accounts' => ['call', t('Merge Accounts'), 'MergeAccts', 'admDeleteAcct'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
@@ -235,7 +236,6 @@ function menu($submenu = '') {
     'scraps' => ['call', 'Scraps', 'Scraps 1', 'signedIn'],
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
-    'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
     'cef' => ['call', t('CEF Dashboard'), 'CEF 1', ANY],

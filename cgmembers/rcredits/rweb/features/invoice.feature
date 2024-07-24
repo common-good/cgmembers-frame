@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | floor | flags             | risks   | bankAccount  | phone        |*
   | .ZZA | Abe One  |   -10 | ok,confirmed      |         |              | +14136280001 |
-  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |              | +14136280002 |
+  | .ZZB | Bea Two  |  -250 | ok,confirmed,debt | hasBank | %T_BANK_ACCT | +14136280002 |
   | .ZZC | Our Pub  |   -30 | ok,confirmed,co   | hasBank | %T_BANK_ACCT | +14136280003 |
   | .ZZD | Dee Four |     0 | debt              |         |              | +14136280004 |
   And these "u_relations":
@@ -19,7 +19,7 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A member approves an invoice
+Scenario: A member invoices someone
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
@@ -30,36 +30,79 @@ Scenario: A member approves an invoice
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
 
+Scenario: A member receives an invoice with a non-positive balance
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  And balances:
+  | uid  | balance |*
+  | .ZZB |       0 |
+  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+  Then we show "Confirm Payment" with:
+  | ~question     | Pay $100 to Abe One for labor |
+  | Amount to Pay | 100     |
+  | Pay           | dispute |
+  | Reason        |         |
+  | Dispute       |         |
+
+Scenario: A member receives an invoice with no connected bank account
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  And members have:
+  | uid  | balance | risks | bankAccount |*
+  | .ZZB |      10 |       |             |
+  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+  Then we show "Confirm Payment" with:
+  | ~question     | Pay $100 to Abe One for labor |
+  | Amount to Pay | 100     |
+  | Pay           | dispute |
+  | Reason        |         |
+  | Dispute       |         |
+
+Scenario: A member receives an invoice with a positive balance
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  And balances:
+  | uid  | balance |*
+  | .ZZB |      10 |
   When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | ~question     | Pay $100 to Abe One for labor |
   | Amount to Pay | 100 |
-  | ~             | Pay |
-  | Reason        |     |
-  | ~             | Dispute |
+  | | Pull this entire amount from your bank account. |
+  | | Pay first from your Common Good balance; then from your bank account as needed. |
+  | Pay           | dispute |
+  | Reason        |         |
+  | Dispute       |         |
 
+Scenario: A member pays an invoice with sufficient balance
+  Given balances:
+  | uid  | balance |*
+  | .ZZB | 300     |
+  And member ".ZZA" confirms form "tx/charge" with values:
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
-  | pay  |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  | 1    |
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
   |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      | I       | 1   |
-  And these "tx_requests":
-  | nvid | created | status | amount | payer | payee | for   |*
-  |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
   | uid  | balance |*
   | .ZZA |     100 |
-  | .ZZB |    -100 |
+  | .ZZB |     200 |
   | .ZZC |       0 |
-  
+
 Scenario: A member makes partial payments
   Given these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
-  | pay  |     |    1 |        10 | .ZZB  | .ZZA  | labor   | %today  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |        10 | .ZZB  | .ZZA  | labor   | %today  | 1    |
   Then we say "status": "report tx|left on invoice" with subs:
   | did    | otherName | amount | remaining |*
   | paid   | Abe One   | $10    | $90       |
@@ -76,11 +119,11 @@ Scenario: A member makes partial payments
   | Amount to Pay | 90 |
   | ~ | Pay |
   | Reason ||
-  | ~ | Dispute |
+  | ~ | dispute |
 
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
-  | pay  |     |    1 |        90 | .ZZB  | .ZZA  | labor   | %today  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |        90 | .ZZB  | .ZZA  | labor   | %today  | 1    |
   Then we say "status": "report tx" with subs:
   | did    | otherName | amount |*
   | paid   | Abe One   | $90    |
@@ -102,22 +145,24 @@ Scenario: A member overpays an invoice
   | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
-  | pay  |     |    1 |       110 | .ZZB  | .ZZA  | labor   | %today  |
-  Then we say "status": "report tx|left on invoice" with subs:
-  | did    | otherName | amount | remaining |*
-  | paid   | Abe One   | $110   | $-10      |
-  And these "txs":
-  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
-  |   1 | %today  |    110 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
-  And these "tx_requests":
-  | nvid | created | status      | amount | payer | payee | for   |*
-  |    1 | %today  | 1           |    100 | .ZZB  | .ZZA  | labor |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |       110 | .ZZB  | .ZZA  | labor   | %today  | 1    |
+  Then we say "error": "amount too big" with subs:
+  | max | 100.00 |**
+#  Then we say "status": "report tx|left on invoice" with subs:
+#  | did    | otherName | amount | remaining |*
+#  | paid   | Abe One   | $110   | $-10      |
+#  And these "txs":
+#  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+#  |   1 | %today  |    110 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+#  And these "tx_requests":
+#  | nvid | created | status      | amount | payer | payee | for   |*
+#  |    1 | %today  | 1           |    100 | .ZZB  | .ZZA  | labor |
   
-  When member ".ZZB" visits page "history/transactions/period=15"
-  Then we show "Transaction History" with:
-  | Tx# | Date | Name    | Purpose                     | Amount | Balance |
-  |  1  | %mdy | Abe One | labor (CG inv#1 - overpaid) | 110.00 | -110.00 |
+#  When member ".ZZB" visits page "history/transactions/period=15"
+#  Then we show "Transaction History" with:
+#  | Tx# | Date | Name    | Purpose                     | Amount | Balance |
+#  |  1  | %mdy | Abe One | labor (CG inv#1 - overpaid) | 110.00 | -110.00 |
   
 Scenario: A member who has a bank account approves an invoice
   When member ".ZZA" confirms form "tx/charge" with values:
@@ -146,7 +191,7 @@ Scenario: A member confirms request to charge a not-yet member
   | ~question | Pay $100 to Abe One for labor |
   | ~ | Pay |
   | Reason ||
-  | ~ | Dispute |
+  | ~ | dispute |
 
   When member ".ZZD" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
@@ -175,19 +220,64 @@ Scenario: A member denies an invoice
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A member approves an invoice with insufficient funds
+Scenario: A member with a bank account approves an invoice drawing automatically
   When member ".ZZA" confirms form "tx/charge" with values:
-  | op     | who     | amount | goods | purpose |*
-  | charge | Bea Two | 300    | %FOR_GOODS     | labor   |
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 600    | %FOR_GOODS | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason |*
-  | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason | auto |*
+  | pay  |     |    1 |       600 | .ZZB  | .ZZA  | labor   | %today  |        | 1    |
   Then these "tx_requests":
   | nvid | created | status       | amount | payer | payee | for   |*
-  |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
+  |    1 | %today  | %TX_APPROVED |    600 | .ZZB | .ZZA | labor |
+  And we say "error": "short invoice|expect a transfer" with subs:
+  | short | payeeName | nvid |*
+  | $350  | Abe One   |    1 |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+  And these "txs2":
+  | payee | amount |*
+  | .ZZB  | 350    |
+
+Scenario: A member with a bank account approves an invoice not drawing automatically
+  When member ".ZZA" confirms form "tx/charge" with values:
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 600    | %FOR_GOODS | labor   |
+  And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason | auto |*
+  | pay  |     |    1 |       600 | .ZZB  | .ZZA  | labor   | %today  |        | 0    |
+  Then these "tx_requests":
+  | nvid | created | status       | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_APPROVED |    600 | .ZZB | .ZZA | labor |
+  And we say "status": "expect a transfer"
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+  And these "txs2":
+  | payee | amount |*
+  | .ZZB  | 600    |
+
+Scenario: A member approves an invoice with insufficient funds without a connected bank account
+  Given members have:
+  | uid  | risks | bankAccount |*
+  | .ZZB |       |             |
+  When member ".ZZA" confirms form "tx/charge" with values:
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 600    | %FOR_GOODS | labor   |
+  And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | reason |*
+  | pay  |     |    1 |       600 | .ZZB  | .ZZA  | labor   | %today  |        |
+  Then these "tx_requests":
+  | nvid | created | status       | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_APPROVED |    600 | .ZZB | .ZZA | labor |
   And we say "error": "short invoice|when funded|how to fund" with subs:
   | short | payeeName | nvid |*
-  | $50   | Abe One   |    1 |
+  | $350  | Abe One   |    1 |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |

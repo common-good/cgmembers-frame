@@ -143,13 +143,16 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE investinterest ANonmemberExpressesInterest
- *     MAKE invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberInvoicesSomeone
+ *     MAKE invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPayments
  *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE invoice AMemberDeniesAnInvoice
- *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     MAKE invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     MAKE invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE invoice APayeeMarksAnInvoicePaidManually
@@ -314,6 +317,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE txs Setup
  *     MAKE txs AdminReversesABankTransfer
  *     MAKE undo Setup
+ *     MAKE unsubscribe Setup
  */
 function members($list) {return t\members($list);}
 
@@ -366,7 +370,8 @@ function members($list) {return t\members($list);}
  *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberMakesPartialPayments
  *     TEST invoice AMemberOverpaysAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
@@ -422,13 +427,14 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST mfa AMemberTypesTheWrongNonce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
@@ -470,6 +476,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
+ *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -631,9 +638,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
  *     TEST invite AMemberInvites
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST invoice AMemberMakesPartialPayments
- *     TEST invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice APayeeMarksAnInvoicePaidManually
  *     TEST invoice APayeeReopensAnInvoice
@@ -649,7 +657,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
  *     TEST posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     TEST posts SomeoneViewsTheDetailsOfATip
@@ -708,6 +716,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
+ *     TEST unsubscribe AMemberClicksAnUnsubscribeLink
  */
 function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\weShowWith($title, $content, $mustBePresent);}
 
@@ -835,9 +844,13 @@ function withoutOptions($options) {
  *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice Setup
- *     TEST invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     BOTH invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -903,6 +916,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCombo
  *     MAKE investinterest AMemberExpressesInterest
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -918,9 +932,10 @@ function balances($list) {return t\balances($list);}
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
- *     MAKE invoice AMemberApprovesAnInvoice
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     MAKE invoice AMemberMakesPartialPayments
- *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -997,6 +1012,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE signupco ACompanySignsUp
  *     MAKE signup AMemberSignsUp
  *     MAKE signup AMemberVerifiesEmail
+ *     MAKE unsubscribe Setup
  */
 function memberIsLoggedOut() {
   global $testOnly, $mya;
@@ -1128,6 +1144,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  * in: TEST download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     TEST download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     TEST download AMemberDownloadsTransactionsForThePastYearAsCombo
  */
 function weDownloadWith($flnm, $rows) {return t\download($flnm, $rows);}
 
@@ -1232,12 +1249,15 @@ function statisticsGetSet($time) {
  *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
+ *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCombo
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE guest Setup
  *     MAKE invest Setup
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1276,10 +1296,11 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
- *     TEST posts SomeoneConfirmsAnOfferOnceTwice
+ *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
+ *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1515,7 +1536,7 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST donate AMemberMakesARecurringDonation
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberInvoicesSomeone
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
@@ -1796,13 +1817,19 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     MAKE invoice Setup
- *     TEST invoice AMemberApprovesAnInvoice
+ *     TEST invoice AMemberInvoicesSomeone
+ *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
+ *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     TEST invoice AMemberPaysAnInvoiceWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPayments
- *     BOTH invoice AMemberOverpaysAnInvoice
+ *     MAKE invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     BOTH invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     BOTH invoice APayeeMarksAnInvoicePaidManually
@@ -1821,7 +1848,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
- *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
+ *     BOTH posts SomeoneSubmitsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     MAKE posts SomeoneViewsTheDetailsOfATip
@@ -2155,22 +2182,24 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE posts SomeoneVisitsACommunitysPostsPage
+ *     MAKE unsubscribe AMemberClicksAnUnsubscribeLink
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
 
 /**
- * someone confirms (ARG) with: (ARG)
+ * someone submits (ARG) with: (ARG)
  *
  * in: MAKE posts SomeoneSubmitsALocus
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     MAKE posts AMemberEntersDataAfterPostingAnOffer
- *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ *     MAKE posts SomeoneSubmitsAnOfferOnceTwice
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
+ *     MAKE unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
-function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
+function someoneSubmitsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
 
 /**
  * cookie (ARG) is (ARG)
@@ -2198,7 +2227,7 @@ function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
  * someone visits (ARG) where code is: (ARG)
  *
  * in: MAKE aacc SomeoneCompletesACreditCardDonation
- *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ *     MAKE posts SomeoneSubmitsAnOfferOnceTwice
  */
 function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -2573,7 +2602,19 @@ function varEncrypts($var, $ray) {
   t\fixData($ray);
   t\fixTestVars($ray);
   $want = u\cryRay($ray);
-  return $testOnly ? t\eq(t('test Var'), nni($testVars, $var)) : ($testVars[$var] = $want);
+  return $testOnly ? t\eq(t('test Var'), nni($testVars, $var), $want) : ($testVars[$var] = $want or true);
+}
+
+/**
+ * var (ARG) Pencrypts: (ARG)
+ *
+ * in: MAKE unsubscribe AMemberClicksAnUnsubscribeLink
+ *     MAKE unsubscribe AMemberFollowsThroughOnUnsubscribing
+ */
+function varPencrypts($var, $ray) {
+  global $testOnly, $testVars;
+  if ($ok = varEncrypts($var, $ray) and !$testOnly) $testVars[$var] = CRYPT_FLAG . $testVars[$var];
+  return $ok;
 }
 
 /**
@@ -2617,7 +2658,8 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
-function buttonCodeFor($var, $args) {  include_once R_ROOT . '/forms/code.inc';
+function buttonCodeFor($var, $args) { 
+  include_once R_ROOT . '/forms/code.inc';
   global $testOnly; if ($testOnly) return FALSE;
   global $testVars;
 

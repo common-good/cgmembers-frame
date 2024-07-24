@@ -428,7 +428,7 @@ EOF
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),
   'savings too high' => t('You can increase your savings amount only by what you have in your primary account. Your maximum additional savings amount at this time is %max.'),
   'organizer grant' => t('You have recruited %ORGANIZER_GRANT_MIN new %PROJECT members. You are probably eligible for a %PROJECT organizer grant of up to %ORGANIZER_GRANT_MAX! <%a>Click here</a> to apply.'),
-  'bad forced tx' => t('You accepted a transaction (offline) that cannot be completed: customer %account, for %amount, on %created%by.'),  
+  'bad forced tx' => t('You accepted a transaction (offline) that cannot be completed: customer %name (%account), for %amount, on %created%by.'),  
   'bad partner' => t('That is not a %PROJECT signup-partner organization.'),
 
   'missing purpose' => t('<p>What purpose? For buying or selling actual goods and services, you must include a description. Rebates and bonuses are intended as rewards for productive economic activity in %RCREDITS.</p>

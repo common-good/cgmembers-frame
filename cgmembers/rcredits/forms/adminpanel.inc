@@ -30,19 +30,21 @@ function formAdminPanel($form, &$sta, $args = '') {
     superSignin($vKeyPw);
   }
 
-  $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
               ];
   
   $title = t('System Administration');
-  
-  $lnkScanQr = item(lnk('/scan-qr', t('Scan SuperAdmin QR')));
 
-  $toSMT = submi(t('To SMT'));
-  $reAuthQBO = submi(t('ReAuthorize QBO'));
-  $inviteeStatus = submi(t('Invitee Status'));
-  $signupCos = submi(t('Connections to Companies'));
+  if ($mya->admSeeSecure) {
+    $lnkScanQr = item(lnk('/scan-qr', t('Scan SuperAdmin QR')));
+
+    $toSMT = submi(t('To SMT'));
+    $reAuthQBO = submi(t('ReAuthorize QBO'));
+    $inviteeStatus = submi(t('Invitee Status'));
+    $signupCos = submi(t('Connections to Companies'));
+  } else $lnkScanQr = $toSMT = $reAuthQBO = $inviteeStatus = $signupCos = NULL;
+  
   $queries = selectFld(t('Query:'), '', '', $queries);
   $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: (svar('adminingAcct') ?: $mya->mainQid)));
   
@@ -50,12 +52,14 @@ function formAdminPanel($form, &$sta, $args = '') {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
   }
 
+  $tables = ($mya->admSeeAccts and $mya->admRegion) // tables to show
+  ? 'users txs usd recurs proxies relations invites admins notices boxes do stats usd nonmembers' : '';
+
   if ($mya->admTen99) $do1099ktest = submi(t('1099-K TEST'));
   if ($mya->admTen99) $do1099k = submi('1099-K');
   if ($mya->admReconcile) $reconcile = submi('Reconcile Ctty Fund');
-  if ($mya->admRegion) $tables .= ' admins notices boxes do stats usd nonmembers';
   $byState = submi('Accts By State');
-  if ($mya->admRegion) $ieReport = submi('IE Report');
+  if ($mya->admRegion and $mya->admEditTx) $ieReport = submi('IE Report');
   if ($mya->admEditTx) {
     $setCats = submi(t('Set Cats'));
     $sendTxs = submi(t('Send to QBO'));
@@ -76,6 +80,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admMakeRules) $fsRule = submi(t('Set up Sponsorship'));
   if ($mya->admChangeUid) $chgAcctId = submi(t('Change Account ID by Addr'));
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
+  if ($mya->admDeleteAcct) $mergeAccts = submi(t('Merge Accounts'));
 
   //  $connectBank = submi(t('Connect Bank'));
   //  $seeHidden = submi(t('See Hidden'));
@@ -87,7 +92,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts');
+  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -95,8 +100,8 @@ function formAdminPanel($form, &$sta, $args = '') {
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
   
-  $closeBooks = dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close'))));
-  $goTx = intFld(t('Edit tx#:'), '', suffix(btn('', t('Go'))));
+  $closeBooks = $mya->admReconcile ? dateFld(t('Close books on:'), '', dft(getV(VAR_CLOSE_BOOKS)) + suffix(btn('', t('Close')))) : NULL;
+  $goTx = $mya->admSeeTxInfo ? intFld(t('See tx#:'), '', suffix(btn('', t('Go')))) : NULL;
   jsx('panel');
 
   return cgform(compact(ray('title lnkScanQr do acctSet closeBooks goTx')));
@@ -201,6 +206,8 @@ function formAdminPanel_submit($form, &$sta) {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'makeTestAccts') {
     return a\makeTestAccounts();
+  } elseif ($op == 'mergeAccts') {
+    return w\go('sadmin/merge-accounts');
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
     $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;

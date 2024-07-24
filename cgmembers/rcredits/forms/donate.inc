@@ -72,7 +72,8 @@ function formDonate($form, &$sta, $args = NULL) {
   $options = item($options);
     
   if ($target) {
-    $where = '(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND :IS_GIFT AND created>=:dt';
+    $fsFeeCat = r\nick2cat('FS-FEE');
+    $where = "(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND cat2<>$fsFeeCat AND :IS_GIFT AND created>=:dt";
     extract(db\get('SUM(1) AS count, SUM(amt) AS value', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: ray('count value', 0, 0));
     $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$target&value=$value&count=$count");
   } else $therm = '';
