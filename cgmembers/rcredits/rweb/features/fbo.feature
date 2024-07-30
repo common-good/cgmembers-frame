@@ -274,11 +274,10 @@ Scenario: A sponsored member views their transaction history
   Then we show "Transaction #1 Detail" with:
   | Date        | %mdY |
   | Amount      | 100 |
-  | From        | Dee Forn (non-member) |
-  | Postal Addr | 4 D St, Dton, MA 01004 |
   | For         | grant |
+  | From        | Dee Forn (non-member) (by Bea Two) * |
+  | Postal Addr | 4 D St, Dton, MA 01004 |
   | Category    | I: Donations |
-  | Our Agent   | Bea Two |
   | Channel     | Web |
 
 Scenario: A non-member donates to a sponsored organization by credit card

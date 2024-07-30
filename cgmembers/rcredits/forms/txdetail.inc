@@ -45,8 +45,9 @@ function formTxDetail($form, &$sta, $args = '') {
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
       uMe.uid AS meId, eid, recursId, reversesXid, t.flags,
-      uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', ' ', agtMe.fullName, ')')) AS meAgt,
-      uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', ' ', agtYou.fullName, ')')) AS youAgt
+      uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
+      uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
+      p.fullName as nonMemberName
     FROM txs t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
@@ -68,7 +69,8 @@ X;
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  $nmYou = item($youNm. $youAgt . $youPOV, $youWay);
+  if ($nonMemberName) ${$myid == UID_OUTER ? 'youNm' : 'meNm'} = $nonMemberName . t(' (non-member)');
+  $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
