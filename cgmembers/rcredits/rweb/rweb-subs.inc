@@ -2385,7 +2385,7 @@ function missingArgs($args, $require) {
 function first($first, $then = NULL) {
   global $testFirst, $testThen;
   
-  u\setDft($then, $_SERVER['REQUEST_URI']);
+  u\setDft($then, URI);
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);

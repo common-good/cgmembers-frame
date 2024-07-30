@@ -256,6 +256,7 @@ function changeWho($zot, $args = '', &$sta = '') {
     if (!$mya->admin) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
     if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.'));
   }
+  \drupal_get_messages(); // clear current messages (which should have already been displayed)
   r\setAcct($mya, $sta); // set new current account
   return go($page);
 }
