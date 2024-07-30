@@ -109,7 +109,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $form = payFlds(t('Donation'), $mya, $coA, t('donation'), '', nn($s_amount), $form);
   if (!nni($form, 'amount')) return $form; // error
   
-  $noteSuffix = []; // suffix(lnk('', t('Add comment')));
+  $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
   $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : ray('submit', submit(t('Donate'), '', '', $noteSuffix));
 
   return cgForm($form);
@@ -134,7 +134,7 @@ function formDonate_submit($form, &$sta) {
 function submitCG($sta) {
   $mya = w\eLinkAcct($sta); 
 
-  extract(just('amount period honor honored roundup recursId coId comment', $sta['input']));
+  extract(just('amount period honor honored roundup recursId coId note', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, $coId, $amount, $period, now(), 0, 0);
   if ($period != PER_1 and nn($recursId)) {
     $was = (object) db\get('amount, period, periods', 'tx_timed', ray('id', $recursId));
@@ -147,11 +147,12 @@ function submitCG($sta) {
     if ($honored) {
       if ($coId == CGID) {
         db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
-      } else $comment = u\honorDesc($honor) . u\unite($honored, $comment, '/');
+      } else $mya->update('notes', r\stampNote(u\honorDesc($honor) . $honored) . $mya->notes);
     }      
-    if ($notes = $comment ? r\stampNote($comment) : '') $mya->update($notes . $mya->notes);
 
     $purpose = t('donation');
+    if ($note) $purpose .= ' ("' . $note . '")';
+
     $recursId = $period == PER_1 ? NULL
     : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $coId, $amount, $period, $purpose, DUR_1));
     $data = ray('gift', TRUE);
@@ -161,7 +162,7 @@ function submitCG($sta) {
 
     $nm = $mya->fullName;
     if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    be\thanks(r\ccGiftType($coId), TRUE, $mya->id, t('donation'), $amount, $period, 1, $coId, !$mya->stepCount());
+    be\thanks(r\ccGiftType($coId), TRUE, $mya->id, $purpose, $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();

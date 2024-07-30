@@ -1090,12 +1090,12 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
       $postalAddr = u\unite($address, "$city, $st $zip", ', ');
     }
 
-    $note = (!$member and u\starts($notes, fmtDt(now(), 'dmY'))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
+//    $note = (!$member and u\starts($notes, fmtDt(now(), 'dmY'))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
     
     $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
     $subs0 += ray('date item amount', fmtDt(now()), $item, $amtDpy);
 
-    $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail note', $fullName, u\fmtPhone($phone), $postalAddr, $email, $note);
+    $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail', $fullName, u\fmtPhone($phone), $postalAddr, $email);
     unset($subs['fullName']); // salutation to co name, not payer name
     $coA->tellIn($report, $subs);
 
