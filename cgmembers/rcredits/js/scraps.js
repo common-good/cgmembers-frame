@@ -181,7 +181,7 @@ function doit(what, vs) {
     break;
 
   case 'cc':
-    hideComment();
+    hideNote();
     break;
     
   case 'receipt':
@@ -522,11 +522,9 @@ function doit(what, vs) {
     }
     break;
 
-  case 'cc': hideComment(); break;
-  
   case 'donate':
     $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
-    hideComment();
+    hideNote();
     $('.form-item-honor, .form-item-payHow span').hide();
     if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
     var coverCCFee = $('.form-item-coverCCFee');
@@ -1017,8 +1015,8 @@ function cardOther(focus) {
   if (focus) $('#edit-desc').focus();
 }
 
-function hideComment() {
-  var note = $('.form-item-comment');
+function hideNote() {
+  var note = $('.form-item-note');
   note.hide();
   $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
 }

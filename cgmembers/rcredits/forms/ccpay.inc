@@ -36,7 +36,7 @@ function formCCPay($form, &$sta, $args = NULL) {
   $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow cgPayLink')));
   if (!nni($form, 'amount')) return $form; // error
   
-  $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add comment'))));
+  $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add note'))));
   
   return cgForm($form + compact('submit'));
 }
@@ -74,12 +74,12 @@ function formCCPay_submit($form, &$sta) {
  */
 function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   $dbFields = 'fullName email notices phone zip country city state notes source';
-  extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payHow routingNumber bankAccount isSavings comment coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
+  extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payHow routingNumber bankAccount isSavings note coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
   
   $coA = r\acct($coId);
   list ($city, $state) = r\zipCity($zip);
   $notices = NOTICE_NONE;
-  $notes = $comment ? r\stampNote($comment) : '';
+  if ($note) $item .= ' ("' . $note . '")';
 
   $source = t('Payment to %nm (by %how)', 'nm how', $coA->bestName, $payHow ? t('cc') : t('ach'));
   $reportInfo += compact(ray($inputFlds));
@@ -93,14 +93,14 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
     u\EXPECT(in($type, 'gift fbo'), 'wrong type for ACH donation');
     $bankAccount = u\cry('V', "USkk$routingNumber$bankAccount");
     $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
-    addToTxs2($amount, t('donation'), $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);
+    addToTxs2($amount, $item, $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);
     r\tellAdmin($source, $reportInfo);
     unset($DBTX);
     return be\thanks($type, FALSE, $pid, $item, $amount, $period, 1, $coA->id, TRUE);
  
   } else { // credit card donation or purchase
     $code = u\cryRay(compact(ray('type item pid period')) + ray('amount coId', number_format($amount, 2, '.', ''), $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests, but omit commas so it's still a number)
-    $what = $type == 'purchase' ? t('your purchase of %item from %who', 'item who', $item, $coA->bestName)
+    $what = $type == 'purchase' ? t('your purchase of %item from %who', 'item who', $reportInfo['item'], $coA->bestName)
     : ($coA->id == CGID ? t('general support') : $coA->bestName);
     return paypal($type != 'purchase', $what, $reportInfo, $code);
     // commit $DBTX when function ends
@@ -220,7 +220,7 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
  */
 function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
 
-  $comment = areaFld(t('Comment:'));
+  $note = textFld(t('Note:'), [t('About the payment')]);
   list ($cq, $ca) = $a ? [NULL, NULL] : w\captcha();
   $coId = hidFld($coA->id);
   u\setDft($period, hidFld(PER_1));
@@ -247,6 +247,6 @@ function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
   // Stuff to do AFTER extracting $extra
   if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test
   
-  foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach comment cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
+  foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach note cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
   return $form;
 }

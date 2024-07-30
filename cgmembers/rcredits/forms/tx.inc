@@ -111,7 +111,7 @@ function formTx_submit($form, &$sta) {
   if (!$who) {
     if ($mya->sponsored) return fboTx($input); // non-member transaction by check or direct ACH
     $payerName = $mya->fullName;
-    debug(compact(ray('fullName payerName email amount purpose')));
+    de bug(compact(ray('fullName payerName email amount purpose')));
   }
 */
   $uid = whoId($sta);
@@ -189,7 +189,7 @@ function fboTx($input) {
   $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
-  $res = $paying ? go('dashboard') : be\thanks($mya->sponsored ? 'fbo' : ($isGift ? 'cggift' : 'purchase'), FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
+  $res = $paying ? go('dashboard') : be\thanks($mya->sponsored ? 'fbo' : ($isGift ? 'cggift' : 'purchase'), FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
   unset($DBTX);
   
   return $res; // no need to continue (outer transactions never delay or repeat)

@@ -37,10 +37,10 @@ Scenario: A non-member donates to a ccOk organization by credit card
 
   Given next captcha is "37"
   And var "code" encrypts:
-  | type | item     | pid | period | amount | coId   |*
-  | gift | donation | 1   | once   | 123.00 | NEWZZC |
+  | type | item                  | pid | period | amount | coId   |*
+  | gift | donation ("awesome!") | 1   | once   | 123.00 | NEWZZC |
   When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
+  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
@@ -54,9 +54,9 @@ Scenario: A non-member donates to a ccOk organization by credit card
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_XFEE    |
+  | eid | xid | payer      | payee | amount | purpose               | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee                | %E_XFEE    |
   And we email "gift-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
@@ -66,13 +66,13 @@ Scenario: A non-member donates to a ccOk organization by credit card
   | amount       | $123            |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123                 |**
-  | date         | %mdY                 |
-  | fromName     | Zee Zot              |
-  | fromAddress  | Greenfield, MA 01301 |
-  | fromPhone    | +1 262 626 2626      |
-  | fromEmail    | z@example.com        |
-  | note         | awesome!             |
+  | item         | donation ("awesome!") |**
+  | amount       | $123                  |
+  | date         | %mdY                  |
+  | fromName     | Zee Zot               |
+  | fromAddress  | Greenfield, MA 01301  |
+  | fromPhone    | +1 262 626 2626       |
+  | fromEmail    | z@example.com         |
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
@@ -83,7 +83,7 @@ Scenario: A non-member donates to a ccOk organization by ACH
   | .ZZC    | Cc3    |
   And next captcha is "37"
   When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
+  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
   |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
@@ -92,8 +92,8 @@ Scenario: A non-member donates to a ccOk organization by ACH
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |       0 | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose            | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation           | %E_OUTER   |
+  | eid | xid | payer      | payee | amount | purpose               | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
   And count "tx_entries" is 2
   And we email "gift-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
@@ -104,13 +104,13 @@ Scenario: A non-member donates to a ccOk organization by ACH
   | amount       | $123            |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123                 |**
-  | date         | %mdY                 |
-  | fromName     | Zee Zot              |
-  | fromAddress  | Greenfield, MA 01301 |
-  | fromPhone    | +1 262 626 2626      |
-  | fromEmail    | z@example.com        |
-  | note         | awesome!             |
+  | item         | donation ("awesome!") |**
+  | amount       | $123                  |
+  | date         | %mdY                  |
+  | fromName     | Zee Zot               |
+  | fromAddress  | Greenfield, MA 01301  |
+  | fromPhone    | +1 262 626 2626       |
+  | fromEmail    | z@example.com         |
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
@@ -119,14 +119,14 @@ Scenario: A member donates to a ccOk organization
   | account | secret |*
   | .ZZC    | Cc3    |
   When member ".ZZA" completes "community/donate/code=%buttonCode" with:
-  | amount | comment  | period | honor  | honored |*
+  | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose            | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation           | %E_PRIME   |
+  | eid | xid | payer | payee | amount | purpose               | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation ("awesome!") | %E_PRIME   |
   And these "tx_timed":
-  | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
-  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
+  | id | action   | from | to   | amount | portion | purpose                | payerType    | payeeType    | period |*
+  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation ("awesome!")  | %REF_ANYBODY | %REF_ANYBODY | month  |  
   And count "tx_entries" is 2
   And we email "gift-thanks-member" to member "a@" with subs:
   | fullName     | Abe One         |**
@@ -137,13 +137,13 @@ Scenario: A member donates to a ccOk organization
   | amount       | $123 monthly    |
   | noFrame      |                 |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123 monthly         |**
-  | date         | %mdY                 |
-  | fromName     | Abe One              |
-  | fromAddress  | 1 A, A, AK           |
-  | fromPhone    | +1 301 301 3001      |
-  | fromEmail    | a@example.com        |
-  | note         |                      |
+  | item         | donation ("awesome!") |**
+  | amount       | $123 monthly          |
+  | date         | %mdY                  |
+  | fromName     | Abe One               |
+  | fromAddress  | 1 A, A, AK            |
+  | fromPhone    | +1 301 301 3001       |
+  | fromEmail    | a@example.com         |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
 
@@ -166,12 +166,12 @@ Scenario: A member pays a ccOk organization
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123 monthly         |**
-  | date         | %mdY                 |
-  | fromName     | Abe One              |
-  | fromAddress  | 1 A, A, AK           |
-  | fromPhone    | +1 301 301 3001      |
-  | fromEmail    | a@example.com        |
-  | note         |                      |
+  | item         | gift                  |**
+  | amount       | $123 monthly          |
+  | date         | %mdY                  |
+  | fromName     | Abe One               |
+  | fromAddress  | 1 A, A, AK            |
+  | fromPhone    | +1 301 301 3001       |
+  | fromEmail    | a@example.com         |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
