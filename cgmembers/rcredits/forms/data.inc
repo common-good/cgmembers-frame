@@ -54,8 +54,9 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $form = compact(ray('title subtext report'));
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
-    $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
+    $subtext = t('<p>Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request</p>')));
     if ($mya->admRegion) {
+      $subtext .= ' ' . t('<p>To include encrypted or other calculated account fields, alias the users table as "u" and end the field name with "!". For example:<br><br><i>SELECT fullName, u.email! FROM users u ORDER BY fullName LIMIT 10</i></p>');
       $sql = areaFld(t('SQL:'), [t('MySQL Select Query')], dft(urldecode(nn($sql))) + maxlen(4096));
       $sqlTitle = textFld(t('Title:'), [t('Results Title')], t('Query Results'));
       $submit = submit(t('Go'));
