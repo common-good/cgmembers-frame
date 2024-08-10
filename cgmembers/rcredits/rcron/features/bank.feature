@@ -187,28 +187,28 @@ Scenario: a member's bank account gets verified
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
 
-Scenario: a member account needs more funding while not yet verified and something is combinable
-  Given members have:
-  | uid  | balance | flags     |*
-  | .ZZA |      10 | ok,refill |
-  | .ZZB |     200 |           |
-  And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |      0 | %today  |         0 |       0 |
-  |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
-  Then count "txs2" is 2
-  And count "txs" is 2
-  
-  When cron runs "getFunds"
-  Then these "txs2":
-  | txid | payee | amount | created | completed | deposit | xid |*
-  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
-  And these "txs":
-  | xid | amount | payer | payee | for       | taking |*
-  |   1 |      0 | bank  | .ZZA  | ?         |     1 |
-  |   2 |      0 | bank  | .ZZA  | from bank |     1 |
-  And count "txs2" is 2
-  And count "txs" is 2
+#(no more combining) Scenario: a member account needs more funding while not yet verified and something is combinable
+#  Given members have:
+#  | uid  | balance | flags     |*
+#  | .ZZA |      10 | ok,refill |
+#  | .ZZB |     200 |           |
+#  And these "txs2":
+#  | txid | payee | amount | created | completed | deposit |*
+#  |    1 | .ZZA  |      0 | %today  |         0 |       0 |
+#  |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
+#  Then count "txs2" is 2
+#  And count "txs" is 2
+# 
+#  When cron runs "getFunds"
+#  Then these "txs2":
+#  | txid | payee | amount | created | completed | deposit | xid |*
+#  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
+#  And these "txs":
+#  | xid | amount | payer | payee | for       | taking |*
+#  |   1 |      0 | bank  | .ZZA  | ?         |     1 |
+#  |   2 |      0 | bank  | .ZZA  | from bank |     1 |
+#  And count "txs2" is 2
+#  And count "txs" is 2
   
 #(rule canceled) Scenario: a member has a negative balance, but no agreement to bring it up to zero
 #  Given members have:
