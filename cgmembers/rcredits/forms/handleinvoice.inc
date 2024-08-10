@@ -141,7 +141,7 @@ function handleInvoice($op, $payAmount, $info) {
   extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
-  $ok = TRUE; // messages default to status, rather than error
+  $ok = TRUE; // messages default to type "status", rather than "error"
   $data = ($data ? unserialize($data) : []);
   
   if ($op == 'pay' and !$reason) {
