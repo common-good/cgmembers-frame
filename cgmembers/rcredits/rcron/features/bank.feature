@@ -44,7 +44,7 @@ Scenario: a member with low credit line gets credit for the bank transfer after 
   Given these "txs2":
   | txid | payee | amount             | channel  | created                        | completed |*
   |    1 | .ZZA  | %(%USDTX_FAST + 1) | %TX_CRON | %(%now - %DAY_SECS*USDTX_DAYS) |         0 |
-  When cron runs "getFunds"
+  When cron runs "completeUsdTxs"
   Then balances:
   | uid  | balance            |*
   | .ZZA | %(%USDTX_FAST + 1) |
@@ -113,7 +113,8 @@ Scenario: a member is under target and has requested insufficient funds from the
   When cron runs "getFunds"
   Then these "txs2":
   | payee | amount | xid |*
-  | .ZZD  | 280.01 |   2 |
+  | .ZZD  | 280.00 |   2 |
+  | .ZZD  |  30.00 |   3 |
 
 Scenario: a member with zero target has balance below target
   Given members:
@@ -209,16 +210,15 @@ Scenario: a member account needs more funding while not yet verified and somethi
   And count "txs2" is 2
   And count "txs" is 2
   
-Scenario: a member has a negative balance, but no agreement to bring it up to zero
-  Given members have:
-  | uid  | balance | floor | flags               |*
-  | .ZZA | -100    | 0     | ok,bankOk,confirmed |
-  | .ZZB | 0       | 0     | ok,confirmed        |
-  | .ZZC | 0       | 0     | ok,co               |
-  When cron runs "getFunds"
-  Then count "txs2" is 0  
+#(rule canceled) Scenario: a member has a negative balance, but no agreement to bring it up to zero
+#  Given members have:
+#  | uid  | balance | floor | flags               |*
+#  | .ZZA | -100    | 0     | ok,bankOk,confirmed |
+#  | .ZZB | 0       | 0     | ok,confirmed        |
+#  | .ZZC | 0       | 0     | ok,co               |
+#  When cron runs "getFunds"
+#  Then count "txs2" is 0  
 
-# bug fix test
 Scenario: a dormant joint member with a negative balance hasn't had wentNeg set yet
   Given these "relations":
   | main  | other | permission |*
@@ -241,10 +241,12 @@ Scenario: member has negative balance, an approved invoice, and a usable credit 
   And these "tx_requests":
   | payer | payee | amount | status   |*
   | .ZZA  | .ZZC  | 37.63  | approved |
+  When cron runs "payInvoices"
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  | 64.64  | %today  |         0 |       0 |
+  |    1 | .ZZA  |  37.63 | %today  |         0 |       0 |
+  And count "txs2" is 1
 
 Skip no longer delaying first transfer, to verify account first
 Scenario: member's bank account has not been verified
