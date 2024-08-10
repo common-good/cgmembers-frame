@@ -497,7 +497,7 @@ X;
             $id = round(($id + $nextId) / 2, 0);
             if (db\exists('tx_cats', compact('id'))) {
               $id = db\max('id', 'tx_cats') + 1;
-              say(t('Maybe change id (order) of new category "%category" (temporary id %id) to be roughly alphabetical before using it.', compact(ray('id category'))));
+              w\say(t('Maybe change id (order) of new category "%category" (temporary id %id) to be roughly alphabetical before using it.', compact(ray('id category'))));
             }
           } else $id = round($id + 100, -2);
           db\insert('tx_cats', $info + compact('id'), 'id');
