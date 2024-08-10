@@ -145,10 +145,11 @@ function handleInvoice($op, $payAmount, $info) {
   $data = ($data ? unserialize($data) : []);
   
   if ($op == 'pay' and !$reason) {
+    $flags = db\get('flags', 'tx_requests', compact('nvid'));
+    db\update('tx_requests', ray('nvid status flags', $nvid, TX_APPROVED, u\setBit($flags, 'funding', FALSE)), 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', $z = be\payInvoice($nvid, $payAmount, $auto))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $auto, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
-      db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
     }
     if ($always) {
