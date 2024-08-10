@@ -622,3 +622,10 @@ function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  */
 function itsLater() {return t\itsLater();}
+
+/**
+ * only these (ARG): (ARG)
+ *
+ * in: TEST gifts ARecurringDonationToCGCannotBeCompleted
+ */
+function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\these($thing, $list)); }
