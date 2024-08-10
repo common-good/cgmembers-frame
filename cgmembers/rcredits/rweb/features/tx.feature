@@ -258,12 +258,12 @@ Scenario: A member ask to pay another member too much, repeatedly
   Then we say "status": "short to|when resolved|repeats" with subs:
   | short | avail | often  |*
   | $650  | $250  | weekly |
-  And we message "banked|bank tx number" to member ".ZZA" with subs:
-  | action | amount | tofrom | why                              | checkNum |*
-  | draw   | $650   | from   | to cover your payment request #1 | 1        |
+  And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
+  | nvid | short | avail |*
+  | 1    | $900  | $250  |
   And we say "status": "banked|bank tx number" with subs:
-  | action | amount | tofrom | why                              | checkNum |*
-  | draw   | $650   | from   | to cover your payment request #1 | 1        |
+  | action | amount | tofrom | why                                 | checkNum |*
+  | draw   | $900   | from   | to cover pending payment request #1 | 1        |
 
 Scenario: A member pays another member later
   When member ".ZZA" confirms form "tx/pay" with values:

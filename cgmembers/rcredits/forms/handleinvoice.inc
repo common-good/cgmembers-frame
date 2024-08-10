@@ -141,14 +141,15 @@ function handleInvoice($op, $payAmount, $info) {
   extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
-  $ok = TRUE; // messages default to status, rather than error
+  $ok = TRUE; // messages default to type "status", rather than "error"
   $data = ($data ? unserialize($data) : []);
   
   if ($op == 'pay' and !$reason) {
+    $flags = db\get('flags', 'tx_requests', compact('nvid'));
+    db\update('tx_requests', ray('nvid status flags', $nvid, TX_APPROVED, u\setBit($flags, 'funding', FALSE)), 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', $z = be\payInvoice($nvid, $payAmount, $auto))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $auto, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
     } else { // if payer account is not active yet
-      db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
     }
     if ($always) {

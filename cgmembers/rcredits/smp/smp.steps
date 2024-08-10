@@ -193,7 +193,16 @@ function balances($list) {return t\balances($list);}
  * these (ARG): (ARG)
  *
  * in: MAKE generateInvoices Setup
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
  *     MAKE getInvoiceStatus Setup
  *     MAKE makePayments Setup
  */
 function these($thing, $list) {return t\these($thing, $list);}
+
+/**
+ * count (ARG) is (ARG)
+ *
+ * in: TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ */
+function countIs($what, $count) {return t\count($what, $count);}

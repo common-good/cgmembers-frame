@@ -140,9 +140,11 @@ function formInvest_submit($form, &$sta) {
     if ($short) {
       $msg = t('You do not currently have enough funds in your %PROJECT account for that investment, so %short will be drawn automatically from your bank account. Once that transfer is complete, your requested investment will be made automatically.', 'short', u\fmtAmt($short));
       $mya->getFunds($short, t('for investment'), TRUE);
-    } else r\handleInvestmentRequest($stakeid, $msg);
+    } else $msg = handleInvestmentRequest($stakeid);
+    
   } elseif (!$buy and $request < 0) { // sell
     $msg = t('redemption request', 'request', u\fmtAmt(-$request));
+    
   } else $msg = t('Your request has been adjusted accordingly.');
 
   say($msg);
@@ -207,4 +209,20 @@ function clubA($clubqid = NULL) {
   }
   
   return w\go('/invest/overview', tr('no page permission', 'page', t('Investment Club Details')));
+}
+
+/**
+ * Handle the investment request for one account in one club.
+ * @param int $stakeid: record ID of the account's stake
+ * @return $msg: a message, if any, resulting from the attempt
+ */
+function handleInvestmentRequest($stakeid) {
+  if (!$res = db\get('stake,request,uid,clubid', 'r_stakes', compact('stakeid'))) return !$msg = t('bad stakeid');
+  extract($res);
+  if ($request <= 0) return t('No additional investment is requested.');
+
+  $a = r\acct($uid);
+  $z = $a->payApproved($clubid, $request, t('investment'), FOR_USD, ray('stake', 1));
+
+  return $z->msg;
 }

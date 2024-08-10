@@ -508,11 +508,11 @@ function creditPeops($id) {
 /**
  * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
- * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @param bool $auto: don't pull any more from bank than needed
+ * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return a txRet object
  */
-function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
+function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
@@ -547,19 +547,25 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
         if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
       } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
-  } else {
-    if ($shortfall = ($auto ? nni($z->subs, 'shortfall') : $payAmount)) {
-      $index = ($auto ? 'short invoice|' : '') . ($payerA->hasBank ? 'expect a transfer' : 'when funded|how to fund');
-      $subs = ray('short payeeName nvid', $auto ? u\fmtAmt($shortfall) : NULL, $payeeA->fullName, $nvid);
-      $payerA->tellOut($index, $subs);
-      if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid')));
+    
+    $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
+  } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
 
-      $z->index = $index; // replace short payment message with something more explicit about the invoice
-      $z->msg = tr($index, $subs);
-      if (!$auto) $z->ok = TRUE;
-      u\preray($subs, $z->subs);
+  if (!$auto) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
+
+  if ($fromBank > 0 and !u\getBit($flags, 'funding')) { // need funds and didn't already request them
+    $z->index .= $payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund'; // add to short payment message something more detailed
+    $tellIndex = 'request num|' . $z->index;
+    if ($z->ok) $tellIndex = str_replace('report tx|', '', $z->index); // don't message both "you paid" and "report tx"
+    $subs = ray('short payeeName nvid', u\fmtAmt($fromBank), $payeeA->fullName, $nvid);
+    u\preray($subs, $z->subs);
+    $z->msg = tr($z->index, $z->subs);
+    $payerA->tellOut($tellIndex, $z->subs);
+    if ($payerA->hasBank) {
+      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
+      db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
+      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $auto, $payAmount); }
     }
-    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
   }
 
   unset($DBTX);
@@ -583,9 +589,9 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
  *   'boxId': the id of the device on which the transaction was initiated
  *   'offline'
  *   'loan'
- *   'investment'
+ *   'investment': community investment (UNUSED?) or investment club investment
  *   'method': the TX_FLAGS index of the payment type, if non-standard (check, cc, directach, wire)
- *   'stake'
+ *   'stake': member buying or selling stake in investment club
  *   'fine'
  *   'noask'
  *   'funding'
@@ -612,7 +618,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $amount = $amount + 0; // convert from string (otherwise some functions fail in PHP 8.2)
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId rule cat reversesXid method', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
+  extract(just('created force', $data, [now(), 0]));
+  extract(just('boxId rule cat reversesXid method', $data, NULL));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -686,8 +693,10 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
   }
 
+  $erInfo += compact('needed');
+
   // Calculate any balance shortfall
-  if ($shortfall = ($loserA->id < 0 ? 0 : $loserA->shortfall($goods, $needed, TRUE, $actorA))) {
+  if ($shortfall = $loserA->shortfall($goods, $needed, TRUE, $actorA)) {
     if ($force) {
       $short = TRUE; // flag overdraft
     } else {
@@ -698,7 +707,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       $msg = $reallyTaking ? ($otherA->secret ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
-      return txErr($msg, compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
+      return txErr($msg, $erInfo + compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
     }
   }
   
@@ -736,14 +745,25 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($crid) db\update('tx_credits', ray('id xid', $crid, $xid));
-  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
+  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $amount));
   
   // Notify both parties by email about any completed transaction
-  $res = sendNotifications($actorA, $type, $tx, $shortfall);
+  $z = sendNotifications($actorA, $type, $tx, $shortfall);
+  $z->subs += compact('needed');
+  
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+  }
+  
+  if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
+    extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount
+    $stake += $amount;
+    $request = max(0, $request - $amount); // just invested more, so request should be less, but not negative
+    db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
+    $z->index .= '|investment increase';
+    $z->msg = tr($z->index, $z->subs);
   }
   
   foreach ([$actorA, $otherA] as $a) {
@@ -761,7 +781,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   unset($DBTX);
 
-  return $res;
+  return $z;
 }
 
 /**
@@ -1123,6 +1143,10 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
  *    created: UNIXtime
  *    request: unique request identifier for actor using API
  *    api: URL to which to report success or failure (for API requests)
+ *    reversesXid: xid of transaction this invoice would reverse
+ *    cat: accounting category for payee
+ *    method:
+ *    for:
  * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  * NOTE: goods is no longer allowed in $extra, it's its own parameter
@@ -1131,13 +1155,12 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   global $channel;
 
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
-  u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
   if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
   $flags = $method ? u\bit($method) : 0;
   foreach (ray('cat reversesXid method') as $k) unset($extra[$k]);
 
-  foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
+  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -1164,10 +1187,8 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
     u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
-    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
-      $z = be\payInvoice($nvid);
-      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
-    } else { $payeeA->tell('you will be paid', $subs2); }
+    $z = be\payInvoice($nvid, FALSE);
+    if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
   }
 
   $msg = 'report tx';

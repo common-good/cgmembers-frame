@@ -19,7 +19,7 @@ Setup:
   | .ZZA |     400 |
   | .ZZB |     100 |
   | .ZZC |     300 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   4 | %today-9d |     10 | .ZZB | .ZZA | cash E  |
   Then balances:
@@ -27,7 +27,7 @@ Setup:
   | .ZZA |     410 |
   | .ZZB |      90 |
   | .ZZC |     300 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   5 | %today-8d |    100 | .ZZC | .ZZA | usd F   |
   Then balances:
@@ -35,7 +35,7 @@ Setup:
   | .ZZA |     510 |
   | .ZZB |      90 |
   | .ZZC |     200 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   6 | %today-7d | 240.01 | .ZZA | .ZZB  | what G  |
   |   6 | %today-7d |    .99 | .ZZA | round | roundup donation |
@@ -46,7 +46,7 @@ Setup:
   | .ZZA  |  269.00 |
   | .ZZB  |  330.01 |
   | .ZZC  |  200.00 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   7 | %today-6d |  99.99 | .ZZA | .ZZB  | pie N   |
   |   7 | %today-6d |   0.01 | .ZZA | round | roundup donation |
@@ -55,7 +55,7 @@ Setup:
   | .ZZA |     169 |
   | .ZZB |     430 |
   | .ZZC |     200 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   8 | %today-5d |    100 | .ZZC | .ZZA | labor M |
   Then balances:
@@ -63,7 +63,7 @@ Setup:
   | .ZZA |     269 |
   | .ZZB |     430 |
   | .ZZC |     100 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |   9 | %today-4d |     50 | .ZZB | .ZZC | cash P  |
   Then balances:
@@ -72,7 +72,7 @@ Setup:
   | .ZZB |     380 |
   | .ZZC |     150 |
   # A: (21*(100+400) + 110+400 + 130+480 + 92+280 + -3+280 + 2*(107+280) + 3*(31+140))/30 * R/12 = 
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |  10 | %today-3d |    120 | .ZZA | .ZZC | this Q  |
   Then balances:
@@ -80,7 +80,7 @@ Setup:
   | .ZZA |     149 |
   | .ZZB |     380 |
   | .ZZC |     270 |
-  When these "txs": 
+  Given these "txs": 
   | xid | created   | amount | payer | payee | purpose |*
   |  11 | %today-1d |    100 |  .ZZA | .ZZB | cash V  |
   Then balances:
@@ -129,18 +129,18 @@ Scenario: Crumbs are invoiced
   |  12 | %today-4d |    770 | .ZZC | .ZZB | loan    |
   Then count "tx_hdrs" is 12
   When cron runs "everyMonth"
-  Then these "tx_requests":
-  | nvid | created        | payer | payee | amount | flags       | purpose                                      | status       |*
-  |    1 | %(%daystart-1) | .ZZC  | crumb |   2.40 | gift,crumbs | crumbs donation: 2.0% of past month receipts | %TX_APPROVED |
+  Then count "tx_requests" is 1
+  And these "tx_requests":
+  | nvid | created        | payer | payee | amount | flags               | purpose                                      | status       |*
+  |    1 | %(%daystart-1) | .ZZC  | crumb |   2.40 | gift,crumbs,funding | crumbs donation: 2.0% of past month receipts | %TX_APPROVED |
   And these "txs2":
   | xid | payee | amount | completed | deposit |*
-  | 13  | .ZZC  | 502.40 |         0 |       0 |
+  | 13  | .ZZC  |   2.40 | %now      |       0 |
   And these "txs":
   | xid | created        | amount | payer | payee | purpose                | flags |*
-  | 13  | %now           |      0 | bank  | .ZZC  | from bank              |       |
+  | 13  | %now           |   2.40 | bank  | .ZZC  | from bank              |       |
   | 14  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations: %mY | gift  |
   And count "tx_hdrs" is 14
-  And count "tx_requests" is 1
 
   When cron runs "everyMonth"
   Then count "tx_hdrs" is 14
@@ -155,13 +155,17 @@ Scenario: Crumbs are invoiced
   Then count "tx_hdrs" is 15
   And count "tx_requests" is 1  
 
-  When cron runs "getFunds"
+  When cron runs "payInvoices"
+  And cron runs "getFunds"
+  And cron runs "completeUsdTxs"
   Then count "tx_hdrs" is 16
-  Then these "txs":
+  And these "txs":
   | xid | created        | amount | payer   | payee | purpose           | flags |*
   | 16  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
 
-  When cron runs "getFunds"
+  When cron runs "payInvoices"
+  And cron runs "getFunds"
+  And cron runs "completeUsdTxs"
   Then count "tx_hdrs" is 16
   
 # NO (Seedpack gets no distribution) distribution of shares to CGCs

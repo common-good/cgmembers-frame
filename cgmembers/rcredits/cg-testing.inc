@@ -1896,7 +1896,7 @@ function weSayWithSubs($type, $index, $subs) {
       if ($actual == $tmsg) {$res = TRUE; break;}
     }
   }
-  if (!$res) t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
+  if (!$res) t\output("EXPECT ($type): $wantMsg", 'output'); // this must come after array_search!
   return $res;
 }
 
@@ -1975,7 +1975,7 @@ function weMessage($index, $id, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testMessages;
 
-  $subs = $subs[0];
+  $subs = nni($subs, 0) ?: [];
   $uid = t\uid($id);
 
   foreach ($testMessages as $one) {

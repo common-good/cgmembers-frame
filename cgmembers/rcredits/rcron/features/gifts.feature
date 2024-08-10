@@ -27,7 +27,7 @@ Scenario: A brand new recurring donation to CG can be completed
   And these "tx_timed":
   | id | start      | from | to   | amount | period | purpose |*
   |  7 | %yesterday | .ZZA | .ZZC |     10 | month  | gift!   |
-  When cron runs "recurs"
+  When cron runs "payInvoices"
   Then these "txs":
   | xid | created | amount | payer | payee    | purpose | flags | recursId |*
   |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
@@ -113,7 +113,7 @@ Scenario: A donation invoice (to CG) can be completed
   | nvid | created   | status       | amount | payer | payee | for      | flags | recursId |*
   |    2 | %today    | %TX_APPROVED |     50 | .ZZA  | cgf   | donation | gift  |        8 |
   And member ".ZZA" has no photo ID recorded
-  When cron runs "getFunds"
+  When cron runs "payInvoices"
   Then these "txs": 
   | xid | created | amount | payer | payee    | purpose  | flags | recursId |*
   |   2 | %today  |     50 | .ZZA  | regulars | donation | gift  |        8 |
@@ -126,20 +126,26 @@ Scenario: A recurring donation to CG cannot be completed
   | start     | from | to  | amount | period | purpose |*
   | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
   When cron runs "recurs"
-  Then these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for   | flags |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift  |  
+  Then only these "tx_requests":
+  | nvid | created   | status       | amount | payer | payee | for   | flags        |*
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,funding |  
+  And only these "txs2":
+  | txid | xid | amount | payee |*
+  | 1    | 2   | 200    | .ZZA  |
   And count "txs" is 2
-  And count "txs2" is 1
-  # because invoice generated a bank transfer
-  And count "tx_requests" is 1
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose   |*
+  |   2 | %today  | 0      | bank  | .ZZA  | from bank |
 
-  When cron runs "getFunds"
+  When cron runs "payInvoices"
+  And cron runs "getFunds"
+  And cron runs "completeUsdTxs"
   Then count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 1
   # (no change)
   
+  Given it's later
   When cron runs "recurs"
   Then count "txs" is 2
   And count "txs2" is 1

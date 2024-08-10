@@ -64,8 +64,8 @@ Scenario: A non-member donates to a sponsored member
   | Full Name   | |
   | Postal Addr | |
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat         |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO       |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat         | isGift |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO       | 1      |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |

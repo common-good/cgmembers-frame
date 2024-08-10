@@ -133,8 +133,8 @@ Scenario: A member donates with insufficient funds
   | coName | %PROJECT |**
   And we say "status": "gift transfer later"
   And these "tx_requests":
-  | nvid | created | amount | payer | payee | purpose  | flags | status   |*
-  |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  | approved |
+  | nvid | created | amount | payer | payee | purpose  | flags        | status   |*
+  |    1 | %today  |    200 | .ZZA  | cgf   | donation | gift,funding | approved |
   And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |

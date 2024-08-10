@@ -145,7 +145,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberInvoicesSomeone
  *     MAKE invoice AMemberPaysAnInvoiceWithSufficientBalance
- *     MAKE invoice AMemberMakesPartialPayments
+ *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
+ *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice
  *     MAKE invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -368,9 +369,11 @@ function members($list) {return t\members($list);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
- *     TEST invoice AMemberMakesPartialPayments
+ *     TEST invoice AMemberMakesPartialPaymentsWithSufficientBalance
+ *     TEST invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     TEST invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
@@ -427,7 +430,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
  *     TEST message AMemberSendsAMessageToAnotherMember
@@ -641,7 +643,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
- *     TEST invoice AMemberMakesPartialPayments
+ *     TEST invoice AMemberMakesPartialPaymentsWithSufficientBalance
+ *     TEST invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice APayeeMarksAnInvoicePaidManually
  *     TEST invoice APayeeReopensAnInvoice
@@ -847,8 +850,9 @@ function withoutOptions($options) {
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     BOTH invoice AMemberPaysAnInvoiceWithSufficientBalance
+ *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
+ *     BOTH invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
  *     TEST invoice AMemberWithABankAccountApprovesAnInvoiceNotDrawingAutomatically
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
@@ -935,7 +939,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
- *     MAKE invoice AMemberMakesPartialPayments
+ *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
+ *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -1822,7 +1827,8 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST invoice AMemberPaysAnInvoiceWithSufficientBalance
- *     BOTH invoice AMemberMakesPartialPayments
+ *     BOTH invoice AMemberMakesPartialPaymentsWithSufficientBalance
+ *     BOTH invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -2691,24 +2697,4 @@ function memberIsSignedOut() {
   global $testOnly, $mya;
   if (!$testOnly) w\signout(TRUE);
   return !$mya;
-}
-
-/**
- * member (ARG) completes (ARG) with values: (ARG)
- *
- * in: 
- */
-function memberCompletesWithValues($arg1, $arg2) {
-  global $testOnly;
-  todo;
-}
-
-/**
- * member (ARG) scans admin card %DEV_VKEYPW
- *
- * in: 
- */
-function memberScansAdminCardVKEYPW($arg1) {
-  global $testOnly;
-  todo;
 }

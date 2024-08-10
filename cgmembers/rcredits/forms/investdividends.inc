@@ -63,7 +63,7 @@ function formInvestDividends_submit($form, &$sta) {
       
       if ($a->reinvest) {
         $ok = $a->payApproved($clubid, $amt, t('re-investment of dividends'), FOR_USD, ray('stake', 1));
-        db\q('UPDATE r_stakes SET stake=GREATEST(0, stake+request+:amt), request=LEAST(0, request+:amt) WHERE clubid=:clubid AND uid=:uid', compact(ray('clubid uid amt')));
+//        db\q('UPDATE r_stakes SET stake=GREATEST(0, stake+request+:amt), request=LEAST(0, request+:amt) WHERE clubid=:clubid AND uid=:uid', compact(ray('clubid uid amt')));
         $reCount++;
         $reSum += $amt;
       }
