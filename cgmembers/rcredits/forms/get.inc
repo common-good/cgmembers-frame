@@ -95,7 +95,7 @@ function formGet_submit($form, &$sta) {
 
   extract(just('amount cat', $sta['input'], NULL));
 
-  list ($xid, $amtDone, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit cat', TRUE, $cat));
+  list ($xid, $amtDone, $completed, $report) = $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('as soon as possible'), ray('explicit cat', TRUE, $cat));
   say($report); // expanded message
   return go('get'); // required for testing
 }

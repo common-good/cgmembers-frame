@@ -552,7 +552,7 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
       $index = ($auto ? 'short invoice|' : '') . ($payerA->hasBank ? 'expect a transfer' : 'when funded|how to fund');
       $subs = ray('short payeeName nvid', $auto ? u\fmtAmt($shortfall) : NULL, $payeeA->fullName, $nvid);
       $payerA->tellOut($index, $subs);
-      if ($payerA->hasBank) $payerA->getFunds($shortfall, t('for invoice', compact('nvid')));
+
 
       $z->index = $index; // replace short payment message with something more explicit about the invoice
       $z->msg = tr($index, $subs);
@@ -560,6 +560,9 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
       u\preray($subs, $z->subs);
     }
     db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
+    if ($payerA->hasBank) {
+      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
+    }
   }
 
   unset($DBTX);

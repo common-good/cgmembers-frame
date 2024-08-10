@@ -1232,34 +1232,34 @@ o;
   /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
    * Call with:
-   *   $got = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
-   *   $got = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
+   *   $completed = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
+   *   $completed = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
    * Called for investments, gifts, invoice payment, and autorefills.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return numeric: amount drawn from other accounts and/or requested from bank
+   * @return completed: <bank transfer (in or out) is "completed" has been credited to the account>
    */
   public function getFunds($amount = NULL, $why = NULL) {
     $a = $this;
 
     if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
-
     if ($a->hasBank) {
       $waiting = 0; // we are not charged per transfer so this is simpler (was $a->waitingFromBank($combinable, $txid);)
       if (round($amount - $waiting, 2) <= 0) return 0;
-      list ($xid, $amtDone, $report) = $a->bank($amount, $why);
+      list ($xid, $amtDone, $completed, $report) = $a->bank($amount, $why);
       $amount -= $waiting + $amtDone;
       $msg = $amount > 0 ? 'automatic when funded' : $report;
       $subs = [];
     } else {
       list ($amtDone, $msg) = [0, 'cannot bank|when funded|how to fund'];
       $subs = ray('tofrom why', 'from', tr('to target'));
+      $completed = FALSE;
     }
 
     w\say($msg, $subs);
     if ($amount > 0) $a->tellOut($msg, $subs); // already told, if the whole amount got transferred
 
-    return $amtDone;
+    return $completed;
   }
   
   /**
@@ -1274,6 +1274,7 @@ o;
    * @return [xid, amtDone, report] where:
    *   xid: the transfer transaction ID
    *   amtDone: the amount transferred
+   *   completed: (bool) <bank transfer is "completed" and CG account credited>
    *   report: actual message to say to account-owner about the transfer (but not by email because we do that herein)
    */
   public function bank($amount, $why, $info = []) {
@@ -1282,7 +1283,7 @@ o;
     extract(just('explicit recursId cat', $info, [FALSE, NULL, NULL]));
 
     $report = '';
-    if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
+    if (!$amount = round($amount, 2)) return [NULL, 0, NULL, NULL]; // no zero requests at this time (to pre-verify bank account)
 
     $payee = $a->id;
 //    $okNow = ($amount < 0 or $a->bankOk); // 
@@ -1297,7 +1298,7 @@ o;
     if ($amount > 0) { // bringing money in
       if (FALSE and !$explicit) { // don't combine
         $amount -= $waiting;
-        if ($amount <= 0) return 0; // do nothing if we already have plenty waiting
+        if ($amount <= 0) return [NULL, 0, NULL, NULL]; // do nothing if we already have plenty waiting
       }
       $amount += $combinable;
       if ($a->refill and !$explicit) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
@@ -1329,7 +1330,7 @@ o;
     $a->tellInOut($amount > 0, $msg, $subs);
     $report = tr($msg, $subs); // for return
 
-    return [nn($xid), $amount, $report];
+    return [nn($xid), $amount, $completed, $report];
   }
   
   /**
