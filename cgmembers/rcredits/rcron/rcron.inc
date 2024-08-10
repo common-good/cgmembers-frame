@@ -614,8 +614,8 @@ function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
 
-  $omitUids = r\acct('NEWARJ')->id // people who don't want to see the "whats up" message
-  . ',' . r\acct('NEWBWN')->id;
+  $omitUids = r\qo('NEWARJ')->id // people who don't want to see the "whats up" message
+  . ',' . r\qo('NEWBWN')->id;
   
   queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND uid NOT IN ($omitUids) AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
