@@ -689,8 +689,7 @@ class Acct {
     global $channel;
     $a = $this; $uid = $a->id;
 
-    // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
-    if ($a->isCanonic) return 0;
+    if ($a->id < 0 or $a->isCanonic) return 0; // communities and structural accounts are never short
 
     if ($a->co and COMPANY_FREEZE and $a->eq($actor) and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
