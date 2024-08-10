@@ -1422,33 +1422,6 @@ function reward($from, $to, $amount = 1, $isPayer = TRUE) {
 }
 
 /**
- * Handle the investment request for one account in one club.
- * @param int $stakeid: record ID of the account's stake
- * @param string $msg: (RETURNED) a message, if any, resulting from the attempt
- * @return <successful>
- */
-function handleInvestmentRequest($stakeid, &$msg) {
-  if (!$res = db\get('stake,request,uid,clubid', 'r_stakes', compact('stakeid'))) return !$msg = t('bad stakeid');
-  extract($res);
-  
-  if ($request <= 0) return (bool) $msg = t('No additional investment is requested.');
-  $a = r\acct($uid);
-  $clubA = r\acct($clubid);
-  $stake += $request;
-  
-  $DBTX = \db_transaction();
-  $z = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
-  $msg = $z->msg;
-
-  if ($z->ok) {
-    db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
-    $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
-  }
-  unset($DBTX);
-  return $z->ok;
-}
-
-/**
  * Calculate community gifts ever paid and ever due as of a certain date/time.
  * @param int $end: ending date/time
  * @return the rows (an array of objects)
