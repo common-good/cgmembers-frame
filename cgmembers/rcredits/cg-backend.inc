@@ -618,7 +618,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $amount = $amount + 0; // convert from string (otherwise some functions fail in PHP 8.2)
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId rule cat reversesXid method', $data, [now(), 0, NULL, NULL, NULL, NULL, NULL]));
+  extract(just('created force', $data, [now(), 0]));
+  extract(just('boxId rule cat reversesXid method', $data, NULL));
   extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -745,12 +746,13 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
   
   // Notify both parties by email about any completed transaction
-  $res = sendNotifications($actorA, $type, $tx, $shortfall);
+  $z = sendNotifications($actorA, $type, $tx, $shortfall);
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
   }
+  
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
     extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount
     $stake += $amount;
@@ -775,7 +777,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   unset($DBTX);
 
-  return $res;
+  return $z;
 }
 
 /**
@@ -1137,6 +1139,10 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
  *    created: UNIXtime
  *    request: unique request identifier for actor using API
  *    api: URL to which to report success or failure (for API requests)
+ *    reversesXid: xid of transaction this invoice would reverse
+ *    cat: accounting category for payee
+ *    method:
+ *    for:
  * @param int $recursId: record ID of related record in tx_timed (if any)
  * @return a txRet object
  * NOTE: goods is no longer allowed in $extra, it's its own parameter
@@ -1145,13 +1151,12 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   global $channel;
 
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
-  u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
   extract(just('created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
   if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
   $flags = $method ? u\bit($method) : 0;
   foreach (ray('cat reversesXid method') as $k) unset($extra[$k]);
 
-  foreach (justNOT("status shid coupon coupid force inv api request created for reversesXid cat", $extra) as $k => $v) {
+  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }

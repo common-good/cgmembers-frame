@@ -234,7 +234,7 @@ class Acct {
       
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
-      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);
+      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub); // member's investment club ID (one of many) DEPRECATED
       case 'trialco': return ($a->co and $a->depends);
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
@@ -1890,14 +1890,13 @@ X;
         $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
         if ($z->ok) {unset($DBTX); return $z;}
         if ($i > 0 or !$shortfall = nni($z->subs, 'shortfall') or $shortfall > $a->creditLine) break; // try just once to fill shortfall
-        $shortfall -= $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
+        $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
         if ($a->avail($goods) < $amount) break;
       }        
     } else $z = be\txRet(FALSE, 'you wait');
 
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    $a->getFunds($shortfall > 0 ? $shortfall : $amount, t('to cover your payment request #%nvid', $z2->subs));
     unset($DBTX);
     
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view

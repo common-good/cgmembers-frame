@@ -77,6 +77,11 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheClubSellsShares
  *     MAKE invest TheClubSellsItsRemainingSharesInAnInvestment
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AMemberTriesToDecreaseStakeBelowZero
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     MAKE invest TheInvestmentClubIssuesDividends
+ *     MAKE invest MembersRateAProposedLoan
+ *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -361,6 +366,9 @@ function members($list) {return t\members($list);}
  *     TEST invest TheClubSellsShares
  *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
  *     TEST invest MembersIncreaseAndDecreaseTheirStakes
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     TEST invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     TEST invoice AMemberOverpaysAnInvoice
@@ -419,6 +427,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest TheClubAddsAProposedInvestment
+ *     TEST invest AMemberTriesToDecreaseStakeBelowZero
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
@@ -625,6 +635,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invest TheClubBuysShares
  *     TEST invest TheClubSellsShares
  *     TEST invest MembersIncreaseAndDecreaseTheirStakes
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     TEST invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
@@ -739,6 +753,10 @@ function with($content) {return weShow($content);}
  *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
  *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -826,6 +844,8 @@ function withoutOptions($options) {
  *     TEST guest Setup
  *     MAKE invest Setup
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice Setup
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
@@ -911,6 +931,10 @@ function balances($list) {return t\balances($list);}
  *     MAKE invest TheClubBuysShares
  *     MAKE invest TheClubSellsShares
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     MAKE invest TheInvestmentClubIssuesDividends
+ *     MAKE invest MembersRateAProposedLoan
+ *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
@@ -1791,6 +1815,11 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheClubSellsShares
  *     BOTH invest TheClubSellsItsRemainingSharesInAnInvestment
  *     BOTH invest MembersIncreaseAndDecreaseTheirStakes
+ *     BOTH invest AMemberTriesToDecreaseStakeBelowZero
+ *     BOTH invest AClubAdministratorHandlesRequestsToCashOut
+ *     BOTH invest TheInvestmentClubIssuesDividends
+ *     BOTH invest MembersRateAProposedLoan
+ *     BOTH invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     MAKE invoice Setup
  *     TEST invoice AMemberInvoicesSomeone
