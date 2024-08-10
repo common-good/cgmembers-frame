@@ -508,11 +508,11 @@ function creditPeops($id) {
 /**
  * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
- * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @param bool $auto: don't pull any more from bank than needed
+ * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return a txRet object
  */
-function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
+function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
@@ -563,6 +563,7 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
     if ($payerA->hasBank) {
       $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
+      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $auto, $payAmount); }
     }
   }
 
