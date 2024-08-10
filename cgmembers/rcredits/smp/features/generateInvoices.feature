@@ -26,12 +26,12 @@ Scenario: member wants to invoice another member and the invoice is approved
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
-  | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED | .ZZA    | 29.00  | 1           | ?     |
+  | nonce | status | payerId | amount | cgInvoiceId | error |*
+  | 1238  | PAID   | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZC | 0       |
+  | .ZZC | 29      |
   | .ZZB | 0       |
   | .ZZA | 0       |
   
@@ -128,11 +128,11 @@ Scenario: a member invoices another member twice for the same thing and it was a
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
-  | nonce | status             | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
+  | nonce | status         | payerId | amount | cgInvoiceId | error |*
+  | 1238  | PAID-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
   | .ZZA | 0       |
   | .ZZB | 0       |
-  | .ZZC | 0       |
+  | .ZZC | 29      |
