@@ -586,9 +586,9 @@ function payInvoice($nvid, $payAmount = NULL, $auto = TRUE) {
  *   'boxId': the id of the device on which the transaction was initiated
  *   'offline'
  *   'loan'
- *   'investment'
+ *   'investment': community investment (UNUSED?) or investment club investment
  *   'method': the TX_FLAGS index of the payment type, if non-standard (check, cc, directach, wire)
- *   'stake'
+ *   'stake': member buying or selling stake in investment club
  *   'fine'
  *   'noask'
  *   'funding'
@@ -747,6 +747,14 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
     be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+  }
+  if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
+    extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount
+    $stake += $amount;
+    $request = max(0, $request - $amount); // just invested more, so request should be less, but not negative
+    db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
+    $z->index .= '|investment increase';
+    $z->msg = tr($z->index, $z->subs);
   }
   
   foreach ([$actorA, $otherA] as $a) {
