@@ -547,19 +547,20 @@ function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
         if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
       } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
-  } else {
-    if ($shortfall = ($auto ? nni($z->subs, 'shortfall') : $payAmount)) {
-      $index = ($auto ? 'short invoice|' : '') . ($payerA->hasBank ? 'expect a transfer' : 'when funded|how to fund');
-      $subs = ray('short payeeName nvid', $auto ? u\fmtAmt($shortfall) : NULL, $payeeA->fullName, $nvid);
-      $payerA->tellOut($index, $subs);
+    
+    $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
+  } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
+
+  if (!$auto) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
 
   if ($fromBank > 0 and !u\getBit($flags, 'funding')) { // need funds and didn't already request them
-      $z->index = $index; // replace short payment message with something more explicit about the invoice
-      $z->msg = tr($index, $subs);
-      if (!$auto) $z->ok = TRUE;
-      u\preray($subs, $z->subs);
-    }
-    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
+    $z->index .= $payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund'; // add to short payment message something more detailed
+    $tellIndex = 'request num|' . $z->index;
+    if ($z->ok) $tellIndex = str_replace('report tx|', '', $z->index); // don't message both "you paid" and "report tx"
+    $subs = ray('short payeeName nvid', u\fmtAmt($fromBank), $payeeA->fullName, $nvid);
+    u\preray($subs, $z->subs);
+    $z->msg = tr($z->index, $z->subs);
+    $payerA->tellOut($tellIndex, $z->subs);
     if ($payerA->hasBank) {
       $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
@@ -1177,10 +1178,8 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
     u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
-    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short (for example, this prevents payApproved from duplicating messages)
-      $z = be\payInvoice($nvid);
-      if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
-    } else { $payeeA->tell('you will be paid', $subs2); }
+    $z = be\payInvoice($nvid, FALSE);
+    if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
   }
 
   $msg = 'report tx';
