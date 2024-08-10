@@ -693,8 +693,10 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
   }
 
+  $erInfo += compact('needed');
+
   // Calculate any balance shortfall
-  if ($shortfall = ($loserA->id < 0 ? 0 : $loserA->shortfall($goods, $needed, TRUE, $actorA))) {
+  if ($shortfall = $loserA->shortfall($goods, $needed, TRUE, $actorA)) {
     if ($force) {
       $short = TRUE; // flag overdraft
     } else {
@@ -705,7 +707,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       $msg = $reallyTaking ? ($otherA->secret ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
-      return txErr($msg, compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
+      return txErr($msg, $erInfo + compact(ray('otherName short shortfall details avail')) + ['success'=>false]);
     }
   }
   
@@ -743,10 +745,12 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($crid) db\update('tx_credits', ray('id xid', $crid, $xid));
-  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
+  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $amount));
   
   // Notify both parties by email about any completed transaction
   $z = sendNotifications($actorA, $type, $tx, $shortfall);
+  $z->subs += compact('needed');
+  
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
