@@ -144,6 +144,56 @@ Scenario: A member makes partial payments with sufficient balance
   |  2  | %mdy | Abe One | labor (CG inv#1 final)   | -90.00 |     0.00 |
   |  1  | %mdy | Abe One | labor (CG inv#1 partial) | -10.00 |    90.00 |
 
+Scenario: A member makes partial payments with insufficient balance
+  Given these "tx_requests":
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |        10 | .ZZB  | .ZZA  | labor   | %today  | 1    |
+  Then these "tx_requests":
+  | nvid | created | status       | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_APPROVED |    100 | .ZZB  | .ZZA  | labor |
+  And we say "status": "report tx|left on invoice|expect a transfer" with subs:
+  | did    | otherName | amount | remaining |*
+  | paid   | Abe One   | $10    | $90       |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose   | taking | relType | rel |*
+  |   1 | %today  |     10 | .ZZB  | .ZZA  | labor     | 0      | I       | 1   |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose   | taking |*
+  |   2 | %today  |     10 | bank  | .ZZB  | from bank | 0      |
+  And these "txs2":
+  | txid | created | completed | amount | payee |*
+  |    1 | %now    | %now      |     10 | .ZZB  |
+
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | auto |*
+  | pay  |     |    1 |        90 | .ZZB  | .ZZA  | labor   | %today  | 0    |
+  Then we say "status": "report tx|expect a transfer" with subs:
+  | did    | otherName | amount |*
+  | paid   | Abe One   | $90    |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   3 | %today  |     90 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose   | taking |*
+  |   4 | %today  |     90 | bank  | .ZZB  | from bank | 0      |
+  And these "tx_requests":
+  | nvid | created | status | amount | payer | payee | for   |*
+  |    1 | %today  | 3      |    100 | .ZZB  | .ZZA  | labor |
+  And these "txs2":
+  | txid | created | completed | amount | payee |*
+  |    2 | %now    | %now      |     90 | .ZZB  |
+  
+  When member ".ZZB" visits page "history/transactions/period=15"
+  Then we show "Transaction History" with:
+  | Tx# | Date | Name    | Purpose                  | Amount |  Balance |
+  |  4  | %mdy |         | from bank                |  90.00 |     0.00 |
+  |  3  | %mdy | Abe One | labor (CG inv#1 final)   | -90.00 |   -90.00 |
+  |  2  | %mdy |         | from bank                |  10.00 |     0.00 |
+  |  1  | %mdy | Abe One | labor (CG inv#1 partial) | -10.00 |   -10.00 |
+
 Scenario: A member overpays an invoice
   Given these "tx_requests":
   | nvid | created | status      | amount | payer | payee | for   |*
