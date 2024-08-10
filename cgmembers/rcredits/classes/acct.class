@@ -1245,7 +1245,7 @@ o;
     if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
 
     if ($a->hasBank) {
-      $waiting = $a->waitingFromBank($combinable, $txid);
+      $waiting = 0; // we are not charged per transfer so this is simpler (was $a->waitingFromBank($combinable, $txid);)
       if (round($amount - $waiting, 2) <= 0) return 0;
       list ($xid, $amtDone, $report) = $a->bank($amount, $why);
       $amount -= $waiting + $amtDone;
@@ -1292,9 +1292,10 @@ o;
     $combined = FALSE;
     $previous = $total = NULL;
     $waiting = $a->waitingFromBank($combinable, $txid);
+    $combinable = 0; // we don't get charged per transfer, so don't combine
   
     if ($amount > 0) { // bringing money in
-      if (!$explicit) {
+      if (FALSE and !$explicit) { // don't combine
         $amount -= $waiting;
         if ($amount <= 0) return 0; // do nothing if we already have plenty waiting
       }
