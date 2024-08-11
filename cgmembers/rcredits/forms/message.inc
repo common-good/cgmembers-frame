@@ -82,14 +82,13 @@ function formMessage_submit($form, &$sta) {
  * The intended recipient may be an individual or a company. Only an authorized agent can read the message.
  */
 function codeResult($code) {
-  global $box;
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
   extract(just('qid from secret path name type size exp download', $ray, NULL));
   
   if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
-  if (!db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
+//  if (!w\itsMyBox($uid)) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That encrypted information is no longer available.'));
-  
+
   $fromA = r\acct($from);
 
   if ($download or $secret) {
