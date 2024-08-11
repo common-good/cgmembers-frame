@@ -54,7 +54,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
     $boxes = db\col('id', 'r_boxes', ray('code', $box)) ?: -1;
-    if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->id, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
+    if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->uids, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
     $func = "\\CG\\Web\\$func";
     return $func($tx, $tip); // only tip uses $tip
   }
