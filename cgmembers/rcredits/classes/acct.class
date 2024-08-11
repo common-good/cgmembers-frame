@@ -210,6 +210,7 @@ class Acct {
       case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
       case 'url': return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
       case 'lastTx': return $a->lastTx();
+      case 'lastTxDt': return ($tx = $a->lastTx) ? fmtDt($tx->created, 'yyyy-MM-dd') : FALSE;
       case 'achName': return str_replace('_', ' ', ($a->sponsored and !$a->ourOwn) ? $a->fullName : $a->legalName); // for ACHs, including u\parseName of names like Jay di_Fiori
       // NOTE: when money comes into a sponsored account, the account belongs to CG (legalName). When money goes out, the account belongs to the sponsored entity (fullName).
       case 'trustCook': return "trust-$a->mainQid"; // cookie name of device trust
@@ -1966,7 +1967,7 @@ X;
   public function codeHash() {return u\hash($this->cardCode());}
   public function o($k) {return $this->{'o_' . $k};}
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
-  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
+  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx($this->uids, $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', fmtDt($tx->created)) : '';}
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->email => $this->fullName];}
