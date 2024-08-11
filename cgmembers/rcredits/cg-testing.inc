@@ -576,7 +576,7 @@ function doRequests($info) {
   unset($info['for']);
 
   $statuses = array_flip(ray(strtolower(TX_STATUSES)));
-  if (!is_numeric($status)) $info['status'] = $statuses[$status];
+  if (isset($status) and !is_numeric($status)) $info['status'] = $statuses[$status];
 
   if ($testOnly) return verifyRecord('tx_requests', $info);
 
