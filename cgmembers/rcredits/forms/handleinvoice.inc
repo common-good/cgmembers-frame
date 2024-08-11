@@ -96,8 +96,10 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $remaining = hidFld($remaining);
 
     if (u\getBit($flags, B_SELF) and $status == TX_APPROVED) {
-      $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
+      $cancel = submit(t('Cancel Payment'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     } else {
+      if ($status >= TX_PAID) return w\go($ret, t('inv already paid'), 'ERR');
+      if (u\getBit($flags, 'funding')) return w\go($ret, t('inv already funding'), 'ERR');
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
       $choices = [
         t('Pull this entire amount from your bank account.'),
@@ -148,9 +150,13 @@ function handleInvoice($op, $payAmount, $info) {
   
   if ($op == 'pay' and !$reason) {
     $flags = db\get('flags', 'tx_requests', compact('nvid'));
-    db\update('tx_requests', ray('nvid status flags', $nvid, TX_APPROVED, u\setBit($flags, 'funding', FALSE)), 'nvid'); // in case it wasn't marked approved already
+    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', $z = be\payInvoice($nvid, $auto, $payAmount))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $auto, $payAmount)));
+      if ($payAmount < $amount) { // don't let the funding flag prevent payer from completing payment!
+        $flags = u\setBit($flags, 'funding', FALSE);
+        db\update('tx_requests', compact(ray('nvid flags')), 'nvid');
+      }
     } else { // if payer account is not active yet
       $msg = t('finish signup|when funded');
     }
