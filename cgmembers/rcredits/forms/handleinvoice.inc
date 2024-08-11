@@ -23,24 +23,26 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
   extract(just('nvid ret webpay code', $args, NULL));
   $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
-
-  if (!$inv = db\get('*', 'tx_requests', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To approve this payment request, sign in at %CG_DOMAIN and click History / Pending FROM You.'), 'err');
+  
+  if (!$inv = db\get('*', 'tx_requests', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To approve this payment request, sign in at %CG_DOMAIN and click History / Pending From You.'), 'ERR');
   if ($err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
   extract(just('nvid amount payer payee purpose created data status flags', $inv));
-  
-  if ($mya and !in($payer, $mya->uids) 
-    and !(in($payee, $mya->uids) and !$code)) w\signout(TRUE); // make sure we're signed out of any possibly different acct
-  if (!$mya) { // not signed in (might have changed in previous line)
-    if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$code) return go('/signin'); // probably admin browser refresh (but timed out)
-    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
 
+  if ($code) {
+    if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
+    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
     extract(just('op v', $info, NULL));
-    u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');
+    u\EXPECT($op == 'inv' and $v == $nvid, 'handleInvoice fake');
+//    if (!w\itsMyBox($payer)) return w\go($ret, t('You can pay an invoice only on a device you have signed in from.'), 'ERR');
   }
+  
+  $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
+  $fromMe = ($mya and in($payer, $mya->uids)); // fromMe means signed in and paying
+
+  if ($mya and !($toMe and $mya->id == $payee) and !($fromMe and $mya->id == $payer)) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+  if (!$mya and !$code) return go('/signin'); // not signed in (might have changed in previous line); probably admin browser refresh (but timed out)
 
   $subs = ray('nvid amount what date', $nvid, u\fmtAmt($amount), $purpose, fmtDt($created));
-  $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
   $data = unserialize(nn($data)) ?: [];
   $reasonDft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 
