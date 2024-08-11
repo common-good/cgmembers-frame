@@ -42,13 +42,12 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   $opts = $retId ? ray('return', \Database::RETURN_INSERT_ID) : [];
 
   $res = \db_query($sql, $subs, $opts);
+
   if (is_null($res)) {
-    global $dbERR; // PDOException set in database.inc
-///   if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
-//    \lock_release_all();
-//    f('a.clearCache');
-//    die('Database error');
-//    u\FAIL(t('Database error'));
+    global $mya, $dbERR; // PDOException set in database.inc
+    w\err($err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query'))));
+    flog($err);
+    if (!$mya or $mya->admin) if (!isDEV) r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
   } else return $res;
 }
 
