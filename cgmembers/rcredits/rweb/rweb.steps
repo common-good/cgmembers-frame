@@ -148,6 +148,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice
+ *     MAKE invoice AMemberTriesToPayAnInvoiceThatIsAlreadyPaid
+ *     MAKE invoice AMemberTriesToPayAnInvoiceThatIsAlreadyBeingFunded
  *     MAKE invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE invoice AMemberDeniesAnInvoice
@@ -429,6 +431,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest TheClubAddsAProposedInvestment
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
+ *     TEST invoice AMemberTriesToPayAnInvoiceThatIsAlreadyPaid
+ *     TEST invoice AMemberTriesToPayAnInvoiceThatIsAlreadyBeingFunded
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
@@ -1830,6 +1834,8 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice
+ *     MAKE invoice AMemberTriesToPayAnInvoiceThatIsAlreadyPaid
+ *     MAKE invoice AMemberTriesToPayAnInvoiceThatIsAlreadyBeingFunded
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
