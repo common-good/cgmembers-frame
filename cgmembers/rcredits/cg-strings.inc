@@ -384,6 +384,7 @@ EOF
   'amount too big' => t('Amounts larger than %max are not allowed.'),
   'already undone' => t('Transaction is already undone.'),
   'no such tx' => t('That transaction does not exist.'),
+  'tx deleted' => t('That transaction was deleted on %on.'),
   'bank unverified' => t('You cannot transfer funds to or from your bank account until it has been verified.'),
   'no ALL' => t('"ALL" (meaning all employees) is not allowed here.'),
   'no employees' => t('There are no employees related to this account.'),

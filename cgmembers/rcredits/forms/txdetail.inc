@@ -22,7 +22,10 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$orig = db\get('*', 'txs t', $where, $subs)) return softErr('no such tx'); // for now just show main transaction
+  if (!$orig = db\get('*', 'txs t', $where, $subs)) {
+    if ($deletedOn = db\get('deleted', 'txs_deleted t', $where, $subs)) return softErr(t('tx deleted', 'on', fmtDt($deletedOn)));
+    return softErr('no such tx'); // for now just show main transaction
+  }
   extract(just('uid1,uid2', $orig));
   
   if ($myid == $uid1) {

@@ -2448,4 +2448,4 @@ function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press t
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
 function tweakSta(&$sta, $info) {$sta['input'] = array_filter($info + $sta['input'], function ($x) {return isset($x);});} // ignores null values, updates input
-//function itsMyBox($uid) { global $box; return db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', "b.code=:box AND (:uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED))", compact(ray('uid box'))); }
+function itsMyBox($uid) { global $box; return db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', "b.code=:box AND (:uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED))", compact(ray('uid box'))); }
