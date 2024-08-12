@@ -361,6 +361,7 @@ function coupons($list) {return doRecords($list, 'Coupons');}
  * Create device (box) records.
  */
 function doBoxes($info = []) {
+  u\FAIL('t\doBoxes() UNUSED');
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
   $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_APP, TX_WEB)) ?: $channel;

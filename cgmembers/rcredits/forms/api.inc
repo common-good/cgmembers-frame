@@ -80,12 +80,12 @@ function accounts($params) {
   } else {
     if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
     if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
-    $a = r\acct($myid);
-    
     if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
+
+    $a = r\acct($myid);
     $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
+    w\updateFlood($sta, $success, $err, TRUE); // handle flooding before other errors
     if (!$success) return exitJust($err, X_NOTFOUND);
-    w\updateFlood($sta, $success, $err, TRUE);
   }
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   

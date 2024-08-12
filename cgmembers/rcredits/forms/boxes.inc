@@ -11,6 +11,7 @@ use CG\Db as db;
  * @todo: focus on code input
  */
 function formBoxes($form, &$sta) {
+  u\FAIL('formBoxes UNUSED');
   $myid = r\acct()->id;
 //  if ($confirm = sureForm($sta)) return $confirm; // confirm only deletion
   if (form_step($sta, $info) == 'prove') {
