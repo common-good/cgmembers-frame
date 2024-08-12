@@ -190,7 +190,7 @@ Scenario: A member with a joined account views invoices
   | Req# | Date    | Name    | Purpose | Amount | Status |
   | 1    | %mdY-1d | Cor Pub | drink   | 100.00 | OPEN   |
 
-  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+  When member ".ZZB" visits page "handle-invoice/nvid=1"
   Then we show "Confirm Payment" with:
   | ~question     | Pay $100 to Cor Pub for drink |
   | Amount to Pay | 100     |
@@ -198,7 +198,7 @@ Scenario: A member with a joined account views invoices
   | Reason        |         |
   | ~             | Dispute |
 
-  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  When member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |       100 | .ZZA  | .ZZC  | drink   | %now    |
   Then these "txs":

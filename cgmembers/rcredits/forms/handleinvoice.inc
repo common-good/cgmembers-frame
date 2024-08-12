@@ -30,16 +30,16 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
   if ($code) {
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
+    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact(ray('args code info')));
     extract(just('op v', $info, NULL));
-    u\EXPECT($op == 'inv' and $v == $nvid, 'handleInvoice fake');
+    u\EXPECT($op == 'inv' and $v == $nvid, t('handleInvoice fake') . pr(compact(ray('args code info'))));
 //    if (!w\itsMyBox($payer)) return w\go($ret, t('You can pay an invoice only on a device you have signed in from.'), 'ERR');
   }
   
   $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
   $fromMe = ($mya and in($payer, $mya->uids)); // fromMe means signed in and paying
 
-  if ($mya and !($toMe and $mya->id == $payee) and !($fromMe and $mya->id == $payer)) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+  if ($mya and !$toMe and !$fromMe) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   if (!$mya and !$code) return go('/signin'); // not signed in (might have changed in previous line); probably admin browser refresh (but timed out)
 
   $subs = ray('nvid amount what date', $nvid, u\fmtAmt($amount), $purpose, fmtDt($created));
