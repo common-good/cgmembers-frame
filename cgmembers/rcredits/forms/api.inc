@@ -542,7 +542,7 @@ function authOk($arg, $params, $noBox = FALSE) {
       if ($qid != $mya->mainQid and $two != $mya->fullName) return exitJust(X_UNAUTH);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    if (!$noBox) $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
+    if (!$noBox) $boxId = $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;

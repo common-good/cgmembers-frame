@@ -414,6 +414,26 @@ class Acct {
     unset($DBTX); // commit
   }  
   
+/**
+ * Return the box record ID for the given device code and account record ID (create one if none).
+ * @param int $code: device identifier
+ * @param string $version: app version (web version is not used here)
+ * @return the box record ID
+ */
+public function box($code, $version = NULL) {
+  $a = $this;
+  global $channel;
+
+  $cookid = 'boxnum' . $a->id;
+  if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
+  
+  if ($id = boxIdCheck($code, $a)) {
+    $access = now();
+    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
+  } else $id = $a->makeBox($code, $channel, $version);
+  return r\setCook($cookid, $id, now() + SESSION_LIFE);
+}
+
   /**
    * Return a printable (scrambled) invitation card code or gift coupon code 
    * @param int $iCode: sequence number (0 to 35^3-1)

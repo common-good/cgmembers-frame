@@ -930,26 +930,6 @@ function pickPassword($reset = TRUE, $req = '') {
   focusOn('pw');
   return compact(ray('pw'));
 }
-  
-/**
- * Return the box record ID for the given device code and account record ID (create one if none).
- * @param int $code: device identifier
- * @param int $a: current account (can be a company)
- * @param string $version: app version (web version is not used here)
- * @return the box record ID
- */
-function boxId($code, $a, $version = NULL) {
-  global $channel;
-
-  $cookid = 'boxnum' . $a->id;
-  if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
-  
-  if ($id = boxIdCheck($code, $a)) {
-    $access = now();
-    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
-  } else $id = $a->makeBox($code, $channel, $version);
-  return r\setCook($cookid, $id, now() + SESSION_LIFE);
-}
 
 /**
  * Return the box record ID for the given device code and account record ID (NULL if none).

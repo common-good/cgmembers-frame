@@ -127,7 +127,7 @@ function formCard_submit($form, &$sta) {
     $scannerA = r\acct($account);
     if (!$mya or $scannerA->id != $mya->agentId) {
       if ($mya) w\signout(TRUE);
-      w\boxId($box, $scannerA); // create boxid if it doesn't exist yet
+      $scannerA->boxId($box); // create boxid if it doesn't exist yet
     }
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
     return go($tail ? "/card/$tail" : '/app');

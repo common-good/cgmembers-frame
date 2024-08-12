@@ -24,7 +24,7 @@ use CG\Web as w;
  *
  * REQUESTS:
  * (see https://docs.google.com/document/d/1fZE_wmEBRTBO9DAZcY4ewQTA70gqwWqeqkUnJSfWMV0/edit)
- * time:  [] => [ok=”1”, time, message]
+ * time:  [] => [ok=ï¿½1ï¿½, time, message]
  * identify:  [member, code] 
  *      => [ok, message, logon="1", name, descriptions[], can, device, default, company, time]
  *   OR  => [ok, message, logon, name, place, company, balance] where logon is 0 or -1
@@ -167,7 +167,7 @@ function smartTest($args) {
 
 /**
  * Get the current server time
- * time: [data] => [ok=”1”, time, message]
+ * time: [data] => [ok=ï¿½1ï¿½, time, message]
  * @param string $data: optional message string or json-encoded data (perhaps data we requested from the app)
  * @return json:
  *   time: the current unixtime
@@ -619,7 +619,7 @@ function badDevice(&$device, $signin, $version) {
     $device = nn($nextCode) ?: u\b64encode(u\cryPP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
   }
 
-  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there
+  $box = $mya->boxId(substr($device, 0, DEVICE_MAXLEN), $version); // find device in the db or put it there
 
   return FALSE;
 }

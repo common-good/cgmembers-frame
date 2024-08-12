@@ -687,7 +687,7 @@ function getScannerA() {
   $scanner = r\cook('scanner');
   $scannerA = r\acct($scanner);
   if ($scanner and (!$scannerA or !w\boxIdCheck($box, $scannerA))) return r\setCook('scanner', NULL);
-  $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
+  $boxId = $scannerA ? $scannerA->boxId($box) : NULL;
   return $scannerA;
 }
 
@@ -2138,7 +2138,7 @@ function drupal_bootstrap() {
   global $channel, $boxId, $box;
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
   $box = nni($_COOKIE, 'box') ?: r\setCook('box', u\code()); // a unique persistant identifier for the current machine (set randomly, if none yet)
-  if ($mya) $boxId = w\boxId($box, $mya); // so far used only when recording transactions
+  if ($mya) $boxId = $mya->boxId($box); // so far used only when recording transactions
 
   return DRUPAL_BOOTSTRAP_FULL;
 }
