@@ -218,8 +218,8 @@ function menu($submenu = '') {
     'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
     'app' => ['call', t('Web App'), 'Card', ANY], // call app from mobile icon (no params)
-    'card' => ['call', t('Card'), 'Card 1 2', ANY],
-    'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
+//    'card' => ['call', t('Card'), 'Card 1 2', ANY],
+//    'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
     'error' => ['call', 'System Error', '1', ANY, 'error'],
