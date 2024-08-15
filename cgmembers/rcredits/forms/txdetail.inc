@@ -84,9 +84,9 @@ X;
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   
-  $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
+  $boxMsg = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
-  $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
+  $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
   $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
   $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
 

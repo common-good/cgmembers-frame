@@ -89,7 +89,7 @@ function fixData(&$info, $direct = FALSE) {
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
   $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data'; // first key is probably an ID field, so keep it at the front
-  if (!is_numeric($key = key($info))) $fields = "$key $fields";
+  if (!is_numeric($key = key($info)) and u\validVarName($key)) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", nn($var), $v);
@@ -121,7 +121,6 @@ function fixData(&$info, $direct = FALSE) {
     $data = $info['data'] = serialize(compact('reason'));
     unset($info['reason']);
   }
-
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
 
@@ -208,7 +207,7 @@ function adminPerms($id, $perms) {
 function cookieIs($nm, $v, $crypt = FALSE) {
   global $testOnly, $box;
 
-  $info = [$nm => $v]; fixData($info); [$nm => $v] = $info;
+  $info = [$nm => $v]; fixData($info); $v = $info[$nm];
   if (!$testOnly) {
     if ($crypt) r\setCryptCook($nm, u\b64decode($v)); else r\setCook($nm, $v);
   }
@@ -361,7 +360,6 @@ function coupons($list) {return doRecords($list, 'Coupons');}
  * Create device (box) records.
  */
 function doBoxes($info = []) {
-  u\FAIL('t\doBoxes() UNUSED');
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
   $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_APP, TX_WEB)) ?: $channel;
@@ -1294,7 +1292,9 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  */
 function hitServer($op, $info = [], $agent = NULL, $device = '', $version = 230) {
   global $rposResult;
+
   if ($agent) $agent = fullQid2($agent);
+  
   extract(just('amount member code created proof goods', $info));
   if (is_numeric(nn($amount))) $amount = number_format($amount, 2);
   if (nn($member)) $member = fullQid2($member);
@@ -1372,7 +1372,7 @@ function addAttribs(&$thing) {
  * @return: successful (always successful for anonymous)
  */
 function logIn($id) {
-  global $box, $boxId, $mya, $user;
+  global $mya, $user;
   if ($id == '?') {
     w\signout(TRUE);
   } else {

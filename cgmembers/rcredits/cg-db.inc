@@ -27,6 +27,7 @@ define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_st
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
+  global $mya, $dbERR; // PDOException set in database.inc
 
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if ($where = $subs and !strihas($sql, ':')) {
@@ -44,11 +45,13 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   $res = \db_query($sql, $subs, $opts);
 
   if (is_null($res)) {
-    global $mya, $dbERR; // PDOException set in database.inc
     w\err($err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query'))));
     flog($err);
     if (!$mya or $mya->admin) if (!isDEV) r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
-  } else return $res;
+    $dbERR = $err; // pass this to insert
+  } else $dbERR = NULL;
+  
+  return $res;
 }
 
 /**
@@ -131,6 +134,8 @@ function update($table, $info, $key = 'id') {
  * @return: record key of the inserted record (FALSE on failure)
  */
 function insert($table, $info, $key = 'id') {
+  global $dbERR;
+  
   logSql(compact(ray('table info')));
 
   foreach (ray('start created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
@@ -148,6 +153,7 @@ function insert($table, $info, $key = 'id') {
     $result = db\q($sql, $info, TRUE);
     if ($result) return $result; // if there is no serial field, result will be false, so check
 
+    if ($dbERR) u\FAIL($dbERR);
     u\EXPECT($key and isset($info[$key]), 'no primary key');
     $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
     u\EXPECT(!is_null($res), 'insert failed');

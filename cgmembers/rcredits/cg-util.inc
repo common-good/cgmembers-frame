@@ -1920,3 +1920,4 @@ function cryFile($path) {file_put_contents($path, u\cry('S', file_get_contents($
 function urlExists($url) {return ($hdrs = get_headers($url) and !strhas($hdrs[0], '404'));}
 function word9($s, $m = ' ') {return ($ray = explode($m, $s)) ? $ray[count($ray) - 1] : $s;}
 function sign($n) {return ($n > 0) - ($n < 0);} // -1, 0, or 1
+function validVarName($s) {return (isset($s) and preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $s));}
