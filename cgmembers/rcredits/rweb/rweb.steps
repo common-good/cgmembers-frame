@@ -123,7 +123,10 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE cgpay AMemberRedeemsStoreCredit
+ * in: MAKE boxes AMemberSignsInForTheFirstTimeOnADevice
+ *     MAKE boxes AMemberSignsInAgain
+ *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
+ *     MAKE cgpay AMemberRedeemsStoreCredit
  *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
@@ -252,8 +255,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE card Setup
- *     MAKE cardself Setup
+ *     MAKE boxes Setup
  *     MAKE ccpay Setup
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
@@ -1214,16 +1216,7 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE card AMemberUndoesACharge
- *     MAKE card AMemberAddsATip
- *     MAKE cardself Setup
- *     MAKE cardself AMemberCardIsCharged
+ *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
  *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
@@ -1390,7 +1383,9 @@ function aMemberPostsToWithValues($page, $values) {return memberConfirmsFormWith
 /**
  * member (ARG) is logged in
  *
- * in: TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ * in: TEST boxes AMemberSignsInForTheFirstTimeOnADevice
+ *     TEST boxes AMemberSignsInAgain
+ *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
@@ -1401,7 +1396,9 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
 /**
  * next random code is (ARG)
  *
- * in: MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ * in: MAKE boxes AMemberSignsInForTheFirstTimeOnADevice
+ *     MAKE boxes AMemberSignsInAgain
+ *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     MAKE mfa AMemberTypesTheWrongNonce
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE signin AMemberAsksForANewPasswordForUsername
@@ -1718,15 +1715,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     BOTH bank ASlaveMemberRequestsATransfer
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     BOTH card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     BOTH card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     BOTH card AMemberUndoesACharge
- *     BOTH card AMemberAddsATip
- *     MAKE cardself Setup
- *     TEST cardself AMemberCardIsCharged
+ *     TEST boxes AMemberSignsInForTheFirstTimeOnADevice
+ *     BOTH boxes AMemberSignsInAgain
+ *     BOTH boxes AMemberTransactsAndBoxIdGetsRecorded
  *     MAKE ccpay Setup
  *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
  *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
@@ -2188,17 +2179,10 @@ function someoneSubmitsWith($page, $values) {return t\completeForm('?', $page, $
 /**
  * cookie (ARG) is (ARG)
  *
- * in: BOTH card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
- *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE card AMemberUndoesACharge
- *     MAKE card AMemberAddsATip
- *     MAKE cardself Setup
+ * in: MAKE boxes Setup
+ *     TEST boxes AMemberSignsInForTheFirstTimeOnADevice
+ *     BOTH boxes AMemberSignsInAgain
+ *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer

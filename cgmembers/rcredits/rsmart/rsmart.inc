@@ -103,7 +103,8 @@ function pos($args = FALSE) {
 
   if ($op == 'time') return getTime($args); // no agent or device required
   if (!$mya = getAgent($agent ?: $member, $agentErr)) return posErr($agentErr); // set "current" account for internals
-  if ($err = badDevice($device, $signin, $version)) return $err; else $args['device'] = $device;
+  $device = deviceCheck($device, $signin, $version);
+  if (substr($device, 0, 1) == '{') return $device; else $args['device'] = $device; // left brace begins JSON posErr return
   if (!$mya->cttyUp) return posErr('your community down', ray('contact', $mya->cAdminContact()));
 
   $op = 'CG\\Smart\\' . $op;
@@ -605,10 +606,10 @@ function decodeDevice($device) {
  * @param acct $device: the specified device
  * @param acct $device: (RETURNED) the device code to return (undefined if error)
  * @param bool $signin: <signing in>
- * @return the error (FALSE if none)
+ * @return $device or PosErr($err)
  */
-function badDevice(&$device, $signin, $version) {
-  global $mya, $boxId;
+function deviceCheck($device, $signin, $version) {
+  global $mya;
   global $nextCode; // tests usurp generated device code, using this instead
 
   if ($version >= 230 and $device and !decodeDevice($device)) return posErr('unknown device'); // bad crypt
@@ -619,7 +620,7 @@ function badDevice(&$device, $signin, $version) {
     $device = nn($nextCode) ?: u\b64encode(u\cryPP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
   }
 
-  $box = $mya->boxId(substr($device, 0, DEVICE_MAXLEN), $version); // find device in the db or put it there
+  $mya->boxId($device, $version); // find device in the db or put it there
 
-  return FALSE;
+  return $device;
 }

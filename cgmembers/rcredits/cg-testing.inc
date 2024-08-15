@@ -88,7 +88,7 @@ function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T, $testCode;
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info)) and u\validVarName($key)) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
@@ -156,14 +156,12 @@ function fixData(&$info, $direct = FALSE) {
     if (nn($federalId)) u\digits($federalId);
     if (nn($dob) and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
   }
-  if (!empty($boxId) and !is_numeric($code = $boxId)) $boxId = db\get('id', 'r_boxes', compact('code'));
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) if (!($k == 'to' and strhas($v, '@'))) { // exception for the "to" parameter in r\rMail() subs
     $$k = fixIdFld($v);
     if ($k == 'qid') $$k = r\qid($$k); // convert back to qid for qid field
     $info[$k] = $$k;
   }
-
 //  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (array_key_exists($k, $info)) $info[$k] = nn($$k, NULL);
   return $info;
@@ -205,14 +203,14 @@ function adminPerms($id, $perms) {
 }
 
 function cookieIs($nm, $v, $crypt = FALSE) {
-  global $testOnly, $box;
+  global $testOnly;
 
   $info = [$nm => $v]; fixData($info); $v = $info[$nm];
   if (!$testOnly) {
     if ($crypt) r\setCryptCook($nm, u\b64decode($v)); else r\setCook($nm, $v);
   }
-  if ($nm == 'box') $box = $v; // global $boxId gets set in t\logIn()
   $cookieV = $crypt ? u\b64encode(r\cryptCook($nm)) : r\cook($nm);
+
   return t\eq("cookie $nm", $v, $cookieV);
 }
 
@@ -1385,7 +1383,6 @@ function logIn($id) {
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
       r\setAcct($a);
     }
-    $boxId = $a->boxId($box);
   }
   return TRUE;
 }
@@ -1735,7 +1732,7 @@ function clear($ch = 0) {
   global $testRewardStep; $testRewardStep = 500;
   global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
 
-  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs';
+  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs boxId';
   foreach (ray($vars) as $k) { global $$k; $$k = NULL; }
 
   $formOut['text'] = '';

@@ -228,7 +228,7 @@ function transactions($params) {
   global $allowDupTxs;
   global $scanned; $scanned = true;
   
-  global $mya, $boxId, $allowDupTxs;
+  global $mya, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
   $flds = 'version deviceId actorId otherId amount description created offline'; // proof is proof enough (no cardCode needed)
@@ -530,7 +530,7 @@ function photoReturn($pic) {
  * @return <ok>
  */
 function authOk($arg, $params, $noBox = FALSE) {
-  global $mya, $boxId;
+  global $mya;
 
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
@@ -542,7 +542,7 @@ function authOk($arg, $params, $noBox = FALSE) {
       if ($qid != $mya->mainQid and $two != $mya->fullName) return exitJust(X_UNAUTH);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    if (!$noBox) $boxId = $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
+    if (!$noBox) $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;
