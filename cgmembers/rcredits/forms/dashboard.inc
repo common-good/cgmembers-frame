@@ -86,7 +86,7 @@ function formDashboard($form, &$sta, $args = '') {
   $acct = $mya->mainQid;
   $desc = $mya->jid ? t(' (joined with %nm)', 'nm', $mya->jA->fullName) : '';
   $lnkShowQr = lnk('/show-qr', t('Show QR'));
-//  $lnkScanQr = lnk('/scan-qr', t('Scan QR')) . qBtn('qr');
+  $acct = item($acct, t('Account:'), $desc, suffix(tr(' %DASH ') . $lnkShowQr));
 
   if ($mya->ok) {
     $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
