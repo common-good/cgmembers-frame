@@ -678,20 +678,6 @@ function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
 function exitJson($message, $status = X_GOT) {return exitJust(u\jsonize(is_array($message) ? $message : compact('message')), $status, u\noSecrets($message));}
 
 /**
- * Return the account to scan from. Also set $boxId.
- */
-function getScannerA() {
-  global $mya, $box, $boxId;
-  
-  if ($mya) return $mya;
-  $scanner = r\cook('scanner');
-  $scannerA = r\acct($scanner);
-  if ($scanner and (!$scannerA or !w\boxIdCheck($box, $scannerA))) return r\setCook('scanner', NULL);
-  $boxId = $scannerA ? $scannerA->boxId($box) : NULL;
-  return $scannerA;
-}
-
-/**
  * Retrieves the current page from the cache.
  *
  * Note: we do not serve cached pages to authenticated users, or to anonymous

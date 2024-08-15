@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\QR as qr;
 use CG\Db as db;
 
-include_once R_ROOT . '/cg-qr.inc';
+//include_once R_ROOT . '/cg-qr.inc';
 
 /**
  * Handle a scanned Common Good card.
@@ -19,7 +19,10 @@ include_once R_ROOT . '/cg-qr.inc';
  *   URL parameters for undo, tip, or receipt (xid, pct)
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
-  global $mya, $box, $boxId;
+  return softErr(t('Scanning from our desktop app is no longer supported. Please use our CGPay app instead. <%a>Get it here</a>!', '_a', atag('http://cg4.us/pay')));
+}
+/*  
+  global $mya, $boxId;
 
   $scannerA = getScannerA(); // allow even friends to use the device, without changing standard scanner
 
@@ -53,8 +56,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     }
   } elseif (in($func = $dom, 'receipt undo tip')) {
     extract(just('xid tip', $code, NULL));
-    $boxes = db\col('id', 'r_boxes', ray('code', $box)) ?: -1;
-    if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->uids, 'xid=:xid and boxId IN (:boxes)', compact(ray('xid boxes'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
+    if (!$scannerA or !$xid or !$tx = r\Tx::lastTx($scannerA->uids, compact(ray('xid boxId'))) or $tx->uid2 != $scannerA->id) return softErr(t('That is not a payment to you.'));
     $func = "\\CG\\Web\\$func";
     return $func($tx, $tip); // only tip uses $tip
   }
@@ -119,7 +121,7 @@ function formCard_validate($form, &$sta) {
 }
 
 function formCard_submit($form, &$sta) {
-  global $mya, $box;
+  global $mya, $boxId;
   
   extract(just('mode account tail amount desc uid', $sta['input'], NULL));
 
@@ -127,7 +129,7 @@ function formCard_submit($form, &$sta) {
     $scannerA = r\acct($account);
     if (!$mya or $scannerA->id != $mya->agentId) {
       if ($mya) w\signout(TRUE);
-      $scannerA->boxId($box); // create boxid if it doesn't exist yet
+      if (!$boxId) $boxId = $scannerA->boxId(); // create boxId if it doesn't exist yet
     }
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
     return go($tail ? "/card/$tail" : '/app');
@@ -161,7 +163,7 @@ function cardSignout($msg, $err = '') {
  * Choose which account "owns" this device for scanning purposes.
  * @param assoc $choices: list of account names keyed by uid
  * @param string $tail: the original query
- */
+ */ /*
 function chooseScanner($choices, $tail) {
   global $mya;
   
@@ -178,7 +180,7 @@ function chooseScanner($choices, $tail) {
 
 /**
  * Show startup screen, having already chosen an associated account.
- */
+ */ /*
 function startup($actorA) {
   global $mya;
 
@@ -193,7 +195,7 @@ function startup($actorA) {
 
 /**
  * Report a result, showing useful links.
- */
+ */ /*
 function cardDone($z) {
   global $mya;
 
@@ -222,7 +224,7 @@ function cardDone($z) {
 
 /**
  * Print a receipt for a transaction.
- */
+ */ /*
 function receipt($tx) {
   $bizA = $tx->actorA;
   $logo = logoFld($bizA->logo ? $bizA : r\acct(CGID)); // use CG logo if company has none
@@ -248,7 +250,7 @@ function receipt($tx) {
 
 /**
  * Undo a transaction.
- */
+ *//*
 function undo($tx) {
   $z = be\posUndo($tx->actorA, $tx->xid, $tx->amt2 < 0 ? (now() - $tx->created < FORCE_WINDOW) : TRUE); // forced reversal of payments is time-sensitive
   return cardDone($z);
@@ -257,7 +259,7 @@ function undo($tx) {
 /**
  * Ask the customer for a tip.
  * tip=3 means $3, tip=3! means 3% (an actual percent sign screws up the browser)
- */
+ */ /*
 function tip($tx, $tip) {
   if (isset($tip)) {
     list ($tip, $isPct) = substr($tip, -1, 1) == '!' ? [strstr($tip, '!', TRUE), TRUE] : [$tip, FALSE];
@@ -295,3 +297,4 @@ function tip($tx, $tip) {
 function tipAmt($tx) {return db\get('amt', 'txs', ray('xid uid1 uid2 type', $tx->xid, $tx->uid1, $tx->uid2, E_AUX));}
 
 function selfServe() {global $mya; return (r\cook('selfServe') and !$mya);}
+*/
