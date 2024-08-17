@@ -194,20 +194,27 @@ class QB {
    * Credit card charges increase the number by 4 again: Sponsee -> CG and [increase the (negative) Tx Fee Reimbursement Expense and the (positive) Sponsored Tx Expense]
    * This is all driven by the accounting categories (cat field) chosen manually or by be\setCat().
    *
-   * Accounting NOTE: to increase an account, CREDIT income and liability, DEBIT expense and asset (maybe think of expenses and assets as being negative income and liabilities).
+   * Accounting NOTE: to increase an account, CREDIT income and liability, DEBIT expense and asset (maybe think of expenses and assets as being negative income and liabilities). Here's what happens to each type of account (increase or decrease) when you credit it or debit it
+   *      CR  DB
+   *   I   +   -
+   *   E   -   +
+   *   A   -   +
+   *   L   +   -
+   *
+   * @param bool $omitBankTxs: <don't handle txs for bank transfers> (normally called with this TRUE after handling txs through the latest bank transfer date)
    */
-  public function sendTxs($end = NULL) { // usually call only from sendBankTxs
+  public function sendTxs($omitBankTxs, $end = NOW) { // usually call only from sendBankTxs
     global $testQbTxs;
     
     $start = strtotime('7/1/2021');
-    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
+//    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
     $cnt = 0;
     $sql = 'SELECT DISTINCT uid2 FROM txs WHERE :IS_CC AND uid1=:UID_OUTER AND created BETWEEN :start AND :end';
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids()));
 
-    $txs = be\getTxs($uids, $start, $end, ray('includeSelfTxs catsOnly', TRUE, TRUE));
+    $txs = be\getTxs($uids, $start, $end, ray('omitBankTxs includeSelfTxs catsOnly', $omitBankTxs, TRUE, TRUE));
 
     foreach ($txs as $entries) {
       extract(just('xid description created banking cat2 uif2 uid2 name', $entries[0]));
@@ -281,12 +288,13 @@ X;
       } else {
         if (test()) $testQbTxs[] = $qbTx; else
         $this->ds->Add($qbTx);
-        $this->sendTxs($deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
+        $this->sendTxs(FALSE, $deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
     }
 
+    $this->sendTxs(TRUE);
     list ($dt1, $dt9) = $cnt ? [fmtDt($dt1), fmtDt($deposit)] : ['', ''];
 //    r\tellAdmin(t('QBO Ctty Fund export complete'), compact(ray('cnt dt1 dt9')));
     w\say(t('QBO Ctty Fund export complete: ') . pr(compact(ray('cnt dt1 dt9'))));

@@ -23,6 +23,7 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
  * @param assoc $extra: extra parameters
+ *   omitBankTxs: <don't handle txs for bank transfers>
  *   includeSelfTxs: <include transactions between the various $uids>
  *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are a credit card payment) AND B_QBOK flag off> 
  *     NOTE: usually cats are set manually or by be\setCat(), but CC donations are handled differently and cat1 gets set in Qb::sendCCTx()
@@ -31,7 +32,7 @@ require_once R_ROOT . '/classes/txentry.class';
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($uids)) $uids = [$uids];
 
-  extract(just('includeSelfTxs catsOnly', $extra, FALSE));
+  extract(just('omitBankTxs includeSelfTxs catsOnly', $extra, FALSE));
 
   $fromMe = 'x.uid1 IN (:uids)';
   $toMe = 'x.uid2 IN (:uids)';
@@ -39,6 +40,8 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   $where .= ' AND !(x.amt=0 AND x.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
+  
+  if ($omitBankTxs) $where .= ' AND t2.bankAccount IS NULL';
   if ($catsOnly) {
     $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR (x.:IS_CC AND x.uid1=:UID_OUTER)) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
