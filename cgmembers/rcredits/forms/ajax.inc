@@ -40,7 +40,7 @@ function ajax($args = NULL) {
       return exitJust(u\jsonize($res ? array_values($res) : []));
 
     case 'suggestTxDesc': // suggest a description and/or category for a transaction being entered
-      extract(just('otherId purpose paying', $data));
+      extract(just('otherId purpose paying', $data, NULL));
       $purpose = $purpose ?: r\suggestDesc($myid, $otherId, $paying);
       $cat = r\bestCat(ray('myid otherId desc type channel paying', $myid, $otherId, $purpose, E_PRIME, TX_WEB, $paying));
       return ajaxRet(compact(ray('purpose cat')));
