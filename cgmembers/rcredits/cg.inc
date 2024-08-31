@@ -274,7 +274,7 @@ function rdoMonth($time = NULL) {
  * @param string $device: one device code for this account (not very important, but interesting, especially for POS)
  */
 function ipok($uid) {
-  global $box; $device = $box;
+  global $boxId; $device = $boxId ?: 0; // see Acct::boxId()
   $ip = $_SERVER['REMOTE_ADDR'];
   if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device')), 'ip'); 
 }

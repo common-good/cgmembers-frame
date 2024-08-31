@@ -1500,6 +1500,7 @@ EOF;
  * @return object(nonce, todo) if $todo is 'nothing', else the nonce
  */
 function todo($number, $todo = 'nothing', $nonce = 'whatever') {
+  u\FAIL('be\todo() UNUSED');
   if ($todo == 'nothing') {
     return (object) db\get('nonce,todo', 'r_boxes', 'code=:number', compact('number'));
   } else {

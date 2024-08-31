@@ -271,7 +271,7 @@ function signout($continue = FALSE) {
   r\deleteCook('qboRefresh');
   r\deleteCook('vKeyPw'); // no longer admV, if we ever were
 
-  if ($from == 'app' and $continue === 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
+//  if ($from == 'app' and $continue === 'timedout' and $a = getScannerA() and !$a->co) return go('app'); // timeout for members using app just resets to app home
   
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue === 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
