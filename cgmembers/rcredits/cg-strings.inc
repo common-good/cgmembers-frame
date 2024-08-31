@@ -381,7 +381,7 @@ EOF
   'negative amount' => t('The amount cannot be negative.'),
   'zero amount' => t('The amount cannot be zero.'),
   'too fractional' => t('You have too many digits after the decimal point.'),
-  'amount too big' => t('Amounts larger than %max are not allowed.'),
+  'amount too big' => t('The largest amount permitted here is %max.'),
   'already undone' => t('Transaction is already undone.'),
   'no such tx' => t('That transaction does not exist.'),
   'bank unverified' => t('You cannot transfer funds to or from your bank account until it has been verified.'),
