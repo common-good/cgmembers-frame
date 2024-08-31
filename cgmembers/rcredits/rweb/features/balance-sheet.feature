@@ -29,7 +29,7 @@ Setup:
   And these "tx_requests":
   | payer | payee | amount | status   |*
   | .ZZB  | ctty  |     20 | approved |
-  | ctty  | .ZZA  |     10 | pending  |
+  | ctty  | .ZZA  |     10 | open  |
   And these "txs2":
   | payee | amount | created    | completed  |*
   |  .ZZA |   1000 | %today-13m | %today-13m |

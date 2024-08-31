@@ -189,7 +189,7 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
 /**
  * usd transfer count is (ARG)
  *
- * in: TEST invoices UnpaidInvoicesGetHandled
+ * in: 
  */
 function usdTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 
@@ -224,8 +224,6 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  * in: TEST bank AMemberIsBarelyBelowTarget
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     BOTH bank AMembersBankAccountGetsVerified
- *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
@@ -388,7 +386,6 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     TEST bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
- *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     BOTH bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout Setup
@@ -448,8 +445,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *
  * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
- *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     TEST bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     TEST bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ASecondRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
@@ -517,8 +513,6 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
- *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
@@ -625,5 +619,13 @@ function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms
  *
  * in: MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  */
 function itsLater() {return t\itsLater();}
+
+/**
+ * only these (ARG): (ARG)
+ *
+ * in: TEST gifts ARecurringDonationToCGCannotBeCompleted
+ */
+function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\these($thing, $list)); }

@@ -370,6 +370,10 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     flog(t('. marking account unusable'));
     db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
   } elseif ($merge) {
+    $newA = r\acct($newUid);
+    $notes = r\stampNote(t('duplicate account %oldQid merged into this account', compact('oldQid'))) . ($a->notes ?: '');
+    if ($oldNotes = $a->notes) $notes .= "\n" . t('---- notes from duplicate account %oldQid:', compact('oldQid')) . "\n" . $oldNotes;
+    $newA->update('notes', $notes);
     flog(t('. deleting account'));
     db\del('users', 'uid', $oldUid);
   }

@@ -49,7 +49,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card, 0:Standard')));
+  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card, 0::PROJECT Account')));
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
@@ -189,7 +189,14 @@ function fboTx($input) {
   $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
-  $res = $paying ? go('dashboard') : be\thanks($mya->sponsored ? 'fbo' : ($isGift ? 'cggift' : 'purchase'), FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
+  
+  if ($paying) {
+    $res = go('dashboard');
+  } else {
+    $type = $isGift ? ($mya->sponsored ? 'fbo' : 'cggift') : 'purchase';
+    $res = be\thanks($type, FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
+  }
+  
   unset($DBTX);
   
   return $res; // no need to continue (outer transactions never delay or repeat)

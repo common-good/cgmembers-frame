@@ -23,7 +23,7 @@ timer_start('page');
 $uri = 'I' . nni($_SERVER, 'REQUEST_URI'); // handle scanned rCard URIs
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
 define('URI', $_SERVER['REQUEST_URI']);
-define('PAGE', basename(URI));
+define('PAGE', dirname(URI));
     
 if (NOT_PRODUCTION) {
   ini_set('display_startup_errors', TRUE);

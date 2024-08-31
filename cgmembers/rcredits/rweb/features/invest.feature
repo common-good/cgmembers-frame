@@ -520,7 +520,7 @@ Scenario: The investment club issues dividends
   And these "r_stakes":
   | stakeid | uid  | clubid | stake | request | joined  |*
   |       1 | .ZZA | .ZZI   |    30 |     -20 | %now-2d |
-  |       2 | .ZZB | .ZZI   |  3180 |       0 | %now-2d |
+  |       2 | .ZZB | .ZZI   |  3220 |       0 | %now-2d |
   And balances:
   | uid  | balance |*
   |  cgf |   -4820 |

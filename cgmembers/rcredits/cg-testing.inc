@@ -570,10 +570,13 @@ function json($want, $sub = FALSE) {
 function doRequests($info) {
   global $testOnly, $channel;
 ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
-  u\setDft($info['purpose'], nn($info['for'], 'this or that'));
+
+  extract(just('purpose status', $info, NULL));
+  $purpose = u\setDft($info['purpose'], nn($info['for'], 'this or that'));
   unset($info['for']);
 
-  extract($info);
+  $statuses = array_flip(ray(strtolower(TX_STATUSES)));
+  if (isset($status) and !is_numeric($status)) $info['status'] = $statuses[$status];
 
   if ($testOnly) return verifyRecord('tx_requests', $info);
 
@@ -581,14 +584,9 @@ function doRequests($info) {
   u\EXPECT($missing == [], "missing fields " . pr($missing));
 
   $invInfo = just('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, now()]);
-  switch ($invInfo['status']) {
-  case 'denied': $invInfo['status'] = TX_DENIED; break;
-  case 'pending': $invInfo['status'] = TX_PENDING; break;
-  case 'approved': $invInfo['status'] = TX_APPROVED; break;
-  }
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId reversesXid', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
-  u\EXPECT(!empty($nvid));
+  u\EXPECT(!empty($nvid), 'failed updateOrInsert into tx_requests: ' . pr($invInfo));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
     // No -- don't do this, because there is insufficient information
@@ -1896,7 +1894,7 @@ function weSayWithSubs($type, $index, $subs) {
       if ($actual == $tmsg) {$res = TRUE; break;}
     }
   }
-  if (!$res) t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
+  if (!$res) t\output("EXPECT ($type): $wantMsg", 'output'); // this must come after array_search!
   return $res;
 }
 
@@ -1975,7 +1973,7 @@ function weMessage($index, $id, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testMessages;
 
-  $subs = $subs[0];
+  $subs = nni($subs, 0) ?: [];
   $uid = t\uid($id);
 
   foreach ($testMessages as $one) {

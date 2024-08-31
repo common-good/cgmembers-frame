@@ -223,9 +223,8 @@ function formAccounts($form, &$sta) {
 }
 
 function formAccounts_submit($form, &$sta) {
-//  extract(just('a', $sta['input']));
   $uid = whoId($sta);
-  changeWho('', 'acct=' . $uid, $sta);
+  return go("change-account/acct=$uid");
 }
 
 /**
@@ -241,7 +240,7 @@ function logo($qid = '') {
  * Change the current account.
  * @param string $zot: gets basename passed from URL
  */
-function changeWho($zot, $args = '', &$sta = '') {
+function changeWho($zot, $args = '') {
   global $mya;
   extract(just('acct page', $args, NULL));
 
@@ -256,7 +255,8 @@ function changeWho($zot, $args = '', &$sta = '') {
     if (!$mya->admin) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
     if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.'));
   }
-  r\setAcct($mya, $sta); // set new current account
+  \drupal_get_messages(); // clear current messages (which should have already been displayed)
+  r\setAcct($mya); // set new current account
   return go($page);
 }
 

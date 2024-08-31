@@ -210,6 +210,7 @@ class Acct {
       case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
       case 'url': return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
       case 'lastTx': return $a->lastTx();
+      case 'lastTxDt': return ($tx = $a->lastTx) ? fmtDt($tx->created, 'yyyy-MM-dd') : FALSE;
       case 'achName': return str_replace('_', ' ', ($a->sponsored and !$a->ourOwn) ? $a->fullName : $a->legalName); // for ACHs, including u\parseName of names like Jay di_Fiori
       // NOTE: when money comes into a sponsored account, the account belongs to CG (legalName). When money goes out, the account belongs to the sponsored entity (fullName).
       case 'trustCook': return "trust-$a->mainQid"; // cookie name of device trust
@@ -234,7 +235,7 @@ class Acct {
       
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
-      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);
+      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub); // member's investment club ID (one of many) DEPRECATED
       case 'trialco': return ($a->co and $a->depends);
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
@@ -689,8 +690,7 @@ class Acct {
     global $channel;
     $a = $this; $uid = $a->id;
 
-    // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
-    if ($a->isCanonic) return 0;
+    if ($a->id < 0 or $a->isCanonic) return 0; // communities and structural accounts are never short
 
     if ($a->co and COMPANY_FREEZE and $a->eq($actor) and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
@@ -711,8 +711,8 @@ class Acct {
   public function avail($goods = FOR_GOODS) {
     $a = $this;
     
-    // no going into debt without permission
-    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
+    // no going into debt without permission or without a connected bank account
+    if ($goods == FOR_USD or !$a->hasBank or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
       if ($a->ourOwn) $floor = min($floor, -CG_LOAN_LIMIT); // allow CG to transfer money to bank account from a zero CG balance
     } else {$floor = $a->floor;}
@@ -1233,34 +1233,34 @@ o;
   /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
    * Call with:
-   *   $got = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
-   *   $got = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
+   *   $completed = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
+   *   $completed = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
    * Called for investments, gifts, invoice payment, and autorefills.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return numeric: amount drawn from other accounts and/or requested from bank
+   * @return completed: <bank transfer (in or out) is "completed" has been credited to the account>
    */
   public function getFunds($amount = NULL, $why = NULL) {
     $a = $this;
 
     if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
-
     if ($a->hasBank) {
-      $waiting = $a->waitingFromBank($combinable, $txid);
+      $waiting = 0; // we are not charged per transfer so this is simpler (was $a->waitingFromBank($combinable, $txid);)
       if (round($amount - $waiting, 2) <= 0) return 0;
-      list ($xid, $amtDone, $report) = $a->bank($amount, $why);
+      list ($xid, $amtDone, $completed, $report) = $a->bank($amount, $why);
       $amount -= $waiting + $amtDone;
       $msg = $amount > 0 ? 'automatic when funded' : $report;
       $subs = [];
     } else {
       list ($amtDone, $msg) = [0, 'cannot bank|when funded|how to fund'];
       $subs = ray('tofrom why', 'from', tr('to target'));
+      $completed = FALSE;
     }
 
     w\say($msg, $subs);
     if ($amount > 0) $a->tellOut($msg, $subs); // already told, if the whole amount got transferred
 
-    return $amtDone;
+    return $completed;
   }
   
   /**
@@ -1275,6 +1275,7 @@ o;
    * @return [xid, amtDone, report] where:
    *   xid: the transfer transaction ID
    *   amtDone: the amount transferred
+   *   completed: (bool) <bank transfer is "completed" and CG account credited>
    *   report: actual message to say to account-owner about the transfer (but not by email because we do that herein)
    */
   public function bank($amount, $why, $info = []) {
@@ -1283,7 +1284,7 @@ o;
     extract(just('explicit recursId cat', $info, [FALSE, NULL, NULL]));
 
     $report = '';
-    if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
+    if (!$amount = round($amount, 2)) return [NULL, 0, NULL, NULL]; // no zero requests at this time (to pre-verify bank account)
 
     $payee = $a->id;
 //    $okNow = ($amount < 0 or $a->bankOk); // 
@@ -1293,11 +1294,12 @@ o;
     $combined = FALSE;
     $previous = $total = NULL;
     $waiting = $a->waitingFromBank($combinable, $txid);
+    $combinable = 0; // we don't get charged per transfer, so don't combine
   
     if ($amount > 0) { // bringing money in
-      if (!$explicit) {
+      if (FALSE and !$explicit) { // don't combine
         $amount -= $waiting;
-        if ($amount <= 0) return 0; // do nothing if we already have plenty waiting
+        if ($amount <= 0) return [NULL, 0, NULL, NULL]; // do nothing if we already have plenty waiting
       }
       $amount += $combinable;
       if ($a->refill and !$explicit) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
@@ -1329,7 +1331,7 @@ o;
     $a->tellInOut($amount > 0, $msg, $subs);
     $report = tr($msg, $subs); // for return
 
-    return [nn($xid), $amount, $report];
+    return [nn($xid), $amount, $completed, $report];
   }
   
   /**
@@ -1889,14 +1891,13 @@ X;
         $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
         if ($z->ok) {unset($DBTX); return $z;}
         if ($i > 0 or !$shortfall = nni($z->subs, 'shortfall') or $shortfall > $a->creditLine) break; // try just once to fill shortfall
-        $shortfall -= $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
+        $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
         if ($a->avail($goods) < $amount) break;
       }        
     } else $z = be\txRet(FALSE, 'you wait');
 
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    $a->getFunds($shortfall > 0 ? $shortfall : $amount, t('to cover your payment request #%nvid', $z2->subs));
     unset($DBTX);
     
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
@@ -1966,7 +1967,7 @@ X;
   public function codeHash() {return u\hash($this->cardCode());}
   public function o($k) {return $this->{'o_' . $k};}
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
-  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
+  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx($this->uids, $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', fmtDt($tx->created)) : '';}
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->email => $this->fullName];}

@@ -28,7 +28,7 @@ global $tStrings; $tStrings = array(
   'for why' => t('(for %why)'),
   'report funding' => t("You successfully %did %amount to %otherName."),
   'balance unchanged' => t('Your balance is unchanged, pending payment.'),
-  'denial done' => t('The invoice has been marked "denied".'),
+  'denial done' => t('The payment request has been marked "denied".'),
   'invoice done' => t('The payment request has been %done.'),
   'prev gift canned' => t('Your previous recurring gift has been canceled.'),
 
@@ -83,9 +83,9 @@ global $tStrings; $tStrings = array(
   'refunded you' => t('<b>Received:</b> %otherName refunded you %amount for "%payerPurpose".'),
   'paid you' => t('<b>Received:</b> %otherName paid you <b>%amount</b> for "%payeePurpose".'),
   'paid you linked' => t('<b>Received:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'paid you'
-  'you invoiced' => t('<p><b>Invoice:</b> You invoiced %otherName %amount for "%purpose".</p>'),
-  'you will be paid' => t('<p><b>Invoice:</b> %otherName initiated a bank transfer for payment of %amount to you for "%purpose". The payment will go through once the transfer has completed.</p>'),
-  'invoiced you' => t('<p><b>Invoice:</b> %otherName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You".</p><p>If you have any questions or concerns about this invoice, <i>please contact %otherName</i> at %otherEmail or %otherPhone.</p>'), // can't separate out 'invoice concerns'
+  'you invoiced' => t('<p><b>Payment Request:</b> You asked %otherName to pay %amount for "%purpose".</p>'),
+  'you will be paid' => t('<p><b>Payment Request:</b> %otherName initiated a bank transfer for payment of %amount to you for "%purpose". The payment will go through once the transfer has completed.</p>'),
+  'invoiced you' => t('<p><b>Payment Request:</b> %otherName request that you pay %amount for "%purpose". <%a1>Click here to pay or to deny this request</a>. Or sign in at %CG_DOMAIN and click History, then "Pending From You".</p><p>If you have any questions or concerns about this payment request, <i>please contact %otherName</i> at %otherEmail or %otherPhone.</p>'), // can't separate out 'invoice concerns'
   'you gave cash' => t('<b>Credit:</b> You traded %amount USD for %amount of %PROJECT credit from %otherName.'),
   'drew from you' => t('<b>Transfer:</b> %otherName drew %amount from your account automatically.'),
 
@@ -97,31 +97,31 @@ global $tStrings; $tStrings = array(
   'you got cash' => t('<b>Exchange:</b> %otherName paid you %amount USD for %amount of %PROJECT credit.'),
   'you drew' => t('<b>Transfer:</b> You drew %amount from %otherName\'s account automatically.'),
   
-  'stale invoice' => t('<b>Invoice Reminder:</b> %daysAgo days ago we emailed you an invoice from %payeeName for %amount. <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click History, then "Pending FROM You". If you have any questions or concerns about this invoice, please contact %payeeName at %email or %phone.'),
-  'stale invoice report' => t('<b>Invoice Update:</b> %daysAgo days ago you invoiced %payerName %amount for %purpose (invoice #%nvid, %created). That invoice is still marked "pending", so we sent %payerName a reminder. If this invoice is no longer valid, sign in at %CG_DOMAIN and choose "Invoices FROM You" on the History menu to cancel it.'),
+  'stale invoice' => t('<b>Pending Request:</b> %daysAgo days ago we emailed you a payment request from %payeeName for %amount. <%a1>Click here to pay or to deny this request</a>. Or sign in at %CG_DOMAIN and click History, then "Pending From You". If you have any questions or concerns about this payment request, please contact %payeeName at %email or %phone.'),
+  'stale invoice report' => t('<b>Request Update:</b> %daysAgo days ago you requested that %payerName pay %amount for %purpose (request #%nvid, %created). That request is still marked "pending", so we sent %payerName a reminder. If this payment request is no longer valid, sign in at %CG_DOMAIN and choose "Pending To You" on the History menu to cancel it.'),
 
   'short invoice' => t('Your balance is %short short to pay the requested amount to %payeeName (payment request #%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),
   'finish signup' => t('<b class="loud">IMPORTANT</b>: You must sign in at %CG_DOMAIN and finish setting up your %PROJECT account before this payment can be made.'),
-  'debt timeout' => t('Your balance has been negative for more than %R_DEBT_DAYS. The system will try to bring it up to zero, in keeping with the <%a>%PROJECT Agreement</a> you signed on %signed.'),
+  'debt timeout' => t('Your balance has been negative for more than %R_DEBT_DAYS. The system will try to bring it up to zero with funds from your connected bank account, in keeping with the <%a>%PROJECT Agreement</a> you signed on %signed.'),
   'when funded' => t('You cannot make payments until you have enough money in your account.'),
   'how to fund' => t('To put money in your account, trade cash for %RCREDITS at a participating business or with another member OR sign in at %CG_DOMAIN and click "Bank", to connect a bank account and transfer funds.'),
-  'auto pay on' => t('From now on your invoices from %payeeName will be approved and paid automatically, drawing funds from your connected bank account as needed. (We do not expect there to be overdraft problems, of course, but if there are, you will be responsible for them.)'),
-  'invoice denied' => t('<p><b>Invoice DENIED:</b> Your customer %payerName has declined to pay the following invoice:</p>
+  'auto pay on' => t('From now on your payment requests from %payeeName will be approved and paid automatically, drawing funds from your connected bank account as needed. (We do not expect there to be overdraft problems, of course, but if there are, you will be responsible for them.)'),
+  'invoice denied' => t('<p><b>Request DENIED:</b> Your customer %payerName has declined to pay the following request:</p>
   <blockquote>%created %amount for "%purpose"</blockquote>
   <p>Reason given: "%reason". You may want to contact the customer directly, to resolve any dispute.</p>'),
   
-  'invoice withdrawn' => t('<p><b>Invoice CLOSED:</b> %payeeName has %done the following invoice:</p>
+  'invoice withdrawn' => t('<p><b>Payment Request CANCELED:</b> %payeeName has %done the following payment request:</p>
     <blockquote>%created %amount for "%purpose"</blockquote>'),
-  'invoice reopened' => t('<p><b>Invoice REOPENED:</b> %payeeName has reopened the following invoice:</p>'), // use in combination with 'invoiced you'
-  'inv reopened' => t('The invoice has been reopened.'),
+  'invoice reopened' => t('<p><b>Payment Request RENEWED:</b> %payeeName has reissued the following payment request:</p>'), // use in combination with 'invoiced you'
+  'inv reopened' => t('The payment request has been reissued.'),
   
   'charge disputed' => t('<p><b>Charge DISPUTED:</b> Your customer %otherName disputes the following charge:</p>
   <blockquote>%created %amount for "%payeePurpose"</blockquote>
   <p>You may want to contact the customer directly, to resolve this dispute.</p>'),
-  'invoice canceled' => t('<p><b>Invoice CANCELED:</b> Your invoice from %otherName has been canceled:</p>
+  'invoice canceled' => t('<p><b>Request CANCELED:</b> Your request to %otherName for payment has been canceled:</p>
   <blockquote>%created %amount for "%payerPurpose"</blockquote>
-  <p>This invoice will no longer appear in your list of Pending FROM You.'),
+  <p>This payment request will no longer appear in your list of Pending From You.'),
   'offer refused' => t('%otherName has declined to accept your %created offer of %amount for "%payerPurpose".'),
   'offer canceled' => t('NYI'),
   'over max' => t('Your balance is over the maximum you set.'),
@@ -130,7 +130,7 @@ global $tStrings; $tStrings = array(
   'to zero' => t('to bring your balance up to zero'),
   'to pending' => t('to cover your pending payment requests'),
   'part way to target' => t('to bring your balance up part way to the target you set (as much as your current credit line allows)'),
-  'for invoice' => t('to pay pending payment request #%nvid'),
+  'for invoice' => t('to cover pending payment request #%nvid'),
   'for investment' => t('for an increased stake in the investment club'),
   'now a member' => t('You are now a member of the Investment Club!'),
   'investment increase' => t('Your investment has been successfully increased by %amount.'),
@@ -138,8 +138,8 @@ global $tStrings; $tStrings = array(
   'rating successful' => t('You have successfully rated investment #%num'),
   'purchased shares' => t('You successfully purchased %amt shares of %co at %price.'),
   'loaned' => t('You successfully loaned %amount to %co.'),
-  'investment sale pending' => t('Your sale of shares will go through when %co approves the invoice.'),
-  'repayment request pending' => t('Your request to reclaim your loan will go through when %co approves the invoice.'),
+  'investment sale pending' => t('Your sale of shares will go through when %co approves the request.'),
+  'repayment request pending' => t('Your request to reclaim your loan will go through when %co approves the request.'),
   'redemption request' => t('Your request to redeem %request of your investment will be handled by a club administrator when funds become available.'),
   'investment oversell' => t('That is more than you have invested!'),
   'dividends paid' => t('The club paid %got members (out of %count) a total of %sum in dividends, with %reCount members reinvesting a total of %reSum'),
@@ -233,12 +233,12 @@ EOF
   'member tentative' => t('<h3>You Completed the Minimum Signup</h3><p>Once your account is approved, you can pay and receive payments using the <%a>CGPay mobile app</a> or website.</p><p>But you have a few more steps before you can participate in %PROJECT decisions. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
 //  'card tentative' => t('<h3>Your %PROJECT card will arrive in the mail within about a week.</h3><p>Once a staff member approves your account, you can also send and receive payments online or use our web app (<%a>%APP_URL</a>) on your phone for in-person transactions.</p><p>There are just a few more steps to become a voting member of your %PROJECT community. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
   'voter tentative' => t('<h3>Your Account Setup Is Complete!</h3>A staff member will approve your account shortly.'),
-  'co tentative' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon. A staff member will approve your account shortly.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments.</p><p>Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
+  'co tentative' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon. A staff member will approve your account shortly.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments.</p><p>Of course you can also make payments or send payment requests online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
 
   'member ok' => t('<h3>You Completed the Minimum Signup</h3><p>You can now pay and receive payments using the <%a>CGPay mobile app</a> or website (or click "Print Your Card" below to print yourself a %PROJECT card).</p><p>But you have a few more steps before you can participate in %PROJECT decisions. Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
 //  'card ok' => t('<h3>Your %PROJECT card will arrive in the mail within about a week.</h3><p>Meanwhile, you can send and receive payments online or use our web app (<%a>%APP_URL</a>) on your phone for in-person transactions! There are just a few more steps to become a voting member of your %PROJECT community.</p><p>Click "Get a Vote" below to continue, or sign in again later to finish.</p>', '_a', $appATag),
   'voter ok' => t('<h3>Your Account Setup Is Complete!</h3>'),
-  'co ok' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments. Of course you can also make payments or send invoices online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
+  'co ok' => t('<p>Expect to receive a register sign, and some handout cards in the mail soon.</p><p>Visit <%a>%APP_URL</a> on your phone or tablet to begin accepting in-person payments. Of course you can also make payments or send payment requests online. See the Company menu to create a payment button for your website or emails.</p>', '_a', $appATag),
 
   'join thanks' => t('Thank you for joining us!'),
   'pioneer thanks' => t('Thank you for helping pioneer the %PROJECT economy!'),
@@ -289,7 +289,7 @@ EOF
   'yes or no' =>  '%yesNo', // to replace with yesNo(url)
   'confirm accept' => '%who %did you %amount for %for on %date. Okay to %do', // used in EditTx test
   'confirm payment' => t('Pay %otherName %amount for %why?'),
-  'confirm pay invoice' => t('Pay %otherName %amount (invoice %created)?'), // used in rSMS
+  'confirm pay invoice' => t('Pay %otherName %amount (request %created)?'), // used in rSMS
   'confirm charge' => t('Charge %otherName %amount for %why?'),
   'confirm pay employees' => t('Pay %employeeCount employees %amount each (a total of %total)?'),
   'confirm undo' => t('Undo %created transfer of %amount %tofrom %otherName?'),
@@ -342,8 +342,9 @@ EOF
   'self-investing' => t('You can\'t invest in yourself.'),
   'self-credit' => t('You can\'t give yourself store credit.'),
   'funding error' => t("You do not have permission to fund that person."),
-  'no matching invoice' => t('That is not an invoice to be paid.'), // Type "helpme pay".'),
+  'no matching invoice' => t('That is not an unpaid request.'), // Type "helpme pay".'),
   'inv already paid' => t('That payment request is already paid.'), // message to either payer or payee
+  'inv already funding' => t('That payment request is already approved and funds have been requested from your bank account. Payment will be made once the bank transfer is complete.'), // message to either payer or payee
   'inv is canceled' => t('That payment request has been canceled.'),
   'undo no match' => t("You have no matching transactions to undo."),
   'undo moving target' => t("Can't undo: the last matching transaction has changed."),
@@ -361,6 +362,7 @@ EOF
   'short to' => t('You are %short short for that transaction. Your available credit is %avail. Maybe increase your target balance?'),
   'short from' => t('%otherName is %short short for this request (do NOT try again). Available balance is %avail.'),
   'short from vague' => t('%otherName does not have enough funds for this request (do NOT try again).'),
+  'request num' => t('Request #%nvid:'),
   'min too low' => t('Your target balance is set too low, causing conflicting deposits and withdrawals from your bank account. To increase your target balance to %suggestion, visit the %page page (under Settings).'),
   'you were short' => t('You tried to make a purchase but did not have enough funds in your account.'),
   'suggest refills' => t('Automatic refills might keep this from happening again. To set automatic refills, sign in at %CG_DOMAIN and click "Bank Info" on the Settings menu.'),
@@ -438,7 +440,7 @@ EOF
   'nothing to do' => t('There is nothing to process.'),
   'csv error' => t('Line %line: %msg (%row)'),
   'no txs' => t('There are no transactions in that period.'),
-  'no invoices' => t('There are no such invoices or pending payments in that period.'),
+  'no invoices' => t('There are no such payment requests in that period.'),
   'no relations' => t('There are not yet any relations for this account.'),
   'no devices' => t('Surprisingly, this account has no related devices.'),
   'required field' => t('%field must not be blank.'),
@@ -526,9 +528,9 @@ EOF
   'bad csv' => t('Incorrect CSV format'),
   'empty payroll' => t('There are no employees listed as having received a %PROJECT payroll deduction.'),
   'bad payroll employee' => t('%employee is mispelled, does not have an active %PROJECT Account, or is not listed as an employee on your Relations page. Click Settings, then Relations.'),
-  'illegal amount change' => t('You cannot %action the original amount (%amount). <%a>Send an invoice</a> instead.'),
+  'illegal amount change' => t('You cannot %action the original amount (%amount). <%a>Send a payment request</a> instead.'),
   'bad achmin' => t('The minimum transfer amount must be at least $%R_ACHMIN.'),
-  'say why not' => t('You must say why you are disputing the invoice.'),
+  'say why not' => t('You must say why you are denying the payment request.'),
   'no co pass' => t('Company accounts do not have passwords. Sign in to your personal account, then click your photo in the upper right corner and select %company from the dropdown.'),
   'inactive' => t('That account is closed.'),
   'account number mismatch' => t('You must have mistyped your account number once. Try again.'),

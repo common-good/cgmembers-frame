@@ -2385,7 +2385,7 @@ function missingArgs($args, $require) {
 function first($first, $then = NULL) {
   global $testFirst, $testThen;
   
-  u\setDft($then, $_SERVER['REQUEST_URI']);
+  u\setDft($then, URI);
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
@@ -2448,3 +2448,4 @@ function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press t
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
 function tweakSta(&$sta, $info) {$sta['input'] = array_filter($info + $sta['input'], function ($x) {return isset($x);});} // ignores null values, updates input
+//function itsMyBox($uid) { global $box; return db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', "b.code=:box AND (:uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED))", compact(ray('uid box'))); }

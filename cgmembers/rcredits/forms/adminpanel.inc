@@ -169,7 +169,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'clone' and $a) {
     $newA = a\cloneA($a);
     say(t('You are now in cloned account %qid. Add any desired relations', 'qid', $newA->mainQid));
-    return changeWho('', tr('page=%page&acct=%acct', 'page acct', u\urlify('/settings/relations'), $newA->id), $sta);
+    return changeWho('', tr('page=%page&acct=%acct', 'page acct', u\urlify('/settings/relations'), $newA->id));
   } elseif ($op == 'resetSSN' and $a) {
     $a->setBit(B_MEMBER, FALSE);
     $a->stepDone('verifyid', FALSE);

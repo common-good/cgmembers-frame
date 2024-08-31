@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62c'; // software version
+const R_VERSION = '3.62d'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -696,7 +696,7 @@ const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket
 const BACK_CHANNELS = [TX_APP, TX_CRON, TX_AJAX, TX_API, TX_SOCKET]; // channels with no browser
 
 // Transaction types
-const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
+const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not trading for cash
 const TX_BANK = 99; // used only internally, to mark bank transfers
 
 const TX_DEFAULT_PERIOD = 90; // number of days to show in transaction history, by default

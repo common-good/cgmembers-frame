@@ -24,18 +24,16 @@ use CG\Cron as cr;
 - identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM u_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM u_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
 DAILY (every 5 mins for 5 mins, starting at 2am)
 - checkAccts() check accounts (and their activity) more thoroughly for consistency, security, scams
-- notify and maybe fine late borrowers
-- suggest another donation (after a year?) if first was small
+- notify and maybe fine late borrowers (accounts with a negative balance)
 WEEKLY
 - tell members what they did that was dumb
 MONTHLY
-- distribute community dividends (based on growth of account's wider economic ctty)
 - archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
 YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
+const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs nudges payInvoices getFunds completeUsdTxs notices END'; // getFunds, completeUsdTxs, and notices should probably always be the last 3 things
 const LOGLESS_OPS = 'acctHourly oneAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once R_ROOT . '/rcron/rcron-subs.inc';
@@ -250,8 +248,8 @@ function oneAcct($item) {
   if ($badPartner) { // delete stale unused partner accounts
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     db\del('users', 'uid', $a->id);
-  } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
-    $s = strtr(nn($a->source), ['self() '=>'', 'knows: '=>'']);
+  } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots
+    $s = strtr($a->source ?: '', ['self() '=>'', 'knows: '=>'']); // can't use nn() here
     if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
       r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
 //        f('a.deleteUid', $a->id);
@@ -613,8 +611,11 @@ function everyWeek() {
 function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+
+  $omitUids = r\qo('NEWARJ')->id // people who don't want to see the "whats up" message
+  . ',' . r\qo('NEWBWN')->id;
   
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND uid NOT IN ($omitUids) AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
@@ -971,16 +972,20 @@ function txRisk1($xid) {
 }
 
 /**
- * 1. Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete)
- * 2. Get funds from a connected bank account or drawable CG account, as needed, 
- *    handling approved invoices and investment requests as we go
+ * Get funds from a connected bank account or drawable CG account, as needed, 
  */
 function getFunds() {
-  queueEach('getFunds1', 'SELECT u.uid, request, stakeid FROM users u LEFT JOIN r_stakes s ON s.uid IN (u.uid, jid) AND request>0 WHERE (jid=0 OR u.uid<jid) AND u.uid>:UID_CANON9 AND u.:IS_OK');
+  $sql = 'SELECT u.uid FROM users u WHERE (jid=0 OR u.uid<jid) AND u.uid>:UID_CANON9 AND u.:IS_OK AND uid NOT IN (:ours)';
+  queueEach('getFunds1', $sql, ray('ours', r\cgsOwnUids())); // CG accounts are managed explicitly
+  queueNext();
+}
 
+/**
+ * Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete).
+ */
+function completeUsdTxs() {
   $sql = 'SELECT DISTINCT xid,channel FROM txs2_bank WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);
-  
   queueNext();
 }
 
@@ -990,85 +995,73 @@ function completeUsdTx($item) {
   be\usdTxFollowup($xid);
 }
 
+/**
+ * Get additional funds from bank account as needed.
+ * Strategy:
+ * (1) Make up for any shortfall of pending transfers (completed=0) compared to pending requests (status=approved, ignoring B_FUNDING bit).
+ * (2) Plus bring balance up to target, if autofill (considering #1 only if shortfall is negative).
+ * (3) If balance has been negative for too long and not autofill (or target is negative), bring it up to zero.
+ */
 function getFunds1($item) {
-  extract(just('uid request stakeid', $item, NULL));
+  extract(just('uid', $item, NULL));
   $a = r\acct($uid);
+  $uids = $a->uids;
 
-  // pay pending requests and add up the amounts still pending, so we include those in the amount of funds to get
-  $pending = 0;
-  $sql = <<< o
-    SELECT i.* FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
-    WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer IN (:uids)
-    ORDER BY i.nvid
-o;
-  $q = db\q($sql, ['uids' => $a->uids]);
-  while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
-  if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
-  $balPlusPend = $a->balance + $pending;
+  $need = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'))
+        - db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
 
-  list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
-  ? [$a->minimum + $pending, tr('to target')]
-  : [($a->balance < 0 and $balPlusPend > 0) ? $balPlusPend : min($pending, $balPlusPend), t('to pending')]; // this could be negative (just enough to pay pending)
-///  debug(compact(ray('uid request stakeid pending balPlusPend target why')));
-
-  $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
-  $debtTimeout = FALSE; // disable this 
-
-  if ($a->balance < 0) {
-    if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
-    if ($debtTimeout) $why = tr('debt timeout', 'signed', fmtDt($a->signed)) . "|$why";
+  if ($need > 0) {
+    $a->getFunds($need, tr('to pending')); // this should never happen after 9/1/2024 because getFunds happens when the request is approved
+    if (now() > strtotime('9/1/2024')) r\tellAdmin('unexpected "to pending"', compact(ray('uid need')));
+    $need = 0; // positive need no longer relevant
+  }
+  
+  if ($a->balance < 0 and !$a->wentNeg) {
+    r\tellAdmin('missing wentNeg', ray('qid', $a->mainQid)); // shouldn't happen, but always fix it if it does
+    $a->update('wentNeg', now());
   }
 
-  if ($pending > 0 and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
-    if (!$a->debt or $debtTimeout) { // time to get out of the negative
-      list ($target, $why) = [$pending, tr('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
+  if ($a->refill) { // auto refills
+    $need = $a->minimum - $a->balance + min(0, $need);
+    if ($need > 0) $a->getFunds($need, tr('to target'));
+  } elseif ($a->balance < 0) { // negative balance
+    if (!$a->debt) { // member chose never to go negative
+      $a->getFunds(-$a->balance, tr('to zero'));
+    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
+      $a->getFunds(-$a->balance, tr('debt timeout', 'signed', fmtDt($a->signed)));
     }
   }
-  
-  $amount = $target - $a->balance; // scootch up to target, if below
-    
-  if ($amount > 0) $a->getFunds($amount, $why); // getFunds will subtract any amount already waiting
 }
 
 /**
- * Try to pay any pending transaction requests.
- * @param assoc $nvid: request record ID
- * @return numeric: remaining amount pending
+ * Try to pay any approved transaction requests.
  */
-function payPending($a, $nvid) {
-  if (!$a->ok) return 0; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-  
-  $z = be\payInvoice($nvid);
-  return nni($z->subs, 'shortfall', 0);
+function payInvoices() {
+  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer=u.uid AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
+  queueNext();
 }
 
-/**
- * Handle requests to invest in an investment club.
- * @return numeric: remaining amount requested
- */
-function payInvestmentRequests($a, $request, $stakeid) {
-  if (!$a->avail($request)) return $request;
-
-  r\handleInvestmentRequest($stakeid, $msg);
-  $a->tellMisc($msg);
-  return 0;
+function payInvoice($item) {
+  extract(just('uid nvid', $item, NULL));
+  $a = r\acct($uid);
+  $z = be\payInvoice($nvid, FALSE);
 }
 
 /**
  * Handle pending requests (invoices and unfunded payments).
  */
-function pendingRequests() {
+function nudges() {
   $sql = <<< X
     SELECT DISTINCT i.*
     FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status=:TX_PENDING AND u2.:IS_OK
     ORDER BY i.nvid
 X;
-  queueEach('pendingRequest', $sql);
+  queueEach('nudge', $sql);
   queueNext();
 }
 
-function pendingRequest($item) {
+function nudge($item) {
   extract(just('nvid payer payee amount purpose status created', $item));
   $a1 = r\acct($payer);
   $a2 = r\acct($payee);
