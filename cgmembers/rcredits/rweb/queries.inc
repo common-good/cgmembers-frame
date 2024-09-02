@@ -393,4 +393,4 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
     WHERE u.IS_CO AND u.activated AND t.created>:NOW-$recentSecs
     ORDER BY sales DESC",  
 */
-// Negative Balances: SELECT balance, fullName, u.phoneDash!, u.email!, u.lastTxDt! AS lastTx FROM users u WHERE balance<0 ORDER BY balance
+// Negative Balances: SELECT balance, fullName, u.phoneDash!, u.email!, u.lastTxDt! AS lastTx, u.hasBank! FROM users u WHERE balance<0 ORDER BY balance
