@@ -97,6 +97,55 @@ Setup:
   And cron runs "getFunds"
   Then count "txs2" is 3
 
+  Scenario: Unpaid invoices get handled for a member who opted for "Balance First"
+  Given members have:
+  | uid  | floor | balance | flags |*
+  | .ZZA |     0 |     100 | ok,confirmed,refill,debt,bankOk,balFirst |
+  And these "tx_requests":
+  | nvid | created   | status       | amount | payer | payee | for   | reversesXid |*
+  |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |          37 |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |        %NUL |
+  |    3 | %today    | %TX_APPROVED |    300 | .ZZB  | .ZZC  | three |        %NUL |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |        %NUL |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |        %NUL |
+  Then balances:
+  | uid  | balance |*
+  | .ZZA |     100 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+  
+  When cron runs "payInvoices"
+  Then count "txs" is 2
+  And these "txs": 
+  | xid | created | amount | payer | payee | purpose   | taking | type  | reversesXid |*
+  |   1 | %today  |    100 | .ZZA  | .ZZC  | one       |        | prime |          37 |
+  |   2 | %today  |      0 | bank  | .ZZA  | from bank |      1 | bank  |             |
+  And count "txs2" is 1
+  And these "txs2":
+  | txid | xid | payee | amount | created | completed | deposit |*
+  |    1 |   2 | .ZZA  |    200 | %now    |         0 |       0 |
+  And count "tx_requests" is 5
+  And these "tx_requests":
+  | nvid | created   | status       | amount | payer | payee | for   |*
+  |    1 | %today    | 1            |    100 | .ZZA  | .ZZC  | one   |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
+  |    3 | %today    | %TX_APPROVED |    300 | .ZZB  | .ZZC  | three |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |
+
+  And we message "you paid" to member ".ZZA" with subs:
+  | otherName | amount | payerPurpose |*
+  | Our Pub   | $100   | one          |
+  And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
+  | nvid | short | payeeName | amount | avail |*
+  | 2    | $200  | Our Pub   | 200    | $0    |
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
+  | action | tofrom | amount | checkNum | why               |*
+  | draw   | from   | $200   |        2 | to cover pending payment request #2 |
+  And we message "request num|short to|when funded|how to fund" to member ".ZZB" with subs:
+  | short | payeeName | nvid |*
+  | $300  | Our Pub   |    3 |
+  
 Scenario: Non-member unpaid invoice does not generate a transfer request
   Given members have:
   | uid  | flags                    |*

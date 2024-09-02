@@ -511,11 +511,11 @@ function creditPeops($id) {
 /**
  * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
- * @param bool $auto: don't pull any more from bank than needed
+ * @param bool $balFirst: don't pull any more from bank than needed
  * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return a txRet object
  */
-function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
+function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
@@ -554,7 +554,7 @@ function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
     $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
   } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
 
-  if (!$auto) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
+  if (!$balFirst) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
 
   if ($fromBank > 0 and !u\getBit($flags, 'funding')) { // need funds and didn't already request them
     $z->index .= $payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund'; // add to short payment message something more detailed
@@ -567,7 +567,7 @@ function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
     if ($payerA->hasBank) {
       $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
-      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $auto, $payAmount); }
+      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $balFirst, $payAmount); }
     }
   }
 
@@ -1190,7 +1190,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
     u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
-    $z = be\payInvoice($nvid, FALSE);
+    $z = be\payInvoice($nvid, $payerA->balFirst);
     if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
   }
 

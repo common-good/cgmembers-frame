@@ -526,7 +526,7 @@ const B_NOSEARCH = 10; // user wants to be not findable by other members, by pho
 const B_DEPENDS = 11; // dependent account (can't change settings, federalId is sponsor's)
 const B_BANKOK = 12; // connected bank account has been verified
 const B_MFA = 13; // use multi-factor authentication
-const B_u14 = 14; // 
+const B_BALFIRST = 14; // pay invoices from balance first, drawing as little as possible from bank (otherwise draw 100% from bank)
 const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
 const B_PARTNER = 16; // is a signup partner
 const B_PAPER = 17; // will not accept electronic statements
@@ -546,7 +546,7 @@ const B_ADMIN = 30; // is an administrator (has a record in the admins table)
 
 const B_MAX = 62; // maximum bit number
 const B_ADMINABLE = 'member confirmed carded nonudge mfa partner iclubq influencer cgc invites rewardy noneg'; // for admin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk mfa u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk mfa balFirst contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags

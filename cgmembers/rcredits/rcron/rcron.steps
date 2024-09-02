@@ -85,6 +85,7 @@ function members($list) {return t\members($list);}
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits Setup
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     TEST joint Setup
  *     TEST joint AJointAccountNeedsRefilling
@@ -232,6 +233,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     TEST daily GeopositionGetsCalculated
  *     MAKE invoices Setup
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
@@ -364,6 +366,7 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
  *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
@@ -404,6 +407,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices Setup
  *     BOTH invoices UnpaidInvoicesGetHandled
+ *     BOTH invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     BOTH invoices ALanguishingInvoiceGetsFundedAgain
@@ -451,6 +455,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     TEST monthly CrumbAndRoundupDonationsAreMade
  *     TEST monthly CrumbsAreInvoiced
@@ -526,6 +531,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices ALanguishingInvoiceGetsFundedAgain

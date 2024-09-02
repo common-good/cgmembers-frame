@@ -33,10 +33,7 @@ function formPrefs($form, &$sta) {
   $showAdvancet = item(t('<a>Show advanced options</a>'), NBSP); // different name from showAdvanced (for CSS)
 
   // Advanced settings
-//  if ($mya->ok and $mya->share) $share = w\shareFld($mya); // don't show this during signup (it's on the donation page)
-
   $noticeRadios = array(t('daily'), t('weekly'), t('monthly'));
-
   $secretBal = boolFld(t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->secret);
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
   $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Let members identify my account only by phone, email, or account ID &mdash; not by name."), $mya->nosearch);
@@ -48,6 +45,7 @@ function formPrefs($form, &$sta) {
   } else list ($desc, $extra) = ['', []];
   
   $debtOk = $mya->underage ? NULL : boolFld(t('Debt Okay:'), $desc, $mya->can(B_DEBT), NULL, $extra);
+  $balFirst = boolFld(t('Balance 1st:'), t('When making a payment, use your %PROJECT balance as much as possible, pulling as little as possible from your bank account.'), $mya->balFirst);
   
   $posttext = item(t(<<<EOF
 <h4>** Disclaimers required by the IRS:</h4>
@@ -57,7 +55,7 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin secretBal nosearch debtOk';
+  $advancedFields = 'achMin secretBal nosearch debtOk balFirst';
   
 //  $submit = submit(t('Update Preferences'));
   
@@ -75,12 +73,12 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('snap roundup statements nosearch debtOk secretBal', $sta['input'], NULL));
+  extract(just('snap roundup statements nosearch debtOk balFirst secretBal', $sta['input'], NULL));
   $fields = 'snap';
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
-  $bits = ray('roundup paper secret debt nosearch', $roundup, $statements, $secretBal, $debtOk, $nosearch);
+  $bits = ray('roundup paper secret debt balFirst nosearch', $roundup, $statements, $secretBal, $debtOk, $balFirst, $nosearch);
   $info = compact(ray($fields)) + $bits;
 
   if ($statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);

@@ -82,8 +82,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $remaining = be\invRemains($nvid);
 
     if ($a->hasBank) {
-      $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Auto" box).</p>');
-      if (!$webpay) $always = boxFld('always', t('Auto:'), t('Pay all invoices from %who automatically.', $subs), 0);
+      $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Always" box).</p>');
+      if (!$webpay) $always = boxFld('always', t('Always:'), t('Pay all invoices from %who automatically.', $subs), 0);
     } elseif ($a->avail() < $remaining) {
       $_warning = t('<p><b>NOTE:</b>You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account. Then click History / Pending FROM You and select this invoice to approve it.</p>');
       $disabled = w\disabled();
@@ -105,7 +105,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
         t('Pull this entire amount from your bank account.'),
         t('Pay first from your Common Good balance; then from your bank account as needed.'),
       ];
-      $auto = $a->hasBank ? radiosFld(REQ . NBSP, dft(0), [], $choices) : hidFld(1);
+      $balFirst = $a->hasBank ? radiosFld(REQ . NBSP, dft($a->balFirst ? 1 : 0), [], $choices) : hidFld(1);
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
       $reason = textFld(t('Reason for dispute:'));
@@ -118,7 +118,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always auto pay action because denySet close cancel reopen toMe remaining hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always balFirst pay action because denySet close cancel reopen toMe remaining hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -137,12 +137,12 @@ function formHandleInvoice_submit($form, &$sta) {
   extract(just('payAmount', $input = $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action auto', $input));
+  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action balFirst', $input));
   return w\go($hidInfo['ret']);
 }
 
 function handleInvoice($op, $payAmount, $info) {
-  extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
+  extract(just('nvid payer payee purpose created data amount always reason action balFirst', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to type "status", rather than "error"
@@ -152,7 +152,7 @@ function handleInvoice($op, $payAmount, $info) {
     $flags = db\get('flags', 'tx_requests', compact('nvid'));
     db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', $z = be\payInvoice($nvid, $auto, $payAmount)));
+      extract(just('ok msg', $z = be\payInvoice($nvid, $balFirst, $payAmount)));
       if ($payAmount < $amount) { // don't let the funding flag prevent payer from completing payment!
         $flags = u\setBit($flags, 'funding', FALSE);
         db\update('tx_requests', compact(ray('nvid flags')), 'nvid');

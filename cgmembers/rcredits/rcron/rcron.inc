@@ -1044,7 +1044,7 @@ function payInvoices() {
 function payInvoice($item) {
   extract(just('uid nvid', $item, NULL));
   $a = r\acct($uid);
-  $z = be\payInvoice($nvid, FALSE);
+  $z = be\payInvoice($nvid, $a->balFirst);
 }
 
 /**
