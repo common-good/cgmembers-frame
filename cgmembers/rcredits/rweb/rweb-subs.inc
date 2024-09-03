@@ -588,7 +588,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  * @param string $args: URL parameters
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @param string $flds: list of fields to extract for display and edit
- * @param string $order: ASC or DESC
+ * @param string $order: list order (defaults to <id field> DESC)
  * @return parameters to extract in the form:
  *   ret: what to return from the form OR
  *
@@ -596,7 +596,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  *   title: form title
  *   orig: original values of the requested record
  */
-function crud($tnm, $args, $url, $flds, $order = 'DESC') {
+function crud($tnm, $args, $url, $flds, $order = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
   $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
   extract(just("del $idFld", $args, NULL));
@@ -622,7 +622,8 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
   } else {
-    $list = a\showQuery($tnm, "$idFld $order", '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
+    u\setDft($order, "$idFld DESC");
+    $list = a\showQuery($tnm, $order, '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
   
