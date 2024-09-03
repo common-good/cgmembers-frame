@@ -1275,7 +1275,7 @@ function deleteCell($number) {
  *   name, phone, email, or account ID
  *   name@city, zip, or city, ST
  * @param int $mya: current user's account
- * @param string $selfErr: index to error message for identifying oneself
+ * @param string $selfErr: index to error message for identifying oneself (if none, allow self)
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param bool $returnObj: <return an array of objects> (else return a keyed array of strings)
  * @return one of the following:
@@ -1358,7 +1358,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   $anon = "IF(:IS_CO, '$individual', '$company')";
   $uidCrit = 'uid NOT :CANONIC';
   if ($mya->admActivate) $uidCrit = "($uidCrit OR uid=:UID_SUPER)"; // needed for helper when activating
-  if ($returnObj) $uidCrit .= " AND uid NOT IN ($myid, :UID_SUPER)";
+  if ($returnObj and $selfErr) $uidCrit .= " AND uid NOT IN ($myid, :UID_SUPER)";
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 
@@ -1376,8 +1376,10 @@ EOF;
 
   $result = $q->fetchAllKeyed(0, 1);
   
-  if (count($result) == 1 and key($result) == $myid) return $selfErr;
-  unset($result[$myid]); // if self is one of many results, ignore it
+  if ($selfErr) {
+    if (count($result) == 1 and key($result) == $myid) return $selfErr;
+    unset($result[$myid]); // if self is one of many results, ignore it
+  }
   if (!$result) return $err ?: tr('unknown member', compact('who'));
   
   if ($atPos and $uid = array_search($who0, $result)) $result = [$uid => $who0];
