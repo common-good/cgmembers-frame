@@ -17,7 +17,9 @@ class Model extends AbstractMigration {
     $t->addColumn('description', 'text', ray('length null comment', phx::TEXT_LONG, TRUE, 'description of category')); // or BLOB_TINY/_REGULAR/_MEDIUM/_LONG
     $t->addColumn('type', 'enum', ray('values comment', ray('Income Expense Asset Liability'), 'balance sheet account type'));
     $t->addColumn('backing', 'decimal', ray('precision scale null default comment after', 11, 2, FALSE, '0', 'amount account-holder chose to back', phx::FIRST));
+    $t->addColumn('fraction', 'float', ray('null comment', TRUE, 'amount account-holder chose to back'));
     $t->addColumn('backingDate', 'integer', ray('length null default comment after', phx::INT_BIG, FALSE, '0', 'date account-holder started backing', 'backing'));
+    $t->addIndex(['thatid'], ray('name order unique type limit ', 'myindex', 'DESC', TRUE, 'fulltext', 6])); // limit sets the max length of the index entries
     $t->create();
     $t->update();
     if ($this->isMigratingUp()) {}
