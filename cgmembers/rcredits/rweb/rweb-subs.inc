@@ -604,7 +604,7 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   $id = $$idFld;
   $msg = t('Delete this %tnm record (#%id)?', compact(ray('tnm id')));
   jsx('crud', compact(ray('msg url id')));
-  $title = ucfirst($tnm);
+  $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
   if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
   if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
   if (is_numeric($id)) $title .= btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
