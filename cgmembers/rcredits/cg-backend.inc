@@ -1362,7 +1362,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 
-      CONCAT(IF($searchable, fullName, $anon), ' @ ', IFNULL(city, ''), ', ', IFNULL(abbreviation, '')) AS nm
+      CONCAT(IF($searchable, fullName, $anon), IF(city IS NULL OR abbreviation IS NULL, '', CONCAT(' @ ', city, ', ', abbreviation))) AS nm
     FROM users u
     LEFT JOIN r_states s ON s.id=u.state
     WHERE $where AND $uidCrit
