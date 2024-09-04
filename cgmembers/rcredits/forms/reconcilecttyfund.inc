@@ -11,6 +11,7 @@ use CG\Db as db;
  * Handle two files, in case the Community Fund is split into INCOMING and OUTGOING
  */
 function formReconcileCttyFund($form, &$sta) {
+  call u\FAIL('UNUSED');
   $title = t('Reconcile Community Fund');
   $subtext = t('Upload a Community Fund bank statement file (in OFX format). Or two files, if the Community Fund is split.');
   if ($reconciledAsOf = getv('reconciledAsOf') and !$txs = getv('ofxTxs')) $buttons = offerOffsetTransfer($reconciledAsOf);

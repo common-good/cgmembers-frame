@@ -1575,3 +1575,4 @@ function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for
 function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications for testing (it checks if it's already running); "php" must be lowercase. But this has to run as a root cron job instead (edit with crontab -e).
 function ccGiftType($coId) {return in($coId, BUCKET_UIDS) ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
 function no1099k($tot) { return ($tot < MIN1099); }
+function isCriminal($nm, $co) { return db\exists('ofac', 'nm LIKE :nm AND co=:co', ray('nm co', str_replace(' ', '%', " $nm "), $co ?: 0)); }

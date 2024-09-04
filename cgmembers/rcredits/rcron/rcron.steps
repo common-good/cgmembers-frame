@@ -51,6 +51,7 @@ function extraSetup($feature) {
  *     MAKE cashout Setup
  *     MAKE communitybits Setup
  *     MAKE daily Setup
+ *     MAKE eachacct Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices Setup
@@ -398,6 +399,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE daily Setup
  *     TEST daily GeopositionGetsCalculated
  *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
  *     MAKE gifts Setup
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     BOTH gifts ABrandNewRecurringDonationToCGCanBeCompleted
@@ -525,6 +527,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     MAKE daily GeopositionGetsCalculated
  *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
@@ -610,6 +613,7 @@ function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
  * we tell admin (ARG) with ray: (ARG)
  *
  * in: TEST daily AMemberHasABigDay
+ *     TEST eachacct AUserBecomesAnInternationalCriminal
  */
 function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => pr($ray)]);}
 
@@ -635,3 +639,10 @@ function itsLater() {return t\itsLater();}
  * in: TEST gifts ARecurringDonationToCGCannotBeCompleted
  */
 function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\these($thing, $list)); }
+
+/**
+ * variable (ARG) is (ARG)
+ *
+ * in: MAKE eachacct AUserBecomesAnInternationalCriminal
+ */
+function variableIs($k, $v) {return t\varIs($k, $v);}
