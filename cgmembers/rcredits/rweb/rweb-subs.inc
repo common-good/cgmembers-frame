@@ -123,22 +123,25 @@ function superSignin($vKeyPw = '') {
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
  * @param string $types: space-delimited list of acceptable mime types (empty means "any")
- * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
  * @param string $fldName: field name of file upload field (defaults to "file")
+ * @param assoc $extra: options
+ *   noReplace: <not okay to replace the file at that path, if it exists>
+ *   maxSize:   defaults to MAX_UPLOAD_SIZE MB
  * @return an assoc of file data OR the error message
  */
-function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
+function uploadFile($path = NULL, $types = 'text/csv text/plain', $fldName = 'file', $extra = []) {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
+  extract(just('noReplace maxSize', $extra, [FALSE, MAX_UPLOAD_SIZE * 1024 * 1024]));
   
   if (!$tmp_name) return t('Upload failed with error ') . $error;
   if (!$filetype = mime_content_type($tmp_name) or ($types and !in($filetype, $types))) return t('bad file type', compact('filetype'));
-  if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
+  if ($size > $maxSize) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');
 //  $ext = explode('/', $mimetype )[1];
 
   if ($path) {
-    if (!$replaceOk and file_exists($path)) return t('That filename is taken. Try again.');
+    if ($noReplace and file_exists($path)) return t('That filename is taken. Try again.');
     u\deleteFile($path);
     rename($tmp_name, $path);
   } else $path = $tmp_name;
