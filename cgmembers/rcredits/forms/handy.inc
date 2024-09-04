@@ -12,6 +12,7 @@ function formHandy($form, &$sta) {
   $links = [
     'sadmin/check-sanity|Check database integrity|Sanity Check|ok',
     'sadmin/util/reset-menu|Rebuild menus based on cg-menu.inc.|Redo MENUS|menu-hamburger',
+    'sadmin/ofac|Upload the latest OFAC files to prevent use by known criminals.|Upload OFAC Files|upload',
     'sadmin/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'sadmin/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
     'sadmin/variables|Edit and delete site variables.|Variables|copy',

@@ -338,6 +338,7 @@ function doThing($info, $thing, $key = 'id') {
 //  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
 //  if (!in($thing, 'people txs2') and !strhas($thing, '_') and substr($thing, -1, 1) != 's') $table .= 's';
   foreach (ray('u_photo:uid, u_company:uid, u_shout:uid, tx_hdrs:xid') as $tnm => $k) if ($table == $tnm) $key = $k;
+  if ($table == 'ofac') $key = 'nm';
 
   // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
@@ -1758,6 +1759,7 @@ function clear($ch = 0) {
     'cache',              // -
     'flood',              // -
     'messages',           // posts
+    'ofac',               // -
     'people',             // posts
     'posts',              // -
     'queue',              // -
@@ -1797,6 +1799,7 @@ function clear($ch = 0) {
     'txs2',               // tx_hdrs, users
     'r_boxes',            // users
     'u_company',          // users
+    'u_focuses',          // users
     'u_groupies',         // u_groups, users
     'u_groups',           // -
     'u_photo',            // users
