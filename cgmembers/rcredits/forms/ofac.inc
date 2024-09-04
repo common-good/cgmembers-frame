@@ -19,7 +19,7 @@ function formOFAC($form, &$sta) {
   $title = t('Upload OFAC Files');
   $subtext = t(
    '<p>Processing this upload might take 5 minutes or so, so be patient.</p>
-    <p>The Office of Foreign Assets Control (OFAC) provides names of known foreign criminals and their aliases (ALT names). We must not allow them to use %PROJECT. Upload new files here every month.</p>
+    <p>The Office of Foreign Assets Control (OFAC) provides names of known foreign criminals and their aliases (ALT names). We must not allow anyone using these names to use %PROJECT. Upload new files here every month.</p>
     <p>Here are the direct download links for CSV files from the <%aSdnPage>SDN page</a> and the <%aConsPage>Consolidated List page</a>:</p>
     <ul>
       <li><%aSdn>sdn.csv</a></li>
