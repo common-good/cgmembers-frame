@@ -99,15 +99,12 @@ function util($arg) {
   return w\go('sadmin');
 }
 
+// KEEP THIS until deployed everywhere (and all developers have a post-9/15/2024 version and have recreated the menu)
 function formHandy($form, &$sta) {
   global $base_path, $base_url, $base_root;
 
   $links = [
-    'sadmin/check-sanity|Check database integrity|Sanity Check|ok',
     'sadmin/util/reset-menu|Rebuild menus based on cg-menu.inc.|Redo MENUS|menu-hamburger',
-    'sadmin/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
-    'sadmin/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
-    'sadmin/variables|Edit and delete site variables.|Variables|copy',
   ];
 
   foreach ($links as $link) {
