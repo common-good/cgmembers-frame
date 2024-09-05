@@ -11,6 +11,7 @@ use CG\Db as db;
  * @todo: focus on code input
  */
 function formBoxes($form, &$sta) {
+  u\FAIL('formBoxes UNUSED');
   $myid = r\acct()->id;
 //  if ($confirm = sureForm($sta)) return $confirm; // confirm only deletion
   if (form_step($sta, $info) == 'prove') {
@@ -40,7 +41,6 @@ function formBoxes($form, &$sta) {
       : ($channel == TX_WEB ? (t('Computer/Browser #') . $boxnum)
       : ($channel == TX_SMS ? u\fmtPhone($code)
       : 'ERROR')));
-//    $list["x$boxid"] = array($boxid, $boxName, $restricted ? 'Yes' : 'No', fmtDt($access));
     $list["x$boxnum"] = array($boxnum, $type, $boxName, fmtDt($access));
   }
 

@@ -23,6 +23,7 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
  * @param assoc $extra: extra parameters
+ *   omitBankTxs: <don't handle txs for bank transfers>
  *   includeSelfTxs: <include transactions between the various $uids>
  *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are a credit card payment) AND B_QBOK flag off> 
  *     NOTE: usually cats are set manually or by be\setCat(), but CC donations are handled differently and cat1 gets set in Qb::sendCCTx()
@@ -31,7 +32,7 @@ require_once R_ROOT . '/classes/txentry.class';
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($uids)) $uids = [$uids];
 
-  extract(just('includeSelfTxs catsOnly', $extra, FALSE));
+  extract(just('omitBankTxs includeSelfTxs catsOnly', $extra, FALSE));
 
   $fromMe = 'x.uid1 IN (:uids)';
   $toMe = 'x.uid2 IN (:uids)';
@@ -39,6 +40,8 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   $where .= ' AND !(x.amt=0 AND x.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
+  
+  if ($omitBankTxs) $where .= ' AND t2.bankAccount IS NULL';
   if ($catsOnly) {
     $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR (x.:IS_CC AND x.uid1=:UID_OUTER)) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
@@ -508,11 +511,11 @@ function creditPeops($id) {
 /**
  * Try to pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
- * @param bool $auto: don't pull any more from bank than needed
+ * @param bool $balFirst: don't pull any more from bank than needed
  * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return a txRet object
  */
-function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
+function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   if ($err = r\badUnpaidInv($nvid, $inv)) return txRet(FALSE, $err);
 
@@ -551,7 +554,7 @@ function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
     $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
   } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
 
-  if (!$auto) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
+  if (!$balFirst) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
 
   if ($fromBank > 0 and !u\getBit($flags, 'funding')) { // need funds and didn't already request them
     $z->index .= $payerA->hasBank ? '|expect a transfer' : '|when funded|how to fund'; // add to short payment message something more detailed
@@ -564,7 +567,7 @@ function payInvoice($nvid, $auto = TRUE, $payAmount = NULL) {
     if ($payerA->hasBank) {
       $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
-      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $auto, $payAmount); }
+      if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $balFirst, $payAmount); }
     }
   }
 
@@ -1187,7 +1190,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
     u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
-    $z = be\payInvoice($nvid, FALSE);
+    $z = be\payInvoice($nvid, $payerA->balFirst);
     if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
   }
 
@@ -1272,7 +1275,7 @@ function deleteCell($number) {
  *   name, phone, email, or account ID
  *   name@city, zip, or city, ST
  * @param int $mya: current user's account
- * @param string $selfErr: index to error message for identifying oneself
+ * @param string $selfErr: index to error message for identifying oneself (if none, allow self)
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param bool $returnObj: <return an array of objects> (else return a keyed array of strings)
  * @return one of the following:
@@ -1355,11 +1358,11 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
   $anon = "IF(:IS_CO, '$individual', '$company')";
   $uidCrit = 'uid NOT :CANONIC';
   if ($mya->admActivate) $uidCrit = "($uidCrit OR uid=:UID_SUPER)"; // needed for helper when activating
-  if ($returnObj) $uidCrit .= " AND uid NOT IN ($myid, :UID_SUPER)";
+  if ($returnObj and $selfErr) $uidCrit .= " AND uid NOT IN ($myid, :UID_SUPER)";
 
   $sql = <<<EOF
     SELECT DISTINCT uid, 
-      CONCAT(IF($searchable, fullName, $anon), ' @ ', IFNULL(city, ''), ', ', IFNULL(abbreviation, '')) AS nm
+      CONCAT(IF($searchable, fullName, $anon), IF(city IS NULL OR abbreviation IS NULL, '', CONCAT(' @ ', city, ', ', abbreviation))) AS nm
     FROM users u
     LEFT JOIN r_states s ON s.id=u.state
     WHERE $where AND $uidCrit
@@ -1373,8 +1376,10 @@ EOF;
 
   $result = $q->fetchAllKeyed(0, 1);
   
-  if (count($result) == 1 and key($result) == $myid) return $selfErr;
-  unset($result[$myid]); // if self is one of many results, ignore it
+  if ($selfErr) {
+    if (count($result) == 1 and key($result) == $myid) return $selfErr;
+    unset($result[$myid]); // if self is one of many results, ignore it
+  }
   if (!$result) return $err ?: tr('unknown member', compact('who'));
   
   if ($atPos and $uid = array_search($who0, $result)) $result = [$uid => $who0];
@@ -1497,6 +1502,7 @@ EOF;
  * @return object(nonce, todo) if $todo is 'nothing', else the nonce
  */
 function todo($number, $todo = 'nothing', $nonce = 'whatever') {
+  u\FAIL('be\todo() UNUSED');
   if ($todo == 'nothing') {
     return (object) db\get('nonce,todo', 'r_boxes', 'code=:number', compact('number'));
   } else {

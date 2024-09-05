@@ -51,6 +51,7 @@ function extraSetup($feature) {
  *     MAKE cashout Setup
  *     MAKE communitybits Setup
  *     MAKE daily Setup
+ *     MAKE eachacct Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices Setup
@@ -85,6 +86,7 @@ function members($list) {return t\members($list);}
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits Setup
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     TEST joint Setup
  *     TEST joint AJointAccountNeedsRefilling
@@ -232,6 +234,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     TEST daily GeopositionGetsCalculated
  *     MAKE invoices Setup
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
@@ -364,6 +367,7 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
  *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
@@ -395,6 +399,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE daily Setup
  *     TEST daily GeopositionGetsCalculated
  *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
  *     MAKE gifts Setup
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     BOTH gifts ABrandNewRecurringDonationToCGCanBeCompleted
@@ -404,6 +409,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices Setup
  *     BOTH invoices UnpaidInvoicesGetHandled
+ *     BOTH invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     BOTH invoices ALanguishingInvoiceGetsFundedAgain
@@ -451,6 +457,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     TEST monthly CrumbAndRoundupDonationsAreMade
  *     TEST monthly CrumbsAreInvoiced
@@ -520,12 +527,14 @@ function riskThresholdPercentIs($pct) {
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     MAKE daily GeopositionGetsCalculated
  *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices ALanguishingInvoiceGetsFundedAgain
@@ -604,6 +613,7 @@ function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
  * we tell admin (ARG) with ray: (ARG)
  *
  * in: TEST daily AMemberHasABigDay
+ *     TEST eachacct AUserBecomesAnInternationalCriminal
  */
 function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => pr($ray)]);}
 
@@ -629,3 +639,10 @@ function itsLater() {return t\itsLater();}
  * in: TEST gifts ARecurringDonationToCGCannotBeCompleted
  */
 function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\these($thing, $list)); }
+
+/**
+ * variable (ARG) is (ARG)
+ *
+ * in: MAKE eachacct AUserBecomesAnInternationalCriminal
+ */
+function variableIs($k, $v) {return t\varIs($k, $v);}

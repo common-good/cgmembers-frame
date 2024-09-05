@@ -123,22 +123,25 @@ function superSignin($vKeyPw = '') {
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
  * @param string $types: space-delimited list of acceptable mime types (empty means "any")
- * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
  * @param string $fldName: field name of file upload field (defaults to "file")
+ * @param assoc $extra: options
+ *   noReplace: <not okay to replace the file at that path, if it exists>
+ *   maxSize:   defaults to MAX_UPLOAD_SIZE MB
  * @return an assoc of file data OR the error message
  */
-function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
+function uploadFile($path = NULL, $types = 'text/csv text/plain', $fldName = 'file', $extra = []) {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
+  extract(just('noReplace maxSize', $extra, [FALSE, MAX_UPLOAD_SIZE * 1024 * 1024]));
   
   if (!$tmp_name) return t('Upload failed with error ') . $error;
   if (!$filetype = mime_content_type($tmp_name) or ($types and !in($filetype, $types))) return t('bad file type', compact('filetype'));
-  if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
+  if ($size > $maxSize) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');
 //  $ext = explode('/', $mimetype )[1];
 
   if ($path) {
-    if (!$replaceOk and file_exists($path)) return t('That filename is taken. Try again.');
+    if ($noReplace and file_exists($path)) return t('That filename is taken. Try again.');
     u\deleteFile($path);
     rename($tmp_name, $path);
   } else $path = $tmp_name;
@@ -588,7 +591,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  * @param string $args: URL parameters
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @param string $flds: list of fields to extract for display and edit
- * @param string $order: ASC or DESC
+ * @param string $order: list order (defaults to <id field> DESC)
  * @return parameters to extract in the form:
  *   ret: what to return from the form OR
  *
@@ -596,7 +599,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  *   title: form title
  *   orig: original values of the requested record
  */
-function crud($tnm, $args, $url, $flds, $order = 'DESC') {
+function crud($tnm, $args, $url, $flds, $order = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
   $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
   extract(just("del $idFld", $args, NULL));
@@ -604,7 +607,7 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   $id = $$idFld;
   $msg = t('Delete this %tnm record (#%id)?', compact(ray('tnm id')));
   jsx('crud', compact(ray('msg url id')));
-  $title = ucfirst($tnm);
+  $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
   if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
   if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
   if (is_numeric($id)) $title .= btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
@@ -622,7 +625,8 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
   } else {
-    $list = a\showQuery($tnm, "$idFld $order", '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
+    u\setDft($order, "$idFld DESC");
+    $list = a\showQuery($tnm, $order, '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
   
@@ -929,36 +933,6 @@ function pickPassword($reset = TRUE, $req = '') {
   jsx('pw');
   focusOn('pw');
   return compact(ray('pw'));
-}
-  
-/**
- * Return the box record ID for the given device code and account record ID (create one if none).
- * @param int $code: device identifier
- * @param int $a: current account (can be a company)
- * @param string $version: app version (web version is not used here)
- * @return the box record ID
- */
-function boxId($code, $a, $version = NULL) {
-  global $channel;
-
-  $cookid = 'boxnum' . $a->id;
-  if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
-  
-  if ($id = boxIdCheck($code, $a)) {
-    $access = now();
-    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
-  } else $id = $a->makeBox($code, $channel, $version);
-  return r\setCook($cookid, $id, now() + SESSION_LIFE);
-}
-
-/**
- * Return the box record ID for the given device code and account record ID (NULL if none).
- */
-function boxIdCheck($code, $a) {
-  if (!$row = db\row('r_boxes', compact('code'))) return NULL;
-  extract((array) $row);
-// nope. might be several accounts on this device  u\EXPECT($uid == $a->id, 'actor mismatch in deviceId');
-  return $id;
 }
 
 /**
@@ -1449,7 +1423,7 @@ function stateFld($dft = NULL, $req = REQ) {return selectFld($req . t('State:'),
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + ($accts ?: db\keyed('id, category', 'tx_cats', '`show`')));}
-function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
+function fboCatFld($dft = '', $way = 'OUT') {return catFld($way == 'OUT' ? (REQ . $dft) : $dft, '', fboCatChoices($way));} // not REQ for way=IN
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(DEV_ROUTING) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
@@ -2448,4 +2422,3 @@ function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press t
 function gotFile($fldName = 'file') {return $_FILES ? (bool) $_FILES['files']['name'][$fldName] : FALSE;}
 function img($src) {return "<img src=\"$src\" />";}
 function tweakSta(&$sta, $info) {$sta['input'] = array_filter($info + $sta['input'], function ($x) {return isset($x);});} // ignores null values, updates input
-//function itsMyBox($uid) { global $box; return db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', "b.code=:box AND (:uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED))", compact(ray('uid box'))); }

@@ -159,8 +159,8 @@ class Tx {
    * @return the xid of the transaction
    */
   function insert($allowModification = FALSE) {
-    global $boxId;
-    
+    global $boxId; // most recently set boxId (see Acct::boxId)
+
     $tx = $this;
     u\setDft($tx->boxId, nn($boxId, 0));
     

@@ -85,8 +85,8 @@ function codeResult($code) {
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
   extract(just('qid from secret path name type size exp download', $ray, NULL));
   
-  if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
-//  if (!w\itsMyBox($uid)) return softErr(t('You are not the intended recipient.'));
+  if ($intendedA = r\acct($qid)) return softErr(t('This message is no longer available.'));
+  if (!w\itsMyBox($qid)) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That encrypted information is no longer available.'));
 
   $fromA = r\acct($from);

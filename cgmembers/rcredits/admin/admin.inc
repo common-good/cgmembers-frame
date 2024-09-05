@@ -221,7 +221,9 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
     'admins:uid:D',
+    // ofac
     'people:uid',
+    // phinxlog
     // posts
     // post_cats
     // r_areas
@@ -250,15 +252,12 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'r_notices:uid:D',
     // r_options
     // r_pairs
-    'u_photo:uid:D', // this gets tracked
     'r_proposals:ctty',
     'r_proxies:person:D',
     'r_proxies:proxy:D',
     // r_questions
     'r_ratings:uid',
     // r_regions
-    'u_relations:main:D', // this gets tracked
-    'u_relations:other:D', // this gets tracked
     // r_states
     // r_shares',
     'r_stakes:uid',
@@ -288,14 +287,19 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'tx_timed:payee:D',
     'tx_timed:from:D',
     'txs2:payee',
+    'u_focuses:uid:D',
     // u_groups
     'u_groupies:uid:D',
+    'u_photo:uid:D', // this gets tracked
+    'u_relations:main:D', // this gets tracked
+    'u_relations:other:D', // this gets tracked
     'u_shout:uid:D', // this gets tracked
-    'users:jid', // users should be last, because it's the main table for what we're deleting/changing
+    // variable
+
+    'users:jid', // users must be last, because it's the main table for what we're deleting/changing
     'users:uid:D',
     'users:helper',
     'users:community',
-    // variable
   );
   
   flog(t('Calling changeUid variant "%variant" for oldUid %oldUid.', compact(ray('variant oldUid'))));

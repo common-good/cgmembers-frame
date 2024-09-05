@@ -238,12 +238,13 @@ X;
  * Delete accounts that aren't real or are abandoned.
  */
 function eachAcct() {
-  queueEach('oneAcct', "SELECT uid, (BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0) AS badPartner FROM users WHERE uid > 0 AND uid NOT :CANONIC");
+  $testOFAC = now() - getv('ofac_updated') < DAY_SECS * 1.5 ?: 0;
+  queueEach('oneAcct', "SELECT uid, $testOFAC AS testOFAC, (BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0) AS badPartner FROM users WHERE uid > 0 AND uid NOT :CANONIC");
   queueNext();
 }
 
 function oneAcct($item) {
-  extract(just('uid badPartner', $item));
+  extract(just('uid testOFAC badPartner', $item));
   $a = r\acct($uid);
   if ($badPartner) { // delete stale unused partner accounts
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
@@ -256,6 +257,8 @@ function oneAcct($item) {
     }
   }
  
+  if ($testOFAC and r\isCriminal($a->fullName, $a->co)) r\tellAdmin(t('Name flagged as criminal by latest OFAC data'), ray('nm qid', $a->fullName, $a->mainQid));
+
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 
@@ -1044,7 +1047,7 @@ function payInvoices() {
 function payInvoice($item) {
   extract(just('uid nvid', $item, NULL));
   $a = r\acct($uid);
-  $z = be\payInvoice($nvid, FALSE);
+  $z = be\payInvoice($nvid, $a->balFirst);
 }
 
 /**

@@ -75,7 +75,7 @@ Scenario: A member asks to pay another member for loan/reimbursement
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
 
 Scenario: A member confirms request to pay another member
-  Given cookie "box" is "abcd"
+  Given cookie "box-NEWZZA" is "abcd"
   And these "r_boxes":
   | id | channel | code | boxnum | uid  |*
   | 2  | %TX_WEB | abcd | 12345  | .ZZA |

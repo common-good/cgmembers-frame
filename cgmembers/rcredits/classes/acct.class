@@ -415,6 +415,55 @@ class Acct {
   }  
   
   /**
+   * Return (and maybe set) the box record ID for this account
+   * @param int $code: device identifier
+   * @param string $version: app version (web version is not used here)
+   */
+  public function boxId($code = NULL, $version = NULL) {
+    global $channel, $boxId; // store boxId for Tx::insert and r\ipOk()
+    $a = $this; $uid = $a->id;
+    
+    $web = ($channel == TX_WEB);
+    $created = $access = now();
+    if ($boxId) return;
+    
+    if ($web) { // web channel -- get box code from cookie
+      u\EXPECT(!$code, t('bad web channel call to Acct::boxId'));
+      $cookid = "box-$a->mainQid";
+      $code = r\cook($cookid);
+    } elseif (!$code) return; // app makes its own code
+
+    if ($code = mb_substr($code ?: '', 0, DEVICE_MAXLEN)) {
+      $boxId = $id = db\get('id', 'r_boxes', compact(ray('uid code')));
+      if ($web and $a->admin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record the accounts admins visit
+    } else $code = u\code();
+
+    if (!$boxId) $boxnum = (db\get('MAX(boxnum)', 'r_boxes', compact('uid')) ?: 0) + 1;
+
+    $info = compact(ray('access version ' . ($boxId ? 'id' : 'uid code boxnum created channel')));
+    $newBoxId = db\updateOrInsert('r_boxes', $info, 'id'); // update version, channel, date
+    if (!$boxId) $boxId = $newBoxId;
+    if ($web) r\setCook($cookid, $code);
+  }
+  
+  /**
+   * See if the intended recipient (or any agent with manager permission) has signed in on this machine.
+   * @param string $qid: the intended recipient's qid
+   * @return <the intended recipient has signed in on this machine>
+   */
+  public function itsMyBox($qid) {
+    if (!$a = r\acct($qid)) return FALSE;
+    $uids = array_merge($a->uids, db\col('other', 'u_relations', 'main IN :uids AND permission>=:B_RELATED+:B_MANAGE', ray('uids', $a->uids)));
+    
+    foreach ($uids as $uid) {
+      $qid = r\qid($uid);
+      $cookieId = "box-$qid";
+      if ($code = r\cook($cookieId) and $access = db\get('access', 'r_boxes', compact(ray('uid code')))) return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Return a printable (scrambled) invitation card code or gift coupon code 
    * @param int $iCode: sequence number (0 to 35^3-1)
    * @see r\iCardAcct()
@@ -1707,23 +1756,6 @@ X;
   }
 
   /**
-   * Record the relation of a device with an account.
-   * @param string $code: phone # or device code
-   * @param int $channel: channel (TX_APP, TX_SMS, or TX_WEB)
-   * @return int: the device record ID
-   */
-  public function makeBox($code, $channel, $version = NULL) {
-    $a = $this;
-    $uid = $a->id;
-    if ($a->admin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
-
-    $created = $access = now();
-    $boxnum = db\get('MAX(boxnum)', 'r_boxes', compact('uid')) + 1;
-    $info = compact(ray('uid code boxnum access created channel version'));
-    return db\insert('r_boxes', $info);
-  }
-
-  /**
    * Encrypt the region's private key (for decrypting highly sensitive data) for a new regional admin.
    * @param string $vKey: key text (PEM-formatted or not) or file path with key text
    * @param string $vKeyPw: password to use in u\b64 format (defaults to 32 random pseudo-bytes)
@@ -2026,12 +2058,13 @@ function agent($uid = '') { $a = r\acct($uid); return $a ? $a->agentA : NULL; }
  * @return the new account
  */
 function setAcct($myid = '', &$sta = NULL) {
-  global $mya;
+  global $mya, $boxId;
   global $user;
   global $channel; 
   if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
   w\uncacheSubmenus();
+  $boxId = NULL;
 
   if (is_null($myid)) { // sign out
     $user = obj('uid', 0);
@@ -2049,6 +2082,8 @@ function setAcct($myid = '', &$sta = NULL) {
   if ($a = r\acct($myid, $agentId)) { // we get NULL here when current account is deleted
     if ($a->proSe or !$a->admin) $a->accessed(); // admin access doesn't count
   } else { $a = setAcct(NULL); }
+  
+  $a->boxId();
   return $mya = $a;
 }
 

@@ -24,7 +24,7 @@ use CG\Web as w;
  *
  * REQUESTS:
  * (see https://docs.google.com/document/d/1fZE_wmEBRTBO9DAZcY4ewQTA70gqwWqeqkUnJSfWMV0/edit)
- * time:  [] => [ok=”1”, time, message]
+ * time:  [] => [ok=ï¿½1ï¿½, time, message]
  * identify:  [member, code] 
  *      => [ok, message, logon="1", name, descriptions[], can, device, default, company, time]
  *   OR  => [ok, message, logon, name, place, company, balance] where logon is 0 or -1
@@ -103,7 +103,8 @@ function pos($args = FALSE) {
 
   if ($op == 'time') return getTime($args); // no agent or device required
   if (!$mya = getAgent($agent ?: $member, $agentErr)) return posErr($agentErr); // set "current" account for internals
-  if ($err = badDevice($device, $signin, $version)) return $err; else $args['device'] = $device;
+  $device = deviceCheck($device, $signin, $version);
+  if (substr($device, 0, 1) == '{') return $device; else $args['device'] = $device; // left brace begins JSON posErr return
   if (!$mya->cttyUp) return posErr('your community down', ray('contact', $mya->cAdminContact()));
 
   $op = 'CG\\Smart\\' . $op;
@@ -167,7 +168,7 @@ function smartTest($args) {
 
 /**
  * Get the current server time
- * time: [data] => [ok=”1”, time, message]
+ * time: [data] => [ok=ï¿½1ï¿½, time, message]
  * @param string $data: optional message string or json-encoded data (perhaps data we requested from the app)
  * @return json:
  *   time: the current unixtime
@@ -605,10 +606,10 @@ function decodeDevice($device) {
  * @param acct $device: the specified device
  * @param acct $device: (RETURNED) the device code to return (undefined if error)
  * @param bool $signin: <signing in>
- * @return the error (FALSE if none)
+ * @return $device or PosErr($err)
  */
-function badDevice(&$device, $signin, $version) {
-  global $mya, $boxId;
+function deviceCheck($device, $signin, $version) {
+  global $mya;
   global $nextCode; // tests usurp generated device code, using this instead
 
   if ($version >= 230 and $device and !decodeDevice($device)) return posErr('unknown device'); // bad crypt
@@ -619,7 +620,7 @@ function badDevice(&$device, $signin, $version) {
     $device = nn($nextCode) ?: u\b64encode(u\cryPP(now() . "/$mya->fullName", 'private')); // let company prove to customer who they're dealing with
   }
 
-  $boxId = w\boxId(substr($device, 0, DEVICE_MAXLEN), $mya, $version); // find device in the db or put it there
+  $mya->boxId($device, $version); // find device in the db or put it there
 
-  return FALSE;
+  return $device;
 }

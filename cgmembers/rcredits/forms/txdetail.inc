@@ -22,7 +22,10 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$orig = db\get('*', 'txs t', $where, $subs)) return softErr('no such tx'); // for now just show main transaction
+  if (!$orig = db\get('*', 'txs t', $where, $subs)) {
+    if ($deletedOn = db\get('deleted', 'txs_deleted t', $where, $subs)) return softErr(t('tx deleted', 'on', fmtDt($deletedOn)));
+    return softErr('no such tx'); // for now just show main transaction
+  }
   extract(just('uid1,uid2', $orig));
   
   if ($myid == $uid1) {
@@ -84,9 +87,9 @@ X;
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   
-  $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
+  $boxMsg = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
-  $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
+  $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
   $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
   $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
 
