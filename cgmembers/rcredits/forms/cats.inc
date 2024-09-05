@@ -15,7 +15,7 @@ const CAT_URL = 'sadmin/cats/id';
 function formCats($form, &$sta, $args = '') {
   
   if (!db\exists('tx_cats')) return goFirst('qbo/op=accounts');
-  extract(crud('tx_cats', $args, CAT_URL, CAT_FLDS, 'ASC')); // get ret or [title, orig, id, and CAT_FLDS]
+  extract(crud('tx_cats', $args, CAT_URL, CAT_FLDS, 'id ASC')); // get ret or [title, orig, id, and CAT_FLDS]
   if (nn($ret)) return $ret;
   
   $title = t('Accounting Categories');
