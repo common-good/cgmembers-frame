@@ -1758,6 +1758,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
+ *     TEST fbo AMemberDonatesToASponsoredMemberEverythingTheyHave
  *     TEST fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
@@ -1987,6 +1988,7 @@ function memberIsUnconfirmed($id) {
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
+ *     TEST fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
@@ -2502,6 +2504,7 @@ function nextCaptchaIs($ca) {
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberChargesAMember
+ *     MAKE fbo AMemberDonatesToASponsoredMemberEverythingTheyHave
  *     MAKE fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo AMemberPaysASponsoredOrganization
  *     MAKE joint AMemberAsksToJoinAnExistingAccount

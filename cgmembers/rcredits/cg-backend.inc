@@ -851,8 +851,10 @@ function setCat(&$txes, $tx, $i) {
     $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
   } elseif ($in and $iA->mainQid == 'NEWAIN') { // 457 retirement (!!!Must come before $iA->sponsored test)
     $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
-  } elseif ($in and $iA->sponsored) {
+  } elseif ($in and $iA->sponsored and $gift) {
       $nick = $type == E_AUX ? 'D-FBO-STEPUP' : 'D-FBO';
+  } elseif ($in and $iA->sponsored and !$gift) {
+      $nick = NULL; // income category will need to be set manually by the sponsee (maybe set this to "D-ASK"?)
   } elseif ($in and $iA->ourOwn) {
       $nick = strhas($iA->fullName, t('Loan Fund')) ? $iA->mainQid : 'D-FBO';
   } elseif ($in and $gift) {
@@ -1069,6 +1071,7 @@ EOF;
       if ($absValue <= 0) continue;
       $rebates += $absValue;
     } else { // everything else is an auxiliary transaction
+      if (strhas($purpose, FS_NOTE) and !u\getBit($tx->flags, 'gift')) continue; // skip FS fee if not a gift
       list ($type, $desc) = [E_AUX, $purpose];
       if ($from == $buyer->id) $stepups += $absValue; // stepup -- anything else from the buyer is a donation of some sort
     }
