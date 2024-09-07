@@ -90,14 +90,14 @@ function formDonate($form, &$sta, $args = NULL) {
   
   if ($mya) { // member: no need to ask for payment method
     $payHow = $coverCCFee = $ach = NULL;
-  } elseif ($fbo) { // nonmember & sponsored: guest can choose ACH or CC
+  } elseif ($fbo or $isCG) { // nonmember & sponsored (or CG): guest can choose ACH or CC
     $payHow = radiosFld(REQ . t('Pay By:'), '', dft(-1), [t('ACH (easier and saves us 3% in CC fees)'), t('Credit Card <span>(cannot automatically repeat)</span>')]);
     $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
     $routingNumber = routingFld(FALSE);
     $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
     $isSavings = radiosFld(t('Type:'), '', dft(-1), [t('Checking'), t('Savings')]);
     $ach = fieldSet('ach', compact(ray('checkHint routingNumber bankAccount isSavings')), BARE);
-  } else { // nonmember & not sponsored: CC only
+  } else { // nonmember & not sponsored (or CG): CC only
     $payHow = hidFld(1);
     $ach = NULL;
   }
