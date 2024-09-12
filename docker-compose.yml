@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - 8080:80
+    volumes:
+      - ./cgmembers:/var/www/html:ro
+      - ./docker/config.json:/var/www/config/config.json:ro
+      - ./docker/phinx.json:/var/www/config/phinx.json:ro
+      - ./cgLogs:/var/www/cgLogs
+      - vendor:/var/www/vendor
+  db:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: cg
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbpass
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db:
+  vendor:
