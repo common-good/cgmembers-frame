@@ -46,7 +46,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
 
   if (is_null($res)) {
     w\err($err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query'))));
-    flog($err);
+/**/flog($err);
     if (!$mya or $mya->admin) if (!isDEV) r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
     $dbERR = $err; // pass this to insert
   } else $dbERR = NULL;

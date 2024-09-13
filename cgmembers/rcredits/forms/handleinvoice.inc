@@ -22,7 +22,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
 
   extract(just('nvid ret webpay code', $args, NULL));
-  $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
+  $ret = $ret ? u\deurlify($ret) : 'empty';
   
   if (!$inv = db\get('*', 'tx_requests', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To approve this payment request, sign in at %CG_DOMAIN and click History / Pending From You.'), 'ERR');
   if ($err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
