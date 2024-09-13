@@ -694,7 +694,7 @@ function roundupFld($a) {
 function boolFld($title = '', $help = '', $dft = NULL, $labels = NULL, $extra = []) {
   $class = ['yesno'];
   $inline = TRUE;
-  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
+  $dft = is_null($dft) ? dft(-1) : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
   return radiosFld($title, $help, $extra + $dft + compact('class', 'inline'), $labels ?: array(t('No'), t('Yes')));
 }
 
