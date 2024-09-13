@@ -43,8 +43,8 @@ Scenario: A non-member pays a member company by credit card
   | type     | item     | pid | period | amount | coId   |*
   | purchase | apples   | 1   | once   | 123.00 | NEWZZC |
   When member "?" completes "ccpay/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
+  | amount | fullName | phone        | email | zip   | payByCard | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         1 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
@@ -100,8 +100,8 @@ Scenario: A non-member pays Common Good by credit card
   | type     | item     | pid | period | amount | coId   |*
   | purchase | apples   | 1   | once   | 123.00 | NEWAAB |
   When member "?" completes "ccpay/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
+  | amount | fullName | phone        | email | zip   | payByCard | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         1 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
@@ -146,8 +146,8 @@ Scenario: A non-member pays a member company by ACH
   | .ZZC    | apples | Cc3    |
   And next captcha is "37"
   When member "?" completes "ccpay/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
+  | amount | fullName | phone        | email | zip   | payByCard | comment  | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         0 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |

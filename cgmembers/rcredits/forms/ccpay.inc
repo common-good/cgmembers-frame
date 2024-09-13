@@ -8,8 +8,9 @@ use CG\Db as db;
 
 /*
   Give a nonmember a chance to pay a member by credit card.
-*/
+ */
 function formCCPay($form, &$sta, $args = NULL) {
+  call u\FAIL('This function will need to be rewritten to work like donate.inc');
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
   $mya = w\eLinkAcct($sta, $args, 'any');
@@ -32,8 +33,8 @@ function formCCPay($form, &$sta, $args = NULL) {
   $logo = logoFld($coA);
   $title = t('Pay ') . $coA->bestName;
   $subtext = '';
-  $payHow = hidFld(1); // always by CC
-  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payHow cgPayLink')));
+  $payByCard = hidFld(1); // always by CC
+  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payByCard cgPayLink')));
   if (!nni($form, 'amount')) return $form; // error
   
   $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add note'))));
@@ -41,9 +42,12 @@ function formCCPay($form, &$sta, $args = NULL) {
   return cgForm($form + compact('submit'));
 }
 
+/**
+ * NOTE: this validation function is also called from donate.inc (sometimes with payByCard FALSE)
+ */
 function formCCPay_validate($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
-  extract(just($flds = 'amount fullName phone email zip country coId', $sta['input'], NULL));
+  extract(just($flds = 'amount fullName phone email zip country coId payByCard', $sta['input'], NULL));
 
   if ($mya and $coId == CGID and array_key_exists('amtChoice', $sta['input'])) return w\checkAmtChoice($sta);
 
@@ -56,7 +60,7 @@ function formCCPay_validate($form, &$sta) {
     if (!emailOkay($email, TRUE)) return; // allow duplicate emails so a member can donate with CC
     if ($err = u\badZip($zip, $country)) return err($err, 'zip');
     if (!checkBankAccount($sta)) return;
-    if (badCaptcha($sta)) return;
+    if (!$payByCard and badCaptcha($sta)) return;
   }
 
   u\preray(compact(ray($flds)), $sta['input']);
@@ -74,14 +78,14 @@ function formCCPay_submit($form, &$sta) {
  */
 function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   $dbFields = 'fullName email notices phone zip country city state notes source';
-  extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payHow routingNumber bankAccount isSavings note coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
+  extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payByCard routingNumber bankAccount isSavings note coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
   
   $coA = r\acct($coId);
   list ($city, $state) = r\zipCity($zip);
   $notices = NOTICE_NONE;
   if ($note) $item .= ' ("' . $note . '")';
 
-  $source = t('Payment to %nm (by %how)', 'nm how', $coA->bestName, $payHow ? t('cc') : t('ach'));
+  $source = t('Payment to %nm (by %how)', 'nm how', $coA->bestName, $payByCard ? t('cc') : t('ach'));
   $reportInfo += compact(ray($inputFlds));
 
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
@@ -89,7 +93,7 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
   $DBTX = \db_transaction();
   $pid = db\insert('people', $info, 'pid');
   
-  if ($payHow == 0) { // bank transfer (suggested for gift/fbo, else not allowed)
+  if (!$payByCard) { // bank transfer (suggested for gift/fbo, else not allowed)
     u\EXPECT(in($type, 'gift fbo'), 'wrong type for ACH donation');
     $bankAccount = u\cry('V', "USkk$routingNumber$bankAccount");
     $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
@@ -198,12 +202,10 @@ function getCGPayArgs($args) {
  * @return a Tx object for the outer transaction record
  */
 function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {
-  $recursId = NULL;
   if ($period != PER_1) {
-    if ($bankAccount) { // allow recurring payment only by ACH (not CC)
-      $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
-    } else w\say('no cc recur');
-  }
+    $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
+  } else $recursId = NULL;
+
   list ($purpose, $explicit, $completed) = [$desc, TRUE, now()];
   $deposit = $bankAccount ? 0 : now();
   $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId'));
@@ -216,37 +218,34 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
 /**
  * Return most of the form fields for a CC or ACH payment.
  * @param acct $a: payer account, if any (not $mya, so this can be called from a no-signin link)
- * @param assoc $extra: additional fields to include
+ * @return: standard fields to include
  */
-function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft, $extra = []) {
+function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft) {
 
   $note = textFld(t('Note:'), [t('About the payment')]);
   list ($cq, $ca) = $a ? [NULL, NULL] : w\captcha();
   $coId = hidFld($coA->id);
-  u\setDft($period, hidFld(PER_1));
 
   if ($amount) {
     $amount = preg_replace('/[\\$\\,]/', '', $amount); // no $ or ,
     $amtDpy = item(t('%amt for %item', 'amt item', u\fmtAmt($amount), $item), t('Amount:'));
     $amount = hidFld($amount);
   } else {
-    $amount = numFld(REQ . "$amtLabel:", [t('Amount:')], dft($amtDft) + ($item ? suffix(t('For: ') . $item) : []));
+    $amount = numFld(REQ . "$amtLabel:", [t('Amount')], dft($amtDft) + ($item ? suffix(t('For: ') . $item) : clas('short')));
     $amtDpy = NULL;
   }
   $item = $item ? hidFld($item) : textFld(REQ . t('For:'), [t('What your payment is for')]);
 
   if (!$a) {
-    $fullName = textFld(REQ . t('Name:'), [t('Your full name'), t('Your full name, properly capitalized')]);
+    $fullName = textFld(REQ . t('Name:'), [t('Your full name, properly capitalized')]);
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
     $email = emailFld(REQ . t('Email:'), [t('Email')]);
     $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
     $zip = zipFld(nn($zip));
   }
-  extract($extra);
   
   // Stuff to do AFTER extracting $extra
-  if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test
+//  if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test
   
-  foreach (ray('logo title subtext amtChoice amount amtDpy item options period honor coverFSFee fullName phone email country zip payHow coverCCFee ach note cq ca coId fsFee recursId for') as $k) if (isset($$k)) $form[$k] = $$k;
-  return $form;
+  return compact(ray('amount amtDpy item fullName phone email country zip note coId'));
 }

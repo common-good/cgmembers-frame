@@ -1096,6 +1096,7 @@ EOF;
  * @param int $periods: how many periods between recurrences
  * @param int $coId: sponsored organization's account record ID
  * @param bool $redirect: <redirect to empty page when done>
+ * @return result message if not redirect (especially for when called from ajax)
  */
 function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
   $coA = r\acct($coId);
@@ -1130,7 +1131,10 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
   }
   
   $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
-  return $redirect ? w\sayEmpty($msg) : w\say($msg);
+  if ($redirect) w\sayEmpty($msg);
+
+  w\say($msg);
+  return $msg;
 }
  
 /**

@@ -523,30 +523,26 @@ function doit(what, vs) {
     break;
 
   case 'donate':
-    $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+    var amtChoice = $('#edit-amtchoice');
+    if (amtChoice.length) $('#edit-amount').val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
-    $('.form-item-honor, .form-item-payHow span').hide();
-    if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
-    var coverCCFee = $('.form-item-coverCCFee');
-    var ach = $('#ach'); ach.hide();
-    if ($('#edit-payhow-0').length) {
-      coverCCFee.hide();
-      $('#edit-payhow-1').click(function () {
-        ach.hide();
-        coverCCFee.show(); 
-        if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
-        $('.btn-repeat, .form-item-period').hide();
-      });
-      $('#edit-payhow-0').click(function () {
-        ach.show();
-        coverCCFee.hide();
-        $('.btn-repeat, .form-item-period').show();
-      });
-    } else if ($('#edit-fullname').length) { // non-member donating to non-FS org, so CC only and no repeats
-      $('.btn-repeat').hide();
+    const thisForm = $('#frm-donate');
+    const submit = $('.form-item-submit');
+    const honor = $('.form-item-honor'); 
+    if ($('#edit-honored').val() == '') honor.hide(); else $('.btn-honor').hide();
+    const repeat = $('.btn-repeat');
+    const period = $('.form-item-period');
+    if (repeat.length) { // hide period only if it can be unhidden
+      if (period.val() == 'once') period.hide(); else repeat.hide();
     }
-    
-    $('.btn-repeat').click(function () {
+    const stay = $('.form-item-stay');
+    if (stay.length) {
+      const nonMember = $('#nonMember'); nonMember.hide();
+      const paySet = $('#paySet'); paySet.hide();
+      submit.hide();
+    } 
+      
+    repeat.click(function () {
       $(this).hide();
       $('.form-item-period').show();
       $('#edit-period').val('month').focus();
@@ -554,8 +550,42 @@ function doit(what, vs) {
 
     $('.btn-honor').click(function () {
       $(this).hide();
-      $('.form-item-honor').show();
+      honor.show();
       $('#edit-honored').focus();
+    });
+    
+    $('#edit-stay-0').click(function () { // pay by card
+      stay.hide(); $('#edit-stayLabel').hide();
+      nonMember.show();
+    });
+    
+    $('#edit-next .btn').click(function () {
+      if (document.getElementById('frm-donate').reportValidity()) {
+        $('.form-item-next').hide();
+        paySet.show();
+        submit.show();
+              
+        var amount = parseFloat($('#edit-amount').val());
+        var feeCovered = amount * (
+          ($('#edit-coverFSFee input:checked').length ? parseFloat($('#edit-fsfee').val()) : 0) + 
+          ($('#edit-coverCCFee input:checked').length ? parseFloat(vs['ccRate']) : 0)
+        );
+        amount += feeCovered;
+        const info = {
+          amount: amount + feeCovered,
+          feeCovered: feeCovered,
+          period: $('#edit-period').val(),
+          honor: $('#edit-honor').val(),
+          honorName: $('#edit-honorname').val(),
+          coId: $('#edit-coid').val(),
+          fullName: $('#edit-fullname').val(),
+          email: $('#edit-email').val(),
+          phone: $('#edit-phone').val(), 
+          zip: $('#edit-zip').val(),
+          country: $('#edit-country').val()
+        };
+        stripe(info);
+      }
     });
 
     break;
@@ -862,7 +892,7 @@ function doit(what, vs) {
     });
     amtChoice.change();
     
-    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('Y');});
+    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
     break;
     
   case 'contact':

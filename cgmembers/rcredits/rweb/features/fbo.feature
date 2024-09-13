@@ -300,8 +300,8 @@ Scenario: A non-member donates to a sponsored organization by credit card
   | type | item                  | pid | period | amount | coId   |*
   | fbo  | donation ("awesome!") | 1   | once   | 123.00 | NEWZZC |
   When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
+  | amount | fullName | phone        | email | zip   | payByCard | note     | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         1 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
@@ -343,8 +343,8 @@ Scenario: A non-member donates to a sponsored organization by ACH
   | .ZZC    | Cc3    |
   And next captcha is "37"
   When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
+  | amount | fullName | phone        | email | zip   | payByCard | note     | cq | ca |*
+  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         0 | awesome! | 37 | 74 |
   Then these "people":
   | pid | fullName | phone        | email | zip   | state |*
   | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |

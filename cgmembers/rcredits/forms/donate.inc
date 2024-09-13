@@ -10,17 +10,20 @@ include_once R_ROOT . '/forms/ccpay.inc';
 
 /*
   Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account or a ccOk account.
+  @params: donation form sometimes redirects to signin, which passes amount, period, honor, and honored here in $_GET
 */
 function formDonate($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
+  extract(just('amount period honor honored', $args, NULL));
   $mya = w\eLinkAcct($sta, $args, 'any');
   
-  $op = nni($args, 'op');
-
-  if ($op == 'done') return completeCCPayment($args);
-  if ($op == 'cancel') return softErr(tr('no paypal cancel'));
-  if ($op == 'thermometer') return therm($args);
+  switch ($op = nni($args, 'op')) {
+    case 'done': return completeCCPayment($args); // in ccpay.inc
+    case 'cancel': return softErr(tr('no paypal cancel'));
+    case 'thermometer': return therm($args);
+    default: // fall through
+  }
 
   if ($code = nni($args, 'code')) { // donating to a sponsored org
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
@@ -28,8 +31,11 @@ function formDonate($form, &$sta, $args = NULL) {
     if (!nn($coA)) return; // softErr
     if ($mya and $mya->id == $coA->id) return softErr(t('Donating to yourself is not permitted.'));
   } else $coA = r\acct(CGID); // vanilla CG donation page
+
+  u\setDft($s_amount, $amount); // get the default one way or the other (or not at all)
   
-  jsx('donate');
+  js('https://js.stripe.com/v3/');
+  jsx('donate', ray('ccRate', CC_FEE / 100));
   
   $oftens = array_reverse(r\recurRay(TRUE));
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
@@ -38,15 +44,15 @@ function formDonate($form, &$sta, $args = NULL) {
   $fbo = $coA->sponsored;
   $ccOk = ($fbo or $coA->ccOk);
   $target = $coA->target + 0;
-  $options = btnOpt('', t('in honor or memory'), 'btn-honor');
+  $options = btnOpt('', t('repeat'), 'btn-repeat') . btnOpt('', t('in honor or memory'), 'btn-honor');
 // to support our planned merger with <%a>The Truth Telling Project</a>
   $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months.</p>', '_a amt', atag('https://thetruthtellingproject.org/'), u\fmtAmt($target)) : '';
   
   if ($isCG and $mya) {
-    if ($recurs = db\get('id,period,amount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
+    if ($recurs = db\get('id,period AS xPeriod,amount AS xAmount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
       extract($recurs);
       $recursId = hidFld($id);
-      $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
+      $replaces = t('donation replaces', 'period amt', $oftens[$xPeriod], u\fmtAmt($xAmount));
     } else $recursId = NULL;
     
     if (!$mya->activated or !$recurs) {
@@ -63,54 +69,55 @@ function formDonate($form, &$sta, $args = NULL) {
     jsx('amtChoice');
 
   } else { // sponsored (or other member company accepting donations) or not signed in
-    $options = btnOpt('', t('repeat'), 'btn-repeat') . $options;
     $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
     $subtext = t('<p>Make a tax-deductible contribution of any amount to support %coName.</p>', compact('coName')) . $special;
     if ($isCG or $fbo) $subtext .= ' ' . t('<p>For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
   }
 
-  $options = item($options);
-    
-  if ($target) {
+  if ($target) { // set up thermometer, if there's a target
     $fsFeeCat = r\nick2cat('FS-FEE');
     $where = "(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND cat2<>$fsFeeCat AND :IS_GIFT AND created>=:dt";
     extract(db\get('SUM(1) AS count, SUM(amt) AS value', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: ray('count value', 0, 0));
     $therm = img(BASE_URL . "/community/donate/op=thermometer&max=$target&value=$value&count=$count");
   } else $therm = '';
+  
   $logo = logoFld($coA, $therm);
   $title = t('Donate to ') . $coA->bestName;
 
-  $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($isCG ? PER_YEAR : PER_1), $oftens);
-  $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
-  $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
+  $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($period ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1)), $oftens);
+  $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft($honored)));
+  $honor = selectFld(t('Honoring:'), '', suffix($honored) + dft($honor), $honors);
 
   $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
   $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
-  $coverCCFee = boxFld('coverCCFee', NBSP, t('Check here to cover the credit card processing fees also.'), 0);
-  
-  if ($mya) { // member: no need to ask for payment method
-    $payHow = $coverCCFee = $ach = NULL;
-  } elseif ($fbo or $isCG) { // nonmember & sponsored (or CG): guest can choose ACH or CC
-    $payHow = radiosFld(REQ . t('Pay By:'), '', dft(-1), [t('ACH (easier and saves us 3% in CC fees)'), t('Credit Card <span>(cannot automatically repeat)</span>')]);
-    $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
-    $routingNumber = routingFld(FALSE);
-    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
-    $isSavings = radiosFld(t('Type:'), '', dft(-1), [t('Checking'), t('Savings')]);
-    $ach = fieldSet('ach', compact(ray('checkHint routingNumber bankAccount isSavings')), BARE);
-  } else { // nonmember & not sponsored (or CG): CC only
-    $payHow = hidFld(1);
-    $ach = NULL;
-  }
 
+  $std = payFlds('', $mya, $coA, '', '', 0);
+  if (!nni($std, 'amount')) return $std; else extract($std); // no amount means error from payFlds()
+  $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft($s_amount) + clas('short') + suffix(NBSP . NBSP . NBSP . $options));
+
+  if ($mya) { // member: no need to ask for payment method
+    $paySet = $nonMember = $stay = NULL;
+    $options = item($options);
+  } else {
+    $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
+    $stay = boolFld();
+    $coverCCFee = boxFld('coverCCFee', NBSP, t('Check here to cover the transaction processing fees also.'), 0);
+    $next = btnFld('', '', t('Next'));
+    $nonMember = fieldSet('nonMember', compact(ray('coverCCFee fullName phone email country zip next')), BARE);
+    $options = NULL;
+    
+    $payment = item('', t('Pay by:'));
+    $paymentErr = item('', NBSP);
+    $paySet = fieldSet('paySet', compact(ray('payment paymentErr')), BARE);
+  }
+  
   $fsFee = hidFld($fsFee);
 
-  $cgPayLink = '/' . first('signin');
-  $form = compact(ray('logo title subtext amtChoice options period honor coverFSFee payHow coverCCFee ach fsFee recursId cgPayLink'));
-  $form = payFlds(t('Donation'), $mya, $coA, t('donation'), '', nn($s_amount), $form);
-  if (!nni($form, 'amount')) return $form; // error
+  $form = compact(ray('logo title subtext amtChoice amount amtDpy options period honor coverFSFee stayLabel stay nonMember paySet note coId fsFee recursId'));
   
   $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
-  $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : ray('submit', submit(t('Donate'), '', '', $noteSuffix));
+  $submit = submit(t('Donate'), '', 'md', $noteSuffix);
+  $form += ($mya and $isCG) ? w\setupFoot(t('Donate'), $noteSuffix) : compact('submit');
 
   return cgForm($form);
 }
@@ -121,8 +128,8 @@ function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   if ($mya) return submitCG($sta);
 
-  extract(just('amount fsFee payHow coverCCFee coverFSFee coId', $sta['input'], NULL));
-  $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payHow > 0 and $coverCCFee) ? CC_FEE / 100 : 0));
+  extract(just('amount fsFee payByCard coverCCFee coverFSFee coId', $sta['input'], NULL));
+  $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payByCard and $coverCCFee) ? CC_FEE / 100 : 0));
   $sta['input']['amount'] = round($amount + $feeCovered, 2);
 
   return submitNonMemberPayment($sta, r\ccGiftType($coId), compact('feeCovered'));
