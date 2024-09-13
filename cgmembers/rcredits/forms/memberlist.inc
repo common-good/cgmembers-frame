@@ -27,7 +27,7 @@ function formMemberList($form, &$sta) {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $nameClass = $co ? 'name co' : 'name';
-    $notes = str_replace("\n", "<br>\n", $notes);
+    $notes = str_replace("\n", "<br>\n", nn($notes));
     $notes = str_replace('do:', '<b class="memberlist-notes">do:</b>', $notes);
     $a = r\acct($uid);
     $phone = str_replace('+1 ', '', u\fmtPhone($phone0 = $a->phone));
