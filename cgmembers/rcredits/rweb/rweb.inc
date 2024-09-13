@@ -324,15 +324,14 @@ function formMenu($form, &$sta) {return cgform(['title' => t('Menu')]);}
 
 /**
  * Present an empty slate for status and error messages.
- * @param mixed $form: usually unused (but required by Drupal); if string, output it.
  * @param string $args: say=1 (if called from doSay) or err=1&msg=<msg> (or empty)
  */
 function formEmpty($form, &$sta = '', $args = '') {
-  if ($form and !is_array($form)) say(plain($form));
+// NO  if ($form and !is_array($form)) say(plain($form));
   extract(just('say err msg', $args, NULL));
   
   $title = NBSP;
-  if ($msg) say(plain($msg), $err);
+  if ($msg) say(u\dery('P', $msg), $err);
   $subtext = $say ? t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"') : NULL;
   return cgform(compact(ray('title subtext')));
 }
