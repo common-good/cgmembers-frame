@@ -1075,3 +1075,44 @@ function goPage(page, newWindow = false) {
   if (newWindow) window.open(baseUrl + page); else location.href = baseUrl + page;
   return false; // to help cancel default href
 }
+
+function stripe(info) {
+  const stripe = Stripe('pk_test_51PwptW00VpKSa9pm4QQhvi2Tqozf0Y87vNXMIel85xn5J75nV96mqdyxw8jFCjal6IkYEI0EdeAWW41DoDBHYWxw00hfJAlnLz');
+  const erDiv = $('#edit-paymentErr .control-data');
+
+  post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
+    const clientSecret = j.secret;
+    const elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment', {
+      fields: { billingDetails: { 
+        name: 'never',
+        email: 'never',
+        phone: 'never',
+        address: { postalCode:'never', country:'never' } // shouldn't this be postal_code?
+      }}
+    });
+    paymentElement.mount('#edit-payment .control-data');
+
+    const form = document.getElementById('frm-donate');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      elements.submit();
+
+      const confirmParams = { payment_method_data: { billing_details: {
+        name: info.fullName,
+        email: info.email,
+        phone: info.phone,
+        address: { postal_code:info.zip, country:'US' }
+      }}};
+      const { setupIntent, er } = await stripe.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
+
+      if (er) {
+        erDiv.html(er.message);
+      } else { // setup is successful, so do the actual payment
+        post('stripeTx', {...info, ...j}, function (k) {
+          if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else erDiv.html(k.message);
+        });
+      }
+    });
+  });
+}
