@@ -223,7 +223,6 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
 function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft) {
 
   $note = textFld(t('Note:'), [t('About the payment')]);
-  list ($cq, $ca) = $a ? [NULL, NULL] : w\captcha();
   $coId = hidFld($coA->id);
 
   if ($amount) {
