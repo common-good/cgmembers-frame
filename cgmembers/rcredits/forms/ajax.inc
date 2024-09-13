@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Cron as cr;
 
 /**
  * Handle an arbitrary AJAX request.
@@ -25,7 +26,7 @@ function ajax($args = NULL) {
 
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
-  if (!in($op, 'setNotice')) { // no sid if not signed in
+  if (!in($op, 'setNotice stripeSetup stripeTx')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }
@@ -38,6 +39,10 @@ function ajax($args = NULL) {
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
+      
+    case 'stripeSetup': return stripeSetup($data); // get client secret for card payment
+    
+    case 'stripeTx': return stripeTx($data); // do a Stripe payment (possibly recurring, based on stripeSetup)
 
     case 'suggestTxDesc': // suggest a description and/or category for a transaction being entered
       extract(just('otherId purpose paying', $data, NULL));
@@ -179,7 +184,78 @@ function ajax($args = NULL) {
   
 }
 
-function ajaxErr($msg) {return ajaxMsg($msg, 0);}
+/**
+ * Create the basis for a (possibly recurring) donation through Stripe
+ * @return {id, client_secret} or an error message (id is the setupIntent ID)
+ */
+function stripeSetup($data) {
+  extract(just('period honor honorName coId fullName email phone zip country', $data, NULL));
+  require_once R_ROOT . '/stripe.inc';
+
+  if ($period == 'once') $period = '';
+  $periodDesc = $period ? ucfirst(r\recurRay()[$period]) : '';
+  $description = trim($periodDesc . t(' Donation'));
+  
+  $email = strtolower($email);
+  list ($city, $state) = r\zipCity($zip);
+  $coA = r\acct($coId);
+  $notices = NOTICE_NONE;
+  $notes = $honorName ? t('in %honor of %honorName', compact(ray('honor honorName'))) : NULL;
+  $source = t('paid %nm (by card)', 'nm', $coA->bestName);
+//    $reportInfo += compact(ray($inputFlds));
+  
+  $nmNow = "CONCAT('%', REPLACE(fullName, ' ', '%'), '%')";
+  $newNm = "CONCAT('%', REPLACE(:fullName, ' ', '%'), '%')";
+  $where = "email=:email AND (fullName LIKE $newNm OR :fullName LIKE $nmNow)";
+  $old = db\row('people', $where, compact(ray('fullName email')));
+
+  if (!$old or empty($old->stripeCid)) {
+    $cust = stripe('cust', $data);
+    if (!is_object($cust)) return ajaxErr($cust); // anything other than an object is an error message
+    $stripeCid = $cust->id;
+  }
+
+  if ($old) { // if person already in people table
+    extract(just('pid city notices source notes stripeCid', $old), EXTR_PREFIX_ALL, 'o');
+    $new = compact(ray('phone notes'));
+    if (!$o_city) $new += compact(ray('city state zip country'));
+    foreach (ray('pid notices source stripeCid') as $k) $new[$k] = $$k = $old->$k ?: $$k;
+    $notes = ($o_notes and $notes) ? "$notes\n$o_notes" : "$notes$o_notes";
+    db\update('people', $new, 'pid');
+  } else {
+    $pid = db\insert('people', compact(ray('fullName email phone zip city state country notices notes source stripeCid')), 'pid');
+  }
+  
+  $intent = stripe('setup', compact(ray('stripeCid description')));
+  if (!is_object($intent)) return ajaxErr($intent); // anything other than an object is an error message
+  
+  return ajaxRet(ray('pid description stripeId secret', $pid, $description, $intent->id, $intent->client_secret));
+}
+
+/**
+ * Create a donation payment through Stripe
+ * @return {msg}: msg is an encrypted success or failure message
+ */
+function stripeTx($data) {
+  extract(just('amount period coId pid stripeId', $data, NULL));
+  require_once R_ROOT . '/rcron/rcron.inc';
+  
+  $purpose = t('donation'); // assume this for now (don't use the same, more formal description sent to Stripe and used in thanks)
+  $flags = u\bit(B_GIFT) | u\bit(B_CC);
+  $info = compact(ray('amount period purpose flags stripeId')) 
+        + ray('action from to payerType payer duration', 
+        ACT_PAY, MATCH_PAYER, $coId, REF_PERSON, $pid, PER_1);
+  $id = db\insert('tx_timed', $info); // create a timed record even if not recurring (for cron)
+  $template = (array) db\row('tx_timed', compact('id')); // pass all fields to cron job
+  $template += ray('lastRecur', 0);
+  $queueId = cr\queue('recur', $template, TRUE);
+  
+  [$ok, $msg] = cr\recur($template);
+  if ($ok) db\del('queue', ray('id', $queueId));
+  return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
+}
+
+function ajaxErr($msg) { http_response_code(500); return ajaxMsg($msg, 0); }
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data0, $ok = 1) {
   $data = u\jsonize($data0 + compact('ok'));
