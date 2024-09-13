@@ -96,7 +96,7 @@ function export($params) {
 
   $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:UID_CANON9 AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
   
-  $q = db\q($sql, ray('cttyId', $cttyA->id));
+  $q = db\q($sql, $allCttys ? [] : ray('cttyId', $cttyA->id));
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = r\acct($id);
@@ -114,7 +114,7 @@ function export($params) {
       } else $bankName = '';
     } else {
       list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
-      if (strlen($firstname) < 2 and strlen($mid) > 2) $firstname = $mid;
+      if (strlen($firstname ?: '') < 2 and strlen($mid ?: '') > 2) $firstname = $mid;
       $name = $firstname ?: $a->fullName; // Company name or person's first name
       $email = $a->email;
       $phone = $a->phone;
