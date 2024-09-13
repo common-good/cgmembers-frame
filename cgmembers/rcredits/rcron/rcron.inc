@@ -291,9 +291,14 @@ EOF;
   queueEach('recur', $sql);
   queueNext();
 }
-  
+
+/**
+ * Handle a recurring event (or one-time non-member donation through Stripe).
+ * Note: for non-member donations through Stripe, this function provides a useful return, since it may be called from stripe.inc
+ * @return: [ok, msg] (for Stripe only)
+ */
 function recur($template) {
-  extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer', $template));
+  extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer stripeId', $template));
 
   $lastRecurWanted = u\lastRecur($start, $periods, $period);
   
@@ -307,7 +312,7 @@ function recur($template) {
     $erSubs += compact(ray('when purpose'));
   } else { $when = t('one-time'); }
 
-  if ($action == 'surtx') {
+  if ($action == 'surtx') { // create rollover surtx (UNUSED as of ~2020)
     if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't do it more than a week in advance
     $rule = justNot(ray('id period periods duration durations start end lastRecur flags'), $template);
     $rule['template'] = $id;
@@ -320,23 +325,36 @@ function recur($template) {
 
   if (!in($action, 'pay charge')) return FAIL(t('bad action in template: ') . pr($erSubs));
 
-// No longer needed  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
+// keep transactions synced with template even if cron fails for a few days
   $created = now();
   if ($shouldStart > now()) return; // don't pay or charge until the right date and time
 
-  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring payment from a non-member
+  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring (or timed) payment from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
-    if (!$res = db\get('bankAccount,isSavings,payee', 'txs2 t2 JOIN txs_noreverse t USING(xid)', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY t2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
-    extract($res);
-    u\EXPECT($payee == $to, 'previous ACH mismatch');
+    $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $id);
+    
+    if ($stripeId) { // recurring credit card payment
+      require_once R_ROOT . '/stripe.inc';
+      $info['deposit'] = now();
+      $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
+      if (!is_object($erMsg = $paymentIntent)) {
+        r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
+        return [FALSE, $erMsg]; // try again tomorrow
+      }
+    } else { // recurring non-member ACH (legacy)
+      if (!$res = db\get('bankAccount,isSavings,payee AS txs2Payee', 'txs2 x2 JOIN txs_noreverse t USING(xid)', 'pid=:pid ORDER BY x2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous non-member payment'), $template);
+      extract($res);
+      u\EXPECT($txs2Payee == $to, 'previous recurring non-member payment: payee mismatch');
+      $info += compact(ray('bankAccount isSavings'));
+    }
+    
     $coA = r\acct($to);
-    $type = r\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
-    $info = compact(ray('amount purpose created')) + ray('explicit completed recursId deposit gift', FALSE, now(), $id, 0, TRUE);
-    be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
-    r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
-    be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
-    return;
+    $type = r\ccGiftType($to); // NOTE: we currently do not do non-member CC or ACH purchases (just gifts), so this is a gift.
+    be\createUsdTransfer($coA, $amount, $info);
+    r\tellAdmin(t('non-member donation'), ray('period by fbo', $period, $stripeId ? 'cc' : 'ach', $coA->fullName) + $info + $emailAndName);
+    $msg = be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
+    return [TRUE, $msg]; // this return is used only when called from stripe.inc
 
   } else { // normal pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
