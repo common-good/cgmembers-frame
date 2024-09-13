@@ -44,7 +44,7 @@ global $pageTitle;
  * @see template_preprocess_html()
  * @see template_process()
  */
-global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $styleNonce;
+global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $scriptNonce;
 $version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
