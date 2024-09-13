@@ -2192,6 +2192,9 @@ function emailtag($email = NULL, $subject = '', $body = '') {
 function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
+function btnFld($label, $href, $text, $style = '', $size = 'md', $extras = []) {
+  return item(btn($href, $text, $style, $size), $label, '', $extras);
+}
 function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
