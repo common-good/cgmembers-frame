@@ -267,7 +267,7 @@ function oneAcct($item) {
  * Instantiate surtx rules first so they apply to subsequent transactions.
  * Action options are: 
  *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
- *   pay or charge: recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
+ *   pay or charge: timed or recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
  * OBSCURE NOTE: if you want to count a transaction as the latest recurrence, give it the right rule and set its date/time AFTER the expected recur date/time
  */
 function recurs() {
@@ -293,12 +293,13 @@ EOF;
 }
 
 /**
- * Handle a recurring event (or one-time non-member donation through Stripe).
+ * Handle a delayed or recurring event.
  * Note: for non-member donations through Stripe, this function provides a useful return, since it may be called from stripe.inc
  * @return: [ok, msg] (for Stripe only)
  */
 function recur($template) {
   extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer stripeId', $template));
+  $recursId = $id;
 
   $lastRecurWanted = u\lastRecur($start, $periods, $period);
   
@@ -315,7 +316,7 @@ function recur($template) {
   if ($action == 'surtx') { // create rollover surtx (UNUSED as of ~2020)
     if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't do it more than a week in advance
     $rule = justNot(ray('id period periods duration durations start end lastRecur flags'), $template);
-    $rule['template'] = $id;
+    $rule['template'] = $recursId;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
     $ok = db\insert('tx_rules', $rule, 'id');
@@ -332,7 +333,7 @@ function recur($template) {
   if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring (or timed) payment from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
-    $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $id);
+    $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
     
     if ($stripeId) { // recurring credit card payment
       require_once R_ROOT . '/stripe.inc';
@@ -354,7 +355,6 @@ function recur($template) {
     be\createUsdTransfer($coA, $amount, $info);
     r\tellAdmin(t('non-member donation'), ray('period by fbo', $period, $stripeId ? 'cc' : 'ach', $coA->fullName) + $info + $emailAndName);
     $msg = be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
-    return [TRUE, $msg]; // this return is used only when called from stripe.inc
 
   } else { // normal pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
@@ -374,7 +374,7 @@ function recur($template) {
       }
       
       if (in(UID_BANK, [$from, $to])) { // bank transfer (NULL amount means sweep to bank)
-        $info = ray('recursId', $id);
+        $info = compact('recursId');
         $why = tr('auto transfer', compact('when'));
         if ($to == UID_BANK) { // transfer from CG account to bank
           $avail = $fromA->avail(FOR_USD);
@@ -382,19 +382,22 @@ function recur($template) {
           $fromA->bank(-$amount, $why, $info);
         } else $toA->bank($amount, $why, $info); // transfer to CG account from bank
       } else { // payment/transfer to another account
-        $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
+        $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $recursId);
         if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
         $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
       }
     } else { // charge
-      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
+      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $recursId);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
-    if ($period == PER_1) r\endRule('tm', $id);
-    
+    if ($period == PER_1) r\endRule('tm', $recursId);
+
     unset($DBTX);
+    $msg = '';
   }
   
+  if (db\count('tx_hdrs', 'recursId=:recursId AND created >= :NOW-HOUR_SECS', $subs = compact('recursId')) != 1) r\tellAdmin(t('Double-dipped recurrence'), $subs);
+  return [TRUE, $msg]; // this return is used only when called from stripe.inc
 }
 
 /**
