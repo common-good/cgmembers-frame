@@ -18,11 +18,13 @@ Setup:
   | 1003 |  .ZZC |   3000 | %today-3m | %today-3m |
   And these "tx_requests":
   | nvid | created   | amount | payer | payee | purpose  | status       |*
-  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |  5           |
-  |    2 | %today-2m |    120 | .ZZA | .ZZC | this Q   | 17           |
-  |    3 | %today-1m |     80 | .ZZA | .ZZC | this CF  | 19           |
-  |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED   |
-  |    5 | %today-2d |   2000 | .ZZA | .ZZC | realist  | %TX_APPROVED |
+  |    1 | %today-3m |    240 | .ZZA  | .ZZB  | what G   |  5           |
+  |    2 | %today-2m |    120 | .ZZA  | .ZZC  | this Q   | 17           |
+  |    3 | %today-1m |     80 | .ZZA  | .ZZC  | this CF  | 19           |
+  |    4 | %today-5d |     90 | .ZZA  | .ZZC  | wrongly  | %TX_DENIED   |
+  |    5 | %today-2d |   2000 | .ZZA  | .ZZC  | realist  | %TX_APPROVED |
+  |    6 | %today-1d |    101 | .ZZA  | .ZZC  | bogus    | %TX_CANCELED |
+  |    7 | %today-1d |    202 | .ZZA  | .ZZC  | outside  | %TX_PAID     |
   And these "txs": 
   | xid | created   | amount | payer | payee | purpose  |*
   |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |
@@ -55,6 +57,8 @@ Scenario: A company looks at a customer statement
   | %mdY-5d | inv #4 |    90.00 |         |   -20.00 | (DISPUTED) wrongly |
   | %mdY-3d | tx #19 |          |   80.00 |  -100.00 | this CF            |
   | %mdY-2d | inv #5 | 2,000.00 |         | 1,900.00 | realist            |
+  | %mdY-1d | inv #6 |   101.00 |  101.00 | 1,900.00 | bogus              |
+  | %mdY-1d | inv #7 |   202.00 |  202.00 | 1,900.00 | outside            |
   | %mdY-1d | tx #20 |          | -100.00 | 2,000.00 | pool CJ            |
   And we show PDF with:
   || Account Balance: $2,000.00 |
