@@ -128,6 +128,12 @@ function lock_acquire($name, $timeout = 30.0) {
     // The first time through the loop cannot be a retry.
     $retry = FALSE;
     // We always want to do this code at least once.
+    
+/*  do { // maybe do this instead?
+      if (db\exists('semaphore', compact('name'))) {
+        $retry = $retry ? FALSE : lock_may_be_available($name);
+      } else try { */
+    
     do {
       try {
 	    db\insert('semaphore', ray('name value expire', $name, _lock_id(), $expire), 'name');

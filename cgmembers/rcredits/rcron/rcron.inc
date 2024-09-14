@@ -53,7 +53,7 @@ function run() {
   $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
   $GLOBALS['user'] = \drupal_anonymous_user();
   \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts
-  if (!\lock_acquire('cron', 240.0)) return u\log(t('Attempted to run cron while it was already running.'));
+  if (!\lock_acquire('cron', 4 * 60)) return u\log(t('Attempted to run cron while it was already running.'));
   
   db\del('sessions', 'timestamp < :NOW-:SESSION_LIFE'); // remove stagnant sessions
   cr\periodic();
@@ -69,8 +69,9 @@ function run() {
       $DBTX = \db_transaction(); // this is crucial! otherwise we may partially do something several times (like add a bank transfer request to the queue)
       cr\doTask($item);
       db\del('queue', compact('id'));
-      unset($DBTX);
+      $DBTX->commit();
     } catch (\Exception $e) {
+      $DBTX->rollback();
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
       r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
     }
@@ -1232,7 +1233,7 @@ X;
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
 
-  if ($cnt = db\count('queue') and $cnt > 1) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
+  if ($cnt = db\count('queue') - 1 and $cnt > 0) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);
