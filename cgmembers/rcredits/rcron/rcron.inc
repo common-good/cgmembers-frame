@@ -252,9 +252,13 @@ function oneAcct($item) {
     db\del('users', 'uid', $a->id);
   } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots
     $s = strtr($a->source ?: '', ['self() '=>'', 'knows: '=>'']); // can't use nn() here
-    if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
-      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
-//        f('a.deleteUid', $a->id);
+    
+    $onestepAge = now() - $a->created;
+    if ($onestepAge > WEEK_SECS) { // warn about slow joiners for a week, then delete them in 6 months
+      if ($onestepAge < 2 * WEEK_SECS or now() < strtotime('10/1/2024')) {
+        $msg = tr('stale single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
+        r\tellAdmin($msg, ray('email phone', $a->email, u\fmtPhone($a->phone)));
+      } elseif ($onestepAge > YEAR_SECS / 2) f('a.deleteUid', $a->id);
     }
   }
  

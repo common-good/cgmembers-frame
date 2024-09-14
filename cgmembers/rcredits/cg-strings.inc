@@ -511,6 +511,7 @@ EOF
   'bad pin' => t('That is not your correct PIN.'),
   'wrong pin len' => t('Your PIN must be exactly 4 characters long.'),
   'pin required' => t('You must choose a PIN.'),
+  'stale single-step' => t('"%nm" (%qid) completed just one step on %created. Call?'),
   'only us banks' => t('Unfortunately, at this time, we can handle only U.S. banks.'),
   'no cc recur' => t('Unfortunately, we cannot automatically charge recurring donations to your credit card at this time. Your first donation went through, but you will need to remember to donate again when it is time. Thank you for the donation and the intent!'),
   'no can scan' => t('You do not have permission to scan an individual\'s %PROJECT QR code.'),
