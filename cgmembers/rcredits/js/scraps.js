@@ -533,7 +533,7 @@ function doit(what, vs) {
     const repeat = $('.btn-repeat');
     const period = $('.form-item-period');
     if (repeat.length) { // hide period only if it can be unhidden
-      if (period.val() == 'once') period.hide(); else repeat.hide();
+      if ($('#edit-period'.val() == 'once') period.hide(); else repeat.hide();
     }
     const stay = $('.form-item-stay');
     if (stay.length) {

@@ -10,7 +10,7 @@ use CG\Db as db;
   Give a nonmember a chance to pay a member by credit card.
  */
 function formCCPay($form, &$sta, $args = NULL) {
-  call u\FAIL('This function will need to be rewritten to work like donate.inc');
+  u\FAIL('This function will need to be rewritten to work like donate.inc');
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
   $mya = w\eLinkAcct($sta, $args, 'any');
@@ -241,7 +241,7 @@ function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft) {
     $email = emailFld(REQ . t('Email:'), [t('Email')]);
     $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
     $zip = zipFld(nn($zip));
-  }
+  } else $fullName = $phone = $email = $country = $zip = NULL;
   
   // Stuff to do AFTER extracting $extra
 //  if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test

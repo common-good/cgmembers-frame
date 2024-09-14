@@ -96,7 +96,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft($s_amount) + clas('short') + suffix(NBSP . NBSP . NBSP . $options));
 
   if ($mya) { // member: no need to ask for payment method
-    $paySet = $nonMember = $stay = NULL;
+    $paySet = $nonMember = $stay = $stayLabel = NULL;
     $options = item($options);
   } else {
     $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
