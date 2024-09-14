@@ -1010,8 +1010,9 @@ function getFunds1($item) {
   $a = r\acct($uid);
   $uids = $a->uids;
 
-  $need = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'))
-        - db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
+  $requests = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'));
+  $pendingIn = db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
+  $need = $requests - $pendingIn;
 
   if ($need > 0) {
     $a->getFunds($need, tr('to pending')); // this should never happen after 9/1/2024 because getFunds happens when the request is approved
@@ -1027,7 +1028,7 @@ function getFunds1($item) {
   if ($a->refill) { // auto refills
     $need = $a->minimum - $a->balance + min(0, $need);
     if ($need > 0) $a->getFunds($need, tr('to target'));
-  } elseif ($a->balance < 0) { // negative balance
+  } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
     if (!$a->debt) { // member chose never to go negative
       $a->getFunds(-$a->balance, tr('to zero'));
     } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
