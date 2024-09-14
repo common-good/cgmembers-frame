@@ -226,6 +226,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  * in: TEST bank AMemberIsBarelyBelowTarget
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     BOTH bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
@@ -390,6 +391,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     TEST bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
+ *     TEST bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     BOTH bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout Setup
@@ -451,6 +453,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *
  * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
+ *     TEST bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     TEST bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ASecondRecurringDonationToCGCanBeCompleted
@@ -520,6 +523,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     MAKE cashout AMemberCompanyCashesOutMonthly
