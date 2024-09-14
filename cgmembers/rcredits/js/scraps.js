@@ -558,6 +558,18 @@ function doit(what, vs) {
       stay.hide(); $('#edit-stayLabel').hide();
       nonMember.show();
     });
+
+    $('#edit-stay-1').click(function () { // member
+      const info = {
+        amount: $('#edit-amount').val(),
+        period: $('#edit-period'.val(),
+        honor: $('#edit-honor'.val(),
+        honored: $('#edit-honored'.val()
+      };
+      post('signinThenDonate', {info}, function (j) {
+        if (j.ok) location.href = j.url; else erDiv.html(j.message); // should always succeed
+      });
+    });
     
     $('#edit-next .btn').click(function () {
       if (document.getElementById('frm-donate').reportValidity()) {
