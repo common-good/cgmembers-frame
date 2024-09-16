@@ -318,6 +318,7 @@ function recur($template) {
     $rule['template'] = $id;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
+    unset($rule['stripeId']);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
     return;
