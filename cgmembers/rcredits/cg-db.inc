@@ -45,7 +45,8 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   $res = \db_query($sql, $subs, $opts);
 
   if (is_null($res)) {
-    w\err($err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query'))));
+    $err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query')));
+    if ($channel == TX_WEB) w\err($err);
     flog($err);
     if (!$mya or $mya->admin) if (!isDEV) r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
     $dbERR = $err; // pass this to insert
