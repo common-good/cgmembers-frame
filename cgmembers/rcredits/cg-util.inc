@@ -1356,7 +1356,11 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
  */
 function code($upper = FALSE, $len = R_CODE_LEN) {
   global $nextCode;
-  if (test() and nn($nextCode)) return $nextCode;
+  if (test() and $codeRay = ray(nn($nextCode))) {
+    $res = array_shift($codeRay);
+    $nextCode = join(' ', $codeRay);
+    return $res;
+  }
   $res = u\randomString($len, 'word');
   return $upper ? strtoupper($res) : $res;
 }
