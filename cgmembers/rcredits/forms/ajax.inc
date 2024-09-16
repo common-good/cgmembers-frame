@@ -26,7 +26,7 @@ function ajax($args = NULL) {
 
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
-  if (!in($op, 'setNotice stripeSetup stripeTx')) { // no sid if not signed in
+  if (!in($op, 'setNotice signinThenDonate stripeSetup stripeTx')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }
@@ -39,6 +39,10 @@ function ajax($args = NULL) {
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
+      
+    case 'signinThenDonate':
+      $url = BASE_URL . '/' . w\first('signin', 'community/donate/code=' . u\cryRay($data));
+      return ajaxRet(compact('url'));
       
     case 'stripeSetup': return stripeSetup($data); // get client secret for card payment
     
