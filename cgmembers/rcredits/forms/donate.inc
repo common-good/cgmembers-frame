@@ -42,6 +42,7 @@ function formDonate($form, &$sta, $args = NULL) {
   $ccOk = ($fbo or $coA->ccOk);
   $target = $coA->target + 0;
   $options = btnOpt('', t('repeat'), 'btn-repeat') . btnOpt('', t('in honor or memory'), 'btn-honor');
+
 // to support our planned merger with <%a>The Truth Telling Project</a>
   $special = ($isCG and $target) ? t('<p>We currently need to raise %amt over the next few months.</p>', '_a amt', atag('https://thetruthtellingproject.org/'), u\fmtAmt($target)) : '';
   
@@ -124,12 +125,13 @@ function formDonate_validate($form, &$sta) {return formCCPay_validate($form, $st
 function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   if ($mya) return submitCG($sta);
+  u\FAIL('unexpected submit of nonmember donation');
 
-  extract(just('amount fsFee payByCard coverCCFee coverFSFee coId', $sta['input'], NULL));
+/*  extract(just('amount fsFee payByCard coverCCFee coverFSFee coId', $sta['input'], NULL));
   $feeCovered = $amount * (($coverFSFee ? $fsFee : 0) + (($payByCard and $coverCCFee) ? CC_FEE / 100 : 0));
   $sta['input']['amount'] = round($amount + $feeCovered, 2);
 
-  return submitNonMemberPayment($sta, r\ccGiftType($coId), compact('feeCovered'));
+  return submitNonMemberPayment($sta, r\ccGiftType($coId), compact('feeCovered')); */
 }
 
 /**

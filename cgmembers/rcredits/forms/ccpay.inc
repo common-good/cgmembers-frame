@@ -77,6 +77,8 @@ function formCCPay_submit($form, &$sta) {
  * @param assoc $reportInfo: extra information to report to admin
  */
 function submitNonMemberPayment($sta, $type, $reportInfo = []) {
+  u\FAIL('unexpected nonmember payment in ccpay.inc');
+  /*
   $dbFields = 'fullName email notices phone zip country city state notes source';
   extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payByCard routingNumber bankAccount isSavings note coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
   
@@ -109,6 +111,7 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
     return paypal($type != 'purchase', $what, $reportInfo, $code);
     // commit $DBTX when function ends
   }
+  */
 }
 
 /**
@@ -120,6 +123,8 @@ function submitNonMemberPayment($sta, $type, $reportInfo = []) {
  * @return (does not return)
  */
 function paypal($donating, $what, $reportInfo, $code) {
+  u\FAIL('unexpected call to paypal in ccpay.inc');
+/*
   global $testReturnUrl;
   
   extract(just('amount fullName email zip source', $reportInfo));
@@ -138,6 +143,7 @@ function paypal($donating, $what, $reportInfo, $code) {
 //  if ($permo) unset($data['amount']);
   r\tellAdmin($source, $reportInfo + compact('return')); // include clickable return parameter in case the donation goes through but PayPal doesn't return
   return u\postnGo("https://www.paypal.com/$paypalUri", $data); // does not return (until redirected from PayPal)
+  */
 }
 
 /**
@@ -145,12 +151,14 @@ function paypal($donating, $what, $reportInfo, $code) {
  * @
  */
 function completeCCPayment($args) {
+  u\FAIL('unexpected return from paypal in ccpay.inc');
+  /*
   extract(just('code', $args, NULL));
 
-  if (!$code or !$ray = u\decryRay($code)) return softErr(t('That code is flawed.'));
+  if (!$code or !$ray = u\decryRay($code)) return [FALSE, t('That code is flawed (%code).', compact('code'))];
   
-  extract(just('type pid item amount period coId honorId', $ray, NULL));
-  if (!($type and $pid and $amount and $coId)) return softErr(t('That code is missing a parameter.'));
+  extract(just('type pid item amount period coId honorId recursId', $ray, NULL));
+  if (!($type and $pid and $amount and $coId)) return [FALSE, t('That code is missing a parameter.')];
   $coA = r\acct($coId);
     
   $fullName = db\get('fullName', 'people', compact('pid'));
@@ -166,6 +174,7 @@ function completeCCPayment($args) {
   r\tellAdmin(t('CC payment complete (to %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
   
   return be\thanks($type, FALSE, $pid, $item, $amount, $period, 1, $coId, TRUE);
+  */
 }
 
 
@@ -185,7 +194,7 @@ function getCGPayArgs($args) {
   if (test() and $code == 'TESTCODE') $code = $testCode;
   if (!$ray = u\decryRay($code)) return exitErr(t('The "code" parameter is not valid.'));
   if ($dups = just($args, $ray)) return exitErr(t('Parameter "%k" attempts to override that parameter as encoded in "code".', 'k', $dups[0]));
-
+//die(pr($ray));
   foreach (ray(CGPAY_VARS) as $k) u\setDft($ray[$k], NULL); // make sure all possible parameters get extracted from return, even if not set
   foreach (ray(CGPAY_VARS2) as $k) $ray["s_$k"] = nni($args, $k, NULL); // optional "suggested" parameters (amount, id, item, name) except for request
   extract(just('expires account s_amount', $ray));
@@ -200,7 +209,7 @@ function getCGPayArgs($args) {
  * Add an "outer" record to txs2 for the credit card payment.
  * @param string $bankAccount: the bankAccount, V-encrypted
  * @return a Tx object for the outer transaction record
- */
+ *//*
 function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {
   if ($period != PER_1) {
     $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
@@ -213,7 +222,7 @@ function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift =
   $tx = be\createUsdTransfer($coA, $amount, $info);
   if ($id = $honorId) db\update('r_honors', ray('id xid', $id, $tx->xid), 'id');
   return $tx;
-}
+}*/
 
 /**
  * Return most of the form fields for a CC or ACH payment.
