@@ -72,6 +72,8 @@ function formDonate($form, &$sta, $args = NULL) {
     if ($isCG or $fbo) $subtext .= ' ' . t('<p>For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
   }
 
+  u\setDft($s_amount, nn($amount)); // get the default one way or the other (or not at all)
+
   if ($target) { // set up thermometer, if there's a target
     $fsFeeCat = r\nick2cat('FS-FEE');
     $where = "(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND cat2<>$fsFeeCat AND :IS_GIFT AND created>=:dt";
