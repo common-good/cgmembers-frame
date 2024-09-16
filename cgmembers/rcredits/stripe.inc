@@ -25,6 +25,7 @@ function cust($args) {
   extract(just('fullName email phone zip country', $args, NULL));
 
   $info = ray('name email phone address', $fullName, $email, $phone, ray('postal_code country', $zip, 'US')); // not $country, which has to be an integer
+  if (test()) return obj('id', u\code());
   
   try {
     return str\Customer::create($info); // we need a customer record whether recurring or not
@@ -43,6 +44,7 @@ function setup($args) {
   $usage = 'off_session';
   $use_stripe_sdk = TRUE;
   $info = compact(ray('customer description payment_method_types usage use_stripe_sdk'));
+  if (test()) return obj('id client_secret', u\code(), u\code());
   
   try {
     return str\SetupIntent::create($info);
@@ -55,6 +57,8 @@ function setup($args) {
  */
 function charge($args) {
   extract(just('stripeId shouldStart to amount', $args)); 
+  if (test()) return obj('id', u\code());
+  
   $setupIntent = str\SetupIntent::retrieve($stripeId);
   $paymentMethodId = $setupIntent->payment_method;
   $customerId = $setupIntent->customer;

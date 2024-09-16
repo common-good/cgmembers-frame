@@ -21,42 +21,81 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A non-member donates to a ccOk organization by credit card
+Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
   When member "?" visits "community/donate/code=%buttonCode"
   Then we show "Donate to Our Pub" with:
-  | Donation    |
-  | Name        |
-  | Phone       |
-  | Email       |
-  | Country     |
-  | Postal Code |
-  | Donate      |
+  | Donation:    |
+  | When:        |
+  | Honoring:    |
+  | member?      |
+  | Name:        |
+  | Phone:       |
+  | Email:       |
+  | Country:     |
+  | Postal Code: |
+  | Next         |
+  | Pay by:      |
+  | Note:        |
+  | Donate       |
 
-  Given next captcha is "37"
-  And var "code" encrypts:
-  | type | item                  | pid | period | amount | coId   |*
-  | gift | donation ("awesome!") | 1   | once   | 123.00 | NEWZZC |
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payByCard | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         1 | awesome! | 37 | 74 |
+Scenario: A non-member submits information to Stripe
+  Given next codes are "strCid123 strId456 secret78"
+  When member "?" ajax "stripeSetup" with:
+  | amount   | 123          |**
+  | period   | once         |
+  | honor    | memory       |
+  | honored  | God          |
+  | fullName | Zee Zot      |
+  | phone    | 262-626-2626 |
+  | email    | z@           |
+  | zip      | 01301        |
+  | country  | US           |
+  | notes    | wow!         |
+  | coId     | .ZZC         |
   Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+  | pid | fullName | phone        | email | zip   | state | country | stripeCid | notes                   | source                 |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    | US      | strCid123 | in memory of God - wow! | paid Our Pub (by card) |
+  And ajax returns:
+  | pid  | description | stripeId | secret   | ok |*
+  | 1    | Donation    | strId456 | secret78 | 1  |
 
-  And we redirect to "https://www.paypal.com/donate"
-  And return URL "/community/donate/op=done&code=%code"
-  
-  When member "?" visits "community/donate/op=done&code=%code"
-  Then these "txs2":
+Scenario: A non-member confirms donation intent
+  Given these "people":
+  | pid | fullName | phone        | email | zip   | state | country | stripeCid | notes                   | source                 |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    | US      | strCid123 | in memory of God - wow! | paid Our Pub (by card) |
+  When member "?" ajax "stripeTx" with:
+  | amount   | 123          |**
+  | period   | once         |
+  | honor    | memory       |
+  | honored  | God          |
+  | fullName | Zee Zot      |
+  | phone    | 262-626-2626 |
+  | email    | z@           |
+  | zip      | 01301        |
+  | country  | US           |
+  | notes    | wow!         |
+  | coId     | .ZZC         |
+  | pid      | 1            |
+  | description | Donation  |
+  | stripeId | strId456     |
+  | secret   | secret78     |
+  Then these "tx_timed":
+  | id | action   | from         | to   | amount | portion | purpose  | payerType   | payer | period | stripeId |*
+  | 1  | %ACT_PAY | %MATCH_PAYER | .ZZC | 123    | 0       | donation | %REF_PERSON | 1     | once   | strId456 | 
+#  And these "queue":
+#  And ajax returns: (encrypted ryP)
+
+  And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose               | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee                | %E_XFEE    |
+  | eid | xid | payer      | payee | amount | purpose  | cat1       | cat2        | type       |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | AAAAJV     |             | %E_OUTER   |
+  | 3   | 1   | .ZZC       | cgf   | 3.69   | cc fee   |            | TX-FEE-BACK | %E_XFEE    |
+  And count "txs" is 2
   And we email "gift-thanks-nonmember" to member "z@" with subs:
   | fullName     | Zee Zot         |**
   | date         | %mdY            |
@@ -66,53 +105,73 @@ Scenario: A non-member donates to a ccOk organization by credit card
   | amount       | $123            |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
-  | item         | donation ("awesome!") |**
+  | item         | donation ("in memory of God - wow!") |**
   | amount       | $123                  |
   | date         | %mdY                  |
   | fromName     | Zee Zot               |
-  | fromAddress  | Greenfield, MA 01301  |
+  | fromAddress  | , MA 01301            |
   | fromPhone    | +1 262 626 2626       |
   | fromEmail    | z@example.com         |
   And we say "status": "gift thanks|check it out" with subs:
   | coName | Our Pub |**
 
-# ACH is not allowed, but in case it ever is:
-Scenario: A non-member donates to a ccOk organization by ACH
-  Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  And next captcha is "37"
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payByCard | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |         0 | awesome! | 37 | 74 |
-  Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
+Scenario: A non-member confirms a donation to a sponsored organization by credit card
+  Given these "people":
+  | pid | fullName | phone        | email | zip   | state | country | stripeCid | notes                   | source                 |*
+  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    | US      | strCid123 | in memory of God - wow! | paid Our Pub (by card) |
+  And members have:
+  | uid   | coFlags   |*
+  | .ZZC  | sponsored |
+  And these "tx_rules":
+  | id        | 1            |**
+  | payer     |              |
+  | payerType | %REF_ANYBODY |
+  | payee     | .ZZC         |
+  | payeeType | %REF_ACCOUNT |
+  | from      | %MATCH_PAYEE |
+  | to        | cgf          |
+  | action    | %ACT_SURTX   |
+  | amount    | 0            |
+  | portion   | .05          |
+  | purpose   | %FS_NOTE |
+  | minimum   | 0            |
+  | useMax    |              |
+  | amtMax    |              |
+  | template  |              |
+  | start     | %now         |
+  | end       |              |
+  | code      |              |
+  
+  When member "?" ajax "stripeTx" with:
+  | amount   | 123          |**
+  | period   | once         |
+  | honor    | memory       |
+  | honored  | God          |
+  | fullName | Zee Zot      |
+  | phone    | 262-626-2626 |
+  | email    | z@           |
+  | zip      | 01301        |
+  | country  | US           |
+  | notes    | wow!         |
+  | coId     | .ZZC         |
+  | pid      | 1            |
+  | description | Donation  |
+  | stripeId | strId456     |
+  | secret   | secret78     |
+  Then these "tx_timed":
+  | id | action   | from         | to   | amount | portion | purpose  | payerType   | payer | period | stripeId |*
+  | 1  | %ACT_PAY | %MATCH_PAYER | .ZZC | 123    | 0       | donation | %REF_PERSON | 1     | once   | strId456 | 
+#  And these "queue":
+#  And ajax returns: (encrypted ryP)
+
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 123    | %now      |       0 | 1   |
+  | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose               | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
-  And count "tx_entries" is 2
-  And we email "gift-thanks-nonmember" to member "z@" with subs:
-  | fullName     | Zee Zot         |**
-  | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
-  | amount       | $123            |
-  | noFrame      | 1               |
-  And we email "gift-report" to member ".ZZC" with subs:
-  | item         | donation ("awesome!") |**
-  | amount       | $123                  |
-  | date         | %mdY                  |
-  | fromName     | Zee Zot               |
-  | fromAddress  | Greenfield, MA 01301  |
-  | fromPhone    | +1 262 626 2626       |
-  | fromEmail    | z@example.com         |
-  And we say "status": "gift thanks|check it out" with subs:
-  | coName | Our Pub |**
+  | eid | xid | payer      | payee | amount | purpose  | cat1       | cat2        | type     |*
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | AAAAJV     | D-FBO       | %E_OUTER |
+  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | D-FBO      | FS-FEE      | %E_AUX   |
+  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | FBO-TX-FEE | TX-FEE-BACK | %E_XFEE  |
 
 Scenario: A member donates to a ccOk organization
   Given button code "buttonCode" for:

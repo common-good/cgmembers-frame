@@ -246,8 +246,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
 /**
  * members: (ARG)
  *
- * in: MAKE aacc Setup
- *     MAKE accredit Setup
+ * in: MAKE accredit Setup
  *     MAKE ajax Setup
  *     MAKE backing Setup
  *     TEST backing AMemberIncreasesBackingAmount
@@ -329,15 +328,13 @@ function members($list) {return t\members($list);}
 /**
  * we say (ARG): (ARG) with subs: (ARG)
  *
- * in: TEST aacc SomeoneCompletesACreditCardDonation
- *     TEST backing AMemberDecreasesBackingAmount
+ * in: TEST backing AMemberDecreasesBackingAmount
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
+ *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
@@ -352,8 +349,6 @@ function members($list) {return t\members($list);}
  *     TEST donate ACompanyMakesARecurringDonation
  *     TEST donate AMemberDonatesWithInsufficientFunds
  *     TEST fbo ASponsoredMemberChargesAMember
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -487,14 +482,11 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
+ * in: TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ANonmemberDonatesToCommonGood
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
@@ -569,13 +561,12 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
- *     TEST accredit AMemberCompanyGivesACustomerCredit
+ * in: TEST accredit AMemberCompanyGivesACustomerCredit
  *     TEST backing AMemberVisitsTheBackingPage
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
+ *     TEST ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -610,7 +601,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
@@ -1217,6 +1207,7 @@ function statisticsGetSet($time) {
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
+ *     MAKE ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
@@ -1263,10 +1254,7 @@ function membersHave($list) {return t\membersHave($list);}
 /**
  * we redirect to (ARG)
  *
- * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
- *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
+ * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
@@ -1699,9 +1687,7 @@ function weScripWithSubs($script, $args = []) {
 /**
  * these (ARG): (ARG)
  *
- * in: TEST aacc SomeoneAsksToMakeACreditCardDonation
- *     MAKE aacc SomeoneCompletesACreditCardDonation
- *     MAKE accredit Setup
+ * in: MAKE accredit Setup
  *     TEST accredit AMemberCompanyGivesACustomerCredit
  *     TEST accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
@@ -1719,8 +1705,9 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH boxes AMemberSignsInAgain
  *     BOTH boxes AMemberTransactsAndBoxIdGetsRecorded
  *     MAKE ccpay Setup
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
+ *     TEST ccpay ANonmemberSubmitsInformationToStripe
+ *     BOTH ccpay ANonmemberConfirmsDonationIntent
+ *     BOTH ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     MAKE cgpay Setup
@@ -1760,8 +1747,6 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -1983,11 +1968,10 @@ function memberIsUnconfirmed($id) {
  *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST boxes Setup
- *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
+ *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
@@ -2194,8 +2178,7 @@ function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
 /**
  * someone visits (ARG) where code is: (ARG)
  *
- * in: MAKE aacc SomeoneCompletesACreditCardDonation
- *     MAKE posts SomeoneSubmitsAnOfferOnceTwice
+ * in: MAKE posts SomeoneSubmitsAnOfferOnceTwice
  */
 function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -2354,24 +2337,6 @@ function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 
 /**
- * we show JSON of: (ARG)
- *
- * in: TEST ajax AjaxSuggestWho
- */
-function weShowJSONOf($ray) {
-  global $testOnly; if (!$testOnly) return FALSE;
-
-//  $ray = count($ray[0]) == 1 ? call_user_func_array('array_merge', $ray) : $ray[0];
-  foreach ($ray as $i => $one) {
-    t\fixData($one);
-    foreach ($one as $k => $v) $one[$k] = (string) $v; // make sure numbers are quoted or it won't match what we get
-    $ray[$i] = $one;
-  }
-    
-  return weExitShowingJust(json_encode($ray));
-}
-
-/**
  * member (ARG) clicks (ARG) on page (ARG) with: (ARG)
  *
  * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
@@ -2386,14 +2351,23 @@ function memberClicksOnPageWith($id, $button, $page, $info) {
  * member (ARG) ajax (ARG) with: (ARG)
  *
  * in: MAKE ajax AjaxSuggestWho
+ *     MAKE ccpay ANonmemberSubmitsInformationToStripe
+ *     MAKE ccpay ANonmemberConfirmsDonationIntent
+ *     MAKE ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  */
-function memberAjaxWith($id, $op, $data) {
+function memberAjaxWith($id, $op, $ray) {
   global $testOnly; if ($testOnly) return FALSE;
   global $mya;
   include_once R_ROOT . '/forms/ajax.inc';
   if ($id != '?') t\login($id);
 
-  $res = w\ajax(ray('op sid data myid aid', $op, session_id(), u\jsonize($data), $mya->id, $mya->agentId));
+  $ray = $ray[0];
+  t\fixData($ray);
+
+  [$myid, $aid] = $mya ? [$mya->id, $mya->agentId] : [NULL, NULL];
+  [$sid, $data] = [session_id(), u\jsonize($ray)];
+
+  $res = w\ajax(compact(ray('op sid data myid aid')));
   t\output($res);
   return TRUE;
 }
@@ -2401,13 +2375,11 @@ function memberAjaxWith($id, $op, $data) {
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
+ * in: MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     MAKE fbo ANonmemberDonatesToASponsoredMember
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
@@ -2451,12 +2423,7 @@ function weFirstThen($first, $then) {
 /**
  * member (ARG) completes (ARG) with: (ARG)
  *
- * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByACH
- *     MAKE ccpay AMemberDonatesToACcOkOrganization
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
+ * in: MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
@@ -2479,12 +2446,7 @@ function withQR($url) {
 /**
  * next captcha is (ARG)
  *
- * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByACH
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
- *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
+ * in: MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE signup Setup
  */
@@ -2516,9 +2478,7 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
 /**
  * return URL (ARG)
  *
- * in: TEST ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
+ * in: TEST guest ANonmemberPaysAMemberCompanyByCreditCard
  *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  */
 function returnURL($url) {
@@ -2535,9 +2495,7 @@ function returnURL($url) {
 /**
  * var (ARG) encrypts: (ARG)
  *
- * in: MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
+ * in: MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     MAKE mfa AMemberTypesTheWrongNonce
@@ -2583,8 +2541,7 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  * button code (ARG) for: (ARG)
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByACH
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE cgpay AMemberClicksACGPayButton
  *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
@@ -2597,8 +2554,6 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
  *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
  *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
@@ -2638,4 +2593,45 @@ function memberIsSignedOut() {
   global $testOnly, $mya;
   if (!$testOnly) w\signout(TRUE);
   return !$mya;
+}
+
+/**
+ * next codes are (ARG)
+ *
+ * in: MAKE ccpay ANonmemberSubmitsInformationToStripe
+ */
+function nextCodesAre($codes) { return nextRandomCodeIs($codes); }
+
+/**
+ * ajax returns: (ARG)
+ *
+ * in: TEST ccpay ANonmemberSubmitsInformationToStripe
+ */
+function ajaxReturns($ray) {
+  global $testOnly; if (!$testOnly) return FALSE;
+
+  $ray = $ray[0];
+  t\fixData($ray);
+  foreach ($ray as $k => $v) $ray[$k] = (string) $v; // make sure numbers are quoted or it won't match what we get
+
+  return weExitShowingJust(json_encode($ray));
+}
+
+/**
+ * we show JSON ray: (ARG)
+ *
+ * in: TEST ajax AjaxSuggestWho
+ */
+function weShowJSONRay($ray) {
+  global $testOnly; if (!$testOnly) return FALSE;
+
+//  $ray = count($ray[0]) == 1 ? call_user_func_array('array_merge', $ray) : $ray[0];
+  
+  foreach ($ray as $i => $one) {
+    t\fixData($one);
+    foreach ($one as $k => $v) $one[$k] = (string) $v; // make sure numbers are quoted or it won't match what we get
+    $ray[$i] = $one;
+  }
+
+  return weExitShowingJust(json_encode($ray));
 }

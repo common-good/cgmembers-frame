@@ -371,6 +371,9 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
  *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ARecurringSweepCanBeCompleted
+ *     TEST recurs ARecurringBankTransferCanBeCompleted
+ *     TEST recurs ARecurringBankTransferFailsForInsufficientFunds
  *     TEST weekly AMemberCashesOutAutomatically
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
@@ -430,6 +433,16 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE recurs Setup
  *     BOTH recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     BOTH recurs ARecurringSweepCanBeCompleted
+ *     BOTH recurs ARecurringBankTransferCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
+ *     BOTH recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     TEST risk WeCalculateRisks
  *     MAKE rules Setup
@@ -463,6 +476,11 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST monthly CrumbsAreInvoiced
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     TEST recurs ARecurringBankTransferCanBeCompleted
+ *     TEST recurs ARecurringPaymentHappenedYesterday
+ *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     TEST recurs ADelayedPaymentDoesNotHappenImmediately
+ *     TEST recurs ARecurringPaymentCannotBeCompleted
  *     TEST rules RulesGetInstantiated
  *     TEST rules AnEndedTemplateHasNoEffect
  */
@@ -553,6 +571,16 @@ function riskThresholdPercentIs($pct) {
  *     MAKE posts AParticipantGetsANoticeAboutAnExpiringPost
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     MAKE recurs ARecurringSweepCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
+ *     MAKE recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
  *     MAKE rules RulesGetInstantiated
@@ -630,6 +658,7 @@ function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms
  * in: MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
+ *     MAKE recurs ARecurringBankTransferCanBeCompleted
  */
 function itsLater() {return t\itsLater();}
 
