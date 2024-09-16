@@ -193,7 +193,7 @@ function ajax($args = NULL) {
  * @return {id, client_secret} or an error message (id is the setupIntent ID)
  */
 function stripeSetup($data) {
-  extract(just('period honor honorName coId fullName email phone zip country', $data, NULL));
+  extract(just('period honor honored coId fullName email phone zip country notes', $data, NULL));
   require_once R_ROOT . '/stripe.inc';
 
   if ($period == 'once') $period = '';
@@ -204,7 +204,8 @@ function stripeSetup($data) {
   list ($city, $state) = r\zipCity($zip);
   $coA = r\acct($coId);
   $notices = NOTICE_NONE;
-  $notes = $honorName ? t('in %honor of %honorName', compact(ray('honor honorName'))) : NULL;
+  $honor = $honored ? t('in %honor of %honored', compact(ray('honor honored'))) : NULL;
+  $notes = join(' - ', [$honor, $notes]);
   $source = t('paid %nm (by card)', 'nm', $coA->bestName);
 //    $reportInfo += compact(ray($inputFlds));
   
@@ -256,15 +257,17 @@ function stripeTx($data) {
   
   [$ok, $msg] = cr\recur($template);
   if ($ok) db\del('queue', ray('id', $queueId));
+
   return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
 }
 
 function ajaxErr($msg) { http_response_code(500); return ajaxMsg($msg, 0); }
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data0, $ok = 1) {
-  $data = u\jsonize($data0 + compact('ok'));
   if (!isset($data0['which'])) u\loga('ajax', $data0); // don't log hundreds of choices (log data0 so secrets are hidden)
-  exit($data);
+  return exitJson($data0 + compact('ok'));
+//  $data = u\jsonize($data0 + compact('ok'));
+//  exit($data);
 }
 function relPermErr($message, $reid, $v0) {
   return ajaxRet(compact(ray('message v0')), 0);

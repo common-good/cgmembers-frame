@@ -15,7 +15,6 @@ include_once R_ROOT . '/forms/ccpay.inc';
 function formDonate($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
-  extract(just('amount period honor honored', $args, NULL));
   $mya = w\eLinkAcct($sta, $args, 'any');
   
   switch ($op = nni($args, 'op')) {
@@ -27,13 +26,11 @@ function formDonate($form, &$sta, $args = NULL) {
 
   if ($code = nni($args, 'code')) { // donating to a sponsored org
     if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
-    extract(just('coA s_amount', $ray, NULL));
+    extract(just('coA amount period honor honored s_amount', $ray, NULL));
     if (!nn($coA)) return; // softErr
     if ($mya and $mya->id == $coA->id) return softErr(t('Donating to yourself is not permitted.'));
   } else $coA = r\acct(CGID); // vanilla CG donation page
 
-  u\setDft($s_amount, $amount); // get the default one way or the other (or not at all)
-  
   js('https://js.stripe.com/v3/');
   jsx('donate', ray('ccRate', CC_FEE / 100));
   
@@ -54,7 +51,7 @@ function formDonate($form, &$sta, $args = NULL) {
       $recursId = hidFld($id);
       $replaces = t('donation replaces', 'period amt', $oftens[$xPeriod], u\fmtAmt($xAmount));
     } else $recursId = NULL;
-    
+
     if (!$mya->activated or !$recurs) {
       unset($oftens[PER_1]); // no one-time donation unless the account is activated and has a recurring donation
       unset($oftens[0]);
@@ -84,20 +81,20 @@ function formDonate($form, &$sta, $args = NULL) {
   $logo = logoFld($coA, $therm);
   $title = t('Donate to ') . $coA->bestName;
 
-  $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($period ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1)), $oftens);
-  $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft($honored)));
-  $honor = selectFld(t('Honoring:'), '', suffix($honored) + dft($honor), $honors);
+  $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft(nn($period) ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1)), $oftens);
+  $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft(nn($honored))));
+  $honor = selectFld(t('Honoring:'), '', suffix($honored) + dft(nn($honor)), $honors);
 
   $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
   $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
 
   $std = payFlds('', $mya, $coA, '', '', 0);
   if (!nni($std, 'amount')) return $std; else extract($std); // no amount means error from payFlds()
+
   $amount = numFld(REQ . t('Donation:'), [t('Amount')], dft($s_amount) + clas('short') + suffix(NBSP . NBSP . NBSP . $options));
 
   if ($mya) { // member: no need to ask for payment method
     $paySet = $nonMember = $stay = $stayLabel = NULL;
-    $options = item($options);
   } else {
     $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
     $stay = boolFld();
@@ -113,7 +110,7 @@ function formDonate($form, &$sta, $args = NULL) {
   
   $fsFee = hidFld($fsFee);
 
-  $form = compact(ray('logo title subtext amtChoice amount amtDpy options period honor coverFSFee stayLabel stay nonMember paySet note coId fsFee recursId'));
+  $form = compact(ray('logo title subtext amtChoice amount amtDpy period honor coverFSFee stayLabel stay nonMember paySet note coId fsFee recursId'));
   
   $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
   $submit = submit(t('Donate'), '', 'md', $noteSuffix);
