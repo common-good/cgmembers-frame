@@ -837,7 +837,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
   if ($req == 'user' and $mya) return w\go('dashboard'); // dashboard not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
-  $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
+  $form['opid'] = hidFld(nn($submit1) ?: 'none', ray('id name', 'opid', 'opid')); // default to first, in case submitted programmatically
 
 //  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
