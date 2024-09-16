@@ -53,7 +53,7 @@ function setupBasicAccounts($withEIN = TRUE) {
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   if (!isDEV) return; // don't mess with existing members on stage or production server
   
-  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_ADMIN, B_CO]));
+  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_OK, B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
 
@@ -403,9 +403,9 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     $what = $merge ? t('merged into ') . $newUid 
     : ($change ? t('changed to ') . $newUid 
     : ($delete ? t('deleted') : t('recovered')));
-    w\say(t('Success. Account %nm has been %what.', compact(ray('nm what'))));
-    $goto = $undelete ? $uid : ($delete ? $mya->agentId : $newUid);
-    return w\go("change-account/acct=$goto"); // this doesn't work if deleting current account. Instead it signs you out and gives a session timed out message. But close enough for now...
+    w\say(t('<h2>Success</h2>Account %nm has been %what.', compact(ray('nm what'))));
+    $url = $undelete ? "change-account/acct=$uid" : ($delete ? '/sadmin/panel' : "change-account/acct=$newUid");
+    return w\go($url);
   }
   return TRUE;
 }
