@@ -69,7 +69,7 @@ function run() {
       $DBTX = \db_transaction(); // this is crucial! otherwise we may partially do something several times (like add a bank transfer request to the queue)
       cr\doTask($item);
       db\del('queue', compact('id'));
-      $DBTX->commit();
+      unset($DBTX);
     } catch (\Exception $e) {
       $DBTX->rollback();
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
@@ -318,6 +318,7 @@ function recur($template) {
     $rule['template'] = $id;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
+    unset($rule['stripeId']);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
     return;

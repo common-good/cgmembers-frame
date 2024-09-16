@@ -401,3 +401,4 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
     ORDER BY sales DESC",  
 */
 // Negative Balances: SELECT balance, fullName, u.phoneDash!, u.email!, u.lastTxDt! AS lastTx, u.hasBank! FROM users u WHERE balance<0 ORDER BY balance
+// Total transaction volume ever: SELECT SUM(ABS(amount)) AS total$ FROM tx_entries WHERE id>0

@@ -2083,7 +2083,7 @@ function setAcct($myid = '', &$sta = NULL) {
     if ($a->proSe or !$a->admin) $a->accessed(); // admin access doesn't count
   } else { $a = setAcct(NULL); }
   
-  $a->boxId();
+  if ($a) $a->boxId();
   return $mya = $a;
 }
 

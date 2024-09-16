@@ -242,7 +242,7 @@ function logo($qid = '') {
  */
 function changeWho($zot, $args = '') {
   global $mya;
-  extract(just('acct page', $args, NULL));
+  extract(just('acct page then', $args, NULL));
 
   if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
   $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
@@ -255,8 +255,11 @@ function changeWho($zot, $args = '') {
     if (!$mya->admin) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
     if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.'));
   }
-  \drupal_get_messages(); // clear current messages (which should have already been displayed)
+
   r\setAcct($mya); // set new current account
+
+  if ($then) return then($then);
+
   return go($page);
 }
 
