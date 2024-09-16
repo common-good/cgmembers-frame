@@ -163,7 +163,7 @@ function formAdminPanel_submit($form, &$sta) {
       $a->update('getAppData appData', '!report', []);
       return say(t('Request for app data sent to ') . $a->fullName);
       
-    case 'seeAppData': debug($a->appData);
+    case 'seeAppData': say(pr($a->appData));
     case 'seeSecure':
       say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admRegion ? fmtDt($a->dob) : '', $a->address . ' ' . $a->zip)));
       //      seeHidden($a);
