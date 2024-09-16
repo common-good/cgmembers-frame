@@ -319,6 +319,7 @@ function recur($template) {
     $rule['template'] = $recursId;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
+    unset($rule['stripeId']);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
     return;
@@ -334,6 +335,8 @@ function recur($template) {
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
     $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
+    $coA = r\acct($to); $coId = $coA->id;
+    $type = r\ccGiftType($to); // NOTE: we currently do not do non-member CC or ACH purchases (just gifts), so this is a gift.
     
     if ($stripeId) { // recurring credit card payment
       require_once R_ROOT . '/stripe.inc';
@@ -341,22 +344,38 @@ function recur($template) {
       $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
       if (!is_object($erMsg = $paymentIntent)) {
         r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
-        return [FALSE, $erMsg]; // try again tomorrow
+        return [FALSE, $erMsg]; // try again later
       }
+
+      $DBTX = \db_transaction();
+      $deposit = $completed = now();
+      $info = compact(ray('purpose pid completed deposit recursId flags'));
+      $tx = be\createUsdTransfer($coA, $amount, $info);
+      if (db\count('tx_hdrs', compact('recursId')) == 1) { // first recurrence: add note from donation form
+        $note = db\get('notes', 'people', compact('pid'));
+        $info['purpose'] = $purpose .= " (\"$note\")";
+      }
+  
+      if ($coId != CGID) { // no credit card fees for CG, for payments to CG
+        be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coId, CGID], tr('cc fee'), E_XFEE);
+        be\insertTxes($txes, $tx->xid);
+      }
+      unset($DBTX);
+      
     } else { // recurring non-member ACH (legacy)
       if (!$res = db\get('bankAccount,isSavings,payee AS txs2Payee', 'txs2 x2 JOIN txs_noreverse t USING(xid)', 'pid=:pid ORDER BY x2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous non-member payment'), $template);
       extract($res);
       u\EXPECT($txs2Payee == $to, 'previous recurring non-member payment: payee mismatch');
       $info += compact(ray('bankAccount isSavings'));
+      be\createUsdTransfer($coA, $amount, $info);
     }
-    
-    $coA = r\acct($to);
-    $type = r\ccGiftType($to); // NOTE: we currently do not do non-member CC or ACH purchases (just gifts), so this is a gift.
-    be\createUsdTransfer($coA, $amount, $info);
-    r\tellAdmin(t('non-member donation'), ray('period by fbo', $period, $stripeId ? 'cc' : 'ach', $coA->fullName) + $info + $emailAndName);
-    $msg = be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
 
-  } else { // normal pay or charge
+    $adminMsg = $stripeId ? t('CC payment') : t('Non-member ACH');
+    $adminMsg .= tr(' (to %whom)', 'whom', $coA->bestName);
+    r\tellAdmin($adminMsg, compact(ray('amount period')) + $info + $emailAndName);
+    $msg = be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coId, FALSE);
+
+  } else { // normal (member) pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
@@ -368,7 +387,7 @@ function recur($template) {
 
     $DBTX = \db_transaction();
     if ($action == 'pay') {
-      if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
+      if ($to == CGID and $period != PER_1) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
       }
@@ -390,13 +409,13 @@ function recur($template) {
       $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $recursId);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
-    if ($period == PER_1) r\endRule('tm', $recursId);
 
     unset($DBTX);
     $msg = '';
   }
   
-  if (db\count('tx_hdrs', 'recursId=:recursId AND created >= :NOW-HOUR_SECS', $subs = compact('recursId')) != 1) r\tellAdmin(t('Double-dipped recurrence'), $subs);
+  if ($period == PER_1) r\endRule('tm', $recursId);
+  if (db\count('tx_hdrs', 'recursId=:recursId AND created >= :NOW-:HOUR_SECS', $subs = compact('recursId')) != 1) r\tellAdmin(t('Double-dipped recurrence'), $subs);
   return [TRUE, $msg]; // this return is used only when called from stripe.inc
 }
 
