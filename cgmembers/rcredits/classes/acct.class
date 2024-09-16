@@ -1856,10 +1856,13 @@ X;
     }
     if ($i == $max) return $a->ssnErr(SSN_TIMEOUT_MSG . t(' on %max tries.', compact('max')));
 
-    $xml = simplexml_load_string($ssnData0);
-    $json = u\jsonize($xml);
-    $ssnData = u\dejsonize($json);
-    if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
+    if (substr($ssnData0, 0, 1) == '<') try {
+      $xml = simplexml_load_string($ssnData0);
+      $json = u\jsonize($xml);
+      $ssnData = u\dejsonize($json);
+    } catch (\Exception $er) { }
+    
+    if (!nn($ssnData) or !is_array($d = nni($ssnData, 'searchResults')) or nni($ssnData, 'ResultCount') + 0 <= 0) { // 0 for tests, <=0 for failure
       return $a->ssnErr(t('No SSN data available: ') . pr($ssnData0));
     }
     unset($ssnData['searchResults']['ssn']); // has first 5 digits of SSN -- don't store it
