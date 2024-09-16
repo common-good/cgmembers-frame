@@ -2354,9 +2354,10 @@ function missingArgs($args, $require) {
  * Sign in or sign up, before doing the given task.
  * @param string $first: signin or signup
  * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @param bool $addParam: <$first already has a paramter>
  * @return: first() returns a URL to redirect to (first); goFirst() does not return -- redirects to signin or signup
  */
-function first($first, $then = NULL) {
+function first($first, $then = NULL, $addParam = FALSE) {
   global $testFirst, $testThen;
   
   u\setDft($then, URI);
@@ -2364,9 +2365,9 @@ function first($first, $then = NULL) {
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
 
-  return "$first/then=$then";
+  return $first . ($addParam ? '&' : '/') . "then=$then";
 }
-function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
+function goFirst($first, $then = NULL, $addParam = FALSE) { return w\go(first($first, $then, $addParam)); }
 
 /**
  * Do what was intended after a redirect.
