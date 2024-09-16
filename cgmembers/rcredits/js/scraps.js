@@ -533,12 +533,13 @@ function doit(what, vs) {
     const repeat = $('.btn-repeat');
     const period = $('.form-item-period');
     if (repeat.length) { // hide period only if it can be unhidden
-      if ($('#edit-period'.val() == 'once') period.hide(); else repeat.hide();
+      if ($('#edit-period').val() == 'once') period.hide(); else repeat.hide();
     }
     const stay = $('.form-item-stay');
+    
     if (stay.length) {
-      const nonMember = $('#nonMember'); nonMember.hide();
-      const paySet = $('#paySet'); paySet.hide();
+      nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
+      paySet = $('#paySet'); paySet.hide();
       submit.hide();
     } 
       
@@ -560,13 +561,13 @@ function doit(what, vs) {
     });
 
     $('#edit-stay-1').click(function () { // member
-      const info = {
+      post('signinThenDonate', {
         amount: $('#edit-amount').val(),
-        period: $('#edit-period'.val(),
-        honor: $('#edit-honor'.val(),
-        honored: $('#edit-honored'.val()
-      };
-      post('signinThenDonate', {info}, function (j) {
+        period: $('#edit-period').val(),
+        honor: $('#edit-honor').val(),
+        honored: $('#edit-honored').val(),
+        account: $('#edit-coid').val()
+      }, function (j) {
         if (j.ok) location.href = j.url; else erDiv.html(j.message); // should always succeed
       });
     });
@@ -588,13 +589,14 @@ function doit(what, vs) {
           feeCovered: feeCovered,
           period: $('#edit-period').val(),
           honor: $('#edit-honor').val(),
-          honorName: $('#edit-honorname').val(),
+          honored: $('#edit-honored').val(),
           coId: $('#edit-coid').val(),
           fullName: $('#edit-fullname').val(),
           email: $('#edit-email').val(),
           phone: $('#edit-phone').val(), 
           zip: $('#edit-zip').val(),
-          country: $('#edit-country').val()
+          country: $('#edit-country').val(),
+          notes: $('#edit-note').val()
         };
         stripe(info);
       }
@@ -1060,7 +1062,10 @@ function cardOther(focus) {
 function hideNote() {
   var note = $('.form-item-note');
   note.hide();
-  $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
+  $('.form-item-submit a').click(function () {
+    $('.form-item-submit a').hide();
+    note.show().find('textarea, input').focus();
+  });
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
