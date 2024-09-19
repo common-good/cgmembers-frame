@@ -16,7 +16,7 @@ Setup:
 
 Scenario: A member donates
   Given next DO code is "whatever"
-  When member ".ZZA" visits page "community/donate"
+  When member ".ZZA" visits page "ccpay"
   Then we show "Donate to %PROJECT" with:
   | Donation | One Brick |
   | When      | yearly    |
@@ -30,7 +30,7 @@ Scenario: A member donates
 #  And without: (can't tell this isn't showing because it's CSS)
 #  | Other amount |
   
-  When member ".ZZA" completes form "community/donate" with values:
+  When member ".ZZA" completes form "ccpay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | once   | memory | Jane Do |
   Then these "txs":
@@ -56,7 +56,7 @@ Scenario: A member donates
   # and many other fields
 
 Scenario: A member makes a recurring donation
-  When member ".ZZA" completes form "community/donate" with values:
+  When member ".ZZA" completes form "ccpay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "tx_timed":
@@ -77,12 +77,12 @@ Scenario: A member makes a new recurring donation
   Given these "tx_timed":
   | id | start     | from | to  | amount | period |*
   | 1  | %today-1d | .ZZA | cgf |     25 | year   |
-  When member ".ZZA" visits page "community/donate"
+  When member ".ZZA" visits page "ccpay"
   Then we show "donation replaces" with:
   | period | amt |*
   | yearly | $25 |
 
-  When member ".ZZA" completes form "community/donate" with values:
+  When member ".ZZA" completes form "ccpay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "txs":
@@ -100,12 +100,12 @@ Scenario: A member makes a new recurring donation of zero
   Given these "tx_timed":
   | start     | from | to  | amount | period |*
   | %today-1d | .ZZA | cgf |     25 | year   |
-  When member ".ZZA" visits page "community/donate"
+  When member ".ZZA" visits page "ccpay"
   Then we show "donation replaces" with:
   | period | amt |*
   | yearly | $25 |
 
-  When member ".ZZA" completes form "community/donate" with values:
+  When member ".ZZA" completes form "ccpay" with values:
   | amtChoice | amount | period |*
   |        -1 |      0 | year   |
   Then we say "status": "prev gift canned"
@@ -116,7 +116,7 @@ Scenario: A member makes a new recurring donation of zero
   And count "tx_timed" is 1
 
 Scenario: A company makes a recurring donation
-  When member ".ZZC" completes form "community/donate" with values:
+  When member ".ZZC" completes form "ccpay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "txs":
@@ -126,7 +126,7 @@ Scenario: A company makes a recurring donation
   | coName | %PROJECT |**
   
 Scenario: A member donates with insufficient funds
-  When member ".ZZA" completes form "community/donate" with values:
+  When member ".ZZA" completes form "ccpay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |    200 | once   | memory | Jane Do |
   Then we say "status": "gift thanks|cggift thanks" with subs:

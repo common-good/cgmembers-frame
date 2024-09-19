@@ -11,9 +11,7 @@ use \Stripe as str;
  */
 function stripe($op, $args = []) {
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
-
-  str\Stripe::setApiKey('sk_test_51PwptW00VpKSa9pmIXb27IFAk0LnsP9KyFLQOIGkepMdQQMw4rTqBo5mTAW5ssc8phCN93GrLAkw7YTlOLcYyWRS00TWYpYLNQ'); // Set your secret key (from Stripe Dashboard)
-
+  str\Stripe::setApiKey(STRIPE_SECRET);
   return $op($args);
 }
 

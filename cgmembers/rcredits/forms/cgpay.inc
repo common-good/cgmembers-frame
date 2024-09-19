@@ -20,7 +20,7 @@ function formCGPay($form, &$sta, $args = '') {
 
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
-  if (!$res = getCGPayArgs($args)) return; // if there were errors, don't continue
+  if (!$res = getCGPayArgs($args, $mya)) return; // if there were errors, don't continue
   extract($res); // coA, CGPAY_VARS, and CGPAY_VARS2 (prefixed by s_)
   if (!nn($coA)) return; // softErr
   
@@ -49,11 +49,11 @@ function formCGPay($form, &$sta, $args = '') {
     $item = t('gift of store credit');
     $itemDpy = item(t('store credit'), t('For:'));
   } elseif ($for == 'credit') {
-    $for = hidFld(SELF_CREDIT);
+    $for = hidFld(FOR_CREDIT);
     $item = ($credit ? u\fmtAmt($credit) . ' ' : '') . t('store credit');
     $itemDpy = item($item, t('For:'));
   } elseif ($for == 'credit50') {
-    $for = hidFld(SELF_CREDIT50);
+    $for = hidFld(FOR_CREDIT50);
     $item = t('store credit');
     $itemDpy = item($item, t('For:'));
   } elseif ($for == 'donate') {
@@ -97,7 +97,7 @@ function formCGPay_validate($form, &$sta) {
   if (isset($amount) and $err = u\badAmount($sta['input']['amount'], '>0')) return say($err, 'amount'); // fix amount
   if (!$mya and !formSignin_validate($form, $sta)) return;
 
-  if ($for and !in($for, [SELF_CREDIT, SELF_CREDIT50])) {
+  if ($for and !in($for, [FOR_CREDIT, FOR_CREDIT50])) {
     $for = trim(strhas($for, '@') ? mb_strtolower($for) : mb_strtoupper($for));
     if (!$a = r\acct($for)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'for');
     $item .= t(' (to %who)', 'who', $a->fullName);

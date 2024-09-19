@@ -7,181 +7,278 @@ use CG\Util as u;
 use CG\Db as db;
 
 /*
-  Give a nonmember a chance to pay a member by credit card.
- */
+  Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account or a ccOk account.
+  @params: donation form sometimes redirects to signin, which passes amount, period, honor, and honored here in $_GET
+*/
 function formCCPay($form, &$sta, $args = NULL) {
-  u\FAIL('This function will need to be rewritten to work like donate.inc');
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
   $mya = w\eLinkAcct($sta, $args, 'any');
-
-  jsx('cc');
-  $op = nni($args, 'op');
-
-  if ($op == 'done') return completeCCPayment($args);
-  if ($op == 'cancel') return softErr(tr('no paypal cancel'));
-
-  $cgPayLink = '/' . str_replace('ccpay/', 'cgpay/', $_SERVER['REQUEST_URI']) . '?' . $_SERVER['QUERY_STRING'];
-  if ($mya) return go($cgPayLink);
-
-  if ($code = nni($args, 'code')) {
-    if (!$ray = getCGPayArgs($args)) return; // webmaster error message already shown
-    if (!nni($ray, 'coA')) return $ray; // softErr
-    extract(just('coA amount item s_amount', $ray, NULL));
-  } else return softErr(t('That is not a valid payment link.'));
-
-  $logo = logoFld($coA);
-  $title = t('Pay ') . $coA->bestName;
-  $subtext = '';
-  $payByCard = hidFld(1); // always by CC
-  $form = payFlds(t('Pay'), $mya, $coA, $item, $amount, $s_amount, compact(ray('logo title subtext payByCard cgPayLink')));
-  if (!nni($form, 'amount')) return $form; // error
   
-  $submit = submit(t('Pay'), '', '', suffix(lnk('', t('Add note'))));
+  if (nni($args, 'op') == 'thermometer') return thermometer($args);
+  $codeFlds = 'coId coA for isGift amount item credit period honor honored return s_amount s_item s_id s_request';
+
+  if ($code = nni($args, 'code')) { // customer clicked a coded button
+    if (!$ray = getCGPayArgs($args, $mya) or !$coA = nni($ray, 'coA')) return; // error message already shown
+    extract(just($codeFlds, $ray, NULL));
+  } else { // vanilla CG donation page
+    foreach (ray($codeFlds) as $k) $$k = NULL;
+    $coA = r\acct($coId = CGID);
+    $for = 'donate'; $isGift = TRUE;
+  }
+
+  $button = !empty($code);
+  $oftens = array_reverse(r\recurRay(TRUE));
+  $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
+  $isCG = ($coId == CGID);
+  $fbo = $coA->sponsored;
+  $ccOk = ($fbo or $coA->ccOk);
+  $target = $coA->target + 0;
+
+  if ($isGift) u\setDft($s_item, t('donation'));
+  $therm = therm($isGift ? $target : 0); // set up thermometer, if there's a target
+  $logo = logoFld($coA, $therm);
+  $title = title($for, $coA);
+
+  if ($isCG and $mya and $isGift) { // member gift to CG
+    extract(just('recursId oftens subtext amtChoice', memberGift($mya, $oftens)));
+  } else { // other member company accepting payments) or not signed in
+    $recursId = $amtChoice = NULL;
+    $subtext = $isGift ? subtext($coA, $mya) : NULL;
+  }
+
+  [$amount, $amtDpy] = amount($amount, $s_amount, $isGift); 
+  [$itemDpy, $item, $forDpy] = itemDpy($for, $item, $s_item, $credit);
+  $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
+
+  if ($isGift) {
+    $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
+    $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft(nn($period) ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1)), $oftens);
+    $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft(nn($honored))));
+    $honor = selectFld(t('Honoring:'), '', suffix($honored) + dft(nn($honor)), $honors);
+  } else [$coverFSFee, $period, $honor] = [NULL, hidFld(PER_1), NULL]; // no recurring or honoring payments that aren't gifts
+
+
+  if ($mya) { // member: no need to ask for payment method
+    $qid = $pass = $paySet = $nonMember = $stay = $stayLabel = NULL;
+  } else {
+    [$qid, $pass] = w\signinFlds($s_id);
+    [$paySet, $nonMember, $stay, $stayLabel] = nonMember($isGift, $s_id);
+  }
   
-  return cgForm($form + compact('submit'));
+  $note = textFld(t('Note:'), [t('About the payment')]);
+
+  $form = compact(ray('logo title subtext amtChoice amount amtDpy period honor itemDpy item forDpy coverFSFee stayLabel stay qid pass nonMember paySet note'));
+  foreach (ray('isGift coId credit for return fsFee recursId button') as $k) $form[$k] = hidfld(nn($$k, NULL));
+  
+  $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
+  $submitLabel = $isGift ? t('Donate') : t('Pay');
+  $submit = submit($submitLabel, '', 'md', $noteSuffix);
+  $form += ($mya and $isCG) ? w\setupFoot($submitLabel, $noteSuffix) : compact('submit');
+
+  js('https://js.stripe.com/v3/');
+  jsx('cc', ray('stripePublicKey ccRate', STRIPE_PUBLIC, CC_FEE / 100));
+
+  return cgForm($form);
 }
 
-/**
- * NOTE: this validation function is also called from donate.inc (sometimes with payByCard FALSE)
- */
 function formCCPay_validate($form, &$sta) {
+  include_once __DIR__ . '/signin.inc';
   $mya = w\eLinkAcct($sta); 
-  extract(just($flds = 'amount fullName phone email zip country coId payByCard', $sta['input'], NULL));
+  if (!$mya and !formSignin_validate($form, $sta)) return;
 
-  if ($mya and $coId == CGID and array_key_exists('amtChoice', $sta['input'])) return w\checkAmtChoice($sta);
+  extract(just($flds = 'qid for forDpy item amount fullName phone email zip country coId', $sta['input'], NULL));
+  $isCG = ($coId == CGID);
 
-  if ($err = u\badAmount($amount, '>0')) return say($err, 'amount'); // fix amount
-  if (!$mya) {
+  if ($mya and $isCG and array_key_exists('amtChoice', $sta['input'])) return w\checkAmtChoice($sta);
+
+  if ($err = u\badAmount($amount, ($isCG and r\acct()) ? '>=0' : '>0')) return say($err, 'amount'); // fix amount
+  if (!$mya and !$qid) { // nonmember (not even trying to sign in)
     if ($err = u\badName($fullName)) return err($err, ['field' => 'fullName'], 'fullName');
     $fullName = u\normalizeCase($fullName);
     
     if ($err = u\badPhone($phone)) return err($err, 'phone');
     if (!emailOkay($email, TRUE)) return; // allow duplicate emails so a member can donate with CC
     if ($err = u\badZip($zip, $country)) return err($err, 'zip');
-    if (!checkBankAccount($sta)) return;
-    if (!$payByCard and badCaptcha($sta)) return;
   }
 
+  if ($for == FOR_GIVE_CREDIT) {
+    $forDpy = trim(strhas($forDpy, '@') ? mb_strtolower($forDpy) : mb_strtoupper($forDpy));
+    if (!$a = r\acct($forDpy)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'forDpy');
+    $item = nn($item) . t(' (to %who)', 'who', $a->fullName);
+  }
+  
   u\preray(compact(ray($flds)), $sta['input']);
 }
 
 function formCCPay_submit($form, &$sta) {
-  return submitNonMemberPayment($sta, 'purchase');
-}
+  extract(just('isGift uid amount period honor honored roundup recursId coId note credit for forDpy qid item request return button', $sta['input'], NULL));
+  if (!$mya = w\eLinkAcct($sta)) $mya = r\acct($uid); // uid is from signin_validate() 
+  $isCG = ($coId == CGID);
 
-/**
- * Submit non-member payment from formCCPay_submit() and formDonate_submit().
- * @param assoc $sta: the status hash from the form submit function
- * @param string $type: fbo, gift, cggift, or purchase
- * @param assoc $reportInfo: extra information to report to admin
- */
-function submitNonMemberPayment($sta, $type, $reportInfo = []) {
-  u\FAIL('unexpected nonmember payment in ccpay.inc');
-  /*
-  $dbFields = 'fullName email notices phone zip country city state notes source';
-  extract(just($inputFlds = $dbFields . ' item amount period recursId honor honored payByCard routingNumber bankAccount isSavings note coverFSFee coverCCFee coId fsFee', $sta['input'], NULL));
-  
-  $coA = r\acct($coId);
-  list ($city, $state) = r\zipCity($zip);
-  $notices = NOTICE_NONE;
-  if ($note) $item .= ' ("' . $note . '")';
+  $info = ray('payer payee amount period created lastTx invoiced', $mya->id, $coId, $amount, $period, now(), 0, 0);
 
-  $source = t('Payment to %nm (by %how)', 'nm how', $coA->bestName, $payByCard ? t('cc') : t('ach'));
-  $reportInfo += compact(ray($inputFlds));
+  if ($period != PER_1 and nn($recursId)) {
+    $was = (object) db\get('amount, period, periods', 'tx_timed', ray('id', $recursId));
+    $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
+    r\endRule('tm', $recursId);
+    say('prev gift canned');
+  } else $was = t('no previous recurring donation');
 
-  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
-  
-  $DBTX = \db_transaction();
-  $pid = db\insert('people', $info, 'pid');
-  
-  if (!$payByCard) { // bank transfer (suggested for gift/fbo, else not allowed)
-    u\EXPECT(in($type, 'gift fbo'), 'wrong type for ACH donation');
-    $bankAccount = u\cry('V', "USkk$routingNumber$bankAccount");
-    $honorId = NULL; //$honored ? db\insert('r_honors', $honored = ray('xid honor honored tnm', 0, $honor, $honored)) : NULL;
-    addToTxs2($amount, $item, $coA, $period, $pid, $honorId, TRUE, $bankAccount, $isSavings);
-    r\tellAdmin($source, $reportInfo);
-    unset($DBTX);
-    return be\thanks($type, FALSE, $pid, $item, $amount, $period, 1, $coA->id, TRUE);
- 
-  } else { // credit card donation or purchase
-    $code = u\cryRay(compact(ray('type item pid period')) + ray('amount coId', number_format($amount, 2, '.', ''), $coA->mainQid)); // info for thanks, etc. (standard format for amount helps tests, but omit commas so it's still a number)
-    $what = $type == 'purchase' ? t('your purchase of %item from %who', 'item who', $reportInfo['item'], $coA->bestName)
-    : ($coA->id == CGID ? t('general support') : $coA->bestName);
-    return paypal($type != 'purchase', $what, $reportInfo, $code);
-    // commit $DBTX when function ends
+  if ($amount == 0) { // must cme after if($period...)
+    u\EXPECT($isCG and r\acct(), 'zero tx not to CG signed in');
+    return w\goNextStep('donate', ''); // a zero donation is fine
   }
-  */
-}
-
-/**
- * Post the charge request to PayPal, with this page as the callback (with parameters).
- * @param bool $donating: the payer is making a donation to a member company
- * @param string $what: description of item or service
- * @param assoc $reportInfo: a collection of parameters to report to an admin
- * @param string $code: an encrypted collection of parameters to return from PayPal
- * @return (does not return)
- */
-function paypal($donating, $what, $reportInfo, $code) {
-  u\FAIL('unexpected call to paypal in ccpay.inc');
-/*
-  global $testReturnUrl;
   
-  extract(just('amount fullName email zip source', $reportInfo));
-  list ($cmd, $paypalUri, $returnTo) = ray($donating? '_donations donate community/donate' : '_xclick cgi-bin/webscr ccpay');
-  $return = $testReturnUrl = BASE_URL . "/$returnTo/op=done&code=$code";
-  u\EXPECT(strlen($return) <= 1024, 'cc return url too long');
-  $cancel_return = str_replace('=done', '=cancel', $return);
+  $recursId = $period == PER_1 ? NULL // new recursId
+  : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $coId, $amount, $period, $item, DUR_1));
 
-  list ($first_name, $last_name) = u\parseName($fullName);
-  $no_shipping = 1;
-  $rm = 0; // 0 for GET, 2 for POST
-  $business = 'info@CommonGood.earth'; // CGF_EMAIL
-  $item_name = t('for %what', compact('what'));
-  $data = compact(ray('cmd business amount first_name last_name email zip item_name return cancel_return no_shipping rm'));
-//  if ($permo) $data += ray('a3 t3 p3 src', $amount, 'M', 1, 1); // t3=DWMY, p3=periods, src=1 for recur
-//  if ($permo) unset($data['amount']);
-  r\tellAdmin($source, $reportInfo + compact('return')); // include clickable return parameter in case the donation goes through but PayPal doesn't return
-  return u\postnGo("https://www.paypal.com/$paypalUri", $data); // does not return (until redirected from PayPal)
-  */
-}
+  if ($honored and $isCG) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
+    //else $mya->update('notes', r\stampNote(u\honorDesc($honor) . $honored) . $mya->notes);
 
-/**
- * Complete the payment accounting, upon return from PayPal.
- * @
- */
-function completeCCPayment($args) {
-  u\FAIL('unexpected return from paypal in ccpay.inc');
-  /*
-  extract(just('code', $args, NULL));
+  $data = compact(ray('for button'));
+  if ($for == FOR_GIVE_CREDIT) $data['creditWhom'] = $forDpy;
+  if ($credit) $data += compact('credit');
+  if ($isGift) $data['gift'] = TRUE;
+  $z = $mya->payApproved($coId, $amount, $item, FOR_NONGOODS, $data, $recursId);
+  if ($z->ok) {
+    if ($mya->ok and nni($z->subs, 'xid')) {
+      $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
+    } else say('gift transfer later');
 
-  if (!$code or !$ray = u\decryRay($code)) return [FALSE, t('That code is flawed (%code).', compact('code'))];
-  
-  extract(just('type pid item amount period coId honorId recursId', $ray, NULL));
-  if (!($type and $pid and $amount and $coId)) return [FALSE, t('That code is missing a parameter.')];
-  $coA = r\acct($coId);
-    
-  $fullName = db\get('fullName', 'people', compact('pid'));
-  
-  $DBTX = \db_transaction();
-  $tx = addToTxs2($amount, $item, $coA, $period, $pid, $honorId, $type != 'purchase');
-  if ($coA->id != CGID) {
-    be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coA->id, CGID], tr('cc fee'), E_XFEE);
-    be\insertTxes($txes, $tx->xid);
+    $nm = $mya->fullName;
+    if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
+    if ($note) $item .= ' ("' . $note . '")';
+    $type = $isGift ? r\ccGiftType($coId) : 'purchase';
+    be\thanks($type, TRUE, $mya->id, $item, $amount, $period, 1, $coId, !$mya->stepCount());
   }
-  unset($DBTX);
   
-  r\tellAdmin(t('CC payment complete (to %coName)', 'coName', $coA->bestName), compact(ray('fullName amount period')));
-  
-  return be\thanks($type, FALSE, $pid, $item, $amount, $period, 1, $coId, TRUE);
-  */
+  if ($return) {
+    $res = compact(ray('ok msg request'));
+    $return = tr($return, $res);
+    return u\postnGo($return, $res);
+  } else { // show standard CG success / failure page
+    if (!r\acct()) return w\doSay("success title|$z->index", $z->subs);
+    return $z->ok ? w\goNextStep('donate', '') : softErr($z->index, $z->subs);
+  }
+
 }
 
+/**
+ * Set up for purchase or donation by a member.
+ */
+function memberGift($mya, $oftens) {
+  if ($recurs = db\get('id AS recursId,period AS xPeriod,amount AS xAmount', 'tx_timed tm', 'action=:ACT_PAY AND tm.from=:payer AND tm.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
+    extract($recurs);
+    $replaces = tr('donation replaces', 'period amt', $oftens[$xPeriod], u\fmtAmt($xAmount));
+  } else $recursId = NULL;
+
+  if (!$mya->activated or !$recurs) {
+    unset($oftens[PER_1]); // no one-time donation unless the account is activated and has a recurring donation
+    unset($oftens[0]);
+    $recurOnly = t(': monthly, quarterly, or yearly -- think of it as an optional membership fee while we are scaling up');
+    $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-one-time-option'));
+  } else $recurOnly = $noOneTime = '';
+
+  $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
+  
+  $subtext = t('<p>Thank you for partnering with us to create a %PROJECT Economy and thank you for considering a tax-deductible donation.</p><p>Most members choose to donate%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'name recurOnly replaces amountTip', $mya->bestName, $recurOnly, nn($replaces), $amountTip) . $noOneTime;
+  $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? COMPANY_GIFT : INDIVIDUAL_GIFT), GIFT_LEVELS);
+  jsx('amtChoice');
+  return compact(ray('recursId oftens subtext amtChoice'));
+}
+
+const IMG_W = 350;
+const IMG_H = 220;
+const BULB_X0 = 24;
+const BULB_Y0 = 5;
+const BULB_Y9 = 170;
+const BULB_H = BULB_Y9 - BULB_Y0;
+
+const TXT_X = 56; // left edge of text
+const FONT_SIZE = 16; // font-size in pixels
+const MAX_FONT_SIZE = .85 * FONT_SIZE; // smaller max
+const MAX_Y = 1.4 * MAX_FONT_SIZE;
+define('MAX_TEXT', 'target: ');
+define('VAL_TEXT', ' so far');
+  
+/**
+ * Return a thermometer image.
+ */
+function thermometer($args) {
+  /*
+       Fundraising Thermometer Generator v1.1
+       Sairam Suresh sai1138@yahoo.com / www.entropyfarm.org (more than 50% modified by CG)
+  */
+  $thermDir = R_ROOT . '/images/thermometer';
+  $font = "$thermDir/Poppins Medium 500.ttf";
+  foreach (ray('max value count') as $k) $$k = nni($args, $k) ?: 0; // convert empty string to 0
+
+  $unit = ' $';
+
+  $img = imagecreateTrueColor(IMG_W, IMG_H);
+
+  $white = imagecolorallocate ($img, 255, 255, 255);
+  $black = imagecolorallocate ($img, 0, 0, 0);
+  $red = imagecolorallocate ($img, 255, 0, 0);
+  $blue = imagecolorallocate ($img, 0, 0, 255);
+
+  imagefill($img, 0, 0, $white);
+  ImageAlphaBlending($img, true); 
+
+  $thermImage = imagecreatefromjpeg("$thermDir/therm.jpg");
+  $tix = ImageSX($thermImage);
+  $tiy = ImageSY($thermImage);
+  ImageCopy($img, $thermImage, 0, 0, 0, 0, $tix, $tiy);
+  Imagedestroy($thermImage);
+
+  $bar = ImageCreateFromjpeg("$thermDir/thermbar.jpg"); // thermbar pic courtesy http://www.rosiehardman.com/
+  $barW = ImageSX($bar); 
+  $barH = ImageSY($bar); 
+
+  // Draw the filled bar
+  $newH = (is_numeric($max) and $max > 0) ? min($max, round(BULB_H * ($value / $max))) : 0;
+  $y = BULB_Y9 - $newH;
+  imagecopyresampled($img, $bar, BULB_X0, $y, 0, 0, $barW, $newH, $barW, $barH); 
+  Imagedestroy($bar);
+  $count = t(' (%cnt gifts)', 'cnt', number_format($count));
+
+  if ($y > MAX_Y + MAX_FONT_SIZE/2) imagettftext ($img, MAX_FONT_SIZE, 0, round(TXT_X+4), round(MAX_Y-4), $black, $font, MAX_TEXT . $unit . number_format($max)); // the max
+  if ($y <= MAX_Y + FONT_SIZE/2) {
+      imagettftext ($img, FONT_SIZE, 0, TXT_X, round(MAX_Y), $blue, $font, $unit . number_format($value) . $count . '!!'); // Current > Max
+  } elseif ($value > 0) {
+    imagettftext ($img, FONT_SIZE, 0, TXT_X, round($y+FONT_SIZE/2), $blue, $font, $unit. number_format($value) . VAL_TEXT . $count);  // Current < Max
+  }
+
+  if ($value > $max) {
+      $burstImg = ImageCreateFromjpeg("$thermDir/burst.jpg");
+      $burstW = ImageSX($burstImg);
+      $burstH = ImageSY($burstImg);
+      ImageCopy($img, $burstImg, 0, 0, 0, 0, $burstW, $burstH);
+  }
+
+  Header("Content-Type: image/jpeg"); 
+  Imagejpeg($img);
+  Imagedestroy($img);
+  exit();
+}
+
+/**
+ * Return a thermometer image.
+ */
+function therm($target) {
+  if (!$target) return '';
+
+  $fsFeeCat = r\nick2cat('FS-FEE');
+  $where = "(uid2=:uid OR (:uid=:CGID AND uid2 IN :BUCKET_UIDS)) AND cat2<>$fsFeeCat AND :IS_GIFT AND created>=:dt";
+  extract(db\get('SUM(1) AS count, SUM(amt) AS value', 'txs_noreverse', $where, ray('uid dt', $coA->id, $coA->targetStart)) ?: ray('count value', 0, 0));
+  return img(BASE_URL . "/ccpay/op=thermometer&max=$target&value=$value&count=$count");
+}
 
 /**
  * Return the parameters in a CGPay link
  */
-function getCGPayArgs($args) {
+function getCGPayArgs($args, $mya) {
   global $testCode;
 
   foreach ($args as $k => $v) if (!in($k, 'q code')) {
@@ -194,66 +291,105 @@ function getCGPayArgs($args) {
   if (test() and $code == 'TESTCODE') $code = $testCode;
   if (!$ray = u\decryRay($code)) return exitErr(t('The "code" parameter is not valid.'));
   if ($dups = just($args, $ray)) return exitErr(t('Parameter "%k" attempts to override that parameter as encoded in "code".', 'k', $dups[0]));
-//die(pr($ray));
+
   foreach (ray(CGPAY_VARS) as $k) u\setDft($ray[$k], NULL); // make sure all possible parameters get extracted from return, even if not set
   foreach (ray(CGPAY_VARS2) as $k) $ray["s_$k"] = nni($args, $k, NULL); // optional "suggested" parameters (amount, id, item, name) except for request
-  extract(just('expires account s_amount', $ray));
+
+  u\setDft($ray['for'], FOR_PURCHASE);
+  extract(just('expires amount s_amount account for', $ray, NULL));
+
   if ($expires and $expires < now()) return softErr(tr('button expired'));
-  $ray['coA'] = $coA = r\acct($account);
-  u\EXPECT($coA, 'missing account in code!');
+  if (!$account or !$coA = r\acct($account)) return exitErr(t('That account does not exist.'));
+  $coId = $coA->id;
+  if ($mya and $mya->id == $coId) return softErr(t('Making a payment to yourself is not permitted.'));
   if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));
-  return $ray;
+  $isGift = ($for == FOR_DONATE);
+  if (in($for, [FOR_CREDIT, FOR_GIVE_CREDIT])) u\setDft($ray['credit'], $s_amount ?: $amount);
+
+  return $ray + compact(ray('isGift coId coA'));
 }
 
-/**
- * Add an "outer" record to txs2 for the credit card payment.
- * @param string $bankAccount: the bankAccount, V-encrypted
- * @return a Tx object for the outer transaction record
- *//*
-function addToTxs2($amount, $desc, $coA, $period, $pid, $honorId = NULL, $gift = FALSE, $bankAccount = NULL, $isSavings = NULL) {
-  if ($period != PER_1) {
-    $recursId = db\insert('tx_timed', ray('action from to payerType payer amount period purpose duration', ACT_PAY, MATCH_PAYER, $coA->id, REF_PERSON, $pid, $amount, $period, $desc, PER_1));
-  } else $recursId = NULL;
+function title($for, $coA) {
+  $nm = $coA->bestName;
+  return ($for == 'donate' ? t('Donate to ') : t('Pay ')) . $nm;
+}
 
-  list ($purpose, $explicit, $completed) = [$desc, TRUE, now()];
-  $deposit = $bankAccount ? 0 : now();
-  $info = compact(ray('purpose pid completed deposit explicit bankAccount isSavings recursId'));
-  $info['flags'] = ($gift ? u\bit(B_GIFT) : 0) | ($bankAccount ? 0 : u\bit(B_CC));
-  $tx = be\createUsdTransfer($coA, $amount, $info);
-  if ($id = $honorId) db\update('r_honors', ray('id xid', $id, $tx->xid), 'id');
-  return $tx;
-}*/
+function subtext($coA, $mya) {
+  $isCG = ($coA->id == CGID);
+  $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
+  $subtext = t('<p>Make a tax-deductible contribution of any amount to support %coName.</p>', compact('coName'));
 
-/**
- * Return most of the form fields for a CC or ACH payment.
- * @param acct $a: payer account, if any (not $mya, so this can be called from a no-signin link)
- * @return: standard fields to include
- */
-function payFlds($amtLabel, $a, $coA, $item, $amount, $amtDft) {
+  if ($isCG or $coA->sponsored) $subtext .= ' ' . t('<p>For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));
+  return $subtext;
+}
 
-  $note = textFld(t('Note:'), [t('About the payment')]);
-  $coId = hidFld($coA->id);
-
+function amount($amount, $s_amount, $isGift) {
+  $amtLabel = $isGift ? t('Donation:') : t('Pay:');
+  $suffix = $isGift ? (NBSP . NBSP . NBSP . btnOpt('', t('repeat'), 'btn-repeat') . btnOpt('', t('in honor or memory'), 'btn-honor')) : '';
+  
   if ($amount) {
-    $amount = preg_replace('/[\\$\\,]/', '', $amount); // no $ or ,
-    $amtDpy = item(t('%amt for %item', 'amt item', u\fmtAmt($amount), $item), t('Amount:'));
+    $amtDpy = item(u\fmtAmt($amount, ''), $amtLabel, '', suffix($suffix));
     $amount = hidFld($amount);
   } else {
-    $amount = numFld(REQ . "$amtLabel:", [t('Amount')], dft($amtDft) + ($item ? suffix(t('For: ') . $item) : clas('short')));
     $amtDpy = NULL;
+    $dft = $s_amount ? u\fmtAmt($s_amount, '') : '';
+    $amount = numFld(REQ . $amtLabel, [t('Amount')], dft($dft) + suffix($suffix) + clas('short middle'));
   }
-  $item = $item ? hidFld($item) : textFld(REQ . t('For:'), [t('What your payment is for')]);
 
-  if (!$a) {
-    $fullName = textFld(REQ . t('Name:'), [t('Your full name, properly capitalized')]);
-    $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
-    $email = emailFld(REQ . t('Email:'), [t('Email')]);
-    $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
-    $zip = zipFld(nn($zip));
-  } else $fullName = $phone = $email = $country = $zip = NULL;
+  return [$amount, $amtDpy];
+}
+
+function itemDpy($for, $item, $s_item, $credit) {
+  $forDpy = NULL;
   
-  // Stuff to do AFTER extracting $extra
-//  if (!$a) $subtext .= t('<p>%PROJECT members save time and CC fees! <%aSignin class="loud">Sign in</a> or <%aSignup class="loud">sign up</a>.</p>', '_aSignin _aSignup', atag(nn($cgPayLink)), atag('/signup')); // nn() for fbo test
+  if ($for == FOR_GIVE_CREDIT) {
+    $forDpy = textFld(REQ . t('As a Gift to:'), [t('Email or account ID')]);
+    $item = t('gift of store credit');
+    $itemDpy = item(t('store credit'), t('For:'));
+  } elseif ($for == FOR_CREDIT) {
+    $item = ($credit ? u\fmtAmt($credit) . ' ' : '') . t('store credit');
+    $itemDpy = item($item, t('For:'));
+  } elseif ($for == FOR_CREDIT50) {
+    $item = t('store credit');
+    $itemDpy = item($item, t('For:'));
+  } elseif ($for == FOR_DONATE) {
+    $for = NULL;
+    u\setDft($item, t('donation'));
+    $itemDpy = NULL;
+  } elseif (!$for or $for == FOR_PURCHASE) { // for is other or empty or nonsense
+    $for = FOR_PURCHASE;
+    if ($item) {
+      $itemDpy = item($item, t('For:'));
+    } else {
+      $item = textFld(REQ . t('For:'), [t('What to pay for')], dft($s_item));
+      $itemDpy = NULL;
+    }
+  } else return u\FAIL(t('The "for" parameter must be credit, gift, donate, or other -- not "%for"', compact('for')));
+
+  if (!is_array($item)) $item = hidFld($item);
   
-  return compact(ray('amount amtDpy item fullName phone email country zip note coId'));
+  return [$itemDpy, $item, $forDpy];
+}
+
+function nonMember($isGift, $s_id) {
+  $payment = item('', t('Pay by:'));
+  $paymentErr = item('', NBSP);
+  $paySet = fieldSet('paySet', compact(ray('payment paymentErr')), BARE);
+
+  $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, t('Check here to cover the transaction processing fees also.'), 0) : NULL;
+  $next = btnFld('', '', t('Next'));
+  $fullName = textFld(REQ . t('Name:'), [t('Your full name, properly capitalized')]);
+  $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
+  $email = emailFld(REQ . t('Email:'), [t('Email')], dft(strhas($s_id, '@') ? $s_id : ''));
+  $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
+  $zip = zipFld(nn($zip));
+  $nonMemberInfo = compact(ray('fullName phone email country zip coverCCFee next'));
+  $nonMember = fieldSet('nonMember', $nonMemberInfo, BARE);
+  
+  $signinMsg = t('%PROJECT members save time and card fees! <%a class="loud">Sign up here</a>.', '_a', atag('/signup'));
+
+  $stay = boolFld('', $signinMsg);
+  $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
+  
+  return [$paySet, $nonMember, $stay, $stayLabel];
 }

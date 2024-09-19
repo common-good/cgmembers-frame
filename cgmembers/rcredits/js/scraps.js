@@ -180,10 +180,6 @@ function doit(what, vs) {
       .click(function () {$(this).hide();}); // tap to return to cardDone screen
     break;
 
-  case 'cc':
-    hideNote();
-    break;
-    
   case 'receipt':
 // fails on mobile    window.onafterprint = function () {history.go(-1);}
     $('.btn-print').click(function () {window.print(); return false;});
@@ -460,11 +456,13 @@ function doit(what, vs) {
     $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
-      var credit = (fer == forStoreCredit || fer == forGiftCredit);
+      var ferStoreCredit = (fer == forStoreCredit);
+      var credit = (ferStoreCredit || fer == forGiftCredit);
       $('.form-item-ccOk').toggle(vs['showCcOk'] == 1);
       ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
-      $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)
+      $('.form-item-credit').toggle(ferStoreCredit); // show credit option only for credit (not for gift of credit)
+//      if (ferStoreCredit) $('#edit-credit').val('');
       $('.form-item-item').toggle(!credit);
       $(credit ? '#edit-size' : '#edit-item').focus();
       getCGPayCode();
@@ -473,7 +471,7 @@ function doit(what, vs) {
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
     
-    function getCGPayCode() { // get a CGPay buttonn code
+    function getCGPayCode() { // get a CGPay button code
       post('cgPayCode', {
         item:$('#edit-item').val(),
         amount:$('#edit-amount').val(),
@@ -502,7 +500,7 @@ function doit(what, vs) {
       
       var url = baseUrl + '/cgpay';
       if (fer == forGift) {
-        url = url.replace('/cgpay', '/community/donate');
+        url = url.replace('/cgpay', '/ccpay');
       } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
       
       var text = htmlEntities($('#edit-text').val());
@@ -522,11 +520,11 @@ function doit(what, vs) {
     }
     break;
 
-  case 'donate':
+  case 'cc':
     var amtChoice = $('#edit-amtchoice');
     if (amtChoice.length) $('#edit-amount').val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
-    const thisForm = $('#frm-donate');
+    const thisForm = $('#frm-ccpay');
     const submit = $('.form-item-submit');
     const honor = $('.form-item-honor'); 
     if ($('#edit-honored').val() == '') honor.hide(); else $('.btn-honor').hide();
@@ -561,7 +559,7 @@ function doit(what, vs) {
     });
 
     $('#edit-stay-1').click(function () { // member
-      post('signinThenDonate', {
+      post('signinThenPay', {
         amount: $('#edit-amount').val(),
         period: $('#edit-period').val(),
         honor: $('#edit-honor').val(),
@@ -573,7 +571,7 @@ function doit(what, vs) {
     });
     
     $('#edit-next .btn').click(function () {
-      if (document.getElementById('frm-donate').reportValidity()) {
+      if (document.getElementById('frm-ccpay').reportValidity()) {
         $('.form-item-next').hide();
         paySet.show();
         submit.show();
@@ -587,6 +585,8 @@ function doit(what, vs) {
         const info = {
           amount: amount + feeCovered,
           feeCovered: feeCovered,
+          'for': $('#edit-for').val(),
+          item: $('#edit-item').val(),
           period: $('#edit-period').val(),
           honor: $('#edit-honor').val(),
           honored: $('#edit-honored').val(),
@@ -598,7 +598,8 @@ function doit(what, vs) {
           country: $('#edit-country').val(),
           notes: $('#edit-note').val()
         };
-        stripe(info);
+
+        stripe(Stripe(vs['stripePublicKey']), info);
       }
     });
 
@@ -1093,8 +1094,7 @@ function goPage(page, newWindow = false) {
   return false; // to help cancel default href
 }
 
-function stripe(info) {
-  const stripe = Stripe('pk_test_51PwptW00VpKSa9pm4QQhvi2Tqozf0Y87vNXMIel85xn5J75nV96mqdyxw8jFCjal6IkYEI0EdeAWW41DoDBHYWxw00hfJAlnLz');
+function stripe(stripe, info) {
   const erDiv = $('#edit-paymentErr .control-data');
 
   post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
@@ -1110,7 +1110,7 @@ function stripe(info) {
     });
     paymentElement.mount('#edit-payment .control-data');
 
-    const form = document.getElementById('frm-donate');
+    const form = document.getElementById('frm-ccpay');
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       elements.submit();
