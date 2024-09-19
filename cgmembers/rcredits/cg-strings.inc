@@ -33,7 +33,6 @@ global $tStrings; $tStrings = array(
   'prev gift canned' => t('Your previous recurring gift has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
-  'your demand' => t('Your total request for %RCREDITS is now %request.'),
   'deleted relation' => t('Deleted relation with %otherName'),
   'customer balance' => t('The current balance for %otherName is %balance.'),
   'info saved' => t('Your information has been saved.'),

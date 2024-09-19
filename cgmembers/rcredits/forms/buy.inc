@@ -120,11 +120,11 @@ function charge($args) {
     $item = t('gift of store credit');
     $itemDpy = item(t('store credit'), t('For:'));
   } elseif ($for == 'credit') {
-    $for = hidFld(SELF_CREDIT);
+    $for = hidFld(FOR_CREDIT);
     $item = ($credit ? u\fmtAmt($credit) . ' ' : '') . t('store credit');
     $itemDpy = item($item, t('For:'));
   } elseif ($for == 'credit50') {
-    $for = hidFld(SELF_CREDIT50);
+    $for = hidFld(FOR_CREDIT50);
     $item = t('store credit');
     $itemDpy = item($item, t('For:'));
   } elseif ($for == 'donate') {
@@ -184,7 +184,7 @@ function formBuy_validate($form, &$sta) {
       if (!formSignin_validate($form, $sta)) return buyErr('', ray('op account', 'charge', $name) + $input);
     }
   }
-  if ($for and !in($for, [SELF_CREDIT, SELF_CREDIT50])) {
+  if ($for and !in($for, [FOR_CREDIT, FOR_CREDIT50])) {
     $for = fmtAcctId($for);
     if (!$a = r\acct($for)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'for');
     $item .= t(' (to %who)', 'who', $a->fullName);

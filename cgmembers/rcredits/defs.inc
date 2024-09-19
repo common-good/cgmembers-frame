@@ -63,6 +63,8 @@ define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
 define('POSTMARK_KEY', config('postmarkKey'));
+define('STRIPE_PUBLIC', config('stripePublic'));
+define('STRIPE_SECRET', config('stripeSecret'));
 define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
 
@@ -349,8 +351,15 @@ define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,
 const FOR_GOODS = 0; // index into R_WHYS for goods
 const FOR_USD = 1; // index into R_WHYS for USD exchange
 const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
-const SELF_CREDIT = 'cred'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
-const SELF_CREDIT50 = 'cred50'; // (string) similar, but redeemable later for only half the purchase price each time
+
+// cgbutton "for" codes -- existing URLs depend on these, so don't change them
+const FOR_DONATE = 'donate';
+const FOR_PURCHASE = 'other';
+const FOR_CREDIT = 'credit'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
+const FOR_CREDIT50 = 'credit50'; // (string) similar, but redeemable later for only half the purchase price each time
+const FOR_GIVE_CREDIT = 'gift'; // gift of store credit
+const CGBUTTON_CODES = [FOR_DONATE, FOR_PURCHASE, FOR_CREDIT, FOR_GIVE_CREDIT]; // used in cgbutton ajax (FOR_CREDIT50 is currently unused)
+
 //const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
 //const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
 //const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)

@@ -26,7 +26,7 @@ function ajax($args = NULL) {
 
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
-  if (!in($op, 'setNotice signinThenDonate stripeSetup stripeTx')) { // no sid if not signed in
+  if (!in($op, 'setNotice signinThenPay stripeSetup stripeTx')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }
@@ -40,8 +40,8 @@ function ajax($args = NULL) {
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
       
-    case 'signinThenDonate':
-      $url = BASE_URL . '/' . w\first('signin', 'community/donate/code=' . u\cryRay($data));
+    case 'signinThenPay':
+      $url = BASE_URL . '/' . w\first('signin', 'ccpay/code=' . u\cryRay($data));
       return ajaxRet(compact('url'));
       
     case 'stripeSetup': return stripeSetup($data); // get client secret for card payment
@@ -82,7 +82,7 @@ function ajax($args = NULL) {
     case 'cgPayCode': // get cgPay code
       include_once R_ROOT . '/forms/code.inc';
       extract(just('fer expires', $data));
-      $data['for'] = nni(ray('donate,,credit,gift'), $fer); // fer=2 (other) is ignored
+      $data['for'] = nni(CGBUTTON_CODES, $fer);
       unset($data['fer']);
       if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
       foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
@@ -189,23 +189,23 @@ function ajax($args = NULL) {
 }
 
 /**
- * Create the basis for a (possibly recurring) donation through Stripe
+ * Create the basis for a (possibly recurring) payment through Stripe
  * @return {id, client_secret} or an error message (id is the setupIntent ID)
  */
 function stripeSetup($data) {
-  extract(just('period honor honored coId fullName email phone zip country notes', $data, NULL));
+  extract(just('for item period honor honored coId fullName email phone zip country notes', $data, NULL));
   require_once R_ROOT . '/stripe.inc';
 
   if ($period == 'once') $period = '';
   $periodDesc = $period ? ucfirst(r\recurRay()[$period]) : '';
-  $description = trim($periodDesc . t(' Donation'));
+  $description = $item ?: ($for == 'gift' ? t('donation') : ($for ?: t('purchase')));
   
   $email = strtolower($email);
   list ($city, $state) = r\zipCity($zip);
   $coA = r\acct($coId);
   $notices = NOTICE_NONE;
   $honor = $honored ? t('in %honor of %honored', compact(ray('honor honored'))) : NULL;
-  $notes = join(' - ', [$honor, $notes]);
+  $notes = $honor . (($honor and $notes) ? ' - ' : '') . $notes;
   $source = t('paid %nm (by card)', 'nm', $coA->bestName);
 //    $reportInfo += compact(ray($inputFlds));
   
@@ -234,7 +234,7 @@ function stripeSetup($data) {
   $intent = stripe('setup', compact(ray('stripeCid description')));
   if (!is_object($intent)) return ajaxErr($intent); // anything other than an object is an error message
   
-  return ajaxRet(ray('pid description stripeId secret', $pid, $description, $intent->id, $intent->client_secret));
+  return ajaxRet(ray('pid purpose stripeId secret', $pid, $description, $intent->id, $intent->client_secret));
 }
 
 /**
@@ -242,11 +242,10 @@ function stripeSetup($data) {
  * @return {msg}: msg is an encrypted success or failure message
  */
 function stripeTx($data) {
-  extract(just('amount period coId pid stripeId', $data, NULL));
+  extract(just('amount for purpose period coId pid stripeId', $data, NULL));
   require_once R_ROOT . '/rcron/rcron.inc';
   
-  $purpose = t('donation'); // assume this for now (don't use the same, more formal description sent to Stripe and used in thanks)
-  $flags = u\bit(B_GIFT) | u\bit(B_CC);
+  $flags = ($for == 'gift' ? u\bit(B_GIFT) : 0) | u\bit(B_CC);
   $info = compact(ray('amount period purpose flags stripeId')) 
         + ray('action from to payerType payer duration', 
         ACT_PAY, MATCH_PAYER, $coId, REF_PERSON, $pid, PER_1);

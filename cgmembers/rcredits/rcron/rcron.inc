@@ -336,7 +336,8 @@ function recur($template) {
     extract($emailAndName);
     $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
     $coA = r\acct($to); $coId = $coA->id;
-    $type = r\ccGiftType($to); // NOTE: we currently do not do non-member CC or ACH purchases (just gifts), so this is a gift.
+    $gift = u\getBit($flags, 'gift') ?: 0;
+    $type = $gift ? r\ccGiftType($to) : 'purchase';
     
     if ($stripeId) { // recurring credit card payment
       require_once R_ROOT . '/stripe.inc';
