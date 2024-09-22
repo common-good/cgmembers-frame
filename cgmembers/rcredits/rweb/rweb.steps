@@ -334,7 +334,6 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
@@ -1974,7 +1973,6 @@ function memberIsUnconfirmed($id) {
  *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST boxes Setup
- *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
