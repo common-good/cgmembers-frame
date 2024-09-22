@@ -25,7 +25,7 @@ Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   Given button code "buttonCode" for:
   | account | secret | for  |*
   | .ZZC    | Cc3    | gift |
-  When member "?" visits "ccpay/code=%buttonCode"
+  When member "?" visits "pay/code=%buttonCode"
   Then we show "Donate to Our Pub" with:
   | Donation:    |
   | When:        |
@@ -181,7 +181,7 @@ Scenario: A non-member clicks a link to pay a ccOk organization by Stripe
   Given button code "buttonCode" for:
   | account | secret | item  |*
   | .ZZC    | Cc3    | stuff |
-  When member "?" visits "ccpay/code=%buttonCode"
+  When member "?" visits "pay/code=%buttonCode"
   Then we show "Pay Our Pub" with:
   | Pay:         |
   | When:        |
@@ -259,7 +259,7 @@ Scenario: A member donates to a ccOk organization
   Given button code "buttonCode" for:
   | account | secret | for    |*
   | .ZZC    | Cc3    | donate |
-  When member ".ZZA" completes "ccpay/code=%buttonCode" with:
+  When member ".ZZA" completes "pay/code=%buttonCode" with:
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":

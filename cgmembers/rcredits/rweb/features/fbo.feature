@@ -284,7 +284,7 @@ Scenario: A member donates to a sponsored organization
   Given button code "buttonCode" for:
   | account | secret |*
   | .ZZC    | Cc3    |
-  When member ".ZZA" completes "community/donate/code=%buttonCode" with:
+  When member ".ZZA" completes "pay/code=%buttonCode" with:
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":

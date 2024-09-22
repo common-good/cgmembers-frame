@@ -498,11 +498,7 @@ function doit(what, vs) {
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/cgpay';
-      if (fer == forGift) {
-        url = url.replace('/cgpay', '/ccpay');
-      } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
-      
+      var url = baseUrl + '/pay';
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
@@ -1108,7 +1104,7 @@ function stripe(stripe, info) {
     });
     paymentElement.mount('#edit-payment .control-data');
 
-    const form = document.getElementById('frm-ccpay');
+    const form = document.getElementById('frm-pay');
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       elements.submit();

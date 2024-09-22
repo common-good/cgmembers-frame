@@ -198,8 +198,8 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  * in: MAKE accredit AMemberCompanyGivesACustomerCredit
  *     MAKE accredit AMemberCompanyGivesACustomerCreditAgainBeforeItRunsOut
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
- *     MAKE cgpay AMemberSubmitsACcpayButtonPaymentWithAccountID
- *     MAKE cgpay AMemberSubmitsACcpayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     MAKE cgpay AMemberBuysStoreCreditAgain
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
@@ -337,8 +337,8 @@ function members($list) {return t\members($list);}
  *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
- *     TEST cgpay AMemberSubmitsACcpayButtonPaymentWithAccountID
- *     TEST cgpay AMemberSubmitsACcpayButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberSubmitsAPayButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
@@ -401,7 +401,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
- *     TEST cgpay AMemberClicksAnExpiredCcpayButton
+ *     TEST cgpay AMemberClicksAnExpiredPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     TEST contact AMemberUpdatesContactInfo
@@ -567,8 +567,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
- *     TEST cgpay AMemberClicksACcpayButton
- *     TEST cgpay AMemberClicksACcpayButtonWithVariableAmount
+ *     TEST cgpay AMemberClicksAPayButton
+ *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgpay AMemberBuysStoreCreditAgain
@@ -722,7 +722,7 @@ function with($content) {return weShow($content);}
  * without: (ARG)
  *
  * in: TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
- *     TEST cgpay AMemberClicksACcpayButtonWithVariableAmount
+ *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST fbo ANonmemberDonatesToASponsoredMember
  *     TEST fbo ASponsoredMemberPaysANonmember
@@ -852,9 +852,9 @@ function balances($list) {return t\balances($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
- *     MAKE cgpay AMemberClicksACcpayButton
- *     MAKE cgpay AMemberClicksAnExpiredCcpayButton
- *     MAKE cgpay AMemberClicksACcpayButtonWithVariableAmount
+ *     MAKE cgpay AMemberClicksAPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredPayButton
+ *     MAKE cgpay AMemberClicksAPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     MAKE cgpay AMemberBuysStoreCreditAgain
@@ -1717,7 +1717,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     MAKE cgpay Setup
- *     TEST cgpay AMemberSubmitsACcpayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgpay AMemberBuysStoreCreditAgain
  *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
@@ -2553,11 +2553,11 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     MAKE ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
- *     MAKE cgpay AMemberClicksACcpayButton
- *     MAKE cgpay AMemberClicksAnExpiredCcpayButton
- *     MAKE cgpay AMemberSubmitsACcpayButtonPaymentWithAccountID
- *     MAKE cgpay AMemberClicksACcpayButtonWithVariableAmount
- *     MAKE cgpay AMemberSubmitsACcpayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredPayButton
+ *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberClicksAPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     MAKE cgpay AMemberBuysStoreCreditAgain

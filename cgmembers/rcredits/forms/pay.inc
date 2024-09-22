@@ -10,7 +10,7 @@ use CG\Db as db;
   Give the member or nonmember a chance to donate to CG or a sponsored (CG FBO) account or a ccOk account.
   @params: donation form sometimes redirects to signin, which passes amount, period, honor, and honored here in $_GET
 */
-function formCCPay($form, &$sta, $args = NULL) {
+function formPay($form, &$sta, $args = NULL) {
   if (!$args) $args = u\_GET(); // can't use u\setDft here
   $args = $args ? urlq2ray($args) : $_POST;
   $mya = w\eLinkAcct($sta, $args, 'any');
@@ -82,7 +82,7 @@ function formCCPay($form, &$sta, $args = NULL) {
   return cgForm($form);
 }
 
-function formCCPay_validate($form, &$sta) {
+function formPay_validate($form, &$sta) {
   include_once __DIR__ . '/signin.inc';
   $mya = w\eLinkAcct($sta); 
   if (!$mya and !formSignin_validate($form, $sta)) return payRet();
@@ -117,7 +117,7 @@ function payRet($erMsg = NULL) {
   return go($url);
 }
 
-function formCCPay_submit($form, &$sta) {
+function formPay_submit($form, &$sta) {
   extract(just('isGift uid amount period honor honored roundup recursId coId note credit for forDpy qid item request return button', $sta['input'], NULL));
   if (!$mya = w\eLinkAcct($sta)) $mya = r\acct($uid); // uid is from signin_validate() 
   $isCG = ($coId == CGID);
