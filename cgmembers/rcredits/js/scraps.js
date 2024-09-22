@@ -520,7 +520,7 @@ function doit(what, vs) {
     }
     break;
 
-  case 'cc':
+  case 'pay':
     var amtChoice = $('#edit-amtchoice');
     if (amtChoice.length) $('#edit-amount').val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
@@ -533,7 +533,9 @@ function doit(what, vs) {
     if (repeat.length) { // hide period only if it can be unhidden
       if ($('#edit-period').val() == 'once') period.hide(); else repeat.hide();
     }
-    const stay = $('.form-item-stay');
+    const stay = $('.form-item-stay'); stay.find('input').val(-1); // reset on error
+    const qid = $('.form-item-qid'); qid.hide();
+    const pass = $('.form-item-pass'); pass.hide();
     
     if (stay.length) {
       nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
@@ -554,20 +556,16 @@ function doit(what, vs) {
     });
     
     $('#edit-stay-0').click(function () { // pay by card
+      for (fnm of 'fullName phone email zip'.split()) req($('.form-item-' + fnm));
       stay.hide(); $('#edit-stayLabel').hide();
       nonMember.show();
     });
 
     $('#edit-stay-1').click(function () { // member
-      post('signinThenPay', {
-        amount: $('#edit-amount').val(),
-        period: $('#edit-period').val(),
-        honor: $('#edit-honor').val(),
-        honored: $('#edit-honored').val(),
-        account: $('#edit-coid').val()
-      }, function (j) {
-        if (j.ok) location.href = j.url; else erDiv.html(j.message); // should always succeed
-      });
+      stay.hide(); $('#edit-stayLabel').hide();
+      for (fnm of 'fullName phone email zip'.split()) reqNot($('.form-item-' + fnm));
+      req(qid); req(pass); submit.show();
+      qid.find('input').focus();
     });
     
     $('#edit-next .btn').click(function () {

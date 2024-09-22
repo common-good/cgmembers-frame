@@ -77,7 +77,7 @@ function formCCPay($form, &$sta, $args = NULL) {
   $form += ($mya and $isCG) ? w\setupFoot($submitLabel, $noteSuffix) : compact('submit');
 
   js('https://js.stripe.com/v3/');
-  jsx('cc', ray('stripePublicKey ccRate', STRIPE_PUBLIC, CC_FEE / 100));
+  jsx('pay', ray('stripePublicKey ccRate', STRIPE_PUBLIC, CC_FEE / 100));
 
   return cgForm($form);
 }
@@ -85,30 +85,36 @@ function formCCPay($form, &$sta, $args = NULL) {
 function formCCPay_validate($form, &$sta) {
   include_once __DIR__ . '/signin.inc';
   $mya = w\eLinkAcct($sta); 
-  if (!$mya and !formSignin_validate($form, $sta)) return;
+  if (!$mya and !formSignin_validate($form, $sta)) return payRet();
 
-  extract(just($flds = 'qid for forDpy item amount fullName phone email zip country coId', $sta['input'], NULL));
+  extract(just($flds = 'qid for forDpy item amount amtChoice fullName phone email zip country coId', $sta['input'], NULL));
   $isCG = ($coId == CGID);
 
-  if ($mya and $isCG and array_key_exists('amtChoice', $sta['input'])) return w\checkAmtChoice($sta);
+  if (($mya and $isCG and isset($amtChoice) and !w\checkAmtChoice($sta))) return payRet();
 
-  if ($err = u\badAmount($amount, ($isCG and r\acct()) ? '>=0' : '>0')) return say($err, 'amount'); // fix amount
+  if ($err = u\badAmount($amount, ($isCG and r\acct()) ? '>=0' : '>0')) return  payRet($err, 'amount'); // fix amount
   if (!$mya and !$qid) { // nonmember (not even trying to sign in)
-    if ($err = u\badName($fullName)) return err($err, ['field' => 'fullName'], 'fullName');
+    if ($err = u\badName($fullName)) return payRet($err, ['field' => 'fullName'], 'fullName');
     $fullName = u\normalizeCase($fullName);
     
-    if ($err = u\badPhone($phone)) return err($err, 'phone');
-    if (!emailOkay($email, TRUE)) return; // allow duplicate emails so a member can donate with CC
-    if ($err = u\badZip($zip, $country)) return err($err, 'zip');
+    if ($err = u\badPhone($phone)) return payRet($err, 'phone');
+    if (!emailOkay($email, TRUE)) return payRet(); // allow duplicate emails so a member can donate with CC
+    if ($err = u\badZip($zip, $country)) return payRet($err, 'zip');
   }
 
   if ($for == FOR_GIVE_CREDIT) {
     $forDpy = trim(strhas($forDpy, '@') ? mb_strtolower($forDpy) : mb_strtoupper($forDpy));
-    if (!$a = r\acct($forDpy)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'forDpy');
+    if (!$a = r\acct($forDpy)) return payRet(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'forDpy');
     $item = nn($item) . t(' (to %who)', 'who', $a->fullName);
   }
   
   u\preray(compact(ray($flds)), $sta['input']);
+}
+
+function payRet($erMsg = NULL) {
+  $url = $_SERVER['REQUEST_URI'];
+  if ($erMsg) err($erMsg);
+  return go($url);
 }
 
 function formCCPay_submit($form, &$sta) {
@@ -378,15 +384,15 @@ function nonMember($isGift, $s_id) {
 
   $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, t('Check here to cover the transaction processing fees also.'), 0) : NULL;
   $next = btnFld('', '', t('Next'));
-  $fullName = textFld(REQ . t('Name:'), [t('Your full name, properly capitalized')]);
-  $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
-  $email = emailFld(REQ . t('Email:'), [t('Email')], dft(strhas($s_id, '@') ? $s_id : ''));
+  $fullName = textFld(t('Name:'), [t('Your full name, properly capitalized')]);
+  $phone = phoneFld(t('Phone:'), [t('Your phone number')]);
+  $email = emailFld(t('Email:'), [t('Email')], dft(strhas($s_id, '@') ? $s_id : ''));
   $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
-  $zip = zipFld(nn($zip));
+  $zip = zipFld(nn($zip), FALSE);
   $nonMemberInfo = compact(ray('fullName phone email country zip coverCCFee next'));
   $nonMember = fieldSet('nonMember', $nonMemberInfo, BARE);
   
-  $signinMsg = t('%PROJECT members save time and card fees! <%a class="loud">Sign up here</a>.', '_a', atag('/signup'));
+  $signinMsg = t('%PROJECT members save time and card fees! ') . buttino('/signup', t('<big>Sign up here</big>'));
 
   $stay = boolFld('', $signinMsg);
   $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
