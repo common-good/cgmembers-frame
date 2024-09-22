@@ -23,8 +23,8 @@ Setup:
 
 Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   Given button code "buttonCode" for:
-  | account | secret | for  |*
-  | .ZZC    | Cc3    | gift |
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
   When member "?" visits "pay/code=%buttonCode"
   Then we show "Donate to Our Pub" with:
   | Donation:    |
@@ -47,7 +47,7 @@ Scenario: A non-member submits donation information to Stripe
   When member "?" ajax "stripeSetup" with:
   | amount   | 123          |**
   | period   | once         |
-  | for      | gift         |
+  | for      | donate       |
   | honor    | memory       |
   | honored  | God          |
   | fullName | Zee Zot      |
@@ -71,7 +71,7 @@ Scenario: A non-member confirms donation intent
   When member "?" ajax "stripeTx" with:
   | amount   | 123          |**
   | period   | once         |
-  | for      | gift         |
+  | for      | donate       |
   | honor    | memory       |
   | honored  | God          |
   | fullName | Zee Zot      |
@@ -148,7 +148,7 @@ Scenario: A non-member confirms a donation to a sponsored organization by credit
   When member "?" ajax "stripeTx" with:
   | amount   | 123          |**
   | period   | once         |
-  | for      | gift         |
+  | for      | donate       |
   | honor    | memory       |
   | honored  | God          |
   | fullName | Zee Zot      |
@@ -184,7 +184,6 @@ Scenario: A non-member clicks a link to pay a ccOk organization by Stripe
   When member "?" visits "pay/code=%buttonCode"
   Then we show "Pay Our Pub" with:
   | Pay:         |
-  | When:        |
   | member?      |
   | Name:        |
   | Phone:       |
@@ -196,6 +195,7 @@ Scenario: A non-member clicks a link to pay a ccOk organization by Stripe
   | Note:        |
   | Pay          |
 And without:
+  | When:        |
   | Honoring:    |
 
 Scenario: A non-member submits payment information to Stripe

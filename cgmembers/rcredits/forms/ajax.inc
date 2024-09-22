@@ -198,7 +198,7 @@ function stripeSetup($data) {
 
   if ($period == 'once') $period = '';
   $periodDesc = $period ? ucfirst(r\recurRay()[$period]) : '';
-  $description = $item ?: ($for == 'gift' ? t('donation') : ($for ?: t('purchase')));
+  $description = $item ?: ($for == FOR_DONATE ? t('donation') : ($for ?: t('purchase')));
   
   $email = strtolower($email);
   list ($city, $state) = r\zipCity($zip);
@@ -245,7 +245,7 @@ function stripeTx($data) {
   extract(just('amount for purpose period coId pid stripeId', $data, NULL));
   require_once R_ROOT . '/rcron/rcron.inc';
   
-  $flags = ($for == 'gift' ? u\bit(B_GIFT) : 0) | u\bit(B_CC);
+  $flags = ($for == FOR_DONATE ? u\bit(B_GIFT) : 0) | u\bit(B_CC);
   $info = compact(ray('amount period purpose flags stripeId')) 
         + ray('action from to payerType payer duration', 
         ACT_PAY, MATCH_PAYER, $coId, REF_PERSON, $pid, PER_1);
