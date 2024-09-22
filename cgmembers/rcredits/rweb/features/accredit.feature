@@ -94,7 +94,7 @@ Scenario: A member tries to buy credit with credit
   And button code "buttonCode" for:
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 100.00 |
-  When member "?" confirms "cgpay?code=%buttonCode" with:
+  When member "?" confirms "pay/code=%buttonCode" with:
   | qid  | pass |*
   | .ZZA | a1   |
   Then count "txs" is 1
