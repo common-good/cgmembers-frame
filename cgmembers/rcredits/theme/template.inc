@@ -386,8 +386,9 @@ function rcredits_submit($variables) {
   $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
   if (!nn($id) or $id == strtolower($id2)) $id = $id2;
   $extra = cgElement($variables, $special);
+  if ($hasSuffix = nni($extra, 'field_suffix')) unset ($extra['field_suffix']);
   $res = spinLink('submit', $value, $id, nn($style), nn($size), $extra);
-  if (nni($extra, 'field_suffix')) $res = '<div class="presuffix">' . $res . '</div>';
+  if ($hasSuffix) $res = '<div class="presuffix">' . $res . '</div>';
   $variables['element']['#children'] = $res;
   return nn($bare) ? $res : rcredits_form_element($variables);
 }
