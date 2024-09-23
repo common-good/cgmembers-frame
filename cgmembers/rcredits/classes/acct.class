@@ -1914,7 +1914,7 @@ X;
     $a = $this;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');
-    if ($payeeA->legalName != CGF_LEGALNAME) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    if (!in($payee, r\cgsOwnUids())) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
     $shortfall = NULL;
 
     $DBTX = \db_transaction();

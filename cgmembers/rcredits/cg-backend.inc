@@ -552,7 +552,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
     }
     
     $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
-  } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
+  } else $fromBank = nni($z->subs, 'needed', $payAmount) - $payerA->balance; // just get how much more we need (without using credit line)
 
   if (!$balFirst) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
 
@@ -683,10 +683,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $needed = abs($amount);
 
   if ($goods != FOR_USD) {
-    // Apply rules
-    if ($amount > 0) {
-      $needed += handleSurTx($entries, $tx, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
-    }
+    if ($amount > 0) $needed += handleSurTx($entries, $tx, $loserA, $gainerA, $amount, nn($for) and $for != 'other'); // Apply rules
 
     // Apply any roundup
     if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recursId and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
@@ -1028,7 +1025,8 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test 
   // Get a list of applicable rules
   $payerCheck = u\genRuleSQL('payer', ':buyer'); // rule applies to this buyer
   $payeeCheck = u\genRuleSQL('payee', ':seller'); // rule applies to this seller
-  $forCreditCheck = $forCredit ? '`from`<>:MATCH_PAYEE' : '1'; // no buying credit with credit or discount
+  $forCreditCheck = $forCredit  // no buying credit with discount (including store credit!)
+  ? '(ru.from NOT IN (:MATCH_PAYEE,:seller) OR ru.to NOT IN (:MATCH_PAYER,:buyer))' : '1';
   
   $sql = <<<EOF
     SELECT ru.id AS rule, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
@@ -1049,7 +1047,7 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test 
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
-///  showq($sql, $subs); // debug()
+/// debug(showq($sql, $subs));
   $q = db\q($sql, $subs);
 
   $stepups = $rebates = 0;

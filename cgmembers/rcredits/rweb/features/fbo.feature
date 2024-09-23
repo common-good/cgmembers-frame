@@ -282,18 +282,18 @@ Scenario: A sponsored member views their transaction history
 
 Scenario: A member donates to a sponsored organization
   Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
   When member ".ZZA" completes "pay/code=%buttonCode" with:
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose               | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation ("awesome!") | %E_PRIME   |
+  | eid | xid | payer | payee | amount | purpose  | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation | %E_PRIME   |
   | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
   And these "tx_timed":
-  | id | action   | from | to   | amount | portion | purpose               | payerType    | payeeType    | period |*
-  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation ("awesome!") | %REF_ANYBODY | %REF_ANYBODY | month  |  
+  | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
+  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
   And count "tx_entries" is 4
   And we email "fbo-thanks-member" to member "a@" with subs:
   | fullName     | Abe One         |**

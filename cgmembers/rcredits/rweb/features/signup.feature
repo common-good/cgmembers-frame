@@ -24,7 +24,7 @@ Scenario: A newbie visits the individual signup page
 
 Scenario: A member signs up
   Given member is logged out
-  And next random code is "WHATEVER"
+  And next codes are "zot WHATEVER"
   When member "?" completes form "signup" with values:
   | fullName | email | phone        | zip   | acctType     | cq | ca |*
   | Al Aargh | z@    | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
@@ -112,8 +112,8 @@ Scenario: A member sets preferences
 Scenario: A member donates
   Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences"
   When member ".ZZB" completes form "community/donate" with values:
-  | amtChoice | period | honor | honored |*
-  |        50 | month  |     - |         |
+  | amtChoice | amount | period | honor | honored |*
+  |        50 | 50     | month  |     - |         |
   Then we show "Connect a Checking Account" with:
   | Routing |
   | Account |
@@ -123,7 +123,7 @@ Scenario: A member donates
   And we say "status": "gift transfer later"
   And we say "status": "step completed"
   And member ".ZZB" steps left "verifyemail"
-  
+
 Scenario: A member connects a bank account
   Given member ".ZZB" has "person" steps done: "signup agree verifyid photo contact preferences donate"
   When member ".ZZB" completes form "settings/fund" with values:
