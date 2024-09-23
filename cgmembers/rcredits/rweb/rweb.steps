@@ -274,7 +274,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE download Setup
  *     MAKE fbo Setup
  *     MAKE flow Setup
- *     MAKE guest Setup
  *     MAKE investinterest Setup
  *     TEST investinterest ANonmemberExpressesInterest
  *     MAKE invest Setup
@@ -353,8 +352,6 @@ function members($list) {return t\members($list);}
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
@@ -488,8 +485,6 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -603,8 +598,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST flow AJointAccountSlaveMemberDraws
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST investinterest AMemberExpressesInterest
  *     TEST investinterest ANonmemberExpressesInterest
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -812,7 +805,6 @@ function withoutOptions($options) {
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE flow Setup
- *     TEST guest Setup
  *     MAKE invest Setup
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
  *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
@@ -1223,7 +1215,6 @@ function statisticsGetSet($time) {
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
- *     MAKE guest Setup
  *     MAKE invest Setup
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
@@ -1258,8 +1249,6 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
@@ -1399,8 +1388,6 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
- *     MAKE signupco ACompanySignsUp
- *     MAKE signup AMemberSignsUp
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -1760,9 +1747,6 @@ function weScripWithSubs($script, $args = []) {
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
- *     MAKE guest Setup
- *     TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE invest Setup
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     BOTH invest AMemberBuysAStakeInTheClub
@@ -1980,7 +1964,6 @@ function memberIsUnconfirmed($id) {
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
@@ -2391,8 +2374,6 @@ function memberAjaxWith($id, $op, $ray) {
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE flow AJointAccountSlaveMemberDraws
- *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
- *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE invoice APayeeMarksAnInvoicePaidManually
  *     MAKE invoice APayeeReopensAnInvoice
  *     MAKE joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
@@ -2434,8 +2415,6 @@ function weFirstThen($first, $then) {
  *
  * in: MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
- *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
- *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     MAKE mfa AMemberTypesTheWrongNonce
  */
@@ -2455,9 +2434,7 @@ function withQR($url) {
 /**
  * next captcha is (ARG)
  *
- * in: MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
- *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
- *     MAKE signup Setup
+ * in: MAKE signup Setup
  */
 function nextCaptchaIs($ca) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -2487,8 +2464,7 @@ function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $pag
 /**
  * return URL (ARG)
  *
- * in: TEST guest ANonmemberPaysAMemberCompanyByCreditCard
- *     TEST guest ANonmemberPaysCommonGoodByCreditCard
+ * in: 
  */
 function returnURL($url) {
   global $testOnly, $testReturnUrl; if (!$testOnly) return FALSE;
@@ -2504,9 +2480,7 @@ function returnURL($url) {
 /**
  * var (ARG) encrypts: (ARG)
  *
- * in: MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
- *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
- *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ * in: MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     MAKE mfa AMemberTypesTheWrongNonce
  *     MAKE nosignin AMemberDonatesFromAnEmailLink
  */
@@ -2565,8 +2539,6 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
- *     MAKE guest ANonmemberPaysAMemberCompanyByCreditCard
- *     MAKE guest ANonmemberPaysCommonGoodByCreditCard
  *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
@@ -2610,6 +2582,8 @@ function memberIsSignedOut() {
  *
  * in: MAKE ccpay ANonmemberSubmitsDonationInformationToStripe
  *     MAKE ccpay ANonmemberSubmitsPaymentInformationToStripe
+ *     MAKE signupco ACompanySignsUp
+ *     MAKE signup AMemberSignsUp
  */
 function nextCodesAre($codes) { return nextRandomCodeIs($codes); }
 

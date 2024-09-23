@@ -14,7 +14,7 @@ Scenario: A member donates from an email link
   Given member is signed out
   And var "CODE" encrypts:
   | qid | NEWZZA |**
-  When member "?" visits page "do/doDonate~%CODE"
+  When member "?" visits page "do/doPay~%CODE"
   Then we show "Donate to %PROJECT" with:
   | Donation: |
   | When:     |
