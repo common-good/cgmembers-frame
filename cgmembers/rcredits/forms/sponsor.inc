@@ -22,7 +22,7 @@ function formSponsor($form, &$sta, $args = '') {
   $source2 = hidFld($source2);
 
   $title = t('Fiscal Sponsorship Application');
-  $subtext = t('<p>%PROJECT provides fiscal sponsorship for compatible, mission-aligned organizations and projects working for social, racial, environmental, and economic justice. This allows you to accept tax-deductible contributions without having to apply to the IRS for nonprofit status. %PROJECT provides some extra benefits and charges a lower fee than most other fiscal sponsors. Complete this form to apply, or give us a call.</p><p><span class="loud">If your project already has a %PROJECT account</span>, sign in to that account before applying.</p>');
+  $subtext = t('<p>%PROJECT provides fiscal sponsorship for compatible, mission-aligned organizations and projects working for social, racial, environmental, and economic justice. This allows you to accept tax-deductible contributions without having to apply to the IRS for nonprofit status. %PROJECT provides some extra benefits and charges a lower fee than most other fiscal sponsors. Complete this form to apply, or give us a call. Meanwhile, look over our <%a>model contract</a> and think about any changes you might need.</p><p><span class="loud">If your project already has a %PROJECT account</span>, sign in to that account before applying.</p>', '_a', atag('https://docs.google.com/document/d/13AHqDo9EbuYHZJATC-zK0dWJVthbkurtNhwzQ1lIf-M/edit'));
   $contactTitle = textFld(REQ . t('Your Position:'), [t('Your title in the organization')], dft($isCo ? $mya->contactTitle : ''));
 
   $mission = areaFld(REQ . t('Mission:'), [t('Organization\'s mission')], dft($isCo ? $mya->mission : '') + maxlen(250));
