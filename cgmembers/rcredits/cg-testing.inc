@@ -105,7 +105,7 @@ function fixData(&$info, $direct = FALSE) {
   if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
   if (nni($info, 'item')) {
     if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat')); // fix cat for post_cats
-  } else foreach (ray('cat cat1 cat2') as $k) if (isset($$k)) $$k = r\nick2cat($$k); // fix cat for tx_cats
+  } else foreach (ray('cat cat1 cat2') as $k) if (isset($$k) and $$k) $$k = r\nick2cat($$k); // fix cat for tx_cats
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {

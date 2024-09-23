@@ -210,14 +210,22 @@ Scenario: a member's bank account gets verified
 #  And count "txs2" is 2
 #  And count "txs" is 2
   
-#(rule canceled) Scenario: a member has a negative balance, but no agreement to bring it up to zero
-#  Given members have:
-#  | uid  | balance | floor | flags               |*
-#  | .ZZA | -100    | 0     | ok,bankOk,confirmed |
-#  | .ZZB | 0       | 0     | ok,confirmed        |
-#  | .ZZC | 0       | 0     | ok,co               |
-#  When cron runs "getFunds"
-#  Then count "txs2" is 0  
+# Rule: negative balances are brought up to zero unless a member allows negatives
+
+Scenario: a member has a negative balance and chose to disallow it
+  Given members have:
+  | uid  | balance | floor | flags               |*
+  | .ZZA | -100    | 0     | ok,bankOk,confirmed |
+  | .ZZB | 0       | 0     | ok,confirmed        |
+  | .ZZC | 0       | 0     | ok,co               |
+  When cron runs "getFunds"
+  Then count "txs2" is 1
+  And these "txs2":
+  | txid | payee | amount | channel  | completed |*
+  |    1 | .ZZA  | 100    | %TX_CRON | 0         |
+  # make sure it doesn't double dip
+  When cron runs "getFunds"
+  Then count "txs2" is 1
 
 Scenario: a dormant joint member with a negative balance hasn't had wentNeg set yet
   Given these "relations":

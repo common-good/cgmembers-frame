@@ -1208,6 +1208,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .page-sadmin-panel #messages .status > ul {padding:0;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 #frm-adminpanel .form-item-lnkScanQr {margin-bottom:20px;}
+#frm-adminpanel .form-item-acctSet {margin-top:20px;}
+#frm-adminpanel .form-item-acctSet .btn {margin:3px 3px;}
+#frm-adminpanel .form-item-acctSet label {margin-top:0px;}
 
 /* Admin Deposits */
 #frm-deposits #deposits .btn-xs {font-size:10px;}

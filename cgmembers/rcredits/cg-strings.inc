@@ -435,7 +435,6 @@ EOF
 
   'missing purpose' => t('<p>What purpose? For buying or selling actual goods and services, you must include a description. Rebates and bonuses are intended as rewards for productive economic activity in %RCREDITS.</p>
     <p>For everyone\'s protection, the %PROJECT software automatically detects and penalizes attempts to "game" the system.</p>'),
-  'missing field0' => t('%field field is required.'), // Drupal's standard
   'missing field' => t('Missing a required field: %field'),
   'nothing to do' => t('There is nothing to process.'),
   'csv error' => t('Line %line: %msg (%row)'),
@@ -510,6 +509,7 @@ EOF
   'bad pin' => t('That is not your correct PIN.'),
   'wrong pin len' => t('Your PIN must be exactly 4 characters long.'),
   'pin required' => t('You must choose a PIN.'),
+  'stale single-step' => t('"%nm" (%qid) completed just one step on %created. Call?'),
   'only us banks' => t('Unfortunately, at this time, we can handle only U.S. banks.'),
   'no can scan' => t('You do not have permission to scan an individual\'s %PROJECT QR code.'),
   'must agree' => t('Accept Terms checkbox field is required.'), // drupal shows this

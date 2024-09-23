@@ -35,6 +35,17 @@ function doit(what, vs) {
     break;
 
   case 'panel':
+    $('.form-item-acctSet .btn').click(function () {
+      const op = $(this).attr('id');
+      const form = fform(this);
+      const question = 'Do <b class=loud>' + op + '</b> for account ' + vs['who'] + '?';
+      yesno(question, function () {
+        form[0].opid.value = 'edit-' + op; // $('#opid').val() fails here
+        form.submit();
+      });
+      return false;
+    });
+    
     $('.form-item-closeBooks a').click(function () {
       var dt = $('#edit-closebooks').val();
       if (dt) location.href = baseUrl + '/sadmin/panel/op=close&dt=' + dt;

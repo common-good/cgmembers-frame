@@ -518,6 +518,8 @@ const S_FU_TASKS = 'card vote co'; // followup tasks for members
 const S_PTASKS = 'person card sell vote partner';
 const S_COTASKS = 'co partner';
 
+/**/ if (preg_replace('/(:[^,]*)?,/', '', S_ALL) != 'signup verifyemail verifyid ssn fund contact agree donate invite proxies preferences company photo discount backing stepup crumbs work partnersteptwo partnerend food wantsPrint printed') die('DO NOT CHANGE THE ORDER of S_ALL keys');
+
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
 // for documentation of IS_OK etc. see u\SUBS()

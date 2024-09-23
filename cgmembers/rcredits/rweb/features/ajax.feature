@@ -17,7 +17,7 @@ Scenario: Ajax suggestWho
   | data |  |**
   Then we show JSON ray:
   | uid     | nm                                      |*
-  | .ZZA    | Abe One @ Aton, AL                       |
+  | .ZZA    | Abe One @ Aton, AL                      |
   | .ZZB    | Bea Two @ Bton, ME                      |
   | .AAB    | Common Good @ Ashfield, MA              |
   | !.AAA   | Common Good Western Mass @ Ashfield, MA |

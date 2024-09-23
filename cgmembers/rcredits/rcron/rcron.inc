@@ -53,7 +53,7 @@ function run() {
   $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
   $GLOBALS['user'] = \drupal_anonymous_user();
   \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts
-  if (!\lock_acquire('cron', 240.0)) return u\log(t('Attempted to run cron while it was already running.'));
+  if (!\lock_acquire('cron', 4 * 60)) return u\log(t('Attempted to run cron while it was already running.'));
   
   db\del('sessions', 'timestamp < :NOW-:SESSION_LIFE'); // remove stagnant sessions
   cr\periodic();
@@ -71,6 +71,7 @@ function run() {
       db\del('queue', compact('id'));
       unset($DBTX);
     } catch (\Exception $e) {
+      if (isset($DBTX)) $DBTX->rollback(); // if(isset) required (dunno why)
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
       r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
     }
@@ -251,9 +252,13 @@ function oneAcct($item) {
     db\del('users', 'uid', $a->id);
   } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots
     $s = strtr($a->source ?: '', ['self() '=>'', 'knows: '=>'']); // can't use nn() here
-    if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
-      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
-//        f('a.deleteUid', $a->id);
+    
+    $onestepAge = now() - $a->created;
+    if ($onestepAge > WEEK_SECS) { // warn about slow joiners for a week, then delete them in 6 months
+      if ($onestepAge < 2 * WEEK_SECS or now() < strtotime('10/1/2024')) {
+        $msg = tr('stale single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
+        r\tellAdmin($msg, ray('email phone', $a->email, u\fmtPhone($a->phone)));
+      } elseif ($onestepAge > YEAR_SECS / 2) f('a.deleteUid', $a->id);
     }
   }
  
@@ -1051,8 +1056,9 @@ function getFunds1($item) {
   $a = r\acct($uid);
   $uids = $a->uids;
 
-  $need = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'))
-        - db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
+  $requests = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'));
+  $pendingIn = db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
+  $need = $requests - $pendingIn;
 
   if ($need > 0) {
     $a->getFunds($need, tr('to pending')); // this should never happen after 9/1/2024 because getFunds happens when the request is approved
@@ -1068,7 +1074,7 @@ function getFunds1($item) {
   if ($a->refill) { // auto refills
     $need = $a->minimum - $a->balance + min(0, $need);
     if ($need > 0) $a->getFunds($need, tr('to target'));
-  } elseif ($a->balance < 0) { // negative balance
+  } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
     if (!$a->debt) { // member chose never to go negative
       $a->getFunds(-$a->balance, tr('to zero'));
     } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
@@ -1272,7 +1278,7 @@ X;
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
 
-  if ($cnt = db\count('queue') and $cnt > 1) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
+  if ($cnt = db\count('queue') - 1 and $cnt > 0) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);

@@ -128,7 +128,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
   // Note that we show the company's tx description, not the customer's  
   $reverseText = t('reverses tx #');
   $special = be\specialTxFlds();
-  $markedPAID = 'status=:TX_PAID';
+  $markedPAID = 'status IN (:TX_CANCELED, :TX_PAID)';
   [$fromA, $fromB] = ['uid1 IN (:aUids)', 'uid1 IN (:bUids)'];
   [$toA, $toB] = ['uid2 IN (:aUids)', 'uid2 IN (:bUids)'];
   foreach (ray('a b') as $k) {

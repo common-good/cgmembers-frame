@@ -174,7 +174,7 @@ function formSummary_submit($form, &$sta) {
     if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
       $helperA = r\acct($helper);
       $_a1 = $helperA->doLink('confirmInvite', $mya->id); // link to confirm invitedness
-      $helperA->tell('confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
+//      $helperA->tell('confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
   }
 

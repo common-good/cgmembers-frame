@@ -837,7 +837,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
   if ($req == 'user' and $mya) return w\go('dashboard'); // dashboard not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
-  $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
+  $form['opid'] = hidFld(nn($submit1) ?: 'none', ray('id name', 'opid', 'opid')); // default to first, in case submitted programmatically
 
 //  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
@@ -2357,9 +2357,10 @@ function missingArgs($args, $require) {
  * Sign in or sign up, before doing the given task.
  * @param string $first: signin or signup
  * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @param bool $addParam: <$first already has a paramter>
  * @return: first() returns a URL to redirect to (first); goFirst() does not return -- redirects to signin or signup
  */
-function first($first, $then = NULL) {
+function first($first, $then = NULL, $addParam = FALSE) {
   global $testFirst, $testThen;
   
   u\setDft($then, URI);
@@ -2367,9 +2368,9 @@ function first($first, $then = NULL) {
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
 
-  return "$first/then=$then";
+  return $first . ($addParam ? '&' : '/') . "then=$then";
 }
-function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
+function goFirst($first, $then = NULL, $addParam = FALSE) { return w\go(first($first, $then, $addParam)); }
 
 /**
  * Do what was intended after a redirect.
