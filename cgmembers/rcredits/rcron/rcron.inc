@@ -71,7 +71,7 @@ function run() {
       db\del('queue', compact('id'));
       unset($DBTX);
     } catch (\Exception $e) {
-      $DBTX->rollback();
+      if (isset($DBTX)) $DBTX->rollback(); // if(isset) required (dunno why)
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
       r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
     }
