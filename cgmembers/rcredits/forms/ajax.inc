@@ -26,7 +26,7 @@ function ajax($args = NULL) {
 
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
-  if (!in($op, 'setNotice signinThenPay stripeSetup stripeTx')) { // no sid if not signed in
+  if (!in($op, 'qBtn setNotice signinThenPay stripeSetup stripeTx')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }

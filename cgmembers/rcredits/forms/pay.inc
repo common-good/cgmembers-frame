@@ -392,7 +392,7 @@ function nonMember($isGift, $s_id) {
   $nonMemberInfo = compact(ray('fullName phone email country zip coverCCFee next'));
   $nonMember = fieldSet('nonMember', $nonMemberInfo, BARE);
   
-  $signinMsg = t('%PROJECT members save time and card fees! ') . buttino('/signup', t('<big>Sign up here</big>'));
+  $signinMsg = t('%PROJECT members save time and card fees! ') . buttino('/signup', t('<big>Sign up here</big>')) . qBtn('signup-why');
 
   $stay = boolFld('', $signinMsg);
   $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
