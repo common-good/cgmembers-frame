@@ -363,7 +363,7 @@ function recur($template) {
       }
   
       if ($coId != CGID) { // no credit card fees for CG, for payments to CG
-        be\txEntryPair($txes, $tx, round($amount * CC_FEE / 100, 2), [$coId, CGID], tr('cc fee'), E_XFEE);
+        be\txEntryPair($txes, $tx, round($amount * CC_PCT / 100 + CC_PLUS / 100, 2), [$coId, CGID], tr('cc fee'), E_XFEE);
         be\insertTxes($txes, $tx->xid);
       }
       unset($DBTX);

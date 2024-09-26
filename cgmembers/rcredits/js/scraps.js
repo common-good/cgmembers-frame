@@ -527,10 +527,11 @@ function doit(what, vs) {
     break;
 
   case 'pay':
+    var amt = $('#edit-amount');
     var amtChoice = $('#edit-amtchoice');
-    if (amtChoice.length) $('#edit-amount').val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+    if (amtChoice.length) amt.val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
-    const thisForm = $('#frm-ccpay');
+    const thisForm = $('#frm-pay');
     const submit = $('.form-item-submit');
     const honor = $('.form-item-honor'); 
     if ($('#edit-honored').val() == '') honor.hide(); else $('.btn-honor').hide();
@@ -542,6 +543,22 @@ function doit(what, vs) {
     const stay = $('.form-item-stay'); stay.find('input').val(-1); // reset on error
     const qid = $('.form-item-qid'); qid.hide();
     const pass = $('.form-item-pass'); pass.hide();
+    const ccPctVal = parseFloat(vs['ccPct']) / 100;
+    const ccPlusVal = parseFloat(vs['ccPlus']) / 100;
+    const fsPctVal = parseFloat($('#edit-fspct').val());
+    var ccFeeVal;
+    var fsFeeVal;
+    
+    amt.change(function () {
+      const amtVal = amt.val();
+      const ccFeeMsg = $('.form-item-coverCCFee span');
+      ccFeeVal = parseFloat(amtVal) * ccPctVal + ccPlusVal;
+      if (ccFeeVal > 0) ccFeeMsg.html(ccFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(ccFeeVal) + ').'));
+      
+      const fsFeeMsg = $('.form-item-coverFSFee span');
+      fsFeeVal = parseFloat(amtVal) * fsPctVal;
+      if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
+    });
     
     if (stay.length) {
       nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
@@ -561,13 +578,13 @@ function doit(what, vs) {
       $('#edit-honored').focus();
     });
     
-    $('#edit-stay-0').click(function () { // pay by card
+    $('#edit-stay-0').click(function () { // nonmember (pay by card)
       for (fnm of 'fullName phone email zip'.split()) req($('.form-item-' + fnm));
       stay.hide(); $('#edit-stayLabel').hide();
       nonMember.show();
     });
 
-    $('#edit-stay-1').click(function () { // member
+    $('#edit-stay-1').click(function () { // member (sign in)
       stay.hide(); $('#edit-stayLabel').hide();
       for (fnm of 'fullName phone email zip'.split()) reqNot($('.form-item-' + fnm));
       req(qid); req(pass); submit.show();
@@ -575,15 +592,15 @@ function doit(what, vs) {
     });
     
     $('#edit-next .btn').click(function () {
-      if (document.getElementById('frm-ccpay').reportValidity()) {
+      if (document.getElementById('frm-pay').reportValidity()) {
         $('.form-item-next').hide();
         paySet.show();
         submit.show();
               
-        var amount = parseFloat($('#edit-amount').val());
+        var amount = parseFloat(amt.val());
         var feeCovered = amount * (
-          ($('#edit-coverFSFee input:checked').length ? parseFloat($('#edit-fsfee').val()) : 0) + 
-          ($('#edit-coverCCFee input:checked').length ? parseFloat(vs['ccRate']) : 0)
+          ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0) + 
+          ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0)
         );
         amount += feeCovered;
         const info = {

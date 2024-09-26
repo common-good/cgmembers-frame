@@ -49,10 +49,10 @@ function formPay($form, &$sta, $args = NULL) {
 
   [$amount, $amtDpy] = amount($amount, $s_amount, $isGift); 
   [$itemDpy, $item, $forDpy] = itemDpy($for, $item, $s_item, $credit);
-  $fsFee = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
+  $fsPct = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
 
   if ($isGift) {
-    $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, t('Check here to cover the %fee% fiscal sponsorship fee also.', 'fee', u\fmtAmt($fsFee * 100, 's')), 0) : hidFld(0);
+    $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, tr('cover FS fee', 'fee', u\fmtAmt($fsPct * 100, 's')), 0) : hidFld(0);
     $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft(nn($period) ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1)), $oftens);
     $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft(nn($honored))));
     $honor = selectFld(t('Honoring:'), '', suffix($honored) + dft(nn($honor)), $honors);
@@ -69,7 +69,7 @@ function formPay($form, &$sta, $args = NULL) {
   $note = textFld(t('Note:'), [t('About the payment')]);
 
   $form = compact(ray('logo title subtext amtChoice amount amtDpy period honor itemDpy item forDpy coverFSFee stayLabel stay qid pass nonMember paySet note'));
-  foreach (ray('isGift coId credit for return fsFee recursId button') as $k) $form[$k] = hidfld(nn($$k, NULL));
+  foreach (ray('isGift coId credit for return fsPct recursId button') as $k) $form[$k] = hidfld(nn($$k, NULL));
   
   $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
   $submitLabel = $isGift ? t('Donate') : t('Pay');
@@ -77,7 +77,7 @@ function formPay($form, &$sta, $args = NULL) {
   $form += ($mya and $isCG) ? w\setupFoot($submitLabel, $noteSuffix) : compact('submit');
 
   js('https://js.stripe.com/v3/');
-  jsx('pay', ray('stripePublicKey ccRate', STRIPE_PUBLIC, CC_FEE / 100));
+  jsx('pay', ray('stripePublicKey ccPct ccPlus', STRIPE_PUBLIC, CC_PCT, CC_PLUS));
 
   return cgForm($form);
 }
@@ -382,7 +382,7 @@ function nonMember($isGift, $s_id) {
   $paymentErr = item('', NBSP);
   $paySet = fieldSet('paySet', compact(ray('payment paymentErr')), BARE);
 
-  $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, t('Check here to cover the transaction processing fees also.'), 0) : NULL;
+  $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, tr('cover cc fee'), 0) : NULL;
   $next = btnFld('', '', t('Next'));
   $fullName = textFld(t('Name:'), [t('Your full name, properly capitalized')]);
   $phone = phoneFld(t('Phone:'), [t('Your phone number')]);
