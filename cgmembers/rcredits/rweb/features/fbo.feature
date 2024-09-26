@@ -40,7 +40,7 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A non-member donates to a sponsored member
+Scenario: A non-member donates to a sponsored member by check
   When member "C:A" visits "tx/charge"
   Then we show "Charge" with:
   | Full Name   | |
@@ -64,17 +64,18 @@ Scenario: A non-member donates to a sponsored member
   | Full Name   | |
   | Postal Addr | |
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat         | isGift |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO       | 1      |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method   | ckNumber | ckDate   |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_CHECK | 123      | 9/1/2024 |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
+  And count "txs" is 2
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose                        | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant (check #123, 09/01/2024) |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE                       | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -96,13 +97,52 @@ Scenario: A non-member donates to a sponsored member
   | amount       | $100            |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
-  | item        | grant                |**
+  | item        | grant (check #123, 09/01/2024) |**
   | amount      | $100                 |
   | date        | %mdY                 |
   | fromName    | Dee Forn             |
   | fromAddress | 4 Fr St, Fton, MA 01004 |
   | fromPhone   |                      |
   | fromEmail   | d@example.com        |
+
+Scenario: A non-member donates to a sponsored member by direct ACH
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "C:A" submits "tx/charge" with:
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method       |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_DIRECTACH |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  # choice between Pay and Charge gets set in JS
+  And we say "status": "info saved"
+  And count "txs" is 2
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+
+Scenario: A non-member donates to a sponsored member by wire transfer
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "C:A" submits "tx/charge" with:
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method  |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_WIRE |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  # choice between Pay and Charge gets set in JS
+  And we say "status": "info saved"
+  And count "txs" is 3
+  And these "txs":
+  | eid | xid | payer      | payee | amount    | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100       | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
+  |   4 | 1   | .ZZC       | cgf   | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
 
 Scenario: A non-member donates to Common Good
   Given members have:

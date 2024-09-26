@@ -421,7 +421,9 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST donate AMemberMakesANewRecurringDonation
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
  *     TEST donate AMemberDonatesWithInsufficientFunds
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -491,7 +493,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST ccpay ANonmemberDonatesToACcOkOrganizationByACH
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByCreditCard
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
@@ -606,7 +608,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST donate AMemberDonates
  *     TEST donate AMemberMakesANewRecurringDonation
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
@@ -732,7 +734,7 @@ function with($content) {return weShow($content);}
  * without: (ARG)
  *
  * in: TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST investinterest AMemberExpressesInterest
@@ -814,7 +816,7 @@ function withoutOptions($options) {
  *     MAKE donate Setup
  *     TEST download Setup
  *     TEST fbo Setup
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
@@ -1225,7 +1227,9 @@ function statisticsGetSet($time) {
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCSV
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsQBO
  *     MAKE download AMemberDownloadsTransactionsForThePastYearAsCombo
- *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -1678,7 +1682,9 @@ function coupons($list) {return t\coupons($list);}
 /**
  * we scrip (ARG) with subs: (ARG)
  *
- * in: TEST fbo ANonmemberDonatesToASponsoredMember
+ * in: TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
@@ -1754,7 +1760,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST donate AMemberDonatesWithInsufficientFunds
  *     MAKE download Setup
  *     MAKE fbo Setup
- *     TEST fbo ANonmemberDonatesToASponsoredMember
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredMemberChargesAMember
@@ -1987,6 +1995,9 @@ function memberIsUnconfirmed($id) {
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
  *     TEST donate AMemberMakesANewRecurringDonationOfZero
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     TEST fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     TEST fbo ANonmemberDonatesToASponsoredOrganizationByACH
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
@@ -2403,7 +2414,7 @@ function memberAjaxWith($id, $op, $data) {
  *
  * in: MAKE aacc SomeoneAsksToMakeACreditCardDonation
  *     MAKE ccpay ANonmemberDonatesToACcOkOrganizationByCreditCard
- *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
@@ -2498,7 +2509,9 @@ function nextCaptchaIs($ca) {
  * member (ARG) submits (ARG) with: (ARG)
  *
  * in: MAKE ccpay AMemberPaysACcOkOrganization
- *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE fbo ASponsoredMemberChargesAMember
@@ -2621,7 +2634,9 @@ function buttonCodeFor($var, $args) {
  * member (ARG) has admin permissions: (ARG)
  *
  * in: MAKE changeaccount Setup
- *     MAKE fbo ANonmemberDonatesToASponsoredMember
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByDirectACH
+ *     MAKE fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     MAKE fbo ANonmemberDonatesToCommonGood
  *     MAKE fbo ASponsoredMemberPaysANonmember
  *     MAKE queries Setup

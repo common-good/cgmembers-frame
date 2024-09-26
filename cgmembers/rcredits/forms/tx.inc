@@ -49,7 +49,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card, 0::PROJECT Account')));
+  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card')));
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
@@ -172,7 +172,7 @@ function formTx_submit($form, &$sta) {
 function fboTx($input) {
   global $mya;
 
-  extract($input);
+  extract(just('amount purpose paying hasCats fullName address city state zip phone email cat isGift method ckNumber ckDate', $input, NULL));
   $state = (int) $state;
   u\EXPECT($hasCats and ($paying or $mya->admNonmemberTx), 'hasCats income by non-admin');
   $uid = UID_OUTER;

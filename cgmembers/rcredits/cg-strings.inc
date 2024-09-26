@@ -269,6 +269,9 @@ EOF
   'sent message' => t('Your message has been sent to %fullName.'),
   'pass saved' => t('Your new password has been saved.'),
   'cc fee' => t('credit card processing fee (%CC_FEE%)'),
+  'wire fee' => t('wire transfer fee'),
+  'cover cc fee' => t('<span>Check here to cover the transaction processing fee (%CC_PCT% + %CC_PLUS¢).</span>'), // must include <span> (see 'pay' in scraps.js)
+  'cover FS fee' => t('<span>Check here to cover the fiscal sponsorship fee (%fee%).</span>'), // must include <span> (see 'pay' in scraps.js)
     
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',
