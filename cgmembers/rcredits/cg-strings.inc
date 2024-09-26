@@ -267,7 +267,8 @@ EOF
   'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),
   'sent message' => t('Your message has been sent to %fullName.'),
   'pass saved' => t('Your new password has been saved.'),
-  'cc fee' => t('credit card processing fee (%CC_FEE%)'),
+  'cc fee' => t('credit card processing fee (%CC_PCT% + %CC_PLUS¢)'),
+  'wire fee' => t('wire transfer fee'),
   'cover cc fee' => t('<span>Check here to cover the transaction processing fee (%CC_PCT% + %CC_PLUS¢).</span>'), // must include <span> (see 'pay' in scraps.js)
   'cover FS fee' => t('<span>Check here to cover the fiscal sponsorship fee (%fee%).</span>'), // must include <span> (see 'pay' in scraps.js)
     
@@ -319,7 +320,7 @@ EOF
   'search forbidden' => t('You need to be signed in to refer to a member account.'),
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
   'no paypal cancel' => t('We apologize. This form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
-  'categorize txs' => t('You must resolve uncategorized transactions before exporting to QBO.'),
+  'categorize txs' => t('You must resolve uncategorized transactions before exporting to QBO (see xid #%xid, eid #%eid).'),
   'auto bankout nsf' => t('Your %when transfer of %amount to your bank account failed because you have an available balance of only %avail. The system will try again tomorrow.'),
   'button expired' => t('That button has expired.'),
 //  'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),
