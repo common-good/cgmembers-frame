@@ -439,8 +439,8 @@ const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default prof
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 
-const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing
-const CC_PLUS = 30; // plus this many cents for credit card processing
+const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing (PayPal was 1.99%)
+const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
 define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
