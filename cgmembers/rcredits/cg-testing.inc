@@ -467,7 +467,7 @@ function doTxs($info) {
   if ($type and !is_numeric($type)) $info['type'] = u\consta('E', $type) ?: -1;
   if (isset($for)) {
     unset($info['for']);
-    if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
+    if ($p = mb_strpos($for, ',') and mb_substr($for, $p+1, 1) != ' ') $for = explode(',', $for); // specifying both (no space after a comma)
     if ($for) list ($for1, $for2) = is_array($for) ? $for : [$for, $for];
     $info += compact(ray('for1 for2'));
     if (u\starts($for2, 'undoes:')) $info['reversesXid'] = substr($for2, mb_strpos($for2, ':') + 1);

@@ -1556,6 +1556,11 @@ function createUsdTransfer($a, $amount, $options = []) {
   if (isset($method)) $extra += compact('method');
   
   txEntryPair($txes, $tx, 0, [$bankId, $payee], $purpose, $eType, $extra); // tentative amount is 0
+  
+  if (u\getBit($flags, B_WIRE)) { // wire transfer -- add fee
+    be\txEntryPair($txes, $tx, WIRE_FEE, [$payee, CGID], tr('wire fee'), E_XFEE);
+  }
+
   list ($buyer, $seller) = u\order($amount > 0, r\acct($bankId), $a);
   if ($amount) handleSurTx($txes, $tx, $buyer, $seller, abs($amount), FALSE);
   $tx->addEntries($txes);
