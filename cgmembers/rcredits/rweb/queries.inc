@@ -84,7 +84,8 @@ if ($mya and $mya->admin) {
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
   1 . t('Fiscal Sponsorships') =>
-    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, IF(u.:IS_OK, 'active', IF(u.activated, 'CLOSED', 'pending')) AS status,
+      fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
       IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x1.inLast3m AS GiftsLast3Mo, x2.outLast12m AS ExpenseLast12Mo, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
@@ -100,7 +101,8 @@ if ($mya and $mya->admin) {
         FROM txs t 
         WHERE t.created >:NOW-:YEAR_SECS GROUP BY uid
       ) x2 USING(uid)
-      WHERE u.:IS_OK AND coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
+      WHERE coFlags & (1<<:CO_SPONSORED) 
+      ORDER BY u.:IS_OK DESC, u.fullName",
       
   1 . t('Fiscal Sponsorships Last FY') =>
     "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,

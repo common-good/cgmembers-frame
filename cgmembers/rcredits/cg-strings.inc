@@ -344,6 +344,8 @@ EOF
   'funding error' => t("You do not have permission to fund that person."),
   'no matching invoice' => t('That is not an unpaid request.'), // Type "helpme pay".'),
   'inv already paid' => t('That payment request is already paid.'), // message to either payer or payee
+  'inv canceled' => t('That payment request is canceled.'),
+  'inv delayed' => t('That payment request will have to wait until both payer and payee accounts are active.'),
   'inv already funding' => t('That payment request is already approved and funds have been requested from your bank account. Payment will be made once the bank transfer is complete.'), // message to either payer or payee
   'inv is canceled' => t('That payment request has been canceled.'),
   'undo no match' => t("You have no matching transactions to undo."),
