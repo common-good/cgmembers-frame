@@ -295,7 +295,7 @@ function getCGPayArgs($args, $mya) {
   if ($err = missingArgs($args, 'code')) return exitErr($err);
   $code = $args['code'];
   if (test() and $code == 'TESTCODE') $code = $testCode;
-  if (!$ray = u\decryRay($code)) return exitErr(t('The "code" parameter is not valid.'));
+  if (!$ray = u\decryRay($code)) return exitErr(t('That is not a valid link for payment or donation.'));
   if ($dups = just($args, $ray)) return exitErr(t('Parameter "%k" attempts to override that parameter as encoded in "code".', 'k', $dups[0]));
 
   foreach (ray(CGPAY_VARS) as $k) u\setDft($ray[$k], NULL); // make sure all possible parameters get extracted from return, even if not set
