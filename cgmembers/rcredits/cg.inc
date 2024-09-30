@@ -476,7 +476,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   
   $topic = mb_strlen($index) < 100 ? $index : '';
   $noFrame = TRUE;
-  $chan = ray(TX_CHANNELS)[$channel];
+  $chan = nni(ray(TX_CHANNELS), $channel);
   $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
   $body = u\seeAssoc($subs);
