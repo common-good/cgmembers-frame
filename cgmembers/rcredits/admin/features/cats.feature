@@ -243,3 +243,16 @@ Scenario: admin sets most categories and sends to QBO
   And QBO gets Tx "cg#79":"labor [Bea Two]" dated "%ymd-5m" with entries:
   | 709 Credit .ZZC  | 709 Debit FBO-LABOR    |
   And QBO gets nothing else
+
+Scenario: The region makes an investment
+  Given these "txs":
+  | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   | cat2   |*
+  | 901 |  91 | %now-5m |   -901 | %UID_OUTER | ctty  | loan    |      | outer |          |         | INVEST |
+  And these "txs2":
+  | xid | payee | amount | created | deposit | completed | pid | bankAccount  | bankTxId |*
+  |  91 | ctty  |   -901 | %now-5m | %now-5d | %now-6d   | 101 | %NUL         | 0        |
+  When member ".ZZA" submits "sadmin/set-cats" with:
+  | start | %now-9m |**
+  And member ".ZZA" visits "qbo/op=txs"
+  Then QBO gets Tx "cg#91":"loan [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
+  | 901 Credit ctty   | 901 Debit INVEST      |

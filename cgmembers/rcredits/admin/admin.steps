@@ -144,7 +144,8 @@ function with($content) {return t\weShow($content);}
  *     BOTH ach AdminDownloadsACHRequests
  *     MAKE activate Setup
  *     MAKE cats Setup
- *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     BOTH cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
  *     MAKE changes Setup
  *     MAKE changeUid Setup
  *     TEST changeUid AdminMergesTwoPersonalAccounts
@@ -263,6 +264,7 @@ function memberIsSignedIn($id) {return t\isSignedIn($id);}
  * member (ARG) visits (ARG)
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
  *     MAKE changeUid AdminViewsTheMergePage
  *     MAKE super AnAdminPrintsChecks
  *     MAKE super AMemberTriesToDoAnAdminThing
@@ -310,6 +312,7 @@ function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, 
  * member (ARG) submits (ARG) with: (ARG)
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
  *     MAKE changeUid AdminMergesTwoPersonalAccounts
  *     MAKE changeUid AdminMergesTwoCompanyAccounts
  *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
@@ -349,10 +352,10 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
     $detail = $L->JournalEntryLineDetail;
     $gotRay = [$L->Amount, $detail->PostingType, $detail->AccountRef];
     $wantRay = ray($wantRay0 = $lines[(int) floor($i / 2)][$i & 1]); // conceptually the index is just $i, but we specify them in pairs
+
     $w2 = $wantRay[2];
-    $map0 = $w2[0] == '.' ? ray($w2, t\uid($w2)) : ray(tr('cgf:%CGID, fund:%UID_BANK')); // in the tests, any nickname starting with '.' is an account abbreviation
-    foreach ($map0 as $k => $v) $map[$k] = r\acct($v)->mainQid;
-    $wantRay[2] = r\qbCat(strtr($w2, $map));
+    if ($w2[0] == '.' or ctype_lower($w2)) $w2 = r\acct(t\uid($w2))->mainQid;
+    $wantRay[2] = r\qbCat($w2);
     for ($j = 0; $j < 3; $j++) if (t\badEq(t('journal line #') . "$i - $id: $wantRay0", $wantRay[$j], $gotRay[$j])) return FALSE;
   }
   
@@ -363,6 +366,7 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
  * QBO gets Tx (ARG):(ARG) dated (ARG) with entries: (ARG)
  *
  * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     TEST cats TheRegionMakesAnInvestment
  */
 function qBOGetsTxDatedWithEntries($id, $desc, $dt, $lines) {return qBOGetsTxWithINAndOUTDatedWithEntries($id, $desc, NULL, $dt, $lines);}
 
@@ -417,3 +421,10 @@ function fieldsOfMatch($xtnm) {
   array_shift($xFlds);
   return t\eq("$xtnm fields", db\cols($tnm), $xFlds);
 }
+
+/**
+ * we say (ARG): (ARG) with subs: (ARG)
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
