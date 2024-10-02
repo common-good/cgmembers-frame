@@ -17,6 +17,7 @@ use CG\Web as w;
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
+define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
@@ -464,7 +465,7 @@ function doTxs($info) {
   if ($type and !is_numeric($type)) $info['type'] = u\consta('E', $type) ?: -1;
   if (isset($for)) {
     unset($info['for']);
-    if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
+    if ($p = mb_strpos($for, ',') and mb_substr($for, $p+1, 1) != ' ') $for = explode(',', $for); // specifying both (no space after a comma)
     if ($for) list ($for1, $for2) = is_array($for) ? $for : [$for, $for];
     $info += compact(ray('for1 for2'));
     if (u\starts($for2, 'undoes:')) $info['reversesXid'] = substr($for2, mb_strpos($for2, ':') + 1);
@@ -1089,8 +1090,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
 function uid($id, $field = '') {
   u\EXPECT(!$field, 'nonempty field');
   if (is_numeric($id) or empty($id)) { return $id; }
-  $map = ray('ctty cgf bank regulars crumb round stepups',
-             r\serverUid(), CGID, UID_BANK, UID_REGULARS, UID_CRUMBS, UID_ROUNDUPS, UID_STEPUPS);
+  $map = array_combine(ray(SPECIAL_IDS), ray(SPECIAL_UIDS));
   if ($res = nni($map, $id)) return $res;
 
   $qo = r\qo(fullQid2($id));

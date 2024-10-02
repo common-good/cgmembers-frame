@@ -206,7 +206,7 @@ class QB {
   public function sendTxs($omitBankTxs, $end = NOW) { // usually call only from sendBankTxs
     global $testQbTxs;
     
-    $start = strtotime('7/1/2021');
+    $start = strtotime('7/1/2022');
 //    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
     $cnt = 0;
@@ -334,6 +334,7 @@ X;
 
       $this->addJLine($qbTx, $uidNick, -$amt, $desc);
       if ($cat != CAT_CG2CG) $this->addJLine($qbTx, $cat, $amt, $desc);
+      if ($cat == r\nick2cat('INVEST')) break;
     }
 
     if (isset($ccFee)) { // save the CC processor fees for AFTER the main transaction

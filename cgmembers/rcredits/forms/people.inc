@@ -27,7 +27,9 @@ function formPeople($form, &$sta, $args = '') {
   $state = stateFld($state ?: R_STATE_ID);
   $zip = zipFld($zip);
 
-  $method = w\radiosFld(t('Preferred Contact:'), '', dft($method), ray(METHOD_OPTS));
+
+  $methods = ray(METHOD_OPTS);
+  $method = w\radiosFld(t('Preferred Contact:'), '', dft(nni(array_flip($methods), $method, 0)), $methods);
   $source = textFld(t('Source:'), '', dft($source));
   $gpsExtra = ray('step min', .00000001, -99.99999999);
   $latitude = numFld(t('Latitude:'), '', dft($latitude ?: 0) + $gpsExtra);

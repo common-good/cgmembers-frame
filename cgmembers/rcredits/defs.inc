@@ -431,6 +431,9 @@ const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // de
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 
 const CC_FEE = 3; // percentage of transaction amount to charge for credit card processing
+const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing (PayPal was 1.99%)
+const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
+const WIRE_FEE = 12; // what our bank charges for incoming wire transfers
 define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
@@ -654,7 +657,7 @@ const B_u4 = 4; //
 const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_CHECK = 7; // transaction method is payment by check -- default method is by normal CG transfer (member) OR by one-time ACH through CG system (nonmember)
-const B_CC = 8; // payment by credit card
+const B_CC = 8; // payment to CG or to a CG-sponsored or CG-owned organization by credit card
 const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)
