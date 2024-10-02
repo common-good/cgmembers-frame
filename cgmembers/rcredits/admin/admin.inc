@@ -48,6 +48,8 @@ function setupBasicAccounts($withEIN = TRUE) {
       $info += compact(ray('postalAddr address city state activated' . ($withEIN ? ' federalId' : '')));
       $serverA = new r\Acct($info);
       $serverA->update(compact('zips'));
+      $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
+      $serverA->setCoBit(CO_OUROWN);
     }
   }
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
@@ -66,7 +68,6 @@ function setupBasicAccounts($withEIN = TRUE) {
 
   $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
 
-  $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
   if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
   $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo);
