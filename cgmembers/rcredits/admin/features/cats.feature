@@ -37,7 +37,15 @@ Setup:
   | start     | %now         |
   | end       |              |
   | code      |              |
-  And these "txs":
+
+Scenario: admin visits the Set Categories page
+  When member ".ZZA" visits page "sadmin/set-cats"
+  Then we show "Set Transaction Categories" with:
+  | Starting Date | 202 | -01 |
+  | Set Cats      | | |
+
+Scenario: admin sets most categories and sends to QBO
+  Given these "txs":
   | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   |*
 # non-member gifts to CG  
   | 201 |  21 | %now-6m |    201 | %UID_OUTER | cgf   | by CC   |      | outer |          | cc,gift |
@@ -101,14 +109,6 @@ Setup:
   |  32 | cgf   |    302 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
   |  33 | cgf   |    303 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
   |  41 | .ZZF  |    401 | %now-5m | %now-3d | %now-3m   | 101 | %NUL         | 0        |
-
-Scenario: admin visits the Set Categories page
-  When member ".ZZA" visits page "sadmin/set-cats"
-  Then we show "Set Transaction Categories" with:
-  | Starting Date | 202 | -01 |
-  | Set Cats      | | |
-
-Scenario: admin sets most categories and sends to QBO
   When member ".ZZA" submits "sadmin/set-cats" with:
   | start | %now-9m |**
   Then we say "status": "Set 39 cats."
@@ -170,7 +170,7 @@ Scenario: admin sets most categories and sends to QBO
 
   When member ".ZZA" visits "qbo/op=txs"
   Then QBO gets Tx "cgFund#%now0" with IN "$1,010 (4)" and OUT "$0 (0)" dated "%ymd0" with entries:
-  | 1010 Debit fund   | 1010 Credit POOL      |
+  | 1010 Debit bank   | 1010 Credit POOL      |
   And QBO gets Tx "cg#21":"by CC [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
   | 201 Debit cgf     | 201 Credit D-ONCE     |
   | 201 Credit POOL   | 201 Debit PROCESSOR   |
