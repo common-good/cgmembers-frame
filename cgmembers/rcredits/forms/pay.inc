@@ -289,7 +289,7 @@ function getCGPayArgs($args, $mya) {
 
   foreach ($args as $k => $v) if (!in($k, 'q code')) {
     if (strlen($v) > CGPAY_MAXLEN) return exitErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
-    if (!in($k, CGPAY_VARS2)) return exitErr(t('"%k" is not a parameter. Check your spelling?', compact('k')));
+    if (!in($k, CGPAY_VARS2 . ' _gl')) return exitErr(t('"%k" is not a parameter. Check your spelling?', compact('k'))); // _gl is added by google
   }
 
   if ($err = missingArgs($args, 'code')) return exitErr($err);
