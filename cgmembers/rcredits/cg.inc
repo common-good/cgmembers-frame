@@ -17,6 +17,8 @@ use CG\Backend as be;
 use CG\Web as w; // use sparingly
 use CG\Testing as t;
 
+include_once __DIR__ . '/classes/acct.class'; // sometimes needed
+
 /*use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
