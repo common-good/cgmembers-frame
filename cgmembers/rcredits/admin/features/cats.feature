@@ -157,9 +157,10 @@ Scenario: admin sets most categories and sends to QBO
   | 700 |            |             |
   | 801 |            |             |
   | 800 |            |             |
-
   When member ".ZZA" visits "qbo/op=txs"
-  Then we say "error": "categorize txs"
+  Then we say "error": "categorize txs" with subs:
+  | xid | eid  |*
+  | 50  | -500 |
   
   Given tx 50 cat 1 is "ACCOUNTING"
   And tx 70 cat 1 is "FBO-LABOR"
