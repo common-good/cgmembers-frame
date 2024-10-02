@@ -47,7 +47,7 @@ Scenario: A new recurring payment is not to be completed yet
   When cron runs "recurs"
   Then count "txs" is 1
   And count "tx_requests" is 0
-Skip
+
 Scenario: A recurring sweep can be completed
   Given these "tx_timed":
   | id | action | start      | from | to   | amount | period | purpose |*
@@ -104,13 +104,13 @@ Scenario: A second recurring payment can be completed
   | xid | created | amount | payer | payee | purpose | flags  | recursId |*
   |   3 | %now    |     10 | .ZZA  | .ZZB  | pmt     |        |        8 |
 
-Scenario: A second recurring payment can be completed from a non-member
+Scenario: A second recurring payment can be completed from a non-member by ACH
   Given these "people":
   | pid | fullName |*
   | 123 | Ned Nine |
   And these "tx_timed":
-  | id | start    | from         | to   | amount | period | purpose | payerType   | payer |*
-  |  8 | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   |
+  | id | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
+  |  8 | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   |          |
   And these "txs":
   | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
   |   2 | %now-8d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
@@ -124,6 +124,27 @@ Scenario: A second recurring payment can be completed from a non-member
   And these "txs2":
   | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
   | 3   | %now    | %now      | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
+
+Scenario: A second recurring payment can be completed from a non-member by card
+  Given these "people":
+  | pid | fullName |*
+  | 123 | Ned Nine |
+  And these "tx_timed":
+  | id | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
+  |  8 | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   | strId456 |
+  And these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   2 | %now-8d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 2   | %now-8d | %now-8d   | 10     | .ZZB  | 123 | %NUL        | %NUL      |
+  When cron runs "recurs"
+  Then these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   3 | %now    |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 3   | %now    | %now      | 10     | .ZZB  | 123 | %NUL        | %NUL      |
   
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":
@@ -163,12 +184,12 @@ Scenario: A recurring payment cannot be completed
   |  8 | %yesterday | .ZZA | .ZZB |    200 | week   | pmt     |
   When cron runs "recurs"
   Then these "tx_requests":
-  | nvid | created | status       | amount | payer | payee | for  | flags  | recursId |*
-  |    1 | %now    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  |        |        8 |
+  | nvid | created | status       | amount | payer | payee | for  | flags   | recursId |*
+  |    1 | %now    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | funding |        8 |
   And count "tx_requests" is 1
   And these "txs2":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    100 | .ZZA  |         0 |       0 |
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 1
@@ -178,7 +199,7 @@ Scenario: A recurring payment cannot be completed
   Then count "txs" is 2
   And these "txs2":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    100 | .ZZA  |         0 |       0 |
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "txs2" is 1
   And count "tx_requests" is 1
 

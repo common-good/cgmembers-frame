@@ -31,7 +31,7 @@ function formAccredit_submit($form, &$sta) {
 
   $uid = whoId($sta);
   $a = r\acct($uid);
-  be\advanceCredit(SELF_CREDIT, $a, $mya, $amount);
+  be\advanceCredit(FOR_CREDIT, $a, $mya, $amount);
 
   $msg = 'store grant|to redeem';
   if ($a->stepsLeft('card')) $msg .= '|want a card|finish get card';

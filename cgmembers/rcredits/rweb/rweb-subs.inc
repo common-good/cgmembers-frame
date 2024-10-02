@@ -694,7 +694,7 @@ function roundupFld($a) {
 function boolFld($title = '', $help = '', $dft = NULL, $labels = NULL, $extra = []) {
   $class = ['yesno'];
   $inline = TRUE;
-  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
+  $dft = is_null($dft) ? dft(-1) : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
   return radiosFld($title, $help, $extra + $dft + compact('class', 'inline'), $labels ?: array(t('No'), t('Yes')));
 }
 
@@ -2192,6 +2192,9 @@ function emailtag($email = NULL, $subject = '', $body = '') {
 function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
+function btnFld($label, $href, $text, $style = '', $size = 'md', $extras = []) {
+  return item(btn($href, $text, $style, $size), $label, '', $extras);
+}
 function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
@@ -2233,10 +2236,14 @@ function skipStepLonger() {
   
 /**
  * Return account and password fields for sign-in.
+ * @param string $qid: default account identifier
+ * @param string $req: REQ (required) or ''
+ * @param string $acctDesc: account description
+ * @param string $passDesc: password description
  */
-function signinFlds($qid, $acctDesc = '', $passDesc = '') {
-  $qid = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
+function signinFlds($qid, $req = '', $acctDesc = '', $passDesc = '') {
+  $qid = textFld($req . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld($req . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
   return [$qid, $pass];
 }
 

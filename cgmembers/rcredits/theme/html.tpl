@@ -44,7 +44,7 @@ global $pageTitle;
  * @see template_preprocess_html()
  * @see template_process()
  */
-global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $styleNonce;
+global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $scriptNonce;
 $version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
@@ -57,13 +57,16 @@ $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $page
 $scripts = '';
 $tm = now();
 foreach ($s as $id => $v) { // having selected the scripts, format for inclusion in page
-  $src = "$rUrl/js/$id.js";
-  if (!strpos($src, 'x/') or $v) {
+  $exo = u\starts($id, 'http');
+  $src = $exo ? $id : "$rUrl/js/$id.js";
+  if ((strpos($src, 'x/') or $exo) and !$v) { // 3rd-party or has args
+    $idRay = []; // no id for 3rd-party scripts
+  } else { 
     if (u\starts($id, 'goo-')) $src = 'https://www.google.com/' . substr($id, 4); else $src .= "?v=$tm&$v"; // $v is either a small integer (from array_flip) or all script arguments
     $idRay = ray('id', "script-$id");
-  } else { $idRay = []; } // no id for 3rd-party scripts
+  }
   if (in($id, SCRIPT_MODULES)) $idRay['type'] = 'module';
-  $nonceRay = ray('nonce', $styleNonce); // but external nonce fails in Edge as of 12/14/2017
+  $nonceRay = ray('nonce', $scriptNonce); // but external nonce fails in Edge as of 12/14/2017
   
   if (strpos($v, ';')) { // temporary for inline
     $scripts .= w\tags('script', $v, $idRay) . "\n";

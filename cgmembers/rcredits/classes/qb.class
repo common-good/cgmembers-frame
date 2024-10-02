@@ -12,8 +12,8 @@ use QuickBooksOnline\API\Facades as qbFacades;
 const LOAN_CAT = 11150; // cat of "Other Loans" asset category
 const QSEND_TEST = FALSE; // outputs instead of sending
 const MAX_QCNT = 0; // maximum number of txs to send (whether testing or not)
-const CC_PCT = .0199; // credit card processor percentage fee
-const CC_PT = .49; // credit card processor per-transaction fee
+const CC_PCT0 = 2.9; // actual credit card processor percentage fee (PayPal was 1.99%)
+const CC_PLUS0 = 30; // actual credit card processor per-transaction fee in cents (PayPal was 49 cents)
 
 const QB_TYPES = 'Bank, Other Current Assets, Accounts Receivable, Fixed Assets, Other Assets, Credit Card, Accounts Payable, Other Current Liabilities, Long Term Liabilities, Equity, Income, Cost of Goods Sold, Expenses, Other Income, Other Expense'; // not yet used
 
@@ -316,7 +316,7 @@ X;
 
     if ($uid1 == UID_OUTER and $noBank and $cat1 != CAT_CG2CG and (!$cat1 or $cat1 = r\nick2cat($processorNick))) { // no bank account in the CG system and payer category not set yet (because UID_OUTER is not owned by CG)
       if (u\getBit($flags, B_CC)) { // payment by cc
-        $ccFee = u\sign($amt) * round(CC_PT + CC_PCT * abs($amt), 2); // add a couple lines for the processing fees CG pays
+        $ccFee = u\sign($amt) * round(CC_PLUS0 / 100 + CC_PCT0 * abs($amt) / 100, 2); // add a couple lines for the processing fees CG pays
         u\EXPECT($uid2 == CGID or db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc'))));
         $e['cat1'] = r\nick2cat($processorNick);
       } else {

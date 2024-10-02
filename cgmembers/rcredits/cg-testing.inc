@@ -35,8 +35,11 @@ const SAME_TIME = 60 * 20; // number of seconds that make no difference in "same
 function output($msg, $color = 'error') {
   global $wholeModule, $channel;
 
-  $debugFunc = $channel == TX_AJAX ? 'flog' : '\\drupal_set_message';
-  if (!isPRODUCTION and !nn($wholeModule)) $debugFunc(color($msg, $color)); // make sure we don't do this on production
+  if (!isPRODUCTION and !nn($wholeModule)) { // make sure we don't do this on production
+    \drupal_set_message(color($msg, $color));
+    if (isDEV and $channel == TX_AJAX) flog($msg);
+  }
+  
   return $color == 'error' ? FALSE : TRUE;
 }
 function err($msg) { return t\output($msg); }

@@ -34,7 +34,7 @@ function formSignin($form, &$sta, $arg = '') {
 
   $_a = atag('/settings/password/' . $qid, tabindex(3)); // uses $qid, so must precede $qid = 
   $passDesc = t('<%a>Reset password</a>', compact('_a'));
-  list ($qid, $pass) = w\signinFlds($qid, t('Your account ID or email address'), $passDesc);
+  list ($qid, $pass) = w\signinFlds($qid, REQ, t('Your account ID or email address'), $passDesc);
   $pass['#default_value'] = $pw;
   $vKeyPw = hidFld($vKeyPw); // superAdmin password
   

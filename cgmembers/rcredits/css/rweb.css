@@ -1070,7 +1070,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-taxinfo #edit-submit {display:none;}
 
 /* Options (Preferences) */
-/* #frm-options .form-item-payHow {border-top:1px solid darkgreen; padding-top:5px;} */
+/* #frm-options .form-item-payByCard {border-top:1px solid darkgreen; padding-top:5px;} */
 #frm-prefs #edit-posttext .control-data {font-size:80%; border-top:1px solid silver;}
 #frm-prefs #edit-crumbs,
 #frm-crumbs #edit-crumbs,
@@ -1382,6 +1382,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #help-modal .modal-title {text-align:left; padding:0 2px;}
 #help-modal .modal-body {text-align:left; padding:8px 16px;}
 [class^="qbtn-"] {display:inline-block; width:12px; height:12px; background:url('../images/icons/qb12.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
+.help-block [class^="qbtn-"] {width:16px; height:16px; background:url('../images/icons/qb16.png') no-repeat; margin-bottom:-5px;}
+#help-modal ul li {margin-bottom:8px;}
 
 #txsum caption {display:none;}
 #txsum tr:first-child {font-weight:bold;}
@@ -1429,6 +1431,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-donate .form-item-fullName {margin-top:5px;}
 #frm-donate #edit-title,
 #frm-donate .radio {margin-bottom:0;}
+#frm-donate #paySet {margin-top:10px;}
+#frm-donate #edit-payment label {margin-top:15px;}
 
 #edit-honor {display:inline-block; width:150px; margin-right:10px;}
 #edit-honored {display:inline-block; max-width:150px;}

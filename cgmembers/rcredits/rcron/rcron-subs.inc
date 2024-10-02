@@ -69,6 +69,7 @@ function timeFor($time, $period, $chosen) {
  * @param string $op: the function name in rcron.inc
  * @param assoc $item: a single assoc argument to that function, containing parameters
  * @param bool $always: <queue it even when running tests> (normally FALSE)
+ * @return the queue record ID or NULL if not added
  */
 function queue($op, $item = [], $always = FALSE) {
   global $cronOp; // this is set when calling cron() from PHP window on test server
@@ -76,11 +77,12 @@ function queue($op, $item = [], $always = FALSE) {
   $item = compact('op') + $item;
   if ((nn($cronOp) or test()) and !$always) {
     cr\doTask($item);
+    return NULL;
   } else {
     $item = serialize($item0 = $item);
     $dup = in($op, 'acctRisk1 geocode') ? FALSE : db\exists('queue', compact('item')); // allow dups just in this case
     if ($dup and in($op, 'payRequests getFunds1')) return; // not an error, but don't duplicate (payRequests was 5-minute getFunds followup on balChange)
     u\EXPECT(!$dup, 'item already in queue: ' . u\jsonize($item0));
-    db\insert('queue', ray('item created', $item, now()));
+    return db\insert('queue', ray('item created', $item, now()));
   }
 }

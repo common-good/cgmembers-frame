@@ -36,7 +36,7 @@ Scenario: Someone wants to open a company account
   | Federal ID    | |
 
 Scenario: A company signs up
-  Given next random code is "WHATEVER"
+  Given next codes are "zot zot WHATEVER"
   When member ".ZZA" completes form "signup-co/relate=1" with values:
   | fullName  | New Co       |**
   | legalName |              |

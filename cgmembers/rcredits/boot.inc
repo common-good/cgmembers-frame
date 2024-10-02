@@ -7,7 +7,7 @@
 
 strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we expect)
  
-global $base_url, $base_path, $base_root, $styleNonce;
+global $base_url, $base_path, $base_root;
 global $databases, $drupal_hash_salt;
 global $cookie_domain, $is_https, $base_secure_url, $base_insecure_url;
 global $CGdomain;
@@ -93,7 +93,7 @@ function strip(&$v) {
   } else $v = preg_replace('~<[!/a-z][^>]*(>|$)~i', '', $v); // not strip_tags, which zaps <3, etc.
 }
 
-define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.php $base_url/sadmin/export-list/ $base_url/show-doc/"); // base_url not self, because we use this to sanitize page too
+define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.php $base_url/sadmin/export-list/ $base_url/show-doc/ https://js.stripe.com/"); // base_url not self, because we use this to sanitize page too
 
 /** Set Content-Security-Policy
  * We might want to use require-sri-for eventually for even our own scripts and style sheets
@@ -105,13 +105,13 @@ define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.
  * nonces are for spin.min.js on iPhone (but it doesn't work)
  */
 function setCSP() {
-  global $styleNonce; $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
+  global $scriptNonce; $scriptNonce = $nonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
   $uri = $_SERVER['REQUEST_URI'];
 
   $styleSource = ($uri == 'co/cgbutton' or ($uri == 'community/invite' and nni($_POST, 'example')))
   ? "'unsafe-inline'"  // allow inline styles when creating button
-  : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
+  : "'nonce-$nonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
   
   header('Content-Security-Policy: '
     . "base-uri 'self';"
@@ -123,7 +123,7 @@ function setCSP() {
     . "manifest-src 'self';"
     . "media-src 'self';"
     . "object-src 'none';"
-    . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
+    . "script-src 'self' 'nonce-$scriptNonce' 'report-sample' https://js.stripe.com/v3/fingerprinted/js/;" // 'report-sample' allows script fragment to be included in CSP reports
     . "img-src 'self' https://cg4.us data:;" // data: is for photo upload and QR code
     . "style-src 'self' $styleSource;"
     . "worker-src 'self';"

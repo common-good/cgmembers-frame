@@ -66,6 +66,9 @@ For maximum security, the method list for "V" should include pp.
 *dkimPublic*   public key for email encryption, base64 encoded with EOLs replaced by spaces (not used, here for reference)
 *geocodeKey*   account identifier for opencagedata.com geo-coding service
 *inviteKey*    arbitrary string of 0s and 1s, for generating invitation codes (must be 10101 for development tests to work)
+*stripePublic* publishable key for Stripe transaction processing
+*stripeSecret* secret key for Stripe transaction processing
+
 
 =================================================================================
 
