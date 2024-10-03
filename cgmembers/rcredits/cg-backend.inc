@@ -534,7 +534,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($payAmount > invRemains($nvid)) $extra['overpaid'] = 1;
-  if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+  if ($flags) foreach (ray('gift crumbs investment self') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
