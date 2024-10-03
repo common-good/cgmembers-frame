@@ -168,7 +168,7 @@ Scenario: A recurring payment cannot be completed
   And count "tx_requests" is 1
   And these "txs2":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    100 | .ZZA  |         0 |       0 |
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "txs" is 2
   And count "txs2" is 1
   And count "tx_requests" is 1
@@ -178,7 +178,7 @@ Scenario: A recurring payment cannot be completed
   Then count "txs" is 2
   And these "txs2":
   | txid | amount | payee | completed | deposit |*
-  |    1 |    100 | .ZZA  |         0 |       0 |
+  |    1 |    200 | .ZZA  |         0 |       0 |
   And count "txs2" is 1
   And count "tx_requests" is 1
 
