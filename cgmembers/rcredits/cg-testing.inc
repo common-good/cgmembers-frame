@@ -93,7 +93,11 @@ function fixData(&$info, $direct = FALSE) {
   if (!is_numeric($key = key($info)) and u\validVarName($key)) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
-      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", nn($var), $v);
+      foreach ($testVars as $varName => $var) {
+        if (is_array($var)) {
+          if ($v == "@$varName") $info[$k] = $var;
+        } else $info[$k] = str_replace("@$varName", nn($var), $v);
+      }
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   
@@ -406,12 +410,12 @@ function doAccounts($info = []) {
   u\setDft($community, r\serverUid());
   u\setDft($zip, '01301');
   u\setDft($country, 'US');
-  extract(fixState(nn($state), nn($country)));
+  u\setDft($state, R_STATE_ID);
+  extract(fixState($state, $country));
 
+  $st = r\realState($state);
   u\setDft($address, '1 My Street');
   u\setDft($city, 'Mytown');
-  u\setDft($state, R_STATE_ID);
-  $st = r\realState($state);
   u\setDft($postalAddr, nn($address2) ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
 
   //    u\setDft($photoId, "$state-{$zip}999");
@@ -1425,10 +1429,11 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
       //      ksort($actualRow);
       //      output("Actual $table record at $infoK=$infoV: " . pr($actualRow));
       $difs = '';
+      $flagBits = $table == 'users' ? B_LIST : TX_FLAGS;
       foreach ($info as $k => $v) {
         $v2 = nni($actualRow, $k);
         foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
-        if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, B_LIST);
+        if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $flagBits);
         if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $riskRay);
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }

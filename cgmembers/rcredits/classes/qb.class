@@ -430,8 +430,10 @@ X;
   }
   
   public function delQbTx($id, $objName = 'JournalEntry') {
-    if (!$qbTx = $this->getQbTx($id, $objName)) return FALSE;
-    $this->ds->Delete($qbTx);
+    if (!test()) {
+      if (!$qbTx = $this->getQbTx($id, $objName)) return FALSE;
+      $this->ds->Delete($qbTx);
+    }
     w\say(t('QBO entry %id deleted.', compact('id')));
     return TRUE;
   }    

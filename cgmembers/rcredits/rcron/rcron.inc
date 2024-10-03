@@ -338,7 +338,8 @@ function recur($template) {
     u\EXPECT($payee == $to, 'previous ACH mismatch');
     $coA = r\acct($to);
     $type = r\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
-    $info = compact(ray('amount purpose created')) + ray('explicit completed recursId deposit gift', FALSE, now(), $id, 0, TRUE);
+    $flags |= u\bit(B_SELF);
+    $info = compact(ray('amount purpose created flags')) + ray('explicit completed recursId deposit gift', FALSE, now(), $id, 0, TRUE);
     be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
     r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
     be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
@@ -356,6 +357,7 @@ function recur($template) {
 
     $DBTX = \db_transaction();
     if ($action == 'pay') {
+      $data['self'] = TRUE;
       if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
@@ -1037,7 +1039,7 @@ function getFunds1($item) {
   } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
     if (!$a->debt) { // member chose never to go negative
       $a->getFunds(-$a->balance, tr('to zero'));
-    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
+    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS and !in($uid, r\cgsOwnUids())) { // debt timeout
       $a->getFunds(-$a->balance, tr('debt timeout', 'signed', fmtDt($a->signed)));
     }
   }

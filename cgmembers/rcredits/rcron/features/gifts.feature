@@ -29,8 +29,8 @@ Scenario: A brand new recurring donation to CG can be completed
   |  7 | %yesterday | .ZZA | .ZZC |     10 | month  | gift!   |
   When cron runs "payInvoices"
   Then these "txs":
-  | xid | created | amount | payer | payee    | purpose | flags | recursId |*
-  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
+  | xid | created | amount | payer | payee    | purpose | flags     | recursId |*
+  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift,self |        7 |
   And we message "paid you linked" to member ".ZZC" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
   | Abe One   | $10    | gift!        | ?        |
@@ -69,8 +69,8 @@ Scenario: A brand new recurring donation to CG can be completed
   |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee    | purpose | flags | recursId |*
-  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift |        7 |
+  | xid | created | amount | payer | payee    | purpose | flags     | recursId |*
+  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift,self |        7 |
   And we message "recur pay" to member ".ZZA" with subs:
   | amount | when    | purpose | payee    |*
   |    $10 | monthly | gift!   | %PROJECT |
@@ -92,12 +92,12 @@ Scenario: A second recurring donation to CG can be completed
   | id | start     | from | to  | amount | period | purpose |*
   | 1  | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
   And these "txs":
-  | xid | created    | amount | payer | payee    | purpose | flags | recursId |*
-  |   2 | %today-32d |     10 | .ZZA  | regulars | gift!   | gift  | 1        |
+  | xid | created    | amount | payer | payee    | purpose | flags     | recursId |*
+  |   2 | %today-32d |     10 | .ZZA  | regulars | gift!   | gift,self | 1        |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee    | purpose | flags |*
-  |   3 | %today  |     10 | .ZZA  | regulars | gift!   | gift  |
+  | xid | created | amount | payer | payee    | purpose | flags     |*
+  |   3 | %today  |     10 | .ZZA  | regulars | gift!   | gift,self |
   And count "txs" is 3
 
   Given it's later
@@ -107,28 +107,28 @@ Scenario: A second recurring donation to CG can be completed
 Scenario: A donation invoice (to CG) can be completed
 # even if the member has never yet made a cgCard purchase
   Given these "tx_timed":
-  | id | start      | from | to  | amount | period | purpose |*
-  |  8 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
+  | id | action | start      | from | to  | amount | period | purpose |*
+  |  8 | pay    | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   And these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for      | flags | recursId |*
-  |    2 | %today    | %TX_APPROVED |     50 | .ZZA  | cgf   | donation | gift  |        8 |
+  | nvid | created   | status       | amount | payer | payee | for      | flags     | recursId |*
+  |    2 | %today    | %TX_APPROVED |     50 | .ZZA  | cgf   | donation | gift,self |        8 |
   And member ".ZZA" has no photo ID recorded
   When cron runs "payInvoices"
   Then these "txs": 
-  | xid | created | amount | payer | payee    | purpose  | flags | recursId |*
-  |   2 | %today  |     50 | .ZZA  | regulars | donation | gift  |        8 |
+  | xid | created | amount | payer | payee    | purpose  | flags     | recursId |*
+  |   2 | %today  |     50 | .ZZA  | regulars | donation | gift,self |        8 |
   And these "tx_requests":
   | nvid | created   | status | purpose  |*
   |    2 | %today    | 2      | donation |
 
 Scenario: A recurring donation to CG cannot be completed
   Given these "tx_timed":
-  | start     | from | to  | amount | period | purpose |*
-  | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
+  | action | start     | from | to  | amount | period | purpose |*
+  | pay    | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
   When cron runs "recurs"
   Then only these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for   | flags        |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | gift,funding |  
+  | nvid | created   | status       | amount | payer | payee | for   | flags             |*
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | cgf   | gift! | self,gift,funding |  
   And only these "txs2":
   | txid | xid | amount | payee |*
   | 1    | 2   | 200    | .ZZA  |

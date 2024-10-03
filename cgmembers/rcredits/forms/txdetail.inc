@@ -133,7 +133,7 @@ function formTxDetail_submit($form, &$sta) {
   $input = $sta['input'];
   extract(just('amount toMe forSame eid return cat orig created xid', $input, ''));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
-  
+
   $DBTX = \db_transaction();
   if ($hInfo = just('xid created recursId reversesXid flags', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
@@ -142,7 +142,13 @@ function formTxDetail_submit($form, &$sta) {
   if (!$cat) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
-  if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
+  $subs = ray('id cat', -$eidMe, CAT_CG2CG);
+  if ($cat == CAT_CG2CG) {
+    db\update('tx_entries_all', $subs, 'id'); // cg2cg transfer means cats are both CG2CG
+  } elseif (db\exists('tx_entries_all', $subs)) {
+    $subs['cat'] = NULL;
+    db\update('tx_entries_all', $subs, 'id'); // if this one isn't CG2CG, the other can't be either
+  }
   
   extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
