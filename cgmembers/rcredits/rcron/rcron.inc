@@ -1038,7 +1038,7 @@ function getFunds1($item) {
   } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
     if (!$a->debt) { // member chose never to go negative
       $a->getFunds(-$a->balance, tr('to zero'));
-    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
+    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS and !in($uid, r\cgsOwnUids())) { // debt timeout
       $a->getFunds(-$a->balance, tr('debt timeout', 'signed', fmtDt($a->signed)));
     }
   }
