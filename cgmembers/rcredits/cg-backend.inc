@@ -605,6 +605,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
  *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
  *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
  *   'cat': transaction categories (record IDs in tx_cats) -- [payerCat, payeeCat] or NULL (payerCat and payeeCat can also be NULL)
+ *   'xid': explicit record ID (used only in tests?)
  * @param int $recursId: record ID of related record in tx_timed (or NULL)
  * @return a txRet object
  *
@@ -737,7 +738,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   } else $crid = NULL;
     
   $tx->addEntries($entries);
-  if (array_key_exists('xid', $data)) {
+  if (array_key_exists('xid', $data)) { // for tests only?
+    if (!test()) r\tellAdmin('setting xid explicitly!', ray('trace', pr(trace()))); // remove this line after 3/1/2025
     $tx->xid = $data['xid'];
     $xid = $tx->insert(TRUE);
   } else $xid = $tx->insert();
@@ -1158,12 +1160,12 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   global $channel;
 
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
-  extract(just('created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
+  extract(just($flds = 'created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
+  $extra = justNOT($flds, $extra);
   if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
   $flags = $method ? u\bit($method) : 0;
-  foreach (ray('cat reversesXid method') as $k) unset($extra[$k]);
 
-  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+  foreach (justNOT('shid coupon coupid force inv api request for', $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
