@@ -319,6 +319,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE statement Setup
  *     MAKE stepup Setup
  *     MAKE tx Setup
+ *     MAKE txdetail Setup
  *     MAKE txs Setup
  *     MAKE txs AdminReversesABankTransfer
  *     MAKE undo Setup
@@ -708,6 +709,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
+ *     TEST txdetail AnAdminAsksToViewOrEditATransaction
+ *     TEST txdetail AnAdminAsksToViewOrEditACommunityTransaction
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -763,6 +766,7 @@ function with($content) {return weShow($content);}
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
+ *     TEST txdetail AnAdminAsksToViewOrEditATransaction
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  */
@@ -1877,6 +1881,10 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST tx AMemberPaysBackedByAnInactiveCreditLine
+ *     BOTH txdetail Setup
+ *     MAKE txdetail AnAdminAsksToViewOrEditACommunityTransaction
+ *     BOTH txdetail AnAdminSetsALoanCategory
+ *     BOTH txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     BOTH txs Setup
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
  *     BOTH txs AdminReversesABankTransfer
@@ -2434,6 +2442,8 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
+ *     MAKE txdetail AnAdminAsksToViewOrEditATransaction
+ *     MAKE txdetail AnAdminAsksToViewOrEditACommunityTransaction
  *     MAKE undo AMemberReversesAPaymentFromSomeone
  *     MAKE undo AMemberReversesAPaymentToSomeone
  *     MAKE undo ACustomerReversesARefundFromAStore
@@ -2523,6 +2533,8 @@ function nextCaptchaIs($ca) {
  *     MAKE sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
+ *     MAKE txdetail AnAdminSetsALoanCategory
+ *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  */
 function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2653,4 +2665,18 @@ function memberIsSignedOut() {
   global $testOnly, $mya;
   if (!$testOnly) w\signout(TRUE);
   return !$mya;
+}
+
+/**
+ * var (ARG) is ray: (ARG)
+ *
+ * in: MAKE txdetail AnAdminSetsALoanCategory
+ *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
+ */
+function varIsRay($var, $ray) {
+  global $testOnly, $testVars;
+  $ray = $ray[0];
+  t\fixData($ray);
+  t\fixTestVars($ray);
+  return $testOnly ? t\eq(t('test Var'), nni($testVars, $var), $want = $ray) : ($testVars[$var] = $ray or TRUE);
 }
