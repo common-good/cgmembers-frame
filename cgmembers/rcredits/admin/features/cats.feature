@@ -256,3 +256,4 @@ Scenario: The region makes an investment
   And member ".ZZA" visits "qbo/op=txs"
   Then QBO gets Tx "cg#91":"loan [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 901 Credit ctty   | 901 Debit INVEST      |
+  | 901 Debit POOL    | 901 Credit AAAAJV     |

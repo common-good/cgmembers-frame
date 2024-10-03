@@ -334,7 +334,6 @@ X;
 
       $this->addJLine($qbTx, $uidNick, -$amt, $desc);
       if ($cat != CAT_CG2CG) $this->addJLine($qbTx, $cat, $amt, $desc);
-      if ($cat == r\nick2cat('INVEST')) break;
     }
 
     if (isset($ccFee)) { // save the CC processor fees for AFTER the main transaction
@@ -425,7 +424,7 @@ X;
    */
   public function getQbTx($id, $objName = 'JournalEntry') {
     $this->refresh();
-    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('Entry %id does not exist.', compact('id')));
+    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('QB journal entry %id does not exist.', compact('id')));
     return $res[0];
   }
   
