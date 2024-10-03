@@ -47,7 +47,7 @@ Scenario: A new recurring payment is not to be completed yet
   When cron runs "recurs"
   Then count "txs" is 1
   And count "tx_requests" is 0
-Skip
+
 Scenario: A recurring sweep can be completed
   Given these "tx_timed":
   | id | action | start      | from | to   | amount | period | purpose |*
@@ -163,8 +163,8 @@ Scenario: A recurring payment cannot be completed
   |  8 | %yesterday | .ZZA | .ZZB |    200 | week   | pmt     |
   When cron runs "recurs"
   Then these "tx_requests":
-  | nvid | created | status       | amount | payer | payee | for  | flags  | recursId |*
-  |    1 | %now    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  |        |        8 |
+  | nvid | created | status       | amount | payer | payee | for  | flags        | recursId |*
+  |    1 | %now    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | self,funding |        8 |
   And count "tx_requests" is 1
   And these "txs2":
   | txid | amount | payee | completed | deposit |*

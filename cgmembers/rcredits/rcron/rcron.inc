@@ -356,6 +356,7 @@ function recur($template) {
 
     $DBTX = \db_transaction();
     if ($action == 'pay') {
+      $data['self'] = TRUE;
       if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
