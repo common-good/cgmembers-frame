@@ -46,7 +46,7 @@ function formSummary($form, &$sta) {
 
   $title = item(t('Account Summary'), '', suffix($buttons));
 
-  $suffix = in($mya->id, $cgIds = r\cgIncomeUids()) ? idsLinked($cgIds) : '';
+  $suffix = ($mya->admRegion and $mya->admSeeAccts) ? ' ' . buttino('/sadmin/our-accounts', t('Sponsored Accounts')) : '';
   $accountName = item($mya->j_fullName . $suffix, t('Name:'));
 
   $address = $mya->admin 
@@ -558,23 +558,3 @@ function giftsToDate() {
 }
 
 function stFld($dft) {return selectFld(BARE, t(''), dft($dft), ['' => t('state')] + db\keyed('abbreviation,abbreviation', 'r_states', 'country_id IN (:US_COUNTRY_ID, :CA_COUNTRY_ID) ORDER BY abbreviation'));}
-
-function idsLinked($cgIds) {
-  global $mya;
-
-  $ids = db\col('uid', 'users', 'uid IN (:cgIds) ORDER BY uid=:CGID DESC, uid IN :BUCKET_UIDS DESC, fullName', compact('cgIds'));
-
-  $rows = "<br>\n<table>\n";
-
-  foreach ($ids as $uid) {
-    $a = r\acct($uid);
-    $star = (in($uid, BUCKET_UIDS) and $uid != CGID) ? '*' : '';
-    $name = $uid == $mya->id ? "<b>$a->bestName</b>$star" : w\lnk("/change-account/acct=$uid", $a->bestName) . $star;
-    $balance = u\fmtAmt($a->balance);
-    $rows .= "<tr><td>$a->mainQid</td><td>$name</td><td>$balance</td></tr>\n";
-  }
-  
-  $rows .= '</table>';
-  
-  return $rows;
-}
