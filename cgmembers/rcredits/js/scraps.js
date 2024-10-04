@@ -30,6 +30,16 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'ourAccts': // $(this).closest('form').submit()
+    const go = $('.form-item-asof .btn');
+    const asof = $('#edit-asof');
+    
+    go.click(function () {
+      location.href = baseUrl + '/sadmin/our-accounts/asof=' + asof.val();
+    });
+    asof.on('keypress',function(e) {if(e.which == 13) {go.click();}});
+    break;
+  
   case 'taxinfo':
     $('#edit-year').change(function () { location.href = baseUrl + '/history/tax-info/' + $('#edit-year :selected').val(); });
     break;
