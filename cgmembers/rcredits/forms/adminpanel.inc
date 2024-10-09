@@ -151,6 +151,7 @@ function formAdminPanel_submit($form, &$sta) {
       $info += ray('start portion purpose', today(), .05, t('fiscal sponsorship fee (5%)'));
       db\insert('tx_rules', $info);
       $a->setBit(B_OK); $a->setBit(B_CONFIRMED);
+      if (!$a->activated) $a->update('activated', now());
       $a->setCoBit(CO_SPONSORED);
       $nm = $a->bestName;
       say(t('A sponsorship fee rule has been added for %nm.', compact('nm')));
