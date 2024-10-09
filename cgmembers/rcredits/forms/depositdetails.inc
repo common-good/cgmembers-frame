@@ -25,9 +25,13 @@ function formDepositDetails($form, $sta, $args) {
   $subtext = $date == 1 ? t('(Historical)') : fmtDt($date ?: now());
 
   $sql = <<<EOF
-    SELECT amount, xid, uid, u.fullName AS name, pid FROM txs2 t LEFT JOIN users u ON u.uid=t.payee 
-    WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
+    SELECT x2.amount, x2.xid, u.uid, u.fullName AS name, x2.pid, e.description
+    FROM txs2 x2 
+    LEFT JOIN tx_entries e ON e.xid=x2.xid AND e.uid=x2.payee AND e.entryType=:E_OUTER
+    LEFT JOIN users u ON u.uid=x2.payee 
+    WHERE $where AND x2.deposit=$date AND x2.amount<>0 AND x2.created<=:NOW ORDER BY x2.xid
 EOF;
+
   $q = db\q($sql);
   
   $totIn = $totOut = $cntIn = $cntOut = 0;
@@ -45,7 +49,7 @@ EOF;
       $class = '';
     }
     $qid = r\Qo::uid2($uid);
-    $lines[] = tr('<tr><td>%xid</td><td><%a>%name</a></td><td%class>%amt</td></tr>', 'xid _a name amt _class', $xid, atag("/change-account/acct=$qid"), $name, number_format($amount, 2), $class);
+    $lines[] = tr('<tr><td>%xid</td><td><%a>%name</a></td><td%class>%amt</td><td>%description</td></tr>', 'xid _a name amt _class description', $xid, atag("/change-account/acct=$qid"), $name, number_format($amount, 2), $class, $description);
   }
   
   $lines[] = t('<tr><td></td><td><b>NET</b> (%count)</td><td>%total</td></tr>', 'count total', $count, u\fmtAmt($total, ''));
@@ -53,7 +57,7 @@ EOF;
   $lines[] = t('<tr><td></td><td><b>OUT</b> (%cntOut)</td><td>%totOut</td></tr>', 'cntOut totOut', $cntIn, u\fmtAmt($totOut, ''));
   $lines = join("\n", $lines);
   
-  $hdrs = t('<tr><th>Tx #</th><th>Name</th><th>Amount</th></tr>');
+  $hdrs = t('<tr><th>Tx #</th><th>Name</th><th>Amount</th><th>Description</th></tr>');
 
   $list = <<<X
   <table>
