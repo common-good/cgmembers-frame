@@ -14,13 +14,14 @@ function formOurAccounts($form, &$sta, $args = '') {
   extract(just('asof', $args, NULL));
 
   $title = t('Our Accounts');
+  $subtext = t('<p>This list of accounts owned by %PROJECT shows end-of-day balances.</p>');
   $dft = $asof ? strtotime($asof) : now();
   $asof = dateFld(REQ . t('As of:'), '', dft($dft) + suffix(' ' . btn('', t('Go'))));
 
-  $list = item(idsLinked($dft));
+  $list = item(idsLinked(tomorrow($dft)));
   jsx('ourAccts');
 
-  return cgform(compact(ray('title asof list')));
+  return cgform(compact(ray('title subtext asof list')));
 }
 
 function idsLinked($asof) {
@@ -31,6 +32,8 @@ function idsLinked($asof) {
   $ids = db\col('uid', 'users', 'uid IN (:cgIds) ORDER BY uid=:CGID DESC, uid IN :BUCKET_UIDS DESC, fullName', compact('cgIds'));
 
   $rows = "<br>\n<table>\n";
+  $hdrs = ray(t('Since, ID, Name, Balance'));
+  $rows .= '<tr><td>' . join('</td><td>', $hdrs) . '</td></tr>';
 
   foreach ($ids as $uid) {
     $a = r\acct($uid);
@@ -40,8 +43,9 @@ function idsLinked($asof) {
     if (in($uid, BUCKET_UIDS) and $uid != CGID) {
       if ($seeCanonic) $since = ''; else continue;
     }
-    $balance = u\fmtAmt($asof > today() ? $a->balance : be\balanceAsOf($asof));
-    $rows .= "<tr><td>$a->mainQid</td><td>$since<td>$name</td><td>$balance</td></tr>\n";
+    $balance = u\fmtAmt($asof > today() ? $a->balance : be\balanceAsOf($a->uids, $asof));
+    $row = [$since, $a->mainQid, $name, $balance];
+    $rows .= '<tr><td>' . join('</td><td>', $row) . '</td></tr>';
   }
   
   $rows .= '</table>';
