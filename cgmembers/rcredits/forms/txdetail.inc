@@ -72,7 +72,7 @@ X;
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  if ($nonMemberName) ${$myid == UID_OUTER ? 'youNm' : 'meNm'} = $nonMemberName . t(' (non-member)');
+  if ($nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
   $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
