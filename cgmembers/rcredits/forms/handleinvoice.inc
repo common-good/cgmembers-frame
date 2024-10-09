@@ -100,7 +100,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
       if ($status >= TX_PAID) return w\go($ret, t('inv already paid'), 'ERR');
       if ($status == TX_DELAYED) return w\go($ret, t('inv delayed'), 'ERR');
       if ($status == TX_CANCELED) return w\go($ret, t('inv canceled'), 'ERR');
-      if (u\getBit($flags, 'funding')) return w\go($ret, t('inv already funding'), 'ERR');
+      if (u\getBit($flags, 'funding') and $remains > $a->avail()) return w\go($ret, t('inv already funding'), 'ERR');
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
       $choices = [
         t('Pull this entire amount from your bank account.'),
