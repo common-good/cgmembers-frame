@@ -150,13 +150,12 @@ function formPay_submit($form, &$sta) {
   if ($z->ok) {
     if ($mya->ok and nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
+      $nm = $mya->fullName;
+      if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
+      if ($note) $item .= ' ("' . $note . '")';
+      $type = $isGift ? r\ccGiftType($coId) : 'purchase';
+      be\thanks($xid, $type, TRUE, $mya->id, $item, $amount, $period, 1, $coId, !$mya->stepCount());
     } else say('gift transfer later');
-
-    $nm = $mya->fullName;
-    if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
-    if ($note) $item .= ' ("' . $note . '")';
-    $type = $isGift ? r\ccGiftType($coId) : 'purchase';
-    be\thanks($type, TRUE, $mya->id, $item, $amount, $period, 1, $coId, !$mya->stepCount());
   }
   
   if ($return) {
