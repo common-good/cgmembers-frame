@@ -194,7 +194,7 @@ function fboTx($input) {
     $res = go('dashboard');
   } else {
     $type = $isGift ? ($mya->sponsored ? 'fbo' : 'cggift') : 'purchase';
-    $res = be\thanks($type, FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
+    $res = be\thanks($tx->xid, $type, FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
   }
   
   unset($DBTX);

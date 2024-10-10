@@ -146,9 +146,10 @@ function formPay_submit($form, &$sta) {
   if ($for == FOR_GIVE_CREDIT) $data['creditWhom'] = $forDpy;
   if ($credit) $data += compact('credit');
   if ($isGift) $data['gift'] = TRUE;
+
   $z = $mya->payApproved($coId, $amount, $item, FOR_NONGOODS, $data, $recursId);
   if ($z->ok) {
-    if ($mya->ok and nni($z->subs, 'xid')) {
+    if ($mya->ok and $xid = nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
       $nm = $mya->fullName;
       if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));

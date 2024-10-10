@@ -657,7 +657,7 @@ const FLOW_FROM = 2;
 const FLOW_BOTH = 3;
 
 // Transaction flags (for flags field in transaction and invoice records)
-const B_u0 = 0; //
+const B_THX = 0; // payer has been thanked (applies only to gifts to CG and its sponsored projects)
 const B_u1 = 1; //
 const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
 const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
@@ -680,7 +680,7 @@ const B_BUTTON = 19; // payment from CGPay button
 const B_DIRECTACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
+const TX_FLAGS = 'thx u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice

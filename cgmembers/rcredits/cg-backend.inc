@@ -538,7 +538,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
-    if ($payAmount >= $amount or !invRemains($nvid)) { // == is for efficiency
+    if ($payAmount >= $amount or !invRemains($nvid)) { // >= is for efficiency
       db\update('tx_requests', ray('nvid status', $nvid, $z->subs['xid']), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
@@ -755,7 +755,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+    be\thanks($xid, r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
   }
   
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
@@ -1084,8 +1084,13 @@ EOF;
 }
 
 /**
- * Thank a donor to CG or a fiscally sponsored account and report to that organization.
- * @param string $type: gift (donation not to CG), cggift, fbo (donation to a sponsored organization), or purchase
+ * Thank a payer for a transaction, especially for a donation to CG or a fiscally sponsored account, and report to recipient.
+ * @param int $xid: the transaction ID (used only for type cggift and fbo)
+ * @param string $type:
+ *   gift - donation not to CG or its sponsored projects
+ *   cggift - donation to CG
+ *   fbo - donation to a sponsored PROJECT
+ *   purchase - not a donation
  * @param bool $member: <payer is a member>
  * @param int $id: account record ID or people record ID for the payer
  * @param string $item: item description
@@ -1096,7 +1101,7 @@ EOF;
  * @param bool $redirect: <redirect to empty page when done>
  * @return result message if not redirect (especially for when called from ajax)
  */
-function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
+function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
 
   $coA = r\acct($coId);
   list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
@@ -1126,9 +1131,12 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
     // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
     $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
 
-    if ($member) {
+    if ($member) { // this sends an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
     } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    
+    if (in($type, 'cggift fbo')) db\setFlag('tx_hdrs', $xid, B_THX); // donation to CG or through CG needs record of acknowlegment
+    
   }
   
   if ($redirect) w\sayEmpty($msg);

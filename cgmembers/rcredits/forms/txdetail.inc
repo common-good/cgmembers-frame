@@ -149,7 +149,7 @@ function formTxDetail_submit($form, &$sta) {
     and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
     require_once(R_ROOT . '/classes/qb.class');
-    db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
+    db\setFlag('tx_hdrs_all', $xid, B_QBOK, FALSE); // resend this xid to QBO (do this before delQbTx)
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->delQbTx("cg#$xid"); // delete this xid from QBO
     setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
@@ -158,6 +158,7 @@ function formTxDetail_submit($form, &$sta) {
   $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
   if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
     db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+    if ($o_amt != $amt and ($o_flags & u\bit(B_THX))) err(t('WARNING: audit will show %xid acknowledgment sent for %o_amt.', compact(ray('xid o_amt'))));
   }
 
   $info['id'] = -$eidMe;

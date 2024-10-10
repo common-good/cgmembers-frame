@@ -161,15 +161,6 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
 /**
- * notice count is (ARG)
- *
- * in: 
- */
-function noticeCountIs($count) {
-  return (db\count('r_notices') == $count);
-}
-
-/**
  * member (ARG) charges member (ARG) $(ARG) for (ARG)
  *
  * in: 

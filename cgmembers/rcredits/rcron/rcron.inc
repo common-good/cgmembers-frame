@@ -373,13 +373,13 @@ function recur($template) {
       extract($res);
       u\EXPECT($txs2Payee == $to, 'previous recurring non-member payment: payee mismatch');
       $info += compact(ray('bankAccount isSavings'));
-      be\createUsdTransfer($coA, $amount, $info);
+      $tx = be\createUsdTransfer($coA, $amount, $info);
     }
 
     $adminMsg = $stripeId ? t('CC payment') : t('Non-member ACH');
     $adminMsg .= tr(' (to %whom)', 'whom', $coA->bestName);
     r\tellAdmin($adminMsg, compact(ray('amount period')) + $info + $emailAndName);
-    $msg = be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coId, FALSE);
+    $msg = be\thanks($tx->xid, $type, FALSE, $pid, $purpose, $amount, $period, $periods, $coId, FALSE);
 
   } else { // normal (member) pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
