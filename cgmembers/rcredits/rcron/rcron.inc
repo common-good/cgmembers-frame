@@ -1049,7 +1049,7 @@ function getFunds1($item) {
  * Try to pay any approved transaction requests.
  */
 function payInvoices() {
-  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer=u.uid AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
+  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer IN (u.uid, u.jid) AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
   queueNext();
 }
 
