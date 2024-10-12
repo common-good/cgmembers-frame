@@ -534,7 +534,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
   if ($payAmount > invRemains($nvid)) $extra['overpaid'] = 1;
-  if ($flags) foreach (ray('gift crumbs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+  if ($flags) foreach (ray('gift crumbs investment self') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
@@ -606,6 +606,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
  *   'credit': amount of credit, if for=FOR_CREDIT, FOR_CREDIT50, or FOR_GIVE_CREDIT
  *   'creditWhom': who gets the credit, iff for is FOR_GIVE_CREDIT
  *   'cat': transaction categories (record IDs in tx_cats) -- [payerCat, payeeCat] or NULL (payerCat and payeeCat can also be NULL)
+ *   'xid': explicit record ID (used only in tests?)
  * @param int $recursId: record ID of related record in tx_timed (or NULL)
  * @return a txRet object
  *
@@ -735,7 +736,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   } else $crid = NULL;
     
   $tx->addEntries($entries);
-  if (array_key_exists('xid', $data)) {
+  if (array_key_exists('xid', $data)) { // for tests only?
+    if (!test()) r\tellAdmin('setting xid explicitly!', ray('trace', pr(trace()))); // remove this line after 3/1/2025
     $tx->xid = $data['xid'];
     $xid = $tx->insert(TRUE);
   } else $xid = $tx->insert();
@@ -1170,12 +1172,12 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   global $channel;
 
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
-  extract(just('created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
+  extract(just($flds = 'created status reversesXid cat method', $extra, [now(), NULL, NULL, NULL, NULL]));
+  $extra = justNOT($flds, $extra);
   if ($cat) $cat = $cat[0] ?: $cat[1]; // extract the only non-null entry in the pair, if any
   $flags = $method ? u\bit($method) : 0;
-  foreach (ray('cat reversesXid method') as $k) unset($extra[$k]);
 
-  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+  foreach (justNOT('shid coupon coupid force inv api request for', $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }

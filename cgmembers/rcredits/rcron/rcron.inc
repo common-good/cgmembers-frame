@@ -339,6 +339,7 @@ function recur($template) {
   if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring (or timed) payment from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
+    $flags |= u\bit(B_SELF);
     $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
     $coA = r\acct($to); $coId = $coA->id;
     $gift = u\getBit($flags, 'gift') ?: 0;
@@ -393,6 +394,7 @@ function recur($template) {
 
     $DBTX = \db_transaction();
     if ($action == 'pay') {
+      $data['self'] = TRUE;
       if ($to == CGID and $period != PER_1) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
@@ -1077,7 +1079,7 @@ function getFunds1($item) {
   } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
     if (!$a->debt) { // member chose never to go negative
       $a->getFunds(-$a->balance, tr('to zero'));
-    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS) { // debt timeout
+    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS and !in($uid, r\cgsOwnUids())) { // debt timeout
       $a->getFunds(-$a->balance, tr('debt timeout', 'signed', fmtDt($a->signed)));
     }
   }
@@ -1087,7 +1089,7 @@ function getFunds1($item) {
  * Try to pay any approved transaction requests.
  */
 function payInvoices() {
-  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer=u.uid AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
+  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer IN (u.uid, u.jid) AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
   queueNext();
 }
 

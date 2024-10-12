@@ -17,6 +17,7 @@ use CG\Web as w;
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
+define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
@@ -95,7 +96,11 @@ function fixData(&$info, $direct = FALSE) {
   if (!is_numeric($key = key($info)) and u\validVarName($key)) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
-      foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", nn($var), $v);
+      foreach ($testVars as $varName => $var) {
+        if (is_array($var)) {
+          if ($v == "@$varName") $info[$k] = $var;
+        } else $info[$k] = str_replace("@$varName", nn($var), $v);
+      }
     }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   
@@ -408,12 +413,12 @@ function doAccounts($info = []) {
   u\setDft($community, r\serverUid());
   u\setDft($zip, '01301');
   u\setDft($country, 'US');
-  extract(fixState(nn($state), nn($country)));
+  u\setDft($state, R_STATE_ID);
+  extract(fixState($state, $country));
 
+  $st = r\realState($state);
   u\setDft($address, '1 My Street');
   u\setDft($city, 'Mytown');
-  u\setDft($state, R_STATE_ID);
-  $st = r\realState($state);
   u\setDft($postalAddr, nn($address2) ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
 
   //    u\setDft($photoId, "$state-{$zip}999");
@@ -1092,8 +1097,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
 function uid($id, $field = '') {
   u\EXPECT(!$field, 'nonempty field');
   if (is_numeric($id) or empty($id)) { return $id; }
-  $map = ray('ctty cgf bank regulars crumb round stepups',
-             r\serverUid(), CGID, UID_BANK, UID_REGULARS, UID_CRUMBS, UID_ROUNDUPS, UID_STEPUPS);
+  $map = array_combine(ray(SPECIAL_IDS), ray(SPECIAL_UIDS));
   if ($res = nni($map, $id)) return $res;
 
   $qo = r\qo(fullQid2($id));
@@ -1428,10 +1432,11 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
       //      ksort($actualRow);
       //      output("Actual $table record at $infoK=$infoV: " . pr($actualRow));
       $difs = '';
+      $flagBits = $table == 'users' ? B_LIST : TX_FLAGS;
       foreach ($info as $k => $v) {
         $v2 = nni($actualRow, $k);
         foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
-        if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, B_LIST);
+        if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $flagBits);
         if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $riskRay);
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }

@@ -36,6 +36,7 @@ Setup:
   | .ZZA |     945 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
+  
   Given these "txs": 
   | xid | created   | amount | payer | payee | purpose | taking | reversesXid |*
   |  44 | %today-5m |     10 | .ZZB  | .ZZA  | cash E  | 0      |             |

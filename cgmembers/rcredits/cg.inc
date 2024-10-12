@@ -17,6 +17,8 @@ use CG\Backend as be;
 use CG\Web as w; // use sparingly
 use CG\Testing as t;
 
+include_once __DIR__ . '/classes/acct.class'; // sometimes needed
+
 /*use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -476,7 +478,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   
   $topic = mb_strlen($index) < 100 ? $index : '';
   $noFrame = TRUE;
-  $chan = ray(TX_CHANNELS)[$channel];
+  $chan = nni(ray(TX_CHANNELS), $channel);
   $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
   $body = u\seeAssoc($subs);

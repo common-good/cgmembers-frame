@@ -206,7 +206,7 @@ class QB {
   public function sendTxs($omitBankTxs, $end = NOW) { // usually call only from sendBankTxs
     global $testQbTxs;
     
-    $start = strtotime('7/1/2021');
+    $start = strtotime('7/1/2022');
 //    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
     $cnt = 0;
@@ -424,13 +424,15 @@ X;
    */
   public function getQbTx($id, $objName = 'JournalEntry') {
     $this->refresh();
-    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('Entry %id does not exist.', compact('id')));
+    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('QB journal entry %id does not exist.', compact('id')));
     return $res[0];
   }
   
   public function delQbTx($id, $objName = 'JournalEntry') {
-    if (!$qbTx = $this->getQbTx($id, $objName)) return FALSE;
-    $this->ds->Delete($qbTx);
+    if (!test()) {
+      if (!$qbTx = $this->getQbTx($id, $objName)) return FALSE;
+      $this->ds->Delete($qbTx);
+    }
     w\say(t('QBO entry %id deleted.', compact('id')));
     return TRUE;
   }    

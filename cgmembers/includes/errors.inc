@@ -94,7 +94,7 @@ function handleError($level, $msg, $file, $line, $trace = NULL) {
   $traceMsg = \filter_xss_admin($msg . join("<br>\n", $traceMsg));
   
   if (isPRODUCTION and (!$mya or !$mya->admCode)) {
-    $msg = strtr($msg . $traceMsg, ['&nbsp;' => '', '<br>' => '', '&gt;' => '>']);
+    $msg = strtr($msg . $traceMsg, ['&nbsp;' => '', '<br>' => '', '&gt;' => '>']) . print_r($_SERVER, TRUE);
     mail(R_ADMIN_EMAIL, t('%PROJECT ' . $title), $msg);
     if (!$nasty) return;
     if ($channel == TX_WEB) return w\softErr(tr('crash msg'));

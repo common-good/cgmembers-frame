@@ -79,21 +79,20 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $a = r\acct($payer);
     $title = t('Confirm Payment');
     $subs += ray('who', r\acct($payee)->fullName);
-    $remaining = be\invRemains($nvid);
+    $remains = be\invRemains($nvid);
 
     if ($a->hasBank) {
       $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Always" box).</p>');
       if (!$webpay) $always = boxFld('always', t('Always:'), t('Pay all invoices from %who automatically.', $subs), 0);
-    } elseif ($a->avail() < $remaining) {
+    } elseif ($a->avail() < $remains) {
       $_warning = t('<p><b>NOTE:</b>You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account. Then click History / Pending FROM You and select this invoice to approve it.</p>');
       $disabled = w\disabled();
     } else $_warning = '';
 
-    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($remaining, 2));
-    $remains = u\fmtAmt($remaining);
-    $remains = $remains == $subs['amount'] ? '' : t(' (%remains remaining)', compact('remains'));
-    $subtext = t('<p>Pay %amount to %who for %what%remains.</p>%warning', $subs + compact(ray('_warning remains')));
-    $remaining = hidFld($remaining);
+    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($remains, 2));
+    $remainsDpy = u\fmtAmt($remains);
+    $remainsDpy = $remainsDpy == $subs['amount'] ? '' : t(' (%remainsDpy remaining)', compact('remainsDpy'));
+    $subtext = t('<p>Pay %amount to %who for %what%remainsDpy.</p>%warning', $subs + compact(ray('_warning remainsDpy')));
 
     if (u\getBit($flags, B_SELF) and $status == TX_APPROVED) {
       $cancel = submit(t('Cancel Payment'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
@@ -101,7 +100,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
       if ($status >= TX_PAID) return w\go($ret, t('inv already paid'), 'ERR');
       if ($status == TX_DELAYED) return w\go($ret, t('inv delayed'), 'ERR');
       if ($status == TX_CANCELED) return w\go($ret, t('inv canceled'), 'ERR');
-      if (u\getBit($flags, 'funding')) return w\go($ret, t('inv already funding'), 'ERR');
+      if (u\getBit($flags, 'funding') and $remains > $a->avail()) return w\go($ret, t('inv already funding'), 'ERR');
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
       $choices = [
         t('Pull this entire amount from your bank account.'),
@@ -116,11 +115,12 @@ function formHandleInvoice($form, &$sta, $args = '') {
     }
   }
   
+  $remains = hidFld($remains);
   $toMe = hidFld($toMe);
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always balFirst pay action because denySet close cancel reopen toMe remaining hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always balFirst pay action because denySet close cancel reopen toMe remains hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -128,11 +128,11 @@ function formHandleInvoice($form, &$sta, $args = '') {
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('reason toMe payAmount remaining', $sta['input'], NULL));
+  extract(just('reason toMe payAmount remains', $sta['input'], NULL));
   extract(just('amount', hidFlds($sta, 'hid'), NULL));
   $deny = (op($sta) == 'deny');
   if (!$toMe and $deny and !$reason) return say('say why not', 'reason');
-  if (isset($payAmount) and $err = u\badAmount($payAmount, '>0', 2, $remaining)) return say($err, 'payAmount');
+  if (isset($payAmount) and $err = u\badAmount($payAmount, '>0', 2, $remains)) return say($err, 'payAmount');
 }
 
 function formHandleInvoice_submit($form, &$sta) {

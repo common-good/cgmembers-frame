@@ -11,7 +11,8 @@ use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
 
-require_once __DIR__ . '/cg-util.inc';
+require_once R_ROOT . '/cg.inc';
+require_once R_ROOT . '/cg-util.inc';
 
 define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_stats'); // don't log deletions from these files
 
