@@ -218,6 +218,7 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   if ($unusable or $merge) $change = TRUE;
   
   if (is_object($oldUid)) $oldUid = $oldUid->id;
+  foreach (ray('oldUid newUid') as $k) if (!is_numeric($$k)) return err(t('bad account ID "%k"', 'k', $$k));
   
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
@@ -233,7 +234,7 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'r_ballots:proxy',
     // r_banks
     'r_boxes:uid:D',
-    'r_changes:uid:D',
+    'r_changes:uid:D', // sometimes rid is a uid
     'r_changes:changedBy:D',
     'u_company:uid:D', // this gets tracked
     // r_countries
@@ -279,14 +280,14 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'tx_hdrs:actorAgentId',
     'tx_requests:payer:D', // this gets tracked
     'tx_requests:payee:D', // this gets tracked
-    'tx_rules:to:D',
-    'tx_rules:payer:D',
-    'tx_rules:payee:D',
     'tx_rules:from:D',
-    'tx_timed:to:D',
-    'tx_timed:payer:D',
-    'tx_timed:payee:D',
+    'tx_rules:to:D',
+    'tx_rules:payer:D', // only when payerType is REF_ACCOUNT
+    'tx_rules:payee:D', // only when payeeType is REF_ACCOUNT
     'tx_timed:from:D',
+    'tx_timed:to:D',
+    'tx_timed:payer:D', // only when payerType is REF_ACCOUNT
+    'tx_timed:payee:D', // only when payeeType is REF_ACCOUNT
     'txs2:payee',
     'u_focuses:uid:D',
     // u_groups
@@ -352,21 +353,24 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   }
 
   foreach ($subs as $one) {
-    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
+    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to empty
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
     flog(t('%table: %field', compact(ray('table field'))));
+    $where = "`$field`=:oldUid";
+    if (in($table, 'tx_rules tx_timed') and in($field, 'payer payee')) $where .= " AND `{$field}Type`=:REF_ACCOUNT";
+    if ($table == 'r_changes' and $field == 'rid') $where .= " AND table='users'";
     
     if ($delete) {
       if ($deletable) {
-        db\del($table, $field, $oldUid);
-      } elseif (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+        db\del($table, $where, compact('oldUid'));
+      } elseif (db\exists($table, $where, compact('oldUid'))) {
         $DBTX->rollback(); 
         return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
       }
     } else { // change
       if ($merge) merge($table, $field, $oldUid, $newUid);
       flog(t('. changing old to new'));
-      db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
+      db\q("UPDATE $table SET `$field`=:newUid WHERE $where", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
     }
   }
 
