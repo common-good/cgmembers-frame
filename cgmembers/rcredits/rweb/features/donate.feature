@@ -129,15 +129,10 @@ Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "pay" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |    200 | once   | memory | Jane Do |
-  Then we say "status": "gift thanks|cggift thanks" with subs:
-  | coName | %PROJECT |**
-  And we say "status": "gift transfer later"
+  Then we say "status": "gift transfer later"
   And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose  | flags        | status   |*
   |    1 | %today  |    200 | .ZZA  | cgf   | donation | gift,funding | approved |
   And these "r_honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
-  And we tell "ctty" CO "gift" with subs:
-  | amount | period |*
-  |    200 | once   |

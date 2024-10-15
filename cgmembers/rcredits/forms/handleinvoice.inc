@@ -29,7 +29,6 @@ function formHandleInvoice($form, &$sta, $args = '') {
   extract(just('nvid amount payer payee purpose created data status flags', $inv));
 
   if ($code) {
-    if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
     if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact(ray('args code info')));
     extract(just('op v', $info, NULL));
     u\EXPECT($op == 'inv' and $v == $nvid, t('handleInvoice fake') . pr(compact(ray('args code info'))));
@@ -115,7 +114,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     }
   }
   
-  $remains = hidFld($remains);
+  $remains = hidFld(nn($remains));
   $toMe = hidFld($toMe);
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');

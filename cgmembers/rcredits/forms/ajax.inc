@@ -165,7 +165,7 @@ function ajax($args = NULL) {
     case 'who':
       extract(just('who question amount selfErr restrict', $data));
       $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-      $who = be\identify($who, $mya, $selfErr, $restrict);
+      $who = be\identify($who0 = $who, $mya, $selfErr, $restrict);
       if (is_string($who)) return ajaxErr(tr($who));
       if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->id, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
       

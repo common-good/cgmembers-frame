@@ -110,10 +110,10 @@ Scenario: Paper statement warnings are sent
 Scenario: Crumb and roundup donations are made
   When cron runs "everyMonth"
   Then these "txs": 
-  | xid | created        | amount | payer | payee | purpose                                      | flags       |*
-  | 12  | %(%daystart-1) |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
-  | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations: %mY                       | gift        |
-  | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations: %mY                         | gift        |
+  | xid | created        | amount | payer | payee | purpose                                      | flags           |*
+  | 12  | %(%daystart-1) |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | thx,gift,crumbs |
+  | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations: %mY                       | gift            |
+  | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations: %mY                         | gift            |
   # Note that tests simulate the previous month as the previous 30 days (created field is monthDt1-1 when not testing)
   And count "tx_hdrs" is 14
   And count "tx_requests" is 0
@@ -160,8 +160,8 @@ Scenario: Crumbs are invoiced
   And cron runs "completeUsdTxs"
   Then count "tx_hdrs" is 16
   And these "txs":
-  | xid | created        | amount | payer   | payee | purpose           | flags |*
-  | 16  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
+  | xid | created | amount | payer | payee | purpose                                      | flags           |*
+  | 16  | %now    |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | thx,gift,crumbs |
 
   When cron runs "payInvoices"
   And cron runs "getFunds"

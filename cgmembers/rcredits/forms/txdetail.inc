@@ -22,7 +22,7 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$orig = db\get('*', 'txs t', $where, $subs)) {
+  if (!$orig = db\get('*', 'txs_ever t', $where, $subs)) {
     if ($deletedOn = db\get('deleted', 'txs_deleted t', $where, $subs)) return softErr(t('tx deleted', 'on', fmtDt($deletedOn)));
     return softErr('no such tx'); // for now just show main transaction
   }
@@ -51,7 +51,7 @@ function formTxDetail($form, &$sta, $args = '') {
       uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
       uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
       p.fullName as nonMemberName
-    FROM txs t LEFT JOIN txs2 t2 USING(xid)
+    FROM txs_ever t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
     LEFT JOIN people p ON p.pid=t2.pid

@@ -641,9 +641,9 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   $reallyTaking = ($taking xor $amount < 0); // not taking if charging a negative amount
 
+  if (!$taking and $otherA->id == CGID and $gift and $recursId) $otherA = r\acct(UID_REGULARS); // aggregate the month's regular donations
   list ($loserA, $gainerA) = u\order($reallyTaking, $otherA, $actorA);
   list ($e1A, $e2A) = u\order($taking, $otherA, $actorA);
-  if ($e2A->id == CGID and $gift and $recursId) $e2A = r\acct(UID_REGULARS); // bring just the total of the month's regular donations into CG's account
   
   $ptrs = ray('actor other loser gainer e1 e2'); // set up sets of variable names
   foreach ($ptrs as $k) {

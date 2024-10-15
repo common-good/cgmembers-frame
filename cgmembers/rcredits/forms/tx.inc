@@ -174,7 +174,7 @@ function fboTx($input) {
 
   extract(just('amount purpose paying hasCats fullName address city state zip phone email cat isGift method ckNumber ckDate', $input, NULL));
   $state = (int) $state;
-  u\EXPECT($hasCats and ($paying or $mya->admNonmemberTx), 'hasCats income by non-admin');
+  u\EXPECT($paying or $mya->admNonmemberTx, 'hasCats income by non-admin');
   $uid = UID_OUTER;
   
   $DBTX = \db_transaction();

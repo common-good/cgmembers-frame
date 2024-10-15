@@ -315,7 +315,8 @@ Scenario: A sponsored member views their transaction history
   | Date        | %mdY |
   | Amount      | 100 |
   | For         | grant |
-  | From        | Dee Forn (non-member) (by Bea Two) * |
+  | From        | Dee Forn (non-member) |
+  | To          | Our Pub (by Bea Two) * |
   | Postal Addr | 4 D St, Dton, MA 01004 |
   | Category    | I: Donations |
   | Channel     | Web |

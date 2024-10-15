@@ -347,7 +347,6 @@ function members($list) {return t\members($list);}
  *     TEST donate AMemberMakesARecurringDonation
  *     TEST donate AMemberMakesANewRecurringDonation
  *     TEST donate ACompanyMakesARecurringDonation
- *     TEST donate AMemberDonatesWithInsufficientFunds
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
@@ -375,7 +374,6 @@ function members($list) {return t\members($list);}
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
- *     TEST signup AMemberDonates
  *     TEST signup AMemberRegistersAgain
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -1614,7 +1612,7 @@ function memberViewsStatementFor($id, $month) {
 /**
  * we tell (ARG) CO (ARG) with subs: (ARG)
  *
- * in: TEST donate AMemberDonatesWithInsufficientFunds
+ * in: 
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 
@@ -2505,7 +2503,8 @@ function returnURL($url) {
 /**
  * var (ARG) encrypts: (ARG)
  *
- * in: MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
+ * in: MAKE invoice Setup
+ *     MAKE mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     MAKE mfa AMemberTypesTheWrongNonce
  *     MAKE nosignin AMemberDonatesFromAnEmailLink
  */

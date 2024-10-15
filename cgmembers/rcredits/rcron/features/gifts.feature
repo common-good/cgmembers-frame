@@ -15,8 +15,8 @@ Setup:
 
 Scenario: A donation to CG is visible to admin
   Given these "tx_timed":
-  | start  | from | to  | amount | period | purpose |*
-  | %today | .ZZA | cgf |     10 | week   | gift!   |
+  | action | start  | from | to  | amount | period | purpose |*
+  | pay    | %today | .ZZA | cgf |     10 | week   | gift!   |
   When member "A:B" visits page ""
   Then we show "Summary" with:
   | Donations: | $10 Weekly |
@@ -25,8 +25,8 @@ Scenario: A brand new recurring donation to CG can be completed
   Given members:
   | .ZZC | Cor Pub  | 3 C St. | Ctown | CA    | 01003 | US      | 4132530003 | 3 C, C, CA | ok,confirmed,co    |             |  -200 |
   And these "tx_timed":
-  | id | start      | from | to   | amount | period | purpose |*
-  |  7 | %yesterday | .ZZA | .ZZC |     10 | month  | gift!   |
+  | id | action | start      | from | to   | amount | period | purpose |*
+  |  7 | pay    | %yesterday | .ZZA | .ZZC |     10 | month  | gift!   |
   When cron runs "payInvoices"
   Then these "txs":
   | xid | created | amount | payer | payee    | purpose | flags     | recursId |*
@@ -65,12 +65,12 @@ Scenario: A brand new recurring donation to CG can be completed
 
 Scenario: A brand new recurring donation to CG can be completed
   Given these "tx_timed":
-  | id | start      | from | to  | amount | period | purpose |*
-  |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
+  | id | action | start      | from | to  | amount | period | purpose |*
+  |  7 | pay    | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee    | purpose | flags     | recursId |*
-  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | gift,self |        7 |
+  | xid | created | amount | payer | payee    | purpose | flags         | recursId |*
+  |   2 | %today  |     10 | .ZZA  | regulars | gift!   | thx,gift,self |        7 |
   And we message "recur pay" to member ".ZZA" with subs:
   | amount | when    | purpose | payee    |*
   |    $10 | monthly | gift!   | %PROJECT |
@@ -89,15 +89,15 @@ Scenario: A brand new recurring donation to CG can be completed
 
 Scenario: A second recurring donation to CG can be completed
   Given these "tx_timed":
-  | id | start     | from | to  | amount | period | purpose |*
-  | 1  | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
+  | id | action | start     | from | to  | amount | period | purpose |*
+  | 1  | pay    | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
   And these "txs":
   | xid | created    | amount | payer | payee    | purpose | flags     | recursId |*
   |   2 | %today-32d |     10 | .ZZA  | regulars | gift!   | gift,self | 1        |
   When cron runs "recurs"
   Then these "txs":
-  | xid | created | amount | payer | payee    | purpose | flags     |*
-  |   3 | %today  |     10 | .ZZA  | regulars | gift!   | gift,self |
+  | xid | created | amount | payer | payee    | purpose | flags         |*
+  |   3 | %today  |     10 | .ZZA  | regulars | gift!   | thx,gift,self |
   And count "txs" is 3
 
   Given it's later
@@ -115,8 +115,8 @@ Scenario: A donation invoice (to CG) can be completed
   And member ".ZZA" has no photo ID recorded
   When cron runs "payInvoices"
   Then these "txs": 
-  | xid | created | amount | payer | payee    | purpose  | flags     | recursId |*
-  |   2 | %today  |     50 | .ZZA  | regulars | donation | gift,self |        8 |
+  | xid | created | amount | payer | payee    | purpose  | flags         | recursId |*
+  |   2 | %today  |     50 | .ZZA  | regulars | donation | thx,gift,self |        8 |
   And these "tx_requests":
   | nvid | created   | status | purpose  |*
   |    2 | %today    | 2      | donation |
@@ -158,9 +158,9 @@ Scenario: A non-member chooses a donation to CG
   | .ZZD | Dee Four |        | USkk9000004 |         0 |       0 |
   | .ZZE | Eve Five | refill | USkk9000005 | %today-9m |     200 |
   And these "tx_timed":
-  | id | start     | from | to  | amount | period | purpose  |*
-  | 2  | %today-3y | .ZZD | cgf |      1 | year   | donation |
-  | 3  | %today-3m | .ZZE | cgf |    200 | month  | donation |
+  | id | action | start     | from | to  | amount | period | purpose  |*
+  | 2  | pay    | %today-3y | .ZZD | cgf |      1 | year   | donation |
+  | 3  | pay    | %today-3m | .ZZE | cgf |    200 | month  | donation |
   When cron runs "recurs"
   Then count "txs" is 1
   And count "txs2" is 0

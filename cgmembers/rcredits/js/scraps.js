@@ -10,7 +10,7 @@ args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
-  function fform(fid) {return $(fid).parents('form:first');}
+  function fform(fid) {return $(fid).closest('form');}
   function report(j, callback) {$.alert(j.ok ? 'Success' : 'Error', j.message, callback);}
   function reportErr(j, callback) {if (!j.ok) $.alert('Error', j.message, callback);}
   function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
@@ -676,8 +676,10 @@ function doit(what, vs) {
     var fid = '#edit-newacct';
     var form = $('#frm-accounts');
     suggestWho(fid, '');
-    form.submit(function (e) {
-      return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+    $(fid).focus(function () {
+      form.submit(function (e) {
+        return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+      });
     });
     break;
 

@@ -118,8 +118,6 @@ Scenario: A member donates
   | Routing |
   | Account |
   | Refill  |
-  And we say "status": "gift thanks|cggift thanks" with subs:
-  | coName | %PROJECT |**
   And we say "status": "gift transfer later"
   And we say "status": "step completed"
   And member ".ZZB" steps left "verifyemail"
