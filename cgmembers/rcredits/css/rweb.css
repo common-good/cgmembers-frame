@@ -141,7 +141,7 @@ a.list-group-item:hover {background-color:#b4dcfe;} /* for non-dropdown menus */
 .submenu .popover h4 {font-size:14px;}
 .submenu .popover-content {padding:0;}
 .submenu .popover .arrow:after {border-bottom-color:#044687;}
-.submenu a.list-group-item {border-width:0 0 1px 0;}
+.submenu a.list-group-item {border-width:0 0 1px 0; padding:10px 10px;}
 .submenu a.list-group-item:hover {background-color:#022f5a;}
 .submenu a.list-group-item:last-child {border:0;}
 .submenu a.list-group-item,
@@ -252,7 +252,6 @@ form {max-width:834px; margin:0 auto;}
   .mlab-above ul, .mlab-above ol {margin-left:0}
 
   .ladda-button {margin-left:0;}
-
 
   .control-label[for="agreement"],
   #frm-help .control-label {display:none !important;}
