@@ -519,7 +519,7 @@ function postnGo($url, $data) {
   foreach ($data as $k => $v) {
     foreach (ray('k v') as $x) $$x = htmlentities($$x);
     $guts .= <<<X
-      <input type="hidden" name="$k" value="$v" />\n
+      <input type="hidden" name="$k" value="$v">\n
 X;
   }
   $clickHere = t('Click here to continue.');
@@ -528,7 +528,7 @@ X;
 /**/  echo <<<X
     <form id="me" action="$url" method="GET">
       $guts
-      <noscript><input type="submit" value="$clickHere" /></noscript>
+      <noscript><input type="submit" value="$clickHere"></noscript>
     </form>
     <script>document.getElementById('me').submit();</script>
 X;

@@ -205,7 +205,7 @@ function postInputFlds($dfts = []) {
   
   $dft = isset($radius) ? dft(u\fmtAmt($radius, 'b0')) : [];
   $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], $dft + suffix(t(' miles')));
-  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time). If you leave this blank, the post will end in one year.')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
+  $end = dateFld(t('End Date:'), t('When to stop listing this (you can also cancel it at any time). If you leave this blank, the post will end in one year.'), dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
   return compact(ray(POST_INPUT_FLDS));
 }

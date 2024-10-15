@@ -22,7 +22,7 @@ function formInvestPropose($form, &$sta, $args = '') {
   $fullName = textFld(t('Company:'), [t('The company\'s full name')]);
   $city = textFld(t('City:'), [t('City where company is located')]);
   $zips = textFld(t('Service area:'), [t('Company service area (list of zipcodes)')]);
-  $dob = dateFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately?')]);
+  $dob = dateFld(t('Founded:'), t('When did this company begin, approximately?'));
   $gross = numFld(t('Annual Gross:'), [t('Gross income')]);
   $bizCats = selectFld(t('Biz categories:'), t('Hold down the Ctrl key to select more than one'), ['multiple' => TRUE], coCats());
 

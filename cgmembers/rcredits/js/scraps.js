@@ -217,7 +217,7 @@ function doit(what, vs) {
 
   case 'adminSummary': 
     $('.tickle').click(function () {
-      var tickle = $(this).attr('tickle');
+      var tickle = $(this).attr('data-tickle');
       $('#edit-tickle').val(tickle);
       $('#edit-submit').click();
     });

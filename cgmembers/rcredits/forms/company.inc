@@ -31,7 +31,7 @@ function formCompany($form, &$sta, $arg = '') {
   foreach ($canDescs as $i => $desc) {
     $outbox = <<<EOF
 <div class="form-item form-type-checkbox">
-  <input type="checkbox" name="can[$i]" CHECKED class="form-checkbox" />
+  <input type="checkbox" name="can[$i]" CHECKED class="form-checkbox">
   <div class="description"><div class="box"></div></div>
 </div>
 EOF;

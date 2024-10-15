@@ -15,7 +15,6 @@ global $pageTitle;
  *   $language->language contains its textual representation.
  *   $language->dir contains the language direction. It will either be 'ltr' or 'rtl'.
  * - $rdf_namespaces: All the RDF namespace prefixes used in the HTML document.
- * - $grddl_profile: A GRDDL profile allowing agents to extract the RDF data.
  * - $head_title: A modified version of the page title, for use in the TITLE
  *   tag.
  * - $head_title_array: (array) An associative array containing the string parts
@@ -75,6 +74,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.
 $page = str_replace('target="_blank"', 'target="_blank" rel="noreferrer noopener"', $page); // flout tabnabbing
+if (!$pageTitle) $pageTitle = 'Message';
 
 if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
@@ -95,28 +95,25 @@ EOF;
 <html lang="$language->language" dir="$language->dir"
 $rdf_namespaces>
 
-<head profile="$grddl_profile">
+<head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- The above 3 meta tags *must* come first in the head -->
 
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
 $favicon
-  <meta name="MobileOptimized" content="width" />
-  <meta name="HandheldFriendly" content="true" />
+  <meta name="MobileOptimized" content="width">
+  <meta name="HandheldFriendly" content="true">
   <meta name="apple-mobile-web-app-capable" content="no"><!-- (not yet) -->
-  <meta http-equiv="cleartype" content="on" />
   <title>$pageTitle</title>
   <meta name="description" content="">
   <meta name="author" content="William Spademan -- for Society to Benefit Everyone, Inc.">
-  <link rel="stylesheet" href="$rUrl/css/x/bootstrap.min.css?$version" />
+  <link rel="stylesheet" href="$rUrl/css/x/bootstrap.min.css?$version">
   <link rel="stylesheet" href="$rUrl/css/x/jquery-ui.min.css?$version">
   <link rel="stylesheet" href="$rUrl/css/x/ladda-themeless.min.css?$version">
   $styles
-  <link rel="stylesheet" href="$rUrl/css/cg.css?$version" type="text/css" />
-  <link rel="stylesheet" href="$rUrl/css/rweb.css?$version" type="text/css" />
+  <link rel="stylesheet" href="$rUrl/css/cg.css?$version" type="text/css">
+  <link rel="stylesheet" href="$rUrl/css/rweb.css?$version" type="text/css">
 </head>
 
 <body class="$classes" $attributes>

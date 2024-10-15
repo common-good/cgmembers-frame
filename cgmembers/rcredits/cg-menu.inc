@@ -326,10 +326,10 @@ function subMenuHtml($menu) {
     if ($type == 'call' or !access($perms)) continue;
     if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
-    <h4 class="list-group-item-heading">
+    <span class="list-group-item-heading">
       <span class="glyphicon glyphicon-$icon"></span> &nbsp;
       $head
-    </h4>
+    </span>
     $detail
 EOF;
     $list .= spinLink("/$k", $text, '', 'list-group-item', '');

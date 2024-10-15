@@ -368,6 +368,7 @@ const R_CHUNK = 10; // chunk size for buying CG credit (sales amounts are a mult
 const R_MIN_DEFAULT = 100; // suggested minimum amount to hold in CG credit
 const R_ACHMIN = 10; // minimum granularity of withdrawals from bank account
 const R_ACHMIN_DEFAULT = 50; // suggested achMin
+const BANK_ACCOUNT_MAX = 99999999999999999; // max 17 digits
 //const R_ACH_TRIES = 3; // how many times to retry an ACH
 const CASHOUT_MIN = 100; // minimum dollar amount to cash out automatically
 const VERIFICATION_DELAY = 3; // number of days to wait after requesting a zero transfer, before requesting a real transfer

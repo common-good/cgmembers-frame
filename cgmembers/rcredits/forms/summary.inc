@@ -82,7 +82,7 @@ function formSummary($form, &$sta) {
   } else $extra = $copyAcct = $copyEmail = $copyAddr = '';
   $accountId = item('<div></div>' . ($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:') . '<wbr>'); // empty div and .. for double-click select
   
-  $photoid = item('<iframe width="100%" height="600"></iframe>');
+  $photoid = item('<iframe height="600"></iframe>');
 
   $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine photoid';
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
@@ -304,7 +304,7 @@ function adminSummary() {
       $class = (in($k, $adminable) and $mya->admManageAccts) ? '' : 'noEdit';
       if ($mya->isCtty) $k = strtr($k, ray(B_ADMIN_BITS));
       $dpy = w\popHelp($k, $flagHelp[$k0], '', '', 'click');
-      $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
+      $aliases[$k0] = $class ? "<span class=\"$class\">$dpy</span>" : $dpy;
     }
     $adminable = bitsFld(t('Bits:'), $mya->flags, 'b', join(' ', $blist), $aliases);
 
@@ -316,7 +316,7 @@ function adminSummary() {
         if (u\getBit($mya->coFlags, $i)) u\setBit($dft, count($coList));
         $coList[] = $k;
         $dpy = popHelp($k, nni($coHelp, $k), '', '', 'click');
-        $aliases[$k] = "<div class=\"$class\">$dpy</div>";
+        $aliases[$k] = $dpy;
       }
       $coFlags = bitsFld(t('Co Flags:'), $dft, '', join(' ', $coList), $aliases);
     } else $coFlags = NULL;
@@ -331,7 +331,7 @@ function adminSummary() {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
       if (!isset($risksEditable[$k]) or !$mya->admManageAccts) $class .= ' noEdit';
       $dpy = w\popHelp($k, nni($riskHelp, $k), '', '', 'click');
-      $aliases[$k] = "<div class=\"$class\">$dpy</div>";
+      $aliases[$k] = "<span class=\"$class\">$dpy</span>";
     }
     $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
 
@@ -341,7 +341,7 @@ function adminSummary() {
       $adminCans[] = $k0 = $k;
       $class = $mya->admMakeVAdmin ? '' : ((in($k, A_VLIST) or !$mya->admMakeAdmin) ? 'noEdit' : '');
       $dpy = w\popHelp($k, $cansHelp[$k0], '', '', 'click');
-      $aliases[$k0] = "<div class=\"$class\">$dpy</div>";
+      $aliases[$k0] = $class ? "<span class=\"$class\">$dpy</span>" : $dpy;
     }
 
     $adminCans = bitsFld(t('Admin Can:'), $mya->adminCans, '', join(' ', $adminCans), $aliases);
@@ -401,7 +401,7 @@ function adminSummary() {
       }
       
       $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-      $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
+      $tickle = dateFld(t('Tickle:'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)'), dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
 
     } else $details = $notes = $note = NULL;
 
@@ -427,7 +427,7 @@ function adminSummary() {
 function submitTickle($v, $text, $size = 'xs') {
   if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
   if ($v) $v = date('Y-m-d', strtotime("+$v days"));
-  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v) + notab()));
+  return w\rent(w\submi($text, 'primary', $size, ray('class data-tickle', 'tickle', $v) + notab()));
 }
 
 /**

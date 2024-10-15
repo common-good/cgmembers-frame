@@ -190,7 +190,7 @@ function setWhoId(id, frm) {
   var whoId = $('.whoId', frm);
   if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
     whoId.val(id);
-  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '" />');
+  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '">');
 }
 
 function which(jForm, fid, title, body) {

@@ -66,7 +66,7 @@ function strip($form) {
   $form = preg_replace('~<div[^>]*class="g([A-E])".*?</div>~sm', '$1 ', $form); // change multiple choice options to letters
   
   $form = preg_replace('~<option value="[^"]*">.*?</option>~sm', '', $form); // remove unselected options (fails for dropdowns created on the fly, eg state and country)
-  $form = preg_replace('~<input type="hidden".*?/>~sm', '', $form); // remove hidden inputs
+  $form = preg_replace('~<input type="hidden".*?>~sm', '', $form); // remove hidden inputs
   $form = preg_replace('/<input[^>]* value=" *(.*?) *".*?>/sm', '$1', $form); // show button labels
   $form = preg_replace('/<input[^>]* checked[^>]* data-on="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle on
   $form = preg_replace('/<input[^>]* data-on="([^"]*)"[^>]* checked[^>]*>/sm', '$1', $form); // ditto (either order)

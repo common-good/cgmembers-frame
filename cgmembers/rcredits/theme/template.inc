@@ -177,7 +177,7 @@ function rcredits_links($variables) {
       <a href="#" data-toggle="popover" data-html="true" data-trigger="manual" data-animation="false">$m_title</a>
 EOF;
 //      <a href="#" data-toggle="popover" data-html="true" data-trigger="manual" data-animation="false" onclick="jQuery('.submenu a').not(jQuery(this)).popover('hide'); jQuery(this).popover('toggle');">$m_title</a>
-    } else $link = spinLink("/$m_href", $m_title, $id, '', ''); // the '' args are important
+    } else $link = spinLink("/$m_href", $m_title, "$id-link", '', ''); // the '' args are important
 
     $menuLinks .= "<li id=\"$id\" class=\"$class\">$link</li>\n";
     $i++;
@@ -189,6 +189,7 @@ EOF;
   } else $acctName = $co = '';
 
   $breadcrumb = rcredits_breadcrumb(['breadcrumb' => \drupal_get_breadcrumb()]);
+  $srBreadcrumbText = t('You are here');
   $logo = R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
   $promoUrl = r\promoLink();
   
@@ -197,7 +198,7 @@ EOF;
   <div class="nav2-inner">
     <div id="extras" class="">
       <button type="button" class="accounts-toggle photo$co" data-toggle="collapse" data-target="#edit-accounts" aria-expanded="false" aria-controls="edit-accounts">
-        <a title="$acctName" data-toggle="popover" data-placement="left"><img src="$base_url/account-thumb"/></a>
+        <span title="$acctName" data-toggle="popover" data-placement="left"><img src="$base_url/account-thumb" alt="account profile image - click to select an account"></span>
       </button>
     </div>
   </div>
@@ -205,6 +206,7 @@ EOF;
 
 <nav class="navbar navbar-inverse navbar-fixed-top">
   <div class="container">
+    <div class="sr-only">$srBreadcrumbText</div>
     <ol class="breadcrumb">
       $breadcrumb
     </ol>
@@ -217,7 +219,7 @@ EOF;
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="$promoUrl"><div>
-        <img src="$logo" />
+        <img src="$logo" alt="Common Good logo">
         <div id="orgname">Common Good<sup> &reg;</sup></div>
       </div></a>
     </div>
@@ -282,8 +284,10 @@ function rcredits_form_element($variables) {
 
   $outerClass = nn($class, []);
   $parentName = isset($parents) ? strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']) : '';
-  $for = nn($name) ?: $parentName;
-  if ($for == 'title') $children = "<h3>$children</h3>";
+  $name = nn($name) ?: $parentName;
+  $for = isset($markup) ? "edit-$name" : '';
+  $id = $for ? " id=\"edit-$name\"" : '';
+  if ($name == 'title') $children = "<h3>$children</h3>";
   $children = nn($field_prefix) . $children . nn($field_suffix);
 
   u\setDft($title_display, 'before');
@@ -293,7 +297,7 @@ function rcredits_form_element($variables) {
   $class = $boxy ? 'option' : 'control-label';
   if ($title_display == 'invisible') $class .= ' sr-only';
   $label = ($boxy ? ($children . nn($title)) : nn($title)) ?: NBSP;
-  $label = w\tag('label', $label, compact('for', 'class'));
+  $label = w\tag('label', $label, compact(ray($for ? 'for class' : 'class')));
   if (nn($bare)) return $boxy ? $label : $children;
     
   if (nn($tabled)) {
@@ -307,29 +311,28 @@ function rcredits_form_element($variables) {
 EOF;
   } else $core = $boxy ? $label : ($label . $children);
 
-  $id = isset($markup) ? " id=\"edit-$for\"" : '';
-  $outerClass[] = "form-group form-item-$for";
-  if ($for != $parentName) $outerClass[] = "form-item-$parentName";
+  $outerClass[] = "form-group form-item-$name";
+  if ($name != $parentName) $outerClass[] = "form-item-$parentName";
   $outerClass[] = $boxy ?: "form-type-$type";
-  $required = nn($required) ? ' required="yes"' : '';
+
   if ($class[0] == 'boxes') $outerClass[] = 'boxes';
   $i = raypos($outerClass, 'mlab-left');
   if ($i !== FALSE) unset($outerClass[$i]); else $outerClass[] = 'mlab-above'; // on mobile, labels default to above
   $outerClass = join(' ', $outerClass);
 
   return <<<EOF
-  <div$id class="$outerClass"$required>
+  <div$id class="$outerClass">
 $core
   </div>
 EOF;
 }
 
 function rcredits_textfield($vs) {
-  cgSetAttrs($vs['element'], ray('id name class value size maxlength step min max autocomplete disabled index enctype pattern data-lpignore'));
+  cgSetAttrs($vs['element'], ray('id name class value maxlength step min max autocomplete disabled index enctype pattern data-lpignore'));
   extract(cgElement($vs, 'attributes required help class submitButton subtype'));
 
   if (nn($submitButton)) return rcredits_submit($vs);
-  if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
+  if (nn($required)) $attributes['required'] = 'required'; // don't add this in unless it is yes
   if (nn($subtype)) $attributes['type'] = $subtype; // num, tel, email, date, etc.
   $class[] = 'form-control input-md';
   if (is_array($ray = nn($help))) {
@@ -339,31 +342,32 @@ function rcredits_textfield($vs) {
     }
   }    
   $tribs = u\tribs(compact('class') + $attributes);
-  return "<input $tribs />";
+  return "<input $tribs>";
 }
 
 function rcredits_textarea($variables) {
   cgSetAttrs($variables['element'], ray('id name maxlength'));
-  extract(cgElement($variables, 'attributes required name help class default_value value'));
+  extract(cgElement($variables, 'attributes required name help class value'));
 
   $value = plain(nn($value));
-  if (nn($required)) $attributes['required'] = 'yes';
+  if (nn($required)) $attributes['required'] = 'required';
   $class[] = 'form-control input-md';
   if (is_array($ray = nn($help))) {
     if (nni($ray, 0) and !nni($ray, 2)) $ray[2] = $ray[0]; // hover text defaults to same as hint
     foreach (['placeholder', 'desc', 'title'] as $i => $k) {
       if ($k != 'desc' and $v = $ray[$i]) $attributes[$k] = $v;
     }
-  }    
+  }   
+  foreach (ray('value default_value') as $k) unset($attributes[$k]);
   $tribs = u\tribs(compact('class') + (nn($attributes) ?: []));
-  return "<textarea $tribs />$value</textarea>";
+  return "<textarea $tribs>$value</textarea>";
 }
 
 function rcredits_radios($variables) {
   $chn = $variables['element']['#children'];
   extract(cgElement($variables, 'required inline'));
   if (nn($inline)) $chn = preg_replace('/ radio( |")/', " radio-inline$1", $chn);
-  if (nn($required)) $chn = str_replace('type="radio"', 'type="radio" required="yes"', $chn);
+  if (nn($required)) $chn = str_replace('type="radio"', 'type="radio" required="required"', $chn);
   return $chn;
 }
 
@@ -377,13 +381,14 @@ function rcredits_radio($variables) {
   $tribs = u\tribs(compact(ray('type class')) + $attributes);
   if (test() and nni($attributes, 'checked')) f('t.setRadio', $parents[0], $title);
 
-  return "<input $tribs />";
+  return "<input $tribs>";
 }
 
 function rcredits_submit($variables) {
   $special = 'title class tickle tabindex disabled field_suffix';
   extract(cgElement($variables, 'bare value id size style parents ' . $special));
-  $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
+
+  $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : u\randomString(8, 'word')); // even if no id is set (assures mixed case when appropriate
   if (!nn($id) or $id == strtolower($id2)) $id = $id2;
   $extra = cgElement($variables, $special);
   if ($hasSuffix = nni($extra, 'field_suffix')) unset ($extra['field_suffix']);
@@ -411,7 +416,7 @@ function rcredits_checkbox($variables) {
   if (test() and nni($attributes, 'checked')) f('t.setChecked', $title);
   if (isset($tabindex)) $attributes += compact('tabindex');
   $tribs = u\tribs(compact('type') + $attributes);
-  return "<input $tribs />";
+  return "<input $tribs>";
 }
 
 function rcredits_checkboxes($variables) {
@@ -424,12 +429,12 @@ function rcredits_checkboxes($variables) {
   $fields = ray('name value checked title');
   $classRay = nn($class) ? compact('class') : [];
   $chn = '';
-  foreach ($choices as $k => $v) {
-    $name = "{$for}[$k]";
-    $value = $k;
-    $checked = in($k, $defaults);
-///    debug(compact(ray('k v defaults checked')));
-    $title = $aliases[$k];
+  foreach ($choices as $i => $v) {
+    $name = "{$for}[$i]";
+    $value = $i;
+    $checked = in($i, $defaults);
+///    debug(compact(ray('i v defaults checked')));
+    $title = $aliases[$i];
     $fld = w\fld('checkbox', '', '', compact($fields) + $classRay); // \render arg is called by reference
     $chn .= \render($fld);
   }
@@ -443,7 +448,8 @@ function rcredits_select($variables) {
   extract(cgElement($variables, 'attributes class required default_value'));
   u\setDft($variables['element']['#value'], nn($default_value)); // otherwise rendered fields can't default
   $class[] = 'form-control';
-  if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
+  if (nn($required)) $attributes['required'] = 'required'; // don't add this in unless it is yes
+  unset($attributes['value']);
   return w\tag('select', \form_select_options($variables['element']), (nn($attributes, []) + compact('class')));
 }
 
@@ -463,14 +469,14 @@ function rcredits_breadcrumb($variables) {
   $cnt = count($breadcrumb = nni($variables, 'breadcrumb'));
   if ($cnt < 2) return '';
   $map = ['Sadmin' => t('Sys Admin'), 'Account' => t('Settings')];
-  $head = '<h2 class="sr-only">' . t('You are here') . '</h2>';
+
   foreach ($breadcrumb as $k => $v) {
     $k = ucwords(str_replace('-', ' ', strtr($k, $map)));
     if ($i = mb_strpos($k, '?')) $k = mb_substr($k, 0, $i);
     $crumbs[] = l($k, BASE_URL . $v);
   }
   $crumbs[$cnt - 1] = $k;
-  return $head . '<li>' . join('</li><li>', $crumbs) . '</li>';
+  return '<li>' . join('</li><li>', $crumbs) . '</li>';
 }
 
 function rcredits_hidden($variables) {
@@ -479,7 +485,7 @@ function rcredits_hidden($variables) {
   extract(cgElement($variables, 'attributes id'));
   foreach (ray('value id') as $k) if (isset($$k)) $attributes[$k] = $$k;
   $tribs = u\tribs(compact('type') + $attributes);
-  return "<input $tribs />\n";
+  return "<input $tribs>\n";
 }
 
 /**
