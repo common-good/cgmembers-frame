@@ -2130,7 +2130,7 @@ function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
   $text = ucfirst($text);
   foreach (ray('text help') as $k) $$k = htmlentities($$k);
   return <<<X
-  <$tag$href$class$type data-toggle="popover" data-placement="bottom" data-trigger="$trigger" data-content="$help" title="$text">$text</$tag>
+<$tag$href$class$type data-toggle="popover" data-placement="bottom" data-trigger="$trigger" data-content="$help" title="$text">$text</$tag>
 X;
 }
 
