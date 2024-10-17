@@ -30,7 +30,7 @@ Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   | Donation:    |
   | When:        |
   | Honoring:    |
-  | member?      |
+  | %PROJECT member |
   | Name:        |
   | Phone:       |
   | Email:       |
@@ -184,7 +184,7 @@ Scenario: A non-member clicks a link to pay a ccOk organization by Stripe
   When member "?" visits "pay/code=%buttonCode"
   Then we show "Pay Our Pub" with:
   | Pay:         |
-  | member?      |
+  | %PROJECT member |
   | Name:        |
   | Phone:       |
   | Email:       |

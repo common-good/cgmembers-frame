@@ -679,7 +679,7 @@ class Acct {
     $codeName = $a->proSe ? 'cardCode' : 'cardCode2';
     $code = $a->agentA->$codeName;
     //    $changes = $a->agentA->changes;
-    $changes = db\rows('*', 'changes', "table='users' AND rid=:id AND field=:fld AND created>:dt", ray('id fld dt', $a->agentId, $codeName,$created));
+    $changes = db\rows('*', 'changes', "`table`='users' AND rid=:id AND field=:fld AND created>:dt", ray('id fld dt', $a->agentId, $codeName,$created));
 
     foreach ($changes as $ch) if (u\hash(str_replace($code, u\decry('S', $ch->oldValue), $wanted)) == $proof) return false;
 

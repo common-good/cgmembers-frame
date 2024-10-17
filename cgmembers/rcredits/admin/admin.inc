@@ -360,7 +360,7 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     flog(t('%table: %field', compact(ray('table field'))));
     $where = "`$field`=:oldUid";
     if (in($table, 'tx_rules tx_timed') and in($field, 'payer payee')) $where .= " AND `{$field}Type`=:REF_ACCOUNT";
-    if ($table == 'changes' and $field == 'rid') $where .= " AND table='users'";
+    if ($table == 'changes' and $field == 'rid') $where .= " AND `table`='users'";
     
     if ($delete) {
       if ($deletable) {
