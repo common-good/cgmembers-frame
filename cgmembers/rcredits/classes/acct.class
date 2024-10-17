@@ -253,7 +253,7 @@ class Acct {
       case 'emailCoded': return urlencode(u\cry('P', $a->email));
       case 'changes':
         $chFlds = 'oldValue,newValue';
-        foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {
+        foreach ($rows = db\rows($chFlds, 'changes', ray('table rid', 'users', $uid)) as $i => $row) {
           foreach (ray($chFlds) as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
         }
         return $rows;
@@ -610,6 +610,7 @@ class Acct {
    */
   private function recordChanges($info) {
     global $mya;
+    global $sceneTest; if ($sceneTest) if (empty($sceneTest->state) or $sceneTest->name == 'Setup') return; // no changes until after test setup
     $a = $this;
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
@@ -619,8 +620,8 @@ class Acct {
 
       $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
       $newValue = $a->cryIf($k, is_array($v) ? serialize($v) : '' . $v);
-      $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
-      db\insert('r_changes', $record); // add a r_changes record for each changed field
+      $record = ray('table rid created field oldValue newValue changedBy', 'users', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
+      db\insert('changes', $record); // add a changes record for each changed field
     }
   }
   
@@ -678,7 +679,7 @@ class Acct {
     $codeName = $a->proSe ? 'cardCode' : 'cardCode2';
     $code = $a->agentA->$codeName;
     //    $changes = $a->agentA->changes;
-    $changes = db\rows('*', 'r_changes', 'uid=:id AND field=:fld AND created>:dt', ray('id fld dt', $a->agentId, $codeName,$created));
+    $changes = db\rows('*', 'changes', "table='users' AND rid=:id AND field=:fld AND created>:dt", ray('id fld dt', $a->agentId, $codeName,$created));
 
     foreach ($changes as $ch) if (u\hash(str_replace($code, u\decry('S', $ch->oldValue), $wanted)) == $proof) return false;
 

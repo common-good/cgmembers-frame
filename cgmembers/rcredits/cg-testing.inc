@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier changedBy';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
 const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
@@ -449,7 +449,9 @@ function doAccounts($info = []) {
   if (nn($picture) and !makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
   if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
-
+  db\q("DELETE FROM changes WHERE `table`='users' AND rid=:uid", compact('uid')); // don't record changes during setup
+  db\q('ALTER TABLE changes AUTO_INCREMENT = 1');
+  
   return $uid;
 }
 
@@ -1765,6 +1767,7 @@ function clear($ch = 0) {
   $tables = [             // RELATED TO
     'admins',             // users
     'cache',              // -
+    'changes',            // users, txs
     'flood',              // -
     'messages',           // posts
     'ofac',               // -
@@ -1774,7 +1777,6 @@ function clear($ch = 0) {
     'r_bad',              // -
     'r_votes',            // r_ballots, r_options
     'r_ballots',          // r_questions, users
-    'r_changes',          // users
     'r_ratings',          // r_investments, users
     'r_shares',           // r_investments
     'r_investments',      // users, or is that u_company?, club?
@@ -1838,6 +1840,8 @@ function clear($ch = 0) {
 
   a('aab')->cttyA->setBit(B_OK);
   a('aab')->cttyA->setBit(B_UP);
+  
+  db\q('TRUNCATE changes'); // this is required for some tests, including txDetails
 }
 
 function fixPageArgs($page) {
