@@ -1161,10 +1161,11 @@ function stripe(stripe, info) {
         phone: info.phone,
         address: { postal_code:info.zip, country:'US' }
       }}};
-      const { setupIntent, er } = await stripe.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
+      const { setupIntent, error } = await stripe.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
 
-      if (er) {
-        erDiv.html(er.message);
+      if (error) {
+        // (not needed because Stripe shows it) erDiv.html(error.message);
+        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
       } else { // setup is successful, so do the actual payment
         post('stripeTx', {...info, ...j}, function (k) {
           if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else erDiv.html(k.message);
