@@ -81,6 +81,18 @@ $('[class^="qbtn-"]').click(function () {
   });
 });
 
+/**
+ * Handle a close button (see w\xBtn()).
+ * HTML: <div class="xbtn" data-hide="{hide}" data-show="{show}"></div>
+ */
+$('.xbtn').click(function () {
+  const hide = $(this).attr('data-hide');
+  const show = $(this).attr('data-show');
+  if (hide) alert(show);
+  if (hide) $(hide).hide(); else $(this).closest('.form-group').hide();
+  $(show).show();
+});
+
 function showMore(pgFactor) {
   page = Math.floor(page * pgFactor); 
   if (more) {
@@ -190,7 +202,7 @@ function setWhoId(id, frm) {
   var whoId = $('.whoId', frm);
   if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
     whoId.val(id);
-  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '" />');
+  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '">');
 }
 
 function which(jForm, fid, title, body) {

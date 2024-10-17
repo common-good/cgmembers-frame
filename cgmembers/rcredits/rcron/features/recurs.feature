@@ -94,8 +94,8 @@ Scenario: A recurring bank transfer fails for insufficient funds
 
 Scenario: A second recurring payment can be completed
   Given these "tx_timed":
-  | id | start    | from | to   | amount | period | purpose |*
-  |  8 | %now0-8d | .ZZA | .ZZB |     10 | week   | pmt     |
+  | id | action | start    | from | to   | amount | period | purpose |*
+  |  8 | pay    | %now0-8d | .ZZA | .ZZB |     10 | week   | pmt     |
   And these "txs":
   | xid | created | amount | payer | payee | purpose | flags | recursId |*
   |   2 | %now-8d |     10 | .ZZA  | .ZZB  | pmt     | self  |        8 |
@@ -104,13 +104,13 @@ Scenario: A second recurring payment can be completed
   | xid | created | amount | payer | payee | purpose | flags | recursId |*
   |   3 | %now    |     10 | .ZZA  | .ZZB  | pmt     | self  |        8 |
 
-Scenario: A second recurring payment can be completed from a non-member
+Scenario: A second recurring payment can be completed from a non-member by ACH
   Given these "people":
   | pid | fullName |*
   | 123 | Ned Nine |
   And these "tx_timed":
-  | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer |*
-  |  8 | pay    | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   |
+  | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
+  |  8 | pay    | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   |          |
   And these "txs":
   | xid | created | amount | payer      | payee | purpose | flags | recursId | type     |*
   |   2 | %now-8d |     10 | %UID_OUTER | .ZZB  | pmt     | self  |        8 | %E_OUTER |
@@ -124,6 +124,27 @@ Scenario: A second recurring payment can be completed from a non-member
   And these "txs2":
   | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
   | 3   | %now    | %now      | 10     | .ZZB  | 123 | USkk9000001 | %NUL      |
+
+Scenario: A second recurring payment can be completed from a non-member by card
+  Given these "people":
+  | pid | fullName |*
+  | 123 | Ned Nine |
+  And these "tx_timed":
+  | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
+  |  8 | pay    | %now0-8d | %MATCH_PAYER | .ZZB |     10 | week   | pmt     | %REF_PERSON | 123   | strId456 |
+  And these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   2 | %now-8d |     10 | %UID_OUTER | .ZZB  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 2   | %now-8d | %now-8d   | 10     | .ZZB  | 123 | %NUL        | %NUL      |
+  When cron runs "recurs"
+  Then these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   3 | %now    |     10 | %UID_OUTER | .ZZB  | pmt     | self   |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 3   | %now    | %now      | 10     | .ZZB  | 123 | %NUL        | %NUL      |
   
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":

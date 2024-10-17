@@ -159,7 +159,7 @@ function htmlText($name, $id, $value, $class, $other = []) {
 //  if ($extra = rcAuto(@$autocomplete_path, $id)) $class[] = 'form-autocomplete';
 
   $tribs = u\tribs(compact('type', 'class') + (nn($tribs) ?: []));
-  return "<input $tribs />";
+  return "<input $tribs>";
 }
 function htmlPassword($name, $id, $value, $class, $other = []) {
   return htmlText($name, $id, $value, $class, ['type' => 'password'] + $other);
@@ -205,7 +205,7 @@ function htmlButton($name, $id, $value, $class, $other = []) {
 function NEWfld($type, $label, $desc = '', $other = []) {
 ///  debug(compact(ray('type label desc other')));
   $label0 = substr($label, 0, 1); // not [0]
-  if ($label0 == REQ) list ($required, $label) = ['yes', substr($label, 1)];
+  if ($label0 == REQ) list ($required, $label) = ['required', substr($label, 1)];
   if ($bare = ($label0 == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
 
   list ($placeholder, $help, $title) = u\padRay(is_array($desc) ? $desc : ['', $desc], 3);
@@ -496,10 +496,10 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     $type = 'textfield';
   }
 
-  if ($type == 'textfield') u\setDft($x['maxlength'], 4096);
+  if (in($subtype, 'email password search tel textfield url')) u\setDft($x['maxlength'], 4096);
   if ($type == 'select') u\setDft($x['default_value'], $options ? key($options) : ''); // Drupal's select fails without a default
   
-  if ($label and $label[0] == REQ) list ($x['required'], $label) = ['yes', substr($label, 1)];
+  if ($label and $label[0] == REQ) list ($x['required'], $label) = ['required', substr($label, 1)];
   if ($bare = ($label and $label[0] == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
   if (nni($x, 'wrap')) $bare = FALSE;
   u\setDft($x['title'], $label); 
@@ -534,7 +534,7 @@ function rentRadios($nm, $dft, $ray) {
     $checked = $i == $dft ? ' checked="checked"' : '';
     $res[] = <<< X
 <div class="form-group form-item-$nm radio-inline mlab-above">
-  <label for="$nm" class="option"><input type="radio" class="form-radio" id="edit-$nm-$i" name="$nm" value="$i"$checked />$v</label>
+  <label for="$nm" class="option"><input type="radio" class="form-radio" id="edit-$nm-$i" name="$nm" value="$i"$checked>$v</label>
 </div>
 X;
   }
@@ -667,7 +667,7 @@ function boxFlds($group, $label, $question, $options, $other = []) {
   foreach ($options as $k => $v) {
     $list .= <<<EOF
 <div class="row">
-<div><input type="checkbox" id="edit-$group-$k" name="{$group}[$k]" /></div>
+<div><input type="checkbox" id="edit-$group-$k" name="{$group}[$k]"></div>
 <div>$v</div>
 </div>
 EOF;
@@ -694,7 +694,7 @@ function roundupFld($a) {
 function boolFld($title = '', $help = '', $dft = NULL, $labels = NULL, $extra = []) {
   $class = ['yesno'];
   $inline = TRUE;
-  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
+  $dft = is_null($dft) ? dft(-1) : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
   return radiosFld($title, $help, $extra + $dft + compact('class', 'inline'), $labels ?: array(t('No'), t('Yes')));
 }
 
@@ -837,7 +837,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
   if ($req == 'user' and $mya) return w\go('dashboard'); // dashboard not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
-  $form['opid'] = hidFld(nn($submit1) ?: 'none', ray('id name', 'opid', 'opid')); // default to first, in case submitted programmatically
+  $form['opid'] = hidFld(nn($submit1) ?: 'none', ray('name', 'opid')); // default to first, in case submitted programmatically
 
 //  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
@@ -1059,6 +1059,7 @@ function svar($name) {
 function modal($id, $legend, $prompt, $body, $closer = '') {
   if ($closer == 'X') $closer = '&times;'; // a better X (normally with class "close" alone)
   if ($prompt !== '') $prompt = "<p>$prompt</p>";
+
   return <<<EOF
 <div id="$id" class="modal fade" role="dialog">
   <div class="modal-dialog">
@@ -1437,8 +1438,8 @@ function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
   return radiosFld(REQ . t('Account Type:'), ['', $desc], dft($dft), $coTypes);
 }
 
-function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
-function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
+function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), mobileDobTxt(), autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
+function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt(), dft($dft));}
 function logoFld($a, $suffix = '') {return ($a->hasLogo or $suffix) ? item(logoHtml($a) . $suffix) : NULL;}
 function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid . '?' . now()) : '';}
 
@@ -1660,10 +1661,6 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $downloadPeriod = $downloadable ? submi(t('Download')) : NULL;
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
   $actions = fieldSet('actionsSimple', compact('submitPeriod', 'downloadPeriod'), '', '', suffix($showAdvanced2));
-///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
-//  $onchange = "$('#edit-starting, #edit-ending').val('');";
-//  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
-//  $period = selectFld(t('For the past:'), '', dft($period) + w\onchange($onchange), $txDays);
   $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
   $simple = fieldSet('simple', compact('period', 'actions'), BARE);
@@ -2124,11 +2121,13 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
  */
 function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
   $trigger = $trigger ?: 'hover';
-  list ($href, $tag) = $href ? [" href=\"$href\"", 'a'] : ['', 'span'];
+  list ($href, $tag, $type) = $href ? [" href=\"$href\"", 'a', ' type="button"'] : ['', 'span', ''];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
   foreach (ray('text help') as $k) $$k = htmlentities($$k);
-  return "<$tag$href$class type=\"button\" data-toggle=\"popover\" data-placement=\"bottom\" data-trigger=\"$trigger\" data-content=\"$help\" title=\"$text\">$text</$tag>";
+  return <<<X
+<$tag$href$class$type data-toggle="popover" data-placement="bottom" data-trigger="$trigger" data-content="$help" title="$text">$text</$tag>
+X;
 }
 
 /**
@@ -2192,6 +2191,9 @@ function emailtag($email = NULL, $subject = '', $body = '') {
 function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
+function btnFld($label, $href, $text, $style = '', $size = 'md', $extras = []) {
+  return item(btn($href, $text, $style, $size), $label, '', $extras);
+}
 function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
@@ -2233,10 +2235,14 @@ function skipStepLonger() {
   
 /**
  * Return account and password fields for sign-in.
+ * @param string $qid: default account identifier
+ * @param string $req: REQ (required) or ''
+ * @param string $acctDesc: account description
+ * @param string $passDesc: password description
  */
-function signinFlds($qid, $acctDesc = '', $passDesc = '') {
-  $qid = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
+function signinFlds($qid, $req = '', $acctDesc = '', $passDesc = '') {
+  $qid = textFld($req . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld($req . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
   return [$qid, $pass];
 }
 
@@ -2389,9 +2395,20 @@ function exitRay($ray, $cry = FALSE) {
   return exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
 }
 
+/**
+ * Return a button to hide and maybe show somthing.
+ * @param string $hide: CSS for what to hide (defaults to parent - the button itself normally gets hidden as part of this)
+ * @param string $hide: CSS for what to show (optional)
+ * @return HTML for the button
+ */
+function xBtn($hide = '', $show = '') {
+  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"${$k}\"";
+  return tr('<div class="xbtn"%hide%show title="close"></div>', '_hide _show', $hide, $show); // image is supplied in CSS
+}
+
 // one-line functions that need no explanation
 
-function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
+function disabled($value = NULL, $disabled = 'disabled') {return compact('disabled') + (isset($value) ? compact('value') : []);}
 function dft($v) {return ray('default_value', nn($v, NULL));}
 function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
@@ -2403,7 +2420,7 @@ function vmax($max) {return compact('max');}
 function vrange($min, $max) {return compact('min', 'max');}
 function step($step) {return compact('step');}
 function autofill($autocomplete = 'on') {return compact('autocomplete');}
-function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
+function required($dft = NULL) {return ['required' => 'required'] + (isset($dft) ? dft($dft) : []);}
 function op($sta) {global $testOp; return test() ? $testOp : substr(nni($sta['input'], 'opid'), 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}

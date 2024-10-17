@@ -315,120 +315,26 @@ Scenario: A sponsored member views their transaction history
   | Date        | %mdY |
   | Amount      | 100 |
   | For         | grant |
-  | From        | Dee Forn (non-member) (by Bea Two) * |
+  | From        | Dee Forn (non-member) |
+  | To          | Our Pub (by Bea Two) * |
   | Postal Addr | 4 D St, Dton, MA 01004 |
   | Category    | I: Donations |
   | Channel     | Web |
 
-Scenario: A non-member donates to a sponsored organization by credit card
-  Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  When member "?" visits "community/donate/code=%buttonCode"
-  Then we show "Donate to Our Pub" with:
-  | Donation    |
-  | Name        |
-  | Phone       |
-  | Email       |
-  | Country     |
-  | Postal Code |
-  | Pay By      |
-  | Donate      |
-
-  Given next captcha is "37"
-  And var "code" encrypts:
-  | type | item                  | pid | period | amount | coId   |*
-  | fbo  | donation ("awesome!") | 1   | once   | 123.00 | NEWZZC |
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
-  Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
-
-  And we redirect to "https://www.paypal.com/donate"
-  And return URL "/community/donate/op=done&code=%code"
-  
-  When member "?" visits "community/donate/op=done&code=%code"
-  Then these "txs2":
-  | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 123    | %now      |    %now | 1   |
-  And these "txs":
-  | eid | xid | payer      | payee | amount | purpose               | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE              | %E_AUX     |
-  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_XFEE    |
-  And we email "fbo-thanks-nonmember" to member "z@" with subs:
-  | fullName     | Zee Zot         |**
-  | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
-  | amount       | $123            |
-  | noFrame      | 1               |
-  And we email "gift-report" to member ".ZZC" with subs:
-  | item         | donation ("awesome!") |**
-  | amount       | $123                  |
-  | date         | %mdY                  |
-  | fromName     | Zee Zot               |
-  | fromAddress  | Greenfield, MA 01301  |
-  | fromPhone    | +1 262 626 2626       |
-  | fromEmail    | z@example.com         |
-  And we say "status": "gift thanks|check it out" with subs:
-  | coName | Our Pub |**
-
-Scenario: A non-member donates to a sponsored organization by ACH
-  Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  And next captcha is "37"
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | note     | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
-  Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
-  And these "txs2":
-  | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 123    | %now      |       0 | 1   |
-  And these "txs":
-  | eid | xid | payer      | payee | amount | purpose               | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation ("awesome!") | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
-  And count "tx_entries" is 4
-  And we email "fbo-thanks-nonmember" to member "z@" with subs:
-  | fullName     | Zee Zot         |**
-  | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
-  | amount       | $123            |
-  | noFrame      | 1               |
-  And we email "gift-report" to member ".ZZC" with subs:
-  | item         | donation ("awesome!") |**
-  | amount       | $123                  |
-  | date         | %mdY                  |
-  | fromName     | Zee Zot               |
-  | fromAddress  | Greenfield, MA 01301  |
-  | fromPhone    | +1 262 626 2626       |
-  | fromEmail    | z@example.com         |
-  And we say "status": "gift thanks|check it out" with subs:
-  | coName | Our Pub |**
-
 Scenario: A member donates to a sponsored organization
   Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  When member ".ZZA" completes "community/donate/code=%buttonCode" with:
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
+  When member ".ZZA" completes "pay/code=%buttonCode" with:
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose               | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation ("awesome!") | %E_PRIME   |
+  | eid | xid | payer | payee | amount | purpose  | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation | %E_PRIME   |
   | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
   And these "tx_timed":
-  | id | action   | from | to   | amount | portion | purpose               | payerType    | payeeType    | period |*
-  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation ("awesome!") | %REF_ANYBODY | %REF_ANYBODY | month  |  
+  | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
+  | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
   And count "tx_entries" is 4
   And we email "fbo-thanks-member" to member "a@" with subs:
   | fullName     | Abe One         |**

@@ -74,13 +74,13 @@ function formAdminPanel($form, &$sta, $args = '') {
 //    $seeAppData = t('See App Data');
   }
 
-  if ($mya->admRecheckSsn) $ssnLink = t('SSN Link');
+  if ($mya->admRecheckSsn and !$mya->co) $ssnLink = t('SSN Link');
   if ($mya->admSeeSecure) $seeSecure = t('See Secure');
   if ($mya->admV) $clone = t('Clone');
-  if ($mya->admRecheckSsn) $resetSSN = t('Recheck SSN');
-  if ($mya->admMakeVAdmin) $makeVKeyE = t('Make vKeyE');
+  if ($mya->admRecheckSsn and !$mya->co) $resetSSN = t('Recheck SSN');
+  if ($mya->admMakeVAdmin and !$mya->co) $makeVKeyE = t('Make vKeyE');
   if ($mya->admPrintCards) $cancelCard = t('Cancel CG Card');
-  if ($mya->admMakeRules) $fsSetup = t('Set up Sponsorship');
+  if ($mya->admMakeRules and $mya->co) $fsSetup = t('Set up Sponsorship');
   if ($mya->admChangeUid) $chgAcctId = t('Change Account ID by Addr');
   if ($mya->admDeleteAcct) $delAcct = t('DELETE Account');
 

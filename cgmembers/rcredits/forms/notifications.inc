@@ -65,7 +65,7 @@ EOF;
     foreach ($whens as $k => $v) {
       $checked = $defaults[$eventI] == $k ? 'checked="checked"' : '';
       $input = <<<EOF
-<input type="radio" id="edit-e$eventI-$k" name="e$eventI" value="$whenI" class="form-radio" $checked />
+<input type="radio" id="edit-e$eventI-$k" name="e$eventI" value="$whenI" class="form-radio" $checked>
 EOF;
       $cols .= "<div class=\"col-xs-1\">$input</div>";
       $whenI++;

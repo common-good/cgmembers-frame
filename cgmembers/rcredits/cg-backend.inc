@@ -538,7 +538,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
-    if ($payAmount >= $amount or !invRemains($nvid)) { // == is for efficiency
+    if ($payAmount >= $amount or !invRemains($nvid)) { // >= is for efficiency
       db\update('tx_requests', ray('nvid status', $nvid, $z->subs['xid']), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
@@ -552,7 +552,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
     }
     
     $fromBank = max(0, -$payerA->balance); // just bring new negative balance up to zero
-  } else $fromBank = nni($z->subs, 'needed') - $payerA->balance; // just get how much more we need (without using credit line)
+  } else $fromBank = nni($z->subs, 'needed', $payAmount) - $payerA->balance; // just get how much more we need (without using credit line)
 
   if (!$balFirst) $fromBank = nni($z->subs, 'needed'); // user requested the whole amount to come from bank
 
@@ -602,8 +602,9 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
  *   'crumbs'
  *   'gift': payment is a gift
  *   'rule': the id of the rule associated with this transaction
- *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
- *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
+ *   'for': FOR_DONATE, FOR_PURCHASE, FOR_CREDIT, FOR_CREDIT50, FOR_GIVE_CREDIT, or empty
+ *   'credit': amount of credit, if for=FOR_CREDIT, FOR_CREDIT50, or FOR_GIVE_CREDIT
+ *   'creditWhom': who gets the credit, iff for is FOR_GIVE_CREDIT
  *   'cat': transaction categories (record IDs in tx_cats) -- [payerCat, payeeCat] or NULL (payerCat and payeeCat can also be NULL)
  *   'xid': explicit record ID (used only in tests?)
  * @param int $recursId: record ID of related record in tx_timed (or NULL)
@@ -624,7 +625,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   extract(just('created force', $data, [now(), 0]));
   extract(just('boxId rule cat reversesXid method', $data, NULL));
-  extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
+  extract(just(TX_FLAGS . ' inv api for credit creditWhom', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
 
@@ -640,9 +641,9 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   $reallyTaking = ($taking xor $amount < 0); // not taking if charging a negative amount
 
+  if (!$taking and $otherA->id == CGID and $gift and $recursId) $otherA = r\acct(UID_REGULARS); // aggregate the month's regular donations
   list ($loserA, $gainerA) = u\order($reallyTaking, $otherA, $actorA);
   list ($e1A, $e2A) = u\order($taking, $otherA, $actorA);
-  if ($e2A->id == CGID and $gift and $recursId) $e2A = r\acct(UID_REGULARS); // bring just the total of the month's regular donations into CG's account
   
   $ptrs = ray('actor other loser gainer e1 e2'); // set up sets of variable names
   foreach ($ptrs as $k) {
@@ -650,7 +651,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     ${$k . 'Name'} = ${$k . 'A'}->fullName;
     ${$k . 'For'} = is_array($purpose) ? $purpose[${$k . 'Id'} == $actorId ? 0 : 1] : $purpose;
   }
-    
+
   $erInfo += compact('loserId');
 
   if (r\dupTx($actorA, $otherA, $taking ? $amount : -$amount, $force)) return txErr(t('duplicate transaction'), $erInfo);
@@ -683,10 +684,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $needed = abs($amount);
 
   if ($goods != FOR_USD) {
-    // Apply rules
-    if ($amount > 0) {
-      $needed += handleSurTx($entries, $tx, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
-    }
+    if ($amount > 0) $needed += handleSurTx($entries, $tx, $loserA, $gainerA, $amount, nn($for) and $for != 'other'); // Apply rules
 
     // Apply any roundup
     if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recursId and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
@@ -731,7 +729,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     }
   }
   
-  if ($res = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount)) { // purchase/gift of store credit
+  if ($for and $res = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount, $creditWhom)) { // purchase/gift of store credit
     u\EXPECT(!$rule, 'credit purchase already has a rule!');
     extract($res); // crid and ruid
     for ($i = 0; $i < 2; $i++) $entries[$i]->rule = $ruid; // point the main entry pair at the rule (in case of reversal)
@@ -756,10 +754,10 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $z = sendNotifications($actorA, $type, $tx, $shortfall);
   $z->subs += compact('needed');
   
-  if ($type == 'payment' and $gift) { // gift is a TX_FLAGS flag extracted from $data
+  if (in($type, 'payment, invoice payment') and $gift and $amount > 0 and !in($loserId, r\cgsOwnUids())) { // gift is a TX_FLAGS flag extracted from $data
     list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
     if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks(r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
+    be\thanks($xid, r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
   }
   
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
@@ -904,29 +902,28 @@ function insertTxes(&$txes, $xid) {
 
 /**
  * Create a personal credit for buyer or someone else, at the seller. Add to any existing identical credit
- * @param string $for: SELF_CREDIT, SELF_CREDIT50, or qid of gift recipient
+ * @param string $for: FOR_CREDIT, FOR_CREDIT50, or FOR_GIVE_CREDIT
  * @param acct $buyer: payer acct
  * @param acct $seller: seller acct (where the recipient gets store credit)
  * @param float $credit: amount of credit the recipient gets
+ * @param string $creditWhom: recipient of credit if $for is FOR_GIVE_CREDIT
  * @return assoc of the credit record ID and the the rule record ID: [crid, ruid] (FALSE if not a purchase of credit)
  */
-function advanceCredit($for, $buyer, $seller, $credit) {
-  if (!nn($for) or $for == 'other' or !$credit) return FALSE; // not a purchase of credit
+function advanceCredit($for, $buyer, $seller, $credit, $creditWhom = NULL) {
+  if (!in(nn($for), [FOR_CREDIT, FOR_CREDIT50, FOR_GIVE_CREDIT])) return FALSE; // not a purchase of credit
   u\EXPECT($credit >= 0, 'negative credit in transfer');
   
-  if (!in($for, [SELF_CREDIT, SELF_CREDIT50])) { // gift!
-    $for = r\acct($for);
-    u\EXPECT($for, 'gift account does not exist');
-    $for->tell('you got credit|to redeem', ray('name action credit co', $buyer->fullName, t('sent you a gift'), u\fmtAmt($credit), $seller->fullName), t('You have received a gift through Common Good!'));
-    $buyer = $for;
-  }
+  if ($for == FOR_GIVE_CREDIT) { // gift of credit
+    if (!$creditWhom or !$creditA = r\acct($creditWhom)) u\FAIL('gift account does not exist');
+    $creditA->tell('you got credit|to redeem', ray('name action credit co', $buyer->fullName, t('sent you a gift'), u\fmtAmt($credit), $seller->fullName), t('You have received a gift through Common Good!'));
+  } else $creditA = $buyer;
   
-  $portion = $for == SELF_CREDIT50 ? .5 : 1;
-  $info = ray('action portion payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
+  $portion = $for == FOR_CREDIT50 ? .5 : 1;
+  $info = ray('action portion payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, REF_ACCOUNT, $creditA->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
   $rule = db\get('id,end,amtMax', 'tx_rules', $info);
 
   $DBTX = db_transaction();
-  $crid = r\credit($seller->id, $buyer->id, -$credit);
+  $crid = r\credit($seller->id, $creditA->id, -$credit);
   $info['amtMax'] = $credit;
 
   if ($rule and !$rule['end']) {
@@ -1030,7 +1027,8 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test 
   // Get a list of applicable rules
   $payerCheck = u\genRuleSQL('payer', ':buyer'); // rule applies to this buyer
   $payeeCheck = u\genRuleSQL('payee', ':seller'); // rule applies to this seller
-  $forCreditCheck = $forCredit ? '`from`<>:MATCH_PAYEE' : '1'; // no buying credit with credit or discount
+  $forCreditCheck = $forCredit  // no buying credit with discount (including store credit!)
+  ? '(ru.from NOT IN (:MATCH_PAYEE,:seller) OR ru.to NOT IN (:MATCH_PAYER,:buyer))' : '1';
   
   $sql = <<<EOF
     SELECT ru.id AS rule, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
@@ -1051,7 +1049,7 @@ function handleSurTx(&$entries, $tx, $buyer, $seller, $price, $forCredit, $test 
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
-///  showq($sql, $subs); // debug()
+/// debug(showq($sql, $subs));
   $q = db\q($sql, $subs);
 
   $stepups = $rebates = 0;
@@ -1088,8 +1086,13 @@ EOF;
 }
 
 /**
- * Thank a donor to CG or a fiscally sponsored account and report to that organization.
- * @param string $type: gift (donation not to CG), cggift, fbo (donation to a sponsored organization), or purchase
+ * Thank a payer for a transaction, especially for a donation to CG or a fiscally sponsored account, and report to recipient.
+ * @param int $xid: the transaction ID (used only for type cggift and fbo)
+ * @param string $type:
+ *   gift - donation not to CG or its sponsored projects
+ *   cggift - donation to CG
+ *   fbo - donation to a sponsored PROJECT
+ *   purchase - not a donation
  * @param bool $member: <payer is a member>
  * @param int $id: account record ID or people record ID for the payer
  * @param string $item: item description
@@ -1098,11 +1101,14 @@ EOF;
  * @param int $periods: how many periods between recurrences
  * @param int $coId: sponsored organization's account record ID
  * @param bool $redirect: <redirect to empty page when done>
+ * @return result message if not redirect (especially for when called from ajax)
  */
-function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
+function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
+
   $coA = r\acct($coId);
   list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
   if ($coId == CGID) $thxMsg .= '|cggift thanks';
+  $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
 
   if ($coA->co) { // no special emails for individual gifts
     if ($member) {
@@ -1124,15 +1130,21 @@ function thanks($type, $member, $id, $item, $amount, $period, $periods, $coId, $
     unset($subs['fullName']); // salutation to co name, not payer name
     $coA->tellIn($report, $subs);
 
-    $msg = ''; // NYI tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
+    // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
     $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
-    if ($member) {
+
+    if ($member) { // this sends an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
     } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    
+    if (in($type, 'cggift fbo')) db\setFlag('tx_hdrs', $xid, B_THX); // donation to CG or through CG needs record of acknowlegment
+    
   }
   
-  $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
-  return $redirect ? w\sayEmpty($msg) : w\say($msg);
+  if ($redirect) w\sayEmpty($msg);
+
+  w\say($msg);
+  return $msg;
 }
  
 /**

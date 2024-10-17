@@ -161,15 +161,6 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
 /**
- * notice count is (ARG)
- *
- * in: 
- */
-function noticeCountIs($count) {
-  return (db\count('r_notices') == $count);
-}
-
-/**
  * member (ARG) charges member (ARG) $(ARG) for (ARG)
  *
  * in: 
@@ -439,7 +430,8 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH recurs ARecurringBankTransferCanBeCompleted
  *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
  *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
- *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmember
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
@@ -578,7 +570,8 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ARecurringBankTransferCanBeCompleted
  *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
- *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmember
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately

@@ -65,7 +65,7 @@ function formConnect($form, &$sta, $args = '') {
    
     $routingNumber = $usa ? routingFld(FALSE) : NULL;
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), maxlen(17));
+    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your account number. <br>'), vmax(BANK_ACCOUNT_MAX)); // max 17 digits
 //    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
     $connectFields = fieldSet('connectFields2', compact(ray('routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);

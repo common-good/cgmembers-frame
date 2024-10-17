@@ -10,7 +10,7 @@ args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
-  function fform(fid) {return $(fid).parents('form:first');}
+  function fform(fid) {return $(fid).closest('form');}
   function report(j, callback) {$.alert(j.ok ? 'Success' : 'Error', j.message, callback);}
   function reportErr(j, callback) {if (!j.ok) $.alert('Error', j.message, callback);}
   function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
@@ -30,6 +30,13 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'seeChanges':
+    $('#edit-table').change(function () {
+      const table = $(this).find(":selected").text();
+      location.href = baseUrl + '/history/changes/table=' + table + '&qid=' + vs['qid'];
+    });
+    break;
+
   case 'ourAccts': // $(this).closest('form').submit()
     const go = $('.form-item-asof .btn');
     const asof = $('#edit-asof');
@@ -201,10 +208,6 @@ function doit(what, vs) {
       .click(function () {$(this).hide();}); // tap to return to cardDone screen
     break;
 
-  case 'cc':
-    hideNote();
-    break;
-    
   case 'receipt':
 // fails on mobile    window.onafterprint = function () {history.go(-1);}
     $('.btn-print').click(function () {window.print(); return false;});
@@ -221,7 +224,7 @@ function doit(what, vs) {
 
   case 'adminSummary': 
     $('.tickle').click(function () {
-      var tickle = $(this).attr('tickle');
+      var tickle = $(this).attr('data-tickle');
       $('#edit-tickle').val(tickle);
       $('#edit-submit').click();
     });
@@ -481,11 +484,13 @@ function doit(what, vs) {
     $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
-      var credit = (fer == forStoreCredit || fer == forGiftCredit);
+      var ferStoreCredit = (fer == forStoreCredit);
+      var credit = (ferStoreCredit || fer == forGiftCredit);
       $('.form-item-ccOk').toggle(vs['showCcOk'] == 1);
       ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
-      $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)
+      $('.form-item-credit').toggle(ferStoreCredit); // show credit option only for credit (not for gift of credit)
+//      if (ferStoreCredit) $('#edit-credit').val('');
       $('.form-item-item').toggle(!credit);
       $(credit ? '#edit-size' : '#edit-item').focus();
       getCGPayCode();
@@ -494,7 +499,7 @@ function doit(what, vs) {
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
     
-    function getCGPayCode() { // get a CGPay buttonn code
+    function getCGPayCode() { // get a CGPay button code
       post('cgPayCode', {
         item:$('#edit-item').val(),
         amount:$('#edit-amount').val(),
@@ -521,16 +526,11 @@ function doit(what, vs) {
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/cgpay';
-      if (fer == forGift) {
-        url = url.replace('/cgpay', '/community/donate');
-      } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
-      
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
       var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
-      var html = vsprintf('<a href="%s/code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
+      var html = vsprintf('<a href="%s/code=%s"%s target="_blank">%s</a>', [baseUrl + '/pay', cgPayCode, style, img]);
       
       if ((isButton ? size : text) != '') setButtonHtml(html);
       $('.form-item-size img').height(size == '' ? 0 : size);
@@ -543,31 +543,47 @@ function doit(what, vs) {
     }
     break;
 
-  case 'donate':
-    $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+  case 'pay':
+    var amt = $('#edit-amount');
+    var amtChoice = $('#edit-amtchoice');
+    if (amtChoice.length) amt.val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
-    $('.form-item-honor, .form-item-payHow span').hide();
-    if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
-    var coverCCFee = $('.form-item-coverCCFee');
-    var ach = $('#ach'); ach.hide();
-    if ($('#edit-payhow-0').length) {
-      coverCCFee.hide();
-      $('#edit-payhow-1').click(function () {
-        ach.hide();
-        coverCCFee.show(); 
-        if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
-        $('.btn-repeat, .form-item-period').hide();
-      });
-      $('#edit-payhow-0').click(function () {
-        ach.show();
-        coverCCFee.hide();
-        $('.btn-repeat, .form-item-period').show();
-      });
-    } else if ($('#edit-fullname').length) { // non-member donating to non-FS org, so CC only and no repeats
-      $('.btn-repeat').hide();
+    const thisForm = $('#frm-pay');
+    const submit = $('.form-item-submit');
+    const honor = $('.form-item-honor'); 
+    if ($('#edit-honored').val() == '') honor.hide(); else $('.btn-honor').hide();
+    const repeat = $('.btn-repeat');
+    const period = $('.form-item-period');
+    if (repeat.length) { // hide period only if it can be unhidden
+      if ($('#edit-period').val() == 'once') period.hide(); else repeat.hide();
     }
+    const stay = $('.form-item-stay'); stay.find('input').val(-1); // reset on error
+    const qid = $('.form-item-qid'); qid.hide();
+    const pass = $('.form-item-pass'); pass.hide();
+    const ccPctVal = parseFloat(vs['ccPct']) / 100;
+    const ccPlusVal = parseFloat(vs['ccPlus']) / 100;
+    const fsPctVal = parseFloat($('#edit-fspct').val());
+    var ccFeeVal;
+    var fsFeeVal;
     
-    $('.btn-repeat').click(function () {
+    amt.change(function () {
+      const amtVal = amt.val();
+      const ccFeeMsg = $('.form-item-coverCCFee span');
+      ccFeeVal = parseFloat(amtVal) * ccPctVal + ccPlusVal;
+      if (ccFeeVal > 0) ccFeeMsg.html(ccFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(ccFeeVal) + ').'));
+      
+      const fsFeeMsg = $('.form-item-coverFSFee span');
+      fsFeeVal = parseFloat(amtVal) * fsPctVal;
+      if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
+    });
+    
+    if (stay.length) {
+      nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
+      paySet = $('#paySet'); paySet.hide();
+      submit.hide();
+    } 
+      
+    repeat.click(function () {
       $(this).hide();
       $('.form-item-period').show();
       $('#edit-period').val('month').focus();
@@ -575,8 +591,54 @@ function doit(what, vs) {
 
     $('.btn-honor').click(function () {
       $(this).hide();
-      $('.form-item-honor').show();
+      honor.show();
       $('#edit-honored').focus();
+    });
+    
+    $('#edit-stay-0').click(function () { // nonmember (pay by card)
+      for (fnm of 'fullName phone email zip'.split()) req($('.form-item-' + fnm));
+      stay.hide(); $('#edit-stayLabel').hide();
+      nonMember.show();
+    });
+
+    $('#edit-stay-1').click(function () { // member (sign in)
+      stay.hide(); $('#edit-stayLabel').hide();
+      for (fnm of 'fullName phone email zip'.split()) reqNot($('.form-item-' + fnm));
+      req(qid); req(pass); submit.show();
+      qid.find('input').focus();
+    });
+    
+    $('#edit-next .btn').click(function () {
+      if (document.getElementById('frm-pay').reportValidity()) {
+        $('.form-item-next').hide();
+        paySet.show();
+        submit.show();
+              
+        var amount = parseFloat(amt.val());
+        var feeCovered = amount * (
+          ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0) + 
+          ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0)
+        );
+        amount += feeCovered;
+        const info = {
+          amount: amount + feeCovered,
+          feeCovered: feeCovered,
+          'for': $('#edit-for').val(),
+          item: $('#edit-item').val(),
+          period: $('#edit-period').val(),
+          honor: $('#edit-honor').val(),
+          honored: $('#edit-honored').val(),
+          coId: $('#edit-coid').val(),
+          fullName: $('#edit-fullname').val(),
+          email: $('#edit-email').val(),
+          phone: $('#edit-phone').val(), 
+          zip: $('#edit-zip').val(),
+          country: $('#edit-country').val(),
+          notes: $('#edit-note').val()
+        };
+
+        stripe(Stripe(vs['stripePublicKey']), info);
+      }
     });
 
     break;
@@ -621,8 +683,10 @@ function doit(what, vs) {
     var fid = '#edit-newacct';
     var form = $('#frm-accounts');
     suggestWho(fid, '');
-    form.submit(function (e) {
-      return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+    $(fid).focus(function () {
+      form.submit(function (e) {
+        return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+      });
     });
     break;
 
@@ -883,7 +947,7 @@ function doit(what, vs) {
     });
     amtChoice.change();
     
-    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('Y');});
+    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
     break;
     
   case 'contact':
@@ -1039,7 +1103,10 @@ function cardOther(focus) {
 function hideNote() {
   var note = $('.form-item-note');
   note.hide();
-  $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
+  $('.form-item-submit a').click(function () {
+    $('.form-item-submit a').hide();
+    note.show().find('textarea, input').focus();
+  });
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
@@ -1065,4 +1132,45 @@ function yesGo(url, msg) {yesno(msg, function () {location.href=url;}); return f
 function goPage(page, newWindow = false) {
   if (newWindow) window.open(baseUrl + page); else location.href = baseUrl + page;
   return false; // to help cancel default href
+}
+
+function stripe(stripe, info) {
+  const erDiv = $('#edit-paymentErr .control-data');
+
+  post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
+    const clientSecret = j.secret;
+    const elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment', {
+      fields: { billingDetails: { 
+        name: 'never',
+        email: 'never',
+        phone: 'never',
+        address: { postalCode:'never', country:'never' } // shouldn't this be postal_code?
+      }}
+    });
+    paymentElement.mount('#edit-payment .control-data');
+
+    const form = document.getElementById('frm-pay');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      elements.submit();
+
+      const confirmParams = { payment_method_data: { billing_details: {
+        name: info.fullName,
+        email: info.email,
+        phone: info.phone,
+        address: { postal_code:info.zip, country:'US' }
+      }}};
+      const { setupIntent, error } = await stripe.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
+
+      if (error) {
+        // (not needed because Stripe shows it) erDiv.html(error.message);
+        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+      } else { // setup is successful, so do the actual payment
+        post('stripeTx', {...info, ...j}, function (k) {
+          if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else erDiv.html(k.message);
+        });
+      }
+    });
+  });
 }

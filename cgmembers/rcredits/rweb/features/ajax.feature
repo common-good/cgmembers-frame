@@ -15,7 +15,7 @@ Setup:
 Scenario: Ajax suggestWho
   When member ".ZZA" ajax "suggestWho" with:
   | data |  |**
-  Then we show JSON of:
+  Then we show JSON ray:
   | uid     | nm                                      |*
   | .ZZA    | Abe One @ Aton, AL                      |
   | .ZZB    | Bea Two @ Bton, ME                      |

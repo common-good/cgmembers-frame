@@ -33,7 +33,6 @@ global $tStrings; $tStrings = array(
   'prev gift canned' => t('Your previous recurring gift has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
-  'your demand' => t('Your total request for %RCREDITS is now %request.'),
   'deleted relation' => t('Deleted relation with %otherName'),
   'customer balance' => t('The current balance for %otherName is %balance.'),
   'info saved' => t('Your information has been saved.'),
@@ -103,7 +102,7 @@ global $tStrings; $tStrings = array(
   'short invoice' => t('Your balance is %short short to pay the requested amount to %payeeName (payment request #%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),
   'finish signup' => t('<b class="loud">IMPORTANT</b>: You must sign in at %CG_DOMAIN and finish setting up your %PROJECT account before this payment can be made.'),
-  'debt timeout' => t('Your balance has been negative for more than %R_DEBT_DAYS. The system will try to bring it up to zero with funds from your connected bank account, in keeping with the <%a>%PROJECT Agreement</a> you signed on %signed.'),
+  'debt timeout' => t('Your balance has been negative for more than %R_DEBT_DAYS days. The system will try to bring it up to zero with funds from your connected bank account, in keeping with the <%a>%PROJECT Agreement</a> you signed on %signed.'),
   'when funded' => t('You cannot make payments until you have enough money in your account.'),
   'how to fund' => t('To put money in your account, trade cash for %RCREDITS at a participating business or with another member OR sign in at %CG_DOMAIN and click "Bank", to connect a bank account and transfer funds.'),
   'auto pay on' => t('From now on your payment requests from %payeeName will be approved and paid automatically, drawing funds from your connected bank account as needed. (We do not expect there to be overdraft problems, of course, but if there are, you will be responsible for them.)'),
@@ -268,7 +267,7 @@ EOF
   'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),
   'sent message' => t('Your message has been sent to %fullName.'),
   'pass saved' => t('Your new password has been saved.'),
-  'cc fee' => t('credit card processing fee (%CC_FEE%)'),
+  'cc fee' => t('credit card processing fee (%CC_PCT% + %CC_PLUS¢)'),
   'wire fee' => t('wire transfer fee'),
   'cover cc fee' => t('<span>Check here to cover the transaction processing fee (%CC_PCT% + %CC_PLUS¢).</span>'), // must include <span> (see 'pay' in scraps.js)
   'cover FS fee' => t('<span>Check here to cover the fiscal sponsorship fee (%fee%).</span>'), // must include <span> (see 'pay' in scraps.js)
@@ -517,7 +516,6 @@ EOF
   'pin required' => t('You must choose a PIN.'),
   'stale single-step' => t('"%nm" (%qid) completed just one step on %created. Call?'),
   'only us banks' => t('Unfortunately, at this time, we can handle only U.S. banks.'),
-  'no cc recur' => t('Unfortunately, we cannot automatically charge recurring donations to your credit card at this time. Your first donation went through, but you will need to remember to donate again when it is time. Thank you for the donation and the intent!'),
   'no can scan' => t('You do not have permission to scan an individual\'s %PROJECT QR code.'),
   'must agree' => t('Accept Terms checkbox field is required.'), // drupal shows this
   'redo info' => t('We could not verify your personal information. Please try again, carefully.'),

@@ -31,7 +31,7 @@ X
   $amount = numFld(t('Price/Amt:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
   $credit = numFld(t('Store Credit:'), [t('Amount of credit')]);
   $ccOk = boxFld('ccOk', NBSP, t('Also accept credit card payments from non-members'), TRUE);
-  $expires = dateFld(t('Expires:'), [t('Expiration date')]);
+  $expires = dateFld(t('Expires:'));
   $button = radiosFld(REQ . t('Create:'), '', dft(2), ray(t('Link,Text Button,Image Button')));
   $size = intFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + vmin(1) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
   $example = item(t('(Link will appear here)'), t('Link:'));

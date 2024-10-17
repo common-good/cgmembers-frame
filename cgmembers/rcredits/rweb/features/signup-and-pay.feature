@@ -15,7 +15,7 @@ Scenario: A member clicks a CGPay button
   Given button code "buttonCode" for:
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23.50  |
-  When member "?" visits page "cgpay?code=%buttonCode"
+  When member "?" visits page "pay/code=%buttonCode"
   Then we show "Pay With %PROJECT" with:
   | Pay      | 23.50 to Our Pub |
   | For      | food |
@@ -28,7 +28,7 @@ Scenario: A newbie supplies email to continue CGPay
   | .ZZC    | Cc3    | food | 23     |
   And next random code is "turkey"
   And next random password is "quick brown fox jumped"
-  When member "?" clicks "continue" on page "cgpay?code=%buttonCode" with:
+  When member "?" clicks "continue" on page "pay/code=%buttonCode" with:
   | name |
   | d@   |
   Then we show "Submit"

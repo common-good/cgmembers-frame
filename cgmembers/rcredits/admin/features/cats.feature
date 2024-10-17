@@ -175,7 +175,7 @@ Scenario: admin sets most categories and sends to QBO
   And QBO gets Tx "cg#21":"by CC [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
   | 201 Debit cgf     | 201 Credit D-ONCE     |
   | 201 Credit POOL   | 201 Debit PROCESSOR   |
-  | 4.49 Debit TX-FEE | 4.49 Credit PROCESSOR |
+  | 6.13 Debit TX-FEE | 6.13 Credit PROCESSOR |
   And QBO gets Tx "cg#22":"by ACH [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 202 Debit cgf     | 202 Credit D-ONCE     |
   And QBO gets Tx "cg#23":"by ACHs [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
@@ -183,7 +183,7 @@ Scenario: admin sets most categories and sends to QBO
   And QBO gets Tx "cg#31":"by CC [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 301 Debit .ZZC    | 301 Credit D-FBO      |
   | 301 Credit POOL   | 301 Debit FBO-PROCESSOR   |
-  | 6.48 Debit TX-FEE | 6.48 Credit PROCESSOR |
+  | 9.03 Debit TX-FEE | 9.03 Credit PROCESSOR |
   | 9 Debit cgf       | 9 Credit FS-FEE       |
   | 9 Credit .ZZC     | 9 Debit D-FBO         |
   | 9 Debit cgf       | 9 Credit TX-FEE-BACK  |
@@ -197,9 +197,9 @@ Scenario: admin sets most categories and sends to QBO
   | 9 Debit cgf     | 9 Credit FS-FEE         |
   | 9 Credit .ZZC   | 9 Debit D-FBO           |
   And QBO gets Tx "cg#41":"by CC [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
-  | 401 Credit POOL   | 401 Debit FBO-PROCESSOR   |
-  | 8.47 Debit TX-FEE | 8.47 Credit PROCESSOR |
-  | 12 Debit cgf      | 12 Credit TX-FEE-BACK |
+  | 401 Credit POOL    | 401 Debit FBO-PROCESSOR |
+  | 11.93 Debit TX-FEE | 11.93 Credit PROCESSOR  |
+  | 12 Debit cgf       | 12 Credit TX-FEE-BACK   |
   And QBO gets Tx "cg#50":"other [Fox Co]" dated "%ymd-5m" with entries:
   | 500 Credit cgf  | 500 Debit ACCOUNTING    |
   And QBO gets Tx "cg#51":"once [Bea Two]" dated "%ymd-5m" with entries:
