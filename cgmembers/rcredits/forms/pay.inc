@@ -396,7 +396,7 @@ function nonMember($isGift, $s_id) {
   $signinMsg = t('%PROJECT members save time and card fees! ') . buttino('/signup', t('<big>Sign up here</big>')) . qBtn('signup-why');
 
   $stay = boolFld('', $signinMsg);
-  $stayLabel = item('<br>' . t('Are you a %PROJECT member? (yet 🙂)'));
+  $stayLabel = item('<br>' . t('Are you a %PROJECT member (yet 🙂)?'));
   
   return [$paySet, $nonMember, $stay, $stayLabel];
 }
