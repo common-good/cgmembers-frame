@@ -407,11 +407,11 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #advanced input {padding:4px 0 4px 6px; width:130px; max-width:initial !important;}
 #simple .control-label, #advanced .control-label {width:110px; min-width:110px;}
 #edit-show, #edit-download, #showSimple, #showAdvanced {margin:0 5px 0 0;}
-.form-item-period {display:inline-block; clear:none; margin-right:0;}
+#simple .form-item-period {display:inline-block; clear:none; margin-right:0;}
 #actionsSimple,
 #actionsAdvanced {display:inline-block;}
 
-#edit-period, #edit-starting, #edit-ending {display:inline-block; width:200px;}
+#simple #edit-period, #advanced #edit-starting, #advanced #edit-ending {display:inline-block; width:200px;}
 #simple button, #advanced button {display:inline-block;}
 #edit-showSimple, #edit-showAdvanced {display:inline-block; padding-left:35px;}
 
