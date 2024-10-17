@@ -1661,10 +1661,6 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $downloadPeriod = $downloadable ? submi(t('Download')) : NULL;
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
   $actions = fieldSet('actionsSimple', compact('submitPeriod', 'downloadPeriod'), '', '', suffix($showAdvanced2));
-///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
-//  $onchange = "$('#edit-starting, #edit-ending').val('');";
-//  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
-//  $period = selectFld(t('For the past:'), '', dft($period) + w\onchange($onchange), $txDays);
   $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
   $simple = fieldSet('simple', compact('period', 'actions'), BARE);
@@ -2397,6 +2393,17 @@ function then($then) {
  */
 function exitRay($ray, $cry = FALSE) {
   return exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
+}
+
+/**
+ * Return a button to hide and maybe show somthing.
+ * @param string $hide: CSS for what to hide (defaults to parent - the button itself normally gets hidden as part of this)
+ * @param string $hide: CSS for what to show (optional)
+ * @return HTML for the button
+ */
+function xBtn($hide = '', $show = '') {
+  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"${$k}\"";
+  return tr('<div class="xbtn"%hide%show title="close"></div>', '_hide _show', $hide, $show); // image is supplied in CSS
 }
 
 // one-line functions that need no explanation

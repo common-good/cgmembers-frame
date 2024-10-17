@@ -1384,6 +1384,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 [class^="qbtn-"] {display:inline-block; width:12px; height:12px; background:url('../images/icons/qb12.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
 .help-block [class^="qbtn-"] {width:16px; height:16px; background:url('../images/icons/qb16.png') no-repeat; margin-bottom:-5px;}
 #help-modal ul li {margin-bottom:8px;}
+.xbtn {display:inline-block; width:16px; height:16px; background:url('../images/icons/close16.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
 
 #txsum caption {display:none;}
 #txsum tr:first-child {font-weight:bold;}
