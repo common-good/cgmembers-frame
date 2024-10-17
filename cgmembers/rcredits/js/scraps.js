@@ -30,6 +30,13 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'seeChanges':
+    $('#edit-table').change(function () {
+      const table = $(this).find(":selected").text();
+      location.href = baseUrl + '/history/changes/table=' + table + '&qid=' + vs['qid'];
+    });
+    break;
+
   case 'ourAccts': // $(this).closest('form').submit()
     const go = $('.form-item-asof .btn');
     const asof = $('#edit-asof');
