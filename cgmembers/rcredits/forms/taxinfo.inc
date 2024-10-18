@@ -32,7 +32,7 @@ function formTaxInfo($form, &$sta, $year = '') {
   $title = t('Your Form 1099-K') . ($year == $y9 ? t(' (tentative)') : '');
   $row = be\get1099('K', $mya->id, $ending); // last second of relevant year
   extract(just('gross noCard txCount', $row, 0));
-  $year = selectFld(t('For calendar year:'), [t('Calendar Year')], dft($year) + clas('short'), array_combine($range, $range));
+  $year = selectFld(t('For calendar year:'), [t('Calendar Year')], dft($year) + short(), array_combine($range, $range));
   $jointTxt = $mya->jid ? t(' Your partner in the joint account receives a separate 1099-K.') : '';
   $subtext = t(<<<EOF
   <p>As a Payment Settlement Entity (PSE), the %PROJECT system is required to report (to the IRS and to state government) the total %PROJECT payments made to you in the past calendar year (on Form 1099-K) &mdash; unless the total is below $%MIN1099. This page provides you with that information even if your total is below the threshold.</p>

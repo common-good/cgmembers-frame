@@ -48,7 +48,7 @@ function formSeeChanges($form, &$sta, $args = '') {
   } else $list = t('No changes for table ' . $table);
 
   $chx = ray('users txs'); // table choices
-  $table = selectFld(t('Table:'), '', dft($table) + clas('short'), array_combine($chx, $chx));
+  $table = selectFld(t('Table:'), '', dft($table) + short(), array_combine($chx, $chx));
   
   jsx('seeChanges', 'qid', $a->mainQid);
   return cgform(compact(ray('title table list')), 'nolabs');

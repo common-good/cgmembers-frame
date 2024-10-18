@@ -54,7 +54,7 @@ function formPay($form, &$sta, $args = NULL) {
   if ($isGift) {
     $coverFSFee = $fbo ? boxFld('coverFSFee', NBSP, tr('cover FS fee', 'fee', u\fmtAmt($fsPct * 100, 's')), 0) : hidFld(0);
     $dft = nn($period) ?: ($isCG ? nn($xPeriod, PER_YEAR) : PER_1);
-    $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($dft) + clas('short'), $oftens);
+    $period = selectFld(REQ . t('When:'), t('If you choose a recurring donation, you can stop it at any time.'), dft($dft) + short(), $oftens);
     $honored = rendA('honored', textFld(BARE, [t('whom or what')], dft(nn($honored))));
     $honor = selectFld(t('Honoring:'), '', suffix($honored . xBtn('', '.btn-honor')) + dft(nn($honor)), $honors);
   } else [$coverFSFee, $period, $honor] = [NULL, hidFld(PER_1), NULL]; // no recurring or honoring payments that aren't gifts

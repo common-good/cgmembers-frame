@@ -2414,6 +2414,7 @@ function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
 function suffix($suffix = '') {return ray('field_suffix', "<div class=\"suffix\">$suffix</div>");}
 function prefix($prefix) {return compact('prefix');}
+function short() {return clas('short');}
 function maxlen($maxlength) {return compact('maxlength');}
 function vmin($min) {return compact('min');}
 function vmax($max) {return compact('max');}
