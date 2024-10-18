@@ -89,6 +89,8 @@ function setupBasicAccounts($withEIN = TRUE) {
   new r\Acct(ray($canKeys, UID_STEPUPS, t('stepups'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_BANK, t('cttyfund'), t('Bank'), r\serverUid(), $flagsCo));
   new r\Acct(ray($canKeys, UID_OUTER, t('txs-outer'), t('Txs Outer'), r\serverUid(), $flagsCo));
+  
+  db\q('TRUNCATE changes');
 }
 
 /**
@@ -218,10 +220,13 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   if ($unusable or $merge) $change = TRUE;
   
   if (is_object($oldUid)) $oldUid = $oldUid->id;
+  foreach (ray('oldUid newUid') as $k) if (!is_numeric($$k)) return err(t('bad account ID "%k"', 'k', $$k));
   
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
     'admins:uid:D',
+    'changes:rid:D', // sometimes rid is a uid
+    'changes:changedBy:D',
     // ofac
     'people:uid',
     // phinxlog
@@ -233,8 +238,6 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'r_ballots:proxy',
     // r_banks
     'r_boxes:uid:D',
-    'r_changes:uid:D',
-    'r_changes:changedBy:D',
     'u_company:uid:D', // this gets tracked
     // r_countries
     'r_criteria:ctty:D',
@@ -279,14 +282,14 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'tx_hdrs:actorAgentId',
     'tx_requests:payer:D', // this gets tracked
     'tx_requests:payee:D', // this gets tracked
-    'tx_rules:to:D',
-    'tx_rules:payer:D',
-    'tx_rules:payee:D',
     'tx_rules:from:D',
-    'tx_timed:to:D',
-    'tx_timed:payer:D',
-    'tx_timed:payee:D',
+    'tx_rules:to:D',
+    'tx_rules:payer:D', // only when payerType is REF_ACCOUNT
+    'tx_rules:payee:D', // only when payeeType is REF_ACCOUNT
     'tx_timed:from:D',
+    'tx_timed:to:D',
+    'tx_timed:payer:D', // only when payerType is REF_ACCOUNT
+    'tx_timed:payee:D', // only when payeeType is REF_ACCOUNT
     'txs2:payee',
     'u_focuses:uid:D',
     // u_groups
@@ -352,21 +355,24 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   }
 
   foreach ($subs as $one) {
-    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
+    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to empty
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
     flog(t('%table: %field', compact(ray('table field'))));
+    $where = "`$field`=:oldUid";
+    if (in($table, 'tx_rules tx_timed') and in($field, 'payer payee')) $where .= " AND `{$field}Type`=:REF_ACCOUNT";
+    if ($table == 'changes' and $field == 'rid') $where .= " AND `table`='users'";
     
     if ($delete) {
       if ($deletable) {
-        db\del($table, $field, $oldUid);
-      } elseif (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+        db\del($table, $where, compact('oldUid'));
+      } elseif (db\exists($table, $where, compact('oldUid'))) {
         $DBTX->rollback(); 
         return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
       }
     } else { // change
       if ($merge) merge($table, $field, $oldUid, $newUid);
       flog(t('. changing old to new'));
-      db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
+      db\q("UPDATE $table SET `$field`=:newUid WHERE $where", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
     }
   }
 
@@ -1069,7 +1075,7 @@ function anonymize($encrypting = FALSE) {
   db\q('UPDATE txs2_bank SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
   db\q('UPDATE r_invites SET email=NULL');
   db\q("UPDATE u_company JOIN users USING(uid) SET contact=NULL, website=CONCAT(name, '@example.com')");
-  foreach (ray('cache cache_bootstrap cache_form cu_folders cu_lists cu_members cu_spaces cu_tasks cu_times legacy_x_invoices legacy_x_txs messages r_boxes r_changes r_do r_honors r_invites r_near x_company x_photos x_relations x_shout x_txs2 x_users') as $k) db\q("TRUNCATE $k");
+  foreach (ray('cache cache_bootstrap cache_form cu_folders cu_lists cu_members cu_spaces cu_tasks cu_times legacy_x_invoices legacy_x_txs messages r_boxes changes r_do r_honors r_invites r_near x_company x_photos x_relations x_shout x_txs2 x_users') as $k) db\q("TRUNCATE $k");
   
   if ($encrypting) { 
     $vKeyPw = t\setDevVKey(a(UID_SUPER), TRUE); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup

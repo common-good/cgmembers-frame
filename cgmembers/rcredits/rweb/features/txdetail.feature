@@ -76,14 +76,14 @@ Scenario: an admin asks to view or edit a community transaction
 
 Scenario: an admin sets a loan category
   Given these "txs": 
-  | eid | xid | created | amount | payer | payee | purpose | flags | type  |*
-  | 501 |  51 | %now-5d |     51 | ctty  | .ZZB  | loan    | qbok  | prime |
+  | eid | xid | created  | amount | payer | payee | purpose | flags | type  |*
+  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    | qbok  | prime |
   And var "orig" is ray:
-  | created | cat1 | cat2 | uid1 | uid2 | flags | type | amt |*
-  | %now-5d |      |      | ctty | .ZZB | qbok  | prime | 51 |
+  | created  | cat1 | cat2 | uid1 | uid2 | flags | type | amt |*
+  | %now0-5d |      |      | ctty | .ZZB | qbok  | prime | 51 |
   When member ".ZZD" submits "history/transaction/xid=51" with:
-  | created | %mdY-4d |**
-  | amount  | -52     |
+  | created | %mdY-5d |**
+  | amount  | -51     |
   | toMe    |         |
   | forSame | 1       |
   | eid     | 501     |
@@ -92,18 +92,18 @@ Scenario: an admin sets a loan category
   | xid     | 51      |
   Then these "txs": 
   | eid | xid | created  | amount | payer | payee | purpose | flags | cat1  | cat2  |*
-  | 501 |  51 | %now0-4d |     52 | ctty  | .ZZB  | loan    |       | CG2CG | CG2CG |
+  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    |       | CG2CG | CG2CG |
 
 Scenario: an admin changes from loan category to a different category
   Given these "txs": 
-  | eid | xid | created | amount | payer | payee | purpose | flags | type  | cat1  | cat2  |*
-  | 501 |  51 | %now-5d |     51 | ctty  | .ZZB  | loan    | qbok  | prime | CG2CG | CG2CG |
+  | eid | xid | created  | amount | payer | payee | purpose | flags | type  | cat1  | cat2  |*
+  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    | qbok  | prime | CG2CG | CG2CG |
   And var "orig" is ray:
-  | created | cat1  | cat2  | uid1 | uid2 | flags | type | amt |*
-  | %now-5d | CG2CG | CG2CG | ctty | .ZZB | qbok  | prime | 51 |
+  | created  | cat1  | cat2  | uid1 | uid2 | flags | type | amt |*
+  | %now0-5d | CG2CG | CG2CG | ctty | .ZZB | qbok  | prime | 51 |
   When member ".ZZD" submits "history/transaction/xid=51" with:
-  | created | %mdY-4d |**
-  | amount  | -52     |
+  | created | %mdY-5d |**
+  | amount  | -51     |
   | toMe    |         |
   | forSame | 1       |
   | eid     | 501     |
@@ -112,4 +112,29 @@ Scenario: an admin changes from loan category to a different category
   | xid     | 51      |
   Then these "txs": 
   | eid | xid | created  | amount | payer | payee | purpose | flags | cat1   | cat2 |*
-  | 501 |  51 | %now0-4d |     52 | ctty  | .ZZB  | loan    |       | TO-ORG |      |
+  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    |       | TO-ORG |      |
+
+Scenario: an admin changes a transaction amount and date
+  Given these "txs": 
+  | eid | xid | created | amount | payer | payee | purpose | flags | type  |*
+  | 501 |  51 | %now-5d |     51 | .ZZA  | .ZZB  | stuff   | gift  | prime |
+  And var "orig" is ray:
+  | created | cat1  | cat2  | uid1 | uid2 | flags | type  | amt |*
+  | %now-5d |       |       | .ZZA | .ZZB | gift  | prime | 51 |
+  When member ".ZZD" submits "history/transaction/xid=51" with:
+  | created | %mdY-3d |**
+  | amount  | 52      |
+  | toMe    | 1       |
+  | description | new!    |
+  | forSame |         |
+  | eid     | 501     |
+  | cat     | TO-ORG  |
+  | orig    | @orig   |
+  | xid     | 51      |
+  Then these "txs": 
+  | eid | xid | created  | amount | payer | payee | for1  | for2 | flags        | cat1 | cat2   |*
+  | 501 |  51 | %now0-3d |     52 | .ZZA  | .ZZB  | stuff | new! | gift,changed |      | TO-ORG |
+  And these "changes":
+  | id | table | rid | field   | oldValue | newValue | changedBy |*
+  | 1  | txs   | 51  | amt     | 51       | 52       | .ZZD      |
+  | 2  | txs   | 51  | created | %now-5d  | %now0-3d | .ZZD      |

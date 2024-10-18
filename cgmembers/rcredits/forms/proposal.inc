@@ -104,8 +104,8 @@ EOF
   $systemic = areaFld(REQ . t('Change:'), [t('Systemic Change'), t('%cttyName funds systemic change. In our society today, people suffer. Work that eases that suffering here and now is very important. It is also important to change the world to prevent such suffering from happening year after year. How does your project promote systemic change?', compact('cttyName'))]);
 
   $where = textFld(REQ . t('Where:'), [t('Project Zip Code'), t('Where will the project take place? (zip code)')]);
-  $when = dateFld(REQ . t('When:'), [t('Project Start Date'), t('When will the project begin?')]);
-  $until = dateFld(REQ . t('Until:'), [t('Project End Date'), t('When will the project be completed?')]);
+  $when = dateFld(REQ . t('When:'), t('When will the project begin?'));
+  $until = dateFld(REQ . t('Until:'), t('When will the project be completed?'));
   $how = areaFld(REQ . t('How:'), [t('Implementation Plan'), t('Provide details of HOW your project will be implemented.')]);
   $amount = numFld(REQ . t('Amount:'), [t('Amount to Fund'), t('How much funding are you proposing from the Community Fund? Be sure to read the <%aCrit>Evaluation Criteria</a>.', compact('_aCrit'))]);
 /*  $typeDesc = <<<EOF

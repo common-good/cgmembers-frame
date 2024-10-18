@@ -132,7 +132,7 @@ function poAddress($address) {
  *
  * @param float $amount
  * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
- *  '' = number_format(amount, 2), after ignoring $ and commas
+ *  '' = number_format(amount, 2), after ignoring $, spaces, and commas
  *   b = like '', but without the commas
  *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
@@ -519,7 +519,7 @@ function postnGo($url, $data) {
   foreach ($data as $k => $v) {
     foreach (ray('k v') as $x) $$x = htmlentities($$x);
     $guts .= <<<X
-      <input type="hidden" name="$k" value="$v" />\n
+      <input type="hidden" name="$k" value="$v">\n
 X;
   }
   $clickHere = t('Click here to continue.');
@@ -528,7 +528,7 @@ X;
 /**/  echo <<<X
     <form id="me" action="$url" method="GET">
       $guts
-      <noscript><input type="submit" value="$clickHere" /></noscript>
+      <noscript><input type="submit" value="$clickHere"></noscript>
     </form>
     <script>document.getElementById('me').submit();</script>
 X;
@@ -1054,6 +1054,7 @@ function badName(&$name) {
     r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
     return 'illegal char';
   } */
+  if (empty($name)) return '';
   $name = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $name);
   $name = trim(preg_replace('/ +/', ' ', $name));
   if (strlen(u\shortName($name)) > USERNAME_MAX_LENGTH) return 'too long';
@@ -1094,7 +1095,7 @@ function badDate(&$s, $min = NULL, $max = NULL) {
  * @return the error message or FALSE if the phone number is acceptable
  */
 function badPhone(&$phone, $country = US_COUNTRY_ID) {
-  if (!$phone = u\fmtPhone(trim($phone), '+n')) return 'bad phone';
+  if (empty($phone) or !$phone = u\fmtPhone(trim($phone), '+n')) return 'bad phone';
   if ($country == US_COUNTRY_ID and strlen($phone) != 12) return 'bad phone';
   return FALSE;
 }
@@ -1253,6 +1254,7 @@ function normalizeCase($what, $proper = 'ucwords') {
     foreach ($what as $key => $value) $what[$key] = normalizeCase($value, $proper);
     return $what;
   }
+  if (empty($what)) return '';
   if ($proper = 'ucwords') {
     if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return $what; // already mixedcase
     if (mb_substr($what, 0, 4) == 'POB ') return $what; // special case for PO boxes
@@ -1356,7 +1358,12 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
  */
 function code($upper = FALSE, $len = R_CODE_LEN) {
   global $nextCode;
-  if (test() and nn($nextCode)) return $nextCode;
+
+  if (test() and $codeRay = ray(nn($nextCode))) {
+    $res = array_shift($codeRay);
+    $nextCode = join(' ', $codeRay);
+    return $res;
+  }
   $res = u\randomString($len, 'word');
   return $upper ? strtoupper($res) : $res;
 }
@@ -1911,7 +1918,7 @@ function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function pry($data) {return ry('P', $data);}
 function dePry($code) {return u\dery('P', $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
-function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
+function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));} // just dollars and cents (no $ or commas or spaces)
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', nn($phone));}
 function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists
 function zWhereSubs(&$where, &$subs) {if (is_array($where) and empty($subs)) list ($where, $subs) = [u\where($where), $where];}

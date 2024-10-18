@@ -42,7 +42,10 @@ function code($args = NULL, $validate = TRUE) {
     foreach (ray('return') as $k) if (isset($$k) and !\valid_url($$k, TRUE)) return codeErr(t('The "%k" parameter is not a valid URL.', compact('k')));
     if (isset($for) and !in($for, CGPAY_FORS)) return codeErr(t('That is not a proper value for the "for" parameter.'));
     // item and verb can be anything
-    if (isset($credit) and !in(nn($for), 'credit credit50')) return codeErr(t('The "credit" parameter applies only when the "for" parameter is "credit".'));
+    if (isset($credit) and !in(nn($for), 'credit credit50')) {
+      if ($codeExternal) return codeErr(t('The "credit" parameter applies only when the "for" parameter is "credit".'));
+      unset($args['credit']);
+    }
   }
   
   return $codeExternal ? exitRay($args, TRUE) : u\cryRay($args);

@@ -22,7 +22,7 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$orig = db\get('*', 'txs t', $where, $subs)) {
+  if (!$orig = db\get('*', 'txs_ever t', $where, $subs)) {
     if ($deletedOn = db\get('deleted', 'txs_deleted t', $where, $subs)) return softErr(t('tx deleted', 'on', fmtDt($deletedOn)));
     return softErr('no such tx'); // for now just show main transaction
   }
@@ -37,7 +37,7 @@ function formTxDetail($form, &$sta, $args = '') {
     $uid = in($uid1, EXTERNAL_UIDS) ? $uid1
          : (r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
          : (r\hasCats($uid2) ? $uid1
-         : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
+         : ($uid1 <= UID_CANON9 ? $uid2 : $uid2) ));
   }
 
   $toMe = ($uid == $uid1); // to me if other (uid) is the "from" account
@@ -51,7 +51,7 @@ function formTxDetail($form, &$sta, $args = '') {
       uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
       uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
       p.fullName as nonMemberName
-    FROM txs t LEFT JOIN txs2 t2 USING(xid)
+    FROM txs_ever t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
     LEFT JOIN people p ON p.pid=t2.pid
@@ -72,7 +72,7 @@ X;
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  if ($nonMemberName) ${$myid == UID_OUTER ? 'youNm' : 'meNm'} = $nonMemberName . t(' (non-member)');
+  if ($nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
   $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
@@ -128,6 +128,11 @@ function formTxDetail_validate($form, &$sta) {
   tweakSta($sta, compact(ray($fields)));
 }
 
+/**
+ * Handle changes to the transaction.
+ * A change in amount gets logged in the "changes" table.
+ * If we ever allow changing uid1 or uid2, that should be logged similarly.
+ */
 function formTxDetail_submit($form, &$sta) {
   global $mya;
   $input = $sta['input'];
@@ -152,10 +157,10 @@ function formTxDetail_submit($form, &$sta) {
   
   extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
+    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created or $amt != $o_amount)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
     require_once(R_ROOT . '/classes/qb.class');
-    db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
+    db\setFlag('tx_hdrs_all', $xid, B_QBOK, FALSE); // resend this xid to QBO (do this before delQbTx)
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->delQbTx("cg#$xid"); // delete this xid from QBO
     setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
@@ -164,6 +169,11 @@ function formTxDetail_submit($form, &$sta) {
   $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
   if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
     db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+  }
+  
+  foreach (ray('amt created') as $k) if (${"o_$k"} != $$k) {
+    db\insert('changes', ray('table rid field oldValue newValue changedBy', 'txs', $xid, $k, ${"o_$k"}, $$k, $mya->id)); // changing uid1 AND uid2 is not allowed; other fields don't matter
+    db\setFlag('tx_hdrs_all', $xid, B_CHANGED, TRUE);
   }
 
   $info['id'] = -$eidMe;

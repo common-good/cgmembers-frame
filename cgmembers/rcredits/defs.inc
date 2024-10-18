@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62f'; // software version
+const R_VERSION = '3.62g'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -63,6 +63,8 @@ define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
 define('POSTMARK_KEY', config('postmarkKey'));
+define('STRIPE_PUBLIC', config('stripePublic'));
+define('STRIPE_SECRET', config('stripeSecret'));
 define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
 
@@ -349,8 +351,15 @@ define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,
 const FOR_GOODS = 0; // index into R_WHYS for goods
 const FOR_USD = 1; // index into R_WHYS for USD exchange
 const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
-const SELF_CREDIT = 'cred'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
-const SELF_CREDIT50 = 'cred50'; // (string) similar, but redeemable later for only half the purchase price each time
+
+// cgbutton "for" codes -- existing URLs depend on these, so don't change them
+const FOR_DONATE = 'donate';
+const FOR_PURCHASE = 'other';
+const FOR_CREDIT = 'credit'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
+const FOR_CREDIT50 = 'credit50'; // (string) similar, but redeemable later for only half the purchase price each time
+const FOR_GIVE_CREDIT = 'gift'; // gift of store credit
+const CGBUTTON_CODES = [FOR_DONATE, FOR_PURCHASE, FOR_CREDIT, FOR_GIVE_CREDIT]; // used in cgbutton ajax (FOR_CREDIT50 is currently unused)
+
 //const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
 //const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
 //const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)
@@ -359,6 +368,7 @@ const R_CHUNK = 10; // chunk size for buying CG credit (sales amounts are a mult
 const R_MIN_DEFAULT = 100; // suggested minimum amount to hold in CG credit
 const R_ACHMIN = 10; // minimum granularity of withdrawals from bank account
 const R_ACHMIN_DEFAULT = 50; // suggested achMin
+const BANK_ACCOUNT_MAX = 99999999999999999; // max 17 digits
 //const R_ACH_TRIES = 3; // how many times to retry an ACH
 const CASHOUT_MIN = 100; // minimum dollar amount to cash out automatically
 const VERIFICATION_DELAY = 3; // number of days to wait after requesting a zero transfer, before requesting a real transfer
@@ -430,7 +440,6 @@ const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default prof
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 
-const CC_FEE = 3; // percentage of transaction amount to charge for credit card processing
 const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing (PayPal was 1.99%)
 const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
 const WIRE_FEE = 12; // what our bank charges for incoming wire transfers
@@ -487,8 +496,8 @@ const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD onl
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
-const CGPAY_VARS = 'account amount credit for item expires return secret verb'; // to be encoded in a CGPay button code
-const CGPAY_VARS2 = 'amount code id item name request'; // possible parameters for CGPay button link/form
+const CGPAY_VARS = 'account amount credit for item expires return secret period honor honored'; // to be encoded in a CGPay button code
+const CGPAY_VARS2 = 'amount code id item request'; // possible parameters for CGPay button link/form
 const CGPAY_FORS = 'credit credit50 donate gift other'; // possible values for the "for" parameter
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 
@@ -649,8 +658,8 @@ const FLOW_FROM = 2;
 const FLOW_BOTH = 3;
 
 // Transaction flags (for flags field in transaction and invoice records)
-const B_u0 = 0; //
-const B_u1 = 1; //
+const B_CHANGED = 0; // transaction has been edited in a way that matters (amount or date)
+const B_THX = 1; // payer has been thanked (applies only to gifts to CG and its sponsored projects)
 const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
 const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
 const B_u4 = 4; // 
@@ -672,7 +681,7 @@ const B_BUTTON = 19; // payment from CGPay button
 const B_DIRECTACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice

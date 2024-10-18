@@ -183,7 +183,7 @@ function formAccounts($form, &$sta) {
   if ($mya->admSeeAccts) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
     $submit = submit('Go Account!!');
-    $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
+    $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')), BARE);
     // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
     js('x/typeahead.bundle.min');
     jsx('new-acct');
@@ -327,15 +327,14 @@ function formMenu($form, &$sta) {return cgform(['title' => t('Menu')]);}
 
 /**
  * Present an empty slate for status and error messages.
- * @param mixed $form: usually unused (but required by Drupal); if string, output it.
  * @param string $args: say=1 (if called from doSay) or err=1&msg=<msg> (or empty)
  */
 function formEmpty($form, &$sta = '', $args = '') {
-  if ($form and !is_array($form)) say(plain($form));
+// NO  if ($form and !is_array($form)) say(plain($form));
   extract(just('say err msg', $args, NULL));
   
   $title = NBSP;
-  if ($msg) say(plain($msg), $err);
+  if ($msg) say(u\dery('P', $msg), $err);
   $subtext = $say ? t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"') : NULL;
   return cgform(compact(ray('title subtext')));
 }
@@ -450,7 +449,7 @@ function formFooter() {
   
   $year = date('Y');
   $helpType = $mya ? '' : 'other';
-  $helpModal = modal('help-modal', '', '', '', 'X');
+  $helpModal = modal('help-modal', 'Help', '', '', 'X'); // 'Help' gets replaced, but makes the HTML correct
 
   if (!$mya) {
     $links[] = lnk('/signin', t('Sign in'));
@@ -467,15 +466,15 @@ function formFooter() {
   list ($copyright, $nonprofit) = ray(t('copyright, a nonprofit organization'));
   
   $markup = tr(<<< X
-|<hr><div id=\"footer-menu\">
+|<hr><div id="footer-menu">
 $links
 <br>&nbsp;
 </div>
-<span class="copyright">$copyright &copy; $year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, $nonprofit</span><br/>
-%CGF_POSTALADDR<br/>
+<span class="copyright">$copyright &copy; $year </span><%aSite>%PROJECT<sup> &reg;</sup></a><span class="no-print">, $nonprofit</span><br>
+%CGF_POSTALADDR<br>
 %CGF_PHONE (messages) &nbsp; <%aEmail>%CGF_EMAIL</a><br>
-<span class="no-print"><br>IP: %ip
-$helpModal</span>
+<div class="no-print"><br>IP: %ip
+$helpModal</div>
 X
   , '_aSite _aEmail ip', atag(r\promoLink()), u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
   

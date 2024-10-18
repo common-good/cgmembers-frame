@@ -66,6 +66,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
   if ($mya->admDeleteAcct) $mergeAccts = submi(t('Merge Accounts'));
+  if ($mya->admRegion and $mya->admSeeAccts) $ourAccts = submi(t('Sponsored Accounts'));
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -73,13 +74,13 @@ function formAdminPanel($form, &$sta, $args = '') {
 //    $seeAppData = t('See App Data');
   }
 
-  if ($mya->admRecheckSsn) $ssnLink = t('SSN Link');
+  if ($mya->admRecheckSsn and !$mya->co) $ssnLink = t('SSN Link');
   if ($mya->admSeeSecure) $seeSecure = t('See Secure');
   if ($mya->admV) $clone = t('Clone');
-  if ($mya->admRecheckSsn) $resetSSN = t('Recheck SSN');
-  if ($mya->admMakeVAdmin) $makeVKeyE = t('Make vKeyE');
+  if ($mya->admRecheckSsn and !$mya->co) $resetSSN = t('Recheck SSN');
+  if ($mya->admMakeVAdmin and !$mya->co) $makeVKeyE = t('Make vKeyE');
   if ($mya->admPrintCards) $cancelCard = t('Cancel CG Card');
-  if ($mya->admMakeRules) $fsRule = t('Set up Sponsorship');
+  if ($mya->admMakeRules and $mya->co) $fsSetup = t('Set up Sponsorship');
   if ($mya->admChangeUid) $chgAcctId = t('Change Account ID by Addr');
   if ($mya->admDeleteAcct) $delAcct = t('DELETE Account');
 
@@ -95,11 +96,11 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts');
+  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts ourAccts');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
-  $ks = ray('cancelCard seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsRule chgAcctId delAcct');
+  $ks = ray('cancelCard seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsSetup chgAcctId delAcct');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = btn('', $$k, 'success', 'xs', $k);
   $acctSet = item(join('', $acctSet), t('Account Operations:'));
   
@@ -141,7 +142,7 @@ function formAdminPanel_submit($form, &$sta) {
     
     case 'chgAcctId': return a\changeUid($a);
       
-    case 'fsRule': // make fiscal sponsorship surtx rule (defaults to 5%) and create QB account
+    case 'fsSetup': // make fiscal sponsorship surtx rule (defaults to 5%) and create QB account
       if (!$a->co) return err(t('That account is not a company, so it cannot be sponsored.'));
       $info = ray('action payerType payeeType payee from to', ACT_SURTX, REF_ANYBODY, REF_ACCOUNT, $a->id, MATCH_PAYEE, CGID);
       if ($id = db\get('id', 'tx_rules', u\where($info) . " AND amount=0 AND purpose LIKE '%sponsorship fee%' AND IFNULL(end, :NOW+1) > :NOW", $info)) {
@@ -150,6 +151,7 @@ function formAdminPanel_submit($form, &$sta) {
       $info += ray('start portion purpose', today(), .05, t('fiscal sponsorship fee (5%)'));
       db\insert('tx_rules', $info);
       $a->setBit(B_OK); $a->setBit(B_CONFIRMED);
+      if (!$a->activated) $a->update('activated', now());
       $a->setCoBit(CO_SPONSORED);
       $nm = $a->bestName;
       say(t('A sponsorship fee rule has been added for %nm.', compact('nm')));
@@ -195,15 +197,16 @@ function formAdminPanel_submit($form, &$sta) {
       return r\Special\do1099s('K', nn($test1099));
       
     case 'delAcct': return goFirst("/change-account/acct=$a->agentId", "/sadmin/delete-account/$a->id", TRUE);
-    case 'reconcile': return w\go('sadmin/reconcile-ctty-fund');
+    case 'reconcile': return w\go('/sadmin/reconcile-ctty-fund');
     case 'toSMT': return a\toSMT();
     case 'reAuthQBO': return w\go('qbo');
-    case 'setCats': return w\go('sadmin/set-cats');
+    case 'setCats': return w\go('/sadmin/set-cats');
     case 'ieReport': return w\go('/sadmin/iereport');
     case 'sendTxs': return w\go('qbo/op=txs');
-    case 'inviteeStatus': return w\go('community/invite/invited-whom');
+    case 'inviteeStatus': return w\go('/community/invite/invited-whom');
     case 'makeTestAccts': return a\makeTestAccounts();
-    case 'mergeAccts': return w\go('sadmin/merge-accounts');
+    case 'mergeAccts': return w\go('/sadmin/merge-accounts');
+    case 'ourAccts': return w\go('/sadmin/our-accounts');
     case 'signupCos':
       global $signupCos; $signupCos = [];
       $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;
