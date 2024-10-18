@@ -358,9 +358,10 @@ function recur($template) {
       $deposit = $completed = now();
       $info = compact(ray('purpose pid completed deposit recursId flags'));
       $tx = be\createUsdTransfer($coA, $amount, $info);
-      if (db\count('tx_hdrs', compact('recursId')) == 1) { // first recurrence: add note from donation form
-        $note = db\get('notes', 'people', compact('pid'));
-        $info['purpose'] = $purpose .= " (\"$note\")";
+
+      if (db\count('tx_hdrs', compact('recursId')) == 1 // first recurrence: add note from donation form
+        and $note = db\get('notes', 'people', compact('pid'))) { // if any 
+          $info['purpose'] = $purpose .= " (\"$note\")";
       }
   
       if ($coId != CGID) { // no credit card fees for CG, for payments to CG
