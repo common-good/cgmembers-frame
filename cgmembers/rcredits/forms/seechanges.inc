@@ -26,7 +26,7 @@ function formSeeChanges($form, &$sta, $args = '') {
 
   $list[] = '<tr><th>' . join('</th><th>', array_values($flds)) . '</th></tr>';
 
-  $sql = "SELECT h.created, h.rid, h.field, h.oldValue, h.newValue, h.changedBy, u.name AS changerName FROM changes h LEFT JOIN users u ON u.uid=h.changedBy AND h.table='$table' WHERE $idCrit ORDER BY h.created DESC";
+  $sql = "SELECT h.created, h.rid, h.field, h.oldValue, h.newValue, h.changedBy, u.name AS changerName FROM changes h LEFT JOIN users u ON u.uid=h.changedBy WHERE h.table='$table' AND $idCrit ORDER BY h.created DESC";
   $q = db\q($sql, $subs);
   while ($row = $q->fetchAssoc()) {
     extract($row);
