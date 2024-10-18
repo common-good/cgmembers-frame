@@ -565,7 +565,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
     $z->msg = tr($z->index, $z->subs);
     $payerA->tellOut($tellIndex, $z->subs);
     if ($payerA->hasBank) {
-      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
+      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')), TRUE); // paying an invoice is explicit (request exact amount)
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
       if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $balFirst, $payAmount); }
     }

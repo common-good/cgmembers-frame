@@ -19,8 +19,8 @@ Setup:
 
   Scenario: Unpaid invoices get handled
   Given members have:
-  | uid  | floor | balance |*
-  | .ZZA |     0 |     100 |
+  | uid  | floor | balance | achMin |*
+  | .ZZA |     0 |     100 | 200    |
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   | reversesXid |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |          37 |
