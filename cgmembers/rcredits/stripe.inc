@@ -38,7 +38,7 @@ function setup($args) {
   extract(just('stripeCid description', $args, NULL));
 
   $customer = $stripeCid;
-  $payment_method_types = ray('card us_bank_account'); // You can specify different payment methods
+  $payment_method_types = ray('card'); // You can specify different payment methods (especially us_bank_account)
   $usage = 'off_session';
   $use_stripe_sdk = TRUE;
   $info = compact(ray('customer description payment_method_types usage use_stripe_sdk'));
