@@ -2402,7 +2402,7 @@ function exitRay($ray, $cry = FALSE) {
  * @return HTML for the button
  */
 function xBtn($hide = '', $show = '') {
-  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"${$k}\"";
+  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"{${$k}}\"";
   return tr('<div class="xbtn"%hide%show title="close"></div>', '_hide _show', $hide, $show); // image is supplied in CSS
 }
 

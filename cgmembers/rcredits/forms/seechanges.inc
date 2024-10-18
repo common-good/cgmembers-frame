@@ -38,7 +38,7 @@ function formSeeChanges($form, &$sta, $args = '') {
     $changedBy = $changerName ?: "($changedBy)";
     if ($table == 'txs') $rid = lnk("/history/transaction/xid=$rid", $rid);
     
-    $line = ''; foreach ($flds as $k => $v) $line .= "<td>${$k}</td>";
+    $line = ''; foreach ($flds as $k => $v) $line .= "<td>{${$k}}</td>";
     $list[] = "<tr>$line</tr>\n";
   }
 
