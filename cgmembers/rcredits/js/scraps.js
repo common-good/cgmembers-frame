@@ -1175,7 +1175,12 @@ function stripe(stripe, info) {
         $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
       } else { // setup is successful, so do the actual payment
         post('stripeTx', {...info, ...j}, function (k) {
-          if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else erDiv.html(k.message);
+          if (k.ok) {
+            location.href = baseUrl + '/empty/msg=' + k.message;
+          } else {
+            erDiv.html(k.message);
+            $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+          }
         });
       }
     });
