@@ -323,7 +323,7 @@ function title($for, $coA) {
 
 function subtext($coA, $mya) {
   $isCG = ($coA->id == CGID);
-  $coName = $isCG ? PROJECT : ($coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT));
+  $coName = $coA->bestName . (strhas($coA->bestName, PROJECT) ? '' : t(' through ') . PROJECT);
   $subtext = t('<p>Make a tax-deductible contribution of any amount to support %coName.</p>', compact('coName'));
 
   if ($isCG or $coA->sponsored) $subtext .= ' ' . t('<p>For donations of stock, <%aStock>contact us</a>.</p>', '_aStock', atag($mya ? '/help' : r\promoLink('about-us/contact-us')));

@@ -1099,6 +1099,7 @@ function thanks($xid, $item) {
   $id = $tx->pid ?: $tx->uid1;
   $amount = $tx->amt2;
   $coId = $tx->uid2;
+  if (in($coId, BUCKET_UIDS)) $coId = CGID; // these should all be called just "Common Good" here
 
   if ($recursId = $tx->recursId) { // recurring
     extract(db\get('period, periods', 'tx_timed', ray('id', $recursId)));
@@ -1107,7 +1108,7 @@ function thanks($xid, $item) {
   $coA = r\acct($coId);
   $type = $tx->gift ? r\ccGiftType($coId) : 'purchase';
   
-  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
+  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // "gift", if not "purchase"
   if ($coId == CGID) $thxMsg .= '|cggift thanks';
   $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
 
