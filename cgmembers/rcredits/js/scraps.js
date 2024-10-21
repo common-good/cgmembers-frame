@@ -30,6 +30,13 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'confirm':
+    const confirm = $('#edit-confirm').val();
+    if (confirm) yesno(confirm, function () {
+      location.href = baseUrl + '/do/' + vs['code'];
+    });
+    break;
+
   case 'seeChanges':
     $('#edit-table').change(function () {
       const table = $(this).find(":selected").text();
