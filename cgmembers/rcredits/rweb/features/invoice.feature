@@ -309,8 +309,9 @@ Scenario: A member with a bank account approves an invoice drawing automatically
   | nvid | created | status   | amount | payer | payee | for   |*
   |    1 | %today  | approved |    600 | .ZZB  | .ZZA  | labor |
   And we say "error": "short to|expect a transfer" with subs:
-  | short | avail |*
-  | $500  | $350  |
+  | short |*
+  | $500  |
+  # avail was $350
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -331,8 +332,9 @@ Scenario: A member with a bank account approves an invoice not drawing automatic
   | nvid | created | status   | amount | payer | payee | for   |*
   |    1 | %today  | approved |    600 | .ZZB  | .ZZA  | labor |
   And we say "error": "short to|expect a transfer" with subs:
-  | short | avail |*
-  | $600  | $250  |
+  | short |*
+  | $600  |
+  # avail was $250
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -356,8 +358,9 @@ Scenario: A member approves an invoice with insufficient funds without a connect
   | nvid | created | status   | amount | payer | payee | for   |*
   |    1 | %today  | approved |    600 | .ZZB  | .ZZA  | labor |
   And we say "error": "short to|when funded|how to fund" with subs:
-  | short | avail |*
-  | $600  | $0    |
+  | short |*
+  | $600  |
+  # avail was $0
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |

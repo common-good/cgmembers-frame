@@ -63,7 +63,8 @@ Scenario: A member overdraws with not enough to draw on
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    200 | %FOR_GOODS | food    |
   Then we say "status": "short to|when resolved" with subs:
-  | short | avail |*
-  | $70   | $130  |
+  | short |*
+  | $70   |
+  # avail was 130
   
 # add a scenario for drawing from two sources

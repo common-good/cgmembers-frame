@@ -256,11 +256,13 @@ Scenario: A member ask to pay another member too much, repeatedly
   | op  | who     | amount | purpose | period | periods |*
   | pay | Bea Two | 900    |  labor  | week   |       1 |
   Then we say "status": "short to|when resolved|repeats" with subs:
-  | short | avail | often  |*
-  | $650  | $250  | weekly |
+  | short | often  |*
+  | $650  | weekly |
+  # avail was $250
   And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
-  | nvid | short | avail |*
-  | 1    | $900  | $250  |
+  | nvid | short |*
+  | 1    | $900  |
+  # avail was $250
   And we say "status": "banked|bank tx number" with subs:
   | action | amount | tofrom | why                                 | checkNum |*
   | draw   | $900   | from   | to cover pending payment request #1 | 1        |
