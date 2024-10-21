@@ -754,11 +754,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $z = sendNotifications($actorA, $type, $tx, $shortfall);
   $z->subs += compact('needed');
   
-  if (in($type, 'payment, invoice payment') and $gift and $amount > 0 and !in($loserId, r\cgsOwnUids())) { // gift is a TX_FLAGS flag extracted from $data
-    list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
-    if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks($xid, r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
-  }
+  if (in($type, 'payment, invoice payment') and $gift and $amount > 0 
+    and !in($loserId, r\cgsOwnUids())) be\thanks($xid, $purpose); // gift is a TX_FLAGS flag extracted from $data
   
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
     extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount
@@ -1093,19 +1090,23 @@ EOF;
  *   cggift - donation to CG
  *   fbo - donation to a sponsored PROJECT
  *   purchase - not a donation
- * @param bool $member: <payer is a member>
- * @param int $id: account record ID or people record ID for the payer
  * @param string $item: item description
- * @param numeric $amount: donation or payment amount
- * @param string $period: how often to recur
- * @param int $periods: how many periods between recurrences
- * @param int $coId: sponsored organization's account record ID
- * @param bool $redirect: <redirect to empty page when done>
- * @return result message if not redirect (especially for when called from ajax)
+ * @return result message
  */
-function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
+function thanks($xid, $item) {
+  $tx = r\tx($xid);
+  $member = is_null($tx->pid); // empty and isset fail here
+  $id = $tx->pid ?: $tx->uid1;
+  $amount = $tx->amt2;
+  $coId = $tx->uid2;
+
+  if ($recursId = $tx->recursId) { // recurring
+    extract(db\get('period, periods', 'tx_timed', ray('id', $recursId)));
+  } else $period = PER_1;
 
   $coA = r\acct($coId);
+  $type = $tx->gift ? r\ccGiftType($coId) : 'purchase';
+  
   list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
   if ($coId == CGID) $thxMsg .= '|cggift thanks';
   $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
@@ -1141,7 +1142,6 @@ function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $c
     
   }
   
-  if ($redirect) w\sayEmpty($msg);
 
   w\say($msg);
   return $msg;

@@ -156,7 +156,7 @@ function formPay_submit($form, &$sta) {
       if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
       if ($note) $item .= ' ("' . $note . '")';
       $type = $isGift ? r\ccGiftType($coId) : 'purchase';
-      be\thanks($xid, $type, TRUE, $mya->id, $item, $amount, $period, 1, $coId, !$mya->stepCount());
+      be\thanks($xid, $item);
     } else say('gift transfer later');
   }
   
