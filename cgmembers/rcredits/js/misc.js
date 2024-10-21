@@ -14,8 +14,6 @@ var sessionLife = 1000 * vs['life']; // convert to seconds (sessionLife is 0 if 
 var signoutWarningAdvance = Math.min(sessionLife / 2, 3 * 60 * 1000); // give the user a few minutes to refresh
 if (ajaxSid) var sTimeout = sessionLife == 0 ? 0 : sessionTimeout(); // Warn the user before automatically signing out.
 
-if (sessionLife == 0 && 'serviceWorker' in navigator) navigator.serviceWorker.register(baseUrl + '/sw.js');
-  
 $('.showMore').click(function () {$('.more').show(); $(this).hide();});
 $("#which, #help").addClass("popup");
 $('button[type="submit"]').click(function() {this.form.opid.value = this.id;});
