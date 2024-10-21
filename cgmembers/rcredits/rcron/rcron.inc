@@ -342,8 +342,6 @@ function recur($template) {
     $flags |= u\bit(B_SELF);
     $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
     $coA = r\acct($to); $coId = $coA->id;
-    $gift = u\getBit($flags, 'gift') ?: 0;
-    $type = $gift ? r\ccGiftType($to) : 'purchase';
     
     if ($stripeId) { // recurring credit card payment
       require_once R_ROOT . '/stripe.inc';
@@ -351,16 +349,17 @@ function recur($template) {
       $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
       if (!is_object($erMsg = $paymentIntent)) {
         r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
-        return [FALSE, $erMsg]; // try again later
+        return [FALSE, $erMsg]; // probably a canceled or expired card
       }
 
       $DBTX = \db_transaction();
       $deposit = $completed = now();
       $info = compact(ray('purpose pid completed deposit recursId flags'));
       $tx = be\createUsdTransfer($coA, $amount, $info);
-      if (db\count('tx_hdrs', compact('recursId')) == 1) { // first recurrence: add note from donation form
-        $note = db\get('notes', 'people', compact('pid'));
-        $info['purpose'] = $purpose .= " (\"$note\")";
+
+      if (db\count('tx_hdrs', compact('recursId')) == 1 // first recurrence: add note from donation form
+        and $note = db\get('notes', 'people', compact('pid'))) { // if any 
+          $info['purpose'] = $purpose .= " (\"$note\")";
       }
   
       if ($coId != CGID) { // no credit card fees for CG, for payments to CG
@@ -380,7 +379,7 @@ function recur($template) {
     $adminMsg = $stripeId ? t('CC payment') : t('Non-member ACH');
     $adminMsg .= tr(' (to %whom)', 'whom', $coA->bestName);
     r\tellAdmin($adminMsg, compact(ray('amount period')) + $info + $emailAndName);
-    $msg = be\thanks($tx->xid, $type, FALSE, $pid, $purpose, $amount, $period, $periods, $coId, FALSE);
+    $msg = be\thanks($tx->xid, $purpose);
 
   } else { // normal (member) pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];

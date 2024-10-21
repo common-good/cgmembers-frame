@@ -178,6 +178,7 @@ function fboTx($input) {
   $uid = UID_OUTER;
   
   $DBTX = \db_transaction();
+
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
@@ -190,14 +191,9 @@ function fboTx($input) {
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
   
-  if ($paying) {
-    $res = go('dashboard');
-  } else {
-    $type = $isGift ? ($mya->sponsored ? 'fbo' : 'cggift') : 'purchase';
-    $res = be\thanks($tx->xid, $type, FALSE, $pid, $purpose, $amount, PER_1, 0, $mya->id, TRUE);
-  }
-  
+  if (!$paying) be\thanks($tx->xid, $purpose);
+
   unset($DBTX);
   
-  return $res; // no need to continue (outer transactions never delay or repeat)
+  return go('dashboard'); // no need to continue (outer transactions never delay or repeat)
 }

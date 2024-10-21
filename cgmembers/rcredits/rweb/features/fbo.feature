@@ -95,6 +95,7 @@ Scenario: A non-member donates to a sponsored member by check
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $100            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
   | item        | grant (check #123, 09/01/2024) |**
@@ -195,6 +196,7 @@ Scenario: A non-member donates to Common Good
   | coPostalAddr | %CGF_POSTALADDR |
   | coPhone      | %CGF_PHONE      |
   | amount       | $100            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member "cgf" with subs:
   | item        | grant                |**

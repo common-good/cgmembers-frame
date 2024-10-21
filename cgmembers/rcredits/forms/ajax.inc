@@ -255,7 +255,8 @@ function stripeTx($data) {
   $queueId = cr\queue('recur', $template, TRUE);
   
   [$ok, $msg] = cr\recur($template);
-  if ($ok) db\del('queue', ray('id', $queueId));
+  db\del('queue', ray('id', $queueId));
+  if (!$ok and $period == PER_1) db\del('tx_timed', compact('id'));
 
   return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
 }

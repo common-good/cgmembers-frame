@@ -26,7 +26,7 @@ function formSeeChanges($form, &$sta, $args = '') {
 
   $list[] = '<tr><th>' . join('</th><th>', array_values($flds)) . '</th></tr>';
 
-  $sql = "SELECT h.created, h.rid, h.field, h.oldValue, h.newValue, h.changedBy, u.name AS changerName FROM changes h LEFT JOIN users u ON u.uid=h.changedBy AND h.table='$table' WHERE $idCrit ORDER BY h.created DESC";
+  $sql = "SELECT h.created, h.rid, h.field, h.oldValue, h.newValue, h.changedBy, u.name AS changerName FROM changes h LEFT JOIN users u ON u.uid=h.changedBy WHERE h.table='$table' AND $idCrit ORDER BY h.created DESC";
   $q = db\q($sql, $subs);
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -38,7 +38,7 @@ function formSeeChanges($form, &$sta, $args = '') {
     $changedBy = $changerName ?: "($changedBy)";
     if ($table == 'txs') $rid = lnk("/history/transaction/xid=$rid", $rid);
     
-    $line = ''; foreach ($flds as $k => $v) $line .= "<td>${$k}</td>";
+    $line = ''; foreach ($flds as $k => $v) $line .= "<td>{${$k}}</td>";
     $list[] = "<tr>$line</tr>\n";
   }
 
@@ -48,7 +48,7 @@ function formSeeChanges($form, &$sta, $args = '') {
   } else $list = t('No changes for table ' . $table);
 
   $chx = ray('users txs'); // table choices
-  $table = selectFld(t('Table:'), '', dft($table) + clas('short'), array_combine($chx, $chx));
+  $table = selectFld(t('Table:'), '', dft($table) + short(), array_combine($chx, $chx));
   
   jsx('seeChanges', 'qid', $a->mainQid);
   return cgform(compact(ray('title table list')), 'nolabs');

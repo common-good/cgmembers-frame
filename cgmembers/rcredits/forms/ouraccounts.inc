@@ -39,10 +39,11 @@ function idsLinked($asof) {
     $a = r\acct($uid);
     $ours = $a->ourOwn; // maybe show this?
     $since = fmtDt($a->activated);
-    $name = $uid == $mya->id ? "<b>$a->bestName</b>" : w\lnk("/change-account/acct=$uid", $a->bestName);
     if (in($uid, BUCKET_UIDS) and $uid != CGID) {
+      $bestName = $a->name;
       if ($seeCanonic) $since = ''; else continue;
-    }
+    } else $bestName = $a->bestName;
+    $name = $uid == $mya->id ? "<b>$bestName</b>" : w\lnk("/change-account/acct=$uid", $bestName);
     $balance = u\fmtAmt($asof > today() ? $a->balance : be\balanceAsOf($a->uids, $asof));
     $row = [$since, $a->mainQid, $name, $balance];
     $rows .= '<tr><td>' . join('</td><td>', $row) . '</td></tr>';

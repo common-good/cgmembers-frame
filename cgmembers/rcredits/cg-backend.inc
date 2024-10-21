@@ -565,7 +565,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
     $z->msg = tr($z->index, $z->subs);
     $payerA->tellOut($tellIndex, $z->subs);
     if ($payerA->hasBank) {
-      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')));
+      $completed = $payerA->getFunds($fromBank, t('for invoice', compact('nvid')), TRUE); // paying an invoice is explicit (request exact amount)
       db\update('tx_requests', ray('nvid flags', $nvid, u\setBit($flags, 'funding')), 'nvid');
       if ($completed and !$z->ok) { unset($DBTX); return payInvoice($nvid, $balFirst, $payAmount); }
     }
@@ -754,11 +754,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $z = sendNotifications($actorA, $type, $tx, $shortfall);
   $z->subs += compact('needed');
   
-  if (in($type, 'payment, invoice payment') and $gift and $amount > 0 and !in($loserId, r\cgsOwnUids())) { // gift is a TX_FLAGS flag extracted from $data
-    list ($period, $periods) = [PER_1, 0]; // purpose defaults to whatever is passed to the function
-    if ($per = db\get('purpose, period, periods', 'tx_timed', 'id=:recursId', compact('recursId'))) extract($per);
-    be\thanks($xid, r\ccGiftType($gainerId), TRUE, $loserId, $purpose, $amount, $period, $periods, $gainerId, FALSE);
-  }
+  if (in($type, 'payment, invoice payment') and $gift and $amount > 0 
+    and !in($loserId, r\cgsOwnUids())) be\thanks($xid, $purpose); // gift is a TX_FLAGS flag extracted from $data
   
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
     extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount
@@ -1093,20 +1090,25 @@ EOF;
  *   cggift - donation to CG
  *   fbo - donation to a sponsored PROJECT
  *   purchase - not a donation
- * @param bool $member: <payer is a member>
- * @param int $id: account record ID or people record ID for the payer
  * @param string $item: item description
- * @param numeric $amount: donation or payment amount
- * @param string $period: how often to recur
- * @param int $periods: how many periods between recurrences
- * @param int $coId: sponsored organization's account record ID
- * @param bool $redirect: <redirect to empty page when done>
- * @return result message if not redirect (especially for when called from ajax)
+ * @return result message
  */
-function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $coId, $redirect) {
+function thanks($xid, $item) {
+  $tx = r\tx($xid);
+  $member = is_null($tx->pid); // empty and isset fail here
+  $id = $tx->pid ?: $tx->uid1;
+  $amount = $tx->amt2;
+  $coId = $tx->uid2;
+  if (in($coId, BUCKET_UIDS)) $coId = CGID; // these should all be called just "Common Good" here
+
+  if ($recursId = $tx->recursId) { // recurring
+    extract(db\get('period, periods', 'tx_timed', ray('id', $recursId)));
+  } else $period = PER_1;
 
   $coA = r\acct($coId);
-  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // just purchase or gift (type is purchase/gift/cggift)
+  $type = $tx->gift ? r\ccGiftType($coId) : 'purchase';
+  
+  list ($report, $thxMsg) = $type == 'purchase' ? ['purchase-report', 'purchase thanks'] : ['gift-report', 'gift thanks']; // "gift", if not "purchase"
   if ($coId == CGID) $thxMsg .= '|cggift thanks';
   $msg = tr($thxMsg . ($member ? '' : '|check it out'), ray('coName', $coA->bestName));
 
@@ -1131,18 +1133,25 @@ function thanks($xid, $type, $member, $id, $item, $amount, $period, $periods, $c
     $coA->tellIn($report, $subs);
 
     // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg toCancel', 
+      !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg, '');
 
     if ($member) { // this sends an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
-    } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    } else {
+      if ($period != PER_1) {
+        $when = r\recurDesc($period, $periods);
+        $msg = u\ry('P', t('Cancel your %when payment of %amt?', 'when amt', $when, u\fmtAmt($amount)));
+        $code = u\cryRay(ray('op v', 'cancelTimed', $recursId));
+        $subs['toCancel'] = ''; // t('To cancel future payments, <%a>click here</a>.', '_a', atag(BASE_URL . "/empty/say=1&msg=$msg&confirm=1&code=$code"));
+      }
+      r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    }
     
     if (in($type, 'cggift fbo')) db\setFlag('tx_hdrs', $xid, B_THX); // donation to CG or through CG needs record of acknowlegment
     
   }
   
-  if ($redirect) w\sayEmpty($msg);
-
   w\say($msg);
   return $msg;
 }

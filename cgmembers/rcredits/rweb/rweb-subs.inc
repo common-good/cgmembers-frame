@@ -2402,7 +2402,7 @@ function exitRay($ray, $cry = FALSE) {
  * @return HTML for the button
  */
 function xBtn($hide = '', $show = '') {
-  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"${$k}\"";
+  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"{${$k}}\"";
   return tr('<div class="xbtn"%hide%show title="close"></div>', '_hide _show', $hide, $show); // image is supplied in CSS
 }
 
@@ -2414,6 +2414,7 @@ function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
 function suffix($suffix = '') {return ray('field_suffix', "<div class=\"suffix\">$suffix</div>");}
 function prefix($prefix) {return compact('prefix');}
+function short() {return clas('short');}
 function maxlen($maxlength) {return compact('maxlength');}
 function vmin($min) {return compact('min');}
 function vmax($max) {return compact('max');}

@@ -76,7 +76,7 @@ X;
   $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
-  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
+  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), short() + vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
 
@@ -90,15 +90,15 @@ X;
   $boxMsg = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
-  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
+  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags, '', short() + suffix(u\bits($flags, TX_FLAGS)));
   $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
-    $entryType = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
-    $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
+    $entryType = selectFld(REQ . t('Type:'), '', short() + dft($type), ray(E_TYPES));
+    $recursId = intFld(t('Recurs Id:'), '', short() + dft($recursId));
     $suffix = ($reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
-    $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid) + $suffix);
+    $reversesXid = intFld(t('Reverses Xid:'), '', short() + dft($reversesXid) + $suffix);
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);

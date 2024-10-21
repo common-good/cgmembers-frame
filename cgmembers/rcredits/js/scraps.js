@@ -30,6 +30,13 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'confirm':
+    const confirm = $('#edit-confirm').val();
+    if (confirm) yesno(confirm, function () {
+      location.href = baseUrl + '/do/' + vs['code'];
+    });
+    break;
+
   case 'seeChanges':
     $('#edit-table').change(function () {
       const table = $(this).find(":selected").text();
@@ -1168,7 +1175,12 @@ function stripe(stripe, info) {
         $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
       } else { // setup is successful, so do the actual payment
         post('stripeTx', {...info, ...j}, function (k) {
-          if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else erDiv.html(k.message);
+          if (k.ok) {
+            location.href = baseUrl + '/empty/msg=' + k.message;
+          } else {
+            erDiv.html(k.message);
+            $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+          }
         });
       }
     });

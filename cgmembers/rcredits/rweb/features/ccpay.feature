@@ -86,9 +86,9 @@ Scenario: A non-member confirms donation intent
   | stripeId | strId456     |
   | secret   | secret78     |
   Then these "tx_timed":
-  | id | action   | from         | to   | amount | portion | purpose  | payerType   | payer | period | stripeId |*
-  | 1  | %ACT_PAY | %MATCH_PAYER | .ZZC | 123    | 0       | donation | %REF_PERSON | 1     | once   | strId456 | 
-#  And these "queue":
+  | id | action   | from         | to   | amount | portion | purpose  | payerType   | payer | period | stripeId | start | end  |*
+  | 1  | %ACT_PAY | %MATCH_PAYER | .ZZC | 123    | 0       | donation | %REF_PERSON | 1     | once   | strId456 | %now  | %now |
+  And count "queue" is 0
 #  And ajax returns: (encrypted ryP)
 
   And these "txs2":
@@ -106,6 +106,7 @@ Scenario: A non-member confirms donation intent
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
   | item         | donation ("in memory of God - wow!") |**

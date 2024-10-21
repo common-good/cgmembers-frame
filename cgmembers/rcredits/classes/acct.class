@@ -1288,16 +1288,17 @@ o;
    * Called for investments, gifts, invoice payment, and autorefills.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
+   * @param bool $explicit: <user requested this transfer explicitly>
    * @return completed: <bank transfer (in or out) is "completed" has been credited to the account>
    */
-  public function getFunds($amount = NULL, $why = NULL) {
+  public function getFunds($amount = NULL, $why = NULL, $explicit = FALSE) {
     $a = $this;
 
     if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
     if ($a->hasBank) {
       $waiting = 0; // we are not charged per transfer so this is simpler (was $a->waitingFromBank($combinable, $txid);)
       if (round($amount - $waiting, 2) <= 0) return 0;
-      list ($xid, $amtDone, $completed, $report) = $a->bank($amount, $why);
+      list ($xid, $amtDone, $completed, $report) = $a->bank($amount, $why, compact('explicit'));
       $amount -= $waiting + $amtDone;
       $msg = $amount > 0 ? 'automatic when funded' : $report;
       $subs = [];
