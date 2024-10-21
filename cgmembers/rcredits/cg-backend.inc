@@ -1132,17 +1132,25 @@ function thanks($xid, $item) {
     $coA->tellIn($report, $subs);
 
     // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg', !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg);
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg toCancel', 
+      !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg, '');
 
     if ($member) { // this sends an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
-    } else r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    } else {
+      if ($period != PER_1) {
+        $when = r\recurDesc($period, $periods);
+        $msg = u\ry('P', t('Cancel your %when payment of %amt?', 'when amt', $when, u\fmtAmt($amount)));
+        $code = u\cryRay(ray('op v', 'cancelTimed', $recursId));
+        $subs['toCancel'] = ''; // t('To cancel future payments, <%a>click here</a>.', '_a', atag(BASE_URL . "/empty/say=1&msg=$msg&confirm=1&code=$code"));
+      }
+      r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
+    }
     
     if (in($type, 'cggift fbo')) db\setFlag('tx_hdrs', $xid, B_THX); // donation to CG or through CG needs record of acknowlegment
     
   }
   
-
   w\say($msg);
   return $msg;
 }

@@ -106,6 +106,7 @@ Scenario: A non-member confirms donation intent
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
   | item         | donation ("in memory of God - wow!") |**
