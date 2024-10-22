@@ -12,10 +12,10 @@ use CG\Db as db;
  */
  
 const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
-const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations';
+const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations stripeId';
 const RULE_FLDS = BOTH_FLDS . ' template code';
-const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations template code tnm url flds';
-const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code';
+const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations stripeId template code tnm url flds';
+const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code stripeId';
 const ZERO_FLDS = 'amount portion minimum start';
 const RULES_URL = 'sadmin/rules/id';
 const TIMED_URL = 'sadmin/timed/id';
@@ -58,6 +58,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
   $template = textFld(t('Template:'), '', dft($template));
   $code = textFld(t('Code:'), '', dft($code));
+  $stripeId = textFld(t('Stripe ID:'), '', dft($stripeId));
   
   foreach (ray('tnm flds url id') as $k) $$k = hidFld($$k);
   $submit = t('Submit');

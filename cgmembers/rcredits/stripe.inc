@@ -8,6 +8,12 @@ use \Stripe as str;
 
 /**
  * Handle a Stripe function, using the Stripe PHP APK
+ *
+ * Test cards:
+ *    4242424242424242 good
+ *    4000000000000002 generic decline
+ *    4000000000009995 insufficient funds
+ *    4000000000000341 decline after attaching
  */
 function stripe($op, $args = []) {
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';

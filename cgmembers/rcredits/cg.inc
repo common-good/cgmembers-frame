@@ -1296,7 +1296,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
   
   $confirmed = ($a1->co ? ($a1->agentA->confirmed or $a1->helperA->confirmed) : $a1->confirmed);
-  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
+  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and !in($a2->id, BUCKET_UIDS)) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);

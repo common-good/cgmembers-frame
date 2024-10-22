@@ -580,8 +580,10 @@ function doit(what, vs) {
       if (ccFeeVal > 0) ccFeeMsg.html(ccFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(ccFeeVal) + ').'));
       
       const fsFeeMsg = $('.form-item-coverFSFee span');
-      fsFeeVal = parseFloat(amtVal) * fsPctVal;
-      if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
+      if (fsFeeMsg.length) {
+        fsFeeVal = parseFloat(amtVal) * fsPctVal;
+        if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
+      } else fsFeeVal = 0;
     });
     
     if (stay.length) {
@@ -603,6 +605,7 @@ function doit(what, vs) {
     });
     
     $('#edit-stay-0').click(function () { // nonmember (pay by card)
+//      $.alert('Oops.', 'Non-member payments are temporarily disabled. Please try tomorrow. Our tech team apologizes for the inconvenience.'); return;
       for (fnm of 'fullName phone email zip'.split()) req($('.form-item-' + fnm));
       stay.hide(); $('#edit-stayLabel').hide();
       nonMember.show();
@@ -1141,12 +1144,12 @@ function goPage(page, newWindow = false) {
   return false; // to help cancel default href
 }
 
-function stripe(stripe, info) {
+function stripe(str, info) {
   const erDiv = $('#edit-paymentErr .control-data');
 
   post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
     const clientSecret = j.secret;
-    const elements = stripe.elements({ clientSecret });
+    const elements = str.elements({ clientSecret });
     const paymentElement = elements.create('payment', {
       fields: { billingDetails: { 
         name: 'never',
@@ -1158,9 +1161,16 @@ function stripe(stripe, info) {
     paymentElement.mount('#edit-payment .control-data');
 
     const form = document.getElementById('frm-pay');
-    form.addEventListener('submit', async (ev) => {
+    const handler = async (ev) => {
       ev.preventDefault();
       elements.submit();
+      
+      function retry(erMsg) {
+        erDiv.html(erMsg + ' Try a different payment method?');
+        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+        form.removeEventListener('submit', handler);
+        stripe(str, info);
+      }
 
       const confirmParams = { payment_method_data: { billing_details: {
         name: info.fullName,
@@ -1168,21 +1178,19 @@ function stripe(stripe, info) {
         phone: info.phone,
         address: { postal_code:info.zip, country:'US' }
       }}};
-      const { setupIntent, error } = await stripe.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
+      const { setupIntent, error } = await str.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
 
       if (error) {
-        // (not needed because Stripe shows it) erDiv.html(error.message);
-        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+        retry(error.message);
       } else { // setup is successful, so do the actual payment
         post('stripeTx', {...info, ...j}, function (k) {
           if (k.ok) {
             location.href = baseUrl + '/empty/msg=' + k.message;
-          } else {
-            erDiv.html(k.message);
-            $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
-          }
+          } else { retry('post ' + k.message); }
         });
       }
-    });
+    };
+    
+    form.addEventListener('submit', handler);
   });
 }
