@@ -108,6 +108,8 @@ function setCSP() {
   global $scriptNonce; $scriptNonce = $nonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
   $uri = $_SERVER['REQUEST_URI'];
+  
+  $scriptSource = "'nonce-$scriptNonce' 'report-sample' 'sha256-c1BA5IRd4qX7AiC87dTZwm7t3IkBXmM7O4shhfRBjag=' https://js.stripe.com/v3/fingerprinted/js/;"; // 'report-sample' allows script fragment to be included in CSP reports; sha is for stripe
 
   $styleSource = ($uri == 'co/cgbutton' or ($uri == 'community/invite' and nni($_POST, 'example')))
   ? "'unsafe-inline'"  // allow inline styles when creating button
@@ -123,7 +125,7 @@ function setCSP() {
     . "manifest-src 'self';"
     . "media-src 'self';"
     . "object-src 'none';"
-    . "script-src 'self' 'nonce-$scriptNonce' 'report-sample' https://js.stripe.com/v3/fingerprinted/js/;" // 'report-sample' allows script fragment to be included in CSP reports
+    . "script-src 'self' $scriptSource;"
     . "img-src 'self' https://cg4.us data:;" // data: is for photo upload and QR code
     . "style-src 'self' $styleSource;"
     . "worker-src 'self';"
