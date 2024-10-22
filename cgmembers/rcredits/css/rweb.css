@@ -759,6 +759,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Rules */
 #frm-rules .radio {display:inline-block;}
 #frm-rules #edit-id {width:100px; display:inline-block; margin-right:10px;}
+#frm-rules .form-item-period {display:block;}
 
 /* Groups */
 #frm-groups .container {margin:0; padding:0; font-size:14px;}
@@ -1421,19 +1422,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #deposits td:first-child +td +td +td +td +td {text-align:left;}
 #frm-deposits #edit-count {margin-bottom:3px;}
 
-/* Donate */
-#frm-donate .form-item-wait {margin-top:30px;}
+/* Pay / Donate */
 .form-item-amtChoice select {max-width:200px; font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
-#frm-rules .form-item-period,
-#frm-donate .form-item-period {display:block;}
-#frm-donate #edit-logo img,
+#frm-pay #edit-logo img,
 #frm-cgpay #edit-logo img {max-height:140px; max-width:100%;}
-#frm-donate #edit-logo img + img {margin-left:20px;}
-#frm-donate .form-item-fullName {margin-top:5px;}
-#frm-donate #edit-title,
-#frm-donate .radio {margin-bottom:0;}
-#frm-donate #paySet {margin-top:10px;}
-#frm-donate #edit-payment label {margin-top:15px;}
+#frm-pay #edit-logo img + img {margin-left:20px;}
+#edit-paymentErr .control-data {color:red;}
 
 #edit-honor {display:inline-block; width:150px; margin-right:10px;}
 #edit-honored {display:inline-block; max-width:150px;}
