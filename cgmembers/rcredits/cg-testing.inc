@@ -1486,12 +1486,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   if (!$form = t\pageForm($page)) return FALSE; // probably access error
   $sta = $formSta; $formSta = NULL; // don't let $formSta influence other forms that get invoked
 
-  if ($page == 'pay' or $page == 'charge') $page = 'Tx';
-
-  $dfts = [];
-  foreach ($form as $key => $field) if (substr($key, 0, 1) != '#') {
-    if (isset($field['#value'])) $dfts[$key] = $field['#value'];
-  }
+  $dfts = getDfts($form);
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
@@ -1501,6 +1496,15 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
+}
+
+function getDfts($form) {
+  $dfts = [];
+  foreach ($form as $k => $field) if (substr($k, 0, 1) != '#') {
+    if (rayhas($field, '#value')) $dfts[$k] = $field['#value'];
+    if (nni($field, '#type') == 'fieldset') {$dfts += getDfts($field);}
+  }
+  return $dfts;
 }
 
 /**
