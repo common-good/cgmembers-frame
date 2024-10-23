@@ -572,6 +572,7 @@ function doit(what, vs) {
     const fsPctVal = parseFloat($('#edit-fspct').val());
     var ccFeeVal;
     var fsFeeVal;
+    const erDiv = $('#edit-paymentErr .control-data');
     
     amt.change(function () {
       const amtVal = amt.val();
@@ -584,6 +585,8 @@ function doit(what, vs) {
         fsFeeVal = parseFloat(amtVal) * fsPctVal;
         if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
       } else fsFeeVal = 0;
+      
+      erDiv.html('');
     });
     
     if (stay.length) {
@@ -1145,52 +1148,42 @@ function goPage(page, newWindow = false) {
 }
 
 function stripe(str, info) {
+  const form = document.getElementById('frm-pay');
   const erDiv = $('#edit-paymentErr .control-data');
 
   post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
     const clientSecret = j.secret;
     const elements = str.elements({ clientSecret });
-    const paymentElement = elements.create('payment', {
-      fields: { billingDetails: { 
-        name: 'never',
-        email: 'never',
-        phone: 'never',
-        address: { postalCode:'never', country:'never' } // shouldn't this be postal_code?
-      }}
-    });
+    const address = { postalCode:'never', country:'never' } // postalCode, not postal_code
+    const fields = { billingDetails: { name:'never', email:'never', phone:'never', address } };
+    const paymentElement = elements.create('payment', {fields});
+    
+    const changeHandler = async (ev) => {if (!ev.empty) erDiv.html('');} // ev is {collapsed, complete, elementType:"payment", empty, value:{type:"card"}}
     paymentElement.mount('#edit-payment .control-data');
+    paymentElement.on('change', changeHandler);
 
-    const form = document.getElementById('frm-pay');
-    const handler = async (ev) => {
+    const submitHandler = async (ev) => { // user clicked "Pay" or "Donate"
       ev.preventDefault();
       elements.submit();
       
       function retry(erMsg) {
         erDiv.html(erMsg + ' Try a different payment method?');
         $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
-        form.removeEventListener('submit', handler);
+        form.removeEventListener('submit', submitHandler);
+        paymentElement.off('change', changeHandler);
         stripe(str, info);
       }
 
-      const confirmParams = { payment_method_data: { billing_details: {
-        name: info.fullName,
-        email: info.email,
-        phone: info.phone,
-        address: { postal_code:info.zip, country:'US' }
-      }}};
+      const address = { postal_code:info.zip, country:'US' };
+      const billing_details = { name:info.fullName, email:info.email, phone:info.phone, address }
+      const confirmParams = { payment_method_data:{billing_details} };
       const { setupIntent, error } = await str.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
 
-      if (error) {
-        retry(error.message);
-      } else { // setup is successful, so do the actual payment
-        post('stripeTx', {...info, ...j}, function (k) {
-          if (k.ok) {
-            location.href = baseUrl + '/empty/msg=' + k.message;
-          } else { retry('post ' + k.message); }
-        });
-      }
+      if (error) retry(error.message); else post('stripeTx', {...info, ...j}, (k) => { // if setup succeeds, do the actual payment
+        if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else retry(k.message);
+      });
     };
     
-    form.addEventListener('submit', handler);
+    form.addEventListener('submit', submitHandler);
   });
 }
