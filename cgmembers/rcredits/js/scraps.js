@@ -552,8 +552,6 @@ function doit(what, vs) {
 
   case 'pay':
     var amt = $('#edit-amount');
-    var amtChoice = $('#edit-amtchoice');
-    if (amtChoice.length) amt.val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
     const thisForm = $('#frm-pay');
     const submit = $('.form-item-submit');
@@ -945,22 +943,30 @@ function doit(what, vs) {
     break;
     
   case 'amtChoice':
-    var amtChoiceWrap = $('.form-item-amtChoice');
-    var amtChoice = $('#edit-amtchoice');
-    var amt = $('#edit-amount');
-    var other = $('.form-item-amount'); 
+    const amtChoiceWrap = $('.form-item-amtChoice');
+    const amtChoice = $('#edit-amtchoice');
+    const otherAmtWrap = $('.form-item-amount'); 
+    const otherAmt = $('#edit-amount');
 
-    amtChoice.change(function () {
-      if(amtChoice.val() == '-1') {
-        other.show(); 
+    amtChoice.change( () => {
+      const v = amtChoice.val();
+      amtChoice.find('option').removeAttr('selected');
+      amtChoice.find(':selected').attr('selected', 'selected');
+      amtChoice.val(v); // Force update (don't know why this is needed in Chrome 10/23/2024)
+      otherAmt.val(v); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+
+      if(v == '-1') {
+        otherAmtWrap.show(); 
         amtChoiceWrap.hide();
-        amt.val('').focus().removeAttr('required');
-        fform('#edit-amount').submit(function () {if (amt.val() == '') amt.val(0);}); // "Water" donation defaults to zero
-      } else other.hide();
+        otherAmt.val('').focus();
+        otherAmt.removeAttr('required'); // allow submission while leaving this empty
+        amtChoice.closest('form').submit( () => {if (otherAmt.val() == '') otherAmt.val(0);}); // "Water" donation defaults to zero, but don't suggest it
+        // it is a mystery why $(this) and fform(this) fail here
+      } else otherAmtWrap.hide();
     });
     amtChoice.change();
     
-    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
+    otherAmt.change( () => {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
     break;
     
   case 'contact':

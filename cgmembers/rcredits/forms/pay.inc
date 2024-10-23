@@ -47,7 +47,7 @@ function formPay($form, &$sta, $args = NULL) {
     $subtext = $isGift ? subtext($coA, $mya) : NULL;
   }
 
-  [$amount, $amtDpy] = amount($amount, $s_amount, $isGift); 
+  [$amount, $amtDpy] = amount($amount, $s_amount, $isGift, $amtChoice ? '' : REQ); 
   [$itemDpy, $item, $forDpy] = itemDpy($for, $item, $s_item, $credit);
   $fsPct = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
 
@@ -330,7 +330,7 @@ function subtext($coA, $mya) {
   return $subtext;
 }
 
-function amount($amount, $s_amount, $isGift) {
+function amount($amount, $s_amount, $isGift, $req) {
   $amtLabel = $isGift ? t('Donation:') : t('Pay:');
   $suffix = $isGift ? (NBSP . NBSP . NBSP . btnOpt('', t('repeat'), 'btn-repeat') . btnOpt('', t('in honor or memory'), 'btn-honor')) : '';
   
@@ -340,7 +340,7 @@ function amount($amount, $s_amount, $isGift) {
   } else {
     $amtDpy = NULL;
     $dft = $s_amount ? u\fmtAmt($s_amount, '') : '';
-    $amount = numFld(REQ . $amtLabel, [t('Amount')], dft($dft) + suffix($suffix) + clas('short middle'));
+    $amount = numFld($req . $amtLabel, [t('Amount')], dft($dft) + suffix($suffix) + clas('short middle'));
   }
 
   return [$amount, $amtDpy];
