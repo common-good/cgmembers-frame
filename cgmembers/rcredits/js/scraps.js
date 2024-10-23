@@ -626,11 +626,9 @@ function doit(what, vs) {
         submit.show();
               
         var amount = parseFloat(amt.val());
-        var feeCovered = amount * (
-          ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0) + 
-          ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0)
-        );
-        amount += feeCovered;
+        var feeCovered = ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0)
+                       + ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0);
+
         const info = {
           amount: amount + feeCovered,
           feeCovered: feeCovered,
