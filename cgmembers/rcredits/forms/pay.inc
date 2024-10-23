@@ -47,7 +47,7 @@ function formPay($form, &$sta, $args = NULL) {
     $subtext = $isGift ? subtext($coA, $mya) : NULL;
   }
 
-  [$amount, $amtDpy] = amount($amount, $s_amount, $isGift); 
+  [$amount, $amtDpy] = amount($amount, $s_amount, $isGift, $amtChoice ? '' : REQ); 
   [$itemDpy, $item, $forDpy] = itemDpy($for, $item, $s_item, $credit);
   $fsPct = db\get('`portion`', '(SELECT * FROM tx_rules WHERE end IS NULL) x', ray('payee action amount to', $coA->id, ACT_SURTX, 0, CGID)) ?: .05;
 
@@ -59,6 +59,7 @@ function formPay($form, &$sta, $args = NULL) {
     $honor = selectFld(t('Honoring:'), '', suffix($honored . xBtn('', '.btn-honor')) + dft(nn($honor)), $honors);
   } else [$coverFSFee, $period, $honor] = [NULL, hidFld(PER_1), NULL]; // no recurring or honoring payments that aren't gifts
 
+  $details = fieldSet('details', compact(ray('amtChoice amount amtDpy period honor itemDpy item forDpy coverFSFee')), BARE);
 
   if ($mya) { // member: no need to ask for payment method
     $qid = $pass = $paySet = $nonMember = $stay = $stayLabel = NULL;
@@ -69,7 +70,7 @@ function formPay($form, &$sta, $args = NULL) {
   
   $note = textFld(t('Note:'), [t('About the payment')]);
 
-  $form = compact(ray('logo title subtext amtChoice amount amtDpy period honor itemDpy item forDpy coverFSFee stayLabel stay qid pass nonMember paySet note'));
+  $form = compact(ray('logo title subtext details stayLabel stay qid pass nonMember paySet note'));
   foreach (ray('isGift coId credit for return fsPct recursId button') as $k) $form[$k] = hidfld(nn($$k, NULL));
   
   $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
@@ -78,7 +79,8 @@ function formPay($form, &$sta, $args = NULL) {
   $form += ($mya and $isCG) ? w\setupFoot($submitLabel, $noteSuffix) : compact('submit');
 
   js('https://js.stripe.com/v3/');
-  jsx('pay', ray('stripePublicKey ccPct ccPlus', STRIPE_PUBLIC, CC_PCT, CC_PLUS));
+  $canceledMsg = u\ry('P', 'Payment is canceled.');
+  jsx('pay', ray('stripePublicKey ccPct ccPlus payeeName canceledMsg', STRIPE_PUBLIC, CC_PCT, CC_PLUS, $coA->bestName, $canceledMsg));
 
   return cgForm($form);
 }
@@ -330,7 +332,7 @@ function subtext($coA, $mya) {
   return $subtext;
 }
 
-function amount($amount, $s_amount, $isGift) {
+function amount($amount, $s_amount, $isGift, $req) {
   $amtLabel = $isGift ? t('Donation:') : t('Pay:');
   $suffix = $isGift ? (NBSP . NBSP . NBSP . btnOpt('', t('repeat'), 'btn-repeat') . btnOpt('', t('in honor or memory'), 'btn-honor')) : '';
   
@@ -340,7 +342,7 @@ function amount($amount, $s_amount, $isGift) {
   } else {
     $amtDpy = NULL;
     $dft = $s_amount ? u\fmtAmt($s_amount, '') : '';
-    $amount = numFld(REQ . $amtLabel, [t('Amount')], dft($dft) + suffix($suffix) + clas('short middle'));
+    $amount = numFld($req . $amtLabel, [t('Amount')], dft($dft) + suffix($suffix) + clas('short middle'));
   }
 
   return [$amount, $amtDpy];

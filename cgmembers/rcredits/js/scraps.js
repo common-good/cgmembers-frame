@@ -552,8 +552,6 @@ function doit(what, vs) {
 
   case 'pay':
     var amt = $('#edit-amount');
-    var amtChoice = $('#edit-amtchoice');
-    if (amtChoice.length) amt.val(amtChoice.val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
     hideNote();
     const thisForm = $('#frm-pay');
     const submit = $('.form-item-submit');
@@ -572,6 +570,7 @@ function doit(what, vs) {
     const fsPctVal = parseFloat($('#edit-fspct').val());
     var ccFeeVal;
     var fsFeeVal;
+    const erDiv = $('#edit-paymentErr .control-data');
     
     amt.change(function () {
       const amtVal = amt.val();
@@ -584,6 +583,8 @@ function doit(what, vs) {
         fsFeeVal = parseFloat(amtVal) * fsPctVal;
         if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
       } else fsFeeVal = 0;
+      
+      erDiv.html('');
     });
     
     if (stay.length) {
@@ -620,16 +621,14 @@ function doit(what, vs) {
     
     $('#edit-next .btn').click(function () {
       if (document.getElementById('frm-pay').reportValidity()) {
-        $('.form-item-next').hide();
+        $('.form-item-next, #details, #nonMember').hide();
         paySet.show();
         submit.show();
               
         var amount = parseFloat(amt.val());
-        var feeCovered = amount * (
-          ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0) + 
-          ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0)
-        );
-        amount += feeCovered;
+        var feeCovered = ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0)
+                       + ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0);
+
         const info = {
           amount: amount + feeCovered,
           feeCovered: feeCovered,
@@ -647,7 +646,7 @@ function doit(what, vs) {
           notes: $('#edit-note').val()
         };
 
-        stripe(Stripe(vs['stripePublicKey']), info);
+        stripe(Stripe(vs['stripePublicKey']), info, vs);
       }
     });
 
@@ -942,22 +941,30 @@ function doit(what, vs) {
     break;
     
   case 'amtChoice':
-    var amtChoiceWrap = $('.form-item-amtChoice');
-    var amtChoice = $('#edit-amtchoice');
-    var amt = $('#edit-amount');
-    var other = $('.form-item-amount'); 
+    const amtChoiceWrap = $('.form-item-amtChoice');
+    const amtChoice = $('#edit-amtchoice');
+    const otherAmtWrap = $('.form-item-amount'); 
+    const otherAmt = $('#edit-amount');
 
-    amtChoice.change(function () {
-      if(amtChoice.val() == '-1') {
-        other.show(); 
+    amtChoice.change( () => {
+      const v = amtChoice.val();
+      amtChoice.find('option').removeAttr('selected');
+      amtChoice.find(':selected').attr('selected', 'selected');
+      amtChoice.val(v); // Force update (don't know why this is needed in Chrome 10/23/2024)
+      otherAmt.val(v); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+
+      if(v == '-1') {
+        otherAmtWrap.show(); 
         amtChoiceWrap.hide();
-        amt.val('').focus().removeAttr('required');
-        fform('#edit-amount').submit(function () {if (amt.val() == '') amt.val(0);}); // "Water" donation defaults to zero
-      } else other.hide();
+        otherAmt.val('').focus();
+        otherAmt.removeAttr('required'); // allow submission while leaving this empty
+        amtChoice.closest('form').submit( () => {if (otherAmt.val() == '') otherAmt.val(0);}); // "Water" donation defaults to zero, but don't suggest it
+        // it is a mystery why $(this) and fform(this) fail here
+      } else otherAmtWrap.hide();
     });
     amtChoice.change();
     
-    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
+    otherAmt.change( () => {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
     break;
     
   case 'contact':
@@ -1144,53 +1151,48 @@ function goPage(page, newWindow = false) {
   return false; // to help cancel default href
 }
 
-function stripe(str, info) {
+function stripe(str, info, vs) {
+  const form = document.getElementById('frm-pay');
   const erDiv = $('#edit-paymentErr .control-data');
 
   post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
     const clientSecret = j.secret;
     const elements = str.elements({ clientSecret });
-    const paymentElement = elements.create('payment', {
-      fields: { billingDetails: { 
-        name: 'never',
-        email: 'never',
-        phone: 'never',
-        address: { postalCode:'never', country:'never' } // shouldn't this be postal_code?
-      }}
-    });
+    const address = { postalCode:'never', country:'never' } // postalCode, not postal_code
+    const fields = { billingDetails: { name:'never', email:'never', phone:'never', address } };
+    const paymentElement = elements.create('payment', {fields});
+    
+    const changeHandler = async (ev) => {if (!ev.empty) erDiv.html('');} // ev is {collapsed, complete, elementType:"payment", empty, value:{type:"card"}}
     paymentElement.mount('#edit-payment .control-data');
+    paymentElement.on('change', changeHandler);
 
-    const form = document.getElementById('frm-pay');
-    const handler = async (ev) => {
+    function retry(erMsg) {
+      erDiv.html(erMsg + ' Try a different payment method?');
+      $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+      form.removeEventListener('submit', submitHandler);
+      paymentElement.off('change', changeHandler);
+      stripe(str, info, vs);
+    }
+    
+    function done(msg) { location.href = baseUrl + '/empty/msg=' + msg; }
+      
+    const submitHandler = async (ev) => { // user clicked "Pay" or "Donate"
       ev.preventDefault();
       elements.submit();
       
-      function retry(erMsg) {
-        erDiv.html(erMsg + ' Try a different payment method?');
-        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
-        form.removeEventListener('submit', handler);
-        stripe(str, info);
-      }
-
-      const confirmParams = { payment_method_data: { billing_details: {
-        name: info.fullName,
-        email: info.email,
-        phone: info.phone,
-        address: { postal_code:info.zip, country:'US' }
-      }}};
+      const msg = 'You are paying $%amt to %who. Okay?'.replace('%amt', fmtAmt(info.amount)).replace('%who', vs['payeeName']);
+      const address = { postal_code:info.zip, country:'US' };
+      const billing_details = { name:info.fullName, email:info.email, phone:info.phone, address }
+      const confirmParams = { payment_method_data:{billing_details} };
       const { setupIntent, error } = await str.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
 
-      if (error) {
-        retry(error.message);
-      } else { // setup is successful, so do the actual payment
-        post('stripeTx', {...info, ...j}, function (k) {
-          if (k.ok) {
-            location.href = baseUrl + '/empty/msg=' + k.message;
-          } else { retry('post ' + k.message); }
+      if (error) retry(error.message); else confirm(null, msg, async () => {
+        post('stripeTx', {...info, ...j}, (k) => { // if setup succeeds, do the actual payment
+          if (k.ok) done(k.message); else retry(k.message);
         });
-      }
+      }, () => { done(vs['canceledMsg']); });
     };
     
-    form.addEventListener('submit', handler);
+    form.addEventListener('submit', submitHandler);
   });
 }

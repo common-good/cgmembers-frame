@@ -256,7 +256,7 @@ function stripeTx($data) {
   
   [$ok, $msg] = cr\recur($template);
   db\del('queue', ray('id', $queueId));
-  if (!$ok and $period == PER_1) db\del('tx_timed', compact('id'));
+  if (!$ok and $period == PER_1) db\del('tx_timed', compact('id')); // take out !$ok in December 2024 (we don't need to keep timed records for one-timers)
 
   return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
 }

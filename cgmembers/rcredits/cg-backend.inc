@@ -1141,9 +1141,9 @@ function thanks($xid, $item) {
     } else {
       if ($period != PER_1) {
         $when = r\recurDesc($period, $periods);
-        $msg = u\ry('P', t('Cancel your %when payment of %amt?', 'when amt', $when, u\fmtAmt($amount)));
+        $cancelMsg = u\ry('P', t('Cancel your %when payment of %amt?', 'when amt', $when, u\fmtAmt($amount)));
         $code = u\cryRay(ray('op v', 'cancelTimed', $recursId));
-        $subs['toCancel'] = ''; // t('To cancel future payments, <%a>click here</a>.', '_a', atag(BASE_URL . "/empty/say=1&msg=$msg&confirm=1&code=$code"));
+        $subs['toCancel'] = t('To cancel future payments, <%a>click here</a>.', '_a', w\atag(BASE_URL . "/empty/say=1&msg=$cancelMsg&confirm=1&code=$code"));
       }
       r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
     }
