@@ -621,7 +621,7 @@ function doit(what, vs) {
     
     $('#edit-next .btn').click(function () {
       if (document.getElementById('frm-pay').reportValidity()) {
-        $('.form-item-next').hide();
+        $('.form-item-next, #details, #nonMember').hide();
         paySet.show();
         submit.show();
               
