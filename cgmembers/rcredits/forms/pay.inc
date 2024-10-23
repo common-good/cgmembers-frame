@@ -79,7 +79,8 @@ function formPay($form, &$sta, $args = NULL) {
   $form += ($mya and $isCG) ? w\setupFoot($submitLabel, $noteSuffix) : compact('submit');
 
   js('https://js.stripe.com/v3/');
-  jsx('pay', ray('stripePublicKey ccPct ccPlus', STRIPE_PUBLIC, CC_PCT, CC_PLUS));
+  $canceledMsg = u\ry('P', 'Payment is canceled.');
+  jsx('pay', ray('stripePublicKey ccPct ccPlus payeeName canceledMsg', STRIPE_PUBLIC, CC_PCT, CC_PLUS, $coA->bestName, $canceledMsg));
 
   return cgForm($form);
 }

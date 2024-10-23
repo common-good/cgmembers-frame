@@ -648,7 +648,7 @@ function doit(what, vs) {
           notes: $('#edit-note').val()
         };
 
-        stripe(Stripe(vs['stripePublicKey']), info);
+        stripe(Stripe(vs['stripePublicKey']), info, vs);
       }
     });
 
@@ -1153,7 +1153,7 @@ function goPage(page, newWindow = false) {
   return false; // to help cancel default href
 }
 
-function stripe(str, info) {
+function stripe(str, info, vs) {
   const form = document.getElementById('frm-pay');
   const erDiv = $('#edit-paymentErr .control-data');
 
@@ -1168,26 +1168,31 @@ function stripe(str, info) {
     paymentElement.mount('#edit-payment .control-data');
     paymentElement.on('change', changeHandler);
 
+    function retry(erMsg) {
+      erDiv.html(erMsg + ' Try a different payment method?');
+      $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+      form.removeEventListener('submit', submitHandler);
+      paymentElement.off('change', changeHandler);
+      stripe(str, info, vs);
+    }
+    
+    function done(msg) { location.href = baseUrl + '/empty/msg=' + msg; }
+      
     const submitHandler = async (ev) => { // user clicked "Pay" or "Donate"
       ev.preventDefault();
       elements.submit();
       
-      function retry(erMsg) {
-        erDiv.html(erMsg + ' Try a different payment method?');
-        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
-        form.removeEventListener('submit', submitHandler);
-        paymentElement.off('change', changeHandler);
-        stripe(str, info);
-      }
-
+      const msg = 'You are paying $%amt to %who. Okay?'.replace('%amt', fmtAmt(info.amount)).replace('%who', vs['payeeName']);
       const address = { postal_code:info.zip, country:'US' };
       const billing_details = { name:info.fullName, email:info.email, phone:info.phone, address }
       const confirmParams = { payment_method_data:{billing_details} };
       const { setupIntent, error } = await str.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
 
-      if (error) retry(error.message); else post('stripeTx', {...info, ...j}, (k) => { // if setup succeeds, do the actual payment
-        if (k.ok) location.href = baseUrl + '/empty/msg=' + k.message; else retry(k.message);
-      });
+      if (error) retry(error.message); else confirm(null, msg, async () => {
+        post('stripeTx', {...info, ...j}, (k) => { // if setup succeeds, do the actual payment
+          if (k.ok) done(k.message); else retry(k.message);
+        });
+      }, () => { done(vs['canceledMsg']); });
     };
     
     form.addEventListener('submit', submitHandler);
