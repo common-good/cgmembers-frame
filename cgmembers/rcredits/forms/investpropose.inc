@@ -86,7 +86,7 @@ function formInvestPropose_submit($form, &$sta) {
   extract(just(INVEST_ALLFLDS . ' equity exempt', $sta['input'], NULL));
   list ($clubid, $clubqid) = [$mya->id, $mya->mainQid];
   $types = $equity ? 'D' : 'I';
-  if ($exempt) $types .= 'T';
+  if ($exempt == 1) $types .= 'T';
   
   if ($fullName) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));
