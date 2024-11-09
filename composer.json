@@ -18,10 +18,16 @@
     "paragi/php-websocket-client": "^1.0",
     "ratchet/pawl": "^0.4.1",
     "textalk/websocket": "^1.6",
-    "stripe/stripe-php": "^15.8"
+    "stripe/stripe-php": "^15.8",
+    "endroid/qr-code-bundle": "^6.0"
   },
   "require-dev": {
     "rector/rector": "^1.0",
     "roave/security-advisories": "dev-master"
+  },
+  "config": {
+    "allow-plugins": {
+      "endroid/installer": true
+    }
   }
 }

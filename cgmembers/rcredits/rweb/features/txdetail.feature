@@ -107,12 +107,12 @@ Scenario: an admin changes from loan category to a different category
   | toMe    |         |
   | forSame | 1       |
   | eid     | 501     |
-  | cat     | TO-ORG  |
+  | cat     | CG-GRANT-ORG |
   | orig    | @orig   |
   | xid     | 51      |
   Then these "txs": 
-  | eid | xid | created  | amount | payer | payee | purpose | flags | cat1   | cat2 |*
-  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    |       | TO-ORG |      |
+  | eid | xid | created  | amount | payer | payee | purpose | flags | cat1         | cat2 |*
+  | 501 |  51 | %now0-5d |     51 | ctty  | .ZZB  | loan    |       | CG-GRANT-ORG |      |
 
 Scenario: an admin changes a transaction amount and date
   Given these "txs": 
@@ -122,18 +122,18 @@ Scenario: an admin changes a transaction amount and date
   | created | cat1  | cat2  | uid1 | uid2 | flags | type  | amt |*
   | %now-5d |       |       | .ZZA | .ZZB | gift  | prime | 51 |
   When member ".ZZD" submits "history/transaction/xid=51" with:
-  | created | %mdY-3d |**
-  | amount  | 52      |
-  | toMe    | 1       |
-  | description | new!    |
-  | forSame |         |
-  | eid     | 501     |
-  | cat     | TO-ORG  |
-  | orig    | @orig   |
-  | xid     | 51      |
+  | created | %mdY-3d      |**
+  | amount  | 52           |
+  | toMe    | 1            |
+  | description | new!     |
+  | forSame |              |
+  | eid     | 501          |
+  | cat     | CG-GRANT-ORG |
+  | orig    | @orig        |
+  | xid     | 51           |
   Then these "txs": 
-  | eid | xid | created  | amount | payer | payee | for1  | for2 | flags        | cat1 | cat2   |*
-  | 501 |  51 | %now0-3d |     52 | .ZZA  | .ZZB  | stuff | new! | gift,changed |      | TO-ORG |
+  | eid | xid | created  | amount | payer | payee | for1  | for2 | flags        | cat1 | cat2         |*
+  | 501 |  51 | %now0-3d |     52 | .ZZA  | .ZZB  | stuff | new! | gift,changed |      | CG-GRANT-ORG |
   And these "changes":
   | id | table | rid | field   | oldValue | newValue | changedBy |*
   | 1  | txs   | 51  | amt     | 51       | 52       | .ZZD      |

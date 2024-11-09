@@ -11,6 +11,7 @@ const FOCUSES_URL = 'sadmin/focuses/id';
 
 /**
  * Display contact info for a non-member, for editing by admin.
+ * NOTE: not currently used (we use an audit spreadsheet tab instead)
  */
 function formFocuses($form, &$sta, $args = '') {
   global $mya;

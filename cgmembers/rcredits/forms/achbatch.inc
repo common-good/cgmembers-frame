@@ -29,7 +29,8 @@ function achBatch($args) {
   u\setDft($date, 0);
   if (is_numeric($way)) {
     $offshore = $way;
-    $way = '';
+    $way = ' AND FALSE';
+    $date = now() + DAY_SECS; // make sure no deposit date qualifies
   } elseif ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
 
   achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, nn($offshore)); // <=:NOW lets us verify with $0 transfers before a scheduled real one

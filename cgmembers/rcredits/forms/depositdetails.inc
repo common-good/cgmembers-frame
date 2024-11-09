@@ -27,7 +27,7 @@ function formDepositDetails($form, $sta, $args) {
   $sql = <<<EOF
     SELECT x2.amount, x2.xid, u.uid, u.fullName AS name, x2.pid, e.description, c.category
     FROM txs2 x2 
-    LEFT JOIN tx_entries e ON e.xid=x2.xid AND e.uid=x2.payee AND e.entryType=:E_OUTER
+    LEFT JOIN tx_entries e ON e.xid=x2.xid AND e.uid=x2.payee AND e.entryType IN (:E_OUTER, :E_BANK) AND e.cat IS NOT NULL
     LEFT JOIN tx_cats c ON c.id=e.cat
     LEFT JOIN users u ON u.uid=x2.payee 
     WHERE $where AND x2.deposit=$date AND x2.amount<>0 AND x2.created<=:NOW ORDER BY x2.xid
@@ -50,7 +50,8 @@ EOF;
       $class = '';
     }
     $qid = r\Qo::uid2($uid);
-    if ($category and $catRay = explode(': ', $category) and $cat = end($catRay)) $description .= " ($cat)";
+    $description .= r\shortCat($category);
+
     if (!$description) $description = '&lt;=&gt;'; // <=>
     $lines[] = tr('<tr><td>%xid</td><td>%name</td><td%class>%amt</td><td>%description</td></tr>', 
       '_xid _name amt _class _description', 

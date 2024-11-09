@@ -66,7 +66,7 @@ function rdo($code) {
     return w\showForm($formName, nn($a) ? "qid=$a->mainQid&ecode=$a->emailCode&$v" : '');
   }
 
-  if ($op == 'cancelTimed') $res = db\update('tx_timed', ray('id end', $v, tomorrow()));
+  if ($op == 'cancelTimed') $res = db\update('tx_timed', ray('id end', $v, now()));
   if ($op == 'nosecret') $res = $a->setBit(B_SECRET, FALSE);
   if ($op == 'debtok') $res = $a->setBit(B_DEBT, TRUE);
   if ($op == 'rsv') {return w\go("savings/qid=$qid&ecode=$ecode");}

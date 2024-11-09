@@ -58,13 +58,15 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
-      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed
+      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed,
+      c.category
     FROM txs x
     LEFT JOIN users u ON u.uid=IF($toMe, x.uid1, x.uid2)
     LEFT JOIN txs2 t2 ON t2.xid=x.xid
     LEFT JOIN tx_timed tm ON tm.id=x.recursId
     LEFT JOIN tx_rules ru ON ru.id=x.rule
     LEFT JOIN tx_requests i ON i.nvid=x.rel AND x.relType='I'
+    LEFT JOIN tx_cats c ON c.id=x.cat2 AND x.type IN (:E_OUTER, :E_BANK) AND x.cat2 IS NOT NULL
     WHERE $where ORDER BY $order
 X;
 
@@ -88,7 +90,6 @@ X;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
-  $catUids = r\catUids();
   
   foreach ($txs as $i => $entries) {
     extract(just('actorId type xid pid uid name', $entries[0]));
@@ -107,7 +108,7 @@ X;
         : $name )); // normal
       }
 
-      $description = txDesc($entry);
+      $description = txDesc($entry) . r\shortCat($entry['category']);
       $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
     }
     $txs[$i] = $newEntries;
@@ -829,6 +830,7 @@ function setCat(&$txes, $tx, $i) {
   $iA = r\acct($i_uid);
   $j = be\i2j($i); // point to the other entry in the pair
   $j_uid = $txes[$j]->uid;
+  $jA = r\acct($j_uid);
   $in = ($i < $j); $out = !$in;
 
   $gift = in($type, [E_PRIME, E_OUTER]) ? u\getBit($tx->flags, 'gift') : ($for == t('donation')); // "donation" includes stepups
@@ -861,16 +863,18 @@ function setCat(&$txes, $tx, $i) {
       $nick = 'D-REGULAR';
     } elseif ($j_uid == UID_ROUNDUPS) {
       $nick = 'D-ROUNDUP';
-    } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
+    } elseif ($type != E_OUTER and $jA->co) {
       $nick = 'D-COMPANY';
     } else $nick = 'D-ONCE';
 
   } elseif ($out and $iA->sponsored and $type == E_XFEE) {
     $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
-  } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
-    $nick = 'TO-PERSON';
-  } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
-    $nick = 'TO-ORG';
+  } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') { // direct support to individual from Food Fund
+    $nick = 'CG-GRANT-PERSON';
+  } elseif ($out and $gift) { // gift from CG or from one of its sponsees
+    $nick = ($i_uid == CGID or $iA->ourOwn)
+    ? ($jA->co ? 'CG-GRANT-ORG' : 'CG-GRANT-PERSON')
+    : ($jA->co ? 'GRANT-ORG' : 'GRANT-PERSON'); // grant from a sponsee
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
   } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
@@ -1136,14 +1140,14 @@ function thanks($xid, $item) {
     $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg toCancel', 
       !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg, '');
 
-    if ($member) { // this sends an immediate email whether or not the payer is a member
+    if ($member) { // send an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
     } else {
-      if ($period != PER_1) {
+      if ($period != PER_1) { // someday move this above the if-block and allow amount and period to be edited (including for members)
         $when = r\recurDesc($period, $periods);
         $cancelMsg = u\ry('P', t('Cancel your %when payment of %amt?', 'when amt', $when, u\fmtAmt($amount)));
         $code = u\cryRay(ray('op v', 'cancelTimed', $recursId));
-        $subs['toCancel'] = t('To cancel future payments, <%a>click here</a>.', '_a', w\atag(BASE_URL . "/empty/say=1&msg=$cancelMsg&confirm=1&code=$code"));
+        $subs['toCancel'] = t('To cancel future payments, <%a>click here</a>.', '_a', w\atag(BASE_URL . "/empty/msg=$cancelMsg&confirm=1&code=$code"));
       }
       r\rMail("$type-thanks-nonmember", [$email => $fullName], $subs);
     }
