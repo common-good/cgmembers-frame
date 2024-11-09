@@ -14,9 +14,10 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 //use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
-use Endroid\QrCode\Label\Font\NotoSans;
+use Endroid\QrCode\Label\Font\OpenSans;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Logo\Logo;
 
 function html($data, $logo, $text) {return tr('<img src="%data" />', '_data', generate($data, $logo, $text));}
 
@@ -30,25 +31,25 @@ function html($data, $logo, $text) {return tr('<img src="%data" />', '_data', ge
 function generate($data, $logo, $text) {
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
 
-  $qr = Builder::create()
-    ->writer(new PngWriter())
-//    ->writerOptions([])
-    ->data($data)
-    ->encoding(new Encoding('ISO-8859-1'))
-    ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-    ->size(300)
-    ->margin(5)
-    ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
-    ->labelFont(new NotoSans(10));
-//    ->labelAlignment(new LabelAlignmentCenter())
+  $qr = new Builder(
+    writer: new PngWriter(),
+    writerOptions: [],
+    data: $data,
+    validateResult: false,
+    encoding: new Encoding('ISO-8859-1'),
+    errorCorrectionLevel: ErrorCorrectionLevel::High,
+    size: 300,
+    margin: 5,
+    roundBlockSizeMode: RoundBlockSizeMode::Margin,
+    labelFont: new OpenSans(10),
+    logoPath: $logo ?: NULL,
+    logoResizeToWidth: 99,
+    logoResizeToHeight: 136,
+    labelText: $text ?: NULL,
+//    logoPunchoutBackground: true,
+//    labelAlignment: LabelAlignment::Center
+);
     
-  if ($logo) $qr
-    ->logoPath($logo)
-    ->logoResizeToWidth(99)
-    ->logoResizeToHeight(136);
-    
-  if ($text) $qr->labelText($text);
-
   return $qr->build()->getDataUri();
 }
 
