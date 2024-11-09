@@ -157,7 +157,7 @@ function formTxDetail_submit($form, &$sta) {
   
   extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created or $amt != $o_amount)
+    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created or $amount != $o_amt)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
     require_once(R_ROOT . '/classes/qb.class');
     db\setFlag('tx_hdrs_all', $xid, B_QBOK, FALSE); // resend this xid to QBO (do this before delQbTx)
