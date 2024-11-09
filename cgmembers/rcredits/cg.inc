@@ -1578,3 +1578,4 @@ function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /de
 function ccGiftType($coId) {return in($coId, BUCKET_UIDS) ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
 function no1099k($tot) { return ($tot < MIN1099); }
 function isCriminal($nm, $co) { return db\exists('ofac', 'nm LIKE :nm AND co=:co', ray('nm co', str_replace(' ', '%', " $nm "), $co ?: 0)); }
+function shortCat($category) {return ($category and $catRay = explode(': ', $category) and $cat = end($catRay)) ? " ($cat)" : '';}

@@ -58,13 +58,15 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
       IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
-      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed
+      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed,
+      c.category
     FROM txs x
     LEFT JOIN users u ON u.uid=IF($toMe, x.uid1, x.uid2)
     LEFT JOIN txs2 t2 ON t2.xid=x.xid
     LEFT JOIN tx_timed tm ON tm.id=x.recursId
     LEFT JOIN tx_rules ru ON ru.id=x.rule
     LEFT JOIN tx_requests i ON i.nvid=x.rel AND x.relType='I'
+    LEFT JOIN tx_cats c ON c.id=x.cat2 AND x.type IN (:E_OUTER, :E_BANK) AND x.cat2 IS NOT NULL
     WHERE $where ORDER BY $order
 X;
 
@@ -88,7 +90,6 @@ X;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
-  $catUids = r\catUids();
   
   foreach ($txs as $i => $entries) {
     extract(just('actorId type xid pid uid name', $entries[0]));
@@ -107,7 +108,7 @@ X;
         : $name )); // normal
       }
 
-      $description = txDesc($entry);
+      $description = txDesc($entry) . r\shortCat($entry['category']);
       $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
     }
     $txs[$i] = $newEntries;
