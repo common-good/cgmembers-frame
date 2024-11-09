@@ -24,6 +24,7 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
+  $fyYear = date('Y', $fy9);
   $y9 = strtotime('January 1') - 1;
   $y0 = strtotime('-1 year', $y9) + 1;
   $cgIncomeUids = join(',', r\cgIncomeUids());
@@ -121,11 +122,18 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
-  1 . t('Functional Expenses - Staff') =>
-    "SELECT u.fullName AS `staff person`, f.project, CONCAT(f.percent, '%') AS pct, SUM(x.amt) * f.percent/100 AS amt$
+  1 . t('Staff Net Pay') . " FY$fyYear" =>
+    "SELECT u.fullName AS `staff person`, SUM(x.amt) AS `paid$`
+      FROM users u
+      LEFT JOIN txs x ON x.uid2=u.uid AND x.created BETWEEN $fy0 AND $fy9
+      WHERE u.:IS_ADMIN AND x.uid1=:CGID
+      GROUP BY u.uid
+      HAVING IFNULL(`paid$`, 0)<>0
+      ORDER BY u.fullName
+/*    SELECT u.fullName AS `staff person`, f.project, CONCAT(f.percent, '%') AS pct, SUM(x.amt) * f.percent/100 AS amt$
        FROM u_focuses AS f JOIN users u USING(uid) LEFT JOIN txs x ON x.uid2=u.uid
        WHERE x.uid1=:CGID AND x.created BETWEEN $fy0 AND $fy9
-       GROUP BY u.uid ORDER BY f.project, u.fullName
+       GROUP BY u.uid ORDER BY f.project, u.fullName */
     ". t(''),
   
   1 . t('Major Gifts') => 
