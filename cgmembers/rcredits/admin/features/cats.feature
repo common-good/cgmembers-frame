@@ -139,7 +139,7 @@ Scenario: admin sets most categories and sends to QBO
   | 505 |            | D-ROUNDUP   |
   | 506 |            | D-CRUMB     |
   | 507 |            | D-STEPUP    |
-  | 508 | TO-ORG     |             |
+  | 508 | CG-GRANT-ORG |             |
   | 509 | LABOR      |             |
   | 500 |            |             |
   | 601 |            | D-FBO       |
@@ -172,15 +172,15 @@ Scenario: admin sets most categories and sends to QBO
   When member ".ZZA" visits "qbo/op=txs"
   Then QBO gets Tx "cgFund#%now0" with IN "$1,010 (4)" and OUT "$0 (0)" dated "%ymd0" with entries:
   | 1010 Debit bank   | 1010 Credit POOL      |
-  And QBO gets Tx "cg#21":"by CC [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
+  And QBO gets Tx "cg#21":"by CC (One-time Donations) [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
   | 201 Debit cgf     | 201 Credit D-ONCE     |
   | 201 Credit POOL   | 201 Debit PROCESSOR   |
   | 6.13 Debit TX-FEE | 6.13 Credit PROCESSOR |
-  And QBO gets Tx "cg#22":"by ACH [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
+  And QBO gets Tx "cg#22":"by ACH (One-time Donations) [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 202 Debit cgf     | 202 Credit D-ONCE     |
-  And QBO gets Tx "cg#23":"by ACHs [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
+  And QBO gets Tx "cg#23":"by ACHs (One-time Donations) [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 203 Debit cgf     | 203 Credit D-ONCE     |
-  And QBO gets Tx "cg#31":"by CC [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
+  And QBO gets Tx "cg#31":"by CC (Sponsored Donations) [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 301 Debit .ZZC    | 301 Credit D-FBO      |
   | 301 Credit POOL   | 301 Debit FBO-PROCESSOR   |
   | 9.03 Debit TX-FEE | 9.03 Credit PROCESSOR |
@@ -188,11 +188,11 @@ Scenario: admin sets most categories and sends to QBO
   | 9 Credit .ZZC     | 9 Debit D-FBO         |
   | 9 Debit cgf       | 9 Credit TX-FEE-BACK  |
   | 9 Credit .ZZC     | 9 Debit FBO-TX-FEE    |
-  And QBO gets Tx "cg#32":"by ACH [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
+  And QBO gets Tx "cg#32":"by ACH (Sponsored Donations) [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 302 Debit .ZZC  | 302 Credit D-FBO        |
   | 9 Debit cgf     | 9 Credit FS-FEE         |
   | 9 Credit .ZZC   | 9 Debit D-FBO           |
-  And QBO gets Tx "cg#33":"by ACHs [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
+  And QBO gets Tx "cg#33":"by ACHs (Sponsored Donations) [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
   | 303 Debit .ZZC  | 303 Credit D-FBO        |
   | 9 Debit cgf     | 9 Credit FS-FEE         |
   | 9 Credit .ZZC   | 9 Debit D-FBO           |
@@ -215,7 +215,7 @@ Scenario: admin sets most categories and sends to QBO
   And QBO gets Tx "cg#57":"stepups [various]" dated "%ymd-5m" with entries:
   | 507 Debit cgf   | 507 Credit D-STEPUP     |
   And QBO gets Tx "cg#58":"grant [Fox Co]" dated "%ymd-5m" with entries:
-  | 508 Credit cgf   | 508 Debit TO-ORG       |
+  | 508 Credit cgf   | 508 Debit CG-GRANT-ORG   |
   And QBO gets Tx "cg#59":"labor [Bea Two]" dated "%ymd-5m" with entries:
   | 509 Credit cgf   | 509 Debit LABOR        |
   And QBO gets Tx "cg#61":"once [Bea Two]" dated "%ymd-5m" with entries:
@@ -254,6 +254,6 @@ Scenario: The region makes an investment
   When member ".ZZA" submits "sadmin/set-cats" with:
   | start | %now-9m |**
   And member ".ZZA" visits "qbo/op=txs"
-  Then QBO gets Tx "cg#91":"loan [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
+  Then QBO gets Tx "cg#91":"loan (CG Western MA Region Investments) [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 901 Credit ctty   | 901 Debit INVEST      |
   | 901 Debit POOL    | 901 Credit AAAAJV     |

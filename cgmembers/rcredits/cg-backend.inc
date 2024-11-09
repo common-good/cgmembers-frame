@@ -872,7 +872,7 @@ function setCat(&$txes, $tx, $i) {
   } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') { // direct support to individual from Food Fund
     $nick = 'CG-GRANT-PERSON';
   } elseif ($out and $gift) { // gift from CG or from one of its sponsees
-    $nick = $iA->ourOwn
+    $nick = ($i_uid == CGID or $iA->ourOwn)
     ? ($jA->co ? 'CG-GRANT-ORG' : 'CG-GRANT-PERSON')
     : ($jA->co ? 'GRANT-ORG' : 'GRANT-PERSON'); // grant from a sponsee
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
