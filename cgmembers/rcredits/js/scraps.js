@@ -626,12 +626,15 @@ function doit(what, vs) {
         submit.show();
               
         var amount = parseFloat(amt.val());
-        var feeCovered = ($('#edit-coverFSFee input:checked').length ? fsFeeVal : 0)
-                       + ($('#edit-coverCCFee input:checked').length ? ccFeeVal : 0);
+        var coverCCFee = $('#edit-coverCCFee input:checked').length;
+        var coverFSFee = $('#edit-coverFSFee input:checked').length;
+        var feeCovered = (coverCCFee ? ccFeeVal : 0) + (coverFSFee ? fsFeeVal : 0);
 
         const info = {
           amount: amount + feeCovered,
           feeCovered: feeCovered,
+          coverCCFee,
+          coverFSFee,
           'for': $('#edit-for').val(),
           item: $('#edit-item').val(),
           period: $('#edit-period').val(),

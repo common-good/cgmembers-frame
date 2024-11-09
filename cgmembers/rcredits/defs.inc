@@ -681,7 +681,9 @@ const B_BUTTON = 19; // payment from CGPay button
 const B_DIRECTACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
-const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
+const B_COVERCC = 23; // covers processing fees
+const B_COVERFS = 24; // covers fiscal sponsorship fees
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid covercc coverfs';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice

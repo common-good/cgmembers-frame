@@ -242,10 +242,15 @@ function stripeSetup($data) {
  * @return {msg}: msg is an encrypted success or failure message
  */
 function stripeTx($data) {
-  extract(just('amount for purpose period coId pid stripeId', $data, NULL));
+  extract(just('amount for purpose period coId pid stripeId coverCCFee coverFSFee', $data, NULL));
   require_once R_ROOT . '/rcron/rcron.inc';
   
-  $flags = ($for == FOR_DONATE ? u\bit(B_GIFT) : 0) | u\bit(B_CC);
+  $flags = 
+    ($for == FOR_DONATE ? u\bit(B_GIFT) : 0)
+  | ($coverCCFee ? u\bit(B_COVERCC) : 0)
+  | ($coverFSFee ? u\bit(B_COVERFS) : 0)
+  | u\bit(B_CC);
+
   $info = compact(ray('amount period purpose flags stripeId')) 
         + ray('action from to payerType payer duration', 
         ACT_PAY, MATCH_PAYER, $coId, REF_PERSON, $pid, PER_1);
