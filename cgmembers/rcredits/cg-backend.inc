@@ -830,6 +830,7 @@ function setCat(&$txes, $tx, $i) {
   $iA = r\acct($i_uid);
   $j = be\i2j($i); // point to the other entry in the pair
   $j_uid = $txes[$j]->uid;
+  $jA = r\acct($u_uid);
   $in = ($i < $j); $out = !$in;
 
   $gift = in($type, [E_PRIME, E_OUTER]) ? u\getBit($tx->flags, 'gift') : ($for == t('donation')); // "donation" includes stepups
@@ -862,16 +863,18 @@ function setCat(&$txes, $tx, $i) {
       $nick = 'D-REGULAR';
     } elseif ($j_uid == UID_ROUNDUPS) {
       $nick = 'D-ROUNDUP';
-    } elseif ($type != E_OUTER and r\acct($j_uid)->co) {
+    } elseif ($type != E_OUTER and $jA->co) {
       $nick = 'D-COMPANY';
     } else $nick = 'D-ONCE';
 
   } elseif ($out and $iA->sponsored and $type == E_XFEE) {
     $nick = 'FBO-TX-FEE'; // often balanced by TX-FEE-BACK
-  } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') {
-    $nick = 'TO-PERSON';
-  } elseif ($out and (strhas($for, t('sponsor')) or strhas($for, t('grant')) or $gift)) {
-    $nick = 'TO-ORG';
+  } elseif ($out and $type == E_REBATE and $iA->mainQid == 'NEWAZV') { // direct support to individual from Food Fund
+    $nick = 'CG-GRANT-PERSON';
+  } elseif ($out and $gift) { // gift from CG or from one of its sponsees
+    $nick = $iA->ourOwn
+    ? ($jA->co ? 'CG-GRANT-ORG' : 'CG-GRANT-PERSON');
+    ? ($jA->co ? 'GRANT-ORG' : 'GRANT-PERSON'); // grant from a sponsee
   } elseif ($out and !$i_relType and u\starts($for, t('labor'))) {
     $nick = $iA->sponsored ? 'FBO-LABOR' : 'LABOR';
   } elseif ($out and $inv and $type != E_OUTER) { // pretty safe to assume a recent repeat invoice from the same account is for the same purpose as all others
