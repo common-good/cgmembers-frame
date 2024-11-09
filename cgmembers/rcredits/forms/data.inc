@@ -18,12 +18,12 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   extract(just('qName sql sqlTitle q isco', u\decryRay($code), NULL));
   u\setDft($isco, $isco0 == 'co');
   
-  if ($q) {
+  if ($q) { // run a named report
     $url = $isco ? '/history/company-reports' : '/community/data';
     w\go("$url/code=" . u\cryRay(ray('qName', $q)));
   }
 
-  if ($sql2 = $sql) {
+  if ($sql2 = $sql) { // handle submission of literal SQL (by admin from SQL box)
     $title = $sqlTitle ?: t('MySQL Query');
     try {
       $q = db\adminQ(preMagic($sql2));
@@ -42,17 +42,18 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
 
   if (!$mya) return softErr(tr('no page permission', 'page', t('Community Data'))); // only members get to see standard queries
 
-  if ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr(nn($qName), 1))) {
-    if (substr($sql2, 0, 1) == '/') return go($sql2);
+  if ($qName and ($sql2 = nni($queries, $qName)) or $sql = nni($queries, substr(nn($qName), 1))) { // execute the chosen query (from the list)
+    if (substr($sql2, 0, 1) == '/') return go($sql2); // this query has its own function, so go there to get parameters, etc.
     $title = t('Query Results');
     $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
-    if (strhas($sql2, ' ')) { // explicit query
+    if (strhas($sql2, ' ')) { // explicit SQL from query definition
+      if ($mya->admin) $title .= ' ' . popHelp('SQL', $sql2, '', 'buttino btn-xs btn-default', 'click');
       $q = db\q(preMagic($sql2));
       $rows = postMagic((array) $q->fetchAll());
       $report = item(w\showRecords($rows));
-    } else $report = getReport($sql2);
+    } else $report = getReport($sql2); // report has its own special coding (see getReport below), but needs no user input
     $form = compact(ray('title subtext report'));
-  } else {
+  } else { // no query selected yet, so show the list
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = t('<p>Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request</p>')));
     if ($mya->admRegion) {
