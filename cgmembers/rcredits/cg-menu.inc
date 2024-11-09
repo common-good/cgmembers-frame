@@ -227,7 +227,6 @@ function menu($submenu = '') {
     'error' => ['call', 'System Error', '1', ANY, 'error'],
     'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
-    'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Pay 1', ANY], // deprecated (remove 9/2024)
     'authcode' => ['call', t('Supply a one-use auth code'), '1', ANY, 'authcode'], // deprecated
     'pay' => ['call', t('Pay or Donate from Within or Without'), 'Pay 1', 'okManageIfIn linkable'],
     'cgpay-code' => ['call', t('Supply a CGPay button code'), '', ANY, 'code'],
