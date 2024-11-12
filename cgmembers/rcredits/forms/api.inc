@@ -89,7 +89,7 @@ function accounts($params) {
   }
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   
-  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
+  if (!$list = be\accountChoices(r\acct($myid), B_BUY, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
