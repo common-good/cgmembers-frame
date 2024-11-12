@@ -122,6 +122,16 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
+  1 . t('Large CG Transactions') . " FY$fyYear" =>
+    "SELECT u.fullName, FORMAT(e.amount, 2), e.description, c.category
+     FROM tx_entries e
+     JOIN tx_hdrs h USING(xid)
+     LEFT JOIN users u USING(uid)
+     JOIN tx_cats c ON c.id=e.cat
+     WHERE h.created BETWEEN $fy0 AND $fy9 AND ABS(e.amount)>:BIG_TX
+     ORDER BY ABS(e.amount) DESC, h.created
+    ". t('~<p>We ask sponsees for documentation of all these transactions. Report transactions over %amt in audits.</p>', 'amt', u\fmtAmt(2*BIG_TX)),
+  
   1 . t('Staff Net Pay') . " FY$fyYear" =>
     "SELECT u.fullName AS `staff person`, SUM(x.amt) AS `paid$`
       FROM users u
@@ -151,7 +161,7 @@ if ($mya and $mya->admin) {
       GROUP BY name
       HAVING gifts>=99
       ORDER BY gifts DESC
-    " . t('~<p>Total gifts specifically to %PROJECT in its most recently ended calendar year from top donors.'),
+    " . t('~<p>Total gifts specifically to %PROJECT in its most recently ended calendar year from top donors.</p>'),
 
   1 . t('Gifts From "Disqualified Persons"') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
