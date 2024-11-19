@@ -134,9 +134,11 @@ function formSignup_submit($form, &$sta) {
 
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   if ($acctType != CO_PERSONAL) $info += ['coType' => $acctType];
-  
+
+  //signing up spouse as a joint account
   if (nn($myid)) {
     $a = r\acct($myid);
+      //signing up spouse as a joint account
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name
     $a->update($info);
     $name = $a->name;
@@ -144,16 +146,20 @@ function formSignup_submit($form, &$sta) {
     $a = new r\Acct($info); if (!$a) return say('cannot create account', 'zot');
     list ($myid, $name) = [$a->id, $a->name];
   }
+  //signing up spouse as a joint account
 
   $mya = r\setAcct($myid, $sta); // this works for both an individual account (proSe) and a company account (with agent)
   $qid = $mya->mainQid;
-  
+
+  //disregard this logic as per William
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
-  
+
+  //disregard as per William
   if (nn($iCode) < 0) w\invitation(nn($code), $myid); // mark the invitation used
   $email = u\cry('P', $email);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
   if (!nn($owns)) $mya->setRisk('rents');
+  //disregard as per William
   
   if ($h = $mya->helperA and nn($args) and !$h->admHelpSignup) suCreatorRelation($helper, $args, $myid);
   $info += compact(ray('acctType qid name'));
@@ -163,6 +169,7 @@ function formSignup_submit($form, &$sta) {
   $pw1 = $mya->oneTimePass($mya->name, TRUE);
   $mya->tell('verify', ray('name qid code', $mya->name, $mya->mainQid, $pw1));
 
+  //disregard as per William
   if (!nn($confirmed)) {
     u\EXPECT((bool) $h, 'unconfirmed with no helper');
     if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field

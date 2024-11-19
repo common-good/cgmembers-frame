@@ -1,3 +1,7 @@
+FROM node_copy_stage
+
+COPY ../../../cgpay-node-api /temp_node_context
+
 FROM ubuntu/apache2
 
 WORKDIR /root/cgmembers_main
@@ -22,8 +26,17 @@ RUN pecl install xdebug \
     && echo "xdebug.log=/tmp/xdebug.log" >> /etc/php/8.3/apache2/conf.d/20-xdebug.ini
 
 RUN ls -l /usr/bin/git
-WORKDIR /var/www/html/cg/cgmembers
 
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+ENV NVM_DIR /root/.nvm
+
+WORKDIR /root/cgpay-node-api
+COPY --from=cgpay-node-ap . .
+RUN . "$NVM_DIR/nvm.sh" && \
+    nvm install 20.10.0 && \
+    npm install
+
+WORKDIR /var/www/html/cg/cgmembers
 
 WORKDIR /var/www/html
 EXPOSE 80 8081 9003

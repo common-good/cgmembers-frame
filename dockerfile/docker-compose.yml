@@ -44,6 +44,8 @@ services:
   cgmembers-apache:
     build:
       context: .
+      additional_contexts:
+        cgpay-node-ap:../../../common-good/cgpay-node-ap
       dockerfile: Dockerfile.apache
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -54,6 +56,7 @@ services:
     volumes:
       - ../../cgmembers-frame:/var/www/html/cg
       - ../../cgmembers-frame:/root/cgmembers_main
+      - ../../../common-good/cgpay-node-api:/root/cgpay-node-api
     depends_on:
       cgmembers-mysql:
         condition: service_healthy
