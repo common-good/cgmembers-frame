@@ -45,7 +45,8 @@ services:
     build:
       context: .
       additional_contexts:
-        cgpay-node-ap:../../../common-good/cgpay-node-ap
+        cgpay-node-api: ../../common-good/cgpay-node-api
+        node-env: /usr/local/commongood
       dockerfile: Dockerfile.apache
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -53,10 +54,11 @@ services:
     ports:
       - "80:80"
       - "8081:8081"
+      - "3000:3000"
+      - "9229:9229"
     volumes:
       - ../../cgmembers-frame:/var/www/html/cg
       - ../../cgmembers-frame:/root/cgmembers_main
-      - ../../../common-good/cgpay-node-api:/root/cgpay-node-api
     depends_on:
       cgmembers-mysql:
         condition: service_healthy

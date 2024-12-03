@@ -10,6 +10,7 @@ COPY ["setup/php.ini", "/usr/local/etc/php/8.2/cli/php.ini"]
 RUN apt update && apt install -y curl \
     && apt-get install -y php php-pear php-dev libapache2-mod-php php-xml php-mysql php-fpm php-intl php-mbstring php-curl php-gd default-mysql-client default-libmysqlclient-dev \
     && apt-get clean \
+    && apt-get install -y bash \
     && apt-get install -y git
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN a2enmod rewrite
@@ -31,13 +32,16 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | b
 ENV NVM_DIR /root/.nvm
 
 WORKDIR /root/cgpay-node-api
-COPY --from=cgpay-node-ap . .
-RUN . "$NVM_DIR/nvm.sh" && \
-    nvm install 20.10.0 && \
-    npm install
+COPY --from=cgpay-node-api dist/ dist/
+COPY --from=cgpay-node-api package.json package.json
+COPY --from=node-env .env /usr/local/commongood/.env
+COPY start-services.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start-services.sh
 
 WORKDIR /var/www/html/cg/cgmembers
 
 WORKDIR /var/www/html
-EXPOSE 80 8081 9003
-CMD ["apachectl", "-D", "FOREGROUND"]
+EXPOSE 80 8081 9003 3000 9229
+
+# Use the script as entry point
+CMD ["/bin/bash", "/usr/local/bin/start-services.sh"]
