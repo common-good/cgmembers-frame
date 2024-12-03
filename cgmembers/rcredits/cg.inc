@@ -17,6 +17,8 @@ use CG\Backend as be;
 use CG\Web as w; // use sparingly
 use CG\Testing as t;
 
+include_once __DIR__ . '/classes/acct.class'; // sometimes needed
+
 /*use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -274,7 +276,7 @@ function rdoMonth($time = NULL) {
  * @param string $device: one device code for this account (not very important, but interesting, especially for POS)
  */
 function ipok($uid) {
-  global $box; $device = $box;
+  global $boxId; $device = $boxId ?: 0; // see Acct::boxId()
   $ip = $_SERVER['REMOTE_ADDR'];
   if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device')), 'ip'); 
 }
@@ -476,7 +478,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   
   $topic = mb_strlen($index) < 100 ? $index : '';
   $noFrame = TRUE;
-  $chan = ray(TX_CHANNELS)[$channel];
+  $chan = nni(ray(TX_CHANNELS), $channel);
   $subs += compact(ray('email message keyAcct currentAcct chan topic noFrame'));
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
   $body = u\seeAssoc($subs);
@@ -1294,7 +1296,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
   
   $confirmed = ($a1->co ? ($a1->agentA->confirmed or $a1->helperA->confirmed) : $a1->confirmed);
-  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
+  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and !in($a2->id, BUCKET_UIDS)) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
@@ -1419,33 +1421,6 @@ function reward($from, $to, $amount = 1, $isPayer = TRUE) {
   if (!$isPayer) $pct *= R_BONUS_FACTOR;
 ///   debug(compact(ray('from to amount pct step over res')) + ['new bal' => $a->balance + $a->rewards + ($isPayer ? -$amount : $amount)]);
   return round(min(R_MAX_REBATE, $pct * $amount / 100), 2);
-}
-
-/**
- * Handle the investment request for one account in one club.
- * @param int $stakeid: record ID of the account's stake
- * @param string $msg: (RETURNED) a message, if any, resulting from the attempt
- * @return <successful>
- */
-function handleInvestmentRequest($stakeid, &$msg) {
-  if (!$res = db\get('stake,request,uid,clubid', 'r_stakes', compact('stakeid'))) return !$msg = t('bad stakeid');
-  extract($res);
-  
-  if ($request <= 0) return (bool) $msg = t('No additional investment is requested.');
-  $a = r\acct($uid);
-  $clubA = r\acct($clubid);
-  $stake += $request;
-  
-  $DBTX = \db_transaction();
-  $z = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
-  $msg = $z->msg;
-
-  if ($z->ok) {
-    db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
-    $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
-  }
-  unset($DBTX);
-  return $z->ok;
 }
 
 /**
@@ -1602,3 +1577,5 @@ function tellPromo($body, $topic = NULL, $reply = NULL) {u\setDft($topic, t('for
 function launchWebsocket() {} // exec(tr('nohup setsid php %APP_SOCKET_URL > /dev/null 2>&1 &'));} // launch inter-mobile communications for testing (it checks if it's already running); "php" must be lowercase. But this has to run as a root cron job instead (edit with crontab -e).
 function ccGiftType($coId) {return in($coId, BUCKET_UIDS) ? 'cggift' : (r\acct($coId)->sponsored ? 'fbo' : 'gift');}
 function no1099k($tot) { return ($tot < MIN1099); }
+function isCriminal($nm, $co) { return db\exists('ofac', 'nm LIKE :nm AND co=:co', ray('nm co', str_replace(' ', '%', " $nm "), $co ?: 0)); }
+function shortCat($category) {return ($category and $catRay = explode(': ', $category) and $cat = end($catRay)) ? " ($cat)" : '';}

@@ -65,7 +65,7 @@ function menu($submenu = '') {
     'community/stepup' => ['sub', t('Step Up'), 'StepUp 2', 'manage linkable', '', t(), 'export'],
     'community/crumbs' => ['sub', t('Share When You Receive'), 'Crumbs 2', 'manage', '', t(), 'import'],
     'community/buy-credit' => ['sub', t('Buy Credit for Later'), 'BuyCredit 2', 'manage', '', t(), 'time'],
-    'community/donate' => ['sub', t('Donate to %PROJECT'), 'Donate 2', 'manageIfIn linkable', '', t(), 'thumbs-up'],
+    'community/donate' => ['sub', t('Donate to %PROJECT'), 'Pay 2', 'manageIfIn linkable', '', t(), 'thumbs-up'],
     'community/coupons' => ['sub', t('Discount / Gift Certificates'), 'Coupons 2', 'manage', '', t(), 'usd'],
     'community/coupons/print' => ['call', t('Print Coupons'), '3', 'ok manage', 'couponsPrint'],
     'community/coupons/list' => ['call', t('List Discounts and Gift Cards'), 'CouponsList 3', 'manage'],
@@ -170,6 +170,7 @@ function menu($submenu = '') {
     'sadmin/rules' => ['sub', t('Rules'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/timed' => ['sub', t('Timed'), 'Rules 1 2', 'admMakeRules'],
     'sadmin/people' => ['sub', t('People'), 'People 2', 'admMutualAid'],
+    'sadmin/focuses' => ['sub', t('Focuses'), 'Focuses 2', 'admPrintChecks'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
@@ -180,6 +181,7 @@ function menu($submenu = '') {
     'sadmin/deposit-details' => ['call', t('Deposit Details'), 'DepositDetails 2', 'admSeeDeposits'],
     'sadmin/checks' => ['call', t('Checks'), '2', 'admPrintChecks', 'printChecks'],
     'sadmin/achs' => ['call', t('ACHs'), '2', 'admAch', 'achBatch'],
+    'sadmin/ofac' => ['call', t('Upload OFAC Files'), 'OFAC', 'admMakeRules'],
     'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'admSeeChanges'],
     'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'admReconcile'],
     'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'admReconcile'],
@@ -197,6 +199,7 @@ function menu($submenu = '') {
     'sadmin/cef-billing' => ['call', t('CEF Billing'), 'CEFBilling 2', 'read'],
     'sadmin/tx-entry' => ['call', t('TxEntry'), 'TxEntry 2', 'admEditTx'],
     'sadmin/merge-accounts' => ['call', t('Merge Accounts'), 'MergeAccts', 'admDeleteAcct'],
+    'sadmin/our-accounts' => ['call', t('Our Accounts'), 'OurAccounts', 'admRegion admSeeAccts'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
@@ -215,20 +218,17 @@ function menu($submenu = '') {
     'signup-co' => ['call', t('Open a Company Account'), 'SignupCo', ANY],
     'menu' => ['call', 'Main Menu', 'Menu', ANY],
     'member' => ['call', 'Company Profile', 'Profile', ANY],
-    'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
     'app' => ['call', t('Web App'), 'Card', ANY], // call app from mobile icon (no params)
-    'card' => ['call', t('Card'), 'Card 1 2', ANY],
-    'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
+//    'card' => ['call', t('Card'), 'Card 1 2', ANY],
+//    'card-scanned' => ['call', t('Customer Photo Pate'), 'Card', ANY], // customer photo etc. that comes up after scan
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
     'error' => ['call', 'System Error', '1', ANY, 'error'],
     'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
-    'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY], // deprecated (remove 9/2024)
     'authcode' => ['call', t('Supply a one-use auth code'), '1', ANY, 'authcode'], // deprecated
-    'cgpay' => ['call', t('Pay With %RCREDITS'), 'CGPay', 'okManageIfIn linkable'],
-    'ccpay' => ['call', t('Pay By Credit Card'), 'CCPay 1', 'okManageIfIn linkable'],
+    'pay' => ['call', t('Pay or Donate from Within or Without'), 'Pay 1', 'okManageIfIn linkable'],
     'cgpay-code' => ['call', t('Supply a CGPay button code'), '', ANY, 'code'],
     'show-qr' => ['call', t('Show My QR Code'), 'ShowQr', 'read'],
     'scan-qr' => ['call', t('Scan a QR Code'), 'ScanQr', ANY],
@@ -239,13 +239,14 @@ function menu($submenu = '') {
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
     'cef' => ['call', t('CEF Dashboard'), 'CEF 1', ANY],
+    'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
 
     'get' => ['call', t('Bank'), 'Get 1', 'manage ok'],
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
-    'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
+    'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from our JS scripts
     'api' => ['call', 'API', '1', ANY, 'api'],
-    'cc' => ['call', 'Credit Card Donation', 'Donate 1', ANY],
-    'donate-fbo' => ['call', t('Donate'), 'Donate 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
+    'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
+    'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
 
   foreach ($items as $k => $v) {
@@ -324,10 +325,10 @@ function subMenuHtml($menu) {
     if ($type == 'call' or !access($perms)) continue;
     if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
-    <h4 class="list-group-item-heading">
+    <span class="list-group-item-heading">
       <span class="glyphicon glyphicon-$icon"></span> &nbsp;
       $head
-    </h4>
+    </span>
     $detail
 EOF;
     $list .= spinLink("/$k", $text, '', 'list-group-item', '');

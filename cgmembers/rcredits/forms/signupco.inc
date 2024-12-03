@@ -84,6 +84,11 @@ function formSignupCo_validate($form, &$sta) {
     $$field = trim(str_replace('  ', ' ', u\normalizeCase(nn($$field))));
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
+  if (r\isCriminal($fullName, TRUE) or r\isCriminal($legalName, TRUE)) {
+    r\tellAdmin(t('New potential member flagged as criminal'), $sta['input']);
+    return softErr(t('There is a problem with your account application. Please contact our support staff at %CGF_PHONE.'));
+  }
+
 
   if ($err = u\badEin($federalId, TRUE)) return say($err, 'federalId');
   if ($err = u\badDob($founded, TRUE)) return say($err, 'founded');

@@ -24,8 +24,8 @@ function formGrant($form, &$sta) {
 
   $_getPartners = w\rendA('getPartners', textFld(BARE, [t('Organization name(s)')], $class));
   $_getOther = w\rendA('getOther', textFld(BARE, [t('Describe')], $class));
-  $_start = w\rendA('start', dateFld(BARE, [t('Start date')], $class));
-  $_end = w\rendA('end', dateFld(BARE, [t('End date')], $class));
+  $_start = w\rendA('start', dateFld(BARE, '', $class));
+  $_end = w\rendA('end', dateFld(BARE, '', $class));
 
   $plan = item(t(<<<EOF
 <p>What do you plan to accomplish with this funding and over what (near future) time period?<br>
@@ -41,7 +41,7 @@ EOF
   , compact(array_merge(ray('_getOrganizers _getIndividuals _getCompanies _getPartners _getOther _start _end'), $gets))), t('Plan:')); // + fails here (PHP bug)
 
 //  foreach ($accountables = ray('meet report sayOther') as $k) $$k = w\rendA([$k => boxFld($k, BARE)]);
-//  foreach ($accountables = ray('meet report sayOther') as $k) $$k = "<input type=\"checkbox\" id=\"edit-$k\" name=\"$k\" class=\"inline\" />";
+//  foreach ($accountables = ray('meet report sayOther') as $k) $$k = "<input type=\"checkbox\" id=\"edit-$k\" name=\"$k\" class=\"inline\">";
   $_sayWhat = w\rendA('sayWhat', textFld(BARE, [t('Describe')], $class));
   $accountables = ray('meet report sayOther', t('Attend most weekly organizer conference calls? (We might ask you to participate in these meetings <i>before</i> we consider your grant request.)'), t('Report progress monthly by email?'), t('Other (work this out with %PROJECT staff): %sayWhat', compact('_sayWhat')));
   $accountable = w\boxFlds('crits', t('Reporting:'), t('How will you be accountable to %PROJECT and to other %PROJECT organizers?'), $accountables);

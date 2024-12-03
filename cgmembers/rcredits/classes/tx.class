@@ -84,6 +84,7 @@ class Tx {
     case 'for1': return $tx->e1->description;
     case 'for2': return $tx->e2->description;
     case 'taking': return ($tx->actorId == $tx->uid2);
+    case 'gift': return u\getBit($tx->flags, B_GIFT);
 
     case 'otherId': return $tx->otherEntry->uid;
     case 'actorA': return r\acct($tx->actorId, $tx->actorAgentId);
@@ -96,7 +97,8 @@ class Tx {
     case 'toActor': return ($tx->uid2 == $tx->actorId);
     case 'toMe': return ($tx->payeeId == $myid);
     case 'byMe': return ($tx->actorId == $myid);
-    case 'reversedByXid': return db\get('xid', 'tx_hdrs_all', 'reversesXid=:xid', ['xid' => $this->xid]);
+    case 'pid': return $tx->e1->entryType == E_OUTER ? db\get('pid', 'txs2', ['xid' => $this->xid]) : NULL;
+    case 'reversedByXid': return db\get('xid', 'tx_hdrs_all', ['reversesXid' => $this->xid]);
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
     }
@@ -159,8 +161,8 @@ class Tx {
    * @return the xid of the transaction
    */
   function insert($allowModification = FALSE) {
-    global $boxId;
-    
+    global $boxId; // most recently set boxId (see Acct::boxId)
+
     $tx = $this;
     u\setDft($tx->boxId, nn($boxId, 0));
     
@@ -300,3 +302,5 @@ EOF;
     return r\txPermErr($a, $isToMe ? $this->a2 : $this->a1, $isToMe xor $neg, $neg);
   }
 } // end of class tx
+
+function tx($xid) { return Tx::read($xid); }

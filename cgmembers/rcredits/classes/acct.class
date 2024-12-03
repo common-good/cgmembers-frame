@@ -210,6 +210,7 @@ class Acct {
       case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
       case 'url': return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
       case 'lastTx': return $a->lastTx();
+      case 'lastTxDt': return ($tx = $a->lastTx) ? fmtDt($tx->created, 'yyyy-MM-dd') : FALSE;
       case 'achName': return str_replace('_', ' ', ($a->sponsored and !$a->ourOwn) ? $a->fullName : $a->legalName); // for ACHs, including u\parseName of names like Jay di_Fiori
       // NOTE: when money comes into a sponsored account, the account belongs to CG (legalName). When money goes out, the account belongs to the sponsored entity (fullName).
       case 'trustCook': return "trust-$a->mainQid"; // cookie name of device trust
@@ -234,7 +235,7 @@ class Acct {
       
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
-      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);
+      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub); // member's investment club ID (one of many) DEPRECATED
       case 'trialco': return ($a->co and $a->depends);
       case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
@@ -252,7 +253,7 @@ class Acct {
       case 'emailCoded': return urlencode(u\cry('P', $a->email));
       case 'changes':
         $chFlds = 'oldValue,newValue';
-        foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {
+        foreach ($rows = db\rows($chFlds, 'changes', ray('table rid', 'users', $uid)) as $i => $row) {
           foreach (ray($chFlds) as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
         }
         return $rows;
@@ -414,6 +415,55 @@ class Acct {
   }  
   
   /**
+   * Return (and maybe set) the box record ID for this account
+   * @param int $code: device identifier
+   * @param string $version: app version (web version is not used here)
+   */
+  public function boxId($code = NULL, $version = NULL) {
+    global $channel, $boxId; // store boxId for Tx::insert and r\ipOk()
+    $a = $this; $uid = $a->id;
+    
+    $web = ($channel == TX_WEB);
+    $created = $access = now();
+    if ($boxId) return;
+    
+    if ($web) { // web channel -- get box code from cookie
+      u\EXPECT(!$code, t('bad web channel call to Acct::boxId'));
+      $cookid = "box-$a->mainQid";
+      $code = r\cook($cookid);
+    } elseif (!$code) return; // app makes its own code
+
+    if ($code = mb_substr($code ?: '', 0, DEVICE_MAXLEN)) {
+      $boxId = $id = db\get('id', 'r_boxes', compact(ray('uid code')));
+      if ($web and $a->admin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record the accounts admins visit
+    } else $code = u\code();
+
+    if (!$boxId) $boxnum = (db\get('MAX(boxnum)', 'r_boxes', compact('uid')) ?: 0) + 1;
+
+    $info = compact(ray('access version ' . ($boxId ? 'id' : 'uid code boxnum created channel')));
+    $newBoxId = db\updateOrInsert('r_boxes', $info, 'id'); // update version, channel, date
+    if (!$boxId) $boxId = $newBoxId;
+    if ($web) r\setCook($cookid, $code);
+  }
+  
+  /**
+   * See if the intended recipient (or any agent with manager permission) has signed in on this machine.
+   * @param string $qid: the intended recipient's qid
+   * @return <the intended recipient has signed in on this machine>
+   */
+  public function itsMyBox($qid) {
+    if (!$a = r\acct($qid)) return FALSE;
+    $uids = array_merge($a->uids, db\col('other', 'u_relations', 'main IN :uids AND permission>=:B_RELATED+:B_MANAGE', ray('uids', $a->uids)));
+    
+    foreach ($uids as $uid) {
+      $qid = r\qid($uid);
+      $cookieId = "box-$qid";
+      if ($code = r\cook($cookieId) and $access = db\get('access', 'r_boxes', compact(ray('uid code')))) return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Return a printable (scrambled) invitation card code or gift coupon code 
    * @param int $iCode: sequence number (0 to 35^3-1)
    * @see r\iCardAcct()
@@ -560,6 +610,7 @@ class Acct {
    */
   private function recordChanges($info) {
     global $mya;
+    global $sceneTest; if ($sceneTest) if (empty($sceneTest->state) or $sceneTest->name == 'Setup') return; // no changes until after test setup
     $a = $this;
 
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
@@ -569,8 +620,8 @@ class Acct {
 
       $oldValue = $a->cryIf($k, is_array($ak) ? serialize($ak) : ('' . $ak), TRUE);
       $newValue = $a->cryIf($k, is_array($v) ? serialize($v) : '' . $v);
-      $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
-      db\insert('r_changes', $record); // add a r_changes record for each changed field
+      $record = ray('table rid created field oldValue newValue changedBy', 'users', $a->uid, now(), $k, $oldValue, $newValue, $mya ? $mya->agentId : 0);
+      db\insert('changes', $record); // add a changes record for each changed field
     }
   }
   
@@ -628,7 +679,7 @@ class Acct {
     $codeName = $a->proSe ? 'cardCode' : 'cardCode2';
     $code = $a->agentA->$codeName;
     //    $changes = $a->agentA->changes;
-    $changes = db\rows('*', 'r_changes', 'uid=:id AND field=:fld AND created>:dt', ray('id fld dt', $a->agentId, $codeName,$created));
+    $changes = db\rows('*', 'changes', "`table`='users' AND rid=:id AND field=:fld AND created>:dt", ray('id fld dt', $a->agentId, $codeName,$created));
 
     foreach ($changes as $ch) if (u\hash(str_replace($code, u\decry('S', $ch->oldValue), $wanted)) == $proof) return false;
 
@@ -689,8 +740,7 @@ class Acct {
     global $channel;
     $a = $this; $uid = $a->id;
 
-    // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
-    if ($a->isCanonic) return 0;
+    if ($a->id < 0 or $a->isCanonic) return 0; // communities and structural accounts are never short
 
     if ($a->co and COMPANY_FREEZE and $a->eq($actor) and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
@@ -711,8 +761,8 @@ class Acct {
   public function avail($goods = FOR_GOODS) {
     $a = $this;
     
-    // no going into debt without permission
-    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
+    // no going into debt without permission or without a connected bank account
+    if ($goods == FOR_USD or !$a->hasBank or $a->cttyA->noneg or !$a->debt or $a->depends) { // allow debt without autorefill (just don't allow setting debt ok without autorefill)
       $floor = max(0, $a->floor ?: 0) + ($a->giftPot ?: 0); // don't allow cashing out credit or gift cards
       if ($a->ourOwn) $floor = min($floor, -CG_LOAN_LIMIT); // allow CG to transfer money to bank account from a zero CG balance
     } else {$floor = $a->floor;}
@@ -1233,34 +1283,35 @@ o;
   /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
    * Call with:
-   *   $got = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
-   *   $got = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
+   *   $completed = $a->getFunds(); // brings balance up to zero or (if autorefill is yes) the target balance
+   *   $completed = $a->getFunds($amount, $why); // get a specific amount for a specific purpose
    * Called for investments, gifts, invoice payment, and autorefills.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return numeric: amount drawn from other accounts and/or requested from bank
+   * @param bool $explicit: <user requested this transfer explicitly>
+   * @return completed: <bank transfer (in or out) is "completed" has been credited to the account>
    */
-  public function getFunds($amount = NULL, $why = NULL) {
+  public function getFunds($amount = NULL, $why = NULL, $explicit = FALSE) {
     $a = $this;
 
     if ($a->nonudge and !$a->ok) u\FAIL('trying to get funds from a nonudge non-member');
-
     if ($a->hasBank) {
-      $waiting = $a->waitingFromBank($combinable, $txid);
+      $waiting = 0; // we are not charged per transfer so this is simpler (was $a->waitingFromBank($combinable, $txid);)
       if (round($amount - $waiting, 2) <= 0) return 0;
-      list ($xid, $amtDone, $report) = $a->bank($amount, $why);
+      list ($xid, $amtDone, $completed, $report) = $a->bank($amount, $why, compact('explicit'));
       $amount -= $waiting + $amtDone;
       $msg = $amount > 0 ? 'automatic when funded' : $report;
       $subs = [];
     } else {
       list ($amtDone, $msg) = [0, 'cannot bank|when funded|how to fund'];
       $subs = ray('tofrom why', 'from', tr('to target'));
+      $completed = FALSE;
     }
 
     w\say($msg, $subs);
     if ($amount > 0) $a->tellOut($msg, $subs); // already told, if the whole amount got transferred
 
-    return $amtDone;
+    return $completed;
   }
   
   /**
@@ -1275,6 +1326,7 @@ o;
    * @return [xid, amtDone, report] where:
    *   xid: the transfer transaction ID
    *   amtDone: the amount transferred
+   *   completed: (bool) <bank transfer is "completed" and CG account credited>
    *   report: actual message to say to account-owner about the transfer (but not by email because we do that herein)
    */
   public function bank($amount, $why, $info = []) {
@@ -1283,7 +1335,7 @@ o;
     extract(just('explicit recursId cat', $info, [FALSE, NULL, NULL]));
 
     $report = '';
-    if (!$amount = round($amount, 2)) return 0; // no zero requests at this time (to pre-verify bank account)
+    if (!$amount = round($amount, 2)) return [NULL, 0, NULL, NULL]; // no zero requests at this time (to pre-verify bank account)
 
     $payee = $a->id;
 //    $okNow = ($amount < 0 or $a->bankOk); // 
@@ -1293,11 +1345,12 @@ o;
     $combined = FALSE;
     $previous = $total = NULL;
     $waiting = $a->waitingFromBank($combinable, $txid);
+    $combinable = 0; // we don't get charged per transfer, so don't combine
   
     if ($amount > 0) { // bringing money in
-      if (!$explicit) {
+      if (FALSE and !$explicit) { // don't combine
         $amount -= $waiting;
-        if ($amount <= 0) return 0; // do nothing if we already have plenty waiting
+        if ($amount <= 0) return [NULL, 0, NULL, NULL]; // do nothing if we already have plenty waiting
       }
       $amount += $combinable;
       if ($a->refill and !$explicit) $amount = max($amount, $a->achMin); // apply minimum transfer amount, if member has agreed to that deal
@@ -1329,7 +1382,7 @@ o;
     $a->tellInOut($amount > 0, $msg, $subs);
     $report = tr($msg, $subs); // for return
 
-    return [nn($xid), $amount, $report];
+    return [nn($xid), $amount, $completed, $report];
   }
   
   /**
@@ -1705,23 +1758,6 @@ X;
   }
 
   /**
-   * Record the relation of a device with an account.
-   * @param string $code: phone # or device code
-   * @param int $channel: channel (TX_APP, TX_SMS, or TX_WEB)
-   * @return int: the device record ID
-   */
-  public function makeBox($code, $channel, $version = NULL) {
-    $a = $this;
-    $uid = $a->id;
-    if ($a->admin and !$a->proSe and !r\relation(1, $uid, $a->agentId)) return; // don't record accounts admins visit
-
-    $created = $access = now();
-    $boxnum = db\get('MAX(boxnum)', 'r_boxes', compact('uid')) + 1;
-    $info = compact(ray('uid code boxnum access created channel version'));
-    return db\insert('r_boxes', $info);
-  }
-
-  /**
    * Encrypt the region's private key (for decrypting highly sensitive data) for a new regional admin.
    * @param string $vKey: key text (PEM-formatted or not) or file path with key text
    * @param string $vKeyPw: password to use in u\b64 format (defaults to 32 random pseudo-bytes)
@@ -1822,10 +1858,13 @@ X;
     }
     if ($i == $max) return $a->ssnErr(SSN_TIMEOUT_MSG . t(' on %max tries.', compact('max')));
 
-    $xml = simplexml_load_string($ssnData0);
-    $json = u\jsonize($xml);
-    $ssnData = u\dejsonize($json);
-    if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
+    if (substr($ssnData0, 0, 1) == '<') try {
+      $xml = simplexml_load_string($ssnData0);
+      $json = u\jsonize($xml);
+      $ssnData = u\dejsonize($json);
+    } catch (\Exception $er) { }
+    
+    if (!nn($ssnData) or !is_array($d = nni($ssnData, 'searchResults')) or nni($ssnData, 'ResultCount') + 0 <= 0) { // 0 for tests, <=0 for failure
       return $a->ssnErr(t('No SSN data available: ') . pr($ssnData0));
     }
     unset($ssnData['searchResults']['ssn']); // has first 5 digits of SSN -- don't store it
@@ -1880,7 +1919,7 @@ X;
     $a = $this;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');
-    if ($payeeA->legalName != CGF_LEGALNAME) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    if (!in($payee, r\cgsOwnUids())) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
     $shortfall = NULL;
 
     $DBTX = \db_transaction();
@@ -1889,14 +1928,13 @@ X;
         $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
         if ($z->ok) {unset($DBTX); return $z;}
         if ($i > 0 or !$shortfall = nni($z->subs, 'shortfall') or $shortfall > $a->creditLine) break; // try just once to fill shortfall
-        $shortfall -= $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
+        $a->getFunds($shortfall, t('to cover your %amt payment request', 'amt', u\fmtAmt($amount)));
         if ($a->avail($goods) < $amount) break;
       }        
     } else $z = be\txRet(FALSE, 'you wait');
 
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    $a->getFunds($shortfall > 0 ? $shortfall : $amount, t('to cover your payment request #%nvid', $z2->subs));
     unset($DBTX);
     
     return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
@@ -1966,7 +2004,7 @@ X;
   public function codeHash() {return u\hash($this->cardCode());}
   public function o($k) {return $this->{'o_' . $k};}
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
-  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
+  public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx($this->uids, $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', fmtDt($tx->created)) : '';}
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->email => $this->fullName];}
@@ -2025,12 +2063,13 @@ function agent($uid = '') { $a = r\acct($uid); return $a ? $a->agentA : NULL; }
  * @return the new account
  */
 function setAcct($myid = '', &$sta = NULL) {
-  global $mya;
+  global $mya, $boxId;
   global $user;
   global $channel; 
   if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
   w\uncacheSubmenus();
+  $boxId = NULL;
 
   if (is_null($myid)) { // sign out
     $user = obj('uid', 0);
@@ -2048,6 +2087,8 @@ function setAcct($myid = '', &$sta = NULL) {
   if ($a = r\acct($myid, $agentId)) { // we get NULL here when current account is deleted
     if ($a->proSe or !$a->admin) $a->accessed(); // admin access doesn't count
   } else { $a = setAcct(NULL); }
+  
+  if ($a) $a->boxId();
   return $mya = $a;
 }
 

@@ -26,12 +26,12 @@ Scenario: member wants to invoice another member and the invoice is approved
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
-  | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED | .ZZA    | 29.00  | 1           | ?     |
+  | nonce | status | payerId | amount | cgInvoiceId | error |*
+  | 1238  | PAID   | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZC | 0       |
+  | .ZZC | 29      |
   | .ZZB | 0       |
   | .ZZA | 0       |
   
@@ -48,11 +48,21 @@ Scenario: member wants to invoice another member and the invoice is auto-paid
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
   | 1238  | PAID     | .ZZA    | 29.00  | 1           | ?     |
 
+  And these "tx_requests":
+  | nvid | status | amount | payer | payee | flags   | created | purpose                   |*
+  | 1    | 1      | 29     | .ZZA  | .ZZC  | funding | %now    | 85% of credits for 13 KWH |
+  And these "txs2":
+  | txid | xid | amount | payee | created |*
+  | 1    | 2   | 29     | .ZZA  | %now    |
+  And these "txs":
+  | xid | amount | uid1 | uid2 | type  | created |*
+  | 1   | 29     | .ZZA | .ZZC | prime | %now    |
+  | 2   | 29     | bank | .ZZA | bank  | %now    |
   And balances:
   | uid  | balance |*
   | .ZZC | 29      |
   | .ZZB | 0       |
-  | .ZZA | 196     |
+  | .ZZA | 225     |
 
 Scenario: member wants to invoice another member and fails
   Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
@@ -73,17 +83,38 @@ Scenario: a member invoices another member twice for the same thing and it was p
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
-  And member ".ZZC" with password "33333" sends "generate-invoices" requests:
+  Then count "tx_requests" is 1
+  And these "tx_requests":
+  | nvid | status | amount | payer | payee | flags   | created | purpose                   |*
+  | 1    | 1      | 29     | .ZZA  | .ZZC  | funding | %now    | 85% of credits for 13 KWH |
+  And count "txs2" is 1
+  And these "txs2":
+  | txid | xid | amount | payee | created |*
+  | 1    | 2   | 29     | .ZZA  | %now    |
+  And count "txs" is 2
+  And these "txs":
+  | xid | amount | uid1 | uid2 | type  | created |*
+  | 1   | 29     | .ZZA | .ZZC | prime | %now    |
+  | 2   | 29     | bank | .ZZA | bank  | %now    |
+  And balances:
+  | uid  | balance |*
+  | .ZZC | 29      |
+  | .ZZB | 0       |
+  | .ZZA | 225     |
+  
+  When member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status         | payerId | amount | cgInvoiceId | error |*
   | 1238  | PAID-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
-
+  And count "tx_requests" is 1
+  And count "txs2" is 1
+  And count "txs" is 2
   And balances:
   | uid  | balance |*
-  | .ZZA | 196     |
+  | .ZZA | 225     |
   | .ZZB | 0       |
   | .ZZC | 29      |
 
@@ -97,11 +128,11 @@ Scenario: a member invoices another member twice for the same thing and it was a
   | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
-  | nonce | status             | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
+  | nonce | status         | payerId | amount | cgInvoiceId | error |*
+  | 1238  | PAID-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
   | .ZZA | 0       |
   | .ZZB | 0       |
-  | .ZZC | 0       |
+  | .ZZC | 29      |

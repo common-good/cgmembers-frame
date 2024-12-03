@@ -38,23 +38,23 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE changeUid Setup
- *     TEST changeUid AdminMergesTwoPersonalAccounts
- *     TEST changeUid AdminMergesTwoCompanyAccounts
- *     TEST changeUid VotingDuplicationPreventsMergingAccounts
+ * in: MAKE 1099s Setup
  *     MAKE aaOther Setup
- *     MAKE super Setup
- *     MAKE deletion Setup
- *     MAKE changes Setup
- *     MAKE checks Setup
  *     MAKE ach Setup
  *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminActivatesAnAccountUnconfirmed
  *     TEST activate AdminDeactivatesAnAccount
  *     TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
- *     MAKE 1099s Setup
  *     MAKE cats Setup
+ *     MAKE changes Setup
+ *     MAKE changeUid Setup
+ *     TEST changeUid AdminMergesTwoPersonalAccounts
+ *     TEST changeUid AdminMergesTwoCompanyAccounts
+ *     TEST changeUid VotingDuplicationPreventsMergingAccounts
+ *     MAKE checks Setup
+ *     MAKE deletion Setup
+ *     MAKE super Setup
  */
 function members($list) {return t\members($list);}
 
@@ -62,22 +62,22 @@ function members($list) {return t\members($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE aaOther AdminDeletesAnAccount
- *     MAKE changes AMemberChangesSomeSettings
- *     MAKE checks AdminPrintsChecks
  *     MAKE ach AdminDownloadsACHRequests
  *     MAKE cats AdminVisitsTheSetCategoriesPage
+ *     MAKE changes AMemberChangesSomeSettings
+ *     MAKE checks AdminPrintsChecks
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST changeUid AdminViewsTheMergePage
- *     TEST changes AMemberChangesSomeSettings
- *     TEST checks AdminPrintsChecks
- *     TEST ach AdminDownloadsACHRequests
+ * in: TEST ach AdminDownloadsACHRequests
  *     TEST cats AdminVisitsTheSetCategoriesPage
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     TEST changes AMemberChangesSomeSettings
+ *     TEST changeUid AdminViewsTheMergePage
+ *     TEST checks AdminPrintsChecks
  */
 function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
   return t\weShowWith($title, $content, $showDebugs);
@@ -86,27 +86,27 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE changes AMemberChangesSomeSettings
- *     MAKE activate AdminActivatesAnAccount
+ * in: MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
+ *     MAKE changes AMemberChangesSomeSettings
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
 /**
  * we show PDF with: (ARG)
  *
- * in: TEST super AnAdminPrintsChecks
- *     TEST checks AdminPrintsChecks
+ * in: TEST checks AdminPrintsChecks
+ *     TEST super AnAdminPrintsChecks
  */
 function weShowPDFWith($list) {return t\pdfHas($list);}
 
 /**
  * balances: (ARG)
  *
- * in: TEST checks AdminPrintsChecks
- *     BOTH 1099s Setup
+ * in: BOTH 1099s Setup
+ *     TEST checks AdminPrintsChecks
  */
 function balances($list) {return t\balances($list);}
 
@@ -129,35 +129,36 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 /**
  * with: (ARG)
  *
- * in: TEST changes AMemberChangesSomeSettings
- *     TEST ach AdminDownloadsACHRequests
+ * in: TEST ach AdminDownloadsACHRequests
+ *     TEST changes AMemberChangesSomeSettings
  */
 function with($content) {return t\weShow($content);}
 
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE changeUid Setup
+ * in: MAKE 1099s Setup
+ *     MAKE aaOther Setup
+ *     TEST aaOther AdminDeletesAnAccount
+ *     MAKE ach Setup
+ *     BOTH ach AdminDownloadsACHRequests
+ *     MAKE activate Setup
+ *     MAKE cats Setup
+ *     BOTH cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE changes Setup
+ *     MAKE changeUid Setup
  *     TEST changeUid AdminMergesTwoPersonalAccounts
  *     TEST changeUid AdminMergesTwoCompanyAccounts
  *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
- *     MAKE aaOther Setup
- *     TEST aaOther AdminDeletesAnAccount
- *     MAKE super AnAdminPrintsChecks
+ *     MAKE checks Setup
+ *     BOTH checks AdminPrintsChecks
  *     MAKE deletion Setup
  *     TEST deletion ADeletedbyviewRecordIsDeleted
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
- *     MAKE changes Setup
- *     MAKE checks Setup
- *     BOTH checks AdminPrintsChecks
- *     MAKE ach Setup
- *     BOTH ach AdminDownloadsACHRequests
- *     MAKE activate Setup
- *     MAKE 1099s Setup
- *     MAKE cats Setup
- *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE super AnAdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -203,8 +204,8 @@ function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
 /**
  * we download (ARG) with (ARG) records: (ARG)
  *
- * in: TEST ach AdminDownloadsACHRequests
- *     TEST 1099s AdminGeneratesAReportForThePastMonths
+ * in: TEST 1099s AdminGeneratesAReportForThePastMonths
+ *     TEST ach AdminDownloadsACHRequests
  */
 function weDownloadWithRecords($flnm, $fileType, $rows) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -253,20 +254,21 @@ function weDeleteTableRecord($tnm, $record) {
 /**
  * member (ARG) is signed in
  *
- * in: MAKE super AnAdminPrintsChecks
+ * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
  *     MAKE ach AdminDownloadsACHRequests
- *     MAKE 1099s AdminGeneratesAReportForThePastMonths
+ *     MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
 
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE changeUid AdminViewsTheMergePage
+ * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE changeUid AdminViewsTheMergePage
  *     MAKE super AnAdminPrintsChecks
  *     MAKE super AMemberTriesToDoAnAdminThing
  *     MAKE super AnAdminTriesToDoAnAdminThingWithInsufficientPermissions
- *     MAKE cats AdminSetsMostCategoriesAndSendsToQBO
  */
 function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -280,13 +282,13 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 /**
  * member (ARG) scans admin card (ARG)
  *
- * in: MAKE aaOther Setup
- *     MAKE super AnAdminPrintsChecks
- *     MAKE checks AdminPrintsChecks
+ * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
+ *     MAKE aaOther Setup
  *     MAKE ach AdminDownloadsACHRequests
  *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
- *     MAKE 1099s AdminGeneratesAReportForThePastMonths
+ *     MAKE checks AdminPrintsChecks
+ *     MAKE super AnAdminPrintsChecks
  */
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
 
@@ -309,19 +311,20 @@ function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, 
 /**
  * member (ARG) submits (ARG) with: (ARG)
  *
- * in: MAKE changeUid AdminMergesTwoPersonalAccounts
+ * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
+ *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE changeUid AdminMergesTwoPersonalAccounts
  *     MAKE changeUid AdminMergesTwoCompanyAccounts
  *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
- *     MAKE cats AdminSetsMostCategoriesAndSendsToQBO
  */
 function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
 /**
  * we say (ARG): (ARG)
  *
- * in: TEST changeUid VotingDuplicationPreventsMergingAccounts
- *     TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
+ * in: TEST activate AdminTriesToDeactivateAnAccountWithANonzeroBalance
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     TEST changeUid VotingDuplicationPreventsMergingAccounts
  */
 function weSay($type, $index) {return t\weSayWithSubs($type, $index, array());}
 
@@ -349,10 +352,10 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
     $detail = $L->JournalEntryLineDetail;
     $gotRay = [$L->Amount, $detail->PostingType, $detail->AccountRef];
     $wantRay = ray($wantRay0 = $lines[(int) floor($i / 2)][$i & 1]); // conceptually the index is just $i, but we specify them in pairs
+
     $w2 = $wantRay[2];
-    $map0 = $w2[0] == '.' ? ray($w2, t\uid($w2)) : ray(tr('cgf:%CGID, fund:%UID_BANK')); // in the tests, any nickname starting with '.' is an account abbreviation
-    foreach ($map0 as $k => $v) $map[$k] = r\acct($v)->mainQid;
-    $wantRay[2] = r\qbCat(strtr($w2, $map));
+    if ($w2[0] == '.' or ctype_lower($w2)) $w2 = r\acct(t\uid($w2))->mainQid;
+    $wantRay[2] = r\qbCat($w2);
     for ($j = 0; $j < 3; $j++) if (t\badEq(t('journal line #') . "$i - $id: $wantRay0", $wantRay[$j], $gotRay[$j])) return FALSE;
   }
   
@@ -363,6 +366,7 @@ function qBOGetsTxWithINAndOUTDatedWithEntries($id, $in, $out, $dt, $lines) {
  * QBO gets Tx (ARG):(ARG) dated (ARG) with entries: (ARG)
  *
  * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ *     TEST cats TheRegionMakesAnInvestment
  */
 function qBOGetsTxDatedWithEntries($id, $desc, $dt, $lines) {return qBOGetsTxWithINAndOUTDatedWithEntries($id, $desc, NULL, $dt, $lines);}
 
@@ -417,3 +421,10 @@ function fieldsOfMatch($xtnm) {
   array_shift($xFlds);
   return t\eq("$xtnm fields", db\cols($tnm), $xFlds);
 }
+
+/**
+ * we say (ARG): (ARG) with subs: (ARG)
+ *
+ * in: TEST cats AdminSetsMostCategoriesAndSendsToQBO
+ */
+function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}

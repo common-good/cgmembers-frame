@@ -11,7 +11,8 @@ use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
 
-require_once __DIR__ . '/cg-util.inc';
+require_once R_ROOT . '/cg.inc';
+require_once R_ROOT . '/cg-util.inc';
 
 define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_stats'); // don't log deletions from these files
 
@@ -27,6 +28,7 @@ define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_st
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
+  global $mya, $dbERR; // PDOException set in database.inc
 
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if ($where = $subs and !strihas($sql, ':')) {
@@ -42,14 +44,19 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   $opts = $retId ? ray('return', \Database::RETURN_INSERT_ID) : [];
 
   $res = \db_query($sql, $subs, $opts);
+
   if (is_null($res)) {
-    global $dbERR; // PDOException set in database.inc
-///   if (isDEV) die("<br><br><br>" . pr($dbERR)); // mb_substr(pr($dbERR), 0, 500));
-//    \lock_release_all();
-//    f('a.clearCache');
-//    die('Database error');
-//    u\FAIL(t('Database error'));
-  } else return $res;
+    $err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query')));
+    if ($channel == TX_WEB) w\err($err);
+    flog($err);
+    if (!$mya or $mya->admin) if (!isDEV) {
+      include_once R_ROOT . '/cg.inc'; // this was missing once
+      r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
+    }
+    $dbERR = $err; // pass this to insert
+  } else $dbERR = NULL;
+  
+  return $res;
 }
 
 /**
@@ -132,6 +139,8 @@ function update($table, $info, $key = 'id') {
  * @return: record key of the inserted record (FALSE on failure)
  */
 function insert($table, $info, $key = 'id') {
+  global $dbERR;
+  
   logSql(compact(ray('table info')));
 
   foreach (ray('start created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
@@ -149,6 +158,7 @@ function insert($table, $info, $key = 'id') {
     $result = db\q($sql, $info, TRUE);
     if ($result) return $result; // if there is no serial field, result will be false, so check
 
+    if ($dbERR) u\FAIL($dbERR);
     u\EXPECT($key and isset($info[$key]), 'no primary key');
     $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
     u\EXPECT(!is_null($res), 'insert failed');
@@ -247,7 +257,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users_txs tx_requests tx_hdrs tx_timed', 'uid', 'nvid', 'xid', 'id');
+  $keys = ray('users_txs tx_requests tx_hdrs_all tx_hdrs tx_timed', 'uid', 'nvid', 'xid', 'xid', 'id');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));

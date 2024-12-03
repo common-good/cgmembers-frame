@@ -24,18 +24,16 @@ use CG\Cron as cr;
 - identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM u_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM u_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
 DAILY (every 5 mins for 5 mins, starting at 2am)
 - checkAccts() check accounts (and their activity) more thoroughly for consistency, security, scams
-- notify and maybe fine late borrowers
-- suggest another donation (after a year?) if first was small
+- notify and maybe fine late borrowers (accounts with a negative balance)
 WEEKLY
 - tell members what they did that was dumb
 MONTHLY
-- distribute community dividends (based on growth of account's wider economic ctty)
 - archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
 YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs pendingRequests getFunds notices END';
+const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs nudges payInvoices getFunds completeUsdTxs notices END'; // getFunds, completeUsdTxs, and notices should probably always be the last 3 things
 const LOGLESS_OPS = 'acctHourly oneAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once R_ROOT . '/rcron/rcron-subs.inc';
@@ -55,7 +53,7 @@ function run() {
   $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
   $GLOBALS['user'] = \drupal_anonymous_user();
   \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts
-  if (!\lock_acquire('cron', 240.0)) return u\log(t('Attempted to run cron while it was already running.'));
+  if (!\lock_acquire('cron', 4 * 60)) return u\log(t('Attempted to run cron while it was already running.'));
   
   db\del('sessions', 'timestamp < :NOW-:SESSION_LIFE'); // remove stagnant sessions
   cr\periodic();
@@ -73,6 +71,7 @@ function run() {
       db\del('queue', compact('id'));
       unset($DBTX);
     } catch (\Exception $e) {
+      if (isset($DBTX)) $DBTX->rollback(); // if(isset) required (dunno why)
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
       r\tellAdmin('cron task failed id=' . $id . pr($e), $item);
     }
@@ -240,24 +239,31 @@ X;
  * Delete accounts that aren't real or are abandoned.
  */
 function eachAcct() {
-  queueEach('oneAcct', "SELECT uid, (BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0) AS badPartner FROM users WHERE uid > 0 AND uid NOT :CANONIC");
+  $testOFAC = now() - getv('ofac_updated') < DAY_SECS * 1.5 ?: 0;
+  queueEach('oneAcct', "SELECT uid, $testOFAC AS testOFAC, (BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0) AS badPartner FROM users WHERE uid > 0 AND uid NOT :CANONIC");
   queueNext();
 }
 
 function oneAcct($item) {
-  extract(just('uid badPartner', $item));
+  extract(just('uid testOFAC badPartner', $item));
   $a = r\acct($uid);
   if ($badPartner) { // delete stale unused partner accounts
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     db\del('users', 'uid', $a->id);
-  } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots (if we never get these by 6/1/2022, delete this whole eachA block)
-    $s = strtr($a->source, ['self() '=>'', 'knows: '=>'']);
-    if (!strhas($s, ' ') or now() - $a->created > YEAR_SECS / 2) {
-      r\tellAdmin('robot-created or 6 months old single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
-//        f('a.deleteUid', $a->id);
+  } elseif (!$a->member and !$a->ok and !$a->iclubq and in($a->task, 'co person') and now() - $a->created > 7*DAY_SECS and in($a->steps+0, [1, S_ONESTEP])) { // delete robots
+    $s = strtr($a->source ?: '', ['self() '=>'', 'knows: '=>'']); // can't use nn() here
+    
+    $onestepAge = now() - $a->created;
+    if ($onestepAge > WEEK_SECS) { // warn about slow joiners for a week, then delete them in 6 months
+      if ($onestepAge < 2 * WEEK_SECS or now() < strtotime('10/1/2024')) {
+        $msg = tr('stale single-step', ray('qid nm created', $a->mainQid, $a->fullName, fmtDt($a->created)));
+        r\tellAdmin($msg, ray('email phone', $a->email, u\fmtPhone($a->phone)));
+      } elseif ($onestepAge > YEAR_SECS / 2) f('a.deleteUid', $a->id);
     }
   }
  
+  if ($testOFAC and r\isCriminal($a->fullName, $a->co)) r\tellAdmin(t('Name flagged as criminal by latest OFAC data'), ray('nm qid', $a->fullName, $a->mainQid));
+
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 
@@ -266,7 +272,7 @@ function oneAcct($item) {
  * Instantiate surtx rules first so they apply to subsequent transactions.
  * Action options are: 
  *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
- *   pay or charge: recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
+ *   pay or charge: timed or recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
  * OBSCURE NOTE: if you want to count a transaction as the latest recurrence, give it the right rule and set its date/time AFTER the expected recur date/time
  */
 function recurs() {
@@ -290,9 +296,15 @@ EOF;
   queueEach('recur', $sql);
   queueNext();
 }
-  
+
+/**
+ * Handle a delayed or recurring event.
+ * Note: for non-member donations through Stripe, this function provides a useful return, since it may be called from stripe.inc
+ * @return: [ok, msg] (for Stripe only)
+ */
 function recur($template) {
-  extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer', $template));
+  extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer stripeId', $template));
+  $recursId = $id;
 
   $lastRecurWanted = u\lastRecur($start, $periods, $period);
   
@@ -306,12 +318,13 @@ function recur($template) {
     $erSubs += compact(ray('when purpose'));
   } else { $when = t('one-time'); }
 
-  if ($action == 'surtx') {
+  if ($action == 'surtx') { // create rollover surtx (UNUSED as of ~2020)
     if ($shouldStart > now() + WEEK_SECS) return; // rules can be created ahead, but don't do it more than a week in advance
     $rule = justNot(ray('id period periods duration durations start end lastRecur flags'), $template);
-    $rule['template'] = $id;
+    $rule['template'] = $recursId;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
+    unset($rule['stripeId']);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
     return;
@@ -319,25 +332,56 @@ function recur($template) {
 
   if (!in($action, 'pay charge')) return FAIL(t('bad action in template: ') . pr($erSubs));
 
-// No longer needed  $created = $shouldStart; // keep transactions synced with template even if cron fails for a few days
+// keep transactions synced with template even if cron fails for a few days
   $created = now();
   if ($shouldStart > now()) return; // don't pay or charge until the right date and time
 
-  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring payment from a non-member
+  if ($action == 'pay' and $payerType == REF_PERSON and $pid = $payer) { // recurring (or timed) payment from a non-member
     if (!$emailAndName = db\get('email, fullName', 'people', compact('pid'))) return r\tellAdmin(t('missing people record for tx_timed'), $template);
     extract($emailAndName);
-    if (!$res = db\get('bankAccount,isSavings,payee', 'txs2 t2 JOIN txs_noreverse t USING(xid)', 'pid=:pid AND bankAccount IS NOT NULL ORDER BY t2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous ACH'), $template);
-    extract($res);
-    u\EXPECT($payee == $to, 'previous ACH mismatch');
-    $coA = r\acct($to);
-    $type = r\ccGiftType($to); // NOTE: we currently do not do recurring CC purchases or any ACH purchases (just gifts), so this is a gift
-    $info = compact(ray('amount purpose created')) + ray('explicit completed recursId deposit gift', FALSE, now(), $id, 0, TRUE);
-    be\createUsdTransfer($coA, $amount, $info + compact(ray('pid bankAccount isSavings')));
-    r\tellAdmin(t('recurrence of non-member donation'), $info + $emailAndName + ray('fbo', $coA->fullName));
-    be\thanks($type, FALSE, $pid, $purpose, $amount, $period, $periods, $coA->id, FALSE);
-    return;
+    $flags |= u\bit(B_SELF);
+    $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
+    $coA = r\acct($to); $coId = $coA->id;
+    
+    if ($stripeId) { // recurring credit card payment
+      require_once R_ROOT . '/stripe.inc';
+      $info['deposit'] = now();
+      $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
+      if (!is_object($erMsg = $paymentIntent)) {
+        r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
+        return [FALSE, $erMsg]; // probably a canceled or expired card
+      }
 
-  } else { // normal pay or charge
+      $DBTX = \db_transaction();
+      $deposit = $completed = now();
+      $info = compact(ray('purpose pid completed deposit recursId flags'));
+      $tx = be\createUsdTransfer($coA, $amount, $info);
+
+      if (db\count('tx_hdrs', compact('recursId')) == 1 // first recurrence: add note from donation form
+        and $note = db\get('notes', 'people', compact('pid'))) { // if any 
+          $info['purpose'] = $purpose .= " (\"$note\")";
+      }
+  
+      if ($coId != CGID) { // no credit card fees for CG, for payments to CG
+        be\txEntryPair($txes, $tx, round($amount * CC_PCT / 100 + CC_PLUS / 100, 2), [$coId, CGID], tr('cc fee'), E_XFEE);
+        be\insertTxes($txes, $tx->xid);
+      }
+      unset($DBTX);
+      
+    } else { // recurring non-member ACH (legacy)
+      if (!$res = db\get('bankAccount,isSavings,payee AS txs2Payee', 'txs2 x2 JOIN txs_noreverse t USING(xid)', 'pid=:pid ORDER BY x2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous non-member payment'), $template);
+      extract($res);
+      u\EXPECT($txs2Payee == $to, 'previous recurring non-member payment: payee mismatch');
+      $info += compact(ray('bankAccount isSavings'));
+      $tx = be\createUsdTransfer($coA, $amount, $info);
+    }
+
+    $adminMsg = $stripeId ? t('CC payment') : t('Non-member ACH');
+    $adminMsg .= tr(' (to %whom)', 'whom', $coA->bestName);
+    r\tellAdmin($adminMsg, compact(ray('amount period')) + $info + $emailAndName);
+    $msg = be\thanks($tx->xid, $purpose);
+
+  } else { // normal (member) pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
@@ -349,13 +393,14 @@ function recur($template) {
 
     $DBTX = \db_transaction();
     if ($action == 'pay') {
-      if ($to == CGID) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
+      $data['self'] = TRUE;
+      if ($to == CGID and $period != PER_1) $data['gift'] = TRUE; // assume any recurring payment to CG is a gift
       if (is_null($amount)) { // sweep (to bank or to another account)
         if (!$amount = max(0, $fromA->balance - $fromA->minimum) or $from == UID_BANK) return;
       }
       
       if (in(UID_BANK, [$from, $to])) { // bank transfer (NULL amount means sweep to bank)
-        $info = ray('recursId', $id);
+        $info = compact('recursId');
         $why = tr('auto transfer', compact('when'));
         if ($to == UID_BANK) { // transfer from CG account to bank
           $avail = $fromA->avail(FOR_USD);
@@ -363,19 +408,22 @@ function recur($template) {
           $fromA->bank(-$amount, $why, $info);
         } else $toA->bank($amount, $why, $info); // transfer to CG account from bank
       } else { // payment/transfer to another account
-        $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
+        $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $recursId);
         if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
         $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
       }
     } else { // charge
-      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
+      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $recursId);
       if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
-    if ($period == PER_1) r\endRule('tm', $id);
-    
+
     unset($DBTX);
+    $msg = '';
   }
   
+  if ($period == PER_1) r\endRule('tm', $recursId);
+  if (db\count('tx_hdrs', 'recursId=:recursId AND created >= :NOW-:HOUR_SECS', $subs = compact('recursId')) != 1) r\tellAdmin(t('Double-dipped recurrence'), $subs);
+  return [TRUE, $msg]; // this return is used only when called from stripe.inc
 }
 
 /**
@@ -613,8 +661,11 @@ function everyWeek() {
 function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+
+  $omitUids = r\qo('NEWARJ')->id // people who don't want to see the "whats up" message
+  . ',' . r\qo('NEWBWN')->id;
   
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND uid NOT IN ($omitUids) AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
@@ -971,16 +1022,20 @@ function txRisk1($xid) {
 }
 
 /**
- * 1. Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete)
- * 2. Get funds from a connected bank account or drawable CG account, as needed, 
- *    handling approved invoices and investment requests as we go
+ * Get funds from a connected bank account or drawable CG account, as needed, 
  */
 function getFunds() {
-  queueEach('getFunds1', 'SELECT u.uid, request, stakeid FROM users u LEFT JOIN r_stakes s ON s.uid IN (u.uid, jid) AND request>0 WHERE (jid=0 OR u.uid<jid) AND u.uid>:UID_CANON9 AND u.:IS_OK');
+  $sql = 'SELECT u.uid FROM users u WHERE (jid=0 OR u.uid<jid) AND u.uid>:UID_CANON9 AND u.:IS_OK AND uid NOT IN (:ours)';
+  queueEach('getFunds1', $sql, ray('ours', r\cgsOwnUids())); // CG accounts are managed explicitly
+  queueNext();
+}
 
+/**
+ * Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete).
+ */
+function completeUsdTxs() {
   $sql = 'SELECT DISTINCT xid,channel FROM txs2_bank WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks or do ACHs
   queueEach('completeUsdTx', $sql);
-  
   queueNext();
 }
 
@@ -990,85 +1045,74 @@ function completeUsdTx($item) {
   be\usdTxFollowup($xid);
 }
 
+/**
+ * Get additional funds from bank account as needed.
+ * Strategy:
+ * (1) Make up for any shortfall of pending transfers (completed=0) compared to pending requests (status=approved, ignoring B_FUNDING bit).
+ * (2) Plus bring balance up to target, if autofill (considering #1 only if shortfall is negative).
+ * (3) If balance has been negative for too long and not autofill (or target is negative), bring it up to zero.
+ */
 function getFunds1($item) {
-  extract(just('uid request stakeid', $item, NULL));
+  extract(just('uid', $item, NULL));
   $a = r\acct($uid);
+  $uids = $a->uids;
 
-  // pay pending requests and add up the amounts still pending, so we include those in the amount of funds to get
-  $pending = 0;
-  $sql = <<< o
-    SELECT i.* FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
-    WHERE i.status=:TX_APPROVED AND u1.:IS_OK AND u2.:IS_OK AND i.payer IN (:uids)
-    ORDER BY i.nvid
-o;
-  $q = db\q($sql, ['uids' => $a->uids]);
-  while($row = $q->fetchAssoc()) $pending += payPending($a, $row['nvid']);
-  if ($request) $pending += payInvestmentRequests($a, $request, $stakeid);
-  $balPlusPend = $a->balance + $pending;
+  $requests = db\sum('amount', 'tx_requests', 'payer IN (:uids) AND status=:TX_APPROVED', compact('uids'));
+  $pendingIn = db\sum('amount', 'txs2', 'payee IN (:uids) AND completed=0', compact('uids')); // uids (not uid) in case joint account formed recently
+  $need = $requests - $pendingIn;
 
-  list ($target, $why) = $a->refill // target is what we want to end up with after covering pending payments
-  ? [$a->minimum + $pending, tr('to target')]
-  : [($a->balance < 0 and $balPlusPend > 0) ? $balPlusPend : min($pending, $balPlusPend), t('to pending')]; // this could be negative (just enough to pay pending)
-///  debug(compact(ray('uid request stakeid pending balPlusPend target why')));
-
-  $debtTimeout = ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS);
-  $debtTimeout = FALSE; // disable this 
-
-  if ($a->balance < 0) {
-    if (!$a->wentNeg) $a->update('wentNeg', now()); // legacy check, so we don't somehow never examine negative balance accounts (remove 7/1/2021)
-    if ($debtTimeout) $why = tr('debt timeout', 'signed', fmtDt($a->signed)) . "|$why";
+  if ($need > 0) {
+    $a->getFunds($need, tr('to pending')); // this should never happen after 9/1/2024 because getFunds happens when the request is approved
+    if (now() > strtotime('9/1/2024')) r\tellAdmin('unexpected "to pending"', compact(ray('uid need')));
+    $need = 0; // positive need no longer relevant
+  }
+  
+  if ($a->balance < 0 and !$a->wentNeg) {
+    r\tellAdmin('missing wentNeg', ray('qid', $a->mainQid)); // shouldn't happen, but always fix it if it does
+    $a->update('wentNeg', now());
   }
 
-  if ($pending > 0 and $target < 0) { // tentatively bringing balance up only to some negative amount after paying the pending requests
-    if (!$a->debt or $debtTimeout) { // time to get out of the negative
-      list ($target, $why) = [$pending, tr('to zero')]; // scootch up to zero if credit line timed out or member doesn't want negative
+  if ($a->refill) { // auto refills
+    $need = $a->minimum - $a->balance + min(0, $need);
+    if ($need > 0) $a->getFunds($need, tr('to target'));
+  } elseif ($a->balance < 0 and $need >= 0) { // negative balance (not already pending from bank)
+    if (!$a->debt) { // member chose never to go negative
+      $a->getFunds(-$a->balance, tr('to zero'));
+    } elseif ($a->wentNeg and now() - $a->wentNeg > R_DEBT_DAYS * DAY_SECS and !in($uid, r\cgsOwnUids())) { // debt timeout
+      $a->getFunds(-$a->balance, tr('debt timeout', 'signed', fmtDt($a->signed)));
     }
   }
-  
-  $amount = $target - $a->balance; // scootch up to target, if below
-    
-  if ($amount > 0) $a->getFunds($amount, $why); // getFunds will subtract any amount already waiting
 }
 
 /**
- * Try to pay any pending transaction requests.
- * @param assoc $nvid: request record ID
- * @return numeric: remaining amount pending
+ * Try to pay any approved transaction requests.
  */
-function payPending($a, $nvid) {
-  if (!$a->ok) return 0; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-  
-  $z = be\payInvoice($nvid);
-  return nni($z->subs, 'shortfall', 0);
+function payInvoices() {
+  queueEach('payInvoice', 'SELECT u.uid, i.nvid FROM users u JOIN tx_requests i ON i.payer IN (u.uid, u.jid) AND i.status=:TX_APPROVED WHERE (jid=0 OR u.uid<jid) AND u.uid NOT :CANONIC AND u.:IS_OK');
+  queueNext();
 }
 
-/**
- * Handle requests to invest in an investment club.
- * @return numeric: remaining amount requested
- */
-function payInvestmentRequests($a, $request, $stakeid) {
-  if (!$a->avail($request)) return $request;
-
-  r\handleInvestmentRequest($stakeid, $msg);
-  $a->tellMisc($msg);
-  return 0;
+function payInvoice($item) {
+  extract(just('uid nvid', $item, NULL));
+  $a = r\acct($uid);
+  $z = be\payInvoice($nvid, $a->balFirst);
 }
 
 /**
  * Handle pending requests (invoices and unfunded payments).
  */
-function pendingRequests() {
+function nudges() {
   $sql = <<< X
     SELECT DISTINCT i.*
     FROM tx_requests i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status=:TX_PENDING AND u2.:IS_OK
     ORDER BY i.nvid
 X;
-  queueEach('pendingRequest', $sql);
+  queueEach('nudge', $sql);
   queueNext();
 }
 
-function pendingRequest($item) {
+function nudge($item) {
   extract(just('nvid payer payee amount purpose status created', $item));
   $a1 = r\acct($payer);
   $a2 = r\acct($payee);
@@ -1235,7 +1279,7 @@ X;
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
 
-  if ($cnt = db\count('queue') and $cnt > 1) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
+  if ($cnt = db\count('queue') - 1 and $cnt > 0) r\tellAdmin(t('queue has %cnt dingleberries', compact('cnt'))); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);

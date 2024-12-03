@@ -110,13 +110,23 @@ X;
   makeTxsView($z, 'txs'); // add all transactions that make a difference to CG member accounts, omit bank charges and transfers between CG's banks
   makeTxsView($z, 'txs_bank_only', "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount<0, e.$isBank)",
                                    "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount>0, e2.$isBank)");
-  makeTxsView($z, 'txs_all'); 
+  $sql = makeTxsView($z, 'txs_all'); 
 
-  $delMap = ['SELECT DISTINCT ' => 'SELECT DISTINCT t.deleted,', 't.deleted IS NULL' => 't.deleted IS NOT NULL'];
-//  $z['sql'] = strtr($sql, $delMap);
-//  makeTxsView($z, 'txs_deleted'); 
-//  $z['sql'] = str_replace('AND t.deleted IS NOT NULL', '', $z['sql']);
-  makeTxsView($z, 'txs_ever'); // both deleted and not deleted records
+  $everMap = [
+    'txs_all' => 'txs_ever', // all transactions ever, including deleted ones
+    'SELECT DISTINCT ' => 'SELECT DISTINCT t.deleted,',
+    'tx_hdrs' => 'tx_hdrs_all',
+    'tx_entries' => 'tx_entries_all',
+  ];
+  $sql = strtr($sql, $everMap);
+  $m->doSql($sql);
+
+  $delMap = [
+    'txs_ever' => 'txs_deleted', // just the deleted transactions
+    'WHERE e1' => 'WHERE t.deleted IS NOT NULL AND e1',
+  ];
+  $sql = strtr($sql, $delMap);
+  $m->doSql($sql);
 
   $m->doSql('CREATE VIEW txs_noreverse AS SELECT * FROM txs t WHERE reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid=t.xid)');
   

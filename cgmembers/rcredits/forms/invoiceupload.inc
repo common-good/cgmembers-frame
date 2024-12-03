@@ -24,7 +24,7 @@ function formInvoiceUpload($form, &$sta) {
 }
 
 function formInvoiceUpload_validate($form, &$sta) {
-  $fileData = uploadFile('', 'text/csv text/plain');
+  $fileData = uploadFile();
   if (!is_array($fileData)) return err($fileData, 'file');
   $sta['rows'] = w\uploadRows($fileData['path']);
 }

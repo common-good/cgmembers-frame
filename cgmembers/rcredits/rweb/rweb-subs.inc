@@ -123,22 +123,25 @@ function superSignin($vKeyPw = '') {
  * Handle an uploaded file and return an array of file data (or an error message).
  * @param string $path: where to put the uploaded file (defaults to temporary file's path)
  * @param string $types: space-delimited list of acceptable mime types (empty means "any")
- * @param bool $replaceOk: <okay to replace the file at that path, if it exists>
  * @param string $fldName: field name of file upload field (defaults to "file")
+ * @param assoc $extra: options
+ *   noReplace: <not okay to replace the file at that path, if it exists>
+ *   maxSize:   defaults to MAX_UPLOAD_SIZE MB
  * @return an assoc of file data OR the error message
  */
-function uploadFile($path = NULL, $types = 'text/csv text/plain', $replaceOk = TRUE, $fldName = 'file') {
+function uploadFile($path = NULL, $types = 'text/csv text/plain', $fldName = 'file', $extra = []) {
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k][$fldName];
+  extract(just('noReplace maxSize', $extra, [FALSE, MAX_UPLOAD_SIZE * 1024 * 1024]));
   
   if (!$tmp_name) return t('Upload failed with error ') . $error;
   if (!$filetype = mime_content_type($tmp_name) or ($types and !in($filetype, $types))) return t('bad file type', compact('filetype'));
-  if ($size > MAX_UPLOAD_SIZE * 1024 * 1024) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
+  if ($size > $maxSize) return t('That file is too big. It must be under %MAX_UPLOAD_SIZE MB.');
   if ($error) return t('File upload failed.');
   if (!$size) return t('That file is empty.');
 //  $ext = explode('/', $mimetype )[1];
 
   if ($path) {
-    if (!$replaceOk and file_exists($path)) return t('That filename is taken. Try again.');
+    if ($noReplace and file_exists($path)) return t('That filename is taken. Try again.');
     u\deleteFile($path);
     rename($tmp_name, $path);
   } else $path = $tmp_name;
@@ -156,7 +159,7 @@ function htmlText($name, $id, $value, $class, $other = []) {
 //  if ($extra = rcAuto(@$autocomplete_path, $id)) $class[] = 'form-autocomplete';
 
   $tribs = u\tribs(compact('type', 'class') + (nn($tribs) ?: []));
-  return "<input $tribs />";
+  return "<input $tribs>";
 }
 function htmlPassword($name, $id, $value, $class, $other = []) {
   return htmlText($name, $id, $value, $class, ['type' => 'password'] + $other);
@@ -202,7 +205,7 @@ function htmlButton($name, $id, $value, $class, $other = []) {
 function NEWfld($type, $label, $desc = '', $other = []) {
 ///  debug(compact(ray('type label desc other')));
   $label0 = substr($label, 0, 1); // not [0]
-  if ($label0 == REQ) list ($required, $label) = ['yes', substr($label, 1)];
+  if ($label0 == REQ) list ($required, $label) = ['required', substr($label, 1)];
   if ($bare = ($label0 == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
 
   list ($placeholder, $help, $title) = u\padRay(is_array($desc) ? $desc : ['', $desc], 3);
@@ -493,10 +496,10 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     $type = 'textfield';
   }
 
-  if ($type == 'textfield') u\setDft($x['maxlength'], 4096);
+  if (in($subtype, 'email password search tel textfield url')) u\setDft($x['maxlength'], 4096);
   if ($type == 'select') u\setDft($x['default_value'], $options ? key($options) : ''); // Drupal's select fails without a default
   
-  if ($label and $label[0] == REQ) list ($x['required'], $label) = ['yes', substr($label, 1)];
+  if ($label and $label[0] == REQ) list ($x['required'], $label) = ['required', substr($label, 1)];
   if ($bare = ($label and $label[0] == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
   if (nni($x, 'wrap')) $bare = FALSE;
   u\setDft($x['title'], $label); 
@@ -531,7 +534,7 @@ function rentRadios($nm, $dft, $ray) {
     $checked = $i == $dft ? ' checked="checked"' : '';
     $res[] = <<< X
 <div class="form-group form-item-$nm radio-inline mlab-above">
-  <label for="$nm" class="option"><input type="radio" class="form-radio" id="edit-$nm-$i" name="$nm" value="$i"$checked />$v</label>
+  <label for="$nm" class="option"><input type="radio" class="form-radio" id="edit-$nm-$i" name="$nm" value="$i"$checked>$v</label>
 </div>
 X;
   }
@@ -588,7 +591,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  * @param string $args: URL parameters
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @param string $flds: list of fields to extract for display and edit
- * @param string $order: ASC or DESC
+ * @param string $order: list order (defaults to <id field> DESC)
  * @return parameters to extract in the form:
  *   ret: what to return from the form OR
  *
@@ -596,7 +599,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  *   title: form title
  *   orig: original values of the requested record
  */
-function crud($tnm, $args, $url, $flds, $order = 'DESC') {
+function crud($tnm, $args, $url, $flds, $order = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
   $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
   extract(just("del $idFld", $args, NULL));
@@ -604,7 +607,7 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   $id = $$idFld;
   $msg = t('Delete this %tnm record (#%id)?', compact(ray('tnm id')));
   jsx('crud', compact(ray('msg url id')));
-  $title = ucfirst($tnm);
+  $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
   if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
   if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
   if (is_numeric($id)) $title .= btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
@@ -622,7 +625,8 @@ function crud($tnm, $args, $url, $flds, $order = 'DESC') {
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
   } else {
-    $list = a\showQuery($tnm, "$idFld $order", '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
+    u\setDft($order, "$idFld DESC");
+    $list = a\showQuery($tnm, $order, '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
   
@@ -663,7 +667,7 @@ function boxFlds($group, $label, $question, $options, $other = []) {
   foreach ($options as $k => $v) {
     $list .= <<<EOF
 <div class="row">
-<div><input type="checkbox" id="edit-$group-$k" name="{$group}[$k]" /></div>
+<div><input type="checkbox" id="edit-$group-$k" name="{$group}[$k]"></div>
 <div>$v</div>
 </div>
 EOF;
@@ -690,7 +694,7 @@ function roundupFld($a) {
 function boolFld($title = '', $help = '', $dft = NULL, $labels = NULL, $extra = []) {
   $class = ['yesno'];
   $inline = TRUE;
-  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
+  $dft = is_null($dft) ? dft(-1) : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
   return radiosFld($title, $help, $extra + $dft + compact('class', 'inline'), $labels ?: array(t('No'), t('Yes')));
 }
 
@@ -833,7 +837,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
   if ($req == 'user' and $mya) return w\go('dashboard'); // dashboard not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
-  $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
+  $form['opid'] = hidFld(nn($submit1) ?: 'none', ray('name', 'opid')); // default to first, in case submitted programmatically
 
 //  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
@@ -929,36 +933,6 @@ function pickPassword($reset = TRUE, $req = '') {
   jsx('pw');
   focusOn('pw');
   return compact(ray('pw'));
-}
-  
-/**
- * Return the box record ID for the given device code and account record ID (create one if none).
- * @param int $code: device identifier
- * @param int $a: current account (can be a company)
- * @param string $version: app version (web version is not used here)
- * @return the box record ID
- */
-function boxId($code, $a, $version = NULL) {
-  global $channel;
-
-  $cookid = 'boxnum' . $a->id;
-  if ($id = nni($_COOKIE, $cookid) and !test()) return $id; // we only get this if last set today
-  
-  if ($id = boxIdCheck($code, $a)) {
-    $access = now();
-    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
-  } else $id = $a->makeBox($code, $channel, $version);
-  return r\setCook($cookid, $id, now() + SESSION_LIFE);
-}
-
-/**
- * Return the box record ID for the given device code and account record ID (NULL if none).
- */
-function boxIdCheck($code, $a) {
-  if (!$row = db\row('r_boxes', compact('code'))) return NULL;
-  extract((array) $row);
-// nope. might be several accounts on this device  u\EXPECT($uid == $a->id, 'actor mismatch in deviceId');
-  return $id;
 }
 
 /**
@@ -1085,6 +1059,7 @@ function svar($name) {
 function modal($id, $legend, $prompt, $body, $closer = '') {
   if ($closer == 'X') $closer = '&times;'; // a better X (normally with class "close" alone)
   if ($prompt !== '') $prompt = "<p>$prompt</p>";
+
   return <<<EOF
 <div id="$id" class="modal fade" role="dialog">
   <div class="modal-dialog">
@@ -1449,7 +1424,7 @@ function stateFld($dft = NULL, $req = REQ) {return selectFld($req . t('State:'),
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($dft = NULL, $req = REQ) {return textFld($req . t('Postal Code:'), [t('Physical location postal code')], dft($dft));}
 function catFld($dft = '', $req = REQ, $accts = []) {return selectFld($req . t('Category:'), '', dft($dft), ['' => t('--- What budget category? ---')] + ($accts ?: db\keyed('id, category', 'tx_cats', '`show`')));}
-function fboCatFld($dft = '', $way = 'OUT') {return catFld($dft, '', fboCatChoices($way));} // not REQ!
+function fboCatFld($dft = '', $way = 'OUT') {return catFld($way == 'OUT' ? (REQ . $dft) : $dft, '', fboCatChoices($way));} // not REQ for way=IN
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', fmtDt(now()))], required($selling));}
 function routingFld($req = '') {return intFld($req . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999) + (isDEV ? dft(DEV_ROUTING) : []));} // arbitrary acceptable default for development
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
@@ -1463,8 +1438,8 @@ function coTypeFld($dft = NULL, $omit = [CO_PERSONAL], $desc = '') {
   return radiosFld(REQ . t('Account Type:'), ['', $desc], dft($dft), $coTypes);
 }
 
-function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
-function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()], dft($dft));}
+function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), mobileDobTxt(), autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
+function foundedFld($dft = '', $req = REQ) {return dateFld($req . t('Founded:'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt(), dft($dft));}
 function logoFld($a, $suffix = '') {return ($a->hasLogo or $suffix) ? item(logoHtml($a) . $suffix) : NULL;}
 function logoHtml($a) {return $a->hasLogo ? tr(img('%logo'), 'logo', BASE_URL . '/account-logo/' . $a->mainQid . '?' . now()) : '';}
 
@@ -1686,10 +1661,6 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $downloadPeriod = $downloadable ? submi(t('Download')) : NULL;
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
   $actions = fieldSet('actionsSimple', compact('submitPeriod', 'downloadPeriod'), '', '', suffix($showAdvanced2));
-///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
-//  $onchange = "$('#edit-starting, #edit-ending').val('');";
-//  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
-//  $period = selectFld(t('For the past:'), '', dft($period) + w\onchange($onchange), $txDays);
   $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
   $simple = fieldSet('simple', compact('period', 'actions'), BARE);
@@ -2150,11 +2121,13 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
  */
 function popHelp($text, $help, $href = '', $class = '', $trigger = '') {
   $trigger = $trigger ?: 'hover';
-  list ($href, $tag) = $href ? [" href=\"$href\"", 'a'] : ['', 'span'];
+  list ($href, $tag, $type) = $href ? [" href=\"$href\"", 'a', ' type="button"'] : ['', 'span', ''];
   if ($class) $class = " class=\"$class\"";
   $text = ucfirst($text);
   foreach (ray('text help') as $k) $$k = htmlentities($$k);
-  return "<$tag$href$class type=\"button\" data-toggle=\"popover\" data-placement=\"bottom\" data-trigger=\"$trigger\" data-content=\"$help\" title=\"$text\">$text</$tag>";
+  return <<<X
+<$tag$href$class$type data-toggle="popover" data-placement="bottom" data-trigger="$trigger" data-content="$help" title="$text">$text</$tag>
+X;
 }
 
 /**
@@ -2218,6 +2191,9 @@ function emailtag($email = NULL, $subject = '', $body = '') {
 function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
+function btnFld($label, $href, $text, $style = '', $size = 'md', $extras = []) {
+  return item(btn($href, $text, $style, $size), $label, '', $extras);
+}
 function btnOpt($href, $text, $clas = '') {return btn($href, $text, 'default', '', clas("$clas btn-options"));}
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 
@@ -2259,10 +2235,14 @@ function skipStepLonger() {
   
 /**
  * Return account and password fields for sign-in.
+ * @param string $qid: default account identifier
+ * @param string $req: REQ (required) or ''
+ * @param string $acctDesc: account description
+ * @param string $passDesc: password description
  */
-function signinFlds($qid, $acctDesc = '', $passDesc = '') {
-  $qid = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
+function signinFlds($qid, $req = '', $acctDesc = '', $passDesc = '') {
+  $qid = textFld($req . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld($req . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
   return [$qid, $pass];
 }
 
@@ -2380,19 +2360,20 @@ function missingArgs($args, $require) {
  * Sign in or sign up, before doing the given task.
  * @param string $first: signin or signup
  * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @param bool $addParam: <$first already has a paramter>
  * @return: first() returns a URL to redirect to (first); goFirst() does not return -- redirects to signin or signup
  */
-function first($first, $then = NULL) {
+function first($first, $then = NULL, $addParam = FALSE) {
   global $testFirst, $testThen;
   
-  u\setDft($then, $_SERVER['REQUEST_URI']);
+  u\setDft($then, URI);
   if (!is_array($then)) $then = ray('url', $then);
   list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
 
-  return "$first/then=$then";
+  return $first . ($addParam ? '&' : '/') . "then=$then";
 }
-function goFirst($first, $then = NULL) {return w\go(first($first, $then));}
+function goFirst($first, $then = NULL, $addParam = FALSE) { return w\go(first($first, $then, $addParam)); }
 
 /**
  * Do what was intended after a redirect.
@@ -2414,21 +2395,33 @@ function exitRay($ray, $cry = FALSE) {
   return exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
 }
 
+/**
+ * Return a button to hide and maybe show somthing.
+ * @param string $hide: CSS for what to hide (defaults to parent - the button itself normally gets hidden as part of this)
+ * @param string $hide: CSS for what to show (optional)
+ * @return HTML for the button
+ */
+function xBtn($hide = '', $show = '') {
+  foreach (ray('hide show') as $k) if ($$k) $$k = " data-$k=\"{${$k}}\"";
+  return tr('<div class="xbtn"%hide%show title="close"></div>', '_hide _show', $hide, $show); // image is supplied in CSS
+}
+
 // one-line functions that need no explanation
 
-function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
+function disabled($value = NULL, $disabled = 'disabled') {return compact('disabled') + (isset($value) ? compact('value') : []);}
 function dft($v) {return ray('default_value', nn($v, NULL));}
 function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
 function suffix($suffix = '') {return ray('field_suffix', "<div class=\"suffix\">$suffix</div>");}
 function prefix($prefix) {return compact('prefix');}
+function short() {return clas('short');}
 function maxlen($maxlength) {return compact('maxlength');}
 function vmin($min) {return compact('min');}
 function vmax($max) {return compact('max');}
 function vrange($min, $max) {return compact('min', 'max');}
 function step($step) {return compact('step');}
 function autofill($autocomplete = 'on') {return compact('autocomplete');}
-function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
+function required($dft = NULL) {return ['required' => 'required'] + (isset($dft) ? dft($dft) : []);}
 function op($sta) {global $testOp; return test() ? $testOp : substr(nni($sta['input'], 'opid'), 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}

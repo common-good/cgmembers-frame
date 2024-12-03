@@ -22,7 +22,7 @@ function formInvestPropose($form, &$sta, $args = '') {
   $fullName = textFld(t('Company:'), [t('The company\'s full name')]);
   $city = textFld(t('City:'), [t('City where company is located')]);
   $zips = textFld(t('Service area:'), [t('Company service area (list of zipcodes)')]);
-  $dob = dateFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately?')]);
+  $dob = dateFld(t('Founded:'), t('When did this company begin, approximately?'));
   $gross = numFld(t('Annual Gross:'), [t('Gross income')]);
   $bizCats = selectFld(t('Biz categories:'), t('Hold down the Ctrl key to select more than one'), ['multiple' => TRUE], coCats());
 
@@ -86,7 +86,7 @@ function formInvestPropose_submit($form, &$sta) {
   extract(just(INVEST_ALLFLDS . ' equity exempt', $sta['input'], NULL));
   list ($clubid, $clubqid) = [$mya->id, $mya->mainQid];
   $types = $equity ? 'D' : 'I';
-  if ($exempt) $types .= 'T';
+  if ($exempt == 1) $types .= 'T';
   
   if ($fullName) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));

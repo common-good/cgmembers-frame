@@ -307,9 +307,9 @@ function withUndo($subs) {
 function weReturnErrorWithSubs($msg, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
-  $msg = strip_tags(t($msg, nni($subs, 0)));
-  if ($rposResult['ok'] == '0' and $rposResult['message'] == $msg) return TRUE;
-/**/ t\output(ray('wanted,actually sent', $msg, print_r($rposResult, 1)));
+  $want = strip_tags(t($msg, nni($subs, 0)));
+  if ($rposResult['ok'] == '0' and $rposResult['message'] == $want) return TRUE;
+/**/ t\output(ray('wanted,actually sent', $want, print_r($rposResult, 1)));
   return FALSE;
 }
 

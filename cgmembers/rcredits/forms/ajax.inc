@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Cron as cr;
 
 /**
  * Handle an arbitrary AJAX request.
@@ -25,7 +26,7 @@ function ajax($args = NULL) {
 
   $myid = $aid = NULL;
   if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
-  if (!in($op, 'setNotice')) { // no sid if not signed in
+  if (!in($op, 'qBtn setNotice signinThenPay stripeSetup stripeTx')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(tr('signed out'));
     if (!$aid = $vars['uid'] or !$myid = w\svar('myid')) return ajaxErr('not signed in');
   }
@@ -38,9 +39,17 @@ function ajax($args = NULL) {
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
+      
+    case 'signinThenPay':
+      $url = BASE_URL . '/' . w\first('signin', 'ccpay/code=' . u\cryRay($data));
+      return ajaxRet(compact('url'));
+      
+    case 'stripeSetup': return stripeSetup($data); // get client secret for card payment
+    
+    case 'stripeTx': return stripeTx($data); // do a Stripe payment (possibly recurring, based on stripeSetup)
 
     case 'suggestTxDesc': // suggest a description and/or category for a transaction being entered
-      extract(just('otherId purpose paying', $data));
+      extract(just('otherId purpose paying', $data, NULL));
       $purpose = $purpose ?: r\suggestDesc($myid, $otherId, $paying);
       $cat = r\bestCat(ray('myid otherId desc type channel paying', $myid, $otherId, $purpose, E_PRIME, TX_WEB, $paying));
       return ajaxRet(compact(ray('purpose cat')));
@@ -73,7 +82,7 @@ function ajax($args = NULL) {
     case 'cgPayCode': // get cgPay code
       include_once R_ROOT . '/forms/code.inc';
       extract(just('fer expires', $data));
-      $data['for'] = nni(ray('donate,,credit,gift'), $fer); // fer=2 (other) is ignored
+      $data['for'] = nni(CGBUTTON_CODES, $fer);
       unset($data['fer']);
       if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
       foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
@@ -156,7 +165,7 @@ function ajax($args = NULL) {
     case 'who':
       extract(just('who question amount selfErr restrict', $data));
       $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-      $who = be\identify($who, $mya, $selfErr, $restrict);
+      $who = be\identify($who0 = $who, $mya, $selfErr, $restrict);
       if (is_string($who)) return ajaxErr(tr($who));
       if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->id, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
       
@@ -179,12 +188,91 @@ function ajax($args = NULL) {
   
 }
 
-function ajaxErr($msg) {return ajaxMsg($msg, 0);}
+/**
+ * Create the basis for a (possibly recurring) payment through Stripe
+ * @return {id, client_secret} or an error message (id is the setupIntent ID)
+ */
+function stripeSetup($data) {
+  extract(just('for item period honor honored coId fullName email phone zip country notes', $data, NULL));
+  require_once R_ROOT . '/stripe.inc';
+
+  if ($period == 'once') $period = '';
+  $periodDesc = $period ? ucfirst(r\recurRay()[$period]) : '';
+  $description = $item ?: ($for == FOR_DONATE ? t('donation') : ($for ?: t('purchase')));
+  
+  $email = strtolower($email);
+  list ($city, $state) = r\zipCity($zip);
+  $coA = r\acct($coId);
+  $notices = NOTICE_NONE;
+  $honor = $honored ? t('in %honor of %honored', compact(ray('honor honored'))) : NULL;
+  $notes = $honor . (($honor and $notes) ? ' - ' : '') . $notes;
+  $source = t('paid %nm (by card)', 'nm', $coA->bestName);
+//    $reportInfo += compact(ray($inputFlds));
+  
+  $nmNow = "CONCAT('%', REPLACE(fullName, ' ', '%'), '%')";
+  $newNm = "CONCAT('%', REPLACE(:fullName, ' ', '%'), '%')";
+  $where = "email=:email AND (fullName LIKE $newNm OR :fullName LIKE $nmNow)";
+  $old = db\row('people', $where, compact(ray('fullName email')));
+
+  if (!$old or empty($old->stripeCid)) {
+    $cust = stripe('cust', $data);
+    if (!is_object($cust)) return ajaxErr($cust); // anything other than an object is an error message
+    $stripeCid = $cust->id;
+  }
+
+  if ($old) { // if person already in people table
+    extract(just('pid city notices source notes stripeCid', $old), EXTR_PREFIX_ALL, 'o');
+    $new = compact(ray('phone notes'));
+    if (!$o_city) $new += compact(ray('city state zip country'));
+    foreach (ray('pid notices source stripeCid') as $k) $new[$k] = $$k = $old->$k ?: $$k;
+    $notes = ($o_notes and $notes) ? "$notes\n$o_notes" : "$notes$o_notes";
+    db\update('people', $new, 'pid');
+  } else {
+    $pid = db\insert('people', compact(ray('fullName email phone zip city state country notices notes source stripeCid')), 'pid');
+  }
+  
+  $intent = stripe('setup', compact(ray('stripeCid description')));
+  if (!is_object($intent)) return ajaxErr($intent); // anything other than an object is an error message
+  
+  return ajaxRet(ray('pid purpose stripeId secret', $pid, $description, $intent->id, $intent->client_secret));
+}
+
+/**
+ * Create a donation payment through Stripe
+ * @return {msg}: msg is an encrypted success or failure message
+ */
+function stripeTx($data) {
+  extract(just('amount for purpose period coId pid stripeId coverCCFee coverFSFee', $data, NULL));
+  require_once R_ROOT . '/rcron/rcron.inc';
+  
+  $flags = 
+    ($for == FOR_DONATE ? u\bit(B_GIFT) : 0)
+  | ($coverCCFee ? u\bit(B_COVERCC) : 0)
+  | ($coverFSFee ? u\bit(B_COVERFS) : 0)
+  | u\bit(B_CC);
+
+  $info = compact(ray('amount period purpose flags stripeId')) 
+        + ray('action from to payerType payer duration', 
+        ACT_PAY, MATCH_PAYER, $coId, REF_PERSON, $pid, PER_1);
+  $id = db\insert('tx_timed', $info); // create a timed record even if not recurring (for cron)
+  $template = (array) db\row('tx_timed', compact('id')); // pass all fields to cron job
+  $template += ray('lastRecur', 0);
+  $queueId = cr\queue('recur', $template, TRUE);
+  
+  [$ok, $msg] = cr\recur($template);
+  db\del('queue', ray('id', $queueId));
+  if (!$ok and $period == PER_1) db\del('tx_timed', compact('id')); // take out !$ok in December 2024 (we don't need to keep timed records for one-timers)
+
+  return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
+}
+
+function ajaxErr($msg) { http_response_code(500); return ajaxMsg($msg, 0); }
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data0, $ok = 1) {
-  $data = u\jsonize($data0 + compact('ok'));
   if (!isset($data0['which'])) u\loga('ajax', $data0); // don't log hundreds of choices (log data0 so secrets are hidden)
-  exit($data);
+  return exitJson($data0 + compact('ok'));
+//  $data = u\jsonize($data0 + compact('ok'));
+//  exit($data);
 }
 function relPermErr($message, $reid, $v0) {
   return ajaxRet(compact(ray('message v0')), 0);

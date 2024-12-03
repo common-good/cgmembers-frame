@@ -14,13 +14,13 @@ use CG\Db as db;
  *     <baseurl>/do/<error message (with a space in it)>
  * @param string $form: a form to complete without signing in
  * @param string code: an array encrypted with u\cryRay, possibly including:
- *   op:    what to do (REQUIRED). Must be of the form do<form> (for example doProxies) if the call is <op>~...
- *   qid:   the account QID
- *   ecode: the account's email security code (deprecated. delete 10/1/2020)
- *   mo:    month that the link should expire, relative to first rdo (see rdoMonth()) (deprecated. delete 10/1/2020)
- *   v:     an amount or identifier, specific to the operation
- *   sql:   a database request, if any
- *   subs:  substitutions for the database request
+ *   op:      what to do (REQUIRED). Must be of the form do<form> (for example doProxies) if the call is <op>~...
+ *   qid:     the account QID
+ *   ecode:   the account's email security code (deprecated. delete 10/1/2020)
+ *   mo:      month that the link should expire, relative to first rdo (see rdoMonth()) (deprecated. delete 10/1/2020)
+ *   v:       an amount or identifier, specific to the operation
+ *   sql:     a database request, if any
+ *   subs:    substitutions for the database request
  *   
  * Possible values for op:
  *   min: change minimum to $v
@@ -66,6 +66,7 @@ function rdo($code) {
     return w\showForm($formName, nn($a) ? "qid=$a->mainQid&ecode=$a->emailCode&$v" : '');
   }
 
+  if ($op == 'cancelTimed') $res = db\update('tx_timed', ray('id end', $v, now()));
   if ($op == 'nosecret') $res = $a->setBit(B_SECRET, FALSE);
   if ($op == 'debtok') $res = $a->setBit(B_DEBT, TRUE);
   if ($op == 'rsv') {return w\go("savings/qid=$qid&ecode=$ecode");}

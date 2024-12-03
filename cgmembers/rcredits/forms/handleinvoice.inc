@@ -22,25 +22,26 @@ function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
 
   extract(just('nvid ret webpay code', $args, NULL));
-  $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
-
-  if (!$inv = db\get('*', 'tx_requests', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To approve this payment request, sign in at %CG_DOMAIN and click History / Pending FROM You.'), 'err');
+  $ret = $ret ? u\deurlify($ret) : 'empty';
+  
+  if (!$inv = db\get('*', 'tx_requests', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To approve this payment request, sign in at %CG_DOMAIN and click History / Pending From You.'), 'ERR');
   if ($err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
   extract(just('nvid amount payer payee purpose created data status flags', $inv));
-  
-  if ($mya and !in($payer, $mya->uids) 
-    and !(in($payee, $mya->uids) and !$code)) w\signout(TRUE); // make sure we're signed out of any possibly different acct
-  if (!$mya) { // not signed in (might have changed in previous line)
-    if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$code) return go('/signin'); // probably admin browser refresh (but timed out)
-    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
 
+  if ($code) {
+    if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact(ray('args code info')));
     extract(just('op v', $info, NULL));
-    u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');
+    u\EXPECT($op == 'inv' and $v == $nvid, t('handleInvoice fake') . pr(compact(ray('args code info'))));
+//    if (!w\itsMyBox($payer)) return w\go($ret, t('You can pay an invoice only on a device you have signed in from.'), 'ERR');
   }
+  
+  $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
+  $fromMe = ($mya and in($payer, $mya->uids)); // fromMe means signed in and paying
+
+  if ($mya and !$toMe and !$fromMe) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+  if (!$mya and !$code) return go('/signin'); // not signed in (might have changed in previous line); probably admin browser refresh (but timed out)
 
   $subs = ray('nvid amount what date', $nvid, u\fmtAmt($amount), $purpose, fmtDt($created));
-  $toMe = ($mya and in($payee, $mya->uids)); // toMe means payment is to me (possible only when signed in)
   $data = unserialize(nn($data)) ?: [];
   $reasonDft = nni($data, 'reason') ?: nni($data, 'whyNot'); // whyNot is deprecated (maybe convert it?)
 
@@ -77,31 +78,34 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $a = r\acct($payer);
     $title = t('Confirm Payment');
     $subs += ray('who', r\acct($payee)->fullName);
-    $remaining = be\invRemains($nvid);
+    $remains = be\invRemains($nvid);
 
     if ($a->hasBank) {
-      $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Auto" box).</p>');
-      if (!$webpay) $always = boxFld('always', t('Auto:'), t('Pay all invoices from %who automatically.', $subs), 0);
-    } elseif ($a->avail() < $remaining) {
+      $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Always" box).</p>');
+      if (!$webpay) $always = boxFld('always', t('Always:'), t('Pay all invoices from %who automatically.', $subs), 0);
+    } elseif ($a->avail() < $remains) {
       $_warning = t('<p><b>NOTE:</b>You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account. Then click History / Pending FROM You and select this invoice to approve it.</p>');
       $disabled = w\disabled();
     } else $_warning = '';
 
-    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($remaining, 2));
-    $remains = u\fmtAmt($remaining);
-    $remains = $remains == $subs['amount'] ? '' : t(' (%remains remaining)', compact('remains'));
-    $subtext = t('<p>Pay %amount to %who for %what%remains.</p>%warning', $subs + compact(ray('_warning remains')));
-    $remaining = hidFld($remaining);
+    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($remains, 2));
+    $remainsDpy = u\fmtAmt($remains);
+    $remainsDpy = $remainsDpy == $subs['amount'] ? '' : t(' (%remainsDpy remaining)', compact('remainsDpy'));
+    $subtext = t('<p>Pay %amount to %who for %what%remainsDpy.</p>%warning', $subs + compact(ray('_warning remainsDpy')));
 
     if (u\getBit($flags, B_SELF) and $status == TX_APPROVED) {
-      $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
+      $cancel = submit(t('Cancel Payment'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
     } else {
+      if ($status >= TX_PAID) return w\go($ret, t('inv already paid'), 'ERR');
+      if ($status == TX_DELAYED) return w\go($ret, t('inv delayed'), 'ERR');
+      if ($status == TX_CANCELED) return w\go($ret, t('inv canceled'), 'ERR');
+      if (u\getBit($flags, 'funding') and $remains > $a->avail()) return w\go($ret, t('inv already funding'), 'ERR');
       $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
       $choices = [
         t('Pull this entire amount from your bank account.'),
         t('Pay first from your Common Good balance; then from your bank account as needed.'),
       ];
-      $auto = $a->hasBank ? radiosFld(REQ . NBSP, dft(0), [], $choices) : hidFld(1);
+      $balFirst = $a->hasBank ? radiosFld(REQ . NBSP, dft($a->balFirst ? 1 : 0), [], $choices) : hidFld(1);
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
       $reason = textFld(t('Reason for dispute:'));
@@ -110,11 +114,12 @@ function formHandleInvoice($form, &$sta, $args = '') {
     }
   }
   
+  $remains = hidFld(nn($remains));
   $toMe = hidFld($toMe);
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always auto pay action because denySet close cancel reopen toMe remaining hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always balFirst pay action because denySet close cancel reopen toMe remains hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -122,33 +127,38 @@ function formHandleInvoice($form, &$sta, $args = '') {
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('reason toMe payAmount remaining', $sta['input'], NULL));
+  extract(just('reason toMe payAmount remains', $sta['input'], NULL));
   extract(just('amount', hidFlds($sta, 'hid'), NULL));
   $deny = (op($sta) == 'deny');
   if (!$toMe and $deny and !$reason) return say('say why not', 'reason');
-  if (isset($payAmount) and $err = u\badAmount($payAmount, '>0', 2, $remaining)) return say($err, 'payAmount');
+  if (isset($payAmount) and $err = u\badAmount($payAmount, '>0', 2, $remains)) return say($err, 'payAmount');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
   extract(just('payAmount', $input = $sta['input'], NULL));
 
   $hidInfo = hidFlds($sta, 'hid');
-  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action auto', $input));
+  handleInvoice(op($sta), $payAmount, $hidInfo + just('always reason action balFirst', $input));
   return w\go($hidInfo['ret']);
 }
 
 function handleInvoice($op, $payAmount, $info) {
-  extract(just('nvid payer payee purpose created data amount always reason action auto', $info, NULL));
+  extract(just('nvid payer payee purpose created data amount always reason action balFirst', $info, NULL));
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
-  $ok = TRUE; // messages default to status, rather than error
+  $ok = TRUE; // messages default to type "status", rather than "error"
   $data = ($data ? unserialize($data) : []);
   
   if ($op == 'pay' and !$reason) {
+    $flags = db\get('flags', 'tx_requests', compact('nvid'));
+    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
-      extract(just('ok msg', $z = be\payInvoice($nvid, $payAmount, $auto))); // marks it approved if insufficient funds, ok if paid (or already paid)
+      extract(just('ok msg', $z = be\payInvoice($nvid, $balFirst, $payAmount)));
+      if ($payAmount < $amount) { // don't let the funding flag prevent payer from completing payment!
+        $flags = u\setBit($flags, 'funding', FALSE);
+        db\update('tx_requests', compact(ray('nvid flags')), 'nvid');
+      }
     } else { // if payer account is not active yet
-      db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
       $msg = t('finish signup|when funded');
     }
     if ($always) {

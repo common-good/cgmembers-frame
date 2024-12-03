@@ -10,7 +10,7 @@ args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
-  function fform(fid) {return $(fid).parents('form:first');}
+  function fform(fid) {return $(fid).closest('form');}
   function report(j, callback) {$.alert(j.ok ? 'Success' : 'Error', j.message, callback);}
   function reportErr(j, callback) {if (!j.ok) $.alert('Error', j.message, callback);}
   function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
@@ -30,11 +30,46 @@ function doit(what, vs) {
 
   switch(what) {
     
+  case 'confirm':
+    const confirm = $('#edit-confirm').val();
+    if (confirm) yesno(confirm, function () {
+      location.href = baseUrl + '/do/' + vs['code'];
+    });
+    break;
+
+  case 'seeChanges':
+    $('#edit-table').change(function () {
+      const table = $(this).find(":selected").text();
+      location.href = baseUrl + '/history/changes/table=' + table + '&qid=' + vs['qid'];
+    });
+    break;
+
+  case 'ourAccts': // $(this).closest('form').submit()
+    const go = $('.form-item-asof .btn');
+    const asof = $('#edit-asof');
+    
+    go.click(function () {
+      location.href = baseUrl + '/sadmin/our-accounts/asof=' + asof.val();
+    });
+    asof.on('keypress',function(e) {if(e.which == 13) {go.click();}});
+    break;
+  
   case 'taxinfo':
     $('#edit-year').change(function () { location.href = baseUrl + '/history/tax-info/' + $('#edit-year :selected').val(); });
     break;
 
   case 'panel':
+    $('.form-item-acctSet .btn').click(function () {
+      const op = $(this).attr('id');
+      const form = fform(this);
+      const question = 'Do <b class=loud>' + op + '</b> for account ' + vs['who'] + '?';
+      yesno(question, function () {
+        form[0].opid.value = 'edit-' + op; // $('#opid').val() fails here
+        form.submit();
+      });
+      return false;
+    });
+    
     $('.form-item-closeBooks a').click(function () {
       var dt = $('#edit-closebooks').val();
       if (dt) location.href = baseUrl + '/sadmin/panel/op=close&dt=' + dt;
@@ -180,10 +215,6 @@ function doit(what, vs) {
       .click(function () {$(this).hide();}); // tap to return to cardDone screen
     break;
 
-  case 'cc':
-    hideComment();
-    break;
-    
   case 'receipt':
 // fails on mobile    window.onafterprint = function () {history.go(-1);}
     $('.btn-print').click(function () {window.print(); return false;});
@@ -200,7 +231,7 @@ function doit(what, vs) {
 
   case 'adminSummary': 
     $('.tickle').click(function () {
-      var tickle = $(this).attr('tickle');
+      var tickle = $(this).attr('data-tickle');
       $('#edit-tickle').val(tickle);
       $('#edit-submit').click();
     });
@@ -460,11 +491,13 @@ function doit(what, vs) {
     $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
-      var credit = (fer == forStoreCredit || fer == forGiftCredit);
+      var ferStoreCredit = (fer == forStoreCredit);
+      var credit = (ferStoreCredit || fer == forGiftCredit);
       $('.form-item-ccOk').toggle(vs['showCcOk'] == 1);
       ccOk.prop('checked', vs['showCcOk'] == 1 || fer == forGift); // default to CC is ok when changing purpose and showing it or gifting
       $('#edit-for').val(vs['forVals'].split(',')[fer]);
-      $('.form-item-credit').toggle(fer == forStoreCredit); // show credit option only for credit (not for gift of credit)
+      $('.form-item-credit').toggle(ferStoreCredit); // show credit option only for credit (not for gift of credit)
+//      if (ferStoreCredit) $('#edit-credit').val('');
       $('.form-item-item').toggle(!credit);
       $(credit ? '#edit-size' : '#edit-item').focus();
       getCGPayCode();
@@ -473,7 +506,7 @@ function doit(what, vs) {
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
     
-    function getCGPayCode() { // get a CGPay buttonn code
+    function getCGPayCode() { // get a CGPay button code
       post('cgPayCode', {
         item:$('#edit-item').val(),
         amount:$('#edit-amount').val(),
@@ -500,16 +533,11 @@ function doit(what, vs) {
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/cgpay';
-      if (fer == forGift) {
-        url = url.replace('/cgpay', '/community/donate');
-      } else if (ccOk.is(':checked')) url = url.replace('/cgpay', '/ccpay');
-      
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
       var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
-      var html = vsprintf('<a href="%s/code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
+      var html = vsprintf('<a href="%s/code=%s"%s target="_blank">%s</a>', [baseUrl + '/pay', cgPayCode, style, img]);
       
       if ((isButton ? size : text) != '') setButtonHtml(html);
       $('.form-item-size img').height(size == '' ? 0 : size);
@@ -522,33 +550,50 @@ function doit(what, vs) {
     }
     break;
 
-  case 'cc': hideComment(); break;
-  
-  case 'donate':
-    $('#edit-amount').val($('#edit-amtchoice').val()); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
-    hideComment();
-    $('.form-item-honor, .form-item-payHow span').hide();
-    if ($('.btn-repeat').length) $('.form-item-period').hide(); // hide period only if it can be unhidden
-    var coverCCFee = $('.form-item-coverCCFee');
-    var ach = $('#ach'); ach.hide();
-    if ($('#edit-payhow-0').length) {
-      coverCCFee.hide();
-      $('#edit-payhow-1').click(function () {
-        ach.hide();
-        coverCCFee.show(); 
-        if ($('.form-item-period').is(':visible')) $('.form-item-payHow span').show();
-        $('.btn-repeat, .form-item-period').hide();
-      });
-      $('#edit-payhow-0').click(function () {
-        ach.show();
-        coverCCFee.hide();
-        $('.btn-repeat, .form-item-period').show();
-      });
-    } else if ($('#edit-fullname').length) { // non-member donating to non-FS org, so CC only and no repeats
-      $('.btn-repeat').hide();
+  case 'pay':
+    var amt = $('#edit-amount');
+    hideNote();
+    const thisForm = $('#frm-pay');
+    const submit = $('.form-item-submit');
+    const honor = $('.form-item-honor'); 
+    if ($('#edit-honored').val() == '') honor.hide(); else $('.btn-honor').hide();
+    const repeat = $('.btn-repeat');
+    const period = $('.form-item-period');
+    if (repeat.length) { // hide period only if it can be unhidden
+      if ($('#edit-period').val() == 'once') period.hide(); else repeat.hide();
     }
+    const stay = $('.form-item-stay'); stay.find('input').val(-1); // reset on error
+    const qid = $('.form-item-qid'); qid.hide();
+    const pass = $('.form-item-pass'); pass.hide();
+    const ccPctVal = parseFloat(vs['ccPct']) / 100;
+    const ccPlusVal = parseFloat(vs['ccPlus']) / 100;
+    const fsPctVal = parseFloat($('#edit-fspct').val());
+    var ccFeeVal;
+    var fsFeeVal;
+    const erDiv = $('#edit-paymentErr .control-data');
     
-    $('.btn-repeat').click(function () {
+    amt.change(function () {
+      const amtVal = amt.val();
+      const ccFeeMsg = $('.form-item-coverCCFee span');
+      ccFeeVal = parseFloat(amtVal) * ccPctVal + ccPlusVal;
+      if (ccFeeVal > 0) ccFeeMsg.html(ccFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(ccFeeVal) + ').'));
+      
+      const fsFeeMsg = $('.form-item-coverFSFee span');
+      if (fsFeeMsg.length) {
+        fsFeeVal = parseFloat(amtVal) * fsPctVal;
+        if (fsFeeVal > 0) fsFeeMsg.html(fsFeeMsg.html().replace(/ \(.+/, ' ($$' + fmtAmt(fsFeeVal) + ').'));
+      } else fsFeeVal = 0;
+      
+      erDiv.html('');
+    });
+    
+    if (stay.length) {
+      nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
+      paySet = $('#paySet'); paySet.hide();
+      submit.hide();
+    } 
+      
+    repeat.click(function () {
       $(this).hide();
       $('.form-item-period').show();
       $('#edit-period').val('month').focus();
@@ -556,8 +601,56 @@ function doit(what, vs) {
 
     $('.btn-honor').click(function () {
       $(this).hide();
-      $('.form-item-honor').show();
+      honor.show();
       $('#edit-honored').focus();
+    });
+    
+    $('#edit-stay-0').click(function () { // nonmember (pay by card)
+//      $.alert('Oops.', 'Non-member payments are temporarily disabled. Please try tomorrow. Our tech team apologizes for the inconvenience.'); return;
+      for (fnm of 'fullName phone email zip'.split()) req($('.form-item-' + fnm));
+      stay.hide(); $('#edit-stayLabel').hide();
+      nonMember.show();
+    });
+
+    $('#edit-stay-1').click(function () { // member (sign in)
+      stay.hide(); $('#edit-stayLabel').hide();
+      for (fnm of 'fullName phone email zip'.split()) reqNot($('.form-item-' + fnm));
+      req(qid); req(pass); submit.show();
+      qid.find('input').focus();
+    });
+    
+    $('#edit-next .btn').click(function () {
+      if (document.getElementById('frm-pay').reportValidity()) {
+        $('.form-item-next, #details, #nonMember').hide();
+        paySet.show();
+        submit.show();
+              
+        var amount = parseFloat(amt.val());
+        var coverCCFee = $('#edit-coverCCFee input:checked').length;
+        var coverFSFee = $('#edit-coverFSFee input:checked').length;
+        var feeCovered = (coverCCFee ? ccFeeVal : 0) + (coverFSFee ? fsFeeVal : 0);
+
+        const info = {
+          amount: amount + feeCovered,
+          feeCovered: feeCovered,
+          coverCCFee,
+          coverFSFee,
+          'for': $('#edit-for').val(),
+          item: $('#edit-item').val(),
+          period: $('#edit-period').val(),
+          honor: $('#edit-honor').val(),
+          honored: $('#edit-honored').val(),
+          coId: $('#edit-coid').val(),
+          fullName: $('#edit-fullname').val(),
+          email: $('#edit-email').val(),
+          phone: $('#edit-phone').val(), 
+          zip: $('#edit-zip').val(),
+          country: $('#edit-country').val(),
+          notes: $('#edit-note').val()
+        };
+
+        stripe(Stripe(vs['stripePublicKey']), info, vs);
+      }
     });
 
     break;
@@ -602,8 +695,10 @@ function doit(what, vs) {
     var fid = '#edit-newacct';
     var form = $('#frm-accounts');
     suggestWho(fid, '');
-    form.submit(function (e) {
-      return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+    $(fid).focus(function () {
+      form.submit(function (e) {
+        return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
+      });
     });
     break;
 
@@ -849,22 +944,30 @@ function doit(what, vs) {
     break;
     
   case 'amtChoice':
-    var amtChoiceWrap = $('.form-item-amtChoice');
-    var amtChoice = $('#edit-amtchoice');
-    var amt = $('#edit-amount');
-    var other = $('.form-item-amount'); 
+    const amtChoiceWrap = $('.form-item-amtChoice');
+    const amtChoice = $('#edit-amtchoice');
+    const otherAmtWrap = $('.form-item-amount'); 
+    const otherAmt = $('#edit-amount');
 
-    amtChoice.change(function () {
-      if(amtChoice.val() == '-1') {
-        other.show(); 
+    amtChoice.change( () => {
+      const v = amtChoice.val();
+      amtChoice.find('option').removeAttr('selected');
+      amtChoice.find(':selected').attr('selected', 'selected');
+      amtChoice.val(v); // Force update (don't know why this is needed in Chrome 10/23/2024)
+      otherAmt.val(v); // prevent inexplicable complaint about inability to focus on "name" field when submitting with a standard choice
+
+      if(v == '-1') {
+        otherAmtWrap.show(); 
         amtChoiceWrap.hide();
-        amt.val('').focus().removeAttr('required');
-        fform('#edit-amount').submit(function () {if (amt.val() == '') amt.val(0);}); // "Water" donation defaults to zero
-      } else other.hide();
+        otherAmt.val('').focus();
+        otherAmt.removeAttr('required'); // allow submission while leaving this empty
+        amtChoice.closest('form').submit( () => {if (otherAmt.val() == '') otherAmt.val(0);}); // "Water" donation defaults to zero, but don't suggest it
+        // it is a mystery why $(this) and fform(this) fail here
+      } else otherAmtWrap.hide();
     });
     amtChoice.change();
     
-    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('Y');});
+    otherAmt.change( () => {if ($(this).val().trim() == '0') $('#edit-often').val('year');});
     break;
     
   case 'contact':
@@ -1017,10 +1120,13 @@ function cardOther(focus) {
   if (focus) $('#edit-desc').focus();
 }
 
-function hideComment() {
-  var note = $('.form-item-comment');
+function hideNote() {
+  var note = $('.form-item-note');
   note.hide();
-  $('.form-item-submit a').click(function () {$('.form-item-submit a').hide(); note.show().find('textarea').focus();});
+  $('.form-item-submit a').click(function () {
+    $('.form-item-submit a').hide();
+    note.show().find('textarea, input').focus();
+  });
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
@@ -1046,4 +1152,50 @@ function yesGo(url, msg) {yesno(msg, function () {location.href=url;}); return f
 function goPage(page, newWindow = false) {
   if (newWindow) window.open(baseUrl + page); else location.href = baseUrl + page;
   return false; // to help cancel default href
+}
+
+function stripe(str, info, vs) {
+  const form = document.getElementById('frm-pay');
+  const erDiv = $('#edit-paymentErr .control-data');
+
+  post('stripeSetup', info, function (j) { // get a setupIntent ID and client secret
+    const clientSecret = j.secret;
+    const elements = str.elements({ clientSecret });
+    const address = { postalCode:'never', country:'never' } // postalCode, not postal_code
+    const fields = { billingDetails: { name:'never', email:'never', phone:'never', address } };
+    const paymentElement = elements.create('payment', {fields});
+    
+    const changeHandler = async (ev) => {if (!ev.empty) erDiv.html('');} // ev is {collapsed, complete, elementType:"payment", empty, value:{type:"card"}}
+    paymentElement.mount('#edit-payment .control-data');
+    paymentElement.on('change', changeHandler);
+
+    function retry(erMsg) {
+      erDiv.html(erMsg + ' Try a different payment method?');
+      $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+      form.removeEventListener('submit', submitHandler);
+      paymentElement.off('change', changeHandler);
+      stripe(str, info, vs);
+    }
+    
+    function done(msg) { location.href = baseUrl + '/empty/msg=' + msg; }
+      
+    const submitHandler = async (ev) => { // user clicked "Pay" or "Donate"
+      ev.preventDefault();
+      elements.submit();
+      
+      const msg = 'You are paying $%amt to %who. Okay?'.replace('%amt', fmtAmt(info.amount)).replace('%who', vs['payeeName']);
+      const address = { postal_code:info.zip, country:'US' };
+      const billing_details = { name:info.fullName, email:info.email, phone:info.phone, address }
+      const confirmParams = { payment_method_data:{billing_details} };
+      const { setupIntent, error } = await str.confirmSetup({ elements, confirmParams, clientSecret, redirect:'if_required' });
+
+      if (error) retry(error.message); else confirm(null, msg, async () => {
+        post('stripeTx', {...info, ...j}, (k) => { // if setup succeeds, do the actual payment
+          if (k.ok) done(k.message); else retry(k.message);
+        });
+      }, () => { done(vs['canceledMsg']); });
+    };
+    
+    form.addEventListener('submit', submitHandler);
+  });
 }

@@ -20,7 +20,7 @@ $flagHelp = array(
   'bankOk' => t('The member\'s connected bank account has been verified.'),
   'contactable' => t('It\'s okay for members to contact this member about their calling.'),
   'mfa' => t('Use multi-factor authentication.'),
-// u14
+  'balFirst' => t('When paying, transfer as little as possible from bank account.'),
   'partner' => t('The account is a signup partner.'),
   'paper' => t('Will not accept electronic statements.'),
   'secret' => t('Don\'t let merchants tell the member their balance on request.'),

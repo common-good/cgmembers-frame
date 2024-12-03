@@ -14,8 +14,6 @@ var sessionLife = 1000 * vs['life']; // convert to seconds (sessionLife is 0 if 
 var signoutWarningAdvance = Math.min(sessionLife / 2, 3 * 60 * 1000); // give the user a few minutes to refresh
 if (ajaxSid) var sTimeout = sessionLife == 0 ? 0 : sessionTimeout(); // Warn the user before automatically signing out.
 
-if (sessionLife == 0 && 'serviceWorker' in navigator) navigator.serviceWorker.register(baseUrl + '/sw.js');
-  
 $('.showMore').click(function () {$('.more').show(); $(this).hide();});
 $("#which, #help").addClass("popup");
 $('button[type="submit"]').click(function() {this.form.opid.value = this.id;});
@@ -79,6 +77,18 @@ $('[class^="qbtn-"]').click(function () {
     pop.find('.modal-body').html(j.body);
     pop.modal('show');
   });
+});
+
+/**
+ * Handle a close button (see w\xBtn()).
+ * HTML: <div class="xbtn" data-hide="{hide}" data-show="{show}"></div>
+ */
+$('.xbtn').click(function () {
+  const hide = $(this).attr('data-hide');
+  const show = $(this).attr('data-show');
+  if (hide) alert(show);
+  if (hide) $(hide).hide(); else $(this).closest('.form-group').hide();
+  $(show).show();
 });
 
 function showMore(pgFactor) {
@@ -190,7 +200,7 @@ function setWhoId(id, frm) {
   var whoId = $('.whoId', frm);
   if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
     whoId.val(id);
-  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '" />');
+  } else frm.append('<input type="hidden" class="whoId" name="whoId" value="' + id + '">');
 }
 
 function which(jForm, fid, title, body) {

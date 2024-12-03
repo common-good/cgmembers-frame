@@ -28,7 +28,7 @@ function formMessage($form, &$sta, $args = '') {
   $addSecret = item(lnk('', t('Add some encrypted data')));
   $secret = areaFld(t('Secret:'), [t('Secret information here'), t('Max %SECRET_MAXLEN chars.')], maxlen(SECRET_MAXLEN));
   $file = fileFld(t('Secret File:'), t('Upload a file for secure download. Maximum size %MAX_UPLOAD_SIZE MB. Maximum expiration time %MAX_FILE_DAYS days.'));
-  $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(MAX_FILE_DAYS) + suffix(t(' days')));
+  $expires = numFld(t('Expires In:'), '', vmax(9999) + dft(MAX_FILE_DAYS) + suffix(t(' days')));
   $secrets = fieldSet('secrets', compact(ray('secret file expires')), BARE);
   $submit = t('Send');
   $fromQid = hidFld($a->mainQid);
@@ -82,14 +82,13 @@ function formMessage_submit($form, &$sta) {
  * The intended recipient may be an individual or a company. Only an authorized agent can read the message.
  */
 function codeResult($code) {
-  global $box;
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
   extract(just('qid from secret path name type size exp download', $ray, NULL));
   
-  if ($intendedA = r\acct($qid)) $uid = $intendedA->id; else $uid = 0;
-  if (!db\exists('r_boxes b LEFT JOIN u_relations r ON r.other=b.uid', ':uid=b.uid OR (:uid=r.main AND permission>=:B_READ-:B_RELATED)', compact('uid'))) return softErr(t('You are not the intended recipient.'));
+  if ($intendedA = r\acct($qid)) return softErr(t('This message is no longer available.'));
+  if (!w\itsMyBox($qid)) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That encrypted information is no longer available.'));
-  
+
   $fromA = r\acct($from);
 
   if ($download or $secret) {

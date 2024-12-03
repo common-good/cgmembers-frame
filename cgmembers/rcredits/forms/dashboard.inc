@@ -70,11 +70,12 @@ function formDashboard($form, &$sta, $args = '') {
   $comment = lnk('/help', t('Comment, question, or suggestion'));
   $card = $mya->ok ? lnk('', t('Print Your Card'), 'printCard') : NULL;
   
-  if (r\cook('scanner')) { // only advance app links for now
+/*  if (r\cook('scanner')) { // only advance app links for now
     $showAdvanced = lnk('', t('Advanced Links'), clas('showAdvanced'));
     $frontCamera = lnk('/card/frontCamera', r\cook('frontCamera') ? t('Use BACK Camera') : t('Use FRONT camera'), clas('frontCamera'));
     $disconnect = lnk('/card/disconnect', t('Disconnect From CGPay App'), clas('disconnect'));
-  } else $showAdvanced = $frontCamera = $disconnect = NULL;
+  } else */
+  $showAdvanced = $frontCamera = $disconnect = NULL;
   
   if ($mya->member and !$mya->closed) {
     foreach (ray('reopen invite makeJoint makeCo reports donate comment deposits showAdvanced frontCamera disconnect card') as $k) if ($$k) $shortcuts[] = $$k;
@@ -85,8 +86,7 @@ function formDashboard($form, &$sta, $args = '') {
   $acct = $mya->mainQid;
   $desc = $mya->jid ? t(' (joined with %nm)', 'nm', $mya->jA->fullName) : '';
   $lnkShowQr = lnk('/show-qr', t('Show QR'));
-  $lnkScanQr = lnk('/scan-qr', t('Scan QR')) . qBtn('qr');
-  $acct = item($acct, t('Account:'), $desc, suffix(tr(' %DASH ') . "$lnkShowQr | $lnkScanQr"));
+  $acct = item($acct, t('Account:'), $desc, suffix(tr(' %DASH ') . $lnkShowQr));
 
   if ($mya->ok) {
     $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));

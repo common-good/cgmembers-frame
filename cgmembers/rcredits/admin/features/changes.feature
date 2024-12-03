@@ -26,7 +26,7 @@ Scenario: A member changes some settings
   And member ".ZZA" completes form "settings/fund" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
-  When member ".ZZD" visits page "sadmin/changes/NEWZZA"
+  When member ".ZZD" visits page "sadmin/changes/qid=NEWZZA"
   Then we show "Account Changes for Abe One" with:
   | %mdY | flags       | ok ided       | ok ided              | abeone     |
   And with:

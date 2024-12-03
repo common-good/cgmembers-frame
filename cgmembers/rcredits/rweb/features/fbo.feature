@@ -40,7 +40,7 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
-Scenario: A non-member donates to a sponsored member
+Scenario: A non-member donates to a sponsored member by check
   When member "C:A" visits "tx/charge"
   Then we show "Charge" with:
   | Full Name   | |
@@ -64,17 +64,18 @@ Scenario: A non-member donates to a sponsored member
   | Full Name   | |
   | Postal Addr | |
   When member "C:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | comment | cat         |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |         | D-FBO       |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method   | ckNumber | ckDate   |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_CHECK | 123      | 9/1/2024 |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
   # choice between Pay and Charge gets set in JS
   And we say "status": "info saved"
+  And count "txs" is 2
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee | amount | purpose                        | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant (check #123, 09/01/2024) |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE                       | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -94,15 +95,55 @@ Scenario: A non-member donates to a sponsored member
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $100            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount      | $100                 |**
+  | item        | grant (check #123, 09/01/2024) |**
+  | amount      | $100                 |
   | date        | %mdY                 |
   | fromName    | Dee Forn             |
   | fromAddress | 4 Fr St, Fton, MA 01004 |
   | fromPhone   |                      |
   | fromEmail   | d@example.com        |
-  | note        |                      |
+
+Scenario: A non-member donates to a sponsored member by direct ACH
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "C:A" submits "tx/charge" with:
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method       |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_DIRECTACH |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  # choice between Pay and Charge gets set in JS
+  And we say "status": "info saved"
+  And count "txs" is 2
+  And these "txs":
+  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+
+Scenario: A non-member donates to a sponsored member by wire transfer
+  Given members have:
+  | uid  | flags    |*
+  | .ZZA | ok,admin |
+  And member ".ZZA" has admin permissions: "seeAccts chargeFrom nonmemberTx"
+  When member "C:A" submits "tx/charge" with:
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | purpose | note | cat   | isGift | method  |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | grant   |      | D-FBO | 1      | %B_WIRE |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc | fbo | admin |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 1   | 1     |
+  # choice between Pay and Charge gets set in JS
+  And we say "status": "info saved"
+  And count "txs" is 3
+  And these "txs":
+  | eid | xid | payer      | payee | amount    | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC  | 100       | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | cgf   | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
+  |   4 | 1   | .ZZC       | cgf   | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
 
 Scenario: A non-member donates to Common Good
   Given members have:
@@ -126,8 +167,8 @@ Scenario: A non-member donates to Common Good
   | Member      | Non-member |
 
   When member "cgf:A" submits "tx/charge" with:
-  | op     | fbo | fullName | email | address | city | state | zip   | amount | isGift | purpose | comment | cat         |*
-  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | 1      | grant   |         | D-FBO       |
+  | op     | fbo | fullName | email | address | city | state | zip   | amount | isGift | purpose | note | cat         |*
+  | charge | 1   | Dee Forn | d@    | 4 Fr St | Fton | MA    | 01004 | 100    | 1      | grant   |      | D-FBO       |
   Then we scrip "tx" with subs:
   | field | question            | selfErr | payDesc | chargeDesc | fbo | admin | hasCats |*
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     | 0   | 1     | 1       |
@@ -155,15 +196,16 @@ Scenario: A non-member donates to Common Good
   | coPostalAddr | %CGF_POSTALADDR |
   | coPhone      | %CGF_PHONE      |
   | amount       | $100            |
+  | toCancel     | ?               |
   | noFrame      | 1               |
   And we email "gift-report" to member "cgf" with subs:
-  | amount      | $100                 |**
+  | item        | grant                |**
+  | amount      | $100                 |
   | date        | %mdY                 |
   | fromName    | Dee Forn             |
   | fromAddress | 4 Fr St, Fton, MA 01004 |
   | fromPhone   |                      |
   | fromEmail   | d@example.com        |
-  | note        |                      |
 
 Scenario: A sponsored member pays a nonmember
   When member "C:A" visits "tx/pay"
@@ -274,118 +316,23 @@ Scenario: A sponsored member views their transaction history
   Then we show "Transaction #1 Detail" with:
   | Date        | %mdY |
   | Amount      | 100 |
-  | From        | Dee Forn (non-member) |
-  | Postal Addr | 4 D St, Dton, MA 01004 |
   | For         | grant |
+  | From        | Dee Forn (non-member) |
+  | To          | Our Pub (by Bea Two) * |
+  | Postal Addr | 4 D St, Dton, MA 01004 |
   | Category    | I: Donations |
-  | Our Agent   | Bea Two |
   | Channel     | Web |
-
-Scenario: A non-member donates to a sponsored organization by credit card
-  Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  When member "?" visits "community/donate/code=%buttonCode"
-  Then we show "Donate to Our Pub" with:
-  | Donation    |
-  | Name        |
-  | Phone       |
-  | Email       |
-  | Country     |
-  | Postal Code |
-  | Pay By      |
-  | Donate      |
-
-  Given next captcha is "37"
-  And var "code" encrypts:
-  | type | item     | pid | period | amount | coId   |*
-  | fbo  | donation | 1   | once   | 123.00 | NEWZZC |
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      1 | awesome! | 37 | 74 |
-  Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
-
-  And we redirect to "https://www.paypal.com/donate"
-  And return URL "/community/donate/op=done&code=%code"
-  
-  When member "?" visits "community/donate/op=done&code=%code"
-  Then these "txs2":
-  | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 123    | %now      |    %now | 1   |
-  And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
-  | 4   | 1   | .ZZC       | cgf   | 3.69   | cc fee   | %E_XFEE    |
-  And we email "fbo-thanks-nonmember" to member "z@" with subs:
-  | fullName     | Zee Zot         |**
-  | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
-  | amount       | $123            |
-  | noFrame      | 1               |
-  And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123                 |**
-  | date         | %mdY                 |
-  | fromName     | Zee Zot              |
-  | fromAddress  | Greenfield, MA 01301 |
-  | fromPhone    | +1 262 626 2626      |
-  | fromEmail    | z@example.com        |
-  | note         | awesome!             |
-  And we say "status": "gift thanks|check it out" with subs:
-  | coName | Our Pub |**
-
-Scenario: A non-member donates to a sponsored organization by ACH
-  Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  And next captcha is "37"
-  When member "?" completes "community/donate/code=%buttonCode" with:
-  | amount | fullName | phone        | email | zip   | payHow | comment  | cq | ca |*
-  |    123 | Zee Zot  | 262-626-2626 | z@    | 01301 |      0 | awesome! | 37 | 74 |
-  Then these "people":
-  | pid | fullName | phone        | email | zip   | state |*
-  | 1   | Zee Zot  | +12626262626 | z@    | 01301 | MA    |
-  And these "txs2":
-  | xid | payee | amount | completed | deposit | pid |*
-  | 1   | .ZZC  | 123    | %now      |       0 | 1   |
-  And these "txs":
-  | eid | xid | payer      | payee | amount | purpose            | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation           | %E_OUTER   |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
-  And count "tx_entries" is 4
-  And we email "fbo-thanks-nonmember" to member "z@" with subs:
-  | fullName     | Zee Zot         |**
-  | date         | %mdY            |
-  | coName       | Our Pub         |
-  | coPostalAddr | 3 C, C, FR      |
-  | coPhone      | +1 333 333 3333 |
-  | amount       | $123            |
-  | noFrame      | 1               |
-  And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123                 |**
-  | date         | %mdY                 |
-  | fromName     | Zee Zot              |
-  | fromAddress  | Greenfield, MA 01301 |
-  | fromPhone    | +1 262 626 2626      |
-  | fromEmail    | z@example.com        |
-  | note         | awesome!             |
-  And we say "status": "gift thanks|check it out" with subs:
-  | coName | Our Pub |**
 
 Scenario: A member donates to a sponsored organization
   Given button code "buttonCode" for:
-  | account | secret |*
-  | .ZZC    | Cc3    |
-  When member ".ZZA" completes "community/donate/code=%buttonCode" with:
-  | amount | comment  | period | honor  | honored |*
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
+  When member ".ZZA" completes "pay/code=%buttonCode" with:
+  | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose            | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation           | %E_PRIME   |
+  | eid | xid | payer | payee | amount | purpose  | type       |*
+  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation | %E_PRIME   |
   | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
@@ -399,13 +346,13 @@ Scenario: A member donates to a sponsored organization
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123 monthly         |**
-  | date         | %mdY                 |
-  | fromName     | Abe One              |
-  | fromAddress  | 1 A, A, AK           |
-  | fromPhone    | +1 301 301 3001      |
-  | fromEmail    | a@example.com        |
-  | note         |                      |
+  | item         | donation ("awesome!") |**
+  | amount       | $123 monthly          |
+  | date         | %mdY                  |
+  | fromName     | Abe One               |
+  | fromAddress  | 1 A, A, AK            |
+  | fromPhone    | +1 301 301 3001       |
+  | fromEmail    | a@example.com         |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
 
@@ -429,13 +376,13 @@ Scenario: A member pays a sponsored organization
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
   And we email "gift-report" to member ".ZZC" with subs:
-  | amount       | $123 monthly         |**
-  | date         | %mdY                 |
-  | fromName     | Abe One              |
-  | fromAddress  | 1 A, A, AK           |
-  | fromPhone    | +1 301 301 3001      |
-  | fromEmail    | a@example.com        |
-  | note         |                      |
+  | item         | gift                  |**
+  | amount       | $123 monthly          |
+  | date         | %mdY                  |
+  | fromName     | Abe One               |
+  | fromAddress  | 1 A, A, AK            |
+  | fromPhone    | +1 301 301 3001       |
+  | fromEmail    | a@example.com         |
   And we say "status": "gift thanks" with subs:
   | coName | Our Pub |**
 

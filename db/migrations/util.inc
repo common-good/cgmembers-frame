@@ -65,6 +65,17 @@ function cgpr($s) {
 
 function allSoFar($w) {return '(' . join(') OR (', $w) . ')';}
 
+/**
+ * Modify the CREATE VIEW query in $z['sql'] and execute it.
+ * @param assoc $z: [m sql w1 w2] where
+ *   m is the migration object
+ *   sql is the model SQL for CREATING a txs-type VIEW
+ *   w1 and w2 are arrays of things to change (sequentially) in sql
+ * @param string $_view: name of the VIEW
+ * @param string $_where1: selection criteria for the "from" entry in the transaction (e1)
+ * @param string $_where2: selection criteria for the "to" entry in the transaction (e2)
+ * @return the sql after executing it
+ */
 function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
   cgpr("making $_view");
   $m = $z['m'];
@@ -72,7 +83,9 @@ function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
     if (${"_where$i"}) $z["w$i"][] = '(' . ${"_where$i"} . ')'; else ${"_where$i"} = allSoFar($z["w$i"]);
   }
   $subs = compact(ray('_view _where1 _where2'));
-  $m->doSql(strtr($z['sql'], $subs));
+  $sql = strtr($z['sql'], $subs);
+  $m->doSql($sql);
+  return $sql;
 }
 
 /**

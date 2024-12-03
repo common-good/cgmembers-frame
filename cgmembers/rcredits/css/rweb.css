@@ -141,7 +141,7 @@ a.list-group-item:hover {background-color:#b4dcfe;} /* for non-dropdown menus */
 .submenu .popover h4 {font-size:14px;}
 .submenu .popover-content {padding:0;}
 .submenu .popover .arrow:after {border-bottom-color:#044687;}
-.submenu a.list-group-item {border-width:0 0 1px 0;}
+.submenu a.list-group-item {border-width:0 0 1px 0; padding:10px 10px;}
 .submenu a.list-group-item:hover {background-color:#022f5a;}
 .submenu a.list-group-item:last-child {border:0;}
 .submenu a.list-group-item,
@@ -252,7 +252,6 @@ form {max-width:834px; margin:0 auto;}
   .mlab-above ul, .mlab-above ol {margin-left:0}
 
   .ladda-button {margin-left:0;}
-
 
   .control-label[for="agreement"],
   #frm-help .control-label {display:none !important;}
@@ -408,11 +407,11 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #advanced input {padding:4px 0 4px 6px; width:130px; max-width:initial !important;}
 #simple .control-label, #advanced .control-label {width:110px; min-width:110px;}
 #edit-show, #edit-download, #showSimple, #showAdvanced {margin:0 5px 0 0;}
-.form-item-period {display:inline-block; clear:none; margin-right:0;}
+#simple .form-item-period {display:inline-block; clear:none; margin-right:0;}
 #actionsSimple,
 #actionsAdvanced {display:inline-block;}
 
-#edit-period, #edit-starting, #edit-ending {display:inline-block; width:200px;}
+#simple #edit-period, #advanced #edit-starting, #advanced #edit-ending {display:inline-block; width:200px;}
 #simple button, #advanced button {display:inline-block;}
 #edit-showSimple, #edit-showAdvanced {display:inline-block; padding-left:35px;}
 
@@ -760,6 +759,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Rules */
 #frm-rules .radio {display:inline-block;}
 #frm-rules #edit-id {width:100px; display:inline-block; margin-right:10px;}
+#frm-rules .form-item-period {display:block;}
 
 /* Groups */
 #frm-groups .container {margin:0; padding:0; font-size:14px;}
@@ -1070,7 +1070,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-taxinfo #edit-submit {display:none;}
 
 /* Options (Preferences) */
-/* #frm-options .form-item-payHow {border-top:1px solid darkgreen; padding-top:5px;} */
+/* #frm-options .form-item-payByCard {border-top:1px solid darkgreen; padding-top:5px;} */
 #frm-prefs #edit-posttext .control-data {font-size:80%; border-top:1px solid silver;}
 #frm-prefs #edit-crumbs,
 #frm-crumbs #edit-crumbs,
@@ -1208,6 +1208,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .page-sadmin-panel #messages .status > ul {padding:0;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 #frm-adminpanel .form-item-lnkScanQr {margin-bottom:20px;}
+#frm-adminpanel .form-item-acctSet {margin-top:20px;}
+#frm-adminpanel .form-item-acctSet .btn {margin:3px 3px;}
+#frm-adminpanel .form-item-acctSet label {margin-top:0px;}
 
 /* Admin Deposits */
 #frm-deposits #deposits .btn-xs {font-size:10px;}
@@ -1216,7 +1219,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-deposits .newout {margin-left:50px;}
 #edit-deposits .control-label {width:50px;}
 #frm-deposits a.undo {float:right; color:red;}
-#frm-depositdetails tr td:last-child {text-align:right;}
+#frm-depositdetails tr td:first-child a {color:#117711;}
+#frm-depositdetails tr td:first-child +td+td {text-align:right;}
 
 /* Change Password / Reset / Verify (first time or resetting password) (beginning with stuff from user.css) */
 #edit-pw {background:lawngreen url(images/1x1white.png) no-repeat right center / 100%;}
@@ -1379,6 +1383,9 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #help-modal .modal-title {text-align:left; padding:0 2px;}
 #help-modal .modal-body {text-align:left; padding:8px 16px;}
 [class^="qbtn-"] {display:inline-block; width:12px; height:12px; background:url('../images/icons/qb12.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
+.help-block [class^="qbtn-"] {width:16px; height:16px; background:url('../images/icons/qb16.png') no-repeat; margin-bottom:-5px;}
+#help-modal ul li {margin-bottom:8px;}
+.xbtn {display:inline-block; width:16px; height:16px; background:url('../images/icons/close16.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
 
 #txsum caption {display:none;}
 #txsum tr:first-child {font-weight:bold;}
@@ -1415,17 +1422,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #deposits td:first-child +td +td +td +td +td {text-align:left;}
 #frm-deposits #edit-count {margin-bottom:3px;}
 
-/* Donate */
-#frm-donate .form-item-wait {margin-top:30px;}
+/* Pay / Donate */
 .form-item-amtChoice select {max-width:200px; font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
-#frm-rules .form-item-period,
-#frm-donate .form-item-period {display:block;}
-#frm-donate #edit-logo img,
+#frm-pay #edit-logo img,
 #frm-cgpay #edit-logo img {max-height:140px; max-width:100%;}
-#frm-donate #edit-logo img + img {margin-left:20px;}
-#frm-donate .form-item-fullName {margin-top:50px;}
-#frm-donate #edit-title,
-#frm-donate .radio {margin-bottom:0;}
+#frm-pay #edit-logo img + img {margin-left:20px;}
+#edit-paymentErr .control-data {color:red;}
 
 #edit-honor {display:inline-block; width:150px; margin-right:10px;}
 #edit-honored {display:inline-block; max-width:150px;}

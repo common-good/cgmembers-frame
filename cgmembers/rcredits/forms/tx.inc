@@ -49,7 +49,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card, 0:Standard')));
+  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card')));
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
@@ -111,7 +111,7 @@ function formTx_submit($form, &$sta) {
   if (!$who) {
     if ($mya->sponsored) return fboTx($input); // non-member transaction by check or direct ACH
     $payerName = $mya->fullName;
-    debug(compact(ray('fullName payerName email amount purpose')));
+    de bug(compact(ray('fullName payerName email amount purpose')));
   }
 */
   $uid = whoId($sta);
@@ -172,12 +172,13 @@ function formTx_submit($form, &$sta) {
 function fboTx($input) {
   global $mya;
 
-  extract($input);
+  extract(just('amount purpose paying hasCats fullName address city state zip phone email cat isGift method ckNumber ckDate', $input, NULL));
   $state = (int) $state;
-  u\EXPECT($hasCats and ($paying or $mya->admNonmemberTx), 'hasCats income by non-admin');
+  u\EXPECT($paying or $mya->admNonmemberTx, 'hasCats income by non-admin');
   $uid = UID_OUTER;
   
   $DBTX = \db_transaction();
+
   if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
     $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
   }
@@ -189,8 +190,10 @@ function fboTx($input) {
   $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
   u\EXPECT($tx, 'outer transfer failed');
   say('info saved');
-  $res = $paying ? go('dashboard') : be\thanks($mya->sponsored ? 'fbo' : ($isGift ? 'cggift' : 'purchase'), FALSE, $pid, t('donation'), $amount, PER_1, 0, $mya->id, TRUE);
+  
+  if (!$paying) be\thanks($tx->xid, $purpose);
+
   unset($DBTX);
   
-  return $res; // no need to continue (outer transactions never delay or repeat)
+  return go('dashboard'); // no need to continue (outer transactions never delay or repeat)
 }

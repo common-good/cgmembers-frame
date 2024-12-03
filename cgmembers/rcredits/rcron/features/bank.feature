@@ -44,7 +44,7 @@ Scenario: a member with low credit line gets credit for the bank transfer after 
   Given these "txs2":
   | txid | payee | amount             | channel  | created                        | completed |*
   |    1 | .ZZA  | %(%USDTX_FAST + 1) | %TX_CRON | %(%now - %DAY_SECS*USDTX_DAYS) |         0 |
-  When cron runs "getFunds"
+  When cron runs "completeUsdTxs"
   Then balances:
   | uid  | balance            |*
   | .ZZA | %(%USDTX_FAST + 1) |
@@ -113,7 +113,8 @@ Scenario: a member is under target and has requested insufficient funds from the
   When cron runs "getFunds"
   Then these "txs2":
   | payee | amount | xid |*
-  | .ZZD  | 280.01 |   2 |
+  | .ZZD  | 280.00 |   2 |
+  | .ZZD  |  30.00 |   3 |
 
 Scenario: a member with zero target has balance below target
   Given members:
@@ -186,39 +187,46 @@ Scenario: a member's bank account gets verified
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
 
-Scenario: a member account needs more funding while not yet verified and something is combinable
-  Given members have:
-  | uid  | balance | flags     |*
-  | .ZZA |      10 | ok,refill |
-  | .ZZB |     200 |           |
-  And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |      0 | %today  |         0 |       0 |
-  |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
-  Then count "txs2" is 2
-  And count "txs" is 2
+#(no more combining) Scenario: a member account needs more funding while not yet verified and something is combinable
+#  Given members have:
+#  | uid  | balance | flags     |*
+#  | .ZZA |      10 | ok,refill |
+#  | .ZZB |     200 |           |
+#  And these "txs2":
+#  | txid | payee | amount | created | completed | deposit |*
+#  |    1 | .ZZA  |      0 | %today  |         0 |       0 |
+#  |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
+#  Then count "txs2" is 2
+#  And count "txs" is 2
+# 
+#  When cron runs "getFunds"
+#  Then these "txs2":
+#  | txid | payee | amount | created | completed | deposit | xid |*
+#  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
+#  And these "txs":
+#  | xid | amount | payer | payee | for       | taking |*
+#  |   1 |      0 | bank  | .ZZA  | ?         |     1 |
+#  |   2 |      0 | bank  | .ZZA  | from bank |     1 |
+#  And count "txs2" is 2
+#  And count "txs" is 2
   
-  When cron runs "getFunds"
-  Then these "txs2":
-  | txid | payee | amount | created | completed | deposit | xid |*
-  |    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   2 |
-  And these "txs":
-  | xid | amount | payer | payee | for       | taking |*
-  |   1 |      0 | bank  | .ZZA  | ?         |     1 |
-  |   2 |      0 | bank  | .ZZA  | from bank |     1 |
-  And count "txs2" is 2
-  And count "txs" is 2
-  
-Scenario: a member has a negative balance, but no agreement to bring it up to zero
+# Rule: negative balances are brought up to zero unless a member allows negatives
+
+Scenario: a member has a negative balance and chose to disallow it
   Given members have:
   | uid  | balance | floor | flags               |*
   | .ZZA | -100    | 0     | ok,bankOk,confirmed |
   | .ZZB | 0       | 0     | ok,confirmed        |
   | .ZZC | 0       | 0     | ok,co               |
   When cron runs "getFunds"
-  Then count "txs2" is 0  
+  Then count "txs2" is 1
+  And these "txs2":
+  | txid | payee | amount | channel  | completed |*
+  |    1 | .ZZA  | 100    | %TX_CRON | 0         |
+  # make sure it doesn't double dip
+  When cron runs "getFunds"
+  Then count "txs2" is 1
 
-# bug fix test
 Scenario: a dormant joint member with a negative balance hasn't had wentNeg set yet
   Given these "relations":
   | main  | other | permission |*
@@ -241,10 +249,12 @@ Scenario: member has negative balance, an approved invoice, and a usable credit 
   And these "tx_requests":
   | payer | payee | amount | status   |*
   | .ZZA  | .ZZC  | 37.63  | approved |
+  When cron runs "payInvoices"
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  | 64.64  | %today  |         0 |       0 |
+  |    1 | .ZZA  |  37.63 | %today  |         0 |       0 |
+  And count "txs2" is 1
 
 Skip no longer delaying first transfer, to verify account first
 Scenario: member's bank account has not been verified

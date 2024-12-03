@@ -678,20 +678,6 @@ function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
 function exitJson($message, $status = X_GOT) {return exitJust(u\jsonize(is_array($message) ? $message : compact('message')), $status, u\noSecrets($message));}
 
 /**
- * Return the account to scan from. Also set $boxId.
- */
-function getScannerA() {
-  global $mya, $box, $boxId;
-  
-  if ($mya) return $mya;
-  $scanner = r\cook('scanner');
-  $scannerA = r\acct($scanner);
-  if ($scanner and (!$scannerA or !w\boxIdCheck($box, $scannerA))) return r\setCook('scanner', NULL);
-  $boxId = $scannerA ? w\boxId($box, $scannerA) : NULL;
-  return $scannerA;
-}
-
-/**
  * Retrieves the current page from the cache.
  *
  * Note: we do not serve cached pages to authenticated users, or to anonymous
@@ -1421,7 +1407,7 @@ function fullQid($q) {
 /**/ function lug($s) {u\loga('debug', $s);}
 function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function args() {return debug_backtrace()[1];}
-function showq($sql, $subs = []) {return dnp(strtr(u\SUBS($sql), u\prefixKeys(':', $subs)));}
+function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 /**/ function dnp($s) {print_r($s); debug($s); return $s;}
 
 function who($s = '', $agent = '') {
@@ -2135,10 +2121,7 @@ function drupal_bootstrap() {
     if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
   }
 
-  global $channel, $boxId, $box;
-  $channel = TX_WEB; // assume web unless this gets set otherwise downstream
-  $box = nni($_COOKIE, 'box') ?: r\setCook('box', u\code()); // a unique persistant identifier for the current machine (set randomly, if none yet)
-  if ($mya) $boxId = w\boxId($box, $mya); // so far used only when recording transactions
+  global $channel; $channel = TX_WEB; // assume web unless this gets set otherwise downstream
 
   return DRUPAL_BOOTSTRAP_FULL;
 }

@@ -96,8 +96,8 @@ EOF;
   $type = selectFld(t('Type:'), '', required($type), $types);
   $event = textFld(t('Event name:'), [t('Short Descriptive Event Name'), t('For example, "Voting on 3 questions".')], required(nn($event)));
   $details = areaFld(t('Details:'), [t('Event Details')], dft(nn($details)));
-  $start = dateFld(REQ . t('Start:'), [t('Start Date')], dft(nn($start)));
-  $end = dateFld(REQ . t('End:'), [t('End Date')], dft(nn($end)));
+  $start = dateFld(REQ . t('Start:'), '', dft(nn($start)));
+  $end = dateFld(REQ . t('End:'), '', dft(nn($end)));
   if ($mya->admManageVote) $submit = submit();
   $back = button(t('Back to Events'), "$base_url/community/events");
   

@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62c'; // software version
+const R_VERSION = '3.62k'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -63,6 +63,8 @@ define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));
 define('POSTMARK_KEY', config('postmarkKey'));
+define('STRIPE_PUBLIC', config('stripePublic'));
+define('STRIPE_SECRET', config('stripeSecret'));
 define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
 
@@ -196,12 +198,14 @@ const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a s
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon asymmetrically-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'; // non-personal encrypted fields (must be complete list)
 const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd wentNeg'; // do not record changes to these fields: anything often-changed (automatically or not)
+
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
 const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
 const MAX_FILE_DAYS = 7; // maximum amount of time to store a file for a member (used in member-to-member messaging)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
+const BIG_TX = 5000; // smallest "large transaction" for sponsees sending us documentation and (twice this much) for audits
 
 const SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSeU-o-xtwa9u2rl4MlH_z8VrvBMUGWV4MkGBIsGfstnCNl57w/viewform?usp=sf_link'; // individual survey
 const CO_SURVEY_LINK = 'https://docs.google.com/forms/d/e/1FAIpQLSem8Z0qDMa4Uwf7jF5UIXIVoEKigFK73Bf_p2vclDbiVX8L6Q/viewform?usp=sf_link'; // company survey
@@ -277,7 +281,7 @@ const NO_DISTANCE = '((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0))';
 
 const TEXT_BUTTON_STYLE = 'display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;';
 const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded
-const R_EXCHANGE_LIMITS = '1:10000,7:20000,52:80000,365:500000'; // per day, week, 7-week, year
+const R_EXCHANGE_LIMITS = '1:40000,7:80000,52:160000,365:320000'; // per day, week, 7-week, year
 const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
 const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 //const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)
@@ -349,8 +353,15 @@ define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,
 const FOR_GOODS = 0; // index into R_WHYS for goods
 const FOR_USD = 1; // index into R_WHYS for USD exchange
 const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
-const SELF_CREDIT = 'cred'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
-const SELF_CREDIT50 = 'cred50'; // (string) similar, but redeemable later for only half the purchase price each time
+
+// cgbutton "for" codes -- existing URLs depend on these, so don't change them
+const FOR_DONATE = 'donate';
+const FOR_PURCHASE = 'other';
+const FOR_CREDIT = 'credit'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
+const FOR_CREDIT50 = 'credit50'; // (string) similar, but redeemable later for only half the purchase price each time
+const FOR_GIVE_CREDIT = 'gift'; // gift of store credit
+const CGBUTTON_CODES = [FOR_DONATE, FOR_PURCHASE, FOR_CREDIT, FOR_GIVE_CREDIT]; // used in cgbutton ajax (FOR_CREDIT50 is currently unused)
+
 //const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
 //const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
 //const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)
@@ -359,6 +370,7 @@ const R_CHUNK = 10; // chunk size for buying CG credit (sales amounts are a mult
 const R_MIN_DEFAULT = 100; // suggested minimum amount to hold in CG credit
 const R_ACHMIN = 10; // minimum granularity of withdrawals from bank account
 const R_ACHMIN_DEFAULT = 50; // suggested achMin
+const BANK_ACCOUNT_MAX = 99999999999999999; // max 17 digits
 //const R_ACH_TRIES = 3; // how many times to retry an ACH
 const CASHOUT_MIN = 100; // minimum dollar amount to cash out automatically
 const VERIFICATION_DELAY = 3; // number of days to wait after requesting a zero transfer, before requesting a real transfer
@@ -430,7 +442,9 @@ const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default prof
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 
-const CC_FEE = 3; // percentage of transaction amount to charge for credit card processing
+const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing (PayPal was 1.99%)
+const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
+const WIRE_FEE = 12; // what our bank charges for incoming wire transfers
 define('METHOD_OPTS', t('email phone text')); // contact method options
 
 // account type bits
@@ -484,8 +498,8 @@ const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD onl
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
-const CGPAY_VARS = 'account amount credit for item expires return secret verb'; // to be encoded in a CGPay button code
-const CGPAY_VARS2 = 'amount code id item name request'; // possible parameters for CGPay button link/form
+const CGPAY_VARS = 'account amount credit for item expires return secret period honor honored'; // to be encoded in a CGPay button code
+const CGPAY_VARS2 = 'amount code id item request'; // possible parameters for CGPay button link/form
 const CGPAY_FORS = 'credit credit50 donate gift other'; // possible values for the "for" parameter
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 
@@ -509,6 +523,8 @@ const S_FU_TASKS = 'card vote co'; // followup tasks for members
 const S_PTASKS = 'person card sell vote partner';
 const S_COTASKS = 'co partner';
 
+/**/ if (preg_replace('/(:[^,]*)?,/', '', S_ALL) != 'signup verifyemail verifyid ssn fund contact agree donate invite proxies preferences company photo discount backing stepup crumbs work partnersteptwo partnerend food wantsPrint printed') die('DO NOT CHANGE THE ORDER of S_ALL keys');
+
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
 // for documentation of IS_OK etc. see u\SUBS()
@@ -526,7 +542,7 @@ const B_NOSEARCH = 10; // user wants to be not findable by other members, by pho
 const B_DEPENDS = 11; // dependent account (can't change settings, federalId is sponsor's)
 const B_BANKOK = 12; // connected bank account has been verified
 const B_MFA = 13; // use multi-factor authentication
-const B_u14 = 14; // 
+const B_BALFIRST = 14; // pay invoices from balance first, drawing as little as possible from bank (otherwise draw 100% from bank)
 const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
 const B_PARTNER = 16; // is a signup partner
 const B_PAPER = 17; // will not accept electronic statements
@@ -546,7 +562,7 @@ const B_ADMIN = 30; // is an administrator (has a record in the admins table)
 
 const B_MAX = 62; // maximum bit number
 const B_ADMINABLE = 'member confirmed carded nonudge mfa partner iclubq influencer cgc invites rewardy noneg'; // for admin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk mfa u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk mfa balFirst contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq u26 u27 u28 influencer admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags
@@ -644,15 +660,15 @@ const FLOW_FROM = 2;
 const FLOW_BOTH = 3;
 
 // Transaction flags (for flags field in transaction and invoice records)
-const B_u0 = 0; //
-const B_u1 = 1; //
+const B_CHANGED = 0; // transaction has been edited in a way that matters (amount or date)
+const B_THX = 1; // payer has been thanked (applies only to gifts to CG and its sponsored projects)
 const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
 const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
 const B_u4 = 4; // 
 const B_SELF = 5; // invoice was created by payApproved (a not-yet-funded, pre-approved payment)
 const B_CRUMBS = 6; // monthly donation of percentage of receipts
 const B_CHECK = 7; // transaction method is payment by check -- default method is by normal CG transfer (member) OR by one-time ACH through CG system (nonmember)
-const B_CC = 8; // payment by credit card
+const B_CC = 8; // payment to CG or to a CG-sponsored or CG-owned organization by credit card
 const B_QBOK = 9; // transaction has been sent to QBO (CG's own transactions only)
 const B_GIFT = 10; // grant or gift (of any type) -- applies only to prime and outer
 const B_LOAN = 11; // community loan (UNUSED?)
@@ -667,7 +683,9 @@ const B_BUTTON = 19; // payment from CGPay button
 const B_DIRECTACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
-const TX_FLAGS = 'u0 u1 offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid';
+const B_COVERCC = 23; // covers processing fees
+const B_COVERFS = 24; // covers fiscal sponsorship fees
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid covercc coverfs';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice
@@ -696,7 +714,7 @@ const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack Socket
 const BACK_CHANNELS = [TX_APP, TX_CRON, TX_AJAX, TX_API, TX_SOCKET]; // channels with no browser
 
 // Transaction types
-const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
+const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not trading for cash
 const TX_BANK = 99; // used only internally, to mark bank transfers
 
 const TX_DEFAULT_PERIOD = 90; // number of days to show in transaction history, by default

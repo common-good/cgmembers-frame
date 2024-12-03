@@ -80,16 +80,16 @@ function accounts($params) {
   } else {
     if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
     if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
-    $a = r\acct($myid);
-    
     if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
+
+    $a = r\acct($myid);
     $success = ($a and $a->passwordOkay($password, 'pass', $err)); // ignore admin pass on dev machine
+    w\updateFlood($sta, $success, $err, TRUE); // handle flooding before other errors
     if (!$success) return exitJust($err, X_NOTFOUND);
-    w\updateFlood($sta, $success, $err, TRUE);
   }
   if (!$a->ok) return exitJust(X_FORBIDDEN);
   
-  if (!$list = be\accountChoices(r\acct($myid), B_MANAGE, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
+  if (!$list = be\accountChoices(r\acct($myid), B_BUY, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
     $a = r\acct($uid, $myid);
@@ -228,7 +228,7 @@ function transactions($params) {
   global $allowDupTxs;
   global $scanned; $scanned = true;
   
-  global $mya, $boxId, $allowDupTxs;
+  global $mya, $allowDupTxs;
   include_once R_ROOT . '/classes/tx.class';
 
   $flds = 'version deviceId actorId otherId amount description created offline'; // proof is proof enough (no cardCode needed)
@@ -530,7 +530,7 @@ function photoReturn($pic) {
  * @return <ok>
  */
 function authOk($arg, $params, $noBox = FALSE) {
-  global $mya, $boxId;
+  global $mya;
 
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
@@ -542,7 +542,7 @@ function authOk($arg, $params, $noBox = FALSE) {
       if ($qid != $mya->mainQid and $two != $mya->fullName) return exitJust(X_UNAUTH);
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
-    if (!$noBox) $boxId = w\boxId($device, $mya, nni($params, 'version', -1)); // find device in the db or put it there
+    if (!$noBox) $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
   } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;

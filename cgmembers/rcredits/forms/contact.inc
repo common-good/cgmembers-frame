@@ -42,6 +42,10 @@ function formContact_validate($form, &$sta) {
   if ($fullName != $mya->fullName) {
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
     $name = r\shortName($fullName); // get a unique short version
+    if (r\isCriminal($fullName, $mya->co)) {
+      r\tellAdmin(t('Changed name flagged as criminal'), $sta['input'] + ray('previously', $mya->fullName));
+      if (!$mya->ok) return softErr(t('There is a problem with your account application. Please contact our support staff at %CGF_PHONE.'));
+    }
   }
 
   if ($err = u\badZip($zip)) return say($err, 'zip');

@@ -22,7 +22,10 @@ function formTxDetail($form, &$sta, $args = '') {
   $where = "xid=:xid AND $eidCrit";
   $subs = compact(ray('xid eidV'));
 
-  if (!$orig = db\get('*', 'txs t', $where, $subs)) return softErr('no such tx'); // for now just show main transaction
+  if (!$orig = db\get('*', 'txs_ever t', $where, $subs)) {
+    if ($deletedOn = db\get('deleted', 'txs_deleted t', $where, $subs)) return softErr(t('tx deleted', 'on', fmtDt($deletedOn)));
+    return softErr('no such tx'); // for now just show main transaction
+  }
   extract(just('uid1,uid2', $orig));
   
   if ($myid == $uid1) {
@@ -34,7 +37,7 @@ function formTxDetail($form, &$sta, $args = '') {
     $uid = in($uid1, EXTERNAL_UIDS) ? $uid1
          : (r\hasCats($uid1) ? $uid2 // be sure to supply cat dropdown if appropriate
          : (r\hasCats($uid2) ? $uid1
-         : ($uid1 <= UID_CANON9 ? $uid2 : $uid1) ));
+         : ($uid1 <= UID_CANON9 ? $uid2 : $uid2) ));
   }
 
   $toMe = ($uid == $uid1); // to me if other (uid) is the "from" account
@@ -45,9 +48,10 @@ function formTxDetail($form, &$sta, $args = '') {
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
       uMe.uid AS meId, eid, recursId, reversesXid, t.flags,
-      uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', ' ', agtMe.fullName, ')')) AS meAgt,
-      uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', ' ', agtYou.fullName, ')')) AS youAgt
-    FROM txs t LEFT JOIN txs2 t2 USING(xid)
+      uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
+      uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
+      p.fullName as nonMemberName
+    FROM txs_ever t LEFT JOIN txs2 t2 USING(xid)
     LEFT JOIN users uMe ON uMe.uid=t.uid$me
     LEFT JOIN users uYou ON uYou.uid=t.uid$you
     LEFT JOIN people p ON p.pid=t2.pid
@@ -68,10 +72,11 @@ X;
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  $nmYou = item($youNm. $youAgt . $youPOV, $youWay);
+  if ($nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
+  $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
-  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), vmin(-999999));
+  $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), short() + vmin(-999999));
   $addr = ($toMe or $mya->admin) ? item($addr, t('Postal Addr:')) : NULL; // no addr for people we pay
   $email = item($email, t('Email:'));
 
@@ -82,18 +87,18 @@ X;
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);
   $forSame = hidFld($forMe == $forYou);
   
-  $box = t(' -- <b>Box</b> #%boxId', compact('boxId'));
+  $boxMsg = t(' -- <b>Box</b> #%boxId', compact('boxId'));
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
-  $chan = item(ray(TX_CHANNELS)[$channel] . $box . $version, t('Channel:'));
-  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags);
+  $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
+  $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags, '', short() + suffix(u\bits($flags, TX_FLAGS)));
   $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
-    $entryType = selectFld(REQ . t('Type:'), '', dft($type), ray(E_TYPES));
-    $recursId = intFld(t('Recurs Id:'), '', dft($recursId));
+    $entryType = selectFld(REQ . t('Type:'), '', short() + dft($type), ray(E_TYPES));
+    $recursId = intFld(t('Recurs Id:'), '', short() + dft($recursId));
     $suffix = ($reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
-    $reversesXid = intFld(t('Reverses Xid:'), '', dft($reversesXid) + $suffix);
+    $reversesXid = intFld(t('Reverses Xid:'), '', short() + dft($reversesXid) + $suffix);
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);
@@ -123,12 +128,17 @@ function formTxDetail_validate($form, &$sta) {
   tweakSta($sta, compact(ray($fields)));
 }
 
+/**
+ * Handle changes to the transaction.
+ * A change in amount gets logged in the "changes" table.
+ * If we ever allow changing uid1 or uid2, that should be logged similarly.
+ */
 function formTxDetail_submit($form, &$sta) {
   global $mya;
   $input = $sta['input'];
   extract(just('amount toMe forSame eid return cat orig created xid', $input, ''));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
-  
+
   $DBTX = \db_transaction();
   if ($hInfo = just('xid created recursId reversesXid flags', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
@@ -137,14 +147,20 @@ function formTxDetail_submit($form, &$sta) {
   if (!$cat) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
-  if ($cat == CAT_CG2CG) db\update('tx_entries_all', ray('id cat', -$eidMe, CAT_CG2CG), 'id'); // cg2cg transfer means cats are both CG2CG
+  $subs = ray('id cat', -$eidMe, CAT_CG2CG);
+  if ($cat == CAT_CG2CG) {
+    db\update('tx_entries_all', $subs, 'id'); // cg2cg transfer means cats are both CG2CG
+  } elseif (db\exists('tx_entries_all', $subs)) {
+    $subs['cat'] = NULL;
+    db\update('tx_entries_all', $subs, 'id'); // if this one isn't CG2CG, the other can't be either
+  }
   
   extract(just('cat1 cat2 uid1 uid2 flags created type amt', $orig, NULL), EXTR_PREFIX_ALL, 'o');
   if ($mya->admEditTx and u\getBit($o_flags, B_QBOK) 
-    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created)
+    and ($cat != ($toMe ? $o_cat2 : $o_cat1) or $created != $o_created or $amount != $o_amt)
     and (r\hasCats($o_uid1) or r\hasCats($o_uid2))) { // cat changed, re-export to QBO
     require_once(R_ROOT . '/classes/qb.class');
-    db\q('UPDATE tx_hdrs_all SET flags=flags & ~' . u\bit(B_QBOK), compact('xid')); // resend this xid to QBO (do this before delQbTx)
+    db\setFlag('tx_hdrs_all', $xid, B_QBOK, FALSE); // resend this xid to QBO (do this before delQbTx)
     $qb = new \QB(QBO_CREDS, FALSE);
     $qb->delQbTx("cg#$xid"); // delete this xid from QBO
     setV(VAR_SETCAT_DT0, min(today($created), getV(VAR_SETCAT_DT0, now()))); // tell setCats when to start
@@ -153,6 +169,11 @@ function formTxDetail_submit($form, &$sta) {
   $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
   if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
     db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+  }
+  
+  foreach (ray('amt created') as $k) if (${"o_$k"} != $$k) {
+    db\insert('changes', ray('table rid field oldValue newValue changedBy', 'txs', $xid, $k, ${"o_$k"}, $$k, $mya->id)); // changing uid1 AND uid2 is not allowed; other fields don't matter
+    db\setFlag('tx_hdrs_all', $xid, B_CHANGED, TRUE);
   }
 
   $info['id'] = -$eidMe;

@@ -74,7 +74,7 @@ X
 
   $routingNumber = routingFld(REQ);
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = intFld(REQ . t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), maxlen(17));
+  $bankAccount = intFld(REQ . t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), vmax(BANK_ACCOUNT_MAX));
     
   $midtext = t(<<< X
     <p>Now choose which financial institution will process your payments. We recommend using %PROJECT because it provides a lot of other community benefits and costs us less. %PROJECT is to banking what %partnerName is to energy. Check out their website: <%a>CommonGood.earth</a>.</p>
@@ -443,7 +443,7 @@ X
 
   $routingNumber = routingFld(REQ);
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = intFld(REQ . t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), maxlen(17));
+  $bankAccount = intFld(REQ . t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), vmax(BANK_ACCOUNT_MAX));
   $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
 
 //  $bankInfo = fieldSet(BARE . 'bankInfo', compact(ray('midtext2 routingNumber bankAccount sorch')));

@@ -89,7 +89,7 @@ function addLine($info, $classes, $url, $person = FALSE) {
   global $rUrl, $mya;
 
   extract($info);
-  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+  $button = $button ? "<a href=\"$url&do=stop\" title=\"$button\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
 
   if ($person) {
     $fWho = db\get('fullName', 'people', ray('pid', $fWho));
@@ -102,7 +102,7 @@ function addLine($info, $classes, $url, $person = FALSE) {
     }
   }
   
-  if (!$mya->admManageAccts and !$mya->proSe) $button = '';
+  if (!$mya->can(B_MANAGE)) $button = '';
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

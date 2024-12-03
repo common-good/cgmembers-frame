@@ -34,9 +34,14 @@ function formVerifyId($form, &$sta, $args = '') {
 
 function formVerifyId_validate($form, &$sta) {
   global $mya;
-  extract(just('method idtype', $sta['input']));
+  extract(just('method idtype legalName', $sta['input']));
 
   if (!is_dir(PHOTOID_DIR)) mkdir(PHOTOID_DIR, 0755) or u\FAIL('cannot create photo ID directory'); // required for tests
+
+  if ($legalName != $mya->fullName and r\isCriminal($legalName, FALSE)) {
+    r\tellAdmin(t('Legal name flagged as criminal'), $sta['input']);
+    return softErr(t('There is a problem with your account application. Please contact our support staff at %CGF_PHONE.'));
+  }
 
   $ssnMethod = ($method == 0); // user chose SSN verification
   $checkFlds = $ssnMethod ? 'federalId dob' : 'dob';

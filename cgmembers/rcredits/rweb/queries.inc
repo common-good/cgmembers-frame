@@ -24,6 +24,7 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
+  $fyYear = date('Y', $fy9);
   $y9 = strtotime('January 1') - 1;
   $y0 = strtotime('-1 year', $y9) + 1;
   $cgIncomeUids = join(',', r\cgIncomeUids());
@@ -84,7 +85,8 @@ if ($mya and $mya->admin) {
   1 . t('Income & Expense Report') => '/sadmin/iereport',
   
   1 . t('Fiscal Sponsorships') =>
-    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
+    "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, IF(u.:IS_OK, 'active', IF(u.activated, 'CLOSED', 'pending')) AS status,
+      fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
       IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x1.inLast3m AS GiftsLast3Mo, x2.outLast12m AS ExpenseLast12Mo, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
@@ -100,7 +102,8 @@ if ($mya and $mya->admin) {
         FROM txs t 
         WHERE t.created >:NOW-:YEAR_SECS GROUP BY uid
       ) x2 USING(uid)
-      WHERE u.:IS_OK AND coFlags & (1<<:CO_SPONSORED) ORDER BY u.fullName",
+      WHERE coFlags & (1<<:CO_SPONSORED) 
+      ORDER BY u.:IS_OK DESC, u.fullName",
       
   1 . t('Fiscal Sponsorships Last FY') =>
     "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
@@ -119,6 +122,30 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
+  1 . t('Large CG Transactions') . " FY$fyYear" =>
+    "SELECT u.fullName, FORMAT(e.amount, 2), e.description, c.category
+     FROM tx_entries e
+     JOIN tx_hdrs h USING(xid)
+     LEFT JOIN users u USING(uid)
+     JOIN tx_cats c ON c.id=e.cat
+     WHERE h.created BETWEEN $fy0 AND $fy9 AND ABS(e.amount)>:BIG_TX
+     ORDER BY ABS(e.amount) DESC, h.created
+    ". t('~<p>We ask sponsees for documentation of all these transactions. Report transactions over %amt in audits.</p>', 'amt', u\fmtAmt(2*BIG_TX)),
+  
+  1 . t('Staff Net Pay') . " FY$fyYear" =>
+    "SELECT u.fullName AS `staff person`, SUM(x.amt) AS `paid$`
+      FROM users u
+      LEFT JOIN txs x ON x.uid2=u.uid AND x.created BETWEEN $fy0 AND $fy9
+      WHERE u.:IS_ADMIN AND x.uid1=:CGID
+      GROUP BY u.uid
+      HAVING IFNULL(`paid$`, 0)<>0
+      ORDER BY u.fullName
+/*    SELECT u.fullName AS `staff person`, f.project, CONCAT(f.percent, '%') AS pct, SUM(x.amt) * f.percent/100 AS amt$
+       FROM u_focuses AS f JOIN users u USING(uid) LEFT JOIN txs x ON x.uid2=u.uid
+       WHERE x.uid1=:CGID AND x.created BETWEEN $fy0 AND $fy9
+       GROUP BY u.uid ORDER BY f.project, u.fullName */
+    ". t(''),
+  
   1 . t('Major Gifts') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, u2.name AS `to`,
       SUM(IF(t.:IS_GIFT, amt, 0)) AS gifts,
@@ -134,7 +161,7 @@ if ($mya and $mya->admin) {
       GROUP BY name
       HAVING gifts>=99
       ORDER BY gifts DESC
-    ". t('~<p>Total gifts specifically to %PROJECT in its most recently ended calendar year from top donors.'),
+    " . t('~<p>Total gifts specifically to %PROJECT in its most recently ended calendar year from top donors.</p>'),
 
   1 . t('Gifts From "Disqualified Persons"') => 
     "SELECT IF(p.pid IS NULL, u.fullName, p.fullName) AS name, SUM(IF(t.:IS_GIFT, amt, 0)) AS giftTotal, 
@@ -149,7 +176,7 @@ if ($mya and $mya->admin) {
       GROUP BY name
       HAVING over999>=:SUBSTANTIAL_GIFT OR marked
       ORDER BY giftTotal DESC
-    ". t('~<p>Total gifts in %PROJECT\'s most recently ended fiscal year (July to June) from Influencers or that exceed $5,000 &mdash; ignoring separate gifts of less than $1,000 as allowed for IRS Form 990 Schedule B: "Include all separate and independent gifts that are $1,000 or more Gifts that are less than $1,000 may be disregarded."</p><p>"marked" means the person is marked in the database as an influencer &mdash; that is, someone who might have significant influence over the affairs of the organization because of their position (including being a board member, former board member, key employee, or relative of such a person). Otherwise the person\'s "influence" is because they donated a lot of money.'),
+    " . t('~<p>Total gifts in %PROJECT\'s most recently ended fiscal year (July to June) from Influencers or that exceed $5,000 &mdash; ignoring separate gifts of less than $1,000 as allowed for IRS Form 990 Schedule B: "Include all separate and independent gifts that are $1,000 or more Gifts that are less than $1,000 may be disregarded."</p><p>"marked" means the person is marked in the database as an influencer &mdash; that is, someone who might have significant influence over the affairs of the organization because of their position (including being a board member, former board member, key employee, or relative of such a person). Otherwise the person\'s "influence" is because they donated a lot of money.'),
     // in advance: $gift and (($recurs ? db\get(r\annualAmt(), 'tx_timed tm', ray('id', $recurs)) : amt) >= SUBSTANTIAL_GIFT)
     
   1 . t('Donations to CG last 12mo') =>
@@ -393,3 +420,5 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
     WHERE u.IS_CO AND u.activated AND t.created>:NOW-$recentSecs
     ORDER BY sales DESC",  
 */
+// Negative Balances: SELECT balance, fullName, u.phoneDash!, u.email!, u.lastTxDt! AS lastTx, u.hasBank! FROM users u WHERE balance<0 ORDER BY balance
+// Total transaction volume ever: SELECT SUM(ABS(amount)) AS total$ FROM tx_entries WHERE id>0

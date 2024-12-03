@@ -430,7 +430,7 @@ function getOptsB($opti, $rowclass, $opttext, $optdetail, $defaults) {
 
   $dft = nni($defaults, $option);
   $sliderHtml = <<<EOF
-<input id="$slider" data-slider-id='$slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="$dft" data-slider-handle="triangle" />
+<input id="$slider" data-slider-id='$slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="$dft" data-slider-handle="triangle">
 EOF;
   $optionHtml = w\rendA($option, w\hidFld($dft));
 
@@ -460,7 +460,7 @@ function getOptsR($opti, $rowclass, $opttext, $optdetail, $defaults) {
 
   extract(just('min max minDft maxDft', $defaults));
   $sliderHtml = <<<EOF
-<input id="$slider" data-slider-id='$slider' type="text" data-slider-min="$min" data-slider-max="$max" data-slider-step="1" data-slider-value="[$minDft, $maxDft]" data-slider-handle="triangle" />
+<input id="$slider" data-slider-id='$slider' type="text" data-slider-min="$min" data-slider-max="$max" data-slider-step="1" data-slider-value="[$minDft, $maxDft]" data-slider-handle="triangle">
 EOF;
   $optionHtml = w\rendA($option, w\hidFld($minDft))
               . w\rendA('max', w\hidFld($maxDft));

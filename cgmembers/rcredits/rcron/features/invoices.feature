@@ -19,8 +19,8 @@ Setup:
 
   Scenario: Unpaid invoices get handled
   Given members have:
-  | uid  | floor | balance |*
-  | .ZZA |     0 |     100 |
+  | uid  | floor | balance | achMin |*
+  | .ZZA |     0 |     100 | 200    |
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   | reversesXid |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |          37 |
@@ -34,17 +34,19 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
   
-  When cron runs "getFunds"
-  Then these "txs": 
+  When cron runs "payInvoices"
+  Then count "txs" is 3
+  And these "txs": 
   | xid | created | amount | payer | payee | purpose   | taking | type  | reversesXid |*
   |   1 | %today  |    100 | .ZZA  | .ZZC  | one       |        | prime |          37 |
   |   2 | %today  |      0 | bank  | .ZZA  | from bank |      1 | bank  |             |
-  And count "txs" is 2
-  And count "txs2" is 1
-  And count "tx_requests" is 5
+  |   3 | %today  |      0 | bank  | .ZZA  | from bank |      1 | bank  |             |
+  And count "txs2" is 2
   And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
+  | txid | xid | payee | amount | created | completed | deposit |*
+  |    1 |   2 | .ZZA  |    100 | %now    |         0 |       0 |
+  |    2 |   3 | .ZZA  |    200 | %now    |         0 |       0 |
+  And count "tx_requests" is 5
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today    | 1            |    100 | .ZZA  | .ZZC  | one   |
@@ -53,17 +55,18 @@ Setup:
   |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |
   |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |
 
-  And we message "short invoice|expect a transfer" to member ".ZZA" with subs:
-  | short | payeeName | nvid |*
-  | $200  | Our Pub   |    2 |
+  And we message "you paid" to member ".ZZA" with subs:
+  | otherName | amount | payerPurpose |*
+  | Our Pub   | $100   | one          |
+  And we message "expect a transfer" to member ".ZZA" with subs: ""
   And we message "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
-  | draw   | from   | $200   |        2 | to pay pending payment request #2 |
-  And we message "short invoice|when funded|how to fund" to member ".ZZB" with subs:
+  | draw   | from   | $200   |        3 | to cover pending payment request #2 |
+  And we message "request num|short to|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
-  | $50   | Our Pub   |    3 |
-  
-  When cron runs "pendingRequests"
+  | $300  | Our Pub   |    3 |
+
+  When cron runs "nudges"
   Then we message "stale invoice" to member ".ZZA" with subs:
   | daysAgo | amount | purpose | nvid | payeeName |*
   |       8 | $400   | four    |    4 | Our Pub   |
@@ -78,22 +81,71 @@ Setup:
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |     100 |
-  And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
+  And count "txs2" is 2
 
   When cron runs "getFunds"
-  Then usd transfer count is 1
+  Then count "txs2" is 3
   And these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
+  |    3 | .ZZA  |    400 | %today  |         0 |       0 |
 
-  When cron runs "getFunds"
-  Then usd transfer count is 1
+  When cron runs "payInvoices"
+  And cron runs "getFunds"
+  Then count "txs2" is 3
+  
+  When cron runs "payInvoices"
+  And cron runs "getFunds"
+  Then count "txs2" is 3
+
+  Scenario: Unpaid invoices get handled for a member who opted for "Balance First"
+  Given members have:
+  | uid  | floor | balance | flags |*
+  | .ZZA |     0 |     100 | ok,confirmed,refill,debt,bankOk,balFirst |
+  And these "tx_requests":
+  | nvid | created   | status       | amount | payer | payee | for   | reversesXid |*
+  |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |          37 |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |        %NUL |
+  |    3 | %today    | %TX_APPROVED |    300 | .ZZB  | .ZZC  | three |        %NUL |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |        %NUL |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |        %NUL |
+  Then balances:
+  | uid  | balance |*
+  | .ZZA |     100 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+  
+  When cron runs "payInvoices"
+  Then count "txs" is 2
+  And these "txs": 
+  | xid | created | amount | payer | payee | purpose   | taking | type  | reversesXid |*
+  |   1 | %today  |    100 | .ZZA  | .ZZC  | one       |        | prime |          37 |
+  |   2 | %today  |      0 | bank  | .ZZA  | from bank |      1 | bank  |             |
+  And count "txs2" is 1
   And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    700 | %today  |         0 |       0 |
+  | txid | xid | payee | amount | created | completed | deposit |*
+  |    1 |   2 | .ZZA  |    200 | %now    |         0 |       0 |
+  And count "tx_requests" is 5
+  And these "tx_requests":
+  | nvid | created   | status       | amount | payer | payee | for   |*
+  |    1 | %today    | 1            |    100 | .ZZA  | .ZZC  | one   |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
+  |    3 | %today    | %TX_APPROVED |    300 | .ZZB  | .ZZC  | three |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA  | .ZZC  | four  |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA  | .ZZC  | five  |
 
+  And we message "you paid" to member ".ZZA" with subs:
+  | otherName | amount | payerPurpose |*
+  | Our Pub   | $100   | one          |
+  And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
+  | nvid | short | payeeName | amount | avail |*
+  | 2    | $200  | Our Pub   | 200    | $0    |
+  And we message "banked|bank tx number" to member ".ZZA" with subs:
+  | action | tofrom | amount | checkNum | why               |*
+  | draw   | from   | $200   |        2 | to cover pending payment request #2 |
+  And we message "request num|short to|when funded|how to fund" to member ".ZZB" with subs:
+  | short | payeeName | nvid |*
+  | $300  | Our Pub   |    3 |
+  
 Scenario: Non-member unpaid invoice does not generate a transfer request
   Given members have:
   | uid  | flags                    |*
@@ -121,34 +173,36 @@ Scenario: Second invoice gets funded too for a non-refilling account
   | txid | payee | amount | created   | completed | deposit | xid |*
   |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
   And these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for   |*
-  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |
-  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
+  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   | funding |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |         |
 
-  When cron runs "getFunds"
+  When cron runs "payInvoices"
+  
   Then these "txs2":
   | txid | payee | amount | created   | completed | deposit |*
-  |    1 | .ZZA  |    300 | %today-1d |         0 |       0 |
-  # still dated yesterday, so it doesn't lose its place in the queue
+  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |
+  |    2 | .ZZA  |    200 | %now      |         0 |       0 |
   And these "tx_requests":
-  | nvid | created   | status       | amount | payer | payee | for   |*
-  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   |
-  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   |
-  And we message "banked|combined|bank tx number" to member ".ZZA" with subs:
-  | action | tofrom | amount | previous | total | checkNum | why     |*
-  | draw   | from   | $100   |     $100 |  $200 |        2 | to pay pending payment request #2 |
-  And we message "banked|combined|bank tx number" to member ".ZZA" with subs:
-  | action | tofrom | amount | previous | total | checkNum | why     |*
-  | draw   | from   | $100   |     $200 |  $300 |        2 | to cover your pending payment requests |
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
+  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA  | .ZZC  | one   | funding |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZC  | two   | funding |
+  And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
+  | short | avail |*
+  | $200   |   $0 |
 
 Scenario: A languishing invoice gets funded again
   Given these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1d | %TX_APPROVED |    900 | .ZZA  | .ZZC  | one   |
+  When cron runs "payInvoices"
+  Then these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    900 | %today  |         0 |       0 |
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |   1400 | %today  |         0 |       0 |
+  |    2 | .ZZA  |    500 | %today  |         0 |       0 |
 
 Scenario: An invoice is approved from an account with a negative balance
   Given members have:
@@ -157,10 +211,14 @@ Scenario: An invoice is approved from an account with a negative balance
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA  | .ZZC  | one   |
+  When cron runs "payInvoices"
+  Then these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    400 | %today  |         0 |       0 |
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    900 | %today  |         0 |       0 |
+  |    2 | .ZZA  |    500 | %today  |         0 |       0 |
   
 Scenario: An invoice is approved from an account with a negative balance after credit line times out
   Given members have:
@@ -169,11 +227,15 @@ Scenario: An invoice is approved from an account with a negative balance after c
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA  | .ZZC  | one   |
+  When cron runs "payInvoices"
+  Then these "txs2":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    400 | %today  |         0 |       0 |
   When cron runs "getFunds"
   Then these "txs2":
   | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    900 | %today  |         0 |       0 |
-
+  |    2 | .ZZA  |    500 | %today  |         0 |       0 |
+  
 Scenario: An invoice gets handled for an account that rounds up
   Given members have:
   | uid  | flags                       |*
@@ -181,10 +243,17 @@ Scenario: An invoice gets handled for an account that rounds up
   And these "tx_requests":
   | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today    | %TX_APPROVED |  99.60 | .ZZA | .ZZC | one   |
-  When cron runs "getFunds"
+  |    2 | %today    | %TX_APPROVED |  19.40 | .ZZA | .ZZC | one   |
+  When cron runs "payInvoices"
   Then these "txs": 
-  | xid | created | amount | payer | payee | purpose  | taking | type  |*
-  |   1 | %today  |    100 | bank  | .ZZA | from bank |      1 | bank  |
+  | eid | xid | created | amount | payer | payee | purpose   | taking | type  |*
+  |   1 |   1 | %today  |    100 | bank  | .ZZA  | from bank |      1 | bank  |
+  |   3 |   2 | %today  |  99.60 | .ZZA  | .ZZC  | one       |      0 | prime |
+  |   4 |   2 | %today  |   0.40 | .ZZA  | round | roundup donation | 0 | aux |
+  |   5 |   3 | %today  |     20 | bank  | .ZZA  | from bank |      1 | bank  |
+  |   6 |   4 | %today  |  19.40 | .ZZA  | .ZZC  | one       |      0 | prime |
+  |   7 |   4 | %today  |   0.60 | .ZZA  | round | roundup donation | 0 | aux |
   And these "txs2":
-  | txid | payee | amount | created | completed | deposit |*
-  |    1 | .ZZA  |    100 | %today  |    %today |       0 |  
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |    1 | .ZZA  |    100 | %today  |    %today |       0 |   1 |
+  |    2 | .ZZA  |     20 | %today  |    %today |       0 |   3 |

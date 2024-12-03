@@ -43,27 +43,28 @@ function extraSetup($feature) {
  * in: MAKE aaSeldomNotices Setup
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH aaSeldomNotices ItsTimeToRenewBacking
- *     MAKE trust Setup
- *     MAKE daily Setup
- *     MAKE rules Setup
- *     MAKE joint Setup
- *     MAKE sweep Setup
- *     MAKE monthly Setup
- *     MAKE notices Setup
  *     MAKE bank Setup
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank ANonmemberHasATargetAndRefills
- *     MAKE invoices Setup
- *     MAKE recurs Setup
- *     MAKE weekly Setup
- *     MAKE tickle Setup
+ *     MAKE cashout Setup
+ *     MAKE communitybits Setup
+ *     MAKE daily Setup
+ *     MAKE eachacct Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE communitybits Setup
+ *     MAKE invoices Setup
+ *     MAKE joint Setup
+ *     MAKE monthly Setup
+ *     MAKE notices Setup
+ *     MAKE recurs Setup
  *     MAKE risk Setup
- *     MAKE cashout Setup
+ *     MAKE rules Setup
+ *     MAKE sweep Setup
+ *     MAKE tickle Setup
+ *     MAKE trust Setup
+ *     MAKE weekly Setup
  */
 function members($list) {return t\members($list);}
 
@@ -71,13 +72,7 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST rules AnEndedTemplateHasNoEffect
- *     TEST joint Setup
- *     TEST joint AJointAccountNeedsRefilling
- *     MAKE joint AJointAccountDoesNotNeedRefilling
- *     TEST sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
- *     TEST monthly Setup
- *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ * in: MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
@@ -88,29 +83,36 @@ function members($list) {return t\members($list);}
  *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     MAKE bank AnAccountHasATargetButNoRefills
+ *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE communitybits Setup
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST joint Setup
+ *     TEST joint AJointAccountNeedsRefilling
+ *     MAKE joint AJointAccountDoesNotNeedRefilling
+ *     TEST monthly Setup
  *     TEST recurs Setup
+ *     TEST rules AnEndedTemplateHasNoEffect
+ *     TEST sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     BOTH weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
  *     TEST weekly AMemberBuildsUpSavings
  *     TEST weekly AMemberCashesOutAutomatically
- *     MAKE communitybits Setup
- *     TEST cashout AMemberCompanyCashesOutWeekly
  */
 function balances($list) {return t\balances($list);}
 
 /**
  * bank transfer count is (ARG)
  *
- * in: TEST joint AJointAccountDoesNotNeedRefilling
- *     TEST bank AMemberIsBarelyBelowTarget
+ * in: TEST bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberIsAtTarget
  *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
  *     TEST bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
  *     TEST bank AMemberHasADepositedButNotCompletedTransfer
  *     TEST bank AnAccountHasATargetButNoRefills
+ *     TEST joint AJointAccountDoesNotNeedRefilling
  */
 function bankTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 
@@ -149,23 +151,14 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  *
  * in: TEST aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     TEST aaSeldomNotices ItsTimeToRenewBacking
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST notices AMemberGetsSomeNotices
  *     TEST notices AMemberGetsSomeWeeklyNotices
  *     TEST notices AMemberGetsPostNotices
  *     TEST posts AParticipantGetsANoticeAboutAnExpiringPost
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
- *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
-
-/**
- * notice count is (ARG)
- *
- * in: 
- */
-function noticeCountIs($count) {
-  return (db\count('r_notices') == $count);
-}
 
 /**
  * member (ARG) charges member (ARG) $(ARG) for (ARG)
@@ -189,7 +182,7 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
 /**
  * usd transfer count is (ARG)
  *
- * in: TEST invoices UnpaidInvoicesGetHandled
+ * in: 
  */
 function usdTransferCountIs($count) {return (t\usdTransferCount() == $count);}
 
@@ -221,29 +214,29 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
 /**
  * members have: (ARG)
  *
- * in: TEST trust WeCalculateTrust
- *     TEST daily GeopositionGetsCalculated
- *     TEST bank AMemberIsBarelyBelowTarget
+ * in: TEST bank AMemberIsBarelyBelowTarget
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     BOTH bank AMembersBankAccountGetsVerified
- *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     MAKE bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     BOTH bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
+ *     MAKE cashout AMemberCompanyCashesOutMonthly
+ *     MAKE cashout AMemberCompanyCashesOutWeekly
+ *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     TEST daily GeopositionGetsCalculated
  *     MAKE invoices Setup
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     TEST risk Setup
+ *     BOTH tickle MemberHasNegativeBalanceForSeveralMonths
+ *     TEST trust WeCalculateTrust
  *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
- *     BOTH tickle MemberHasNegativeBalanceForSeveralMonths
- *     MAKE communitybits CommunityBansSpendingBelowZero
- *     TEST risk Setup
- *     MAKE cashout AMemberCompanyCashesOutMonthly
- *     MAKE cashout AMemberCompanyCashesOutWeekly
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -360,16 +353,20 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST joint AJointAccountNeedsRefilling
- *     TEST bank AMemberIsBarelyBelowTarget
+ * in: TEST bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberHasANegativeBalance
  *     TEST bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
- *     TEST invoices UnpaidInvoicesGetHandled
- *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
- *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
- *     TEST weekly AMemberCashesOutAutomatically
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
+ *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     TEST joint AJointAccountNeedsRefilling
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ARecurringSweepCanBeCompleted
+ *     TEST recurs ARecurringBankTransferCanBeCompleted
+ *     TEST recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     TEST weekly AMemberCashesOutAutomatically
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 
@@ -378,24 +375,6 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
- *     MAKE trust Setup
- *     MAKE daily Setup
- *     TEST daily GeopositionGetsCalculated
- *     MAKE daily AMemberHasABigDay
- *     MAKE rules Setup
- *     TEST rules RulesGetInstantiated
- *     MAKE rules AnEndedTemplateHasNoEffect
- *     MAKE joint Setup
- *     BOTH joint AJointAccountNeedsRefilling
- *     BOTH sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
- *     MAKE monthly Setup
- *     TEST monthly CrumbAndRoundupDonationsAreMade
- *     BOTH monthly CrumbsAreInvoiced
- *     MAKE notices Setup
- *     BOTH notices AMemberGetsSomeNotices
- *     BOTH notices AMemberGetsSomeWeeklyNotices
- *     MAKE notices AMemberGetsPostNotices
- *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     BOTH bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
@@ -406,27 +385,17 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     TEST bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
- *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
+ *     TEST bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     BOTH bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
- *     MAKE posts Setup
- *     MAKE invoices Setup
- *     BOTH invoices UnpaidInvoicesGetHandled
- *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
- *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
- *     BOTH invoices ALanguishingInvoiceGetsFundedAgain
- *     BOTH invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
- *     BOTH invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
- *     BOTH invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
- *     MAKE recurs Setup
- *     BOTH recurs ABrandNewRecurringPaymentCanBeCompleted
- *     MAKE recurs ANewRecurringPaymentIsNotToBeCompletedYet
- *     BOTH weekly AMemberCashesOutAutomatically
- *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
- *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
- *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
- *     MAKE tickle ANonmemberHasAcceptedTheInvitation
- *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
+ *     MAKE cashout Setup
+ *     TEST cashout AMemberCompanyCashesOutMonthly
+ *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE daily Setup
+ *     TEST daily GeopositionGetsCalculated
+ *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
  *     MAKE gifts Setup
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     BOTH gifts ABrandNewRecurringDonationToCGCanBeCompleted
@@ -434,34 +403,80 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH gifts ADonationInvoicetoCGCanBeCompleted
  *     BOTH gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE invoices Setup
+ *     BOTH invoices UnpaidInvoicesGetHandled
+ *     BOTH invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
+ *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     BOTH invoices ALanguishingInvoiceGetsFundedAgain
+ *     BOTH invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
+ *     BOTH invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
+ *     BOTH invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     MAKE joint Setup
+ *     BOTH joint AJointAccountNeedsRefilling
+ *     MAKE monthly Setup
+ *     TEST monthly CrumbAndRoundupDonationsAreMade
+ *     BOTH monthly CrumbsAreInvoiced
+ *     MAKE notices Setup
+ *     BOTH notices AMemberGetsSomeNotices
+ *     BOTH notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
+ *     MAKE posts Setup
+ *     MAKE recurs Setup
+ *     BOTH recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     MAKE recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     BOTH recurs ARecurringSweepCanBeCompleted
+ *     BOTH recurs ARecurringBankTransferCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
+ *     BOTH recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     TEST risk WeCalculateRisks
- *     MAKE cashout Setup
- *     TEST cashout AMemberCompanyCashesOutMonthly
- *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE rules Setup
+ *     TEST rules RulesGetInstantiated
+ *     MAKE rules AnEndedTemplateHasNoEffect
+ *     BOTH sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
+ *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
+ *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
+ *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
+ *     MAKE tickle ANonmemberHasAcceptedTheInvitation
+ *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
+ *     MAKE trust Setup
+ *     BOTH weekly AMemberCashesOutAutomatically
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST rules RulesGetInstantiated
- *     TEST rules AnEndedTemplateHasNoEffect
- *     TEST monthly CrumbAndRoundupDonationsAreMade
- *     TEST monthly CrumbsAreInvoiced
- *     TEST bank ANonmemberHasATargetAndRefills
+ * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
- *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     TEST bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
- *     TEST invoices UnpaidInvoicesGetHandled
- *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
- *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
- *     TEST recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     TEST bank AMemberHasANegativeBalanceAndChoseToDisallowIt
+ *     TEST bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ASecondRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
+ *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
+ *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST monthly CrumbAndRoundupDonationsAreMade
+ *     TEST monthly CrumbsAreInvoiced
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ANewRecurringPaymentIsNotToBeCompletedYet
+ *     TEST recurs ARecurringBankTransferCanBeCompleted
+ *     TEST recurs ARecurringPaymentHappenedYesterday
+ *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     TEST recurs ADelayedPaymentDoesNotHappenImmediately
+ *     TEST recurs ARecurringPaymentCannotBeCompleted
+ *     TEST rules RulesGetInstantiated
+ *     TEST rules AnEndedTemplateHasNoEffect
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -503,21 +518,6 @@ function riskThresholdPercentIs($pct) {
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE aaSeldomNotices ItsTimeToRenewBacking
- *     MAKE trust WeCalculateTrust
- *     MAKE daily GeopositionGetsCalculated
- *     MAKE daily AMemberHasABigDay
- *     MAKE rules RulesGetInstantiated
- *     MAKE rules AnEndedTemplateHasNoEffect
- *     MAKE joint AJointAccountNeedsRefilling
- *     MAKE joint AJointAccountDoesNotNeedRefilling
- *     MAKE sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
- *     MAKE monthly PaperStatementWarningsAreSent
- *     MAKE monthly CrumbAndRoundupDonationsAreMade
- *     MAKE monthly CrumbsAreInvoiced
- *     MAKE notices AMemberGetsSomeNotices
- *     MAKE notices AMemberGetsSomeWeeklyNotices
- *     MAKE notices AMemberGetsPostNotices
- *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE bank AMemberIsBarelyBelowTarget
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
@@ -532,24 +532,55 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank AMembersBankAccountGetsVerified
- *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
- *     MAKE bank AMemberHasANegativeBalanceButNoAgreementToBringItUpToZero
+ *     MAKE bank AMemberHasANegativeBalanceAndChoseToDisallowIt
  *     MAKE bank ADormantJointMemberWithANegativeBalanceHasntHadWentNegSetYet
  *     MAKE bank MemberHasNegativeBalanceAnApprovedInvoiceAndAUsableCreditLine
- *     MAKE posts AParticipantGetsANoticeAboutAnExpiringPost
+ *     MAKE cashout AMemberCompanyCashesOutMonthly
+ *     MAKE cashout AMemberCompanyCashesOutWeekly
+ *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE daily GeopositionGetsCalculated
+ *     MAKE daily AMemberHasABigDay
+ *     MAKE eachacct AUserBecomesAnInternationalCriminal
+ *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
+ *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
+ *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices UnpaidInvoicesGetHandledForAMemberWhoOptedForBalanceFirst
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices ALanguishingInvoiceGetsFundedAgain
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     MAKE joint AJointAccountNeedsRefilling
+ *     MAKE joint AJointAccountDoesNotNeedRefilling
+ *     MAKE monthly PaperStatementWarningsAreSent
+ *     MAKE monthly CrumbAndRoundupDonationsAreMade
+ *     MAKE monthly CrumbsAreInvoiced
+ *     MAKE notices AMemberGetsSomeNotices
+ *     MAKE notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
+ *     MAKE posts AParticipantGetsANoticeAboutAnExpiringPost
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ANewRecurringPaymentIsNotToBeCompletedYet
- *     MAKE weekly AMemberCrawlsOutOfDebt
- *     MAKE weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
- *     MAKE weekly AMemberBuildsUpSavings
- *     MAKE weekly AMemberCashesOutAutomatically
+ *     MAKE recurs ARecurringSweepCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferCanBeCompleted
+ *     MAKE recurs ARecurringBankTransferFailsForInsufficientFunds
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
+ *     MAKE recurs ARecurringPaymentCannotBeCompleted
+ *     MAKE risk Setup
+ *     MAKE risk WeCalculateRisks
+ *     MAKE rules RulesGetInstantiated
+ *     MAKE rules AnEndedTemplateHasNoEffect
+ *     MAKE sweep CronSweepsCGsBatchDonationAccountsIntoItsMainAccount
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
@@ -557,16 +588,11 @@ function riskThresholdPercentIs($pct) {
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  *     MAKE tickle MemberHasNegativeBalanceForSeveralMonths
- *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
- *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
- *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
- *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
- *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE communitybits CommunityBansSpendingBelowZero
- *     MAKE risk Setup
- *     MAKE risk WeCalculateRisks
- *     MAKE cashout AMemberCompanyCashesOutMonthly
- *     MAKE cashout AMemberCompanyCashesOutWeekly
+ *     MAKE trust WeCalculateTrust
+ *     MAKE weekly AMemberCrawlsOutOfDebt
+ *     MAKE weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
+ *     MAKE weekly AMemberBuildsUpSavings
+ *     MAKE weekly AMemberCashesOutAutomatically
  */
 function cronRuns($op) {return t\cronRuns($op);}
 
@@ -610,6 +636,7 @@ function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
  * we tell admin (ARG) with ray: (ARG)
  *
  * in: TEST daily AMemberHasABigDay
+ *     TEST eachacct AUserBecomesAnInternationalCriminal
  */
 function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => pr($ray)]);}
 
@@ -625,5 +652,21 @@ function memberHasAdminPermissions($id, $perms) {return t\adminPerms($id, $perms
  *
  * in: MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
+ *     MAKE recurs ARecurringBankTransferCanBeCompleted
  */
 function itsLater() {return t\itsLater();}
+
+/**
+ * only these (ARG): (ARG)
+ *
+ * in: TEST gifts ARecurringDonationToCGCannotBeCompleted
+ */
+function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\these($thing, $list)); }
+
+/**
+ * variable (ARG) is (ARG)
+ *
+ * in: MAKE eachacct AUserBecomesAnInternationalCriminal
+ */
+function variableIs($k, $v) {return t\varIs($k, $v);}

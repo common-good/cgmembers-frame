@@ -75,7 +75,7 @@ Scenario: A member asks to pay another member for loan/reimbursement
   | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
 
 Scenario: A member confirms request to pay another member
-  Given cookie "box" is "abcd"
+  Given cookie "box-NEWZZA" is "abcd"
   And these "r_boxes":
   | id | channel | code | boxnum | uid  |*
   | 2  | %TX_WEB | abcd | 12345  | .ZZA |
@@ -256,14 +256,16 @@ Scenario: A member ask to pay another member too much, repeatedly
   | op  | who     | amount | purpose | period | periods |*
   | pay | Bea Two | 900    |  labor  | week   |       1 |
   Then we say "status": "short to|when resolved|repeats" with subs:
-  | short | avail | often  |*
-  | $650  | $250  | weekly |
-  And we message "banked|bank tx number" to member ".ZZA" with subs:
-  | action | amount | tofrom | why                              | checkNum |*
-  | draw   | $650   | from   | to cover your payment request #1 | 1        |
+  | short | often  |*
+  | $650  | weekly |
+  # avail was $250
+  And we message "request num|short to|expect a transfer" to member ".ZZA" with subs:
+  | nvid | short |*
+  | 1    | $900  |
+  # avail was $250
   And we say "status": "banked|bank tx number" with subs:
-  | action | amount | tofrom | why                              | checkNum |*
-  | draw   | $650   | from   | to cover your payment request #1 | 1        |
+  | action | amount | tofrom | why                                 | checkNum |*
+  | draw   | $900   | from   | to cover pending payment request #1 | 1        |
 
 Scenario: A member pays another member later
   When member ".ZZA" confirms form "tx/pay" with values:
