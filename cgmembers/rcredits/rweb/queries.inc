@@ -131,10 +131,13 @@ if ($mya and $mya->admin) {
      HAVING SUM(x.amt)>:MIN1099",
 
   1 . t('Large CG Transactions') . " FY$fyYear" =>
-    "SELECT u.fullName, FORMAT(e.amount, 2), e.description, c.category
+    "SELECT LEFT(FROM_UNIXTIME(h.created), 10) AS `date`, u.fullName, uOther.fullName AS `to/from`,
+       FORMAT(e.amount, 2) AS amount, e.description, c.category
      FROM tx_entries e
-     JOIN tx_hdrs h USING(xid)
-     LEFT JOIN users u USING(uid)
+     JOIN tx_entries eOther ON eOther.id=-e.id
+     JOIN tx_hdrs h ON h.xid=e.xid
+     LEFT JOIN users u ON u.uid=e.uid
+     LEFT JOIN users uOther ON uOther.uid=eOther.uid
      JOIN tx_cats c ON c.id=e.cat
      WHERE h.created BETWEEN $fy0 AND $fy9 AND ABS(e.amount)>:BIG_TX
      ORDER BY ABS(e.amount) DESC, h.created
