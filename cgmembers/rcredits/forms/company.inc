@@ -68,6 +68,7 @@ EOF;
   $employees = intFld(t('Employees:'), [t('Employee count'), t('How many employees do you have?')], required($mya->employees));
   $gross = numFld(t('Annual Gross:'), [t('Approximate annual gross income')], required($mya->gross));
   $staleNudge = intFld(t('Nudge Every:'), [t('Number of days between nudges'), t('Wait this many days before nudging a customer to pay an invoice you sent them (zero means never send a reminder).')], required($mya->staleNudge ?: STALE_NUDGE));
+  $giftThanks = areaFld(t('Gift Thanks:'), t('Arbitrarily complex additional text at the bottom of automatic emails thanking donors. Use <%a>markdown</a> with "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/')), dft($mya->giftThanks));
 //  $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
   if ($mya->admManageAccts) {
     $fast = NULL; // boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
@@ -75,7 +76,7 @@ EOF;
   } else { $fast = $atm = NULL; }
   
   $showAdvanced = item(btn('', t('Advanced Settings'), 'default'), NBSP);
-  $advanced = fieldSet(NBSP, compact(ray('logo descPreface description staleNudge')));
+  $advanced = fieldSet(NBSP, compact(ray('logo descPreface description staleNudge giftThanks')));
 
   return cgform(compact(ray('title links name private categories selling shortDesc employees gross website founded showAdvanced advanced')) + w\setupFoot(''));
 }
@@ -105,14 +106,14 @@ function formCompany_validate($form, &$sta) {
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($rawInfo = just('private description shortDesc website logo selling categories requireCashier employees gross staleNudge founded', $sta['input'], NULL));
+  extract($rawInfo = just('private description shortDesc website logo selling categories requireCashier employees gross staleNudge giftThanks founded', $sta['input'], NULL));
   
 //  $mya->setCoCans(nn($can));
   $mya->setCoBit(CO_PRIVATE, nn($private));
 //  $mya->setCoBit(CO_TIP, $tips);
 //  if ($mya->admManageAccts) $mya->setCoBit(CO_FAST, nn($fast));
 //  if ($mya->admManageAccts) $mya->setCoBit(CO_ATM, nn($atm));
-  $info = []; foreach (ray('description shortDesc website logo selling employees gross staleNudge founded') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('description shortDesc website logo selling employees gross staleNudge giftThanks founded') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
   if (nn($categories)) $mya->setCategories($categories);
   return w\goNextStep('company', NULL, $rawInfo);

@@ -172,7 +172,7 @@ function formTxDetail_submit($form, &$sta) {
   }
   
   foreach (ray('amt created') as $k) if (${"o_$k"} != $$k) {
-    db\insert('changes', ray('table rid field oldValue newValue changedBy', 'txs', $xid, $k, ${"o_$k"}, $$k, $mya->id)); // changing uid1 AND uid2 is not allowed; other fields don't matter
+    db\insert('changes', ray('table rid field oldValue newValue changedBy', 'txs', $xid, $k, ${"o_$k"}, $$k, $mya->agentId)); // changing uid1 AND uid2 is not allowed; other fields don't matter
     db\setFlag('tx_hdrs_all', $xid, B_CHANGED, TRUE);
   }
 

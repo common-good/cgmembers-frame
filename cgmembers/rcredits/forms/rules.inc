@@ -23,8 +23,9 @@ const TIMED_URL = 'sadmin/timed/id';
 function formRules($form, &$sta, $type = '', $args = '') {
   global $mya;
   
+  $rules = ($type == 'rules');
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
-  list ($tnm, $url, $flds) = $type == 'rules' ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
+  list ($tnm, $url, $flds) = $rules ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
   extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
   if (nn($ret)) return $ret; // show list of records, if appropriate
 
@@ -52,13 +53,18 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $amtMax = numFld(t('Extra Max:'), $maxDesc, dft($amtMax));
   $start = dateFld(t('Start:'), $dtDesc, dft($start));
   $end = dateFld(t('End:'), $dtDesc, dft($end));
-  $periods = intFld(t('Periods:'), '', dft($periods ?: 1));
-  $period = selectFld(t('Period:'), '', dft($period), r\recurRay(TRUE, PERIODS));
-  $durations = intFld(t('Durations:'), '', dft($durations ?: 1));
-  $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
-  $template = textFld(t('Template:'), '', dft($template));
-  $code = textFld(t('Code:'), '', dft($code));
-  $stripeId = textFld(t('Stripe ID:'), '', dft($stripeId));
+  
+  $code = $template = $periods = $period = $durations = $duration = $stripeId = NULL;
+  if ($rules) {
+    $code = textFld(t('Code:'), '', dft($code));
+    $template = textFld(t('Template:'), '', dft($template));
+  } else {
+    $periods = intFld(t('Periods:'), '', dft($periods ?: 1));
+    $period = selectFld(t('Period:'), '', dft($period), r\recurRay(TRUE, PERIODS));
+    $durations = intFld(t('Durations:'), '', dft($durations ?: 1));
+    $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
+    $stripeId = textFld(t('Stripe ID:'), '', dft($stripeId));
+  }
   
   foreach (ray('tnm flds url id') as $k) $$k = hidFld($$k);
   $submit = t('Submit');
