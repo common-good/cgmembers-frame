@@ -319,7 +319,7 @@ function memberRay($myid, $aid, $restrict = '') {
  *   even if the account is joint.
  */
 function get1099($type, $payee, $year = NULL) {
-  global $q1099, $ignore1099;
+  global $q1099;
   
   if (is_null($q1099)) {
     u\setDft($year, strtotime('last day of December last year'));
@@ -534,12 +534,15 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
   if ($cat) $extra += ray('cat', r\hasCats($payer) ? [$cat, NULL] : [NULL, $cat]);
   if ($reversesXid) $extra += compact('reversesXid');
   if ($payAmount < $amount) $extra['partial'] = 1;
-  if ($payAmount > invRemains($nvid)) $extra['overpaid'] = 1;
+  if ($payAmount > invRemains($nvid)) {
+    $extra['overpaid'] = 1;
+    r\tellAdmin('overpaid! (error?)', $extra); // this probably shouldn't ever be allowed, but not sure yet
+  }
   if ($flags) foreach (ray('gift crumbs investment self') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   $z = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($z->ok) {
-    if ($payAmount >= $amount or !invRemains($nvid)) { // >= is for efficiency
+    if ($payAmount >= $amount or !invRemains($nvid)) { // >= is for efficiency (result of invRemains is different from above)
       db\update('tx_requests', ray('nvid status', $nvid, $z->subs['xid']), 'nvid');
       if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $z->ok, $z->msg));
     }
