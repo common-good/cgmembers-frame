@@ -105,7 +105,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
         t('Pull this entire amount from your bank account.'),
         t('Pay first from your Common Good balance; then from your bank account as needed.'),
       ];
-      $balFirst = $a->hasBank ? radiosFld(REQ . NBSP, dft($a->balFirst ? 1 : 0), [], $choices) : hidFld(1);
+      $balFirst = $a->hasBank ? radiosFld(REQ . NBSP, '', dft((int) $a->balFirst), $choices) : hidFld(1);
       $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
       $reason = textFld(t('Reason for dispute:'));
