@@ -1929,3 +1929,4 @@ function word9($s, $m = ' ') {return ($ray = explode($m, $s)) ? $ray[count($ray)
 function sign($n) {return ($n > 0) - ($n < 0);} // -1, 0, or 1
 function validVarName($s) {return (isset($s) and preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $s));}
 function isOdd($n) { return ((int) $n) % 2 != 0; }
+function prevYearSQL($sql) {return preg_replace_callback('/\b(\d{10,11})\b/', fn($m) => (string)strtotime('-1 year', $m[1]), $sql);} // after 2001

@@ -47,7 +47,12 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
     $title = t('Query Results');
     $subtext = '<h4>' . w\queryPermitted($qName, $sql2, $subtext) . "</h4><p>$subtext</p>"; // alters $sql2
     if (strhas($sql2, ' ')) { // explicit SQL from query definition
-      if ($mya->admin) $title .= ' ' . popHelp('SQL', $sql2, '', 'buttino btn-xs btn-default', 'click');
+      if ($mya->admin) {
+        $prevYearCode = u\cryRay(ray('sql sqlTitle', u\prevYearSQL($sql2), substr($qName, 1) . t(' - Previous Year')));
+        $title .= ' '
+        . popHelp('SQL', $sql2, '', $class = 'buttino btn-xs btn-default', 'click') . ' '
+        . btn("/community/data/code=$prevYearCode", t('prevYear'));
+      }
       $q = db\q(preMagic($sql2));
       $rows = postMagic((array) $q->fetchAll());
       $report = item(w\showRecords($rows));
