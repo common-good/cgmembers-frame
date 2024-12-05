@@ -21,7 +21,7 @@ function formOurAccounts($form, &$sta, $args = '') {
   $list = item(idsLinked(tomorrow($dft)));
   jsx('ourAccts');
 
-  return cgform(compact(ray('title subtext asof list')));
+  return cgform(compact(ray('title subtext asof list')), 'wider');
 }
 
 function idsLinked($asof) {
@@ -44,7 +44,11 @@ function idsLinked($asof) {
       if ($seeCanonic) $since = ''; else continue;
     } else $bestName = $a->bestName;
     $name = $uid == $mya->id ? "<b>$bestName</b>" : w\lnk("/change-account/acct=$uid", $bestName);
-    $balance = u\fmtAmt($asof > today() ? $a->balance : be\balanceAsOf($a->uids, $asof));
+
+    $balance = !$a->activated ? t('pending')
+    : (!$a->ok ? (($tx = $a->lastTx and $dt = $tx->created) ? t('closed ') . fmtDt($dt) : t('no txs yet'))
+      : u\fmtAmt($asof > today() ? $a->balance : be\balanceAsOf($a->uids, $asof)) );
+
     $row = [$since, $a->mainQid, $name, $balance];
     $rows .= '<tr><td>' . join('</td><td>', $row) . '</td></tr>';
   }
