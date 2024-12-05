@@ -1140,8 +1140,8 @@ function thanks($xid, $item) {
     $coA->tellIn($report, $subs);
 
     // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
-    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg toCancel', 
-      !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg, '');
+    $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg giftThanks toCancel', 
+      !$member, $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), $msg, u\parseUp($coA->giftThanks), '');
 
     if ($member) { // send an immediate email whether or not the payer is a member
       $a->tellOut("$type-thanks-member", $subs);
