@@ -122,6 +122,14 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
+  1 . t('1099K') . " FY$fyYear" =>
+    "SELECT u.mainQid! AS ID, FORMAT(SUM(x.amt), 2) AS amount, u.fullName as name, u.postalAddr!
+     FROM txs_noreverse x
+     LEFT JOIN users u ON u.uid=x.uid2
+     WHERE u.activated AND x.created BETWEEN $fy0 AND $fy9 AND type NOT IN (:E_BANK,:E_OUTER,:E_REBATE)
+     GROUP BY u.uid
+     HAVING SUM(x.amt)>:MIN1099",
+
   1 . t('Large CG Transactions') . " FY$fyYear" =>
     "SELECT u.fullName, FORMAT(e.amount, 2), e.description, c.category
      FROM tx_entries e
