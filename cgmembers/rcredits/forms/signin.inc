@@ -128,7 +128,7 @@ function mfa($mfa, $then) {
 
 function preMFA($uid, $then) {
   $a = r\acct($uid);
-  if (r\cook($a->trustCook)) return; // this device is trusted for this account, so don't do MFA
+  if (r\cook($a->trustCook)) return TRUE; // this device is trusted for this account, so don't do MFA
 
   $nonce = u\randomString(8, 'digits') . ''; // tests get confused unless this is a string
   r\rMail('confirm-signin', $uid, compact('nonce'));
