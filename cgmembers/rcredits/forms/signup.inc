@@ -67,7 +67,6 @@ EOF
   , '_b _aHelp', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')));
 
   $acctType = hidFld(CO_PERSONAL);
-//    $pin = passFld(t('PIN:'), [t('Choose a PIN (any 4 digits)'), t('Your security code for online purchases.')]); // first time logging in, get PIN
 
   $args = hidFld(nn($args));
   $confirmed = hidFld(nn($iCode) == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
@@ -123,10 +122,10 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 }
 
 function formSignup_submit($form, &$sta) {
-  $dbFields = 'fullName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes tenure source';
+  $dbFields = 'fullName email flags phone country zip address city state postalAddr helper iCode notes tenure source';
   extract(just('then myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
-  extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
+  extract(just('code source2', nn($args) ?: [])); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
 
   u\setDft($source, '');
