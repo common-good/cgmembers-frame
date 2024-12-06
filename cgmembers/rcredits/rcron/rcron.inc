@@ -1095,7 +1095,8 @@ function payInvoices() {
 function payInvoice($item) {
   extract(just('uid nvid', $item, NULL));
   $a = r\acct($uid);
-  $z = be\payInvoice($nvid, $a->balFirst);
+  $remains = be\invRemains($nvid);
+  $z = be\payInvoice($nvid, $a->balFirst, $remains);
 }
 
 /**
