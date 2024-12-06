@@ -83,6 +83,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
     if ($a->hasBank) {
       $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Always" box).</p>');
       if (!$webpay) $always = boxFld('always', t('Always:'), t('Pay all invoices from %who automatically.', $subs), 0);
+    } elseif (in($a->uid, BUCKET_UIDS)) {
+      $_warning = ''; // ignore insufficient funds when refunding from buckets
     } elseif ($a->avail() < $remains) {
       $_warning = t('<p><b>NOTE:</b>You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account. Then click History / Pending FROM You and select this invoice to approve it.</p>');
       $disabled = w\disabled();
