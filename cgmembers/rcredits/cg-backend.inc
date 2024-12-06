@@ -1220,7 +1220,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $payerA->tell('invoiced you', $subs1); // tell other party by email about this invoice
     u\tellApp('request', $payeeA, $payerA, $amount, $purpose, $created, $nvid);
   } else { // pre-approved!
-    $z = be\payInvoice($nvid, $payerA->balFirst);
+    $z = be\payInvoice($nvid, $payerA->balFirst); // no need to specify amount because we just created the invoice
     if ($z->ok) $status = TX_PAID; else r\tellAdmin(t('invoice payment failed'), just('msg', $z) + $z->subs + $info);
   }
 
