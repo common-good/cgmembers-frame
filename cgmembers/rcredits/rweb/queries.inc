@@ -24,7 +24,7 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
-  $fyYear = date('Y', $fy9);
+  $fyDesc = ' FY' . date('y', $fy9);
   $y9 = strtotime('January 1') - 1;
   $y0 = strtotime('-1 year', $y9) + 1;
   $cgIncomeUids = join(',', r\cgIncomeUids());
@@ -122,7 +122,7 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
-  1 . t('1099K') . " FY$fyYear" =>
+  1 . t('1099K') . $fyDesc =>
     "SELECT u.mainQid! AS ID, FORMAT(SUM(x.amt), 2) AS amount, u.fullName as name, u.postalAddr!
      FROM txs_noreverse x
      LEFT JOIN users u ON u.uid=x.uid2
@@ -143,7 +143,7 @@ if ($mya and $mya->admin) {
      ORDER BY ABS(e.amount) DESC, h.created
     ". t('~<p>We ask sponsees for documentation of all these transactions. Report transactions over %amt in audits.</p>', 'amt', u\fmtAmt(2*BIG_TX)),
   
-  1 . t('Staff Net Pay') . " FY$fyYear" =>
+  1 . t('Staff Net Pay') . $fyDesc =>
     "SELECT u.fullName AS `staff person`, SUM(x.amt) AS `paid$`
       FROM users u
       LEFT JOIN txs x ON x.uid2=u.uid AND x.created BETWEEN $fy0 AND $fy9
