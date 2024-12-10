@@ -130,7 +130,33 @@ if ($mya and $mya->admin) {
      GROUP BY u.uid
      HAVING SUM(x.amt)>:MIN1099",
 
-  1 . t('Large CG Transactions') . " FY$fyYear" =>
+  1 . t('Project Totals By Category') . $fyDesc => <<<X
+    -- Dynamically generate columns for each category, sorted by category ID
+    SELECT GROUP_CONCAT(
+      CONCAT('SUM(IF(e.cat=', c.id, ', e.amount, 0)) AS `', c.category, '`')
+      ORDER BY c.id
+    ) INTO @pivot_columns
+    FROM tx_cats c 
+    JOIN tx_entries e ON c.id=e.cat 
+    JOIN tx_hdrs h USING(xid)
+    JOIN users u USING(uid)
+    JOIN u_company y USING(uid)
+    WHERE h.created BETWEEN $fy0 AND $fy9
+      AND (:CO_SPONSORED OR u.:PARTNER_PROJECT);
+    
+    -- Actual pivot query construction
+    SELECT u.fullName AS project, @pivot_columns
+    FROM tx_entries e ON c.id=e.cat 
+    JOIN tx_hdrs h USING(xid)
+    JOIN users u USING(uid)
+    WHERE h.created BETWEEN $fy0 AND $fy9
+      AND (:CO_SPONSORED OR u.:PARTNER_PROJECT)
+    GROUP BY u.uid
+    ORDER BY u.fullName
+X
+  . t(''),
+  
+  1 . t('Large CG Transactions') . $fyDesc =>
     "SELECT LEFT(FROM_UNIXTIME(h.created), 10) AS `date`, u.fullName, uOther.fullName AS `to/from`,
        FORMAT(e.amount, 2) AS amount, e.description, c.category
      FROM tx_entries e
