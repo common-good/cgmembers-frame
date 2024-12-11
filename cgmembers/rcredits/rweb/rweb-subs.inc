@@ -2285,7 +2285,7 @@ function badCaptcha($sta) {
 
 /**
  * Return a table as specified.
- * @param ray $rows: set of row data
+ * @param ray $rows: set of row data (either an array of values OR a return from db\rows)
  * @param ray $heads: column headers
  * @param string $colClasses: (optional) class of each column
  * @param ray $rowClasses: (optional) class of each row
@@ -2293,10 +2293,10 @@ function badCaptcha($sta) {
  */
 function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTribs = 'id=adhoc') {
   u\EXPECT(!$colClasses or count($colClasses) == count($heads), 'wrong aligns count');
-  if ($rows) u\EXPECT(count($rows[0]) == count($heads), 'wrong heads count');
+  if ($rows = (array) $rows) u\EXPECT(count((array) $rows[0]) == count($heads), 'wrong heads count');
   
   $heads = makeRow('th', $heads, $colClasses);
-  if ($rows) {
+  if ($rows = array_values($rows)) {
     foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, nni($rowClasses, $i));
     $after = '';
   } else $after = t('There are no such records.');

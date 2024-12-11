@@ -172,6 +172,37 @@ X;
       $res[] = [$fullName, $phone, $email, $address, $member, number_format($total, 2), number_format($count), fmtDt($since)];
     }
     return w\item(w\makeTable(nn($res), $heads, $colClasses, ''));
+  
+  } elseif ($nm == 'projects-by-category') {
+
+    $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
+    $fy0 = strtotime('-1 year', $fy9) + 1;
+    
+    $where = tr("h.created BETWEEN $fy0 AND $fy9 AND (:CO_SPONSORED OR u.:PARTNER_PROJECT)");
+    $tables =
+     'tx_entries e
+      JOIN tx_hdrs h USING(xid)
+      JOIN users u USING(uid)
+      JOIN u_company y USING(uid)';
+      
+    $fld = <<< X
+      SELECT GROUP_CONCAT(
+        CONCAT('SUM(IF(e.cat=', c.id, ', e.amount, 0)) AS `', c.category, '`')
+        ORDER BY c.id
+      )
+X;
+    $catIds = db\keyed('DISTINCT c.id, c.category', "$tables JOIN tx_cats c ON c.id=e.cat", "$where ORDER BY c.id");
+    $heads[] = t('Project');
+    $cols = 'u.fullName';
+    foreach ($catIds as $k => $cat) {
+      $catRay = explode(': ', $cat);
+      $heads[] = $cat = $catRay[count($catRay) - 1];
+      $cols .= ", SUM(IF(e.cat=$k, e.amount, 0))";
+    }
+    
+    $rows = db\rows($cols, $tables, "$where GROUP BY u.uid ORDER BY u.fullName");
+
+    return w\item(w\makeTable(nn($rows), $heads));
     
   } elseif ($nm == 'cef-billing') {
     w\go('/sadmin/cef-billing');
