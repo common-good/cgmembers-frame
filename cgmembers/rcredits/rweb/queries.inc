@@ -24,7 +24,7 @@ if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
   $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
   $fy0 = strtotime('-1 year', $fy9) + 1;
-  $fyYear = date('Y', $fy9);
+  $fyDesc = ' FY' . date('y', $fy9);
   $y9 = strtotime('January 1') - 1;
   $y0 = strtotime('-1 year', $y9) + 1;
   $cgIncomeUids = join(',', r\cgIncomeUids());
@@ -122,7 +122,7 @@ if ($mya and $mya->admin) {
       ) x2 USING(uid)
       WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
-  1 . t('1099K') . " FY$fyYear" =>
+  1 . t('1099K') . $fyDesc =>
     "SELECT u.mainQid! AS ID, FORMAT(SUM(x.amt), 2) AS amount, u.fullName as name, u.postalAddr!
      FROM txs_noreverse x
      LEFT JOIN users u ON u.uid=x.uid2
@@ -130,7 +130,31 @@ if ($mya and $mya->admin) {
      GROUP BY u.uid
      HAVING SUM(x.amt)>:MIN1099",
 
-  1 . t('Large CG Transactions') . " FY$fyYear" =>
+  1 . t('Project Totals By Category') . $fyDesc => <<<X
+    SELECT GROUP_CONCAT(
+      CONCAT('SUM(IF(e.cat=', c.id, ', e.amount, 0)) AS `', c.category, '`')
+      ORDER BY c.id
+    ) INTO @pivot_columns
+    FROM tx_cats c 
+    JOIN tx_entries e ON c.id=e.cat 
+    JOIN tx_hdrs h USING(xid)
+    JOIN users u USING(uid)
+    JOIN u_company y USING(uid)
+    WHERE h.created BETWEEN $fy0 AND $fy9
+      AND (:CO_SPONSORED OR u.:PARTNER_PROJECT);
+    
+    SELECT u.fullName AS project, @pivot_columns
+    FROM tx_entries e ON c.id=e.cat 
+    JOIN tx_hdrs h USING(xid)
+    JOIN users u USING(uid)
+    WHERE h.created BETWEEN $fy0 AND $fy9
+      AND (:CO_SPONSORED OR u.:PARTNER_PROJECT)
+    GROUP BY u.uid
+    ORDER BY u.fullName
+X
+  . t(''),
+  
+  1 . t('Large CG Transactions') . $fyDesc =>
     "SELECT LEFT(FROM_UNIXTIME(h.created), 10) AS `date`, u.fullName, uOther.fullName AS `to/from`,
        FORMAT(e.amount, 2) AS amount, e.description, c.category
      FROM tx_entries e
@@ -143,7 +167,7 @@ if ($mya and $mya->admin) {
      ORDER BY ABS(e.amount) DESC, h.created
     ". t('~<p>We ask sponsees for documentation of all these transactions. Report transactions over %amt in audits.</p>', 'amt', u\fmtAmt(2*BIG_TX)),
   
-  1 . t('Staff Net Pay') . " FY$fyYear" =>
+  1 . t('Staff Net Pay') . $fyDesc =>
     "SELECT u.fullName AS `staff person`, SUM(x.amt) AS `paid$`
       FROM users u
       LEFT JOIN txs x ON x.uid2=u.uid AND x.created BETWEEN $fy0 AND $fy9

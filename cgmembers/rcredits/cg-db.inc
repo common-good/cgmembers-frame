@@ -65,9 +65,10 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  */
 function adminQ($sql) {
   $word1 = mb_strtolower(mb_strstr(trim($sql), ' ', TRUE));
-  if (!in($word1, 'select show')) return w\err('The query must begin with SELECT or SHOW.');
-  $sql = str_replace(';', '', $sql); // don't allow concatenation of queries
-  return \db_query(u\SUBS($sql));
+  if (!in($word1, 'select set show')
+  or substr_count($sql, ';') > preg_match_all('/;\\s*[SELECT|SET|SHOW]\\s/i', $sql)) {
+    return w\err('Queries must begin with SELECT, SET, or SHOW.');
+  } else return \db_query(u\SUBS($sql));
 }
 
 /**
