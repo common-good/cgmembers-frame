@@ -178,7 +178,7 @@ X;
     $fy9 = strtotime('July 1') - 1; if ($fy9 > now()) $fy9 = strtotime('-1 year', $fy9);
     $fy0 = strtotime('-1 year', $fy9) + 1;
     
-    $where = tr("h.created BETWEEN $fy0 AND $fy9 AND (:CO_SPONSORED OR u.:PARTNER_PROJECT)");
+    $where = tr("h.created BETWEEN $fy0 AND $fy9 AND (y.coFlags&(1<<:CO_SPONSORED) OR u.:PARTNER_PROJECT)");
     $tables =
      'tx_entries e
       JOIN tx_hdrs h USING(xid)
