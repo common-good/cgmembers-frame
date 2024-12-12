@@ -188,25 +188,21 @@ X;
       JOIN tx_hdrs h USING(xid)
       JOIN users u USING(uid)
       JOIN u_company y USING(uid)';
-      
-    $fld = <<< X
-      SELECT GROUP_CONCAT(
-        CONCAT('SUM(IF(e.cat=', c.id, ', e.amount, 0)) AS `', c.category, '`')
-        ORDER BY c.id
-      )
-X;
+
     $catIds = db\keyed('DISTINCT c.id, c.category', "$tables JOIN tx_cats c ON c.id=e.cat", "$where ORDER BY c.id");
     $heads[] = t('Project');
     $cols = 'u.fullName';
     foreach ($catIds as $k => $cat) {
       $catRay = explode(': ', $cat);
       $heads[] = $cat = $catRay[count($catRay) - 1];
-      $cols .= ", SUM(IF(e.cat=$k, e.amount, 0))";
+      $cols .= ", NULLIF(FORMAT(SUM(IF(e.cat=$k, e.amount, 0)), 2), '0.00')";
     }
     
     $rows = db\rows($cols, $tables, "$where GROUP BY u.uid ORDER BY u.fullName");
-
-    return w\item(w\makeTable(nn($rows), $heads));
+    $colClasses = array_fill(0, count($heads), 'alignR');
+    $colClasses[0] = '';
+    
+    return w\item(w\makeTable(nn($rows), $heads, $colClasses));
     
   } elseif ($nm == 'cef-billing') {
     w\go('/sadmin/cef-billing');
