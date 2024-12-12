@@ -8,12 +8,14 @@ use CG\Db as db;
 
 /**
  * Present a choice of data queries
+ * @param string $code: encrypted parameters
+ * @param int $prev: number of years ago (eg for the same report for 2 years earlier, set $prev = 2)
  */
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  extract(just('code', $args, ''));
+  extract(just('code prev', $args, ''));
 
-  require queryFile($isco0 == 'co');
+  require queryFile($isco0 == 'co'); // get $queries array
   
   extract(just('qName sql sqlTitle q isco', u\decryRay($code), NULL));
   u\setDft($isco, $isco0 == 'co');
@@ -56,7 +58,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
       $q = db\q(preMagic($sql2));
       $rows = postMagic((array) $q->fetchAll());
       $report = item(w\showRecords($rows));
-    } else $report = getReport($sql2); // report has its own special coding (see getReport below), but needs no user input
+    } else $report = getReport($sql2, $prev); // report has its own special coding (see getReport below), but needs no user input
     $form = compact(ray('title subtext report'));
   } else { // no query selected yet, so show the list
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
@@ -95,8 +97,9 @@ function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/r
 /**
  * Return a report form-field for the specified report.
  * @param string $nm: report name
+ * @param int $prev: number of years ago (eg for the same report for 2 years earlier, set $prev = 2)
  */
-function getReport($nm) {
+function getReport($nm, $prev) {
   global $mya;
   $myid = $mya->id;
   
@@ -179,6 +182,7 @@ X;
     $fy0 = strtotime('-1 year', $fy9) + 1;
     
     $where = tr("h.created BETWEEN $fy0 AND $fy9 AND (y.coFlags&(1<<:CO_SPONSORED) OR u.:PARTNER_PROJECT)");
+    if ($prev) $where = u\prevYearSQL($where, $prev);
     $tables =
      'tx_entries e
       JOIN tx_hdrs h USING(xid)
