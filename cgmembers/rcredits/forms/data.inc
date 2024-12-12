@@ -8,12 +8,14 @@ use CG\Db as db;
 
 /**
  * Present a choice of data queries
+ * @param string $code: encrypted parameters
+ * @param int $prev: number of years ago (eg for the same report for 2 years earlier, set $prev = 2)
  */
 function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  extract(just('code', $args, ''));
+  extract(just('code prev', $args, ''));
 
-  require queryFile($isco0 == 'co');
+  require queryFile($isco0 == 'co'); // get $queries array
   
   extract(just('qName sql sqlTitle q isco', u\decryRay($code), NULL));
   u\setDft($isco, $isco0 == 'co');
@@ -56,7 +58,7 @@ function formData($form, &$sta, $args = '', $isco0 = FALSE) {
       $q = db\q(preMagic($sql2));
       $rows = postMagic((array) $q->fetchAll());
       $report = item(w\showRecords($rows));
-    } else $report = getReport($sql2); // report has its own special coding (see getReport below), but needs no user input
+    } else $report = getReport($sql2, $prev); // report has its own special coding (see getReport below), but needs no user input
     $form = compact(ray('title subtext report'));
   } else { // no query selected yet, so show the list
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
@@ -95,8 +97,9 @@ function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/r
 /**
  * Return a report form-field for the specified report.
  * @param string $nm: report name
+ * @param int $prev: number of years ago (eg for the same report for 2 years earlier, set $prev = 2)
  */
-function getReport($nm) {
+function getReport($nm, $prev) {
   global $mya;
   $myid = $mya->id;
   
@@ -179,30 +182,27 @@ X;
     $fy0 = strtotime('-1 year', $fy9) + 1;
     
     $where = tr("h.created BETWEEN $fy0 AND $fy9 AND (y.coFlags&(1<<:CO_SPONSORED) OR u.:PARTNER_PROJECT)");
+    if ($prev) $where = u\prevYearSQL($where, $prev);
     $tables =
      'tx_entries e
       JOIN tx_hdrs h USING(xid)
       JOIN users u USING(uid)
       JOIN u_company y USING(uid)';
-      
-    $fld = <<< X
-      SELECT GROUP_CONCAT(
-        CONCAT('SUM(IF(e.cat=', c.id, ', e.amount, 0)) AS `', c.category, '`')
-        ORDER BY c.id
-      )
-X;
+
     $catIds = db\keyed('DISTINCT c.id, c.category', "$tables JOIN tx_cats c ON c.id=e.cat", "$where ORDER BY c.id");
     $heads[] = t('Project');
     $cols = 'u.fullName';
     foreach ($catIds as $k => $cat) {
       $catRay = explode(': ', $cat);
       $heads[] = $cat = $catRay[count($catRay) - 1];
-      $cols .= ", SUM(IF(e.cat=$k, e.amount, 0))";
+      $cols .= ", NULLIF(FORMAT(SUM(IF(e.cat=$k, e.amount, 0)), 2), '0.00')";
     }
     
     $rows = db\rows($cols, $tables, "$where GROUP BY u.uid ORDER BY u.fullName");
-
-    return w\item(w\makeTable(nn($rows), $heads));
+    $colClasses = array_fill(0, count($heads), 'alignR');
+    $colClasses[0] = '';
+    
+    return w\item(w\makeTable(nn($rows), $heads, $colClasses));
     
   } elseif ($nm == 'cef-billing') {
     w\go('/sadmin/cef-billing');
