@@ -2297,7 +2297,7 @@ function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTrib
   
   $heads = makeRow('th', $heads, $colClasses);
   if ($rows = array_values($rows)) {
-    foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, nni($rowClasses, $i));
+    foreach ($rows as $i => $row) $lines[] = makeRow('td', (array) $row, $colClasses, nni($rowClasses, $i));
     $after = '';
   } else $after = t('There are no such records.');
   
@@ -2313,7 +2313,7 @@ X;
 }
 
 function makeRow($tag, $row, $colClasses = [], $rowClass = '') {
-  foreach ($row as $i => $k) {
+  foreach (array_values($row) as $i => $k) {
     if ($class = nni($colClasses, $i)) $class = " class=\"$class\"";
     $line[$i] = "<$tag$class>$k</$tag>";
   }

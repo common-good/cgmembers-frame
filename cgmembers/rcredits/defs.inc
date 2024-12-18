@@ -34,7 +34,7 @@ const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // loca
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 60000',
+  'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 100000',
   'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
   'HIS' => 'Hingham Institution for Savings, 211370370, 082040173, 082040173, _, 4pm, 9999999', // not used as an originating bank (yet)
 ];
