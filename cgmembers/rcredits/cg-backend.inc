@@ -25,8 +25,10 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param assoc $extra: extra parameters
  *   omitBankTxs: <don't handle txs for bank transfers>
  *   includeSelfTxs: <include transactions between the various $uids>
- *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are a credit card payment) AND B_QBOK flag off> 
- *     NOTE: usually cats are set manually or by be\setCat(), but CC donations are handled differently and cat1 gets set in Qb::sendCCTx()
+ *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are an external payment)
+ *     AND B_QBOK flag off> 
+ *     NOTE: usually cats are set manually or by be\setCat(),
+ *       but CC donations are handled differently and cat1 gets set here in Qb::sendCCTx()
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
@@ -43,7 +45,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   
   if ($omitBankTxs) $where .= ' AND t2.bankAccount IS NULL';
   if ($catsOnly) {
-    $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR (x.:IS_CC AND x.uid1=:UID_OUTER)) AND NOT x.:IS_QBOK";
+    $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR x.uid1=:UID_OUTER) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
     $toMe = "($toMe AND (NOT ($fromMe) OR x.uid2 IN ($catUids)))";
   }
