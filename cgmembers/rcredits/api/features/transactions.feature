@@ -114,7 +114,7 @@ Scenario: The app asks to charge a customer with a bad otherId
   | devC     | 123    | K6VMDCC | K6VMDCXccx | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | false   | false   |
   Then we reply "ok" with JSON:
   | ok    | message                                 |*
-  | false | That is not an active %PROJECT account. |
+  | false | That is not a %PROJECT account. |
 
 Scenario: The app asks to charge a customer with a bad otherId offline
   When app posts "transactions" with:
