@@ -99,6 +99,7 @@ X;
     $banking = ($type == E_BANK);
     $newEntries = [];
     $myAmount = 0; foreach ($entries as $entry) $myAmount += $entry['amount'];
+    $myAmount = round($myAmount, 2);
     $balance = round($balance + $myAmount, 2);
     if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
     
