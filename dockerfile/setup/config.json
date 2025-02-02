@@ -37,6 +37,7 @@
   "ssnUser": "abc123",
   "ssnPass": "abc123",
   "ssnRequest": "(not used in development)",
-
+  "stripePublic": "pk_test_51PwptW00VpKSa9pm4QQhvi2Tqozf0Y87vNXMIel85xn5J75nV96mqdyxw8jFCjal6IkYEI0EdeAWW41DoDBHYWxw00hfJAlnLz",
+  "stripeSecret": "sk_test_51PwptW00VpKSa9pmIXb27IFAk0LnsP9KyFLQOIGkepMdQQMw4rTqBo5mTAW5ssc8phCN93GrLAkw7YTlOLcYyWRS00TWYpYLNQ",
   "comments": "See documentation config.json.howto.md"
 }

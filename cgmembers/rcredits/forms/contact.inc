@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+require_once __DIR__ . '/contact.inc';
 /**
  * Display, for editing, contact info for the current account.
  */
@@ -84,5 +85,6 @@ function formContact_submit($form, &$sta) {
   
   if (isset($owns)) $mya->setRisk('rents', !$owns);
   $mya->update($info);
+
   return w\goNextStep('contact', 'info saved', $info);
 }

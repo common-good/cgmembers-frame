@@ -56,7 +56,7 @@ function formVerifyId_validate($form, &$sta) {
   u\cryFile($path);
 }
   
-function formVerifyId_submit($form, &$sta) {
+function formVerifyId_submit($form, &$sta, $endpointCall = false) {
   global $mya;
   extract(just('legalName filedata dob federalId', $sta['input'], NULL));
 
@@ -71,5 +71,10 @@ function formVerifyId_submit($form, &$sta) {
 
   say(t('info saved'));
 
-  return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn', 'verifyid') : w\goNextStep('verifyid');
+    if (!$endpointCall) {
+        if (nn($then) and $res = then($then)) return $res;
+        return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn', 'verifyid') : w\goNextStep('verifyid');
+    } else {
+        return true;
+    }
 }

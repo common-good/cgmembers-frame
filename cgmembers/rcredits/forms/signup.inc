@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\QR as qr;
 
 include_once __DIR__ . '/agreement.inc';
 /**
@@ -122,11 +123,12 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
   $notes = (nn($notes) ? "$notes\n" : '') . tr($msg, compact('field')) . ": $value";
 }
 
-function formSignup_submit($form, &$sta) {
+function formSignup_submit($form, &$sta, $endpointCall = false) {
+  require_once R_ROOT . '/cg-qr.inc';
   $dbFields = 'fullName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes tenure source';
   extract(just('then myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
-  extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
+  extract(just('code source2', nn($args) ?: [])); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
 
   u\setDft($source, '');
@@ -182,10 +184,27 @@ function formSignup_submit($form, &$sta) {
     }
   }
 
-  $mya->update('signed, signedBy', now(), $mya->fullName);
-  $mya->stepDone('agree');
-  if (nn($then) and $res = then($then)) return $res;
-  return w\goNextStep('signup');
+    $mya->update('signed, signedBy', now(), $mya->fullName);
+    $mya->stepDone('agree');
+
+  //Kevin: return actorId, deviceId for next screens and return to ui for rest scenario
+  if (!$endpointCall) {
+      if (nn($then) and $res = then($then)) return $res;
+      return w\goNextStep('signup');
+  } else {
+      $name = $fullName;
+      $accountId = qr\url($mya, 'main');
+      $cardCode = $mya->cardCode();
+      $qr = myQr($mya);
+      $isCo = $mya->co;
+      $selling = $isCo ? explode("\n", $mya->selling) : NULL;
+      $toCry = "$mya->mainQid/" . now() . "/$mya->fullName";
+      $deviceId = base64_encode(u\cryPP($toCry, 'private'));
+      //$accounts[] = compact(ray('accountId cardCode deviceId qr isCo name selling'));
+      $accounts[] = ['accountId' => $accountId, 'cardCode' => $cardCode, 'deviceId' => $deviceId, 'qr' => $qr, 'isCo' => $isCo, 'name' => $name, 'selling' => $selling];
+
+      return $accounts;
+  }
 }
 
 /**

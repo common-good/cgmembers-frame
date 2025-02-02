@@ -17,6 +17,7 @@
     "cboden/ratchet": "^0.4.4",
     "paragi/php-websocket-client": "^1.0",
     "ratchet/pawl": "^0.4.1",
+    "ext-json": "*",
     "textalk/websocket": "^1.6",
     "stripe/stripe-php": "^15.8",
     "endroid/qr-code-bundle": "^6.0"

@@ -76,12 +76,17 @@ function formAgreement_validate($form, &$sta) {
 //  if (w\badSignature($sta)) return;
 }
 
-function formAgreement_submit($form, &$sta) {
+function formAgreement_submit($form, &$sta, $endpointCall = false) {
   global $mya;
   $signed = now();
 //  extract(just('signedBy', $sta['input']));
   $aa = ($mya->admHelpSignup or ($mya->co and $mya->proSe)) ? $mya->helperA : $mya->agentA;
   $signedBy = $aa->fullName;
   $mya->update($info = compact('signed', 'signedBy'));
-  return w\goNextStep('signup');
+
+    if (!$endpointCall) {
+        return w\goNextStep('signup');
+    } else {
+        return true;
+    }
 }
