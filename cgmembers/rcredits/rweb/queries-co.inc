@@ -34,7 +34,7 @@ $queries += [
   t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $footnotes,
   
   t('Last Year Payments By Payee') => <<< X
-    SELECT uid, u.fullName, SUM(amt) AS total, SUM(IF(for1 LIKE '%labor%', amt, 0)) AS laborTotal
+    SELECT u.qid!, uid, u.fullName, SUM(amt) AS total, SUM(IF(for1 LIKE '%labor%', amt, 0)) AS laborTotal
     FROM txs_noreverse x join users u ON u.uid=x.uid2
     WHERE x.created between $LYdt1 AND $LYdt2 AND x.uid1=:myid
     GROUP BY u.uid
