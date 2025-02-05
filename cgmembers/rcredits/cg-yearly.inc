@@ -20,45 +20,50 @@ const TCC = '90MD6'; // our TCC identifier assigned by the IRS
 /**
  * Create 1099-B, K, NEC, or R reports for the IRS as a downloadable file to be uploaded to the IRS FIRE site.
  * Log in at fire.irs.gov (or fire.test.irs.gov)
- * @param string $type: 1099 type (B, K, MISC, etc)
+ * @param string $type: 1099 type (B, K, NEC, MISC, R, INT, etc)
  * @param mixed $testMode: TRUE if testing, otherwise FALSE
- * @param assoc $extra: miscellaneous parameters (omit for CG itself)
+ * @param assoc $extra: miscellaneous parameters
  *   string $ein, $nm, $addr, $phone: payer information (defaults to CG's)
  *   int $year: tax year (defaults to most recently completed calendar year)
  *   assoc $badNames: names reported incorrectly, indexed by uid (1099-B only)
  *   assoc $badTINs: EINs (no punctuation) reported incorrectly, indexed by uid (1099-B only)
+ *   array $omit: uids to omit (for example to submit on time when missing 1 or 2 SSNs)
  * @param array $rows: payee data for 1099-NEC, FALSE for 1099-B
  *    each element of $rows is an assoc: [nm ein co addr qid amount],
  *    where addr is postal address, and qid='' if the payee is not on the server
  *
- * Example for corrections: f('y.do1099bs', FALSE, ray('year badNames badTINs', 2015, [23947972 => 'Miss Pelled'], [29274902 => '292039482']));
+ * Examples:
+ * - for 1099-K:
+ *     f('y.do1099s', 'K', TRUE, $extra); // TRUE means <test>
  *
- * Example for 1099-NEC and 1099-R (get amounts from QBO and/or CG)
+ * - for corrections:
+       f('y.do1099s', 'K', FALSE, ray('year badNames badTINs', 2015, [23947972 => 'Miss Pelled'], [29274902 => '292039482']));
  *
- * Get lines for each contractor (or retiring employee for 1099-R) on production server with:
-     foreach (ray('aka NEVABJ etc') as $qid) { // uppercase if 5 letters, these can also be numeric account IDs
-       $a = a($qid); $co = $a->co ? 1 : 0;
-       e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
-     }
+ * - for 1099-NEC and 1099-R (get amounts from QBO and/or CG):
+ *     Get lines for each contractor (or retiring employee for 1099-R) on production server with:
+         foreach (ray('aka NEVABJ etc') as $qid) { // uppercase if 5 letters, these can also be numeric account IDs
+           $a = a($qid); $co = $a->co ? 1 : 0;
+           e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', AMT, 0),<" . 'br>';
+         }
      
- * For 1099-NEC edit just AMT. For 1099-R edit AMT, 0 (amount and date)
- * Paste in the PHP box on a DEV machine to generate file to upload to fire.irs.gov:
+ *     For 1099-NEC edit just AMT. For 1099-R edit AMT, 0 (amount and date)
+ *     Paste in the PHP box on a DEV machine to generate file to upload to fire.irs.gov:
  
-     include R_ROOT . '/cg-yearly.inc';
-     $extra = NULL; // for CG itself
-     $extra = ray('ein nm addr phone', '043125436', 'Creative Thought and Action Inc', 'PO Box 305, Ashfield, MA 01330', '4136281957');
-     $keys = 'nm ein co addr qid amount dt';
-     $rows = [
-       ray($keys, nm, ein, co, addr, acct, amount, dt), // (for CG get these lines from the production server -- see above)
-     ];
-     r\Special\do1099s('NEC', TRUE, $extra, $rows); // TRUE means <test>
+       include R_ROOT . '/cg-yearly.inc';
+       $extra = NULL; // for CG itself
+       $extra = ray('ein nm addr phone', '043125436', 'Creative Thought and Action Inc', 'PO Box 305, Ashfield, MA 01330', '4136281957');
+       $keys = 'nm ein co addr qid amount dt';
+       $rows = [
+         ray($keys, nm, ein, co, addr, acct, amount, dt), // (for CG get these lines from the production server -- see above)
+       ];
+       r\Special\do1099s('NEC', TRUE, $extra, $rows); // TRUE means <test>
  */
  
 function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
   global $err1099;
   global $stateCode; $stateCode = $type == 'NEC' ? sp(2) : STATE_CODE; // combined state reporting is appropriate for everything but NEC
   
-  extract(just('ein year badNames badTINs', $extra, [NULL, date('Y') - 1, [], []]));
+  extract(just('ein year badNames badTINs omit', $extra ?: [], [NULL, date('Y') - 1, [], [], [] ]));
   $testMode = $testMode ? 'T' : '';
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
@@ -70,6 +75,8 @@ function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
   
   if ($uids = join(',', $uids ?: [])) { // making :uids a parameter fails 
     $where = "uid IN ($uids)";
+  } elseif ($omit) {
+    $where = tr('activated AND uid NOT IN (%uids)', 'uids', join(',', $omit));
   } else $where = 'activated';
   
   $sql = $rows ?: "SELECT uid FROM users WHERE $where ORDER BY uid";
