@@ -153,7 +153,7 @@ function formPay_submit($form, &$sta) {
   $z = $mya->payApproved($coId, $amount, $item, FOR_NONGOODS, $data, $recursId);
   if ($z->ok) {
     if ($mya->ok and $xid = nni($z->subs, 'xid')) {
-      $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
+      $mya->tellOut('gift sent', ray('amount who', u\fmtAmt($amount), r\acct($coId)->fullName));
       $nm = $mya->fullName;
       if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
       if ($note) $item .= ' ("' . $note . '")';
