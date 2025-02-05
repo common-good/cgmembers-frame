@@ -107,6 +107,7 @@ Scenario: A non-member confirms donation intent
   | coPhone      | +1 333 333 3333 |
   | amount       | $123            |
   | toCancel     | ?               |
+  | giftThanks   |                 |
   | noFrame      | 1               |
   And we email "gift-report" to member ".ZZC" with subs:
   | item         | donation ("in memory of God - wow!") |**
@@ -260,6 +261,9 @@ Scenario: A member donates to a ccOk organization
   Given button code "buttonCode" for:
   | account | secret | for    |*
   | .ZZC    | Cc3    | donate |
+  And members have:
+  | uid  | giftThanks    |*
+  | .ZZC | thx a million |
   When member ".ZZA" completes "pay/code=%buttonCode" with:
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
@@ -277,6 +281,7 @@ Scenario: A member donates to a ccOk organization
   | coPostalAddr | 3 C, C, FR      |
   | coPhone      | +1 333 333 3333 |
   | amount       | $123 monthly    |
+  | giftThanks   | thx a million   |
   | noFrame      |                 |
   And we email "gift-report" to member ".ZZC" with subs:
   | item         | donation ("awesome!") |**

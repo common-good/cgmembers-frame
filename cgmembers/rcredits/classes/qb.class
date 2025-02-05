@@ -210,7 +210,7 @@ class QB {
 //    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
     $cnt = 0;
-    $sql = 'SELECT DISTINCT uid2 FROM txs WHERE :IS_CC AND uid1=:UID_OUTER AND created BETWEEN :start AND :end';
+    $sql = 'SELECT DISTINCT uid2 FROM txs WHERE uid1=:UID_OUTER AND created BETWEEN :start AND :end';
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids()));
 

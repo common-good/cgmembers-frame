@@ -1207,6 +1207,7 @@ function statisticsGetSet($time) {
  *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
  *     MAKE ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  *     MAKE ccpay ANonmemberConfirmsAPaymentToACcOkOrganizationByCreditCard
+ *     MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon

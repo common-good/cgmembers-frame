@@ -18,6 +18,9 @@ include_once R_ROOT . '/cg-qr.inc';
  * https://docs.google.com/document/d/1F-qrSyuwi4nZYuK9blsXafOBZfsXBDuMe8xjtVOrnyk/
  * @param string $arg: the operation
  */
+ 
+const REQUIRE_ACTIVE = 'identity idPhoto latest info transactions';
+ 
 function api($arg = null) {
   global $mya;
   global $channel;
@@ -32,7 +35,7 @@ function api($arg = null) {
   }
 
   /**
-   * Endpoints (always POST): accounts, identity, idPhoto, latest, info, transactions, comments, lostPassword, test
+   * Endpoints (always POST)
    */
   $channel = TX_APP;
   unset($params['q']); // Drupal adds this
@@ -40,11 +43,12 @@ function api($arg = null) {
   setHeaders();
   if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
   if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_SYNTAX);
+  $requireActive = in($arg, REQUIRE_ACTIVE);
 
   if ($these = nni($_POST, 'these')) { // process an array with no response needed other than "ok"
     foreach (json_decode($these) as $one) {
       fixVersion($one);
-      if (!$ok = authOk($arg, $one)) return; // return is for testing -- any error triggers exitJust()
+      if (!$ok = authOk($arg, $one, $requireActive)) return; // return is for testing -- any error triggers exitJust()
       $func($one);
     }
     return exitJson('', X_OK);
@@ -52,7 +56,7 @@ function api($arg = null) {
 
 
   fixVersion($params);
-  if (!$ok = authOk($arg, $params)) return; // return is for testing -- any error triggers exitJust()
+  if (!$ok = authOk($arg, $params, $requireActive)) return; // return is for testing -- any error triggers exitJust()
   return $func($params); // functions ignore $params unless they optionally accept a POSTed array
 }
 
@@ -238,7 +242,7 @@ function transactions($params) {
   foreach (ray('pending offline') as $k) $params[$k] = $$k = ($$k == 'true'); // make these bool, modify params for error
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
-  if (!$a = getAcct($otherId, FALSE, $err) or !$a->ok) {
+  if (!$a = getAcct($otherId, FALSE, TRUE, $err) or !$a->ok) {
     return $offline ? badTx($a, $params, $err) : postErr($err);
   }
   $cardCode = $a->cardCode();
@@ -452,19 +456,21 @@ function postErr($msg) {
 /**
  * Return the account corresponding to the given abbreviation.
  * @param string $cardId: the customer abbreviated account code.
- * @param string $code: hash of the customer's card code (formerly the card code itself)
+ * @param string $requireCode: if true, $cardId must include the cardCode
+ * @param bool $requireActive: if true, account must be active
  * @param string $err: (returned) error message, if any
  * @param bool $requireCode: require card code (FALSE for transactions)
  * @return: the customer's acct object (NULL if error)
  */
-function getAcct($cardId, $requireCode = TRUE, &$err = '') {
+function getAcct($cardId, $requireCode = TRUE, $requireActive = TRUE, &$err = '') {
   include_once R_ROOT . '/cg-qr.inc';
   
-  if (!$a = qr\acct($cardId, $requireCode) or !$a->ok) {
+  if (!$a = qr\acct($cardId, $requireCode)) {
     r\badCard($cardId, NULL);
-    $err = t('That is not an active %PROJECT account.');
+    $err = t('That is not a %PROJECT account.');
     return FALSE;
   }
+  if ($requireActive and !$a->ok) return !$err = t('That account is not active.');
 //  if (r\foreignServer(r\uidRegion($a->agentId))) return !$err = 'wrong server for customer';
   return $a;
 }
@@ -526,15 +532,16 @@ function photoReturn($pic) {
  * Check the validity of a specified deviceId and actorId.
  * @param string $arg: the endpoint
  * @param assoc $params: the parameters
+ * @param bool $requireActive: if true, account must be active
  * @param bool $noBox: if true, don't bother with a boxId
- * @return <ok>
+ * @return <ok> or exist with an error status
  */
-function authOk($arg, $params, $noBox = FALSE) {
+function authOk($arg, $params, $requireActive, $noBox = FALSE) {
   global $mya;
 
   if ($deviceId = nni($params, 'deviceId')) { // identify user if deviceId specified
     if (!$actorId = nni($params, 'actorId')) return exitJust(X_SYNTAX);
-    if (!$mya = getAcct($actorId, FALSE)) return exitJust(X_UNAUTH);
+    if (!$mya = getAcct($actorId, FALSE, $requireActive)) return exitJust(X_UNAUTH);
     if ($deviceId == 'dev' . $mya->fullName[0] and !isPRODUCTION) { // for example devA
       // accept it when testing
     } else {

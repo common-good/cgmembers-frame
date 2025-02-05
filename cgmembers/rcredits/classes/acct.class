@@ -687,11 +687,12 @@ class Acct {
   }
 
   /**
-   * Return the account's name and qid, with a link to a fuller description.
+   * Return the account's name and qid, with a change-account link for admins.
    */
   public function linkedDesc() {
-    global $base_url;
-    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid\">$this->mainQid</a>";
+    global $base_url, $mya;
+    $qid = $this->mainQid;
+    if ($mya and $mya->admin) $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid\">$qid</a>";
     return "$this->fullName ($qid)";
   }
   
