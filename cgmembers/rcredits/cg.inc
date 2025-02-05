@@ -461,7 +461,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   global $mya, $channel, $tellingAdmin;
   
   $tellingAdmin = nn($tellingAdmin, 0) + 1; if ($tellingAdmin > 2) return; // don't loop (for example because log file is missing)
-/**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
+/**/  if (isDEV and !test() and $channel == TX_WEB) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
   $to = nni($subs, 'to', R_ADMIN_EMAIL);
   $message = t($index, $subs);
