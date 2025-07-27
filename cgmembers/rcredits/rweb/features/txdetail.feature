@@ -28,13 +28,13 @@ Setup:
   |   15 |  .ZZA |    -22 | %today-4d  | %today-4d  |          0 |
   |   16 |  .ZZA |    -33 | %today-4d  | %today-4d  |          0 |
   Then these "txs": 
-  | xid | created    | amount | payer | payee | purpose   |*
-  |   1 | %today-13m |   1000 | bank  | .ZZA  | from bank |
-  |   2 | %today-13m |   2000 | bank  | .ZZB  | from bank |
-  |   3 | %today-13m |   3000 | bank  | .ZZC  | from bank |
-  |   4 | %today-3d  |      0 | bank  | .ZZA  | from bank |
-  |   5 | %today-4d  |    -22 | bank  | .ZZA  | to bank   |
-  |   6 | %today-4d  |    -33 | bank  | .ZZA  | to bank   |
+  | eid | xid | created    | amount | payer | payee | purpose   |*
+  | 201 |   1 | %today-13m |   1000 | bank  | .ZZA  | from bank |
+  | 202 |   2 | %today-13m |   2000 | bank  | .ZZB  | from bank |
+  | 203 |   3 | %today-13m |   3000 | bank  | .ZZC  | from bank |
+  | 204 |   4 | %today-3d  |      0 | bank  | .ZZA  | from bank |
+  | 205 |   5 | %today-4d  |    -22 | bank  | .ZZA  | to bank   |
+  | 206 |   6 | %today-4d  |    -33 | bank  | .ZZA  | to bank   |
 
   Given these "txs": 
   | xid | created   | amount | payer | payee | purpose | taking | reversesXid | channel |*
@@ -138,3 +138,28 @@ Scenario: an admin changes a transaction amount and date
   | id | table | rid | field   | oldValue | newValue | changedBy |*
   | 1  | txs   | 51  | amt     | 51       | 52       | .ZZD      |
   | 2  | txs   | 51  | created | %now-5d  | %now0-3d | .ZZD      |
+
+Scenario: an admin changes a bank transaction amount and date
+  Given var "orig" is ray:
+  | created    | cat1  | cat2  | uid1 | uid2 | flags | type  | amt |*
+  | %today-13m |       |       | bank | .ZZB |       | bank  | 2000 |
+  When member ".ZZD" submits "history/transaction/xid=2" with:
+  | created | %mdY-3d      |**
+  | amount  | 2001         |
+  | toMe    | 1            |
+  | description | new!     |
+  | forSame |              |
+  | eid     | 202          |
+  | cat     | CG-GRANT-ORG |
+  | orig    | @orig        |
+  | xid     | 2            |
+  Then these "txs": 
+  | eid | xid | created  | amount | payer | payee | for1      | for2 | flags   | cat1 | cat2         |*
+  | 202 |   1 | %now0-3d |   2001 | bank  | .ZZB  | from bank | new! | changed |      | CG-GRANT-ORG |
+  And these "txs2":
+  | txid | payee | amount | created   | completed  | deposit    |*
+  |   12 |  .ZZB |   2001 | %today-3d | %today-13m | %today-13m |
+  And these "changes":
+  | id | table | rid | field   | oldValue | newValue | changedBy |*
+  | 1  | txs   | 2   | amt     | 2000     | 2001     | .ZZD      |
+  | 2  | txs   | 51  | created | %now-13m | %now0-3d | .ZZD      |

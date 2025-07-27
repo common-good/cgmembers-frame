@@ -117,8 +117,8 @@ Scenario: An administrator reverses a bank transfer out
   | txid | payee | amount | created | completed  | deposit           | xid |*
   |  -11 |  .ZZA |   1000 | %now    | %today-13m | %(%today-13m + 1) |   4 |
   And these "txs":
-  | xid | created | amount | payer | payee | purpose                  |*
-  |   4 | %now    |   1000 | bank  | .ZZA  | bank transfer adjustment |
+  | xid | created           | amount | payer | payee | purpose                  |*
+  |   4 | %(%today-13m + 1) |   1000 | bank  | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a non-member ACH in
   Given these "txs":

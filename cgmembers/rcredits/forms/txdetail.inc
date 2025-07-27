@@ -81,7 +81,7 @@ X;
   $email = item($email, t('Email:'));
 
   $cat = ($mya->admEditTx and r\hasCats(${"uid$me"}))
-  ? (($mya->sponsored and !$mya->admV) ? fboCatFld($cat, $toMe ? 'IN' : 'OUT') : catFld($cat, '')) // admV lets you choose ANY category
+  ? (($mya->sponsored and !$mya->admV and FALSE) ? fboCatFld($cat, $toMe ? 'IN' : 'OUT') : catFld($cat, '')) // admV lets you choose ANY category (removed -- all admins with editTx permission must see all cats)
   : ($category ? item(str_replace(FBO_OUT_HDR, '', $category), t('Category:')) : NULL);
   
   $description = editIf($mya->admEditTx, '', t('For:'), $forMe);

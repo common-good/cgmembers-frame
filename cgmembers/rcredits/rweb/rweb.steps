@@ -1860,6 +1860,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH txdetail AnAdminSetsALoanCategory
  *     BOTH txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     BOTH txdetail AnAdminChangesATransactionAmountAndDate
+ *     TEST txdetail AnAdminChangesABankTransactionAmountAndDate
  *     BOTH txs Setup
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
  *     BOTH txs AdminReversesABankTransfer
@@ -2484,6 +2485,7 @@ function nextCaptchaIs($ca) {
  *     MAKE txdetail AnAdminSetsALoanCategory
  *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     MAKE txdetail AnAdminChangesATransactionAmountAndDate
+ *     MAKE txdetail AnAdminChangesABankTransactionAmountAndDate
  */
 function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2657,6 +2659,7 @@ function weShowJSONRay($ray) {
  * in: MAKE txdetail AnAdminSetsALoanCategory
  *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     MAKE txdetail AnAdminChangesATransactionAmountAndDate
+ *     MAKE txdetail AnAdminChangesABankTransactionAmountAndDate
  */
 function varIsRay($var, $ray) {
   global $testOnly, $testVars;
