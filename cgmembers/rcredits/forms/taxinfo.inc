@@ -27,7 +27,8 @@ function formTaxInfo($form, &$sta, $year = '') {
   $dbaName = r\regionfield('fullName');
   if ($dbaName != $regName) $regName .= t(' dba ') . $dbaName;
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
-  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.</p>', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
+  $posttext = item(t('<p>This report is provided by %CGF_LEGALNAME dba %PROJECT (EIN #20-5280780), %CGF_POSTALADDR, %CGF_PHONE, info@%EMAIL_DOMAIN.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.</p>', 'thisYear _aPrefs', date('Y'), atag('/settings/preferences')));
+//  $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr, %regPhone, %regEmail.</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.</p>', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));  
 
   $title = t('Your Form 1099-K') . ($year == $y9 ? t(' (tentative)') : '');
   $row = be\get1099('K', $mya->id, $ending); // last second of relevant year
