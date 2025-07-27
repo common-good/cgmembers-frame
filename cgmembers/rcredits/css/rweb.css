@@ -883,7 +883,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-scanqr .control-data {width:100%;}
 
 /* Pay / Charge / Tx */
-.form-item-periods select {width:40px; display:inline-block;}
+.form-item-periods select {width:100px; display:inline-block;}
 #frm-tx .form-item-start,
 #frm-tx .form-item-end,
 #tx .form-item-start,

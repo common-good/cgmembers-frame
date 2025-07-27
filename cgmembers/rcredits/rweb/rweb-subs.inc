@@ -480,7 +480,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
       if ($dft) $x['default_value'] = u\fmtPhone($dft);
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
-      u\setDft($x['min'], 0);
+// NO!      u\setDft($x['min'], 0);
       $bad = $type0 == 'int' ? '/[$\\,\\.]/' : '/[$\\,]/';
       if ($dft and preg_match($bad, $dft)) {
         if (test()) u\FAIL('bad char in dft');

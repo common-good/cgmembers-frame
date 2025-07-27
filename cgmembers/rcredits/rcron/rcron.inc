@@ -542,6 +542,8 @@ function activeMonthly($item) {
     $floor = -$monthly;
     if ($a->isCtty) $floor = -db\sum('amount', 'txs2_bank t JOIN users u ON u.uid=t.payee', 'u.community=:ctty', ray('ctty', $a->id));
   }
+  
+  if ($floorX > 0) $floor = $floorX; // change a reserved amount only explicitly
   $a->update('floor', $floor);
 
   $ratio = $floor ? $floorX / $floor : 1;
