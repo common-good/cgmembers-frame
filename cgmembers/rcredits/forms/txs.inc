@@ -89,7 +89,10 @@ function reverseTx($xid, &$sta, $args) {
     $tx['xid'] = $z->subs['xid'];
     db\insert('txs2', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
     if (!$deposit) db\update('txs2', ray('deposit completed txid', $tx['deposit'], $completed, -$txid), 'txid'); // mark original as done too (from bank's view)
-    $mya->update('lastBounce floor', now(), max(0, $mya->floor));
+    db\update('tx_hdrs', ray('created xid', $deposit, $tx['xid']), 'xid'); // created must match deposit date, so QBO export includes it
+    if ($pid) {
+      say(t('IMPORTANT: You will need to reverse the credit card transaction also (for example in Stripe).'));
+    } else $mya->update('lastBounce floor', now(), max(0, $mya->floor));
     unset($DBTX);
     
     return w\go($url, t('reversed bank tx', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
