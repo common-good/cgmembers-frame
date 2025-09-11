@@ -672,7 +672,7 @@ function boxFlds($group, $label, $question, $options, $other = []) {
 </div>
 EOF;
   }
-  return item($question . $list, $label, '', ['class' => ['boxes']] + $other);
+  return item($question . $list, $label, nni($other, 'help'), ['class' => ['boxes']] + $other);
 }
 
 function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld('fieldset', $label, $desc, compact('id') + $other) + $flds;}

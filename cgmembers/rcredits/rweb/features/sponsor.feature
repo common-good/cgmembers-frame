@@ -25,6 +25,7 @@ Scenario: A non-member applies for fiscal sponsorship
   | Organization  |
   | Org Phone     |
   | Org Email     |
+  | Website       |
   | Country       |
   | Postal Code   |
   | Federal ID    |
@@ -34,12 +35,23 @@ Scenario: A non-member applies for fiscal sponsorship
   | Activities    |
   | Expected Income |
   | Employees     |
+  | Contractors   |
   | Checks In     |
   | Checks Out    |
   | Oversight     |
   | Justice       |
   | Comments      |
   | Submit        |
+And with:
+  | Interested in | |
+  | | accepting tax-deductible donations |
+  | | payroll service |
+  | | management of employee healthcare and other benefits |
+  | Do you make grants | |
+  | | to individuals? |
+  | | to organizations? |
+  | | to individuals or organizations in other countries? |
+  | If yes to any of the above, please send us your grant-making criteria and process. | |
 
   When member "?" submits "co/sponsor" with:
   | contact    | Jane Dough |**
