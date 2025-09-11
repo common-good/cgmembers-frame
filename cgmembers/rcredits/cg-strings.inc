@@ -363,6 +363,7 @@ EOF
   'ambiguous other2' => t('You can identify a member by phone, email, fullname (no punctuation or spaces), or account ID.'),
   'what relationship' => t('You forgot to say whether you are an employee, owner, or both.'),
   'short put' => t('The most you can transfer to your bank at this time is %max.'),
+  'too much in' => t('The most you can transfer from your bank per day is %max.'),
   'short to' => t('That transaction requires %short more funding.'),
   'short from' => t('%otherName is %short short for this request (do NOT try again). Available balance is %avail.'),
   'short from vague' => t('%otherName does not have enough funds for this request (do NOT try again).'),

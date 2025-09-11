@@ -19,9 +19,9 @@ const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debi
  * Create an ACH Batch file for all relevant transfer requests.
  * @params string $args: URL argument list including:
  *   date: 0 for pending transfers (the default), unixtime for a redo
- *   way: in or out (defaults to neither, meaning both) OR an amount to transfer from or (if <0) TO our second bank account
+ *   way: in or out (defaults to neither, meaning both) OR an amount to transfer from or (if <0) TO our "offshore" bank account
  *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
- *   bank: BSL or Citizens
+ *   bank: BSL
  */
 function achBatch($args) {
   extract(just('date way mark bank', $args, ''));
@@ -45,7 +45,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $offshore = '
   global $mya, $testRecs;
   
   $b = r\bankData();
-  list ($destName, $destNum, $originPrefix, $cutoff, $maxAch) = [$b->name, $b->routing, $b->achPrefix, $b->cutoff, $b->maxDailyAch];
+  list ($destName, $destNum, $originPrefix, $cutoff, $maxAchIn, $maxAchOut, $maxAchTotal) = [$b->name, $b->routing, $b->achPrefix, $b->cutoff, $b->maxDailyAchIn, $b->maxDailyAchOut, $b->maxDailyAchTotal];
   $sp = ' '; // filler for routing number in header
   $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility (blank for browser upload, "1" for direct-from-program upload)
   $reserve = ''; // leave reserved fields empty
@@ -69,9 +69,11 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $offshore = '
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
+  // Collect pending transfers, outgoing first, largest first
   $sql = <<< X
     SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
-    WHERE ($where) AND ABS(amount)<=$maxAch AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
+    WHERE ($where) AND ABS(amount)<=$maxAchTotal AND amount BETWEEN -$maxAchOut AND $maxAchIn
+    AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $tot = 0;
@@ -81,7 +83,8 @@ X;
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    if ($tot + abs($amount) > $maxAch) continue;
+    if ($tot + abs($amount) > $maxAchTotal) continue;
+    if ($amount < 0 ? ($credits - $amount > $maxAchOut) : ($debits + $amount > $maxAchIn)) continue;
     $tot += abs($amount);
     $count++;
     
