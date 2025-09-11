@@ -32,14 +32,14 @@ const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
 const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
 const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAch';
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), same-day cutoff time, maximum daily ACH total
-  'BSL'      => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 100000',
-  'Citizens' => 'Citizens Bank, 011500120, 1326532860, 1326532860, 1, 11:59pm, 9999999', // debits only
-  'HIS' => 'Hingham Institution for Savings, 211370370, 082040173, 082040173, _, 4pm, 9999999', // not used as an originating bank (yet)
+const BANK_TX_LIMITS = '1:40000,7:80000,52:160000,365:320000'; // per day (subject to ACH limits), week, 7-week, year
+const BANK_KEYS = 'name routing acctIn acctOut achPrefix cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, prefix ("_" means blank), next-day cutoff time, maximum daily ACH total IN, OUT, TOTAL
+  'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, _, 3pm, 9999999, 9999999, 100000',
+  'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, _, 6:45pm, 5000, 30000, 9999999',
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
-const BANK_OFFSHORE = 'HIS'; // which bank of ours holds funds just to get interest
+const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
 $base_url = config('baseUrl');
@@ -135,6 +135,7 @@ const FLOOR_DAYS = 183; // how many days to consider for credit line calculation
 const RECENT_DAYS = 60; // back how long is "recent" (don't change this without recreating r_stats data)
 const RECENT_SECS = RECENT_DAYS * DAY_SECS;
 const COOK_NO_EXPIRE = 2147483647; // maximum cookie expiration date (Unixtime - January 2038) 
+const QUICKBOOKS_API_TIMEOUT = 30; // give QB API more time to do its thing
 
 const REGION_DOMAIN = R_SERVER_ID . '.' . CG_DOMAIN;
 const EMAILX = 'example.com'; // domain for unknown, placeholder, test, or example emails
@@ -282,7 +283,6 @@ const NO_DISTANCE = '((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0))';
 
 const TEXT_BUTTON_STYLE = 'display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;';
 const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded
-const R_EXCHANGE_LIMITS = '1:40000,7:80000,52:160000,365:320000'; // per day, week, 7-week, year
 const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
 const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 //const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)

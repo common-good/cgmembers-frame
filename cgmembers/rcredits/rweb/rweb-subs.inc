@@ -480,7 +480,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
       if ($dft) $x['default_value'] = u\fmtPhone($dft);
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
-      u\setDft($x['min'], 0);
+// NO!      u\setDft($x['min'], 0);
       $bad = $type0 == 'int' ? '/[$\\,\\.]/' : '/[$\\,]/';
       if ($dft and preg_match($bad, $dft)) {
         if (test()) u\FAIL('bad char in dft');
@@ -672,7 +672,7 @@ function boxFlds($group, $label, $question, $options, $other = []) {
 </div>
 EOF;
   }
-  return item($question . $list, $label, '', ['class' => ['boxes']] + $other);
+  return item($question . $list, $label, nni($other, 'help'), ['class' => ['boxes']] + $other);
 }
 
 function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld('fieldset', $label, $desc, compact('id') + $other) + $flds;}

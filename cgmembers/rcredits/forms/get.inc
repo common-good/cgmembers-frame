@@ -31,9 +31,10 @@ function formGet($form, &$sta, $args = '') {
     . t('<p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aSettings', atag('/settings/fund'));
 
   $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
-  if ($mya->id != CGID) foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
-    $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
-    $avail = min($avail, $limit - $sofar);
+  if ($mya->id != CGID) foreach (ray(BANK_TX_LIMITS) as $days => $limit) {
+    $sofar = $days == 1 ? 0 
+    : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
+    $avail = min($avail, $limit - $sofar, r\bankData()->maxDailyAchOut);
   }
 
   $subs = ray('uids', $mya->uids);
@@ -80,7 +81,11 @@ function formGet_validate($form, &$sta) {
   extract(just('amount avail', $sta['input']));
   if (!$mya->admin and $amount < R_ACHMIN) return say('bank too little', 'amount');
 // (this is unnecessary)  if ($amount > R_MAX_DAILY_EXCHANGE) return say('max daily usd', 'amount');
-  if (op($sta) == 'get') return;
+  if (op($sta) == 'get') {
+    $max = r\bankData()->maxDailyAchIn;
+    if ($amount > $max) return err('too much in', ray('max', u\fmtAmt($max)), 'amount');
+    return; // no further validation for incoming request
+  }
   
   if ($mya->id != CGID and $amount > ($mya->admin ? max($avail, round($mya->balance, 2)) : $avail)) {
     $max = u\fmtAmt($avail);

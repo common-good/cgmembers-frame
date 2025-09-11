@@ -424,7 +424,7 @@ X;
    */
   public function getQbTx($id, $objName = 'JournalEntry') {
     $this->refresh();
-    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('QB journal entry %id does not exist.', compact('id')));
+    if (!$res = $this->ds->query("SELECT * FROM JournalEntry WHERE DocNumber='$id'", 1, 1)) return w\say(t('Warning: QB journal entry %id does not exist.', compact('id')));
     return $res[0];
   }
   

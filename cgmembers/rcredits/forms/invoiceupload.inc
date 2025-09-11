@@ -54,7 +54,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     $a->setBit(B_CONFIRMED); // count this as equivalent to an invitation to the person
     if (!$email = trim(mb_strtolower($email)) or $a->email != $email) { // not the right email
       if ($a->phone != u\fmtPhone($email, '+n')) { // not the right phone number
-        if (mb_strtolower(r\acct($mya->id, $a->id)->relCode) != $email) {iuErr(t('Wrong email, phone, or account ID'), $e); continue;} // not the right customer ID
+        if (mb_strtolower(r\acct($mya->id, $a->id)->relCode ?: '') != $email) {iuErr(t('Wrong email, phone, or account ID'), $e); continue;} // not the right customer ID (can't use nn() here)
       }
     }
     $txs[] = [$a->id, $email, $amt, $desc ? strtr($desc, $map) : $dftDesc]; // someday we wlll allow paying and invoicing non-members by email and name
