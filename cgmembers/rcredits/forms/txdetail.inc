@@ -118,13 +118,14 @@ X;
 
 function formTxDetail_validate($form, &$sta) {
   global $mya;
-  extract(just($fields = 'created amount recursId reversesXid orig', $sta['input'])); // no default!! (see next line)
+  extract(just($fields = 'xid created amount recursId reversesXid orig', $sta['input'])); // no dft!! (see next line)
   foreach (ray('recursId reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
   
   if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 48 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($mya->admEditTx and min($created, nni($orig, 'created')) < getV(VAR_CLOSE_BOOKS)) return err(t('You cannot change this transaction without first changing the "close books" date.'));
   
   if ($amount and $err = u\badAmount($amount, '!=0')) return say($err, 'amount');
+  if ($amount and $amount != nni($orig, 'amount') and db\get('deposit', 'txs2', compact('xid'))) return err(tr('deposit amt unchangeable'), 'amount');
   tweakSta($sta, compact(ray($fields)));
 }
 
@@ -167,8 +168,8 @@ function formTxDetail_submit($form, &$sta) {
   }
 
   $amt = $toMe ? $amount : -$amount; // txs2 amount always matches the toMe amount
-  if ($o_amt != $amt and $o_type == E_BANK and $o_amt == db\get('amount', 'txs2', compact('xid'))) {
-    db\update('txs2', ray('xid amount', $xid, $amt), 'xid');
+  if (-$o_amt != -$amt and $o_type == 'bank' and -$o_amt == -db\get('amount', 'txs2', compact('xid'))) {
+    db\update('txs2', ray('xid created amount', $xid, $created, $amt), 'xid');
   }
   
   foreach (ray('amt created') as $k) if (${"o_$k"} != $$k) {

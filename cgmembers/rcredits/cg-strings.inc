@@ -368,6 +368,7 @@ EOF
   'short from' => t('%otherName is %short short for this request (do NOT try again). Available balance is %avail.'),
   'short from vague' => t('%otherName does not have enough funds for this request (do NOT try again).'),
   'request num' => t('Request #%nvid:'),
+  'deposit amt unchangeable' => t('You cannot change the amount of a transfer request that has already been downloaded to send to the bank.'),
   'min too low' => t('Your target balance is set too low, causing conflicting deposits and withdrawals from your bank account. To increase your target balance to %suggestion, visit the %page page (under Settings).'),
   'you were short' => t('You tried to make a purchase but did not have enough funds in your account.'),
   'suggest refills' => t('Automatic refills might keep this from happening again. To set automatic refills, sign in at %CG_DOMAIN and click "Bank Info" on the Settings menu.'),

@@ -139,8 +139,8 @@ Scenario: Admin reverses a bank transfer
   And member "A:D" visits page "history/transactions/period=5"
   And member "A:D" clicks X on transaction 1
   Then these "txs2":
-  | txid | payee | amount | created | completed  | deposit           | xid |*
-  |  -11 |  .ZZA |  -1000 | %now    | %today-13m | %(%today-13m + 1) |  51 |
+  | txid | payee | amount | created           | completed  | deposit           | xid |*
+  |  -11 |  .ZZA |  -1000 | %(%today-13m + 1) | %today-13m | %(%today-13m + 1) |  51 |
   And these "txs":
-  | xid | created | amt   | uid1 | uid2 | for     | type |*
-  |  51 | %now    | -1000 | bank | .ZZA | to bank | bank |
+  | xid | created           | amt   | uid1 | uid2 | for     | type |*
+  |  51 | %(%today-13m + 1) | -1000 | bank | .ZZA | to bank | bank |

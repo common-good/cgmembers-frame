@@ -472,6 +472,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ *     TEST txdetail AnAdminChangesADepositedBankTransactionAmount
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
@@ -708,6 +709,7 @@ function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {return t\w
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST relations ItsComplicated
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
+ *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -2486,6 +2488,7 @@ function nextCaptchaIs($ca) {
  *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     MAKE txdetail AnAdminChangesATransactionAmountAndDate
  *     MAKE txdetail AnAdminChangesABankTransactionAmountAndDate
+ *     MAKE txdetail AnAdminChangesADepositedBankTransactionAmount
  */
 function memberSubmitsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2660,6 +2663,7 @@ function weShowJSONRay($ray) {
  *     MAKE txdetail AnAdminChangesFromLoanCategoryToADifferentCategory
  *     MAKE txdetail AnAdminChangesATransactionAmountAndDate
  *     MAKE txdetail AnAdminChangesABankTransactionAmountAndDate
+ *     MAKE txdetail AnAdminChangesADepositedBankTransactionAmount
  */
 function varIsRay($var, $ray) {
   global $testOnly, $testVars;

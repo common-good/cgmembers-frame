@@ -20,21 +20,22 @@ Setup:
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
   And these "txs2":
-  | txid | payee | amount | created    | completed  | deposit    |*
-  |   11 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
-  |   12 |  .ZZB |   2000 | %today-13m | %today-13m | %today-13m |
-  |   13 |  .ZZC |   3000 | %today-13m | %today-13m | %today-13m |
-  |   14 |  .ZZA |     11 | %today-3d  |         0  | %today-13m |
-  |   15 |  .ZZA |    -22 | %today-4d  | %today-4d  |          0 |
-  |   16 |  .ZZA |    -33 | %today-4d  | %today-4d  |          0 |
+  | txid | payee | amount | created    | completed | deposit    |*
+  |   11 |  .ZZA |   1000 | %today-13m | %now-13m  | %today-13m |
+  |   12 |  .ZZB |   2000 | %today-13m | %now-13m  | %today-13m |
+  |   13 |  .ZZC |   3000 | %today-13m | %now-13m  | %today-13m |
+  |   14 |  .ZZA |     11 | %today-3d  |         0 | %today-13m |
+  |   15 |  .ZZA |    -22 | %today-4d  | %now-4d   |          0 |
+  |   16 |  .ZZA |    -33 | %today-4d  | %now-4d   |          0 |
   Then these "txs": 
   | eid | xid | created    | amount | payer | payee | purpose   |*
-  | 201 |   1 | %today-13m |   1000 | bank  | .ZZA  | from bank |
-  | 202 |   2 | %today-13m |   2000 | bank  | .ZZB  | from bank |
-  | 203 |   3 | %today-13m |   3000 | bank  | .ZZC  | from bank |
-  | 204 |   4 | %today-3d  |      0 | bank  | .ZZA  | from bank |
-  | 205 |   5 | %today-4d  |    -22 | bank  | .ZZA  | to bank   |
-  | 206 |   6 | %today-4d  |    -33 | bank  | .ZZA  | to bank   |
+  |   1 |   1 | %today-13m |   1000 | bank  | .ZZA  | from bank |
+  |   3 |   2 | %today-13m |   2000 | bank  | .ZZB  | from bank |
+  |   4 |   3 | %today-13m |   3000 | bank  | .ZZC  | from bank |
+  |   5 |   4 | %today-3d  |      0 | bank  | .ZZA  | from bank |
+  |   6 |   5 | %today-4d  |    -22 | bank  | .ZZA  | to bank   |
+  |   7 |   6 | %today-4d  |    -33 | bank  | .ZZA  | to bank   |
+  # bug in MySql leaves a gap between eid=1 and eid=3
 
   Given these "txs": 
   | xid | created   | amount | payer | payee | purpose | taking | reversesXid | channel |*
@@ -141,25 +142,41 @@ Scenario: an admin changes a transaction amount and date
 
 Scenario: an admin changes a bank transaction amount and date
   Given var "orig" is ray:
-  | created    | cat1  | cat2  | uid1 | uid2 | flags | type  | amt |*
-  | %today-13m |       |       | bank | .ZZB |       | bank  | 2000 |
+  | created   | cat1  | cat2  | uid1 | uid2 | flags | type  | amt |*
+  | %today-4d |       |       | bank | .ZZA |       | bank  | -22 |
+  When member ".ZZD" submits "history/transaction/xid=2" with:
+  | created | %mdY-3d      |**
+  | amount  | 23           |
+  | toMe    |              |
+  | description | new!     |
+  | forSame |              |
+  | eid     | 6            |
+  | cat     | CG-GRANT-ORG |
+  | orig    | @orig        |
+  | xid     | 5            |
+  Then these "txs": 
+  | eid | xid | created  | amount | payer | payee | for2    | for1 | flags   | cat1 | cat2     |*
+  | 6   | 5   | %now0-3d |    -23 | bank  | .ZZA  | to bank | new! | changed | CG-GRANT-ORG |  |
+  And these "txs2":
+  | txid | payee | amount | created  | completed | deposit |*
+  |   15 |  .ZZA |    -23 | %now0-3d | %now-4d   | 0       |
+  And these "changes":
+  | id | table | rid | field   | oldValue  | newValue | changedBy |*
+  | 1  | txs   | 5   | amt     | -22       | -23      | .ZZD      |
+  | 2  | txs   | 5   | created | %today-4d | %now0-3d | .ZZD      |
+
+Scenario: an admin changes a deposited bank transaction amount
+  Given var "orig" is ray:
+  | created   | cat1  | cat2  | uid1 | uid2 | flags | type  | amt  |*
+  | %now0-13m |       |       | bank | .ZZB |       | bank  | 2000 |
   When member ".ZZD" submits "history/transaction/xid=2" with:
   | created | %mdY-3d      |**
   | amount  | 2001         |
   | toMe    | 1            |
   | description | new!     |
   | forSame |              |
-  | eid     | 202          |
+  | eid     | 3            |
   | cat     | CG-GRANT-ORG |
   | orig    | @orig        |
   | xid     | 2            |
-  Then these "txs": 
-  | eid | xid | created  | amount | payer | payee | for1      | for2 | flags   | cat1 | cat2         |*
-  | 202 |   1 | %now0-3d |   2001 | bank  | .ZZB  | from bank | new! | changed |      | CG-GRANT-ORG |
-  And these "txs2":
-  | txid | payee | amount | created   | completed  | deposit    |*
-  |   12 |  .ZZB |   2001 | %today-3d | %today-13m | %today-13m |
-  And these "changes":
-  | id | table | rid | field   | oldValue | newValue | changedBy |*
-  | 1  | txs   | 2   | amt     | 2000     | 2001     | .ZZD      |
-  | 2  | txs   | 51  | created | %now-13m | %now0-3d | .ZZD      |
+  Then we say "error": "deposit amt unchangeable"

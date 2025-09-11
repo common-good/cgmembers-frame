@@ -93,11 +93,11 @@ Scenario: An administrator reverses a bank transfer in
   And we message "bank tx canceled" to member ".ZZA" with subs:
   | xid | 4 |**
   And these "txs2":
-  | txid | payee | amount | created | completed  | deposit           | xid |*
-  |  -11 |  .ZZA |  -1000 | %now    | %today-13m | %(%today-13m + 1) |   4 |
+  | txid | payee | amount | created    | completed  | deposit           | xid |*
+  |  -11 |  .ZZA |  -1000 | %today-13m | %today-13m | %(%today-13m + 1) |   4 |
   And these "txs":
-  | xid | created | amount | payer   | payee | purpose                  |*
-  |   4 | %now    |  -1000 | bank | .ZZA  | bank transfer adjustment |
+  | xid | created    | amount | payer | payee | purpose                  |*
+  |   4 | %today-13m |  -1000 | bank  | .ZZA  | bank transfer adjustment |
 
 Scenario: An administrator reverses a bank transfer out
   Given these "txs2":
@@ -114,8 +114,8 @@ Scenario: An administrator reverses a bank transfer out
   | xid | 4 |**
 #  This should be an immediate notice
   And these "txs2":
-  | txid | payee | amount | created | completed  | deposit           | xid |*
-  |  -11 |  .ZZA |   1000 | %now    | %today-13m | %(%today-13m + 1) |   4 |
+  | txid | payee | amount | created           | completed  | deposit           | xid |*
+  |  -11 |  .ZZA |   1000 | %(%today-13m + 1) | %today-13m | %(%today-13m + 1) |   4 |
   And these "txs":
   | xid | created           | amount | payer | payee | purpose                  |*
   |   4 | %(%today-13m + 1) |   1000 | bank  | .ZZA  | bank transfer adjustment |
