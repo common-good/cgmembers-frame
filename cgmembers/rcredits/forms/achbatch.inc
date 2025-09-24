@@ -42,13 +42,13 @@ function achBatch($args) {
 /**
  * Create an ACH request file.
  */
-function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = NULL, $offshore = '') {
+function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '', $offshore = '') {
   global $hash, $credits, $debits;
   global $testRecs;
   
   $b = r\bankData($bank);
   list ($destName, $destNum, $coName, $coIdPrefix, $originPrefix, $cutoff, $maxAchIn, $maxAchOut, $maxAchTotal) = [$b->name, $b->routing, $b->coName, $b->coIdPrefix, $b->achPrefix, $b->cutoff, $b->maxDailyAchIn, $b->maxDailyAchOut, $b->maxDailyAchTotal];
-  $balanced = isset($balanced) ? $balanced : $b->balanced; // allow user to change from default
+  if ($balanced == '') $balanced = $b->balanced; // allow user to change from default
   $sp = ' '; // filler for routing number in header
   $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility (blank for browser upload, "1" for direct-from-program upload)
   $reserve = ''; // leave reserved fields empty
