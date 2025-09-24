@@ -14,7 +14,7 @@ use CG\Db as db;
  * - Displaying existing fiscal sponsorship ($mya and $mya->sponsored)
  */
 
-define('SP_INTERESTS', ray(t('accepting tax-deductible donations, payroll service,  management of employee healthcare and other benefits (available 2026?)')));
+define('SP_INTERESTS', ray(t('accepting tax-deductible donations, payroll service,  management of employee healthcare and other benefits (available within the next year or two)')));
 define('SP_GRANTS', ray(t('to individuals?, to organizations?, to individuals or organizations in other countries?')));
 
 function formSponsor($form, &$sta, $args = '') {
