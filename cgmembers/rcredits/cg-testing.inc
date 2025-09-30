@@ -642,7 +642,7 @@ function txUid($id, &$main, &$other) {
 /**
  * Analyze downloaded fix-length 1099 records.
  */
-function got1099($flnm, $rows) {
+function got1099($rows) {
   global $testRecs;
   
   foreach ($rows as $rowNum => $row) {
@@ -675,17 +675,19 @@ function got1099($flnm, $rows) {
 /**
  * Analyze downloaded ACH records.
  */
-function gotACH($flnm, $rows) {
+function gotACH($rows) {
   global $testRecs;
   $b = r\bankData();
   $map = [
-    'DATETIME' => fmtDt(now(), 'yyMMddHHmm'),
-    'BANK' => $b->name,
-    'BANKROUTE' => $b->routing,
-    'BANKROUT' => substr($b->routing, 0, 8),
-    'OFFSETACCT' => $b->acctIn,
-    'WHEN' => fmtDt(now(), 'MMMdd'),
-    'EFFECTIVE' => fmtDt(tomorrow(), 'Ymd'), // entryDate
+    '<DATETIME>' => fmtDt(now(), 'yyMMddHHmm'),
+    '<BANK>' => $b->name,
+    '<BANKROUTE>' => $b->routing,
+    '<BANKROUT>' => substr($b->routing, 0, 8),
+    '<ORIGIN>' => $b->coName,
+    '<EINPREFIX>' => $b->coIdPrefix,
+    '<OFFSETACCT>' => $b->acctIn,
+    '<WHEN>' => fmtDt(now(), 'MMMdd'),
+    '<EFFECTIVE>' => fmtDt(tomorrow(), 'Ymd'), // entryDate
     '99...' => str_repeat('9', 94),
   ];
   foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);

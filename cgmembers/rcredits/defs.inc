@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62m'; // software version
+const R_VERSION = '3.62n'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -32,13 +32,13 @@ const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
 const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
 const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_TX_LIMITS = '1:40000,7:80000,52:160000,365:320000'; // per day (subject to ACH limits), week, 7-week, year
+const BANK_TX_LIMITS = '1:30000,7:80000,52:160000,365:320000'; // member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
 const BANK_KEYS = 'name routing acctIn acctOut coName coIdPrefix balanced achPrefix cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, company ID prefix, balanced?, prefix ("_" means blank), next-day cutoff time, maximum daily ACH total IN, OUT, TOTAL
   'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, Common Good, 1, 0, _, 3pm, 9999999, 9999999, 100000',
   'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, Common Good MM, 9, 1, _, 5pm, 5000, 30000, 9999999',
 ];
-const BANK = 'BSL'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
+const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 

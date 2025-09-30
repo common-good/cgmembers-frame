@@ -125,7 +125,7 @@ function formTxDetail_validate($form, &$sta) {
   if ($mya->admEditTx and min($created, nni($orig, 'created')) < getV(VAR_CLOSE_BOOKS)) return err(t('You cannot change this transaction without first changing the "close books" date.'));
   
   if ($amount and $err = u\badAmount($amount, '!=0')) return say($err, 'amount');
-  if ($amount and $amount != nni($orig, 'amount') and db\get('deposit', 'txs2', compact('xid'))) return err(tr('deposit amt unchangeable'), 'amount');
+  if ($amount and $amount != nni($orig, 'amt') and db\get('deposit', 'txs2', compact('xid'))) return err(tr('deposit amt unchangeable'), 'amount');
   tweakSta($sta, compact(ray($fields)));
 }
 
