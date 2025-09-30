@@ -56,7 +56,7 @@ function formSponsor($form, &$sta, $args = '') {
     $website = textFld(t('Website:'), [t('Website address')]);
     $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
     $zip = zipFld();
-    $federalId = passFld(REQ . tr('einTitle'), ['', tr('einDesc') . t(' This cannot be an individual\'s SSN. You can get an EIN from the IRS free online at <%a>this link</a>.', '_a', atag('https://www.irs.gov/businesses/small-businesses-self-employed/how-to-apply-for-an-ein'))], autofill('off'));
+    $federalId = passFld(REQ . tr('einTitle'), ['', tr('einDesc') . t(' This cannot be an individual\'s SSN. You can get an EIN from the IRS free online at <%a>this link</a>.', '_a', atag('https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number'))], autofill('off'));
     $coType = coTypeFld($mya ? $mya->coType : NULL, [CO_PERSONAL, CO_SOLE_PROPRIETOR], t('The "personal" and "sole-proprietor" choices are intentionally omitted here. If you are taking this intitiative on your own, choose "%club". You will need a volunteer oversight board of at least two people who meet with you at least once a quarter.', 'club', ray(CO_TYPES)[CO_CLUB]));
     $source = sourceFld();
   }
