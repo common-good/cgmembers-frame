@@ -43,7 +43,7 @@ function achBatch($args) {
  * Create an ACH request file.
  */
 function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '', $offshore = '') {
-  global $hash, $credits, $debits;
+  global $hash;
   global $testRecs;
   
   $b = r\bankData($bank);
@@ -79,17 +79,16 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '
     AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
-  $tot = 0;
   $depositDt = $mark ? now() : NULL; // a single unique time for each batch
 
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
-    extract($row);
-    if ($tot + abs($amount) > $maxAchTotal) continue;
+    $amount = $row['amount'];
+    if ($credits + $debits + abs($amount) > $maxAchTotal) continue;
     if ($amount < 0 ? ($credits - $amount > $maxAchOut) : ($debits + $amount > $maxAchIn)) continue;
-    $tot += abs($amount);
+    if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $count++;
-    $recs[] = ppd($row, $destNum, $count, $depositDt);
+    $recs[] = ppd($row, $depositDt, $destNum, $count);
   }
 
   unset($DBTX);
@@ -109,12 +108,12 @@ X;
 */
   if (!$count) return 0;
   
+  $credits *= 100; $debits *= 100; // convert to cents
   $offset = $credits - $debits;
   if ($balanced and $offset != 0) { // no need for an offset entry if file is already balanced
     list ($recType, $data, $addendaFlag) = [6, '', 0];
     list ($txCode, $routing, $account, $amount, $id, $name) // offset record parameters
       = [$offset < 0 ? 22 : 27, $b->routing, $b->acctIn, abs($offset), t('CTTYFUND OFFSET'), $b->coName];
-    $tot += $amount;
     $count++;
     if ($offset <= 0) $credits -= $offset; else $debits += $offset;
     $hash += substr($routing, 0, 8);
@@ -146,13 +145,13 @@ X;
 /**
  * Process one transaction
  * @param assoc $row: the txs2 bank transfer request record
- * @param int $destNum: bank identifier as header for transaction number
- * @param int $count: batch file line count
  * $param bool $depositDt: date to mark the transfer request complete (or NULL)
+ * @param int $destNum: bank identifier as header for transaction number
+ * @param int $count: transaction number within batch file
  */
-function ppd($row, $destNum, $count, $depositDt) {
+function ppd($row, $depositDt, $destNum, $count) {
   global $mya;
-  global $hash, $credits, $debits;
+  global $hash;
   extract($row);
 
   list ($recType, $data, $addendaFlag) = [6, '', 0];
@@ -176,11 +175,9 @@ function ppd($row, $destNum, $count, $depositDt) {
   list ($routing, $account) = u\parseBankAccount($bankAccount);
   if (isDEV and !$routing) $routing = $account = '211672476';
   
-  $amount *= 100;
-  if ($amount <= 0) $credits -= $amount; else $debits += $amount;
   $txCode = $amount == 0 ? 23 
   : ($isSavings ? ($amount < 0 ? 32 : 37) : ($amount < 0 ? 22 : 27));
-  $amount = abs($amount);
+  $amount = abs($amount * 100);
 
   $hash += substr($routing, 0, 8);
   if (!$deposit and $depositDt and $mya->admAch) db\update('txs2', ray('deposit xid', $depositDt, $xid), 'xid');

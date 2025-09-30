@@ -215,13 +215,17 @@ function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
 function weDownloadWithRecords($flnm, $fileType, $rows) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testDownloadFlnm, $testRecs;
-  $flnm = str_replace('<NOW>', fmtDt(now(), 'yyyyMMddHHmm'), $flnm);
-  $flnm = str_replace('<LY>', fmtDt(strtotime('1 year ago'), 'yyyy'), $flnm);
+  
+  $map = ['<BANK>' => BANK,
+          '<NOW>'  => fmtDt(now(), 'yyyyMMddHHmm'),
+          '<LY>'   => fmtDt(strtotime('1 year ago'), 'yyyy'),
+         ];
+  $flnm = strtr($flnm, $map);
   if (!t\eq(t('download filename'), $flnm, $testDownloadFlnm)) return FALSE;
   if (!t\eq(t('number of records'), count($rows), count($testRecs ?: []))) return FALSE;
 
   if ($fileType == '1099') return t\got1099($flnm, $rows);
-  if ($fileType == 'ACH') return t\gotACH($flnm, $rows);
+  if ($fileType == 'ACH') return t\gotACH($rows);
   return t\output(t('Bad record file type: ' . $fileType));
 }
 
