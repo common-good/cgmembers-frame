@@ -128,7 +128,7 @@ X;
   $blocks = ceil($lines / 10); // how many blocks of 10 lines, rounded up (2 hdrs, "count" entries, 2 ftrs)
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
-  if ($balanced) for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill
+  for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
 

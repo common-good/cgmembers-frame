@@ -36,7 +36,7 @@ const BANK_TX_LIMITS = '1:30000,7:80000,52:160000,365:320000'; // member limits 
 const BANK_KEYS = 'name routing acctIn acctOut coName coIdPrefix balanced achPrefix cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, company ID prefix, balanced?, prefix ("_" means blank), next-day cutoff time, maximum daily ACH total IN, OUT, TOTAL
   'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, Common Good, 1, 0, _, 3pm, 9999999, 9999999, 100000',
-  'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, Common Good MM, 9, 1, _, 5pm, 5000, 30000, 9999999',
+  'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, Common Good MM, 9, 0, _, 5pm, 5000, 30000, 9999999',
 ];
 const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\bankData() function
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
