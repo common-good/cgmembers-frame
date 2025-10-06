@@ -1538,6 +1538,19 @@ function cttyList($withAll = TRUE) {
   return $cttys;
 }
 
+/**
+ * Convert bank account nickname to an archived bank nickname, if appropriate.
+ * @param string $nick: bank account nickname in tx_cats table
+ * @param int $txDt: transaction date
+ */
+function bankNick($nick, $txDt) {
+  foreach (ray(BANK_CHANGES) as $changeDate) {
+    $chgDt = strtotime($changeDate);
+    if ($txDt < $chgDt) return $nick . date('Y', $chgDt); // add year of bank change to nickname
+  }
+  return $nick;
+}
+
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
 function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR . "/$key.html");}
