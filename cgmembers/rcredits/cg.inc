@@ -1388,42 +1388,6 @@ function up($up = NULL) {
 }
 
 /**
- * Return the reward on the given amount for the given account.
- * @param int $from: payer account record ID
- * @param int $to: payee account record ID
- * @param numeric $amount: transaction amount
- * @param bool $isPayer: <return reward for payer> (else payee)
- * @todo? or manager of company with no (other) employees (set bit?)
- * (not used): Figure the rebate based on R = the payer's total rewards ever and A = the transaction amount,
- *   such that the rebate percentage p tapers linearly from Rmax to 0
- *   The percentage rebate is based on the total rewards AFTER the transaction. That is:
- *   The new percentage rate p = (R + pA)(Pmax-Pmin)/Rmax + Pmin
- *   So p = (RPmax + (Rmax - R)Pmin) / (Rmax^2 - A(Pmax - Pmin))
- * Used here: If the member's balance after the transaction is negative, their reward is negative the maximum reward (-10%).
- *   Otherwise the reward percentage starts at the maximum (10%), then decreases by 1% for every chunk ($500) of rewards
- *   they have received, down to the minimum (1%).
- *   
- */
-function reward($from, $to, $amount = 1, $isPayer = TRUE) {
-/**/ die('reward function is archaic');
-  global $testRewardStep;
-  if (relation(1, $to, $from, ':IS_OWNER OR :IS_DRAW')) return 0;
-  if (relation(1, $from, $to, ':IS_OWNER OR :IS_DRAW')) return 0;
-  $a = r\acct($isPayer ? $from : $to);
-  //  $pct = test() ? $a->rebate : max(R_MIN_REWARD_PCT, R_REBATE - floor($a->rewards / R_REWARD_STEP));
-  $step = nn($testRewardStep) ?: R_REWARD_STEP;
-
-  $over = (($isPayer xor $amount < 0) and $a->balance + $a->rewards - abs($amount) < max(0, $a->floor)); // ignore floor<0
-  if ($over) { // member is spending in (or into) debt
-    //    $pct = $a->cttyNoreduce ? 0 : -max($a->rebate, R_REBATE); // reduce rewards
-    $pct = -max($a->rebate, R_REBATE); // reduce rewards
-  } else $pct = max(R_MIN_REWARD_PCT, $a->rebate * (1 - floor($a->o_rewards / $step) / R_REBATE)); // increase rewards
-  if (!$isPayer) $pct *= R_BONUS_FACTOR;
-///   debug(compact(ray('from to amount pct step over res')) + ['new bal' => $a->balance + $a->rewards + ($isPayer ? -$amount : $amount)]);
-  return round(min(R_MAX_REBATE, $pct * $amount / 100), 2);
-}
-
-/**
  * Calculate community gifts ever paid and ever due as of a certain date/time.
  * @param int $end: ending date/time
  * @return the rows (an array of objects)
@@ -1536,6 +1500,19 @@ function cttyList($withAll = TRUE) {
   unset($cttys[$seed = r\serverUid()]);
   $cttys[$seed] = t('Seedpack (no community yet)'); // last
   return $cttys;
+}
+
+/**
+ * Convert bank account nickname to an archived bank nickname, if appropriate.
+ * @param string $nick: bank account nickname in tx_cats table
+ * @param int $txDt: transaction date
+ */
+function bankNick($nick, $txDt) {
+  foreach (ray(BANK_CHANGES) as $changeDate) {
+    $chgDt = strtotime($changeDate);
+    if ($txDt < $chgDt) return $nick . date('Y', $chgDt); // add year of bank change to nickname
+  }
+  return $nick;
 }
 
 // Single line functions that need no explanation
