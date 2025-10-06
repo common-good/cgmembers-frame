@@ -320,7 +320,7 @@ X;
         u\EXPECT($uid2 == CGID or db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc'))));
         $e['cat1'] = r\nick2cat($processorNick);
       } else {
-        $e['cat1'] = r\nick2cat(r\acct(UID_BANK)->mainQid); // check/wire/directACH in or out of the Ctty Fund bank account
+        $e['cat1'] = r\nick2cat('POOL-A'); // check/wire/directACH in or out of the Ctty Fund bank account
       } // either way, UID_OUTER will map to Dollar Pool Liability (POOL)
     }
 
@@ -329,8 +329,9 @@ X;
       foreach (ray('uid cat') as $k) $$k = $e["$k$i"];
 
       $uidNick = $uid == UID_OUTER // UID_OUTER only when called from sendCCTx()
-      ? ($cat == CAT_CG2CG ? r\acct(UID_BANK)->mainQid : 'POOL') // CC not allowed for loans
-      : (((r\hasCats($uid) or $uid == UID_BANK) and $qid = r\acct($uid)->mainQid) ? $qid : 'LOANFUND');
+      ? ($cat == CAT_CG2CG ? 'POOL-A' : 'POOL') // CC not allowed for loans
+      : ($uid == UID_BANK ? 'POOL-A'
+      : ((r\hasCats($uid) and $qid = r\acct($uid)->mainQid) ? $qid : 'LOANFUND'));
 
       $this->addJLine($qbTx, $uidNick, -$amt, $desc);
       if ($cat != CAT_CG2CG) $this->addJLine($qbTx, $cat, $amt, $desc);

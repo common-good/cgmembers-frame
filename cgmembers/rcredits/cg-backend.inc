@@ -853,7 +853,8 @@ function setCat(&$txes, $tx, $i) {
   } elseif ($in and $type == E_XFEE) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
-    $nick = $tx->created < strtotime('7/1/2021') ? 'OLD-BANK' : 'OPERATIONS';
+    $nick = $tx->created < strtotime('7/1/2021') ? 'OPERATION2021' 
+    : ($tx->created < strtotime('10/1/2025') ? 'OPERATIONS2025' : 'OPERATIONS');
   } elseif ($in and $iA->mainQid == 'NEWAIN') { // 457 retirement (!!!Must come before $iA->sponsored test)
     $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($in and $iA->sponsored) {

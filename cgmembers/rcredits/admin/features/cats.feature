@@ -171,7 +171,7 @@ Scenario: admin sets most categories and sends to QBO
 
   When member ".ZZA" visits "qbo/op=txs"
   Then QBO gets Tx "cgFund#%now0" with IN "$1,010 (4)" and OUT "$0 (0)" dated "%ymd0" with entries:
-  | 1010 Debit bank   | 1010 Credit POOL      |
+  | 1010 Debit POOL-A | 1010 Credit POOL      |
   And QBO gets Tx "cg#21":"by CC (One-time Donations) [Yoyo Yot (non-member)]" dated "%ymd-6m" with entries:
   | 201 Debit cgf     | 201 Credit D-ONCE     |
   | 201 Credit POOL   | 201 Debit PROCESSOR   |
@@ -256,4 +256,4 @@ Scenario: The region makes an investment
   And member ".ZZA" visits "qbo/op=txs"
   Then QBO gets Tx "cg#91":"loan (CG Western MA Region Investments) [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 901 Credit ctty   | 901 Debit INVEST      |
-  | 901 Debit POOL    | 901 Credit AAAAJV     |
+  | 901 Debit POOL    | 901 Credit POOL-A     |
