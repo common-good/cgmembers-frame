@@ -3239,7 +3239,7 @@ INSERT INTO `tx_cats` VALUES(12100, 'A: Sponsored', 'Projects sponsored by CG', 
 INSERT INTO `tx_cats` VALUES(12200, 'A: Sponsored: CG Western MA Region ..AAA', 'The server\'s \"regional\" account', 310, 1, NULL, '!NEWAAA');
 INSERT INTO `tx_cats` VALUES(12250, 'A: Sponsored: Dollar Pool', '', 330, 1, NULL, NULL);
 INSERT INTO `tx_cats` VALUES(12275, 'A: Sponsored: Dollar Pool: CC Processor Sponsored', 'part of CC account that is part of the Dollar Pool', 205, 1, NULL, 'FBO-PROCESSOR');
-INSERT INTO `tx_cats` VALUES(12300, 'A: Sponsored: Dollar Pool ..8598', 'Brattleboro S&L account #500718598', 306, 1, NULL, 'AAAAJV');
+INSERT INTO `tx_cats` VALUES(12300, 'A: Sponsored: Dollar Pool ..8598', 'Brattleboro S&L account #500718598', 306, 1, NULL, 'POOL-A');
 INSERT INTO `tx_cats` VALUES(12400, 'A: Sponsored: Dollar Pool ..8598: MSB Escrow for Dollar Pool', 'BS&L asked to hold $50k in escrow', 327, 1, NULL, NULL);
 INSERT INTO `tx_cats` VALUES(12500, 'A: Sponsored: Food Fund ..AZV', 'Common Good\'s fund for food subsidies', 309, 1, NULL, 'NEWAZV');
 INSERT INTO `tx_cats` VALUES(12600, 'A: Sponsored: Kibilio ..BTY', 'FBO Kibilio (fiscal sponsorship)', 320, 1, NULL, 'NEWBTY');

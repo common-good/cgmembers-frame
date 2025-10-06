@@ -24,7 +24,7 @@ const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debi
  *   bank: index to BANK_DATA array; for example, BSL or CFB (defaults to the default bank)
  */
 function achBatch($args) {
-  extract(just('date way mark bank balanced', $args, ''));
+  extract(just('date way mark bank balanced offshore', $args, ''));
 
   u\setDft($date, 0);
   if (is_numeric($way)) {
@@ -34,7 +34,7 @@ function achBatch($args) {
   } elseif ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
 
   $date = (int) $date; // prevent SQL injection
-  achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, $balanced, nn($offshore)); // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, $balanced, $offshore); // <=:NOW lets us verify with $0 transfers before a scheduled real one
 
   if (test()) return;
 }
@@ -93,19 +93,19 @@ X;
 
   unset($DBTX);
  
-/* 
   if ($offshore) { // add a transfer to or from our "offshore" interest-bearing account
     $count++;
     $b2 = r\bankData(BANK_OFFSHORE);
     $txCode = $offshore < 0 ? 22 : 27; // NO: $offshore < 0 ? 32 : 37 (StacyLee says Money Market accounts are treated as checking)
-    $amount = $offshore * 100;
+    $amount = $offshore;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
-    $amount = abs($amount);
+    $amount = abs($amount * 100);
     [$routing, $account, $id, $name] = [$b2->routing, $b2->acctIn, BANK_OFFSHORE, u\asciiOnly(PROJECT . ' @ ' . BANK_OFFSHORE)];
+    [$recType, $data, $addendaFlag] = [6, '', 0];
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
     $hash += substr($routing, 0, 8);
   }
-*/
+
   if (!$count) return 0;
   
   $credits *= 100; $debits *= 100; // convert to cents
@@ -128,7 +128,7 @@ X;
   $blocks = ceil($lines / 10); // how many blocks of 10 lines, rounded up (2 hdrs, "count" entries, 2 ftrs)
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
-  if ($balanced) for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill
+  for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
 

@@ -96,7 +96,7 @@ Scenario: A non-member confirms donation intent
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1       | cat2        | type       |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | AAAAJV     |             | %E_OUTER   |
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | POOL-A     |             | %E_OUTER   |
   | 3   | 1   | .ZZC       | cgf   | 3.99   | cc fee   |            | TX-FEE-BACK | %E_XFEE    |
   And count "txs" is 2
   And we email "gift-thanks-nonmember" to member "z@" with subs:
@@ -175,7 +175,7 @@ Scenario: A non-member confirms a donation to a sponsored organization by credit
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1       | cat2        | type     |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | AAAAJV     | D-FBO       | %E_OUTER |
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | POOL-A     | D-FBO       | %E_OUTER |
   | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | D-FBO      | FS-FEE      | %E_AUX   |
   | 4   | 1   | .ZZC       | cgf   | 3.99   | cc fee   | FBO-TX-FEE | TX-FEE-BACK | %E_XFEE  |
 
@@ -254,7 +254,7 @@ Scenario: A non-member confirms a payment to a ccOk organization by credit card
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose | cat1       | cat2        | type     |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | stuff   | AAAAJV     | D-FBO       | %E_OUTER |
+  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | stuff   | POOL-A     | D-FBO       | %E_OUTER |
   | 3   | 1   | .ZZC       | cgf   | 3.99   | cc fee  | FBO-TX-FEE | TX-FEE-BACK | %E_XFEE  |
 
 Scenario: A member donates to a ccOk organization

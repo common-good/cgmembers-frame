@@ -32,8 +32,7 @@ function formGet($form, &$sta, $args = '') {
 
   $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
   if ($mya->id != CGID) foreach (ray(BANK_TX_LIMITS) as $days => $limit) {
-    $sofar = $days == 1 ? 0 
-    : db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
+    $sofar = db\get('-SUM(amount)', 'txs2_bank', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $mya->id, strtotime("-$days days")));
     $avail = min($avail, $limit - $sofar, r\bankData()->maxDailyAchOut);
   }
 
