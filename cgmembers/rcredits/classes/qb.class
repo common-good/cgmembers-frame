@@ -353,8 +353,8 @@ X;
   private function addJLine(&$qbTx, $id, $Amount, $Description) {
     $PostingType = $Amount < 0 ? 'Debit' : 'Credit';
     $Amount = abs($Amount);
-    if (in($id, 'OPERATIONS POOL-A')) $id = r\bankNick($id, strtotime($qbTx->TxnDate)); // handle new/old bank accounts
-    $AccountRef = r\qbCat($id);
+
+    $AccountRef = r\qbCat(r\bankNick($id, strtotime($qbTx->TxnDate)));
     u\EXPECT(!empty($AccountRef), t('empty AccountRef for cat=%cat in tx %txid', 'cat txid', $id, $qbTx->DocNumber));
     $DetailType = 'JournalEntryLineDetail';
     $$DetailType = new qbData\IPPJournalEntryLineDetail(compact(ray('PostingType AccountRef')));

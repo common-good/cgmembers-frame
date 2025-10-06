@@ -824,7 +824,7 @@ function txEntryPair(&$txes, $tx, $amount0, $a0, $description0, $entryType0, $ot
 /**
  * Set the transaction account category if the account is owned by Common Good.
  * @param ray(assoc) $txes: (MODIFIED) the transaction entries
- * @param Tx $tx: the transaction header data (only flags and recursId are used)
+ * @param Tx $tx: the transaction header data (only created, flags, and recursId are used)
  * @param int $i: index into $txes of the entry to examine (expects the account to be owned by CG)
  * $i is assumed to be the payee, if even.
  */
@@ -853,7 +853,7 @@ function setCat(&$txes, $tx, $i) {
   } elseif ($in and $type == E_XFEE) {
     $nick = 'TX-FEE-BACK';
   } elseif ($type == E_BANK and $iA->mainQid == 'NEWAAB') { // "to bank" is just a negative transfer IN
-    $nick = r\bankNick('OPERATIONS');
+    $nick = r\bankNick('OPERATIONS', $tx->created);
   } elseif ($in and $iA->mainQid == 'NEWAIN') { // 457 retirement (!!!Must come before $iA->sponsored test)
     $nick = 'NEWAAA457'; // liability to William -- will require additional code and accounts for other 457 participants
   } elseif ($in and $iA->sponsored) {
