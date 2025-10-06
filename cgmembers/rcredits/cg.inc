@@ -1504,10 +1504,13 @@ function cttyList($withAll = TRUE) {
 
 /**
  * Convert bank account nickname to an archived bank nickname, if appropriate.
- * @param string $nick: bank account nickname in tx_cats table
+ * @param string $id: bank account category id or nickname in tx_cats table
  * @param int $txDt: transaction date
  */
-function bankNick($nick, $txDt) {
+function bankNick($id, $txDt) {
+  $nick = is_numeric($id) ? db\get('nick', 'tx_cats', compact('id')) : $id;
+  if (!in($nick, 'OPERATIONS POOL-A')) return $id;
+
   foreach (ray(BANK_CHANGES) as $changeDate) {
     $chgDt = strtotime($changeDate);
     if ($txDt < $chgDt) return $nick . date('Y', $chgDt); // add year of bank change to nickname
