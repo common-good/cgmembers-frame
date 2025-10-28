@@ -32,7 +32,7 @@ const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
 const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
 const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_TX_LIMITS = '1:30000,7:80000,52:160000,365:320000'; // member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
+const BANK_TX_LIMITS = '1:30000,7:9999999,52:9999999,365:9999999'; // WAS 1:30000,7:80000,52:160000,365:320000 member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
 const BANK_KEYS = 'name routing acctIn acctOut coName coIdPrefix balanced achPrefix cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, company ID prefix, balanced?, prefix ("_" means blank), next-day cutoff time, maximum daily ACH total IN, OUT, TOTAL
   'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, Common Good, 1, 0, _, 3pm, 9999999, 9999999, 100000',
