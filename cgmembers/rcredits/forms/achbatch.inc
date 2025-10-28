@@ -65,10 +65,12 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
-  $entryDate = fmtDt($entryDate0 = u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'yyMMdd');
+  $entryDate0 = u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay());
+  $entryDate = fmtDt($entryDate0, 'yyMMdd');
+  $weekday = substr('UMTWHFS', date('w', $entryDate0), 1); // track which weekday this is for, to reconcile more easily
   
+  list ($data, $purpose, $when) = ['', t('CGCredit ') . $weekday, fmtDt(now(), 'MMMdd')];
   $batchNum = 1; // batch (company) number within file
-  list ($data, $purpose, $when) = ['', t('CG Credit'), fmtDt(now(), 'MMMdd')];
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
