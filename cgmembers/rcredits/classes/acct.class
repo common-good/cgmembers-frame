@@ -1775,7 +1775,7 @@ X;
     $vKey = isset($vKey) ? u\unfmtKey($vKey) : r\vKey();
     if (!$vKey) return t('No private key given or available.');
     require_once R_ROOT . '/forms/showqr.inc'; // for qrHtml()
-    
+
     $vKeyPw = $vKeyPw ? u\b64decode($vKeyPw) : openssl_random_pseudo_bytes(51);
     $vKeyE = u\cry($anonymizing ? 'r' : 'R', $vKey, FALSE, $vKeyPw);
 
