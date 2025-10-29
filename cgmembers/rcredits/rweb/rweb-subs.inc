@@ -1788,7 +1788,7 @@ function helpText($page, $tag = '', &$args = '') {
   include_once __DIR__ . '/rweb-help.inc';
   $page = strtolower($page);
   $help = $page == 'charge' ? strtr(rawHelp('pay', $tag, $args), ray('pay', 'charge')) : rawHelp($page, $tag, $args);
-  if ($help) return u\SUBS($help, '%');
+  if ($help) return subConstants($help);
   return t('There is no written help available for this page. Give it a try! If you are still puzzled, please feel free to give us a call at %regPhone. Or send your question by <%a>email</a>.', 'regPhone _a', u\fmtPhone(r\regionfield('phone')), w\emailtag(NULL, t('help with %PROJECT Members Site, %page page', 'page', $page)));
 }
 

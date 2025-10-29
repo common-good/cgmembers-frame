@@ -1433,7 +1433,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
 
   if (!$result = db\exists($table, $crit, $info)) {
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
-    $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
+    $sql = "SELECT * FROM $table WHERE " . strtr(u\qSubs($crit), u\prefixKeys(':', $subs));
     output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {

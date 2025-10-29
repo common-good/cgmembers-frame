@@ -338,8 +338,9 @@ function rMail($index, $to0, $subs = [], $reply0 = NULL, $attachment = NULL) {
     $k = "%$k0";
     $resubs[$k] = $v;
   }
-  $subject = strip_tags(u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%'));
-  $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
+
+  $subject = strip_tags(subConstants(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs)));
+  $body = subConstants(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs));
   $body = mb_convert_encoding($body, 'UTF-8', 'UTF-8');
   
   // log

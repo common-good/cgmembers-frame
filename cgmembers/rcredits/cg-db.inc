@@ -39,7 +39,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
 
-  $sql = u\SUBS($sql);
+  $sql = u\qSubs($sql);
   $subs = u\prefixKeys(':', $subs);
   $opts = $retId ? ray('return', \Database::RETURN_INSERT_ID) : [];
 
@@ -68,7 +68,7 @@ function adminQ($sql) {
   if (!in($word1, 'select set show')
   or substr_count($sql, ';') > preg_match_all('/;\\s*[SELECT|SET|SHOW]\\s/i', $sql)) {
     return w\err('Queries must begin with SELECT, SET, or SHOW.');
-  } else return \db_query(u\SUBS($sql));
+  } else return \db_query(u\qSubs($sql));
 }
 
 /**

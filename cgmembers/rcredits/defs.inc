@@ -528,7 +528,7 @@ const S_COTASKS = 'co partner';
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
-// for documentation of IS_OK etc. see u\SUBS()
+// for documentation of IS_OK etc. see u\qSubs()
 const B_MEMBER = 0; // fulfilled membership requirements (ready for admin approval, if not automatically approved by SSN).
 const B_CONFIRMED = 1; // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
 const B_OK = 2; // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
