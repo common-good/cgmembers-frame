@@ -549,12 +549,18 @@ function randomInt($len = NULL) {
  *     bit number B_WHATEVER in the "flags" field. Identifiers of the form x.:IS_WHATEVER are permitted.
  *     NOTE to developer: this could be expanded later to also handle a flags2 field (if more bits are needed)
  *       by changing the expression to "IF(:B_$1<32,flags&(1<<:B_$1)<>0,flags2&(1<<(:B_$1-32))<>0)".
- *     ??Similarly, "<hdr>IS_WHATEVER" maps to bit number <hdr>_WHATEVER in the <lowercase of hdr>Flags field.
+ *     Similarly, "<hdr>IS_WHATEVER" maps to bit number <hdr>_WHATEVER in the <lowercase of hdr>Flags field.
  * @param string $string: the string to fix
  * @return string: the string with constant names replaced by their values
  */
 function qSubs($string) {
   $string = preg_replace("/([A-za-z]+[0-9]?\.)?:IS_([A-Z0-9_]*)/ms", "($1flags&(1<<:B_$2)<>0)", $string);
+  $string = preg_replace_callback("/([A-za-z]+[0-9]?\.)?:([A-Z]+)IS_([A-Z0-9_]*)/ms", 
+    function($m) { // used for coFlags in u_company (where $hdr is "CO")
+      [$all, $table, $hdr, $bitName] = $m; // table identifier includes a trailing "."
+      $hdrLow = strtolower($hdr);
+      return "($table{$hdrLow}Flags&(1<<:{$hdr}_$bitName)<>0)";
+    }, $string);
   $string = preg_replace_callback('~:(\\d\\d?/\\d\\d?/\\d{4})~', function($m) {return strtotime($m[1]);}, $string); // interpret dates
   $subs = constantSubs($string, ':');
   foreach ($subs as $k => $v) if (!is_numeric($v)) {
