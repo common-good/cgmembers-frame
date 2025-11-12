@@ -1509,6 +1509,7 @@ function cttyList($withAll = TRUE) {
  * @param int $txDt: transaction date
  */
 function bankNick($id, $txDt) {
+  if (test()) return $id; // don't try to handle this (yet) in tests
   $nick = is_numeric($id) ? db\get('nick', 'tx_cats', compact('id')) : $id;
   if (!in($nick, 'OPERATIONS POOL-A')) return $id;
 

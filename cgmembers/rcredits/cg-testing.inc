@@ -640,11 +640,13 @@ function txUid($id, &$main, &$other) {
 }
 
 /**
- * Analyze downloaded fix-length 1099 records.
+ * Analyze downloaded fixed-length 1099 records.
+ * @param string $flnm: the chosen filename for the download
+ * @param array $rows: the fixed-length records
  */
-function got1099($rows) {
+function got1099($flnm, $rows) {
   global $testRecs;
-  
+
   foreach ($rows as $rowNum => $row) {
     $gotRow = $testRecs[$rowNum];
     $gotSeq = substr($gotRow, 499, 8) + 0;
