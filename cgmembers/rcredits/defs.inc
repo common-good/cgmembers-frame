@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62o'; // software version
+const R_VERSION = '3.62p'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -32,7 +32,7 @@ const TEST_QID_HD = 'NEWZP'; // prefix for test account letter
 const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private key for "V" encryption in testing
 const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
-const BANK_TX_LIMITS = '1:30000,7:80000,52:160000,365:320000'; // member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
+const BANK_TX_LIMITS = '1:30000,7:9999999,52:9999999,365:9999999'; // WAS 1:30000,7:80000,52:160000,365:320000 member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
 const BANK_KEYS = 'name routing acctIn acctOut coName coIdPrefix balanced achPrefix cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, company ID prefix, balanced?, prefix ("_" means blank), next-day cutoff time, maximum daily ACH total IN, OUT, TOTAL
   'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, Common Good, 1, 0, _, 3pm, 9999999, 9999999, 100000',
@@ -122,6 +122,7 @@ $base_root = mb_substr($base_url, 0, mb_strlen($base_url) + 1 - mb_strlen($base_
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
 // time periods are defined here because this script uses them
+const WEEKDAY_LTRS = 'UMTWHFS'; // letters to represent weekdays in ACH batch files
 const MIN_SECS = 60;
 const HOUR_SECS = 60 * MIN_SECS;  // 3600
 const DAY_SECS = 24 * HOUR_SECS;  // 86,400
@@ -528,7 +529,7 @@ const S_COTASKS = 'co partner';
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
-// for documentation of IS_OK etc. see u\SUBS()
+// for documentation of IS_OK etc. see u\qSubs()
 const B_MEMBER = 0; // fulfilled membership requirements (ready for admin approval, if not automatically approved by SSN).
 const B_CONFIRMED = 1; // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
 const B_OK = 2; // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)

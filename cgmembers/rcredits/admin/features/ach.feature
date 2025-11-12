@@ -43,7 +43,7 @@ Scenario: admin downloads balanced ACH requests
   |            | OUT       |      1 | -100.00   |
   | %mdY-2w    | IN        |      1 | 100.00    |
 
-  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balanced=1"
+  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balance=1"
   Then we download "<BANK>-<NOW>.ach" with "ACH" records:
   
 # const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
@@ -53,7 +53,7 @@ Scenario: admin downloads balanced ACH requests
 # const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
   | 1,01, ,<BANKROUTE>, ,%CGF_EIN,<DATETIME>,0,094,10,1,<BANK>,<ORIGIN>, |
-  | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CG Credit ,<WHEN>,,,1,<BANKROUT>,0000001 |
+  | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CGCredit <W>,<WHEN>,,,1,<BANKROUT>,0000001 |
   | 6,22,BA-B,100,NEWZZB,Bea Two,0,<BANKROUT>,0000001 |
   | 6,27,BA-A,400,NEWZZA,Abe One,0,<BANKROUT>,0000002 |
   | 6,27,BA-C,300,NEWZZC,Cor Pub,0,<BANKROUT>,0000003 |
@@ -92,7 +92,7 @@ Scenario: admin downloads unbalanced ACH requests
   |            | OUT       |      1 | -100.00   |
   | %mdY-2w    | IN        |      1 | 100.00    |
 
-  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balanced=0"
+  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balance=0"
   Then we download "<BANK>-<NOW>.ach" with "ACH" records:
   
 # const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
@@ -102,14 +102,16 @@ Scenario: admin downloads unbalanced ACH requests
 # const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
   | 1,01, ,<BANKROUTE>, ,%CGF_EIN,<DATETIME>,0,094,10,1,<BANK>,<ORIGIN>, |
-  | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CG Credit ,<WHEN>,,,1,<BANKROUT>,0000001 |
+  | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CGCredit <W>,<WHEN>,,,1,<BANKROUT>,0000001 |
   | 6,22,BA-B,100,NEWZZB,Bea Two,0,<BANKROUT>,0000001 |
   | 6,27,BA-A,400,NEWZZA,Abe One,0,<BANKROUT>,0000002 |
   | 6,27,BA-C,300,NEWZZC,Cor Pub,0,<BANKROUT>,0000003 |
   | 6,27,21187028106,60,6,Flo Six,0,<BANKROUT>,0000004 |
   | 8,200,4,,760,100,,<EINPREFIX>%CGF_EIN,,,<BANKROUT>,0000001 |
   | 9,000001,000001,00000004,,760,100, |
-  
+  | 99... |
+  | 99... |
+
   And these "txs2":
   | txid | payee | amount | created | deposit  | completed |*
   | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |

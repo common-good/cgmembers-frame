@@ -19,38 +19,40 @@ const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debi
  * Create an ACH Batch file for all relevant transfer requests.
  * @params string $args: URL argument list including:
  *   date: 0 for pending transfers (the default), unixtime for a redo
+ *   bank: index to BANK_DATA array; for example, BSL or CFB (defaults to the default bank)
  *   way: in or out (defaults to neither, meaning both) OR an amount to transfer from or (if <0) TO our "offshore" bank account
  *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
- *   bank: index to BANK_DATA array; for example, BSL or CFB (defaults to the default bank)
+ *   balance: 1 means create a balanced file, 0 means unbalanced, omitted means use the bank's default (see BANK_DATA)
  */
 function achBatch($args) {
-  extract(just('date way mark bank balanced offshore', $args, ''));
-
-  u\setDft($date, 0);
-  if (is_numeric($way)) {
-    $offshore = $way;
-    $way = ' AND FALSE';
-    $date = now() + DAY_SECS; // make sure no deposit date qualifies
-  } elseif ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
-
-  $date = (int) $date; // prevent SQL injection
-  achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank ?: BANK, $balanced, $offshore); // <=:NOW lets us verify with $0 transfers before a scheduled real one
-
-  if (test()) return;
-}
-
-/**
- * Create an ACH request file.
- */
-function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '', $offshore = '') {
   global $hash;
   global $testRecs;
-  
+
+ // Set up a lot of parameters
+ 
+  extract(just('date bank way mark balance', $args, [0, BANK, '', FALSE, NULL]));
+
   $b = r\bankData($bank);
-  list ($destName, $destNum, $coName, $coIdPrefix, $originPrefix, $cutoff, $maxAchIn, $maxAchOut, $maxAchTotal) = [$b->name, $b->routing, $b->coName, $b->coIdPrefix, $b->achPrefix, $b->cutoff, $b->maxDailyAchIn, $b->maxDailyAchOut, $b->maxDailyAchTotal];
-  if ($balanced == '') $balanced = $b->balanced; // allow user to change from default
+  extract($bankData = (array) $b); // see BANK_KEYS in defs.inc
+  [$destName, $destNum, $routing0] = [$b->name, $b->routing, $b->routing];
+  u\setDft($balance, $b->balanced);
+
+  if (is_numeric($way)) { // transferring funds to or from a dedicated money storage account
+    $offshore = $way;
+    $way = ' AND FALSE'; // offshore transfers should stand alone
+    $date = now() + DAY_SECS; // make sure no deposit date qualifies
+  } else {
+    $offshore = '';
+    if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+  }
+
+  $date = (int) $date; // prevent SQL injection
+
+  $where = "deposit=$date AND created<=:NOW" . $way; // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  if (!$date) $date = now();
+
   $sp = ' '; // filler for routing number in header
-  $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility (blank for browser upload, "1" for direct-from-program upload)
+  $originPrefix = str_replace('_', ' ', $achPrefix); // _ was for visibility (blank for browser upload, "1" for direct-from-program upload)
   $reserve = ''; // leave reserved fields empty
   $count = $hash = $credits = $debits = 0;
 
@@ -65,17 +67,23 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK, $balanced = '
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
-  $entryDate = fmtDt($entryDate0 = u\nextBizDay(u\nextBizTm() < strtotime($cutoff) ? today() : u\nextBizDay()), 'yyMMdd');
+  $submissionDt = u\nextBizDay(($date >= today() and u\nextBizTm() > strtotime($cutoff)) ? $date : yesterday($date));
+  $entryDate0 = u\nextBizDay($submissionDt);
+  if (test()) $entryDate0 = tomorrow(); // make it simple for tests
+  $entryDate = fmtDt($entryDate0, 'yyMMdd');
+
+  $weekday = substr(WEEKDAY_LTRS, date('w', $entryDate0), 1); // track which weekday this is for, to reconcile more easily
   
+  list ($data, $purpose, $when) = ['', t('CGCredit ') . $weekday, fmtDt(now(), 'MMMdd')];
   $batchNum = 1; // batch (company) number within file
-  list ($data, $purpose, $when) = ['', t('CG Credit'), fmtDt(now(), 'MMMdd')];
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
-  // Collect pending transfers, outgoing first, largest first
+  // Collect pending transfers, outgoing first (in case absolute value is limited), largest first
+  
   $sql = <<< X
     SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
-    WHERE ($where) AND ABS(amount)<=$maxAchTotal AND amount BETWEEN -$maxAchOut AND $maxAchIn
+    WHERE ($where) AND ABS(amount)<=$maxDailyAchTotal AND amount BETWEEN -$maxDailyAchOut AND $maxDailyAchIn
     AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
@@ -84,15 +92,15 @@ X;
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
     $amount = $row['amount'];
-    if ($credits + $debits + abs($amount) > $maxAchTotal) continue;
-    if ($amount < 0 ? ($credits - $amount > $maxAchOut) : ($debits + $amount > $maxAchIn)) continue;
+    if ($credits + $debits + abs($amount) > $maxDailyAchTotal) continue;
+    if ($amount < 0 ? ($credits - $amount > $maxDailyAchOut) : ($debits + $amount > $maxDailyAchIn)) continue;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $count++;
     $recs[] = ppd($row, $depositDt, $destNum, $count);
   }
 
   unset($DBTX);
- 
+
   if ($offshore) { // add a transfer to or from our "offshore" interest-bearing account
     $count++;
     $b2 = r\bankData(BANK_OFFSHORE);
@@ -106,14 +114,14 @@ X;
     $hash += substr($routing, 0, 8);
   }
 
-  if (!$count) return 0;
+/**/  if (!$count) {echo t('No relevant ACH requests.'); return 0;}
   
   $credits *= 100; $debits *= 100; // convert to cents
   $offset = $credits - $debits;
-  if ($balanced and $offset != 0) { // no need for an offset entry if file is already balanced
+  if ($balance and $offset != 0) { // no need for an offset entry if file is already balanced or not supposed to be balanced
     list ($recType, $data, $addendaFlag) = [6, '', 0];
     list ($txCode, $routing, $account, $amount, $id, $name) // offset record parameters
-      = [$offset < 0 ? 22 : 27, $b->routing, $b->acctIn, abs($offset), t('CTTYFUND OFFSET'), $b->coName];
+      = [$offset < 0 ? 22 : 27, $routing0, $acctIn, abs($offset), t('CTTYFUND OFFSET'), $coName];
     $count++;
     if ($offset <= 0) $credits -= $offset; else $debits += $offset;
     $hash += substr($routing, 0, 8);
@@ -128,16 +136,16 @@ X;
   $blocks = ceil($lines / 10); // how many blocks of 10 lines, rounded up (2 hdrs, "count" entries, 2 ftrs)
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
-  for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill
+  for ($i = $lines; $i < $blocks * 10; $i++) $recs[] = str_repeat('9', $recSize); // fill to multiple of 10 lines
 
   foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
 
-  $id = $entryDate0 . substr(r\bankData($bank)->acctIn, -4); // set bankTxId to effective date (10 digits), bank account number (last 4 digits)  
+  $id = $entryDate0 . substr($acctIn, -4); // set bankTxId to effective date (10 digits), bank account number (last 4 digits)  
   if ($depositDt) db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', $id, $depositDt));
 
   u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
 
-  if (test()) return $testRecs = $recs;
+  if (test()) return !$testRecs = $recs;
 /**/  echo join("\n", $recs);
   exit();
 }

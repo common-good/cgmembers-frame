@@ -97,6 +97,21 @@ Scenario: A member confirms request to pay another member
   | .ZZB |     100 |
   | .ZZC |       0 |
 
+Scenario: A member confirms request to pay a fiscally sponsored member
+  Given cookie "box-NEWZZA" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZA |
+  And members have:
+  | uid  | coFlags   |*
+  | .ZZC | sponsored |
+  When member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Our Pub | 100    | %FOR_GOODS | yourock |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | boxId | taking | flags    |*
+  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      | thx,gift |
+  
 Scenario: A member confirms request to pay another member a lot
   Given balances:
   | uid  | balance       |*

@@ -1579,7 +1579,7 @@ function createUsdTransfer($a, $amount, $options = []) {
 
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
   $tx = new r\Tx($tx0);
-  $cat1 = u\getBit($flags, B_CC) ? r\nick2cat(r\acct(UID_BANK)->mainQid) : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
+  $cat1 = u\getBit($flags, B_CC) ? r\nick2cat('POOL-A') : NULL; // set this here because bank and outer are not handled by form setCats and be\setCat()
   $cat2 = is_array($cat) ? $cat[1] : $cat;
   $extra = ($cat1 or $cat2) ? ray('cat', [$cat1, $cat2]) : [];
   if (isset($method)) $extra += compact('method');

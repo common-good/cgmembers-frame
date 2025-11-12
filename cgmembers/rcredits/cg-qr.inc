@@ -42,10 +42,10 @@ function generate($data, $logo, $text) {
     margin: 5,
     roundBlockSizeMode: RoundBlockSizeMode::Margin,
     labelFont: new OpenSans(10),
-    logoPath: $logo ?: NULL,
+    logoPath: nn($logo), // NULL crashes
     logoResizeToWidth: 99,
     logoResizeToHeight: 136,
-    labelText: $text ?: NULL,
+    labelText: nn($text),
 //    logoPunchoutBackground: true,
 //    labelAlignment: LabelAlignment::Center
 );

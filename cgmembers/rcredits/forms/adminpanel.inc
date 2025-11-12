@@ -78,7 +78,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->admSeeSecure) $seeSecure = t('See Secure');
   if ($mya->admV) $clone = t('Clone');
   if ($mya->admRecheckSsn and !$mya->co) $resetSSN = t('Recheck SSN');
-  if ($mya->admMakeVAdmin and !$mya->co) $makeVKeyE = t('Make vKeyE');
+  if ($mya->admMakeVAdmin and !$mya->co) $makeSuperAdmin = t('Make SuperAdmin');
   if ($mya->admPrintCards) $cancelCard = t('Cancel CG Card');
   if ($mya->admMakeRules and $mya->co) $fsSetup = t('Set up Sponsorship');
   if ($mya->admChangeUid) $chgAcctId = t('Change Account ID by Addr');
@@ -100,7 +100,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
-  $ks = ray('cancelCard seeData seeChanges ssnLink seeSecure clone resetSSN makeVKeyE askForAppData seeAppData fsSetup chgAcctId delAcct');
+  $ks = ray('cancelCard seeData seeChanges ssnLink seeSecure clone resetSSN makeSuperAdmin askForAppData seeAppData fsSetup chgAcctId delAcct');
   $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = btn('', $$k, 'success', 'xs', $k);
   $acctSet = item(join('', $acctSet), t('Account Operations:'));
   
@@ -181,7 +181,7 @@ function formAdminPanel_submit($form, &$sta) {
       $a->stepDone('verifyid', FALSE);
       return $a->update('ssnData', '');  
       
-    case 'makeVKeyE':
+    case 'makeSuperAdmin':
       if (!$mya->admMakeVAdmin) return err(t('You must have superAdmin permission to create a superAdmin card.')); // check again
       if ($a->id == $mya->agentId) return err(t('You cannot revoke and recreate your own superAdmin card.'));
       return exitJust($a->makeVKeyE());

@@ -640,11 +640,13 @@ function txUid($id, &$main, &$other) {
 }
 
 /**
- * Analyze downloaded fix-length 1099 records.
+ * Analyze downloaded fixed-length 1099 records.
+ * @param string $flnm: the chosen filename for the download
+ * @param array $rows: the fixed-length records
  */
-function got1099($rows) {
+function got1099($flnm, $rows) {
   global $testRecs;
-  
+
   foreach ($rows as $rowNum => $row) {
     $gotRow = $testRecs[$rowNum];
     $gotSeq = substr($gotRow, 499, 8) + 0;
@@ -687,12 +689,13 @@ function gotACH($rows) {
     '<EINPREFIX>' => $b->coIdPrefix,
     '<OFFSETACCT>' => $b->acctIn,
     '<WHEN>' => fmtDt(now(), 'MMMdd'),
+    '<W>' => substr(WEEKDAY_LTRS, date('w', tomorrow()), 1), // achbatch.inc assumes next day for tests
     '<EFFECTIVE>' => fmtDt(tomorrow(), 'Ymd'), // entryDate
     '99...' => str_repeat('9', 94),
   ];
   foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);
   $pids = db\keyed('pid, bankAccount', 'txs2', 'pid IS NOT NULL');
-  foreach ($pids as $i => $b) $map["BA-$i"] = substr($b, 4);
+  foreach ($pids as $i => $ba) $map["BA-$i"] = substr($ba, 4);
   
   foreach ($rows as $i => $row) {
     $line = strtr($row[0], $map);
@@ -1433,7 +1436,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
 
   if (!$result = db\exists($table, $crit, $info)) {
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
-    $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
+    $sql = "SELECT * FROM $table WHERE " . strtr(u\qSubs($crit), u\prefixKeys(':', $subs));
     output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {

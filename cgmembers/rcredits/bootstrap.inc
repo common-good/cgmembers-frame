@@ -1141,6 +1141,7 @@ function constantSubs($string, $prefix = '%') {
   foreach ($matches[1] as $one) if (defined($one)) $map["$prefix$one"] = constant($one);
   return $map;
 }
+function subConstants($string, $prefix = '%') {return strtr($string, constantSubs($string, $prefix));}
 
 /**
  * Let a called function receive a single assoc arg or several named args, simulating a call with ray(s,...). (CGF)
@@ -1407,7 +1408,7 @@ function fullQid($q) {
 /**/ function lug($s) {u\loga('debug', $s);}
 function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function args() {return debug_backtrace()[1];}
-function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
+function showq($sql, $subs = []) {return strtr(u\qSubs($sql), u\prefixKeys(':', $subs));}
 /**/ function dnp($s) {print_r($s); debug($s); return $s;}
 
 function who($s = '', $agent = '') {

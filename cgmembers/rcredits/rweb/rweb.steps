@@ -182,6 +182,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE stepup CommonGoodGetsAStepupDonation
  *     MAKE tx AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  *     MAKE tx AMemberPaysAnotherMemberRepeatedly
@@ -1249,6 +1250,7 @@ function statisticsGetSet($time) {
  *     MAKE sponsor Setup
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
  *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
@@ -1850,6 +1852,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     BOTH tx AMemberConfirmsRequestToPayAnotherMember
+ *     BOTH tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     BOTH tx AMemberPaysAnotherMemberRepeatedly
@@ -2183,6 +2186,7 @@ function someoneSubmitsWith($page, $values) {return t\completeForm('?', $page, $
  *     BOTH posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
  */
 function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
 
