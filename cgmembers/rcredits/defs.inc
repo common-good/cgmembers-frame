@@ -122,6 +122,7 @@ $base_root = mb_substr($base_url, 0, mb_strlen($base_url) + 1 - mb_strlen($base_
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
 // time periods are defined here because this script uses them
+const WEEKDAY_LTRS = 'UMTWHFS'; // letters to represent weekdays in ACH batch files
 const MIN_SECS = 60;
 const HOUR_SECS = 60 * MIN_SECS;  // 3600
 const DAY_SECS = 24 * HOUR_SECS;  // 86,400

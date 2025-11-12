@@ -687,12 +687,13 @@ function gotACH($rows) {
     '<EINPREFIX>' => $b->coIdPrefix,
     '<OFFSETACCT>' => $b->acctIn,
     '<WHEN>' => fmtDt(now(), 'MMMdd'),
+    '<W>' => substr(WEEKDAY_LTRS, date('w', tomorrow()), 1), // achbatch.inc assumes next day for tests
     '<EFFECTIVE>' => fmtDt(tomorrow(), 'Ymd'), // entryDate
     '99...' => str_repeat('9', 94),
   ];
   foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);
   $pids = db\keyed('pid, bankAccount', 'txs2', 'pid IS NOT NULL');
-  foreach ($pids as $i => $b) $map["BA-$i"] = substr($b, 4);
+  foreach ($pids as $i => $ba) $map["BA-$i"] = substr($ba, 4);
   
   foreach ($rows as $i => $row) {
     $line = strtr($row[0], $map);
