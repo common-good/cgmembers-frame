@@ -448,23 +448,6 @@ class Acct {
   }
   
   /**
-   * See if the intended recipient (or any agent with manager permission) has signed in on this machine.
-   * @param string $qid: the intended recipient's qid
-   * @return <the intended recipient has signed in on this machine>
-   */
-  public function itsMyBox($qid) {
-    if (!$a = r\acct($qid)) return FALSE;
-    $uids = array_merge($a->uids, db\col('other', 'u_relations', 'main IN :uids AND permission>=:B_RELATED+:B_MANAGE', ray('uids', $a->uids)));
-    
-    foreach ($uids as $uid) {
-      $qid = r\qid($uid);
-      $cookieId = "box-$qid";
-      if ($code = r\cook($cookieId) and $access = db\get('access', 'r_boxes', compact(ray('uid code')))) return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
    * Return a printable (scrambled) invitation card code or gift coupon code 
    * @param int $iCode: sequence number (0 to 35^3-1)
    * @see r\iCardAcct()
@@ -2092,6 +2075,23 @@ function setAcct($myid = '', &$sta = NULL) {
   
   if ($a) $a->boxId();
   return $mya = $a;
+}
+
+/**
+ * See if the intended recipient (or any agent with manager permission) has signed in on this machine.
+ * @param string $qid: the intended recipient's qid
+ * @return <the intended recipient has signed in on this machine>
+ */
+function itsMyBox($qid) {
+  if (!$a = r\acct($qid)) return FALSE;
+  $uids = array_merge($a->uids, db\col('other', 'u_relations', 'main IN (:uids) AND permission>=:B_RELATED+:B_MANAGE', ray('uids', $a->uids)));
+  
+  foreach ($uids as $uid) {
+    $qid = r\qid($uid);
+    $cookieId = "box-$qid";
+    if ($code = r\cook($cookieId) and $access = db\get('access', 'r_boxes', compact(ray('uid code')))) return TRUE;
+  }
+  return FALSE;
 }
 
 function taskSteps($task) {return $task ? u\consta('s', $task) : '';}

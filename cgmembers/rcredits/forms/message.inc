@@ -32,7 +32,7 @@ function formMessage($form, &$sta, $args = '') {
   $secrets = fieldSet('secrets', compact(ray('secret file expires')), BARE);
   $submit = t('Send');
   $fromQid = hidFld($a->mainQid);
-  w\whoFldSubmit('to', t('Send to %name?'), 'self-message', '');
+  w\whoFldSubmit('to', t('Send to %name?'), '', ''); // allow sending to self (3rd argument empty)
 
   return cgform(compact(ray('title subtext to subject message addSecret secrets submit fromQid')));
 }
@@ -85,8 +85,8 @@ function codeResult($code) {
   if (!$ray = u\decryRay($code)) return softErr(t('That is not a valid link.'));
   extract(just('qid from secret path name type size exp download', $ray, NULL));
   
-  if ($intendedA = r\acct($qid)) return softErr(t('This message is no longer available.'));
-  if (!w\itsMyBox($qid)) return softErr(t('You are not the intended recipient.'));
+  if (!$intendedA = r\acct($qid)) return softErr(t('This message is no longer available.'));
+  if (!r\itsMyBox($qid)) return softErr(t('You are not the intended recipient.'));
   if (now() > $exp) return softErr(t('That encrypted information is no longer available.'));
 
   $fromA = r\acct($from);
@@ -111,7 +111,7 @@ function codeResult($code) {
   if ($path) {
     $download = $name;
     $code = u\cryRay($ray + compact('download'));
-    $note .= t('<p>Download encrypted file: <%a>%name</a> (%type %size MB)</p><p>Use right-click to Save As a different filename.</p>', '_a name type size', atag(MSG_URL0 . $code, compact('download')), $name, $type, number_format(round($size / 1000), 1));
+    $note .= t('<p>Download encrypted file: <%a>%name</a> (%type %size MB)</p><p>Use right-click to "Save As" with a different filename.</p>', '_a name type size', atag(MSG_URL0 . $code, compact('download')), $name, $type, number_format(round($size / 1000), 1));
     jsx('encrypted', 'msg', t('The file download is underway. It may take a few seconds to appear in your downloads folder.'));
   }
       

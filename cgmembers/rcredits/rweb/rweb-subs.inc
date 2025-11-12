@@ -761,7 +761,7 @@ function badSignature(&$sta) {
  * Return onSubmit script for a typeahead member account field (and include needed script files).
  * @param string $field: the field name
  * @param string $question: what to ask, for confirmation or disambiguation (with params %amount and %name)
- * @param string $selfErr: index to error message for identifying oneself
+ * @param string $selfErr: index to error message for identifying oneself (self is allowed if no message)
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param assoc $extra: less common parameters:
  *   amount: UNUSED amount substitution for question (defaults to form.amount.value)
@@ -1749,7 +1749,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  * @param string $who: what the user typed
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
- * @param string $selfErr: index to error message to give if user self-refers
+ * @param string $selfErr: index to error message to give if user self-refers (self is allowed if no message)
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @return:
  *   NULL if there is an error
