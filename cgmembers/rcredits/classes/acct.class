@@ -329,8 +329,9 @@ class Acct {
   private function coFld($k) {
     $a = $this;
     if (!$a->co) return NULL;
+
     $subs = ray('uid', $a->id);
-    if (!$info = db\get('*', 'u_company', 'uid=:uid', $subs)) {
+    if (!$info = db\get('*', 'u_company', $subs)) {
       db\insert('u_company', $subs, 'uid');
       return nni($subs, $k); // NULL unless $k is 'uid'
     } else return $info[$k];

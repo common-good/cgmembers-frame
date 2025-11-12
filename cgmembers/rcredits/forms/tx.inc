@@ -119,6 +119,7 @@ function formTx_submit($form, &$sta) {
   u\setDft($goods, FOR_GOODS);
   $delay = ($start > today());
   $repeats = ($periods > 0);
+  if ($a->sponsored and !$mya->admin) $isGift = TRUE; // eventually hide the donation checkbox for sponsored orgs
 
   $DBTX = \db_transaction();
   
@@ -137,6 +138,7 @@ function formTx_submit($form, &$sta) {
     
     if (!$start) $start = today(); // handle ''
     $info += compact(ray('action amount purpose period periods start end'));
+    
     if ($isGift) $info['flags'] = u\bit(B_GIFT);
     $recursId = db\insert('tx_timed', $info, 'id');
   }
