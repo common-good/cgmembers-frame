@@ -209,5 +209,5 @@ function achRecord($values, $jlens) {
     ? substr(str_pad($v, $len), 0, $len)
     : u\lpad(is_numeric($v) ? strval((int) round($v)) : $v, $len);
   }
-  return $res;
+  return transliterator_transliterate('Any-Latin; Latin-ASCII', $res);
 }
