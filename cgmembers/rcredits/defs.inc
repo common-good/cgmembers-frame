@@ -737,7 +737,7 @@ const DS_DENIED = 3;  // dispute denied
 
 const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
 const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
-const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, fee, tip, or rule-based donation) triggered by another transaction
+const E_AUX = 2;  // this is an auxiliary payment (e.g., roundup, cc fee, FS fee, tip, or rule-based donation) triggered by another transaction
                   // The precise nature can be determined from uid2. Can be related to prime, bank, or outer.
 const E_REBATE = 3; // discount rebate to customer
 const E_XFEE = 4; // fee from customer to merchant for credit card or check transaction

@@ -32,6 +32,8 @@ const SAME_TIME = 60 * 20; // number of seconds that make no difference in "same
 /**
  * Output the message with the given background color.
  * Return FALSE (meaning error in returns from callers) unless a color is specified.
+ * @param mixed $msg: what to Output
+ * @param string $color: see color() for choices
  */
 function output($msg, $color = 'error') {
   global $wholeModule, $channel;

@@ -6,6 +6,7 @@ use CG\Util as u;
 use CG\Backend as be;
 use CG\Risk as k;
 use CG\Web as w;
+use CG\Testing as t;
 use CG\Cron as cr;
 
 /**
@@ -33,7 +34,7 @@ YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs nudges payInvoices getFunds completeUsdTxs notices END'; // getFunds, completeUsdTxs, and notices should probably always be the last 3 things
+const DAILY_OPS = 'START eachAcct setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs adjustFS nudges payInvoices getFunds completeUsdTxs notices END'; // getFunds, completeUsdTxs, and notices should probably always be the last 3 things
 const LOGLESS_OPS = 'acctHourly oneAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once R_ROOT . '/rcron/rcron-subs.inc';
@@ -343,7 +344,7 @@ function recur($template) {
     $info = compact(ray('pid amount purpose created flags')) + ray('completed recursId', now(), $recursId);
     $coA = r\acct($to); $coId = $coA->id;
     
-    if ($stripeId) { // recurring credit card payment
+    if ($stripeId) { // recurring (or timed) credit card payment
       require_once R_ROOT . '/stripe.inc';
       $info['deposit'] = now();
       $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
@@ -424,6 +425,82 @@ function recur($template) {
   if ($period == PER_1) r\endRule('tm', $recursId);
   if (db\count('tx_hdrs', 'recursId=:recursId AND created >= :NOW-:HOUR_SECS', $subs = compact('recursId')) != 1) r\tellAdmin(t('Double-dipped recurrence'), $subs);
   return [TRUE, $msg]; // this return is used only when called from stripe.inc
+}
+
+/**
+ * Adjust fiscal sponsorship fees
+ */
+function adjustFS() {
+  $uids = db\col('uid', 'u_company', '(coFlags&(1<<:CO_SPONSORED)<>0)');
+
+  foreach ($uids as $uid) {
+    $a = r\acct($uid); if (!$a->ok) continue;
+    if (in($qid = $a->mainQid, 'NEWAZV NEWBTY NEWCBR NYAAUN')) continue; // internal and historic funds
+    $nm = "$a->fullName ($qid)";
+    $nmSub = compact('nm');
+    $donsToDate = db\sum('amt', 'txs_noreverse', ':IS_GIFT AND uid2=:uid', compact('uid'));
+    if ($donsToDate <= 0) continue;
+    if (!$ruleRow = db\row('tx_rules', "action=:ACT_SURTX AND payee=:uid AND purpose LIKE 'fiscal sponsorship fee%' AND `end` IS NULL", compact('uid'))) {$msgs[] = t('missing FS rule for ') . $nm; continue;}
+    extract(just('id portion', $ruleRow)); $rule = $id;
+    $feesCrit = compact(ray('uid rule'));
+    if (!$feesToDate = db\sum('amt', 'txs_noreverse', 'rule=:rule AND uid1=:uid', $feesCrit)) {$msgs[] = t('no FS fees to date for ') . $nm; continue;}
+
+    $paidCG = db\sum('amt', 'txs_noreverse', 'uid2=:CGID AND uid1=:uid', compact('uid'));
+    if (!$fee1desc = db\get('description', 'tx_entries', 'rule=:rule AND uid=:uid ORDER BY ABS(id)', compact('rule', 'uid'))) {$msgs[] = t('no first fee description for ') . $nm; continue;}
+
+    if (!preg_match('/.*([\.0-9]+)%/', $fee1desc, $m)) {$msgs[] = t('missing percentage in first FS fee for ') . $nm; continue;}
+    [$rightFee, $rightPct] = cr\fsFee($donsToDate, $fee1pct = $m[1]);
+    $offBy = round($rightFee - $feesToDate, 2);
+
+    if (abs($offBy) < 5) continue; // ignore if off by less than this (because of rounding -- we give partial cents back when rate changes)
+    
+    $feeXids = db\col('xid', 'tx_entries e', $feesCrit);
+    $giftXids = db\col('xid', 'txs', ':IS_GIFT AND uid2=:uid', compact('uid'));
+    if ($nFeeXids = array_diff($giftXids, $feeXids) and count($nFeeXids) > 0) $msgs[] = $nm . t(' gift xids with no FS fee: ') . pr($nFeeXids);
+    if ($nGiftXids = array_diff($feeXids, $giftXids)and count($nGiftXids) > 0) $msgs[] = $nm . t(' FS fee xids with no gift: ') . pr($nGiftXids);
+        
+    if ($offBy > 0) {$msgs[] = t('Charged FS fees too low by $%offBy for %nm (charged $%feesToDate, should be $%rightFee)', compact(ray('nm offBy feesToDate paidCG rightFee'))); continue;}
+
+    if ($rightPct == $fee1pct) continue; // not time to adjust yet
+
+    // time to adjust the fee
+    $purpose = t('fiscal sponsorship fee (%rightPct%)', compact('rightPct'));
+
+    $allIncome = db\sum('amt', 'txs_noreverse', 'uid2=:uid AND (type IN (:E_PRIME, :E_OUTER) OR (type=:E_BANK AND amt>0 AND :IS_GIFT))', compact('uid'));
+    $info = compact(ray('uid rule offBy portion rightFee rightPct donsToDate allIncome fee1pct fee1desc feesToDate purpose'));
+    $msgs[] = t('adjusting FS fee for ') . $nm . ' ' . pr($info);
+    db\update('tx_rules', ray('id portion purpose', $rule, round($rightPct/100, 4), $purpose), 'id');
+    $cat = [NULL, r\nick2cat('FS-FEE')];
+    r\acct($uid)->payApproved(CGID, $offBy, t('fiscal sponsorship fee adjustment'), FOR_GOODS, compact(ray('rule cat')));
+  }
+
+  if ($msg = join("\n", nn($msgs, []))) {
+    if (test()) t\output($msg, 'normal'); else
+    r\tellAdmin(t('FS rate adjustments'), compact('msg'));
+  }
+  queueNext();
+}
+
+/**
+ * Calculate the appropriate fiscal sponsorship fee, given donation volume to date
+ * @param numeric $dons: donations to date
+ * @param numeric $fee1pct: original fee percentage
+ * @return [$fee, $pct]: the expected fee total and correct percentage going forward
+ */
+function fsFee($dons, $fee1pct) {
+  $CK = 100000;
+  $pct = $fee1pct;
+  $fee = 0;
+  
+  while ($dons > $CK) {
+    $fee += $CK * $pct / 100;
+    $dons -= $CK;
+    $pct -= 0.5;
+  }
+  $fee += $dons * $pct / 100;
+  $fee = round($fee, 2);
+
+  return [$fee, $pct];
 }
 
 /**

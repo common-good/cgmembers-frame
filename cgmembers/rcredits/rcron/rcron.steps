@@ -43,6 +43,7 @@ function extraSetup($feature) {
  * in: MAKE aaSeldomNotices Setup
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH aaSeldomNotices ItsTimeToRenewBacking
+ *     MAKE adjustsponsor Setup
  *     MAKE bank Setup
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
@@ -72,7 +73,8 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ * in: TEST adjustsponsor Setup
+ *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     TEST bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedNondrawingMemberBarelyBelowTargetCannotGetFunded
@@ -375,6 +377,8 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     MAKE adjustsponsor Setup
+ *     TEST adjustsponsor ASponsoredMemberViewsTheirTransactionHistory
  *     BOTH bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
  *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
@@ -518,6 +522,7 @@ function riskThresholdPercentIs($pct) {
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE aaSeldomNotices ItsTimeToRenewBacking
+ *     MAKE adjustsponsor ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE bank AMemberIsBarelyBelowTarget
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
