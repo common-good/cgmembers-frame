@@ -192,5 +192,5 @@ function formTxDetail_submit($form, &$sta) {
     svar('catsList', $rows);
   }
 
-  return w\go($return ? u\dePry($return) : 'history/transactions');
+  return w\go($return ? u\dePry($return) : ($mya->admin ? 'sadmin/panel' : 'history/transactions'));
 }
