@@ -68,7 +68,8 @@ function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
   $flnm = (($ein and $ein != CGF_EIN) ? t('guest-') : '') . "Y$year$testMode-forms1099$type.txt";
-  u\beginDownload($flnm); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload($flnm);
+  header("Content-Type: application/octet-stream"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);

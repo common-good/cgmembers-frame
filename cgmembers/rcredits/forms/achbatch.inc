@@ -144,6 +144,7 @@ X;
   if ($depositDt) db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', $id, $depositDt));
 
   u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
+  header('Content-Type: text/plain; charset=us-ascii'); // required for ACH files
 
   if (test()) return !$testRecs = $recs;
 /**/  echo join("\n", $recs);
