@@ -139,8 +139,9 @@ function formPay_submit($form, &$sta) {
     return w\goNextStep('donate', ''); // a zero donation is fine
   }
   
+  $flags = $isGift ? u\bit(B_GIFT) : 0;
   $recursId = $period == PER_1 ? NULL // new recursId
-  : db\insert('tx_timed', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $coId, $amount, $period, $item, DUR_1));
+  : db\insert('tx_timed', ray('action from to amount period purpose duration flags', ACT_PAY, $mya->id, $coId, $amount, $period, $item, DUR_1, $flags));
 
   if ($honored and $isCG) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
     //else $mya->update('notes', r\stampNote(u\honorDesc($honor) . $honored) . $mya->notes);

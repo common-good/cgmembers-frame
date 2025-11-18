@@ -47,7 +47,7 @@ function formTxDetail($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
-      uMe.uid AS meId, eid, recursId, reversesXid, t.flags,
+      uMe.uid AS meId, eid, recursId, rule, reversesXid, t.flags,
       uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
       uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
       p.fullName as nonMemberName
@@ -72,7 +72,7 @@ X;
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
-  if ($nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
+  if ($uid1 == UID_OUTER and $nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
   $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
@@ -97,6 +97,7 @@ X;
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
     $entryType = selectFld(REQ . t('Type:'), '', short() + dft($type), ray(E_TYPES));
     $recursId = intFld(t('Recurs Id:'), '', short() + dft($recursId));
+    $rule = intFld(t('Rule:'), '', short() + dft($rule));
     $suffix = ($reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
     $reversesXid = intFld(t('Reverses Xid:'), '', short() + dft($reversesXid) + $suffix);
 
@@ -107,19 +108,19 @@ X;
     $submit = submit(t('Update'), '', '', suffix($suffix));
     if ($reversesXid or count($ids) > 1) jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
-  } else $phone = $entryType = $submit = $toMe = $xid = $eid = $recursId = $reversesXid = NULL;
+  } else $phone = $entryType = $submit = $toMe = $xid = $eid = $recursId = $rule = $reversesXid = NULL;
 
   $return = hidFld($return);
   $back = item(w\backButton());
   $orig = hidFld($orig);
 
-  return cgform(compact(ray('title created amount description nmYou nmMe addr email phone forSame cat chan flags recursId reversesXid entryType submit back toMe xid eid return orig')));
+  return cgform(compact(ray('title created amount description nmYou nmMe addr email phone forSame cat chan flags recursId rule reversesXid entryType submit back toMe xid eid return orig')));
 }
 
 function formTxDetail_validate($form, &$sta) {
   global $mya;
   extract(just($fields = 'xid created amount recursId reversesXid orig', $sta['input'])); // no dft!! (see next line)
-  foreach (ray('recursId reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
+  foreach (ray('recursId rule reversesXid') as $k) if (isset($$k) and !$$k) $$k = NULL;
   
   if ($created and $err = u\badDate($created, today() + 2 * DAY_SECS - 48 * MONTH_SECS, tomorrow())) return say($err, 'created');
   if ($mya->admEditTx and min($created, nni($orig, 'created')) < getV(VAR_CLOSE_BOOKS)) return err(t('You cannot change this transaction without first changing the "close books" date.'));
@@ -137,18 +138,19 @@ function formTxDetail_validate($form, &$sta) {
 function formTxDetail_submit($form, &$sta) {
   global $mya;
   $input = $sta['input'];
-  extract(just('amount toMe forSame eid return cat orig created xid', $input, ''));
+  extract(just('amount toMe forSame eid return cat orig created xid rule', $input, ''));
   list ($eidMe, $eidYou) = u\order($toMe, $eid, -$eid);
 
   $DBTX = \db_transaction();
   if ($hInfo = just('xid created recursId reversesXid flags', $input)) db\update('tx_hdrs_all', $hInfo, 'xid');
   if (now() - $created > 3 * MONTH_SECS) say(t('WARNING: This transaction is more than 3 months in the past.'));
 
-  $info = just('entryType amount description cat', $input, NULL);
-  if (!$cat) $input['cat'] = NULL; // '' (no value chosen) crashes otherwise
+  $info = just('entryType amount description cat rule', $input, NULL);
+  foreach (ray('cat rule') as $k) if (!$$k) $info[$k] = NULL; // '' (no value chosen) must be NULL; crashes otherwise
   $info['id'] = $eidMe;
   db\update('tx_entries_all', $info, 'id');
   $subs = ray('id cat', -$eidMe, CAT_CG2CG);
+
   if ($cat == CAT_CG2CG) {
     db\update('tx_entries_all', $subs, 'id'); // cg2cg transfer means cats are both CG2CG
   } elseif (db\exists('tx_entries_all', $subs)) {
@@ -190,5 +192,5 @@ function formTxDetail_submit($form, &$sta) {
     svar('catsList', $rows);
   }
 
-  return w\go($return ? u\dePry($return) : 'history/transactions');
+  return w\go($return ? u\dePry($return) : ($mya->admin ? 'sadmin/panel' : 'history/transactions'));
 }

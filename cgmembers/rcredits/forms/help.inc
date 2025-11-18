@@ -20,6 +20,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
     list ($zot, $type) = explode('/', "$type/");
     $ext = $type ?: 'bin';
     u\beginDownload("from $mya->id.$ext");
+    header("Content-Type: application/octet-stream"); // download as binary because we don't know what the user sent us
 /**/ echo $s;
     exit();
   }
