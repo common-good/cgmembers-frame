@@ -60,11 +60,11 @@ Scenario: A member makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then these "tx_timed":
-  | id | start  | from | to  | amount | period | purpose  |*
-  |  1 | %today | .ZZA | cgf |     10 | month  | donation |
+  | id | start  | from | to  | amount | period | purpose  | flags |*
+  |  1 | %today | .ZZA | cgf |     10 | month  | donation | gift  |
   And these "txs":
-  | xid | created | amount | payer | payee    | purpose  | recursId |*
-  |   1 | %today  |     10 | .ZZA  | regulars | donation |        1 |
+  | xid | created | amount | payer | payee    | purpose  | recursId | flags    |*
+  |   1 | %today  |     10 | .ZZA  | regulars | donation |        1 | gift,thx |
   And we say "status": "gift thanks|cggift thanks" with subs:
   | coName | %PROJECT |**
   And these "r_honors":
