@@ -54,6 +54,7 @@ function extraSetup() {
  *     TEST changeUid VotingDuplicationPreventsMergingAccounts
  *     MAKE checks Setup
  *     MAKE deletion Setup
+ *     MAKE rules Setup
  *     MAKE super Setup
  */
 function members($list) {return t\members($list);}
@@ -62,24 +63,28 @@ function members($list) {return t\members($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE aaOther AdminDeletesAnAccount
- *     MAKE ach AdminDownloadsBalancedACHRequests
- *     MAKE ach AdminDownloadsUnbalancedACHRequests
  *     MAKE cats AdminVisitsTheSetCategoriesPage
  *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
+ *     MAKE rules AdminVisitsTheRulesPage
+ *     MAKE rules AdminChoosesARuleToEdit
+ *     MAKE rules AdminVisitsTheTimedPage
+ *     MAKE rules AdminChoosesATimedRecordToEdit
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST ach AdminDownloadsBalancedACHRequests
- *     TEST ach AdminDownloadsUnbalancedACHRequests
- *     TEST cats AdminVisitsTheSetCategoriesPage
+ * in: TEST cats AdminVisitsTheSetCategoriesPage
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     TEST changes AMemberChangesSomeSettings
  *     TEST changeUid AdminViewsTheMergePage
  *     TEST checks AdminPrintsChecks
+ *     TEST rules AdminVisitsTheRulesPage
+ *     TEST rules AdminChoosesARuleToEdit
+ *     TEST rules AdminVisitsTheTimedPage
+ *     TEST rules AdminChoosesATimedRecordToEdit
  */
 function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
   return t\weShowWith($title, $content, $showDebugs);
@@ -131,9 +136,7 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 /**
  * with: (ARG)
  *
- * in: TEST ach AdminDownloadsBalancedACHRequests
- *     TEST ach AdminDownloadsUnbalancedACHRequests
- *     TEST changes AMemberChangesSomeSettings
+ * in: TEST changes AMemberChangesSomeSettings
  */
 function with($content) {return t\weShow($content);}
 
@@ -144,8 +147,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE aaOther Setup
  *     TEST aaOther AdminDeletesAnAccount
  *     MAKE ach Setup
- *     BOTH ach AdminDownloadsBalancedACHRequests
- *     BOTH ach AdminDownloadsUnbalancedACHRequests
+ *     MAKE ach SetUpOverlimitBalancedFileForCFB
  *     MAKE activate Setup
  *     MAKE cats Setup
  *     BOTH cats AdminSetsMostCategoriesAndSendsToQBO
@@ -162,6 +164,7 @@ function with($content) {return t\weShow($content);}
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
+ *     MAKE rules Setup
  *     MAKE super AnAdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -209,8 +212,6 @@ function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
  * we download (ARG) with (ARG) records: (ARG)
  *
  * in: TEST 1099s AdminGeneratesAReportForThePastMonths
- *     TEST ach AdminDownloadsBalancedACHRequests
- *     TEST ach AdminDownloadsUnbalancedACHRequests
  */
 function weDownloadWithRecords($flnm, $fileType, $rows) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -264,8 +265,7 @@ function weDeleteTableRecord($tnm, $record) {
  * member (ARG) is signed in
  *
  * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
- *     MAKE ach AdminDownloadsBalancedACHRequests
- *     MAKE ach AdminDownloadsUnbalancedACHRequests
+ *     MAKE ach SetUpOverlimitBalancedFileForCFB
  *     MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
@@ -294,8 +294,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *
  * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
  *     MAKE aaOther Setup
- *     MAKE ach AdminDownloadsBalancedACHRequests
- *     MAKE ach AdminDownloadsUnbalancedACHRequests
+ *     MAKE ach SetUpOverlimitBalancedFileForCFB
  *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE checks AdminPrintsChecks
@@ -385,6 +384,7 @@ function qBOGetsTxDatedWithEntries($id, $desc, $dt, $lines) {return qBOGetsTxWit
  * member (ARG) is sponsored
  *
  * in: MAKE cats Setup
+ *     MAKE rules Setup
  */
 function memberIsSponsored($id) {
   global $testOnly;

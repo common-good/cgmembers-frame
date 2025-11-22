@@ -834,7 +834,9 @@ $GLOBALS['topics'] = array( // topics for 'message' email
   'you re-charged' => t('Payment received (Transaction #%xid)'),
 );
 
-if (TRUE) { // can't use if(u\test()) here (this block should be moved somewhere)
+if (basename('http://localhost/cg/cgmembers/tests') == 'tests') {
+//if (TRUE) { // can't use if(test()) here (this block should be moved somewhere)
+  foreach (ray('A B C D E F G H') as $i => $k) define("ZZ$k", 26742000017551 + $i); // especially for rules.feature
   global $specialSubs;
   foreach (explode(' ', B_PERMISSIONS) as $k) {
     $perm = constant('B_' . strtoupper($k));
