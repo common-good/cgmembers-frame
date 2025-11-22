@@ -79,6 +79,29 @@ Scenario: A member receives an invoice with a positive balance
   | Pay           | dispute |
   | Reason        |         |
   | Dispute       |         |
+  And without:
+  | Category |
+
+Scenario: A fiscally sponsored partner receives an invoice
+  Given members have:
+  | uid  | coFlags   |*
+  | .ZZC | sponsored |
+  And these "tx_requests":
+  | nvid | created | status  | amount | payer | payee | for   |*
+  |    1 | %today  | open    |    100 | .ZZC  | .ZZA  | labor |
+  And balances:
+  | uid  | balance |*
+  | .ZZC |     100 |
+  When member ".ZZC" visits page "handle-invoice/nvid=1&code=%code"
+  Then we show "Confirm Payment" with:
+  | ~question     | Pay $100 to Abe One for labor |
+  | Amount to Pay | 100 |
+  | Category      |     |
+  | | Pull this entire amount from your bank account. |
+  | | Pay first from your Common Good balance; then from your bank account as needed. |
+  | Pay           | dispute |
+  | Reason        |         |
+  | Dispute       |         |
 
 Scenario: A member pays an invoice with sufficient balance
   Given balances:
@@ -99,6 +122,25 @@ Scenario: A member pays an invoice with sufficient balance
   | .ZZB |     200 |
   | .ZZC |       0 |
 
+Scenario: A fiscally sponsored partner pays an invoice with sufficient balance
+  Given members have:
+  | uid  | balance | coFlags   |*
+  | .ZZC | 300     | sponsored |
+  And member ".ZZA" confirms form "tx/charge" with values:
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Our Pub | 100    | %FOR_GOODS | labor   |
+  When member ".ZZC" confirms form "handle-invoice/nvid=1&code=%code" with values:
+  | op   | ret | nvid | payAmount | cat          | payer | payee | purpose | created | balFirst |*
+  | pay  |     |    1 |       100 | GRANT-PERSON | .ZZC  | .ZZA  | labor   | %today  | 1    |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | cat1         | taking | relType | rel |*
+  |   1 | %today  |    100 | .ZZC  | .ZZA  | labor   | GRANT-PERSON | 0      | I       | 1   |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |     100 |
+  | .ZZB |       0 |
+  | .ZZC |     200 |
+  
 Scenario: A member makes partial payments with sufficient balance
   Given these "tx_requests":
   | nvid | created | status  | amount | payer | payee | for   |*

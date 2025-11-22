@@ -148,6 +148,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberInvoicesSomeone
  *     MAKE invoice AMemberPaysAnInvoiceWithSufficientBalance
+ *     MAKE invoice AFiscallySponsoredPartnerPaysAnInvoiceWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice
@@ -619,6 +620,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     TEST invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     TEST invoice AFiscallySponsoredPartnerReceivesAnInvoice
  *     TEST invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     TEST invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -733,6 +735,7 @@ function with($content) {return weShow($content);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
+ *     TEST invoice AMemberReceivesAnInvoiceWithAPositiveBalance
  *     TEST nosignin AMemberDonatesFromAnEmailLink
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -819,7 +822,9 @@ function withoutOptions($options) {
  *     TEST invoice Setup
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     MAKE invoice AFiscallySponsoredPartnerReceivesAnInvoice
  *     BOTH invoice AMemberPaysAnInvoiceWithSufficientBalance
+ *     TEST invoice AFiscallySponsoredPartnerPaysAnInvoiceWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     TEST invoice AMemberDeniesAnInvoice
  *     BOTH invoice AMemberWithABankAccountApprovesAnInvoiceDrawingAutomatically
@@ -909,6 +914,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     MAKE invoice AFiscallySponsoredPartnerReceivesAnInvoice
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1227,6 +1233,8 @@ function statisticsGetSet($time) {
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE invest Setup
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
+ *     MAKE invoice AFiscallySponsoredPartnerReceivesAnInvoice
+ *     MAKE invoice AFiscallySponsoredPartnerPaysAnInvoiceWithSufficientBalance
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
@@ -1782,7 +1790,9 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE invoice AMemberReceivesAnInvoiceWithANonpositiveBalance
  *     MAKE invoice AMemberReceivesAnInvoiceWithNoConnectedBankAccount
  *     MAKE invoice AMemberReceivesAnInvoiceWithAPositiveBalance
+ *     MAKE invoice AFiscallySponsoredPartnerReceivesAnInvoice
  *     TEST invoice AMemberPaysAnInvoiceWithSufficientBalance
+ *     TEST invoice AFiscallySponsoredPartnerPaysAnInvoiceWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     BOTH invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberOverpaysAnInvoice

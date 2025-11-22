@@ -12,17 +12,17 @@ use CG\Db as db;
  */
  
 const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
-const TIMED_FLDS = BOTH_FLDS . ' period periods duration durations stripeId';
+const TIMED_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId';
 const RULE_FLDS = BOTH_FLDS . ' template code';
-const EITHER_FLDS = BOTH_FLDS . ' period periods duration durations stripeId template code tnm url flds';
+const EITHER_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId template code tnm url flds';
 const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code stripeId';
-const ZERO_FLDS = 'amount portion minimum start';
+const ZERO_FLDS = 'amount portion minimum start flags';
 const RULES_URL = 'sadmin/rules/id';
 const TIMED_URL = 'sadmin/timed/id';
 
 function formRules($form, &$sta, $type = '', $args = '') {
   global $mya;
-  
+
   $rules = ($type == 'rules');
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
   list ($tnm, $url, $flds) = $rules ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
@@ -54,16 +54,18 @@ function formRules($form, &$sta, $type = '', $args = '') {
   $start = dateFld(t('Start:'), $dtDesc, dft($start));
   $end = dateFld(t('End:'), $dtDesc, dft($end));
   
-  $code = $template = $periods = $period = $durations = $duration = $stripeId = NULL;
   if ($rules) {
     $code = textFld(t('Code:'), '', dft($code));
     $template = textFld(t('Template:'), '', dft($template));
+    $flags = $periods = $period = $durations = $duration = $stripeId = NULL;
   } else {
+    $flags = intFld(t('Flags:'), '', dft($flags));
     $periods = intFld(t('Periods:'), '', dft($periods ?: 1));
     $period = selectFld(t('Period:'), '', dft($period), r\recurRay(TRUE, PERIODS));
     $durations = intFld(t('Durations:'), '', dft($durations ?: 1));
     $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
     $stripeId = textFld(t('Stripe ID:'), '', dft($stripeId));
+    $code = $template = NULL;
   }
   
   foreach (ray('tnm flds url id') as $k) $$k = hidFld($$k);

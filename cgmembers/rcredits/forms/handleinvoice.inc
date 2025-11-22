@@ -21,6 +21,8 @@ const ACT_CANCEL = 1; // radio button to cancel invoice
 function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
 
+  $hasCats = r\hasCats($mya->uid) ?: 0;
+
   extract(just('nvid ret webpay code', $args, NULL));
   $ret = $ret ? u\deurlify($ret) : 'empty';
   
@@ -91,6 +93,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
     } else $_warning = '';
 
     $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft($remains, 2));
+    $cat = $mya->sponsored? fboCatFld('', 'OUT') : ($hasCats ? catFld() : NULL);
+
     $remainsDpy = u\fmtAmt($remains);
     $remainsDpy = $remainsDpy == $subs['amount'] ? '' : t(' (%remainsDpy remaining)', compact('remainsDpy'));
     $subtext = t('<p>Pay %amount to %who for %what%remainsDpy.</p>%warning', $subs + compact(ray('_warning remainsDpy')));
@@ -121,7 +125,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always balFirst pay action because denySet close cancel reopen toMe remains hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount cat always balFirst pay action because denySet close cancel reopen toMe remains hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -145,7 +149,10 @@ function formHandleInvoice_submit($form, &$sta) {
 }
 
 function handleInvoice($op, $payAmount, $info) {
-  extract(just('nvid payer payee purpose created data amount always reason action balFirst', $info, NULL));
+  global $mya;
+
+  extract(just('nvid payer payee purpose created data amount cat always reason action balFirst', $info, NULL));
+  
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $toA->fullName, fmtDt($created), $purpose, $reason);
   $ok = TRUE; // messages default to type "status", rather than "error"
@@ -153,7 +160,8 @@ function handleInvoice($op, $payAmount, $info) {
   
   if ($op == 'pay' and !$reason) {
     $flags = db\get('flags', 'tx_requests', compact('nvid'));
-    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED), 'nvid'); // in case it wasn't marked approved already
+    $catData = $cat ? compact('cat') : [];
+    db\update('tx_requests', ray('nvid status', $nvid, TX_APPROVED) + $catData, 'nvid'); // in case it wasn't marked approved already
     if ($fromA->ok) { // if payer account is active
       extract(just('ok msg', $z = be\payInvoice($nvid, $balFirst, $payAmount)));
       if ($payAmount < $amount) { // don't let the funding flag prevent payer from completing payment!

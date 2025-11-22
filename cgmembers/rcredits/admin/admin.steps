@@ -54,6 +54,7 @@ function extraSetup() {
  *     TEST changeUid VotingDuplicationPreventsMergingAccounts
  *     MAKE checks Setup
  *     MAKE deletion Setup
+ *     MAKE rules Setup
  *     MAKE super Setup
  */
 function members($list) {return t\members($list);}
@@ -67,6 +68,10 @@ function members($list) {return t\members($list);}
  *     MAKE cats AdminVisitsTheSetCategoriesPage
  *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
+ *     MAKE rules AdminVisitsTheRulesPage
+ *     MAKE rules AdminChoosesARuleToEdit
+ *     MAKE rules AdminVisitsTheTimedPage
+ *     MAKE rules AdminChoosesATimedRecordToEdit
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -80,6 +85,10 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     TEST changes AMemberChangesSomeSettings
  *     TEST changeUid AdminViewsTheMergePage
  *     TEST checks AdminPrintsChecks
+ *     TEST rules AdminVisitsTheRulesPage
+ *     TEST rules AdminChoosesARuleToEdit
+ *     TEST rules AdminVisitsTheTimedPage
+ *     TEST rules AdminChoosesATimedRecordToEdit
  */
 function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
   return t\weShowWith($title, $content, $showDebugs);
@@ -162,6 +171,7 @@ function with($content) {return t\weShow($content);}
  *     TEST deletion ATrackdeletedRecordIsDeleted
  *     TEST deletion AMemberRecordIsDeleted
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
+ *     MAKE rules Setup
  *     MAKE super AnAdminPrintsChecks
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -385,6 +395,7 @@ function qBOGetsTxDatedWithEntries($id, $desc, $dt, $lines) {return qBOGetsTxWit
  * member (ARG) is sponsored
  *
  * in: MAKE cats Setup
+ *     MAKE rules Setup
  */
 function memberIsSponsored($id) {
   global $testOnly;
