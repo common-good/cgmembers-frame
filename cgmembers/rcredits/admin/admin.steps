@@ -63,6 +63,7 @@ function members($list) {return t\members($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE aaOther AdminDeletesAnAccount
+ *     MAKE ach AdminVisitsTheBankTransfersPage
  *     MAKE ach AdminDownloadsBalancedACHRequests
  *     MAKE ach AdminDownloadsUnbalancedACHRequests
  *     MAKE cats AdminVisitsTheSetCategoriesPage
@@ -78,8 +79,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST ach AdminDownloadsBalancedACHRequests
- *     TEST ach AdminDownloadsUnbalancedACHRequests
+ * in: TEST ach AdminVisitsTheBankTransfersPage
  *     TEST cats AdminVisitsTheSetCategoriesPage
  *     TEST cats AdminSetsMostCategoriesAndSendsToQBO
  *     TEST changes AMemberChangesSomeSettings
@@ -140,8 +140,7 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 /**
  * with: (ARG)
  *
- * in: TEST ach AdminDownloadsBalancedACHRequests
- *     TEST ach AdminDownloadsUnbalancedACHRequests
+ * in: TEST ach AdminVisitsTheBankTransfersPage
  *     TEST changes AMemberChangesSomeSettings
  */
 function with($content) {return t\weShow($content);}
@@ -153,8 +152,8 @@ function with($content) {return t\weShow($content);}
  *     MAKE aaOther Setup
  *     TEST aaOther AdminDeletesAnAccount
  *     MAKE ach Setup
- *     BOTH ach AdminDownloadsBalancedACHRequests
- *     BOTH ach AdminDownloadsUnbalancedACHRequests
+ *     TEST ach AdminDownloadsBalancedACHRequests
+ *     TEST ach AdminDownloadsUnbalancedACHRequests
  *     MAKE activate Setup
  *     MAKE cats Setup
  *     BOTH cats AdminSetsMostCategoriesAndSendsToQBO
@@ -274,8 +273,7 @@ function weDeleteTableRecord($tnm, $record) {
  * member (ARG) is signed in
  *
  * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
- *     MAKE ach AdminDownloadsBalancedACHRequests
- *     MAKE ach AdminDownloadsUnbalancedACHRequests
+ *     MAKE ach Setup
  *     MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
@@ -304,8 +302,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *
  * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
  *     MAKE aaOther Setup
- *     MAKE ach AdminDownloadsBalancedACHRequests
- *     MAKE ach AdminDownloadsUnbalancedACHRequests
+ *     MAKE ach Setup
  *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE checks AdminPrintsChecks
