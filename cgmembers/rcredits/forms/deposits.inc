@@ -68,7 +68,7 @@ function deposits($starting = 0, $showTxIds = FALSE) {
       SUM(IF(txid<0, amount, 0)) AS amtBad, SUM(IF(txid<0, 1, 0)) AS countBad,
       SUM(amount) AS amtNet, SUM(1) AS countNet,
       deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
-    FROM txs2 WHERE amount<>0 AND created<=:NOW AND created>=:starting
+    FROM txs2 WHERE amount<>0 AND created<=:NOW AND created>=:starting AND bankAccount IS NOT NULL
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
