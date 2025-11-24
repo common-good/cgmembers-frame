@@ -7,7 +7,7 @@
 const R_SERVER_ID = 'NEW'; // qid header for this region's server (New England / Western MA)
 // other 3rd letters: M=ME H=NH V=VT C=CT R=RI P=PA B=Boston
 const ADMIN_NAME = 'William Spademan';
-const SIGNATORY = 'William Spademan, President';
+const SIGNATORY = 'Jose Cruz, Executive Director';
 const R_ADMIN_EMAIL = 'info@CommonGood.earth'; // regional admin email
 const R_ADMIN_PHONE = '+14136281957';
 const R_REGION_EIN = '46-1821792';
