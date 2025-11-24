@@ -31,7 +31,13 @@ function printChecks($args) {
   //  $ck->SetMargins(0, 0, 0); // left/top/right margin
   $ck->SetAutoPageBreak(FALSE);
 
-  $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
+  $ways = [
+    'BOTH'=>'txid>0',
+    'IN'=>'(amount>0 AND txid>0)',
+    'OUT'=>'(amount<0 AND txid>0)',
+    'BAD'=>'txid<0',
+    'VERIFY'=>'amount=0'
+  ];
   $where = $ways[strtoupper($way)];
   $sql = "SELECT xid,txid,created,payee,amount,deposit,bankAccount FROM txs2_bank WHERE deposit=:date AND created<=:NOW AND $where ORDER BY xid";
   $subs = compact('date');
