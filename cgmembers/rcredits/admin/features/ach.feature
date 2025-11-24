@@ -21,7 +21,7 @@ Setup:
   | txid | payee | amount | created | deposit  | completed | pid | bankAccount     |*
   | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |     | USkk21187028101 |
   | 5002 | .ZZA  |    400 | %now-2w |        0 | %now      |     | USkk21187028101 |
-  | 5003 | .ZZB  |   -100 | %now-1d |        0 | %now      |     | USkk21187028102 |
+  | 5003 | .ZZB  |   -100 | %now-1d |        0 | %now-1d   |     | USkk21187028102 |
   | 5004 | .ZZC  |    300 | %now    |        0 |         0 |     | USkk21187028103 |
   | 5005 | .ZZC  |     60 | %now    |        0 |         0 |   6 | USkk21187028106 | 
   And member ".ZZA" is signed in
@@ -30,16 +30,13 @@ Setup:
 Scenario: admin visits the Bank Transfers page:
   When member ".ZZA" visits page "sadmin/deposits"
   Then we show "Bank Transfers" with:
-  | New IN    | 3     | $760  |
-  | New OUT   | 1     | $-100   |
+  | New IN  | 3 | $760  | Download IN  |
+  | New OUT | 1 | $-100 | Download OUT |
   And with:
-  |            | Transfers |  Count | Total     |
-  | TODAY      | IN        |      3 | 760.00    |
-  |            | OUT       |      1 | -100.00   |
-  | %mdY-2w    | IN        |      1 | 100.00    |
+  | %mdY-2w    | IN  |      1 | 100.00    | details ACH checks |
 
 Scenario: admin downloads balanced ACH requests
-  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balance=1"
+  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=1"
   Then we download "<BANK>-<NOW>.ach" with "ACH" records:
   
 # const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
@@ -63,12 +60,12 @@ Scenario: admin downloads balanced ACH requests
   | txid | payee | amount | created | deposit  | completed |*
   | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |
   | 5002 | .ZZA  |    400 | %now-2w | %now     | %now      |
-  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now      |  
+  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now-1d   |  
   | 5004 | .ZZC  |    300 | %now    | %now     |         0 |
   | 5005 | .ZZC  |     60 | %now    | %now     |         0 |
 
 Scenario: admin downloads unbalanced ACH requests
-  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&balance=0"
+  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=0"
   Then we download "<BANK>-<NOW>.ach" with "ACH" records:
   | 1,01, ,<BANKROUTE>, ,%CGF_EIN,<DATETIME>,0,094,10,1,<BANK>,<ORIGIN>, |
   | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CGCredit <W>,<WHEN>,,,1,<BANKROUT>,0000001 |
@@ -84,6 +81,6 @@ Scenario: admin downloads unbalanced ACH requests
   | txid | payee | amount | created | deposit  | completed |*
   | 5001 | .ZZA  |    100 | %now-3w | %now0-2w | %now-3w   |
   | 5002 | .ZZA  |    400 | %now-2w | %now     | %now      |
-  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now      |  
+  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now-1d   |  
   | 5004 | .ZZC  |    300 | %now    | %now     |         0 |
   | 5005 | .ZZC  |     60 | %now    | %now     |         0 |

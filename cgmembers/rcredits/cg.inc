@@ -1520,6 +1520,16 @@ function bankNick($id, $txDt) {
   return $nick;
 }
 
+/**
+ * Return bank data for the given bank.
+ * NOTE: use array_combine here, not ray(), because of colons in the data (for deadline time)
+ */
+function bankData($bank = BANK) {
+  global $testBankData;
+
+  return $testBankData ?: (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));
+}
+
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
 function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR . "/$key.html");}
@@ -1549,7 +1559,6 @@ function isCreditRule($row) {return (array_values(just('action from to amount po
 function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}
 function adminCanBit($k) {$bit = array_search($k, ray(A_LIST)); return $bit === FALSE ? u\FAIL('bad admin permission') : u\bit($bit);}
 function annualAmt() {return "tm.amount * IF(tm.period='day', 365, IF(tm.period='week', 52 / tm.periods, IF(tm.period='month', 12 / tm.periods, IF(period='quarter', 4 / tm.periods, 1))))";}
-function bankData($bank = BANK) {return (object) array_combine(ray(BANK_KEYS), explode(', ', BANK_DATA[$bank]));} // not ray() because of colons in the data
 //function eAddr($x) {return is_array($x) ? new Address(key($x), reset($x)) : $x;}
 function eAddr($x) {return is_array($x) ? '"' . reset($x) . '" <' . key($x) . '>' : $x;}
 function nick2cat($nick) {return db\get('id', 'tx_cats', compact('nick'));}

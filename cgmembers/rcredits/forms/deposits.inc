@@ -15,14 +15,14 @@ include_once R_ROOT . '/admin/admin-web.inc';
  * Offer to print checks or a deposit slip for Dollar Pool transfers to or from member bank accounts.
  */
 function formDeposits($form, &$sta, $args = NULL) {
-  global $mya, $base_url;
-  
+  global $mya;
+
   extract(just('reverse', $args, NULL));
   if ($reverse) {
     if ($reverse < today() and !$mya->admCode) {
       err(t('That transfer batch is too old to reverse (before today).'));
     } else {
-      $q = db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags & ~(1<<:B_QBOK)), x2.deposit=0, x2.bankTxId=NULL WHERE x2.deposit=:reverse', compact('reverse'));
+      $q = db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags & ~(1<<:B_QBOK)), x2.deposit=0, x2.bankTxId=NULL WHERE x2.deposit=:reverse AND x2.bankAccount IS NOT NULL', compact('reverse'));
       $cnt = $q->rowCount();
       say(t('%cnt transfers canceled.', compact('cnt')), $cnt ? NULL : 'err');
       return go('/sadmin/deposits'); // make sure we don't accidentally reverse twice
@@ -40,20 +40,29 @@ EOF;
   $res = db\rows($fields, 'txs2', "deposit=0 AND amount<>0 AND created<=:NOW"); // fails for db\get
   //  if ($res[0]) {
   extract((array) $res[0]);
-  foreach (ray('amtIn amtOut') as $k) $$k = u\fmtAmt($$k);
-  $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amtIn)<br><b>New OUT:</b> %countOut (%amtOut)', compact(ray('countIn amtIn countOut amtOut')));
   
-  if ($mya->admAch) {
-    $btns = btn("$base_url/sadmin/achs/date=0&mark=1", t('Download ACH File'));
-    $last = db\max('deposit', 'txs2', 'deposit<>0');
-    if ($last >= today()) $btns .= ' ' . lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', fmtDt($last)), clas('undo'));
-    $go = item($btns);
-  } else $go = NULL;
-  
-  $deposits = item(deposits(), ' ');
-  w\jsx('deposits', 'msg', t('Are you sure you want to undo the most recent ACH batch (from today)? If the bank already accepted it, DON\'T DO IT!!!'));
+  $subtext = "<table>\n";
+  foreach (ray('In Out') as $way) {
+    $WAY = strtoupper($way);
+    $label = "New $WAY";
+    $count = ${"count$way"};
+    $amt = u\fmtAmt(${"amt$way"});
+    
+    if ($mya->admAch) {
+      if ($count > 0) $label = w\lnk("/sadmin/deposit-details/date=0&total=$amt&count=$count&way=$WAY", $label);
+      $btn = btn(BASE_URL . '/sadmin/achs/date=0&mark=1&way=' . $WAY, t('Download ') . $WAY);
+      $last = db\max('deposit', 'txs2', 'deposit<>0 AND txid>0 AND amount' . ($way == 'In' ? '>0' : '<=0')) ?: 0;
+      $undo = $last < today() ? '' : lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', fmtDt($last)), clas('undo'));
+    } else $btn = $undo = '';
 
-  return cgform(compact(ray('title subtext go deposits')));
+    $subtext .= "<tr><td><b>$label:</b></td><td>$count</td><td>$amt</td><td>$btn</td><td>$undo</td></tr>\n";
+  }
+  $subtext .= "</table>\n";
+
+  $deposits = item(deposits(), ' ');
+  w\jsx('deposits', 'msg', t('If the bank already accepted it, DON\'T DO IT!!! Are you sure you want to undo the most recent ACH batch (from today)?'));
+
+  return cgform(compact(ray('title subtext deposits')));
 }
 
 /**
@@ -61,14 +70,13 @@ EOF;
  * for example a\deposits(0, TRUE); (to help with reconciliation)
  */
 function deposits($starting = 0, $showTxIds = FALSE) {
-  global $base_url;
   $sql = <<<EOF
     SELECT SUM(IF(amount>0 AND txid>0, amount, 0)) AS amtIn, SUM(IF(amount>0 AND txid>0, 1, 0)) AS countIn,
       SUM(IF(amount<0 AND txid>0, amount, 0)) AS amtOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
       SUM(IF(txid<0, amount, 0)) AS amtBad, SUM(IF(txid<0, 1, 0)) AS countBad,
       SUM(amount) AS amtNet, SUM(1) AS countNet,
       deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
-    FROM txs2 WHERE amount<>0 AND created<=:NOW AND created>=:starting AND bankAccount IS NOT NULL
+    FROM txs2 WHERE deposit<>0 AND amount<>0 AND created<=:NOW AND created>=:starting AND bankAccount IS NOT NULL
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
@@ -85,10 +93,10 @@ EOF;
         if ($way == 'Net' and in($amtNet, [$amtIn, $amtOut, $amtBad])) continue; // use first line for Net only if there's more than one way
         $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? fmtDt($deposit) : t('<b>TODAY</b>'));
         $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
-        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum", t('details'));
+        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum&way=$way", t('details'));
         if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers
-          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0", t('ACH'));
-          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'));
+          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0&way=$way", t('ACH'));
+          $details .= ' ' . w\btn("/sadmin/checks/date=$deposit&mark=0&limit=$count&way=$way", t('checks'));
           $xref = $deposit;
         } else $xref = '';
 

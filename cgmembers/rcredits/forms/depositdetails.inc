@@ -12,9 +12,11 @@ use CG\Web as w;
  * Show a PDF of a (populated) deposit slip for a particular Dollar Pool transfer group ("deposit") in and/or out.
  */
 function formDepositDetails($form, $sta, $args) {
-  extract(just('way date total count only', $args, NULL));
+  extract(just('way date total count', $args, NULL));
 
-  if (!$in = (!isset($way) or strtoupper($way) == 'IN')) $total = str_replace('-', '', $total);
+  $way = strtoupper(nn($way));
+  if (!in($way, 'IN OUT Net BOTH')) $way = 'IN';
+  $in = ($way == 'IN');
 
   $activity = t('Bank Transfer');
   $where = 1;
@@ -39,8 +41,9 @@ EOF;
   while ($row = $q->fetchAssoc()) {
     extract($row);
     if ($pid) $name = db\get('fullName', 'people', compact('pid')) . t(' fbo: ') . ($uid == CGID ? PROJECT : str_replace(PROJECT . ' FBO', '', $name));
-    if ($only and ($amount > 0 xor $in)) continue;
-    if ($amount < 0) {
+
+    if (!in($way, 'Net BOTH') and ($amount > 0 xor $in)) continue;
+    if ($amount <= 0) {
       $totOut += -$amount;
       $cntOut++;
       $class = ' class="neg"';
@@ -58,9 +61,10 @@ EOF;
       lnk("/history/transaction/xid=$xid", $xid), lnk("/change-account/acct=$qid", $name), number_format($amount, 2), $class, $description);
   }
   
-  $lines[] = t('<tr><td></td><td><b>NET</b> (%count)</td><td>%total</td></tr>', 'count total', $count, u\fmtAmt($total, ''));
+/*  $lines[] = t('<tr><td></td><td><b>NET</b> (%count)</td><td>%total</td></tr>', 'count total', $count, u\fmtAmt($total, ''));
   $lines[] = t('<tr><td></td><td><b>IN</b> (%cntIn)</td><td>%totIn</td></tr>', 'cntIn totIn', $cntIn, u\fmtAmt($totIn, ''));
   $lines[] = t('<tr><td></td><td><b>OUT</b> (%cntOut)</td><td>%totOut</td></tr>', 'cntOut totOut', $cntIn, u\fmtAmt($totOut, ''));
+  */
   $lines = join("\n", $lines);
   
   $hdrs = t('<tr><th>Tx #</th><th>Name</th><th>Amount</th><th>Description</th></tr>');
@@ -70,6 +74,8 @@ EOF;
   $hdrs
   $lines
   </table>
+  <br>
+  Total: ($count) $total
 X
   , BARE);
 

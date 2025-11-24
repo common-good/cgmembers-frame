@@ -20,9 +20,10 @@ const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debi
  * @params string $args: URL argument list including:
  *   date: 0 for pending transfers (the default), unixtime for a redo
  *   bank: index to BANK_DATA array; for example, BSL or CFB (defaults to the default bank)
- *   way: in or out (defaults to neither, meaning both) OR an amount to transfer from or (if <0) TO our "offshore" bank account
+ *   way: IN, OUT, or BOTH OR an amount to transfer from or (if <0) TO our "offshore" bank account
  *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
  *   balance: 1 means create a balanced file, 0 means unbalanced, omitted means use the bank's default (see BANK_DATA)
+ *   tx: a comma-separated list of specific transactions to include (NYI)
  */
 function achBatch($args) {
   global $hash;
@@ -86,6 +87,7 @@ function achBatch($args) {
     WHERE ($where) AND ABS(amount)<=$maxDailyAchTotal AND amount BETWEEN -$maxDailyAchOut AND $maxDailyAchIn
     AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
+
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $depositDt = $mark ? now() : NULL; // a single unique time for each batch
 
