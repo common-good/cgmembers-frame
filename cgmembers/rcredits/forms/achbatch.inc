@@ -40,26 +40,27 @@ function achBatch($args) {
 
   if (is_numeric($way)) { // transferring funds to or from a dedicated money storage account
     $offshore = $way;
-    $way = ' AND FALSE'; // offshore transfers should stand alone
+    $way = t('OFFSHORE');
+    $crit = ' AND FALSE'; // offshore transfers should stand alone
     $date = now() + DAY_SECS; // make sure no deposit date qualifies
   } else {
     $offshore = '';
     $today = today();
     if ($way == 'BOTH') {
       $maxDailyAchTotal -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today', compact('today'));
-      $way = '';
+      $crit = '';
     } elseif (!in($way, 'IN OUT')) {
       return softErr(t('"way" must be IN, OUT, or BOTH.'));
     } else {
       if ($way == 'IN') $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0', compact('today'));
       if ($way == 'OUT') $maxDailyAchOut -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today AND amount<=0', compact('today'));
-      $way = ' AND amount' . ($way == 'IN' ? '>0' : '<=0');
+      $crit = ' AND amount' . ($way == 'IN' ? '>0' : '<=0');
     }
   }
 
   $date = (int) $date; // prevent SQL injection
 
-  $where = "deposit=$date AND created<=:NOW" . $way; // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  $where = "deposit=$date AND created<=:NOW" . $crit; // <=:NOW lets us verify with $0 transfers before a scheduled real one
   if (!$date) $date = now();
 
   $sp = ' '; // filler for routing number in header
@@ -79,7 +80,7 @@ function achBatch($args) {
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
   $submissionDt = u\nextBizDay(($date >= today() and u\nextBizTm() > strtotime($cutoff)) ? $date : yesterday($date));
-  if (!$sameDay) $entryDate0 = u\nextBizDay($submissionDt);
+  $entryDate0 = $sameDay ? $submissionDt : u\nextBizDay($submissionDt);
   if (test()) $entryDate0 = $sameDay ? today() : tomorrow(); // make it simple for tests
   $entryDate = fmtDt($entryDate0, 'yyMMdd');
 
@@ -155,7 +156,7 @@ X;
   $id = $entryDate0 . substr($acctIn, -4); // set bankTxId to effective date (10 digits), bank account number (last 4 digits)  
   if ($depositDt) db\q('UPDATE txs2 SET bankTxId=:id WHERE deposit=:dt', ray('id dt', $id, $depositDt));
 
-  u\beginDownload(tr('%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
+  u\beginDownload(tr('%bank-20%datetime%way.ach', compact(ray('bank datetime way')))); // use full year (unlike in NACHA records)
   header('Content-Type: text/plain; charset=us-ascii'); // required for ACH files
 
   if (test()) return !$testRecs = $recs;

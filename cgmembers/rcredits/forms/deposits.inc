@@ -51,7 +51,7 @@ EOF;
     
     if ($mya->admAch) {
       $btn = btn(BASE_URL . '/sadmin/achs/date=0&mark=1&way=' . $WAY, t('Download ') . $WAY);
-      $last = db\max('deposit', 'txs2', 'deposit<>0 AND txid>0 AND amount' . ($way == 'In' ? '>0' : '<=0')) ?: 0;
+      $last = db\max('deposit', 'txs2', 'deposit<>0 AND txid>0 AND bankAccount IS NOT NULL AND amount' . ($way == 'In' ? '>0' : '<=0')) ?: 0;
       $undo = $last < today() ? '' : lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', fmtDt($last)), clas('undo'));
     } else $btn = $undo = '';
 
@@ -74,29 +74,30 @@ function deposits($starting = 0, $showTxIds = FALSE) {
     SELECT SUM(IF(amount>0 AND txid>0, amount, 0)) AS amtIn, SUM(IF(amount>0 AND txid>0, 1, 0)) AS countIn,
       SUM(IF(amount<0 AND txid>0, amount, 0)) AS amtOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
       SUM(IF(txid<0, amount, 0)) AS amtBad, SUM(IF(txid<0, 1, 0)) AS countBad,
-      SUM(amount) AS amtNet, SUM(1) AS countNet,
+      SUM(amount) AS amtBoth, SUM(1) AS countBoth,
       deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
     FROM txs2 WHERE deposit<>0 AND amount<>0 AND created<=:NOW AND created>=:starting AND bankAccount IS NOT NULL
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
-  $ways = ray('Net In Out Bad', t('Net'), t('IN'), t('OUT'), t('BAD')); // translate, don't use strtoupper
+  $ways = ray('Both In Out Bad', t('Net'), t('IN'), t('OUT'), t('BAD')); // translate, don't use strtoupper
   $q = db\q($sql, compact('starting')); // include today's potential deposit at the top
 
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $firstline = TRUE;
     foreach ($ways as $way => $wayDesc) {
+      $WAY = strtoupper($way);
       list ($total, $count) = [u\fmtAmt(${"amt$way"}, ''), number_format(${"count$way"})];
       if (!$count) continue;
       if ($firstline) {
-        if ($way == 'Net' and in($amtNet, [$amtIn, $amtOut, $amtBad])) continue; // use first line for Net only if there's more than one way
+        if ($way == 'Both' and in($amtBoth, [$amtIn, $amtOut, $amtBad])) continue; // use first line for Net only if there's more than one way
         $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? fmtDt($deposit) : t('<b>TODAY</b>'));
         $countSum = $way == 'Bad' ? $count : ($countIn + $countOut);
-        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum&way=$way", t('details'));
+        $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$countSum&way=$WAY", t('details'));
         if ($deposit) { // don't risk printing checks or sending ACHes to bank for unprocessed transfers
-          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0&way=$way", t('ACH'));
-          $details .= ' ' . w\btn("/sadmin/checks/date=$deposit&mark=0&limit=$count&way=$way", t('checks'));
+          $details .= ' ' . w\btn("/sadmin/achs/date=$deposit&mark=0&way=$WAY", t('ACH'));
+          $details .= ' ' . w\btn("/sadmin/checks/date=$deposit&mark=0&limit=$count&way=$WAY", t('checks'));
           $xref = $deposit;
         } else $xref = '';
 
