@@ -44,12 +44,12 @@ EOF;
   $subtext = "<table>\n";
   foreach (ray('In Out') as $way) {
     $WAY = strtoupper($way);
-    $label = "New $WAY";
-    $count = ${"count$way"};
     $amt = u\fmtAmt(${"amt$way"});
+    $count = ${"count$way"};
+    $label = "New $WAY";
+    if ($count > 0) $label = w\lnk("/sadmin/deposit-details/date=0&total=$amt&count=$count&way=$WAY", $label);
     
     if ($mya->admAch) {
-      if ($count > 0) $label = w\lnk("/sadmin/deposit-details/date=0&total=$amt&count=$count&way=$WAY", $label);
       $btn = btn(BASE_URL . '/sadmin/achs/date=0&mark=1&way=' . $WAY, t('Download ') . $WAY);
       $last = db\max('deposit', 'txs2', 'deposit<>0 AND txid>0 AND amount' . ($way == 'In' ? '>0' : '<=0')) ?: 0;
       $undo = $last < today() ? '' : lnk('/sadmin/deposits/reverse=' . $last, t('UNDO', 'dt', fmtDt($last)), clas('undo'));
