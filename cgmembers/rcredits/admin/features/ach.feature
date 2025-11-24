@@ -84,3 +84,21 @@ Scenario: admin downloads unbalanced ACH requests
   | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now-1d   |  
   | 5004 | .ZZC  |    300 | %now    | %now     |         0 |
   | 5005 | .ZZC  |     60 | %now    | %now     |         0 |
+
+# Rule: For repeated ACH downloads, previous requests count against limits.
+
+Scenario: admin downloads unbalanced ACH requests again
+  Given these "txs2":
+  | txid | payee | amount | created | deposit  | completed | pid | bankAccount     |*
+  | 6000 | .ZZB  |   -100 | %now-1d | %now0    | %now-1d   |     | USkk21187028102 |
+  | 6001 | .ZZA  |     -1 | %now-2w | 0        | %now-2w   |     | USkk21187028101 |
+  | 6002 | .ZZB  |   -100 | %now0   | 0        | %now0     |     | USkk21187028102 |
+  And bank data:
+  | maxDailyAchOut | 200 |**
+  When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=OUT&balance=0"
+  Then these "txs2":
+  | txid | payee | amount | created | deposit  | completed |*
+  | 5003 | .ZZB  |   -100 | %now-1d | %now     | %now-1d   |
+  | 6000 | .ZZB  |   -100 | %now-1d | %now0    | %now-1d   |
+  | 6001 | .ZZA  |     -1 | %now-2w | 0        | %now-2w   |
+  | 6002 | .ZZB  |   -100 | %now0   | 0        | %now0     |

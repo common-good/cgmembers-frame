@@ -44,7 +44,17 @@ function achBatch($args) {
     $date = now() + DAY_SECS; // make sure no deposit date qualifies
   } else {
     $offshore = '';
-    if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+    $today = today();
+    if ($way == 'BOTH') {
+      $maxDailyAchTotal -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today', compact('today'));
+      $way = '';
+    } elseif (!in($way, 'IN OUT')) {
+      return softErr(t('"way" must be IN, OUT, or BOTH.'));
+    } else {
+      if ($way == 'IN') $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0', compact('today'));
+      if ($way == 'OUT') $maxDailyAchOut -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today AND amount<=0', compact('today'));
+      $way = ' AND amount' . ($way == 'IN' ? '>0' : '<=0');
+    }
   }
 
   $date = (int) $date; // prevent SQL injection
