@@ -79,8 +79,8 @@ function achBatch($args) {
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
 
   $submissionDt = u\nextBizDay(($date >= today() and u\nextBizTm() > strtotime($cutoff)) ? $date : yesterday($date));
-  $entryDate0 = u\nextBizDay($submissionDt);
-  if (test()) $entryDate0 = tomorrow(); // make it simple for tests
+  if (!$sameDay) $entryDate0 = u\nextBizDay($submissionDt);
+  if (test()) $entryDate0 = $sameDay ? today() : tomorrow(); // make it simple for tests
   $entryDate = fmtDt($entryDate0, 'yyMMdd');
 
   $weekday = substr(WEEKDAY_LTRS, date('w', $entryDate0), 1); // track which weekday this is for, to reconcile more easily

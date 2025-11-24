@@ -691,8 +691,8 @@ function gotACH($rows) {
     '<EINPREFIX>' => $b->coIdPrefix,
     '<OFFSETACCT>' => $b->acctIn,
     '<WHEN>' => fmtDt(now(), 'MMMdd'),
-    '<W>' => substr(WEEKDAY_LTRS, date('w', tomorrow()), 1), // achbatch.inc assumes next day for tests
-    '<EFFECTIVE>' => fmtDt(tomorrow(), 'Ymd'), // entryDate
+    '<W>' => substr(WEEKDAY_LTRS, date('w', $b->sameDay ? today() : tomorrow()), 1), // achbatch.inc assumes ASAP for tests
+    '<EFFECTIVE>' => fmtDt($b->sameDay ? today() : tomorrow(), 'Ymd'), // entryDate
     '99...' => str_repeat('9', 94),
   ];
   foreach (ray('A B C') as $k) $map["BA-$k"] = substr(a("ZZ$k")->bankAccount, 4);
