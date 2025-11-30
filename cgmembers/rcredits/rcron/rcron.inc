@@ -384,7 +384,11 @@ function recur($template) {
 
   } else { // normal (member) pay or charge
     list ($fromA, $toA) = [r\acct($from), r\acct($to)];
-    if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
+    if (!$toA->ok) {
+      db\q('UPDATE tx_timed SET `end`=:NOW WHERE `to`=:to', compact('to'));
+      return r\tellAdmin(t('Terminating all recurring transactions for :fullName because account is closed', ray('fullName', $toA->fullName)), $erSubs);
+    }
+    
     if (!$fromA->ok) {
       if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
     }

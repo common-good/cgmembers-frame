@@ -234,6 +234,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     MAKE recurs ARecurringTransactionCannotBeCompletedBecauseTargetAccountIsClosed
  *     TEST risk Setup
  *     BOTH tickle MemberHasNegativeBalanceForSeveralMonths
  *     TEST trust WeCalculateTrust
@@ -440,6 +441,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
  *     BOTH recurs ARecurringPaymentCannotBeCompleted
+ *     BOTH recurs ARecurringTransactionCannotBeCompletedBecauseTargetAccountIsClosed
  *     MAKE risk Setup
  *     TEST risk WeCalculateRisks
  *     MAKE rules Setup
@@ -479,6 +481,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     TEST recurs ADelayedPaymentDoesNotHappenImmediately
  *     TEST recurs ARecurringPaymentCannotBeCompleted
+ *     TEST recurs ARecurringTransactionCannotBeCompletedBecauseTargetAccountIsClosed
  *     TEST rules RulesGetInstantiated
  *     TEST rules AnEndedTemplateHasNoEffect
  */
@@ -581,6 +584,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
  *     MAKE recurs ARecurringPaymentCannotBeCompleted
+ *     MAKE recurs ARecurringTransactionCannotBeCompletedBecauseTargetAccountIsClosed
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
  *     MAKE rules RulesGetInstantiated
