@@ -68,6 +68,7 @@ function members($list) {return t\members($list);}
  *     MAKE ach AdminDownloadsUnbalancedACHRequests
  *     MAKE ach AdminDownloadsUnbalancedACHRequestsAgain
  *     MAKE cats AdminVisitsTheSetCategoriesPage
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
  *     MAKE rules AdminVisitsTheRulesPage
@@ -160,6 +161,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE cats Setup
  *     BOTH cats AdminSetsMostCategoriesAndSendsToQBO
  *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE changes Setup
  *     MAKE changeUid Setup
  *     TEST changeUid AdminMergesTwoPersonalAccounts
@@ -276,6 +278,7 @@ function weDeleteTableRecord($tnm, $record) {
  *
  * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
  *     MAKE ach Setup
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE super AnAdminPrintsChecks
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
@@ -285,6 +288,7 @@ function memberIsSignedIn($id) {return t\isSignedIn($id);}
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
  *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE changeUid AdminViewsTheMergePage
  *     MAKE super AnAdminPrintsChecks
  *     MAKE super AMemberTriesToDoAnAdminThing
@@ -307,6 +311,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     MAKE ach Setup
  *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE checks AdminPrintsChecks
  *     MAKE super AnAdminPrintsChecks
  */
@@ -333,6 +338,7 @@ function weSayWith($type, $index, $subs) {return t\weSayWithSubs($type, $index, 
  *
  * in: MAKE cats AdminSetsMostCategoriesAndSendsToQBO
  *     MAKE cats TheRegionMakesAnInvestment
+ *     MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  *     MAKE changeUid AdminMergesTwoPersonalAccounts
  *     MAKE changeUid AdminMergesTwoCompanyAccounts
  *     MAKE changeUid VotingDuplicationPreventsMergingAccounts
@@ -462,3 +468,10 @@ function bankData($list) {
   foreach ($list[0] as $k => $v) $testBankData->$k = $v;
   return TRUE;
 }
+
+/**
+ * cron runs (ARG)
+ *
+ * in: MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
+ */
+function cronRuns($op) {return t\cronRuns($op);}

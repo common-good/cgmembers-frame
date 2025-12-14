@@ -23,7 +23,7 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
  * @param assoc $extra: extra parameters
- *   omitBankTxs: <don't handle txs for bank transfers>
+ *   omitBankTxs: <don't handle txs for bank transfers, except for non-member ACH>
  *   includeSelfTxs: <include transactions between the various $uids>
  *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are an external payment)
  *     AND B_QBOK flag off> 
@@ -43,7 +43,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
   
-  if ($omitBankTxs) $where .= ' AND t2.bankAccount IS NULL';
+  if ($omitBankTxs) $where .= ' AND (t2.bankAccount IS NULL OR t2.pid IS NOT NULL)';
   if ($catsOnly) {
     $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR x.uid1=:UID_OUTER) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());

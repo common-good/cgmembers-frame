@@ -11,8 +11,8 @@ Setup:
   | .ZZC | Our Pub  |     0 | ok,confirmed,co    |
   | .ZZF | Fox Co   |     0 | ok,confirmed,co    |
   And these "admins":
-  | uid  | vKeyE     | can                 |*
-  | .ZZA | DEV_VKEYE | v,panel,editTx,code |
+  | uid  | vKeyE     | can                                 |*
+  | .ZZA | DEV_VKEYE | ach,v,panel,editTx,code,seeDeposits |
   And these "people":
   | pid | fullName |*
   | 101 | Yoyo Yot |
@@ -29,7 +29,7 @@ Setup:
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
-  | purpose   | sponsor      |
+  | purpose   | %FS_NOTE     |
   | minimum   | 0            |
   | useMax    |              |
   | amtMax    |              |
@@ -106,9 +106,10 @@ Scenario: admin sets most categories and sends to QBO
   |  22 | cgf   |    202 | %now-5m | %now0   | %now-4m   | 102 | %T_BANK_ACCT | %now1234 |
   |  23 | cgf   |    203 | %now-5m | %now0   | %now-4m   | 102 | %T_BANK_ACCT | %now1234 |
   |  31 | .ZZC  |    301 | %now-5m | %now-4d | %now-4m   | 101 | %NUL         | 0        |
-  |  32 | cgf   |    302 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
-  |  33 | cgf   |    303 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
+  |  32 | .ZZC  |    302 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
+  |  33 | .ZZC  |    303 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
   |  41 | .ZZF  |    401 | %now-5m | %now-3d | %now-3m   | 101 | %NUL         | 0        |
+
   When member ".ZZA" submits "sadmin/set-cats" with:
   | start | %now-9m |**
   Then we say "status": "Set 39 cats."
@@ -257,3 +258,27 @@ Scenario: The region makes an investment
   Then QBO gets Tx "cg#91":"loan (CG Western MA Region Investments) [Yoyo Yot (non-member)]" dated "%ymd-5m" with entries:
   | 901 Credit ctty   | 901 Debit INVEST      |
   | 901 Debit POOL    | 901 Credit POOL-A     |
+
+Scenario: a non-member makes a recurring ACH donation to a sponsored project
+  Given these "txs":
+  | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   |*
+# non-member gifts to a fiscally sponsored project
+  | 302 |  32 | %now-5m |    302 | %UID_OUTER | .ZZC  | by ACH  |      | outer |          | gift    |
+  | 312 |  32 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
+  | 303 |  33 | %now-5m |    303 | %UID_OUTER | .ZZC  | by ACHs |      | outer |        1 | gift    |
+  | 313 |  33 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
+  And these "txs2":
+  | xid | payee | amount | created | deposit | completed | pid | bankAccount  | bankTxId |*
+  |  32 | .ZZC  |    302 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
+  |  33 | .ZZC  |    303 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |
+  And these "tx_timed":
+  | id | action | from | to   | amount | purpose | payerType | payer | payeeType | start   | period | periods |*
+  | 1  | pay    | -1   | .ZZC | 303    | by ACHs | person    | 102   | anybody   | %now-5m | day    | 1       |
+
+  When cron runs "recurs"
+  And member ".ZZA" is signed in
+  And member ".ZZA" scans admin card "DEV_VKEYPW"
+  And member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=1"
+  And member ".ZZA" submits "sadmin/set-cats" with:
+  | start | %now-9m |**
+  And member ".ZZA" visits "qbo/op=txs"

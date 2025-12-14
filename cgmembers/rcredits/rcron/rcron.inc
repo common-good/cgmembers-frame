@@ -372,6 +372,7 @@ function recur($template) {
     } else { // recurring non-member ACH (legacy)
       if (!$res = db\get('bankAccount,isSavings,payee AS txs2Payee', 'txs2 x2 JOIN txs_noreverse t USING(xid)', 'pid=:pid ORDER BY x2.created DESC', compact('pid'))) return r\tellAdmin(t('missing previous non-member payment'), $template);
       extract($res);
+
       u\EXPECT($txs2Payee == $to, 'previous recurring non-member payment: payee mismatch');
       $info += compact(ray('bankAccount isSavings'));
       $tx = be\createUsdTransfer($coA, $amount, $info);
