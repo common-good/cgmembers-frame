@@ -82,22 +82,24 @@ function formTx_validate($form, &$sta) {
   global $mya;
   $info = just('amount purpose start end paying who fullName address city state zip phone email ckDate', $sta['input'], NULL);
   extract($info);
-/*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
+/*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return txErr('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
   $uid = $a->id; */
   if (!$who) {
-    if (!$paying and !$mya->admNonmemberTx) return say(t('Only authorized %PROJECT admins can charge non-members.'), 'err');
-    if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
-    if ($zip and $err = u\badZip($zip)) return say($err, 'zip');
-    if ($phone and $err = u\badPhone($phone)) return say($err, 'phone');
-    if ($email and !u\validEmail($email)) return say('bad email', 'email');
-    if ($ckDate and $err = u\badDate($ckDate)) return say($err, 'ckDate');
+    if (!$paying and !$mya->admNonmemberTx) return txErr(t('Only authorized %PROJECT admins can charge non-members.'));
+    if ($err = u\badName($fullName)) return txErr($err, ['field' => 'fullName'], 'fullName');
+    if ($zip and $err = u\badZip($zip)) return txErr($err, 'zip');
+    if ($phone and $err = u\badPhone($phone)) return txErr($err, 'phone');
+    if ($email and !u\validEmail($email)) return txErr('bad email', 'email');
+    if ($ckDate and $err = u\badDate($ckDate)) return txErr($err, 'ckDate');
   }
   
-  if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->admEditTx ? today() - 3 * MONTH_SECS : today())) return say($err, $k);
+  if ($err = u\badAmount($amount, '>0')) return txErr($err, 'amount');
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->admEditTx ? today() - 3 * MONTH_SECS : today())) return txErr($err, $k);
   u\preray(compact(ray('fullName zip amount start end phone ckDate')), $sta['input']);
 }
+
+function txErr($msg, $subs = [], $fldName = 'err') {return say(tr($msg) . ' ' . backButton(), $subs, $fldName);}
 
 function formTx_submit($form, &$sta) {
   global $mya;
