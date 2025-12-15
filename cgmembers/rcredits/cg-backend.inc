@@ -23,7 +23,7 @@ require_once R_ROOT . '/classes/txentry.class';
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
  * @param assoc $extra: extra parameters
- *   omitBankTxs: <don't handle txs for bank transfers>
+ *   omitBankTxs: <don't handle txs for bank transfers, except for non-member ACH>
  *   includeSelfTxs: <include transactions between the various $uids>
  *   catsOnly: <include only transactions that have cat1 or cat2 set (or that are an external payment)
  *     AND B_QBOK flag off> 
@@ -43,7 +43,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
   
-  if ($omitBankTxs) $where .= ' AND t2.bankAccount IS NULL';
+  if ($omitBankTxs) $where .= ' AND (t2.bankAccount IS NULL OR t2.pid IS NOT NULL)';
   if ($catsOnly) {
     $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR x.uid1=:UID_OUTER) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
@@ -608,6 +608,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
  *   'button': paid from a CGPay button on a company website
  *   'crumbs'
  *   'gift': payment is a gift
+ *   'shortloan': payment is a short-term loan
  *   'rule': the id of the rule associated with this transaction
  *   'for': FOR_DONATE, FOR_PURCHASE, FOR_CREDIT, FOR_CREDIT50, FOR_GIVE_CREDIT, or empty
  *   'credit': amount of credit, if for=FOR_CREDIT, FOR_CREDIT50, or FOR_GIVE_CREDIT
@@ -631,7 +632,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
   extract(just('created force', $data, [now(), 0]));
-  extract(just('boxId rule cat reversesXid method', $data, NULL));
+  extract(just('boxId rule cat reversesXid method shortloan', $data, NULL));
   extract(just(TX_FLAGS . ' inv api for credit creditWhom', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
@@ -763,6 +764,11 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   
   if (in($type, 'payment, invoice payment') and $gift and $amount > 0 
     and !in($loserId, r\cgsOwnUids())) be\thanks($xid, $purpose); // gift is a TX_FLAGS flag extracted from $data
+    
+  if ($shortloan and $amount > 0) {
+    invoice($loserA, $gainerA, $amount, t('Repaying %dt loan', 'dt', fmtDt(now())), $goods);
+    w\say('loan invoice created');
+  }
   
   if ($stake and $gainerA->iclub and $stakeInfo = db\row('r_stakes', ray('uid clubid', $loserId, $gainerId))) { // stake here is a flag bit
     extract(just('stakeid stake request', $stakeInfo, 0)); // stake is now an amount

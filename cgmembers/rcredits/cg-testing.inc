@@ -281,7 +281,8 @@ function download($flnm, $wantRecs) {
 }
 
 function isSignedIn($id) {
-  global $testOnly, $mya;
+  global $testOnly, $mya, $channel;
+  if (!$testOnly) $channel = TX_WEB;
   return $testOnly ? ($mya and $mya = r\acct() and t\uid($id) == $mya->id) : t\login($id);
 }
 

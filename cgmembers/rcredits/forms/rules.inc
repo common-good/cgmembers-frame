@@ -27,6 +27,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
   list ($tnm, $url, $flds) = $rules ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
   extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
+
   if (nn($ret)) return $ret; // show list of records, if appropriate
 
   if (isset($action)) $action = array_search($action, ray(ACT_LIST));

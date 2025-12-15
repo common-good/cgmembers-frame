@@ -82,6 +82,7 @@ global $tStrings; $tStrings = array(
   'refunded you' => t('<b>Received:</b> %otherName refunded you %amount for "%payerPurpose".'),
   'paid you' => t('<b>Received:</b> %otherName paid you <b>%amount</b> for "%payeePurpose".'),
   'paid you linked' => t('<b>Received:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'paid you'
+  'loan invoice created' => t('An invoice has been created, for eventual repayment.'),
   'you invoiced' => t('<p><b>Payment Request:</b> You asked %otherName to pay %amount for "%purpose".</p>'),
   'you will be paid' => t('<p><b>Payment Request:</b> %otherName initiated a bank transfer for payment of %amount to you for "%purpose". The payment will go through once the transfer has completed.</p>'),
   'invoiced you' => t('<p><b>Payment Request:</b> %otherName requests that you pay %amount for "%purpose". <%a1>Click here to pay or to deny this request</a>. Or sign in at %CG_DOMAIN and click History, then "Pending From You".</p><p>If you have any questions or concerns about this payment request, <i>please contact %otherName</i> at %otherEmail or %otherPhone.</p>'), // can't separate out 'invoice concerns'

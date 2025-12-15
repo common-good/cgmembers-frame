@@ -35,8 +35,12 @@ input[type=number] {-webkit-appearance:textfield; -moz-appearance:textfield;}
 input.short, select.short {width:100px; display:inline-block; float:left;}
 input[type=date].short {width:150px;}
 #edit-title .btn.add,
+#edit-title .btn.search,
+#edit-title .btn.xsearch,
 #edit-title .btn.list,
 #edit-title .btn.delete {margin-left:5px; border-radius:15px; padding:0px 6px; font-weight:bold;}
+#edit-title .btn.search {margin-left:5px; border-radius:15px; padding:0px 6px; font-weight:bold;}
+#edit-title input.searchbox {margin-left:5px; border-color:#fafafa;}
 
 @keyframes puff {
     from {opacity:0; font-size:0;}
@@ -890,6 +894,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #tx .form-item-end,
 .form-item-periods {display:none;}
 .form-item-submit .btn-default {margin:0 0 0 30px;}
+#tx .form-item-amount .suffix div {display:inline-block;}
 #tx #edit-title h3,
 #frm-rules #edit-title h3 {display:inline-block; margin-right:30px;}
 #tx {display:none;}

@@ -182,7 +182,7 @@ class QB {
    * Strategy: Create a journal entry for each CG transaction.
    *
    * Except: Create a single journal entry for each ACH batch -- see sendBankTxs() below
-   * AND a separate journal entry for each credit card purchase -- see sendCCTx() below.
+   * AND a separate journal entry for each credit card purchase -- see sendTxs() below.
    * Creating an entry just for the net of the ACH batch allows easy reconciliation with the bank and CC Processor.
    * So these journal entries do not include an increase in a Dollar Pool bank account and Dollar Pool liability
    * because those other functions do that.
@@ -281,13 +281,14 @@ X;
       $TxnDate = fmtDt($effectiveDt, 'yyyy-MM-dd');
       $qbTx = new qbData\IPPJournalEntry(compact(ray('DocNumber PrivateNote TxnDate')));
 
-      $this->addTxLine($qbTx, $tx0 + ray('amt', $amtIn + $amtOut), $PrivateNote);
+      $this->addTxLine($qbTx, $tx0 + ray('amt pid', $amtIn + $amtOut, NULL), $PrivateNote);
       
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
         if (test()) $testQbTxs[] = $qbTx; else
         $this->ds->Add($qbTx);
+
         $this->sendTxs(FALSE, $deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
       }
@@ -310,7 +311,7 @@ X;
    * @param 
    */
   public function addTxLine($qbTx, $e, $desc) {
-    extract(just($flds = 'xid amt uid1 uid2 cat1 cat2 flags noBank', $e));
+    extract(just($flds = 'xid amt uid1 uid2 cat1 cat2 flags noBank pid', $e));
 
     $processorNick = $uid2 == CGID ? 'PROCESSOR' : 'FBO-PROCESSOR'; // QBO makes automatic PayPal reconciliation impossible, so we lose little by separating these
 
@@ -322,13 +323,13 @@ X;
       } else {
         $e['cat1'] = r\nick2cat('POOL-A'); // check/wire/directACH in or out of the Ctty Fund bank account
       } // either way, UID_OUTER will map to Dollar Pool Liability (POOL)
-    }
+    } elseif (nn($pid) and !$noBank and $cat1 == r\nick2cat('POOL-A')) $e['cat1'] = NULL; // no additional bank activity (beyond the deposit) for non-member ACH
 
     foreach ([2, 1] as $i) if ($e["cat$i"]) { // do recipient first (if you change this, fix how $amt negation is handled)
       if ($i == 1) $amt = -$amt; // payer loses the amount
       foreach (ray('uid cat') as $k) $$k = $e["$k$i"];
 
-      $uidNick = $uid == UID_OUTER // UID_OUTER only when called from sendCCTx()
+      $uidNick = $uid == UID_OUTER // UID_OUTER only when called from sendTxs()
       ? ($cat == CAT_CG2CG ? 'POOL-A' : 'POOL') // CC not allowed for loans
       : ($uid == UID_BANK ? 'POOL-A'
       : ((r\hasCats($uid) and $qid = r\acct($uid)->mainQid) ? $qid : 'LOANFUND'));

@@ -602,25 +602,58 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
 function crud($tnm, $args, $url, $flds, $order = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
   $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
-  extract(just("del $idFld", $args, NULL));
+  extract(just("del search $idFld", $args, ''));
 
   $id = $$idFld;
-  $msg = t('Delete this %tnm record (#%id)?', compact(ray('tnm id')));
-  jsx('crud', compact(ray('msg url id')));
   $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
   if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
   if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
-  if (is_numeric($id)) $title .= btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
+  
+  $endNow = in($tnm, 'tx_rules tx_timed'); // records in these tables get ended, not deleted
+  
+  $xBtn = btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
+  if (is_numeric($id)) $title .= $xBtn;
+  
+  if (!$id) {
+    if ($xsearch = r\cook('search')) $title .= btn('', 'xO', 'success', 'md', clas('xsearch') + ['title' => t('Previous Search')]);
+    $title .= btn('', 'O', 'success', 'md', clas('search') + ['title' => t('Search')])
+    . tr('<input type="text" class="searchbox" name="edit-search" id="edit-search"/>', compact('search'));
+  } else $xsearch = NULL;
 
   $ret = FALSE;
-  if ($id == 'add') {
+  if ($search) {
+    r\setCook('search', $search);
+    $like = str_replace(' ', '%', $search); // allow anything between words
+    $like = str_replace("'", "''", $like); // escape quote
+    $searchFlds = $idFld == 'pid' ? ['fullName', 'email', "REPLACE(phone1,'-','')"] : ray($flds);
+    foreach ($searchFlds as $k) $where[] = is_numeric($search) ? "`$k`=:like" : "`$k` LIKE :like";
+    $where = join(' OR ', nn($where));
+    if ($idFld == 'pid') $where .= ' ORDER BY fullName';
+    if (!$where or !$rows = db\rows('`' . join('`,`', ray($flds)) . '`', $tnm, "$where LIMIT 500", compact('like'))) {
+      $orig = array_fill_keys(ray($flds), NULL);
+      err(t('No such records found.'));
+      r\deleteCook('search');
+      $ret = go($url);
+    } elseif (count($rows) > 1) {
+      $ret = cgForm(ray('title list', $title, showRecords($rows, NULL, B_LIST, $url)), 'wide nolabs');
+    } else {
+      $title .= $xBtn;
+      $id = $rows[0]->id;
+      $orig = db\get('*', $tnm, compact('id'));
+    }
+  } elseif ($id == 'add') {
     $orig = array_fill_keys(ray($flds), NULL);
   } elseif ($id and $del) {
-    $DBTX = \db_transaction();
-    db\del($tnm, $idFld, $id, TRUE); // override in case this is tx_entries
-    if ($tnm == 'tx_entries') db\del($tnm, $idFld, -$id, TRUE);
-    unset($DBTX);
-    say(t('Record #%id deleted', compact('id')));
+    if ($endNow) {
+      db\update($tnm, ray('id end', $id, now()), 'id');
+      say(t('Rule ended, effective immediately.'));
+    } else {
+      $DBTX = \db_transaction();
+      db\del($tnm, $idFld, $id, TRUE); // override in case this is tx_entries
+      if ($tnm == 'tx_entries') db\del($tnm, $idFld, -$id, TRUE);
+      unset($DBTX);
+      say(t('Record #%id deleted', compact('id')));
+    }
     $ret = go($url);
   } elseif ($id and $orig = db\get('*', $tnm, compact($idFld))) {
     // nothing to do here
@@ -629,7 +662,11 @@ function crud($tnm, $args, $url, $flds, $order = NULL) {
     $list = a\showQuery($tnm, $order, '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
-  
+
+  $subs = compact(ray('tnm id'));
+  $msg = $endNow ? t('End this rule (#%id)?', $subs) : t('Delete this %tnm record (#%id)?', $subs);
+  jsx('crud', compact(ray('msg url id xsearch'))); // must be last, in case id changes
+
   return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig")));
 }
 
@@ -2345,7 +2382,6 @@ function goNextStep($step, $msg = NULL, $info = []) {
 function backButton($size = 'xs') {
   jsx('back-button'); 
   return btn('', '<span>&laquo;</span>&nbsp;' . t('Back'), '', $size, clas('btn-back'));
-//  return tr('<button class="btn btn-back btn-%size btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Back</button>', compact('size'));
 }
 
 /**

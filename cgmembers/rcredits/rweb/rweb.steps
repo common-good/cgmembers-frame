@@ -183,7 +183,9 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE stepup CommonGoodGetsAStepupDonation
  *     MAKE tx AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
- *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
+ *     MAKE tx AMemberConfirmsRequestToMakeAGift
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredPartner
+ *     MAKE tx AMemberConfirmsRequestToMakeAShorttermLoan
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  *     MAKE tx AMemberPaysAnotherMemberRepeatedly
@@ -473,6 +475,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
+ *     TEST tx AMemberConfirmsRequestToMakeAShorttermLoan
  *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST txdetail AnAdminChangesADepositedBankTransactionAmount
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
@@ -1258,7 +1261,7 @@ function statisticsGetSet($time) {
  *     MAKE sponsor Setup
  *     MAKE sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     MAKE statement Setup
- *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredPartner
  *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
@@ -1862,7 +1865,9 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     BOTH tx AMemberConfirmsRequestToPayAnotherMember
- *     BOTH tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
+ *     BOTH tx AMemberConfirmsRequestToMakeAGift
+ *     BOTH tx AMemberConfirmsRequestToPayAFiscallySponsoredPartner
+ *     BOTH tx AMemberConfirmsRequestToMakeAShorttermLoan
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     BOTH tx AMemberPaysAnotherMemberRepeatedly
@@ -2196,7 +2201,9 @@ function someoneSubmitsWith($page, $values) {return t\completeForm('?', $page, $
  *     BOTH posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
- *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredMember
+ *     MAKE tx AMemberConfirmsRequestToMakeAGift
+ *     MAKE tx AMemberConfirmsRequestToPayAFiscallySponsoredPartner
+ *     MAKE tx AMemberConfirmsRequestToMakeAShorttermLoan
  */
 function cookieIs($nm, $v) {return t\cookieIs($nm, $v);}
 

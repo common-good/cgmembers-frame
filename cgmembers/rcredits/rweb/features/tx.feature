@@ -89,15 +89,29 @@ Scenario: A member confirms request to pay another member
   | created | otherName | amount | payeePurpose |*
   | %now    | Abe One   | $100   | labor        |
   And these "txs":
-  | xid | created | amount | payer | payee | purpose      | boxId | taking |*
-  |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |
+  | xid | created | amount | payer | payee | purpose      | boxId | taking | flags |*
+  |   1 | %now    |    100 | .ZZA  | .ZZB  | labor        | 2     | 0      |       |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
   | .ZZB |     100 |
   | .ZZC |       0 |
 
-Scenario: A member confirms request to pay a fiscally sponsored member
+Scenario: A member confirms request to make a gift
+  Given cookie "box-NEWZZA" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZA |
+  When member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | isGift | purpose |*
+  | pay | Our Pub | 100    | 1      | yourock |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | boxId | taking | flags |*
+  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      | gift  |
+  
+# Payments to FS partners are always gifts
+
+Scenario: A member confirms request to pay a fiscally sponsored partner
   Given cookie "box-NEWZZA" is "abcd"
   And these "r_boxes":
   | id | channel | code | boxnum | uid  |*
@@ -106,11 +120,27 @@ Scenario: A member confirms request to pay a fiscally sponsored member
   | uid  | coFlags   |*
   | .ZZC | sponsored |
   When member ".ZZA" confirms form "tx/pay" with values:
-  | op  | who     | amount | goods      | purpose |*
-  | pay | Our Pub | 100    | %FOR_GOODS | yourock |
+  | op  | who     | amount | isGift | purpose |*
+  | pay | Our Pub | 100    | 0      | yourock |
   Then these "txs":
   | xid | created | amount | payer | payee | purpose | boxId | taking | flags    |*
   |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      | thx,gift |
+
+Scenario: A member confirms request to make a short-term loan
+  Given cookie "box-NEWZZA" is "abcd"
+  And these "r_boxes":
+  | id | channel | code | boxnum | uid  |*
+  | 2  | %TX_WEB | abcd | 12345  | .ZZA |
+  When member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | isLoan | purpose |*
+  | pay | Our Pub | 100    | 1      | yourock |
+  Then these "txs":
+  | xid | created | amount | payer | payee | purpose | boxId | taking | flags |*
+  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      |       |
+  And these "tx_requests":
+  | nvid | created | amount | payer | payee | purpose            |*
+  | 1    | %now    |    100 | .ZZC  | .ZZA  | Repaying %mdY loan |
+  And we say "status": "loan invoice created"
   
 Scenario: A member confirms request to pay another member a lot
   Given balances:

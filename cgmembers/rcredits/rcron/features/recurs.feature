@@ -203,6 +203,25 @@ Scenario: A recurring payment cannot be completed
   And count "txs2" is 1
   And count "tx_requests" is 1
 
+# Rule: recurring payments to a member end when account is closed, but transactions from persist
+
+Scenario: A recurring transaction cannot be completed because target account is closed
+  Given members have:
+  | uid  | flags |*
+  | .ZZB |       |
+  And these "tx_timed":
+  | id | start   | from | to   | amount | period | purpose | end |*
+  |  8 | %now-4m | .ZZA | .ZZB |    200 | week   | pmt     |     |
+  |  9 | %now-3m | .ZZB | .ZZC |    200 | week   | pmt     |     |
+  | 10 | %now-3d | .ZZC | .ZZB |    200 | week   | pmt     |     |
+  When cron runs "recurs"
+  Then count "txs" is 1
+  And these "tx_timed":
+  | id | end  |*
+  |  8 | %now |
+  |  9 |      |
+  | 10 | %now |
+
 Skip because member should be allowed to be invoiced?
 Scenario: A recurring payment invoice cannot be completed because member is uncarded
   Given these "tx_requests":

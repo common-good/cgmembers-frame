@@ -120,11 +120,19 @@ function doit(what, vs) {
     break;
     
   case 'crud':
-    var url = baseUrl + '/' + vs['url'];
+    var url = baseUrl + '/' + vs['url']; // assume url ends in <idFnm>=
     var id = vs['id'];
-    if (id) $('#edit-title .btn.list').click(function () {location.href = url + '';});
+
+    if (id) $('#edit-title .btn.list').click(function () {location.href = url.substring(0, url.lastIndexOf('/'));});
     $('#edit-title .btn.add').click(function () {location.href = url + '=add';});
-    if (id) $('#edit-title .btn.delete').click(function () {return yesGo(url + '=' + vs['id'] + '&del=1', vs['msg']);});
+    if (id) $('#edit-title .btn.delete').click(function () {return yesGo(url + '=' + id + '&del=1', vs['msg']);});
+    
+    $('.search').click(function () {$('.searchbox').show().focus();});
+    $('.searchbox').hide().change(function () {
+      fform(this).on('submit', function (e) {e.preventDefault();});
+      location.href = url + '=search&search=' + $(this).val();
+    });
+    $('.xsearch').click(function () {location.href = url + '=search&search=' + vs['xsearch'];}); // repeat previous search
     break;
   
   case 'message':
