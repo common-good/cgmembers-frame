@@ -47,7 +47,11 @@ function formTx($form, &$sta, $type, $args = '') {
   $email = emailFld(t('Email:'), [t('Email address')]);
   $addr = fieldSet('addr', compact(ray('fullName address city state zip phone email')), BARE);
 
-  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix(rent(boxFld('isGift', '', t('this is a donation'), NULL, notab()))));
+  $suffix = t('This is: ')
+  . rent(boxFld('isGift', '', t('a donation'), NULL, notab()))
+  . rent(boxFld('isLoan', '', t('a short-term loan'), NULL, notab()));
+  
+  $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix($suffix));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
   $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card')));
   $ckNumber = textFld(t('Ck Number:'));
@@ -80,7 +84,7 @@ function formTx($form, &$sta, $type, $args = '') {
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('amount purpose start end paying who fullName address city state zip phone email ckDate', $sta['input'], NULL);
+  $info = just('amount purpose start end periods paying who fullName address city state zip phone email ckDate isGift isLoan', $sta['input'], NULL);
   extract($info);
 /*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return txErr('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
@@ -96,6 +100,9 @@ function formTx_validate($form, &$sta) {
   
   if ($err = u\badAmount($amount, '>0')) return txErr($err, 'amount');
   foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->admEditTx ? today() - 3 * MONTH_SECS : today())) return txErr($err, $k);
+  if ($start > now() or $periods > 0) if ($isLoan) return txErr(t('A loan cannot be delayed or repeated.'));
+  if ($isGift and $isLoan) return txErr(t('A payment cannot be both a gift and a loan.'));
+  
   u\preray(compact(ray('fullName zip amount start end phone ckDate')), $sta['input']);
 }
 
@@ -104,7 +111,7 @@ function txErr($msg, $subs = [], $fldName = 'err') {return say(tr($msg) . ' ' . 
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift method ckNumber ckDate', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift isLoan method ckNumber ckDate', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
   if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat]; // if $paying and !$who, cat is cat2 with a negative amount
 
@@ -155,7 +162,8 @@ function formTx_submit($form, &$sta) {
     if ($start and $start < today()) $data['created'] = $start; // admin chose a date in the past
     if ($cat) $data += compact('cat');
     if ($isGift) $data['gift'] = TRUE;
-
+    if ($isLoan) $data['shortloan'] = TRUE;
+    
     $z = $paying
     ? $mya->payApproved($uid, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL)
     : be\invoice($mya, $a, $amount, $purpose, $goods, $data, $repeats ? $recursId : NULL);

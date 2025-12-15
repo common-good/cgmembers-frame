@@ -2382,7 +2382,6 @@ function goNextStep($step, $msg = NULL, $info = []) {
 function backButton($size = 'xs') {
   jsx('back-button'); 
   return btn('', '<span>&laquo;</span>&nbsp;' . t('Back'), '', $size, clas('btn-back'));
-//  return tr('<button class="btn btn-back btn-%size btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Back</button>', compact('size'));
 }
 
 /**

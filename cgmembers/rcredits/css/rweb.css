@@ -894,6 +894,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #tx .form-item-end,
 .form-item-periods {display:none;}
 .form-item-submit .btn-default {margin:0 0 0 30px;}
+#tx .form-item-amount .suffix div {display:inline-block;}
 #tx #edit-title h3,
 #frm-rules #edit-title h3 {display:inline-block; margin-right:30px;}
 #tx {display:none;}
