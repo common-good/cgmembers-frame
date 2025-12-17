@@ -37,7 +37,7 @@ Scenario: admin visits the Bank Transfers page:
 
 Scenario: admin downloads balanced ACH requests
   When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=1"
-  Then we download "<BANK>-<NOW>.ach" with "ACH" records:
+  Then we download "<BANK>-<NOW>BOTH.ach" with "ACH" records:
   
 # const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
 # const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, companyId:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7';
@@ -66,7 +66,7 @@ Scenario: admin downloads balanced ACH requests
 
 Scenario: admin downloads unbalanced ACH requests
   When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=0"
-  Then we download "<BANK>-<NOW>.ach" with "ACH" records:
+  Then we download "<BANK>-<NOW>BOTH.ach" with "ACH" records:
   | 1,01, ,<BANKROUTE>, ,%CGF_EIN,<DATETIME>,0,094,10,1,<BANK>,<ORIGIN>, |
   | 5,200,<ORIGIN>,,,<EINPREFIX>%CGF_EIN,PPD,CGCredit <W>,<WHEN>,,,1,<BANKROUT>,0000001 |
   | 6,22,BA-B,100,NEWZZB,Bea Two,0,<BANKROUT>,0000001 |
