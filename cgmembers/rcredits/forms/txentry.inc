@@ -10,7 +10,6 @@ use CG\Db as db;
  * CRUD for tx_entries_all
  */
  
-const E_URL = 'sadmin/tx-entry/id';
 const E_FLDS = 'id amount uid agentUid xid entryType description cat rule relatedId relType';
 const E_TNM = 'tx_entries';
  
@@ -18,7 +17,7 @@ function formTxEntry($form, &$sta, $args = '') {
   global $mya;
   
   foreach (ray(E_FLDS) as $k) $$k = NULL;
-  extract(crud(E_TNM, $args, E_URL, E_FLDS)); // get ret or [title, orig, id, and $flds]
+  extract(crud(E_TNM, $args, 'id', E_FLDS)); // get ret or [title, orig, id, and $flds]
   if (nn($ret)) return $ret; // show list of records, if appropriate
 
   foreach (ray('uid agentUid') as $k) if (isset($$k) and !is_numeric($$k)) $$k = db\get('fullName', 'users', ['uid' => $$k]);

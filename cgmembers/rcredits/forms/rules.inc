@@ -14,19 +14,17 @@ use CG\Db as db;
 const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
 const TIMED_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId';
 const RULE_FLDS = BOTH_FLDS . ' template code';
-const EITHER_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId template code tnm url flds';
+const EITHER_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId template code tnm flds';
 const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code stripeId';
 const ZERO_FLDS = 'amount portion minimum start flags';
-const RULES_URL = 'sadmin/rules/id';
-const TIMED_URL = 'sadmin/timed/id';
 
 function formRules($form, &$sta, $type = '', $args = '') {
   global $mya;
 
   $rules = ($type == 'rules');
   foreach (ray(EITHER_FLDS) as $k) $$k = NULL;
-  list ($tnm, $url, $flds) = $rules ? ['tx_rules', RULES_URL, RULE_FLDS] : ['tx_timed', TIMED_URL, TIMED_FLDS];
-  extract(crud($tnm, $args, $url, $flds)); // get ret or [title, orig, id, and $flds]
+  list ($tnm, $flds) = $rules ? ['tx_rules', RULE_FLDS] : ['tx_timed', TIMED_FLDS];
+  extract(crud($tnm, $args, 'id', $flds)); // get ret or [title, orig, id, and $flds]
 
   if (nn($ret)) return $ret; // show list of records, if appropriate
 
@@ -69,7 +67,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
     $code = $template = NULL;
   }
   
-  foreach (ray('tnm flds url id') as $k) $$k = hidFld($$k);
+  foreach (ray('tnm flds id') as $k) $$k = hidFld($$k);
   $submit = t('Submit');
   jsx('rules');
 
@@ -77,7 +75,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
 }
 
 function formRules_validate($form, &$sta) {
-  list ($tnm, $flds, $url, $input) = getStuff($sta);
+  list ($tnm, $flds, $input) = getStuff($sta);
   extract($input);
 
   foreach (ray(ZERO_FLDS) as $k) if (!isset($$k) or !$$k) $$k = 0;
@@ -104,7 +102,7 @@ function formRules_validate($form, &$sta) {
 }
 
 function formRules_submit($form, &$sta) {
-  list ($tnm, $flds, $url, $input) = getStuff($sta);
+  list ($tnm, $flds, $input) = getStuff($sta);
 
   extract($input);
   foreach (just(NULL_FLDS, $input) as $k => $v) if (empty($v)) $input[$k] = NULL;
@@ -116,11 +114,11 @@ function formRules_submit($form, &$sta) {
     db\insert($tnm, $input, 'id');
   }
 
-  return go("/$url", 'info saved');
+  return go('sadmin/' . ($tnm = 'tx_rules' ? 'rules' : 'timed'), 'info saved');
 }
 
 function getStuff($sta) {
-  extract(just('tnm flds url', $input = $sta['input'], NULL));
+  extract(just('tnm flds', $input = $sta['input'], NULL));
   $input = just($flds, $input, NULL);
-  return [$tnm, $flds, $url, $input];
+  return [$tnm, $flds, $input];
 }

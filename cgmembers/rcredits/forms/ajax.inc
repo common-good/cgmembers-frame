@@ -32,14 +32,19 @@ function ajax($args = NULL) {
   }
 
   if ($data) $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
-/**/  if ($op != 'suggestWho') u\loga('debug', compact(ray('op myid aid')) + ($data ?: [])); // pass data as array so its NOLOG args get hidden
+/**/  if (!in($op, 'suggestWho suggestNonmember')) u\loga('debug', compact(ray('op myid aid')) + ($data ?: [])); // pass data as array so its NOLOG args get hidden
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
-      
+    
+    case 'suggestNonmember':
+    /*  foreach (ray('fullName email phone, fullName address city state zip') as $flds) {
+          if ($orig = db\row('*', 'people', compact(ray($flds)))) break;
+        } */
+        
     case 'signinThenPay':
       $url = BASE_URL . '/' . w\first('signin', 'ccpay/code=' . u\cryRay($data));
       return ajaxRet(compact('url'));

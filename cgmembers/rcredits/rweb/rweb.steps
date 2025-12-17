@@ -278,6 +278,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE download Setup
  *     MAKE fbo Setup
  *     MAKE flow Setup
+ *     MAKE fsgrants Setup
  *     MAKE investinterest Setup
  *     TEST investinterest ANonmemberExpressesInterest
  *     MAKE invest Setup
@@ -421,6 +422,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST fbo ANonmemberDonatesToASponsoredMemberByWireTransfer
  *     TEST fbo ANonmemberDonatesToCommonGood
  *     TEST fbo ASponsoredMemberPaysANonmember
+ *     TEST fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
+ *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest TheClubAddsAProposedInvestment
@@ -605,6 +608,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST fbo ASponsoredMemberViewsTheirTransactionHistory
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     TEST flow AJointAccountSlaveMemberDraws
+ *     TEST fsgrants ASponsoredPartnerVisitsTheGrantsPage
+ *     TEST fsgrants ASponsoredPartnerAddsAnExpectedGrant
+ *     TEST fsgrants AnAdministratorViewsAnExpectedGrant
  *     TEST investinterest AMemberExpressesInterest
  *     TEST investinterest ANonmemberExpressesInterest
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -731,6 +737,7 @@ function with($content) {return weShow($content);}
  *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
+ *     TEST fsgrants ASponsoredPartnerAddsAnExpectedGrant
  *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
@@ -818,6 +825,7 @@ function withoutOptions($options) {
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE flow Setup
+ *     TEST fsgrants Setup
  *     MAKE invest Setup
  *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
  *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
@@ -1773,6 +1781,10 @@ function weScripWithSubs($script, $args = []) {
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
+ *     MAKE fsgrants Setup
+ *     TEST fsgrants ASponsoredPartnerAddsAnExpectedGrant
+ *     TEST fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
+ *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
  *     MAKE invest Setup
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     BOTH invest AMemberBuysAStakeInTheClub
@@ -2417,6 +2429,9 @@ function memberAjaxWith($id, $op, $ray) {
  *     MAKE fbo ASponsoredMemberViewsTheirTransactionHistory
  *     MAKE fbo ASponsoredOrganizationMovesCreditToTheBank
  *     MAKE flow AJointAccountSlaveMemberDraws
+ *     MAKE fsgrants ASponsoredPartnerVisitsTheGrantsPage
+ *     MAKE fsgrants ASponsoredPartnerAddsAnExpectedGrant
+ *     MAKE fsgrants AnAdministratorViewsAnExpectedGrant
  *     MAKE invoice APayeeMarksAnInvoicePaidManually
  *     MAKE invoice APayeeReopensAnInvoice
  *     MAKE joint AMemberAsksToCreateAJointAccountByClickingALinkOnTheDashboardPage
@@ -2499,6 +2514,9 @@ function nextCaptchaIs($ca) {
  *     MAKE fbo ASponsoredMemberChargesAMember
  *     MAKE fbo AMemberPaysASponsoredMemberEverythingTheyHave
  *     MAKE fbo AMemberPaysASponsoredOrganization
+ *     MAKE fsgrants ASponsoredPartnerAddsAnExpectedGrant
+ *     MAKE fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
+ *     MAKE fsgrants AnAdminMarksADocumentedGrantReceived
  *     MAKE joint AMemberAsksToJoinAnExistingAccount
  *     MAKE joint AMemberAsksToJoinToSelf
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship

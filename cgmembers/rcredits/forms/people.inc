@@ -6,8 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const PEOPLE_FLDS = 'displayName fullName email phone address city state zip method source latitude longitude notes stripeCid'; // just the fields we handle here (and omitting pid)
-const PEOPLE_URL = 'sadmin/people/pid';
+const PEOPLE_FLDS = 'pid displayName fullName email phone address city state zip method source latitude longitude notes stripeCid'; // just the fields we handle here
 
 /**
  * Display contact info for a non-member, for editing by admin.
@@ -15,7 +14,7 @@ const PEOPLE_URL = 'sadmin/people/pid';
 function formPeople($form, &$sta, $args = '') {
   global $mya;
 
-  extract(crud('people', $args, PEOPLE_URL, PEOPLE_FLDS)); // get ret or [title, orig, id, and PEOPLE_FLDS]
+  extract(crud('people', $args, 'pid', PEOPLE_FLDS)); // get ret or [id, title, orig]
   if (nn($ret)) return $ret;
 
   $displayName = textFld(t('Display Name:'), '', dft($displayName));
@@ -39,6 +38,7 @@ function formPeople($form, &$sta, $args = '') {
   
   $submit = submit();
   $orig = hidFlds($orig);
+  $pid = hidFlds($pid);
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
   $form = compact(ray('title ' . PEOPLE_FLDS . ' submit orig'));
@@ -77,5 +77,5 @@ function formPeople_submit($form, &$sta) {
   
   db\updateOrInsert('people', $info, 'pid');
   say('info saved');
-  return go(PEOPLE_URL);
+  return go('sadmin/people');
 }
