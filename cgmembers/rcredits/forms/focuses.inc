@@ -7,16 +7,15 @@ use CG\Util as u;
 use CG\Db as db;
 
 const FOCUSES_FLDS = 'uid project percent'; // just the fields we handle here
-const FOCUSES_URL = 'sadmin/focuses/id';
 
 /**
- * Display contact info for a non-member, for editing by admin.
+ * Display work focus percentages for each staff member.
  * NOTE: not currently used (we use an audit spreadsheet tab instead)
  */
 function formFocuses($form, &$sta, $args = '') {
   global $mya;
 
-  extract(crud('u_focuses', $args, FOCUSES_URL, FOCUSES_FLDS, 'uid, project')); // get ret or [title, orig, id, and FOCUSES_FLDS]
+  extract(crud('u_focuses', $args, 'id', FOCUSES_FLDS, 'uid, project')); // get ret or [title, orig, id, and FOCUSES_FLDS]
   if (nn($ret)) return $ret;
 
   $who = textFld(REQ . t('Staff Member:'), [t('Full name')], dft($uid ? r\acct($uid)->mainQid : NULL));
@@ -45,5 +44,5 @@ function formFocuses_submit($form, &$sta) {
   db\updateOrInsert('u_focuses', $info, 'id');
 
   say('info saved');
-  return go(FOCUSES_URL);
+  return go('sadmin/focuses');
 }

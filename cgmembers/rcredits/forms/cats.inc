@@ -7,7 +7,6 @@ use CG\Util as u;
 use CG\Db as db;
 
 const CAT_FLDS = 'id category description externalId nick show'; // just the fields we handle here (and omitting pid)
-const CAT_URL = 'sadmin/cats/id';
 
 /**
  * Edit Budget Categories (for interface with QuickBooks, 990, etc.)
@@ -15,7 +14,7 @@ const CAT_URL = 'sadmin/cats/id';
 function formCats($form, &$sta, $args = '') {
   
   if (!db\exists('tx_cats')) return goFirst('qbo/op=accounts');
-  extract(crud('tx_cats', $args, CAT_URL, CAT_FLDS, 'id ASC')); // get ret or [title, orig, id, and CAT_FLDS]
+  extract(crud('tx_cats', $args, 'id', CAT_FLDS, 'id ASC')); // get ret or [title, orig, id, and CAT_FLDS]
   if (nn($ret)) return $ret;
   
   $title = t('Accounting Categories');

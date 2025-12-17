@@ -286,6 +286,14 @@ function doit(what, vs) {
     
     break;
     
+  case 'fsgrants':
+    toggleCkFlds(vs);
+    $('.form-item-method input').click(function () {
+      if (toggleCkFlds(vs)) $('.form-item-ckNumber input').focus();
+    });
+    $('.form-item-amount input').change(function () {$('.form-item-documented').toggle(this.value >= vs['undocMax'])});
+    break;
+    
   case 'tx':
     var pay;
     var purpose = $('#edit-purpose');
@@ -349,19 +357,15 @@ function doit(what, vs) {
       reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
       reqQ($('.form-item-method'), !member && !pay, vs['admin'] == 1);
       $('.form-item-amount .suffix').toggle(member ? pay : !pay); // logic for isGift option is reversed for non-members (received can be a gift, but not payments)
-      toggleCkFlds();
+      toggleCkFlds(vs);
+
       if (!member && !pay) {
         $('.form-item-isGift input').prop('checked', true); // non-member
         $('.form-item-method input').click(function () {
-          toggleCkFlds();
-          if (isCheck) $('.form-item-ckNumber input').focus();
+          if (toggleCkFlds(vs)) $('.form-item-ckNumber input').focus();
         });
         $('#edit-method-' + vs['methodDft']).click(); // set default
       }
-    }
-    function toggleCkFlds() {
-      var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
-      $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
     }
     break;
 
@@ -1145,6 +1149,12 @@ function reqQ(fld, show, optional) {
   } else {
     if(show) req(fld); else reqNot(fld);
   }
+}
+
+function toggleCkFlds(vs) {
+  var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
+  $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
+  return isCheck;
 }
 
 function confirmTip(vs, val) {

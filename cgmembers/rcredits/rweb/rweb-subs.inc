@@ -403,7 +403,7 @@ define('FMT_INT', 'trust count');
 /**
  * Show a formatted list of the given records.
  * @param assoc $ray: the key/value pairs
- * @param string $formatFunc: the function used to format the field data
+ * @param string $formatFunc: the function used to format the field data function (k, v, flags)
  * @param string $flagsField: a list of bit names, defined as B_ constants
  * @param string $url: page for editing, followed by /$idFld or &$idFld where $idFld is the name of a clickable id field (for editing)
  * @return: the formatted output
@@ -413,15 +413,18 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
 
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
 
-  u\setDft($formatFunc, 'CG\\Web\\formatField');
+  u\setDft($formatFunc, 'CG\\Admin\\formatField');
   $idFld = ($url and $urlRay = preg_split('~[/&]~', $url)) ? $urlRay[count($urlRay) - 1] : '';
-  $first = (array)reset($ray);
-  $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
+  $first = array_keys((array)reset($ray));
+  
+  $lines[] = '<tr><th>' . join('</th><th>', $first) . "</th></tr>\n";
+  
   foreach ($ray as $row) {
     $line = '';
     foreach ($row as $k => $v) {
-      $v = $formatFunc($k, plain($v), $flags);
-//      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
+      $v = plain($v);
+      $v = $k == $idFld ? "<a href=\"$base_url/$url=$v\">$v</a>" : $formatFunc($k, $v, $flags);
+
       $align = (is_numeric(plain($v)) or in($k, ALIGN_RIGHT)) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
       foreach (ray('balance bal credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
         $align = 'R';
@@ -430,7 +433,6 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
         
 //      if (in_array($k, ray(FMT_INT))) $v = round($v);
 //      if (in_array($k, ray(FMT_2D)) or strhas($k, '$')) if ($v != '') $v = number_format($v, 2);
-      if ($k == $idFld) $v = "<a href=\"$base_url/$url=$v\">$v</a>";
       $line .= "  <td class=\"align$align\">$v</td>\n";
     }
     $lines[] = $line;
@@ -441,7 +443,7 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
 /**
  * Return the given field, formatted for viewing.
  * Unlike a\formatField, the third argument ($flagsField) is ignored.
- */
+ *//* use a\formatField instead
 function formatField($k, $v) {
   $v = $v . ''; // convert to string
 
@@ -449,7 +451,7 @@ function formatField($k, $v) {
   if ($k == 'phone') $v = u\fmtPhone($v);
   if ($k == 'account') $v = $v ? r\qid($v) : '';
   return $v;
-}
+}*/
 
 /**
  * Create a Drupal field array.
@@ -588,21 +590,28 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
 /**
  * Handle CRUD for a standard form.
  * @param string $tnm: table name -- also the title for the form
- * @param string $args: URL parameters
- * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @param string $args: URL parameters ($idFld, del, search, crit)
+ *   where crit is optional criteria for record selection (do not allow user input for crit)
+ * @param string $idFld: name of ID field of the dataset
  * @param string $flds: list of fields to extract for display and edit
  * @param string $order: list order (defaults to <id field> DESC)
+ * @param function $callback: function (k, v) called for each field value (called with (NULL, fnm) for field header)
  * @return parameters to extract in the form:
  *   ret: what to return from the form OR
  *
  *   id: the record id
  *   title: form title
  *   orig: original values of the requested record
+ *   url: the page URL
+ *   
  */
-function crud($tnm, $args, $url, $flds, $order = NULL) {
+function crud($tnm, $args, $idFld, $flds, $order = NULL, $callback = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
-  $idFld = ($url and $urlRay = explode('/', $url)) ? $urlRay[count($urlRay) - 1] : '';
-  extract(just("del search $idFld", $args, ''));
+
+  extract(just("del search $idFld crit", $args, ''));
+  $url = strstr($_SERVER['REQUEST_URI'] . "/$idFld", "/$idFld", TRUE) . "/$idFld"; // URL for editing or other operations
+  if (strhas($crit, ';')) return hack(t('Caller attempted code injection in crud'));
+  if (!$crit) $crit = '1'; // return all records if no criteria
 
   $id = $$idFld;
   $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
@@ -613,7 +622,7 @@ function crud($tnm, $args, $url, $flds, $order = NULL) {
   
   $xBtn = btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
   if (is_numeric($id)) $title .= $xBtn;
-  
+
   if (!$id) {
     if ($xsearch = r\cook('search')) $title .= btn('', 'xO', 'success', 'md', clas('xsearch') + ['title' => t('Previous Search')]);
     $title .= btn('', 'O', 'success', 'md', clas('search') + ['title' => t('Search')])
@@ -621,26 +630,28 @@ function crud($tnm, $args, $url, $flds, $order = NULL) {
   } else $xsearch = NULL;
 
   $ret = FALSE;
-  if ($search) {
+  if ($search = trim($search)) {
     r\setCook('search', $search);
-    $like = str_replace(' ', '%', $search); // allow anything between words
-    $like = str_replace("'", "''", $like); // escape quote
-    $searchFlds = $idFld == 'pid' ? ['fullName', 'email', "REPLACE(phone1,'-','')"] : ray($flds);
-    foreach ($searchFlds as $k) $where[] = is_numeric($search) ? "`$k`=:like" : "`$k` LIKE :like";
-    $where = join(' OR ', nn($where));
+    if (is_numeric($search)) {
+      $like = $search;
+    } else {
+      $like = str_replace(' ', '%', "%$search%"); // allow anything between words
+      $like = str_replace("'", "''", $like); // escape quote
+    }
+    $searchFlds = $idFld == 'pid' ? ['fullName', 'email', "REPLACE(phone,'-','')", 'city'] : ray($flds);
+    foreach ($searchFlds as $k) {
+      if (!strhas($k, '(')) $k = "`$k`";
+      $where[] = is_numeric($search) ? "$k=:like" : "$k LIKE :like";
+    }
+    $where = '(' . join(' OR ', nn($where)) . ')';
     if ($idFld == 'pid') $where .= ' ORDER BY fullName';
-    if (!$where or !$rows = db\rows('`' . join('`,`', ray($flds)) . '`', $tnm, "$where LIMIT 500", compact('like'))) {
+
+    if (!$rows = db\rows('`' . join('`,`', ray($flds)) . '`', $tnm, "($crit) AND $where LIMIT 500", compact('like'))) {
       $orig = array_fill_keys(ray($flds), NULL);
       err(t('No such records found.'));
       r\deleteCook('search');
       $ret = go($url);
-    } elseif (count($rows) > 1) {
-      $ret = cgForm(ray('title list', $title, showRecords($rows, NULL, B_LIST, $url)), 'wide nolabs');
-    } else {
-      $title .= $xBtn;
-      $id = $rows[0]->id;
-      $orig = db\get('*', $tnm, compact('id'));
-    }
+    } else $ret = cgForm(ray('title list', $title, showRecords($rows, $callback, B_LIST, $url)), 'wide nolabs');
   } elseif ($id == 'add') {
     $orig = array_fill_keys(ray($flds), NULL);
   } elseif ($id and $del) {
@@ -659,7 +670,8 @@ function crud($tnm, $args, $url, $flds, $order = NULL) {
     // nothing to do here
   } else {
     u\setDft($order, "$idFld DESC");
-    $list = a\showQuery($tnm, $order, '*', $tnm == 'tx_cats' ? '' : 'uid', $url);
+    $list = a\showQuery("(SELECT * FROM $tnm WHERE $crit) showq", $order, 'showq.*', $tnm == 'tx_cats' ? '' : 'uid', $url, $callback);
+
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }
 
@@ -667,7 +679,7 @@ function crud($tnm, $args, $url, $flds, $order = NULL) {
   $msg = $endNow ? t('End this rule (#%id)?', $subs) : t('Delete this %tnm record (#%id)?', $subs);
   jsx('crud', compact(ray('msg url id xsearch'))); // must be last, in case id changes
 
-  return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig")));
+  return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig url")));
 }
 
 function NEWitem($value, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('value') + $other);}

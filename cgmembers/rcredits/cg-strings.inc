@@ -313,6 +313,8 @@ EOF
   'customer credit canceled' => t('%customer\'s credit of (originally) %amount has been canceled.'),
   'got application' => t('<p>Your application has been received! A %PROJECT staff member will contact you soon, to follow up.</p>'),
   'meanwhile join' => t('<p>Meanwhile, if you\'re not yet in %PROJECT, <a href="%PROMO_URL" target="_blank">check it out</a>!</p>'),
+  'funds distributed' => t('Funds have been distributed to the sponsored project.'),
+
   
   // error messages
   'no deactivate' => t('You cannot de-activate an account with a non-zero balance.'),

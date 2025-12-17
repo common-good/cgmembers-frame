@@ -227,6 +227,7 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     'admins:uid:D',
     'changes:rid:D', // sometimes rid is a uid
     'changes:changedBy:D',
+    'grants:uid',
     // ofac
     'people:uid',
     // phinxlog
@@ -547,18 +548,29 @@ define('ID_KEYS', 'id uid uid1 uid2 t.uid myid payer payee main other inviter in
  * Return the given field, formatted for viewing.
  */
 function formatField($k, $v, $flagsField = B_LIST) {
-  global $base_url;
+  global $base_url, $mya;
   $v = $v . ''; // convert to string
+  
+  if (u\crypted('P', $v)) $v = u\decry('P', $v); // decrypt phone and email
+  if ($k == 'phone') return u\fmtPhone($v);
+  if ($k == 'account') return $v ? r\qid($v) : '';
+  
   if ($v and in($k, ID_KEYS) and is_numeric($v) and strlen($v) >= strlen(CGID) - 1) { // note that some uids are a little shorter or longer than CGID
-    if ($a = r\acct($v)) $v = $k == 'uid' ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v); else $v .= t(' (missing)'); // eg, when uid is changed
-  } // member ID. Don't include agent/payerAgent/etc. here
-  if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
-  if ($v and in($k, R_DATE_FLDS)) {
-    $v = '<div class="date-field">' . fmtDt($v, 'ddMMM') . '<span class="year-field">\'' . fmtDt($v, 'yy') . '<br>' . fmtTime($v) . '</span></div>';
-  } elseif (in($k, 'flags can')) {
-    $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
-    $v = "<div class=\"format-flags\">$flags</div>";
+    if ($a = r\acct($v)) {
+      return ($mya->admin and $k == 'uid') ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v);
+    } else $v .= t(' (missing)'); // eg, when uid is changed
   }
+  
+  if ($v and $k == 'pid' and is_numeric($v)) $v = db\get('fullName', 'people', ray('pid', $v));
+  
+  if ($v and $k == 'channel') return u\rayv(ray(TX_CHANNELS), $v);
+  if ($v and in($k, R_DATE_FLDS)) return '<div class="date-field">' . fmtDt($v, 'ddMMM') . '<span class="year-field">\'' . fmtDt($v, 'yy') . '<br>' . fmtTime($v) . '</span></div>';
+
+  if (in($k, 'flags can')) {
+    $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
+    return "<div class=\"format-flags\">$flags</div>";
+  }
+
   return $v;
 }
 
@@ -572,7 +584,7 @@ function formatField($k, $v, $flagsField = B_LIST) {
  * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
  * @return: the formatted output
  */
-function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = '') {
+function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = '', $callback = 'CG\\Admin\\formatField') {
   global $mya;
   
   $limit = 500; // max records to show
@@ -583,18 +595,19 @@ function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = 
     if ($table != 'users') {
       if (!is_array($joinFields)) $joinFields = ray($joinFields);
       $fieldCount = count($joinFields);
-      $table .= ' t';
+      if (!strhas($table, ' ')) $table .= ' showq';
       $crit = null;
       for ($fieldI = 0; $fieldI < $fieldCount; $fieldI++) {
-        $table .= " INNER JOIN users u$fieldI ON u$fieldI.uid=t." . $joinFields[$fieldI];
+        $table .= " INNER JOIN users u$fieldI ON u$fieldI.uid=showq." . $joinFields[$fieldI];
         $crit = (is_null($crit) ? '' : "$crit OR ") . "u$fieldI.community=$mya->community";
       }
       $where .= " AND ($crit)";
     } else { $where .= " AND community=$mya->community"; }
-  } else $fields = str_replace('t.', '', $fields);
+  } else $fields = str_replace('showq.', '', $fields);
 
   if ($order) $where .= " ORDER BY $order";
-  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), 'CG\\Admin\\formatField', $flagsField, $url);
+
+  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), $callback, $flagsField, $url);
 }
 
 /**

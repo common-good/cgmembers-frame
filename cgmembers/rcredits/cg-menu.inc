@@ -102,6 +102,8 @@ function menu($submenu = '') {
     'co/relations' => ['sub', t('Authorized Users'), 'Relations 2', 'manage -depends', '', t(), 'magnet'],
     'co/reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
     'co/settings' => ['sub', t('Company Settings'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
+    'co/grants' => ['sub', t('Grants Expected'), 'FSGrants', 'co sponsored', '', t(), 'inbox'], // see also co/fsgrants below
+    'co/fsgrants' => ['call', t('Grants Expected'), 'FSGrants', 'admNonmemberTx', '', t(), 'inbox'],
     'co/sponsor' => ['call', t('Fiscal Sponsorship'), 'Sponsor', ANY],
     
     'settings' => ['norm', t('Settings'), 'Settings', 'manage -closed -depends'],
@@ -254,13 +256,14 @@ function menu($submenu = '') {
       if (u\starts($k, "$submenu/")) $menu[$k] = $v;
     } elseif ($v) $menu[$k] = makeMenuItem($k, $v);
   }
-  
+
   return $menu;
 }
 
 /**
  * Construct a menu item from its list of parts.
  * The last two parts (detail and glyphicon) are used only for submenus (see subMenuHtml())
+   -- "bootstrap glyphicon components" choices can be googled
     MENU_CALLBACK  Menu type -- A hidden, internal callback, typically used for API calls.
     MENU_DEFAULT_LOCAL_TASK  Menu type -- The "default" local task, which is initially active.
     MENU_LOCAL_ACTION  Menu type -- An action specific to the parent, usually rendered as a link.

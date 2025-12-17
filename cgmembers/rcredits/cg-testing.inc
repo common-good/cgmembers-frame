@@ -18,8 +18,7 @@ const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier changedBy';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
-const RLESS_TNMS = 'posts people post_cats messages txs2'; // test tables with no "r_" prefix
-const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
+const NULL_FLDS = 'payer payee useMax amtMax template end code rule received documented xid';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
 
@@ -91,10 +90,11 @@ function strip($form) {
  * @param bool $direct: directly to or from db, rather than user input (default FALSE)
  */
 function fixData(&$info, $direct = FALSE) {
-  global $testOnly, $rUrl, $testVars, $T, $testCode;
+  global $testOnly, $rUrl, $testVars, $T, $sceneTest, $testCode;
+  $isTableData = in($sceneTest->func, 'these, members, membersHave, balances');
   
   foreach ($info as $k => $v) if (!is_array($v) and $v . '' == NUL) $info[$k] = NULL;
-  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data'; // first key is probably an ID field, so keep it at the front
+  $fields = 'ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state cat cat1 cat2 method companyOptions coType coFlags code purpose pid vKeyE vKeyPw can reason data by'; // first key is probably an ID field, so keep it at the front
   if (!is_numeric($key = key($info)) and u\validVarName($key)) $fields = "$key $fields";
 
   if (nn($testVars)) foreach ($info as $k => $v) if (!is_array($v) and mb_strpos(nn($v), '@') !== FALSE) {
@@ -104,7 +104,9 @@ function fixData(&$info, $direct = FALSE) {
         } else $info[$k] = str_replace("@$varName", nn($var), $v);
       }
     }
-  foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
+  foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) {
+    if ($k != 'xid' or $T->feature != 'accredit') $info[$k] = NULL;
+  }
   
   extract(just($fields, $info));
   
@@ -133,6 +135,7 @@ function fixData(&$info, $direct = FALSE) {
   }
   if (isset($purpose)) $purpose = tr($purpose); // allow keyed tx descriptions
   if (isset($pid) and !$pid) $pid = NULL;
+  if (isset($by) and !$isTableData) $by = u\consta('b', $by);
 
   if (nn($vKeyE) == 'DEV_VKEYE') $vKeyE = getDevVKeyE();
   if (nn($vKeyPw) == 'DEV_VKEYPW') $vKeyPw = getDevVKeyPw();
@@ -346,7 +349,6 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-//  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
 //  if (!in($thing, 'people txs2') and !strhas($thing, '_') and substr($thing, -1, 1) != 's') $table .= 's';
   foreach (ray('u_photo:uid, u_company:uid, u_shout:uid, tx_hdrs:xid') as $tnm => $k) if ($table == $tnm) $key = $k;
   if ($table == 'ofac') $key = 'nm';
@@ -1504,6 +1506,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos(nn($testConfirmation), $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
+
   if ($fieldErr) return TRUE; // no submit if field error
   if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
@@ -1785,6 +1788,7 @@ function clear($ch = 0) {
     'cache',              // -
     'changes',            // users, txs
     'flood',              // -
+    'grants',             // users, txs, people
     'messages',           // posts
     'ofac',               // -
     'people',             // posts

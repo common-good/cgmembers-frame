@@ -67,6 +67,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if (isDEV) $makeTestAccts = submi(t('Make Test Accounts'));
   if ($mya->admDeleteAcct) $mergeAccts = submi(t('Merge Accounts'));
   if ($mya->admRegion and $mya->admSeeAccts) $ourAccts = submi(t('Sponsored Accounts'));
+  if ($mya->admNonmemberTx) $fsGrants = submi(t('Grants Expected'));
   
   if ($mya->admCode) {
     $special = submi(t('Special'));
@@ -96,7 +97,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   }
 
   $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts ourAccts');
+  $ks = ray('toSMT reAuthQBO setCats ieReport sendTxs inviteeStatus signupCos do1099ktest do1099k reconcile byState special stop start stopCtty startCtty makeTestAccts mergeAccts ourAccts fsGrants');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do, BARE);
   
@@ -207,6 +208,7 @@ function formAdminPanel_submit($form, &$sta) {
     case 'makeTestAccts': return a\makeTestAccounts();
     case 'mergeAccts': return w\go('/sadmin/merge-accounts');
     case 'ourAccts': return w\go('/sadmin/our-accounts');
+    case 'fsGrants': return w\go('/co/fsgrants');
     case 'signupCos':
       global $signupCos; $signupCos = [];
       $crit = $mya->admRegion ? '1' : 'community=' . $mya->community;

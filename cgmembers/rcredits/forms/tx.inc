@@ -53,7 +53,7 @@ function formTx($form, &$sta, $type, $args = '') {
   
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix($suffix));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
-  $method = radiosFld(t('Method:'), '', dft(0), ray(t('%B_CHECK:Check, %B_DIRECTACH:Direct ACH, %B_WIRE:Wire, %B_CC:Credit Card')));
+  $by = radiosFld(t('Method:'), '', dft(0), ray(tr(PAYBY_OPTS)));
   $ckNumber = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
@@ -72,12 +72,12 @@ function formTx($form, &$sta, $type, $args = '') {
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
   $admin = $mya->admNonmemberTx;
-  list ($methodDft, $byCheck) = [B_DIRECTACH, B_CHECK];
+  list ($methodDft, $byCheck) = [B_ACH, B_CHECK];
   jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats methodDft byCheck')));
   
   $paying = hidFld($pay);
   $hasCats = hidFld($hasCats);
-  $form = cgform(compact(ray("title buttons who addr amount purpose method ckNumber ckDate cat start periods end advanced submit paying hasCats")));
+  $form = cgform(compact(ray("title buttons who addr amount purpose by ckNumber ckDate cat start periods end advanced submit paying hasCats")));
 
   return $form;
 }
@@ -111,11 +111,15 @@ function txErr($msg, $subs = [], $fldName = 'err') {return say(tr($msg) . ' ' . 
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift isLoan method ckNumber ckDate', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift isLoan by ckNumber ckDate', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
   if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat]; // if $paying and !$who, cat is cat2 with a negative amount
 
-  if (!$who) return fboTx($input); // non-member transaction by check or direct ACH
+  if (!$who) {
+    u\EXPECT($paying or $mya->admNonmemberTx, 'hasCats income by non-admin');
+    be\fboTx($input, FALSE); // non-member transaction by check or direct ACH
+    return go('dashboard');
+  }
 /*
   if (!$who) {
     if ($mya->sponsored) return fboTx($input); // non-member transaction by check or direct ACH
@@ -175,37 +179,4 @@ function formTx_submit($form, &$sta) {
   if ($repeats) {$msg .= "|$repeatMsg"; $subs += $repeatSubs;}
   say(tr($msg, $subs), $ok ? '' : 'err');
   return go('dashboard');
-}
-
-/**
- * Handle transfer for fiscally sponsored account
- * @param assoc $input: all relevant parameters
- */
-function fboTx($input) {
-  global $mya;
-
-  extract(just('amount purpose paying hasCats fullName address city state zip phone email cat isGift method ckNumber ckDate', $input, NULL));
-  $state = (int) $state;
-  u\EXPECT($paying or $mya->admNonmemberTx, 'hasCats income by non-admin');
-  $uid = UID_OUTER;
-  
-  $DBTX = \db_transaction();
-
-  if (!$pid = db\get('pid', 'people', $email ? compact('email') : compact(ray('fullName address zip')))) {
-    $pid = db\insert('people', compact(ray('fullName address city state zip phone email')), 'pid');
-  }
-  if ($method == B_CHECK) $purpose .= t(' (check #%num, %dt)', 'num dt', $ckNumber, fmtDt($ckDate));
-
-  $flags = $method ? u\bit($method) : 0;
-  if ($isGift) $flags |= u\bit(B_GIFT);
-  $info = ray('purpose pid completed deposit cat flags', $purpose, $pid, now(), $mya->admNonmemberTx ? now() : 0, $cat, $flags);
-  $tx = be\createUsdTransfer($mya, $paying ? -$amount : $amount, $info);
-  u\EXPECT($tx, 'outer transfer failed');
-  say('info saved');
-  
-  if (!$paying) be\thanks($tx->xid, $purpose);
-
-  unset($DBTX);
-  
-  return go('dashboard'); // no need to continue (outer transactions never delay or repeat)
 }

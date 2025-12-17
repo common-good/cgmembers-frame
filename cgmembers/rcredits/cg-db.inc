@@ -190,6 +190,7 @@ function updateOrInsert($table, $info, $key = 'id') {
  */
 function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
   u\zWhereSubs($where, $subs);
+///  echo pr(showq("SELECT $fields FROM $table WHERE $where", $subs));
   $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;

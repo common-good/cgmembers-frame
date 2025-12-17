@@ -600,7 +600,7 @@ function payInvoice($nvid, $balFirst = TRUE, $payAmount = NULL) {
  *   'offline'
  *   'loan'
  *   'investment': community investment (UNUSED?) or investment club investment
- *   'method': the TX_FLAGS index of the payment type, if non-standard (check, cc, directach, wire)
+ *   'method': the TX_FLAGS index of the payment type, if non-standard (check, cc, ach, wire)
  *   'stake': member buying or selling stake in investment club
  *   'fine'
  *   'noask'
@@ -1111,6 +1111,7 @@ EOF;
  */
 function thanks($xid, $item) {
   $tx = r\tx($xid);
+
   $member = is_null($tx->pid); // empty and isset fail here
   $id = $tx->pid ?: $tx->uid1;
   $amount = $tx->amt2;
@@ -1261,6 +1262,42 @@ function txErr($message, $info = []) {
 function txRet($ok, $index, $subs = []) {
   $msg = tr($index, $subs);
   return (object) compact(ray('ok index msg subs'));
+}
+
+/**
+ * Handle transfer for fiscally sponsored account
+ * @param assoc $input: all relevant parameters
+ * $param acct $a: the sponsored account (defaults to $mya)
+ * @param bool $doTx: if false, record just the non-member information but don't create a transaction
+ * @returns [$pid, $xid]: the people ID and transaction ID
+ */
+function fboTx($input, $a = NULL, $doTx = TRUE) {
+  global $mya;
+  $pFlds = 'pid fullName email phone address city state zip source';
+
+  extract($pInfo = just($pFlds, $input, NULL)); // handle the people table (non-member) values first
+  $pInfo['state'] = (int) $state;
+  $pid2 = db\updateOrInsert('people', $pInfo, 'pid');
+  u\setDft($pid, $pid2);
+
+  if ($doTx) {    
+    extract(just('amount by purpose paying cat isGift ckNumber ckDate', $input, NULL));
+    
+    if ($by == B_CHECK) $purpose .= t(' (check #%num, %dt)', 'num dt', $ckNumber, fmtDt($ckDate));
+    $flags = $by ? u\bit($by) : 0;
+    if ($isGift) $flags |= u\bit(B_GIFT);
+
+    $info = ray('purpose pid completed deposit cat flags',
+      $purpose, $pid, now(), now(), $cat, $flags); // 12/17/2025 change: deposit was $mya->admNonmemberTx ? now() : 0
+    $tx = be\createUsdTransfer($a ?: $mya, $paying ? -$amount : $amount, $info);
+    $xid = $tx->xid;
+    u\EXPECT($tx, 'outer transfer failed');
+    w\say('info saved');
+    
+    if (!$paying) be\thanks($xid, $purpose);
+  } else $xid = NULL;
+
+  return [$pid, $xid];
 }
 
 /* /\** */

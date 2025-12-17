@@ -189,7 +189,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
-const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now'; // date field names for testing and administrative display
+const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now received documented'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact contactTitle mission activities checksIn checksOut founded target targetStart giftThanks'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd iintent wentNeg lastBounce lastDup'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
@@ -290,8 +290,9 @@ const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
 const R_CARDCODE_LEN = 14; // length of card security code (long to deter easy copying, max 14 for small QR)
 const R_CARDCODE_MINLEN = 10; // minimum length of any cardCode ever, except in tests
 const R_CARD_COST = 5; // cost (in USD) to order a company or replacement CG Card
-const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to be eligible for a grant
-const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
+// const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to be eligible for a grant
+// const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
+const UNDOC_GRANT_MAX = 5000; // any grant of this much or more must have a documented grant agreement
 const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
 const TICKLE_DELAYED = 6 * 7; // number of days to wait after activation, before followup if no gift or no CGC
 const ALERT_DELAY = 30; // number of seconds to wait before rechecking db for a new invoice
@@ -448,6 +449,7 @@ const CC_PCT = 3; // percentage of transaction amount to charge for credit card 
 const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
 const WIRE_FEE = 12; // what our bank charges for incoming wire transfers
 define('METHOD_OPTS', t('email phone text')); // contact method options
+const PAYBY_OPTS = '%B_CHECK:check, %B_ACH:ach, %B_WIRE:wire'; // plus maybe %B_CC:Credit Card
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
@@ -682,12 +684,12 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const B_DIRECTACH = 20; // payment by direct ACH
+const B_ACH = 20; // payment by direct ACH
 const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const B_COVERCC = 23; // covers processing fees
 const B_COVERFS = 24; // covers fiscal sponsorship fees
-const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button directach wire overpaid covercc coverfs';
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice

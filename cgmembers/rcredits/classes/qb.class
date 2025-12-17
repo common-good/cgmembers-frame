@@ -321,7 +321,7 @@ X;
         u\EXPECT($uid2 == CGID or db\exists('tx_entries', ray('xid entryType', $xid, E_XFEE)), t('CC payment with no CC fee (xid#%xid): %desc', compact(ray('xid desc'))));
         $e['cat1'] = r\nick2cat($processorNick);
       } else {
-        $e['cat1'] = r\nick2cat('POOL-A'); // check/wire/directACH in or out of the Ctty Fund bank account
+        $e['cat1'] = r\nick2cat('POOL-A'); // check/wire/ach in or out of the Ctty Fund bank account
       } // either way, UID_OUTER will map to Dollar Pool Liability (POOL)
     } elseif (nn($pid) and !$noBank and $cat1 == r\nick2cat('POOL-A')) $e['cat1'] = NULL; // no additional bank activity (beyond the deposit) for non-member ACH
 
