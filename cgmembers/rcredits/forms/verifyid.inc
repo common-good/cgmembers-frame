@@ -24,7 +24,8 @@ function formVerifyId($form, &$sta, $args = '') {
   $method = radiosFld(REQ, '', dft(0), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
-  $federalId = ssnFld(FALSE, suffix(lnk('', t('Show other options'))));
+  $suffix = []; // was suffix(lnk('', t('Show other options')))
+  $federalId = ssnFld(FALSE, $suffix);
   $dob = dobFld(FALSE);
   $submit = t('Submit');
 
