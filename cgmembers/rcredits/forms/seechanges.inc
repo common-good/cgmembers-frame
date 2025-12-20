@@ -33,7 +33,7 @@ function formSeeChanges($form, &$sta, $args = '') {
     $date = fmtDt($created);
     foreach (ray('oldValue newValue') as $k) {
       $type = u\crypted($$k);
-      $$k = a\formatField($field, $type ? decryChange($type, $$k) : $$k);
+      $$k = w\formatField($field, $type ? decryChange($type, $$k) : $$k);
     }
     $changedBy = $changerName ?: "($changedBy)";
     if ($table == 'txs') $rid = lnk("/history/transaction/xid=$rid", $rid);

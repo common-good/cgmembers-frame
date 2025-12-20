@@ -399,7 +399,43 @@ define('ALIGN_RIGHT', 'proxiedFor trust');
 define('ALIGN_CENTER', '');
 define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
- 
+
+/**
+ * Display the given table or query.
+ * @param string $table: table name
+ * @param string $where: criteria
+ * @param string $order: row order
+ * @param string $fields: list of fields to display
+ * @param string $joinFields: list of fields joining to users table (limit by community if called by Ctty Admin)
+ * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
+ * @return: the formatted output
+ */
+function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = '', $callback = 'CG\\Web\\formatField') {
+  global $mya;
+  
+  $limit = 500; // max records to show
+  $where = 1;
+  
+  $flagsField = in($table, 'people users') ? B_LIST : TX_FLAGS;
+  if (!$mya->admRegion and $joinFields) {
+    if ($table != 'users') {
+      if (!is_array($joinFields)) $joinFields = ray($joinFields);
+      $fieldCount = count($joinFields);
+      if (!strhas($table, ' ')) $table .= ' showq';
+      $crit = null;
+      for ($fieldI = 0; $fieldI < $fieldCount; $fieldI++) {
+        $table .= " INNER JOIN users u$fieldI ON u$fieldI.uid=showq." . $joinFields[$fieldI];
+        $crit = (is_null($crit) ? '' : "$crit OR ") . "u$fieldI.community=$mya->community";
+      }
+      $where .= " AND ($crit)";
+    } else { $where .= " AND community=$mya->community"; }
+  } else $fields = str_replace('showq.', '', $fields);
+
+  if ($order) $where .= " ORDER BY $order";
+
+  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), $callback, $flagsField, $url);
+}
+
 /**
  * Show a formatted list of the given records.
  * @param assoc $ray: the key/value pairs
@@ -413,7 +449,7 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
 
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
 
-  u\setDft($formatFunc, 'CG\\Admin\\formatField');
+  u\setDft($formatFunc, 'CG\\Web\\formatField');
   $idFld = ($url and $urlRay = preg_split('~[/&]~', $url)) ? $urlRay[count($urlRay) - 1] : '';
   $first = array_keys((array)reset($ray));
   
@@ -442,16 +478,48 @@ function showRecords($ray, $formatFunc = NULL, $flags = B_LIST, $url = '') {
 
 /**
  * Return the given field, formatted for viewing.
- * Unlike a\formatField, the third argument ($flagsField) is ignored.
- *//* use a\formatField instead
-function formatField($k, $v) {
+ */
+function formatField($k, $v, $flagsField = B_LIST) {
+  global $base_url, $mya;
   $v = $v . ''; // convert to string
-
+  
   if (u\crypted('P', $v)) $v = u\decry('P', $v); // decrypt phone and email
-  if ($k == 'phone') $v = u\fmtPhone($v);
-  if ($k == 'account') $v = $v ? r\qid($v) : '';
+  if ($k == 'phone') return u\fmtPhone($v);
+  if ($k == 'account') return $v ? r\qid($v) : '';
+  
+  if ($v and in($k, UID_FLDS) and is_numeric($v) and strlen($v) >= strlen(CGID) - 1) { // note that some uids are a little shorter or longer than CGID
+    if ($a = r\acct($v)) {
+      return ($mya->admin and $k == 'uid') ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v);
+    } else $v .= t(' (missing)'); // eg, when uid is changed
+  }
+  
+  if ($v and $k == 'pid' and is_numeric($v)) $v = db\get('fullName', 'people', ray('pid', $v));
+  
+  if ($v and $k == 'channel') return u\rayv(ray(TX_CHANNELS), $v);
+  if ($v and in($k, R_DATE_FLDS)) return '<div class="date-field">' . fmtDt($v, 'ddMMM') . '<span class="year-field">\'' . fmtDt($v, 'yy') . '<br>' . fmtTime($v) . '</span></div>';
+
+  if (in($k, 'flags can')) {
+    $flags = flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
+    return "<div class=\"format-flags\">$flags</div>";
+  }
+
   return $v;
-}*/
+}
+
+/**
+ * Return a readable list of names of bits set in the given integer bit array.
+ * @param int $n: the bit array
+ * @param string $list: delimited list of bit names
+ * @return list of bit names set in $n
+ */
+function flagsDesc($n, $list) {
+  $bits = ray($list);
+  if (!is_numeric(key($bits))) $bits = array_keys($bits);
+  for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
+  $res = '';
+  for ($i=0; $i < count($bits); $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
+  return $res;
+}
 
 /**
  * Create a Drupal field array.
@@ -670,7 +738,7 @@ function crud($tnm, $args, $idFld, $flds, $order = NULL, $callback = NULL) {
     // nothing to do here
   } else {
     u\setDft($order, "$idFld DESC");
-    $list = a\showQuery("(SELECT * FROM $tnm WHERE $crit) showq", $order, 'showq.*', $tnm == 'tx_cats' ? '' : 'uid', $url, $callback);
+    $list = showQuery("(SELECT * FROM $tnm WHERE $crit) showq", $order, 'showq.*', $tnm == 'tx_cats' ? '' : 'uid', $url, $callback);
 
     $ret = cgForm(compact(ray('title list')), 'wide nolabs');
   }

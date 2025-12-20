@@ -1342,7 +1342,7 @@ function g($k, $v = NULL) {
 /** Miscellaneous functions for debugging
  *
  */
-/**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
+/**/ function bs($n, $list = B_LIST) {d('w.flagsDesc', $n, $list);} // show bit numbers/names
 /**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : now()); return $result;} // convert and display unixtime or string time
 function btxid($bankTxId = '') { // unused
   $dt = DAY_SECS * substr($bankTxId, 0, 5);
