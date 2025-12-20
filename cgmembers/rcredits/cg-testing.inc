@@ -15,7 +15,6 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier changedBy';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
 define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule received documented xid';
@@ -170,7 +169,7 @@ function fixData(&$info, $direct = FALSE) {
     if (nn($dob) and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
   }
 
-  foreach (just(T_ID_FLDS, $info) as $k => $v) if (!($k == 'to' and strhas($v, '@'))) { // exception for the "to" parameter in r\rMail() subs
+  foreach (just(UID_FLDS, $info) as $k => $v) if (!($k == 'to' and strhas($v, '@'))) { // exception for the "to" parameter in r\rMail() subs
     $$k = fixIdFld($v);
     if ($k == 'qid') $$k = r\qid($$k); // convert back to qid for qid field
     $info[$k] = $$k;
