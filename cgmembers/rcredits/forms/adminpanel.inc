@@ -227,19 +227,19 @@ function formAdminPanel_submit($form, &$sta) {
     case 'byState': return byState();
     
     // handle all other buttons with showQuery()
-    case 'users': return say(a\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
-    case 'txs': return say(a\showQuery('txs', 'xid DESC, type', 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init', 'uid1 uid2'));
+    case 'users': return say(w\showQuery('users', 'name', 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip'));
+    case 'txs': return say(w\showQuery('txs', 'xid DESC, type', 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init', 'uid1 uid2'));
 
-    case 'recurs': return say(a\showQuery('tx_timed tm', 'id DESC', 'id,tm.start AS created,tm.from,tm.to,amount,purpose,period,tm.end', 'tm.from tm.to'));
-    case 'invites': return say(a\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
-    case 'notices': return say(a\showQuery('r_notices', 'msgid DESC'));
-    case 'admins': return say(a\showQuery('(SELECT uid,fullName,can FROM users LEFT JOIN admins USING (uid) WHERE :IS_ADMIN OR can) x', 'fullName', 'uid, fullName, IFNULL(can, 0) AS can'));
-    case 'proxies': return say(a\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
-    case 'relations': return say(a\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
-    case 'usd': return say(a\showQuery('txs2', 'created DESC'));
+    case 'recurs': return say(w\showQuery('tx_timed tm', 'id DESC', 'id,tm.start AS created,tm.from,tm.to,amount,purpose,period,tm.end', 'tm.from tm.to'));
+    case 'invites': return say(w\showQuery('r_invites', 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
+    case 'notices': return say(w\showQuery('r_notices', 'msgid DESC'));
+    case 'admins': return say(w\showQuery('(SELECT uid,fullName,can FROM users LEFT JOIN admins USING (uid) WHERE :IS_ADMIN OR can) x', 'fullName', 'uid, fullName, IFNULL(can, 0) AS can'));
+    case 'proxies': return say(w\showQuery('r_proxies', 'id DESC', 'person, proxy, priority', 'person'));
+    case 'relations': return say(w\showQuery('u_relations', 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
+    case 'usd': return say(w\showQuery('txs2', 'created DESC'));
     
     default:
-      foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", 'created DESC'));
+      foreach (ray('boxes do stats') as $one) if ($op == $one) return say(w\showQuery("r_$one", 'created DESC'));
       err(t('Unknown operation.'));
   }
 }
@@ -256,5 +256,5 @@ function byState() {
       $flds[] = "SUM(IF(activated <= $end, 1, 0)) AS $qtr";
     }
     $flds = join(",\n", $flds);
-    return say(a\showQuery("(SELECT abbreviation AS state, $flds FROM users u JOIN r_states s ON s.id=u.state WHERE :IS_OK GROUP BY s.id) x", 'state'));
+    return say(w\showQuery("(SELECT abbreviation AS state, $flds FROM users u JOIN r_states s ON s.id=u.state WHERE :IS_OK GROUP BY s.id) x", 'state'));
 }

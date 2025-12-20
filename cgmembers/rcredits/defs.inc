@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62u'; // software version
+const R_VERSION = '3.62v'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -188,6 +188,7 @@ const US = '<span class="us">us</span>';
 const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
+const UID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId customer coId uid1 uid2 agt1 agt2 fromUid toUid identifier changedBy'; // used only for displaying
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons continue list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'time start end start created completed deposit sent invited giftDate signed login access joined yesterday dob founded when sold deleted now received documented'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website logo description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact contactTitle mission activities checksIn checksOut founded target targetStart giftThanks'; // account fields stored in u_company (can't use DOB as company founding date because DOB is Vsecure)

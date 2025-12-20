@@ -16,6 +16,7 @@ function formHandy($form, &$sta) {
     'sadmin/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'sadmin/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
     'sadmin/variables|Edit and delete site variables.|Variables|copy',
+    'rcredits/misc/mirror.php|Mirror a Gherkin array|Mirror|refresh',
   ];
 
   foreach ($links as $link) {

@@ -64,8 +64,23 @@ Setup:
 Scenario: admin visits the Rules page
   When member ".ZZA" visits page "sadmin/rules"
   Then we show "Tx Rules" with:
-  |id|action|from        |to   |amount|portion|purpose|payerType   |payer|payeeType|payee  |minimum|useMax|amtMax|start|end|code|
-  |1 |surtx |%MATCH_PAYEE|%CGID|0     |.05    |sponsor|%REF_ANYBODY|   |%REF_ACCOUNT|ourpub|0      |      |      |%dmqy|   |    |
+  | id        | 1            |//
+  | action    | surtx        |
+  | from      | %MATCH_PAYEE |
+  | to        | commongood   |
+  | amount    | 0            |
+  | portion   | .05          |
+  | purpose   | sponsor      |
+  | payerType | %REF_ANYBODY |
+  | payer     |              |
+  | payeeType | %REF_ACCOUNT |
+  | payee     | ourpub       |
+  | minimum   | 0            |
+  | useMax    |              |
+  | amtMax    |              |
+  | start     | %dmqy        |
+  | end       |              |
+  | code      |              |
   # ID fields don't get interpreted here because these are displayed values, not actual field values
 
 Scenario: admin chooses a rule to edit
@@ -91,8 +106,27 @@ Scenario: admin chooses a rule to edit
 Scenario: admin visits the Timed page
   When member ".ZZA" visits page "sadmin/timed"
   Then we show "Tx Timed" with:
-  |id|action|from|to          |amount|portion |purpose  |payerType |payer|payeeType|payee|minimum|useMax|amtMax|start|end|period|periods|duration|durations|stripeId|
-  |5 |surtx |%ZZF|%MATCH_PAYER|20.00 |0.000000|food help|%REF_GROUP|1|%REF_INDUSTRY|2    |0.00   |      |20.00 |%dmqy|   |month |1       |forever |1        |        |
+  | id        | 5             |//
+  | action    | surtx         |
+  | from      | foodfund      |
+  | to        | %MATCH_PAYER  |
+  | amount    | 20.00         |
+  | portion   | 0.000000      |
+  | purpose   | food help     |
+  | payerType | %REF_GROUP    |
+  | payer     | 1             |
+  | payeeType | %REF_INDUSTRY |
+  | payee     | 2             |
+  | minimum   | 0.00          |
+  | useMax    |               |
+  | amtMax    | 20.00         |
+  | start     | %dmqy         |
+  | end       |               |
+  | period    | month         |
+  | periods   | 1             |
+  | duration  | forever       |
+  | durations | 1             |
+  | stripeId  |               |
 
 Scenario: admin chooses a Timed record to edit
   When member ".ZZA" visits page "sadmin/timed/id=5"

@@ -545,72 +545,6 @@ EOF;
 define('ID_KEYS', 'id uid uid1 uid2 t.uid myid payer payee main other inviter invitee proxy person owner defaultAgent');
 
 /**
- * Return the given field, formatted for viewing.
- */
-function formatField($k, $v, $flagsField = B_LIST) {
-  global $base_url, $mya;
-  $v = $v . ''; // convert to string
-  
-  if (u\crypted('P', $v)) $v = u\decry('P', $v); // decrypt phone and email
-  if ($k == 'phone') return u\fmtPhone($v);
-  if ($k == 'account') return $v ? r\qid($v) : '';
-  
-  if ($v and in($k, ID_KEYS) and is_numeric($v) and strlen($v) >= strlen(CGID) - 1) { // note that some uids are a little shorter or longer than CGID
-    if ($a = r\acct($v)) {
-      return ($mya->admin and $k == 'uid') ? w\lnk("$base_url/change-account/acct=$v", $a->name) : ($a->name ?: $v);
-    } else $v .= t(' (missing)'); // eg, when uid is changed
-  }
-  
-  if ($v and $k == 'pid' and is_numeric($v)) $v = db\get('fullName', 'people', ray('pid', $v));
-  
-  if ($v and $k == 'channel') return u\rayv(ray(TX_CHANNELS), $v);
-  if ($v and in($k, R_DATE_FLDS)) return '<div class="date-field">' . fmtDt($v, 'ddMMM') . '<span class="year-field">\'' . fmtDt($v, 'yy') . '<br>' . fmtTime($v) . '</span></div>';
-
-  if (in($k, 'flags can')) {
-    $flags = a\flagsDesc($v, $k == 'can' ? A_LIST : $flagsField);
-    return "<div class=\"format-flags\">$flags</div>";
-  }
-
-  return $v;
-}
-
-/**
- * Display the given table or query.
- * @param string $table: table name
- * @param string $where: criteria
- * @param string $order: row order
- * @param string $fields: list of fields to display
- * @param string $joinFields: list of fields joining to users table (limit by community if called by Ctty Admin)
- * @param string $url: page for editing, followed by /$idFld where $idFld is the name of a clickable id field (for editing)
- * @return: the formatted output
- */
-function showQuery($table, $order = '', $fields = '*', $joinFields = '', $url = '', $callback = 'CG\\Admin\\formatField') {
-  global $mya;
-  
-  $limit = 500; // max records to show
-  $where = 1;
-  
-  $flagsField = in($table, 'people users') ? B_LIST : TX_FLAGS;
-  if (!$mya->admRegion and $joinFields) {
-    if ($table != 'users') {
-      if (!is_array($joinFields)) $joinFields = ray($joinFields);
-      $fieldCount = count($joinFields);
-      if (!strhas($table, ' ')) $table .= ' showq';
-      $crit = null;
-      for ($fieldI = 0; $fieldI < $fieldCount; $fieldI++) {
-        $table .= " INNER JOIN users u$fieldI ON u$fieldI.uid=showq." . $joinFields[$fieldI];
-        $crit = (is_null($crit) ? '' : "$crit OR ") . "u$fieldI.community=$mya->community";
-      }
-      $where .= " AND ($crit)";
-    } else { $where .= " AND community=$mya->community"; }
-  } else $fields = str_replace('showq.', '', $fields);
-
-  if ($order) $where .= " ORDER BY $order";
-
-  return w\showRecords(db\q("SELECT $fields FROM $table WHERE $where LIMIT $limit")->fetchAll(), $callback, $flagsField, $url);
-}
-
-/**
  * Show results of an SSN search, compared to personal data supplied by the member.
  * Updates the moves field, if it isn't set yet.
  */
@@ -769,21 +703,6 @@ function moveFieldTo($field, $to = 'data') {
 function changeIt($a) {
   if ($a->bankAccount) $a->setRisk('hasBank');
   $a->setBit(4, FALSE);
-}
-
-/**
- * Return a readable list of names of bits set in the given integer bit array.
- * @param int $n: the bit array
- * @param string $list: delimited list of bit names
- * @return list of bit names set in $n
- */
-function flagsDesc($n, $list) {
-  $bits = ray($list);
-  if (!is_numeric(key($bits))) $bits = array_keys($bits);
-  for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
-  $res = '';
-  for ($i=0; $i < count($bits); $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
-  return $res;
 }
 
 /*
