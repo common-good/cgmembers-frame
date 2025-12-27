@@ -158,3 +158,90 @@ Scenario: An admin marks a documented grant received
   | 2   | .ZZC  | 5000   | %now      | %now    | 5   |             |
   And we say "status": "funds distributed"
   And we say "status": "info saved"
+
+# Rule: When a grant has been received and is not yet documented, we notify the sponsored partner.
+
+Scenario: An admin marks an udocumented grant received
+  When member ".ZZC" submits "co/grants/id=2" with:
+  | fullName | email  | phone        | address | city | state | zip   | amount | by   | received | documented |*
+  | Eve Fivo | e@z.co | 555-555-5555 | 5 Ed St | Eton | MA    | 01005 | 5,000  | wire |          |            |
+  Then these "grants":
+  | id | uid  | pid | amount | created  | by    | xid | received | documented |*
+  | 2  | .ZZC | 5   | 5000   | %now0    | wire  |     |          |            |
+  When member ".ZZA" submits "co/fsgrants/id=2" with:
+  | fullName | email  | phone        | address | city | state | zip   | amount | by   | got | received | documented |*
+  | Eve Fivo | e@z.co | 555-555-5555 | 5 Ed St | Eton | MA    | 01005 | 5,000  | wire | on  |          |            |
+  Then these "grants":
+  | id | uid  | pid | amount | created  | by    | xid | received | documented |*
+  | 2  | .ZZC | 5   | 5000   | %now0    | wire  |     | %now     |            |
+  And we say "status": "sponsee notified"
+  And we say "status": "info saved"
+  And we message "needs-documentation" to member ".ZZC" with subs:
+  | grantorName | amt    | topic             |*
+  | Eve Fivo    | $5,000 | grantdoc-required |
+
+Scenario: An admin marks an udocumented grant received by check
+  When member ".ZZC" submits "co/grants/id=2" with:
+  | fullName   | Eve Fivo     |**
+  | email      | e@z.co       |
+  | phone      | 555-555-5555 |
+  | address    | 5 Ed St      |
+  | city       | Eton         |
+  | state      | MA           |
+  | zip        | 01005        |
+  | amount     | 5,000        |
+  | by         | check        |
+  | received   |              |
+  | documented |              |
+  Then these "grants":
+  | id | uid  | pid | amount | created  | by    | xid | received | documented | ckNum | ckDate |*
+  | 2  | .ZZC | 5   | 5000   | %now0    | check |     |          |            |       |        |
+
+  When member ".ZZA" submits "co/fsgrants/id=2" with:
+  | fullName   | Eve Fivo     |**
+  | email      | e@z.co       |
+  | phone      | 555-555-5555 |
+  | address    | 5 Ed St      |
+  | city       | Eton         |
+  | state      | MA           |
+  | zip        | 01005        |
+  | amount     | 5,000        |
+  | by         | check        |
+  | got        | on           |
+  | received   |              |
+  | documented |              |
+  | ckNum      | 123          |
+  | ckDate     | %mdY         |
+  Then these "grants":
+  | id | uid  | pid | amount | created | by    | xid | received | documented | ckNum | ckDate |*
+  | 2  | .ZZC | 5   | 5000   | %now0   | check |     | %now     |            | 123   | %now0  |
+  And we say "status": "sponsee notified"
+  And we say "status": "info saved"
+  And we message "needs-documentation" to member ".ZZC" with subs:
+  | grantorName | amt    | topic             |*
+  | Eve Fivo    | $5,000 | grantdoc-required |
+  
+  When member ".ZZC" submits "co/grants/id=2" with:
+  | fullName   | Eve Fivo     |**
+  | email      | e@z.co       |
+  | phone      | 555-555-5555 |
+  | address    | 5 Ed St      |
+  | city       | Eton         |
+  | state      | MA           |
+  | zip        | 01005        |
+  | amount     | 5,000        |
+  | by         | check        |
+  | received   | %mdY-1d      |
+  | documented | %mdY         |
+  | ckNum      | 123          |
+  | ckDate     | %mdY-1d      |
+  
+  Then these "txs":
+  | eid | xid | payer      | payee | amount    | purpose                    | cat1        | cat2        | type     |*
+  |   5 | 2   | %UID_OUTER | .ZZC  | 5000      | grant (check #123, %mdY-1d) |             | D-FBO       | %E_OUTER |
+  |   6 | 2   | .ZZC       | cgf   | 250       | %FS_NOTE                   | D-FBO       | FS-FEE      | %E_AUX   |
+  And these "txs2":
+  | xid | payee | amount | completed | deposit | pid | bankAccount |*
+  | 2   | .ZZC  | 5000   | %now      | %now    | 5   |             |
+  And we say "status": "funds distributed"
+  And we say "status": "info saved"

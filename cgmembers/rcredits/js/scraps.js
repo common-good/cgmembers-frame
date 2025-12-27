@@ -288,8 +288,8 @@ function doit(what, vs) {
     
   case 'fsgrants':
     toggleCkFlds(vs);
-    $('.form-item-method input').click(function () {
-      if (toggleCkFlds(vs)) $('.form-item-ckNumber input').focus();
+    $('.form-item-by input').click(function () {
+      if (toggleCkFlds(vs)) $('.form-item-ckNum input').focus();
     });
     $('.form-item-amount input').change(function () {$('.form-item-documented').toggle(this.value >= vs['undocMax'])});
     break;
@@ -355,16 +355,16 @@ function doit(what, vs) {
     function mem0Click(member) {
       reqQ($('.form-item-who, .form-item-advanced, .form-item-buttons, .form-item-mem'), member, vs['admin'] == 1);
       reqQ($('.form-item-fullName, .form-item-phone, .form-item-email, .form-item-address, .form-item-city, .form-item-state, .form-item-zip'), !member, vs['admin'] == 1);
-      reqQ($('.form-item-method'), !member && !pay, vs['admin'] == 1);
+      reqQ($('.form-item-by'), !member && !pay, vs['admin'] == 1);
       $('.form-item-amount .suffix').toggle(member ? pay : !pay); // logic for isGift option is reversed for non-members (received can be a gift, but not payments)
       toggleCkFlds(vs);
 
       if (!member && !pay) {
         $('.form-item-isGift input').prop('checked', true); // non-member
-        $('.form-item-method input').click(function () {
-          if (toggleCkFlds(vs)) $('.form-item-ckNumber input').focus();
+        $('.form-item-by input').click(function () {
+          if (toggleCkFlds(vs)) $('.form-item-ckNum input').focus();
         });
-        $('#edit-method-' + vs['methodDft']).click(); // set default
+        $('#edit-by-' + vs['byDft']).click(); // set default
       }
     }
     break;
@@ -1152,8 +1152,8 @@ function reqQ(fld, show, optional) {
 }
 
 function toggleCkFlds(vs) {
-  var isCheck = $('#edit-method-' + vs['byCheck']).is(':checked');
-  $('.form-item-ckNumber, .form-item-ckDate').toggle(isCheck);
+  var isCheck = $('#edit-by-' + vs['byCheck']).is(':checked');
+  $('.form-item-ckNum, .form-item-ckDate').toggle(isCheck);
   return isCheck;
 }
 

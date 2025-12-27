@@ -835,6 +835,8 @@ $GLOBALS['topics'] = array( // topics for 'message' email
   'you got cash' => t('Payment complete (Transaction #%xid)'),
   'you drew' => t('Transfer complete (Transaction #%xid)'),
   'you re-charged' => t('Payment received (Transaction #%xid)'),
+  
+  'grantdoc-required' => t('IMPORTANT: Grant Documentation Required'),
 );
 
 if (basename('http://localhost/cg/cgmembers/tests') == 'tests') {

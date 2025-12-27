@@ -1279,11 +1279,11 @@ function fboTx($input, $a = NULL, $doTx = TRUE) {
   $pInfo['state'] = (int) $state;
   $pid2 = db\updateOrInsert('people', $pInfo, 'pid');
   u\setDft($pid, $pid2);
-
+  
   if ($doTx) {    
-    extract(just('amount by purpose paying cat isGift ckNumber ckDate', $input, NULL));
-    
-    if ($by == B_CHECK) $purpose .= t(' (check #%num, %dt)', 'num dt', $ckNumber, fmtDt($ckDate));
+    extract(just('amount by purpose paying cat isGift ckNum ckDate', $input, NULL)); // this has to be outside if ($doTx)
+
+    if ($by == B_CHECK) $purpose .= t(' (check #%num, %dt)', 'num dt', $ckNum, fmtDt($ckDate));
     $flags = $by ? u\bit($by) : 0;
     if ($isGift) $flags |= u\bit(B_GIFT);
 
@@ -1292,7 +1292,6 @@ function fboTx($input, $a = NULL, $doTx = TRUE) {
     $tx = be\createUsdTransfer($a ?: $mya, $paying ? -$amount : $amount, $info);
     $xid = $tx->xid;
     u\EXPECT($tx, 'outer transfer failed');
-    w\say('info saved');
     
     if (!$paying) be\thanks($xid, $purpose);
   } else $xid = NULL;
