@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const FSGRANTS_FLDS = 'id uid pid xid amount by documented received created'; // just the fields we handle here (and omitting pid)
+const FSGRANTS_FLDS = 'id uid pid xid amount by ckNum ckDate documented received created'; // just the fields we handle here (and omitting pid)
 require_once R_ROOT . '/forms/tx.inc'; // for txErr()
 require_once R_ROOT . '/forms/people.inc'; // for PEOPLE_FLDS
 
@@ -43,8 +43,8 @@ function formFSGrants($form, &$sta, $args = '') {
   $amount = numFld(REQ . t('Expected Amount:'), [t('Amount')], dft($amount) + vmin(.01));
   $by = radiosFld(REQ . t('Method:'), '', dft($by ?: B_ACH), ray(tr(PAYBY_OPTS)));
   
-  $ckNumber = $mya->admin ? textFld(t('Ck Number:')) : NULL;
-  $ckDate = $mya->admin ? dateFld(t('Ck Date:')) : NULL;
+  $ckNum = $mya->admin ? textFld(t('Ck Number:'), '', dft($ckNum)) : NULL;
+  $ckDate = $mya->admin ? dateFld(t('Ck Date:'), '', dft($ckDate)) : NULL;
   $got = $mya->admin ? boxFld('got', t('Received:'), $received ? fmtDt($received) : '', $received > 0) : NULL;
   
   $documented = dateFld(t('Documented:'), t('Date the sponsored organization emailed a copy of the grant agreement to %PROJECT'));
@@ -54,7 +54,7 @@ function formFSGrants($form, &$sta, $args = '') {
   foreach (ray('url seeAll received') as $k) $$k = hidFld($$k);
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
-  $form = compact(ray('title subtext fullName email phone address city state zip amount got by ckNumber ckDate documented received submit orig url seeAll'));
+  $form = compact(ray('title subtext fullName email phone address city state zip amount got by ckNum ckDate documented received submit orig url seeAll'));
         
   jsx('contact');
   jsx('fsgrants', ray('byCheck undocMax', B_CHECK, UNDOC_GRANT_MAX));
@@ -65,7 +65,7 @@ function formFSGrants($form, &$sta, $args = '') {
 function formFSGrants_validate($form, &$sta) {
   global $mya;
 
-  $info = just('amount purpose fullName address city state zip phone email by ckDate ckNumber documented received seeAll', $sta['input'], NULL);
+  $info = just('amount purpose fullName address city state zip phone email by ckNum ckDate documented received seeAll', $sta['input'], NULL);
   extract($info);
 
   $orig = hidFlds($sta, 'orig');
@@ -80,7 +80,7 @@ function formFSGrants_validate($form, &$sta) {
     if (!$$k) $$k = NULL; elseif ($err = u\badDate($$k)) return txErr($err, $k);
   }
   if ($received and !$by) return txErr(t('You must specify a payment method.'));
-  if ($received and $by == B_CHECK and !($ckDate and $ckNumber)) return txErr(t('You must provide check number and date.'));
+  if ($received and $by == B_CHECK and !($ckDate and $ckNum)) return txErr(t('You must provide check number and date.'));
   
   u\preray(compact(ray('fullName zip phone ckDate received documented amount')), $sta['input']);
 }
@@ -91,22 +91,31 @@ function formFSGrants_submit($form, &$sta) {
   $orig = hidFlds($sta, 'orig');
   $input = $sta['input'] + just(FSGRANTS_FLDS, $orig, NULL); // new values trump orig values
 
-  extract($new = just(FSGRANTS_FLDS . ' got url', $input, NULL));
+  extract($new = just(FSGRANTS_FLDS . ' got url fullName uid', $input, NULL));
+  $received0 = $received;
   if ($got) $received = now();
 
   $cat = [NULL, r\nick2cat('D-FBO')];
   [$paying, $purpose, $isGift] = [FALSE, t('grant'), TRUE];
   $doTx = (!$xid and $received and ($documented or $amount < UNDOC_GRANT_MAX)); // time to credit the account
   $uid = $orig['uid'] ?: $mya->id;
+  foreach (ray('documented received ckDate') as $k) if (!$$k) $$k = NULL; // redundant, but doing it in _validate fails for <input>
 
+  $DBTX = \db_transaction();
   [$pid, $xid] = be\fboTx($input + compact(ray('cat paying purpose isGift')), r\acct($uid), $doTx);
   if ($doTx and $xid) say('funds distributed');
 
   $by = ray(tr(PAYBY_OPTS))[$by];
   $created = $orig['created'] ?: now();
-  foreach (ray('documented received') as $k) if (!$$k) $$k = NULL; // redundant, but doing it in _validate fails for <input>
+  if ($received and !$received0 and !$documented and $amount >= UNDOC_GRANT_MAX) {
+    [$grantorName, $fullName, $email, $amt] = [$fullName, $mya->fullName, $mya->email, u\fmtAmt($amount)];
+    r\acct($uid)->tell('needs-documentation', compact(ray('fullName grantorName amt')), t('grantdoc-required'));
+    say('sponsee notified');
+  }
 
   db\updateOrInsert('grants', compact(ray(FSGRANTS_FLDS)), 'id');
- 
+  say('info saved');
+  unset($DBTX);
+
   return go($url);
 }

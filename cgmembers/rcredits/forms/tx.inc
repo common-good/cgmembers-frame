@@ -54,7 +54,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $amount = numFld(REQ . t('Amount:'), [t('Amount')], dft($amount) + vmin(.01) + suffix($suffix));
   $purpose = textFld(REQ . t('For:'), [t('Purpose or description of goods and services')], dft(nn($purpose)));
   $by = radiosFld(t('Method:'), '', dft(0), ray(tr(PAYBY_OPTS)));
-  $ckNumber = textFld(t('Ck Number:'));
+  $ckNum = textFld(t('Ck Number:'));
   $ckDate = dateFld(t('Ck Date:'));
   
 //  $cat = ($mya->sponsored and !in($mya->id, r\cgsOwnUids()))? fboCatFld('', 'OUT') : ($hasCats ? catFld() : NULL); // note that fbo income gets categorized automatically, so jsx hides this
@@ -72,12 +72,12 @@ function formTx($form, &$sta, $type, $args = '') {
   w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   
   $admin = $mya->admNonmemberTx;
-  list ($methodDft, $byCheck) = [B_ACH, B_CHECK];
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats methodDft byCheck')));
+  list ($byDft, $byCheck) = [B_ACH, B_CHECK];
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats byDft byCheck')));
   
   $paying = hidFld($pay);
   $hasCats = hidFld($hasCats);
-  $form = cgform(compact(ray("title buttons who addr amount purpose by ckNumber ckDate cat start periods end advanced submit paying hasCats")));
+  $form = cgform(compact(ray("title buttons who addr amount purpose by ckNum ckDate cat start periods end advanced submit paying hasCats")));
 
   return $form;
 }
@@ -111,13 +111,14 @@ function txErr($msg, $subs = [], $fldName = 'err') {return say(tr($msg) . ' ' . 
 function formTx_submit($form, &$sta) {
   global $mya;
 
-  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift isLoan by ckNumber ckDate', $sta['input'], NULL));
+  extract($input = just('amount purpose period periods start end goods paying hasCats who fullName address city state zip phone email cat isGift isLoan by ckNum ckDate', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($input)));
   if (r\hasCats($mya->uid) and $cat) $input['cat'] = $cat = ($paying and $who) ? [$cat, NULL] : [NULL, $cat]; // if $paying and !$who, cat is cat2 with a negative amount
 
   if (!$who) {
     u\EXPECT($paying or $mya->admNonmemberTx, 'hasCats income by non-admin');
     be\fboTx($input, FALSE); // non-member transaction by check or direct ACH
+    w\say('info saved');
     return go('dashboard');
   }
 /*

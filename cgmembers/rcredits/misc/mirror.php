@@ -23,7 +23,7 @@ $c89 = substr($line1, -2);
 [$oldTagLen, $tag] = $c89 == '**' ? [2, '*']
   : ($c89 == '//' ? [2, '']
   : ($c9 == '*' ? [1, '**'] : [0, '//']) );
-if ($oldTagLen) $ray[0] = $line1 = substr($line1, 0, strlen($line1) - oldTagLen);
+if ($oldTagLen) $ray[0] = $line1 = substr($line1, 0, strlen($line1) - $oldTagLen);
 
 $hcnt = substr_count($line1, '|') - 1;
 $vcnt = count($ray);

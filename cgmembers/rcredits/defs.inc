@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62v'; // software version
+const R_VERSION = '3.62w'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -835,6 +835,8 @@ $GLOBALS['topics'] = array( // topics for 'message' email
   'you got cash' => t('Payment complete (Transaction #%xid)'),
   'you drew' => t('Transfer complete (Transaction #%xid)'),
   'you re-charged' => t('Payment received (Transaction #%xid)'),
+  
+  'grantdoc-required' => t('IMPORTANT: Grant Documentation Required'),
 );
 
 if (basename('http://localhost/cg/cgmembers/tests') == 'tests') {

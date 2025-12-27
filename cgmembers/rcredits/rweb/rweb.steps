@@ -424,6 +424,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
  *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceived
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest TheClubAddsAProposedInvestment
@@ -1522,6 +1524,8 @@ function memberClicksXOnTransaction($id, $xid) {
  *     TEST donate AMemberMakesARecurringDonation
  *     TEST fbo ASponsoredMemberChargesAMember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceived
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
  *     TEST invoice AMemberInvoicesSomeone
  *     TEST invoice AMemberWhoHasABankAccountApprovesAnInvoice
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1785,6 +1789,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fsgrants ASponsoredPartnerAddsAnExpectedGrant
  *     TEST fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
  *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceived
+ *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
  *     MAKE invest Setup
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     BOTH invest AMemberBuysAStakeInTheClub
@@ -2517,6 +2523,8 @@ function nextCaptchaIs($ca) {
  *     MAKE fsgrants ASponsoredPartnerAddsAnExpectedGrant
  *     MAKE fsgrants ASponsoredPartnerMarksAReceivedGrantDocumented
  *     MAKE fsgrants AnAdminMarksADocumentedGrantReceived
+ *     MAKE fsgrants AnAdminMarksAnUdocumentedGrantReceived
+ *     MAKE fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
  *     MAKE joint AMemberAsksToJoinAnExistingAccount
  *     MAKE joint AMemberAsksToJoinToSelf
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
