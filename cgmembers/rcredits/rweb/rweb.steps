@@ -54,6 +54,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
  *     MAKE connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
@@ -339,6 +340,7 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
@@ -808,6 +810,7 @@ function withoutOptions($options) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST ccpay Setup
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
@@ -1728,6 +1731,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     BOTH bank ASlaveMemberRequestsATransfer
+ *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST boxes AMemberSignsInForTheFirstTimeOnADevice
  *     BOTH boxes AMemberSignsInAgain
  *     BOTH boxes AMemberTransactsAndBoxIdGetsRecorded
