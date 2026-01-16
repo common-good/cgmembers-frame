@@ -44,6 +44,7 @@ function formRecurring($form, &$sta, $args = '') {
     LEFT JOIN txs x ON x.recursId=tm.id
     LEFT JOIN tx_requests i ON i.recursId=tm.id
     WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tm.from,tm.to) 
+    AND period<>:PER_1
     AND $extraCrit
     GROUP BY tm.id
     ORDER BY tm.end IS NOT NULL, tm.to=:myid, tm.start DESC, tm.id DESC
