@@ -1983,6 +1983,40 @@ X;
     return join(', ', $result);
   }
   
+  /**
+   * Clone a user record (especially for sponsored accounts that got their own 501c3 status)
+   * @param assoc $tweaks: fields and values to adjust
+   * @param string $prefixOld: something to add before the original account name, to distinguish it
+   * for example, r\acct('NEWDDD')->cloneUser(ray('federalId legalName', 383838293, 'Aacme Inc.'));
+   */
+  public function cloneUser($tweaks = [], $prefixOld = 'FBO ') {
+    $row = db\row('users', ray('uid', $oldUid = $this->uid));
+    unset($row->uid);
+    $fullName = $prefixOld . $row->fullName;
+    $name = $prefixOld ? r\uniqueName($fullName) : $row->name;
+    
+    $DBTX = db_transaction();
+    
+    db\update('users', ray('uid name fullName', $oldUid, $name, $fullName), 'uid');
+    $uid = r\regionalInsert('users', 'uid', (array) $row);
+    foreach (ray('u_company:uid, u_photo:uid, u_relations:main, u_relations:other') as $tnm => $idFnm) {
+      if ($r = db\row($tnm, ray($idFnm, $oldUid))) {
+        $r->$idFnm = $uid;
+        if ($tnm == 'u_relations') {
+          unset($r->reid);
+          $this->newRelation((array) $r);
+        } else db\insert($tnm, (array) $r, $idFnm);
+      }
+    }
+    $subs = compact(ray('uid oldUid'));
+    db\q("UPDATE tx_timed SET `to`=:uid WHERE `to`=:oldUid AND payerType<>'person' AND `end` IS NULL", $subs);
+    foreach (ray('payer payee') as $fnm) db\q("UPDATE tx_requests SET $fnm=:uid WHERE $fnm=:oldUid AND status IN (:TX_PENDING, :TX_APPROVED)", $subs);
+    
+    unset($DBTX);
+    
+    w\say(t('Record cloned: ') . $row->fullName);
+  }
+  
   private function hasVSecure($fld) {return (nni($this->vsecure, $fld, '') !== '');}
 
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);} // same account
