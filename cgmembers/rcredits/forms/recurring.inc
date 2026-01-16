@@ -93,7 +93,7 @@ function addLine($info, $classes, $url, $person = FALSE) {
   $button = $button ? "<a href=\"$url&do=stop\" title=\"$button\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
 
   if ($person) {
-    $fWho = db\get('fullName', 'people', ray('pid', $fWho));
+    $fWho = db\get('fullName', 'people', ray('pid', $fWho)) . t(' (non-member)');
   } else {
     $a = r\acct($fWho);
     $fWho = $a->bestName;
