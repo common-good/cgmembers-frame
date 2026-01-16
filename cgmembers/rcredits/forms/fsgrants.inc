@@ -41,13 +41,19 @@ function formFSGrants($form, &$sta, $args = '') {
   $methods = ray(METHOD_OPTS);
 
   $amount = numFld(REQ . t('Expected Amount:'), [t('Amount')], dft($amount) + vmin(.01));
-  $by = radiosFld(REQ . t('Method:'), '', dft($by ?: B_ACH), ray(tr(PAYBY_OPTS)));
+
+  $opts = ray(tr(PAYBY_OPTS));
+  $optNums = array_flip($opts);
+  $by = radiosFld(REQ . t('Method:'), '', dft($by ? $optNums[$by] : B_ACH), $opts);
   
   $ckNum = $mya->admin ? textFld(t('Ck Number:'), '', dft($ckNum)) : NULL;
   $ckDate = $mya->admin ? dateFld(t('Ck Date:'), '', dft($ckDate)) : NULL;
-  $got = $mya->admin ? boxFld('got', t('Received:'), $received ? fmtDt($received) : '', $received > 0) : NULL;
+
+  if ($received) {
+    $got = item(fmtDt($received), t('Received:'));
+  } else $got = $mya->admin ? boxFld('got', t('Received:'), '', FALSE) : NULL;
   
-  $documented = dateFld(t('Documented:'), t('Date the sponsored organization emailed a copy of the grant agreement to %PROJECT'));
+  $documented = dateFld(t('Documented:'), t('Date the sponsored organization emailed a copy of the grant agreement to %PROJECT'), dft($documented));
   
   $submit = submit();
   $orig = hidFlds($orig);
@@ -76,9 +82,10 @@ function formFSGrants_validate($form, &$sta) {
   if ($phone and $err = u\badPhone($phone)) return txErr($err, 'phone');
   if ($email and !u\validEmail($email)) return txErr('bad email', 'email');
   if ($err = u\badAmount($amount, '>0')) return txErr($err, 'amount');
-  foreach (ray('ckDate documented received') as $k) {
-    if (!$$k) $$k = NULL; elseif ($err = u\badDate($$k)) return txErr($err, $k);
-  }
+
+  $dtFlds = ray('ckDate documented' . (nni($orig, 'received') ? '' : ' received'));
+  foreach ($dtFlds as $k) if (!$$k) $$k = NULL; elseif ($err = u\badDate($$k)) return txErr("$k: $err", $k);
+  
   if ($received and !$by) return txErr(t('You must specify a payment method.'));
   if ($received and $by == B_CHECK and !($ckDate and $ckNum)) return txErr(t('You must provide check number and date.'));
   
@@ -102,8 +109,11 @@ function formFSGrants_submit($form, &$sta) {
   foreach (ray('documented received ckDate') as $k) if (!$$k) $$k = NULL; // redundant, but doing it in _validate fails for <input>
 
   $DBTX = \db_transaction();
+  $xid0 = $xid;
   [$pid, $xid] = be\fboTx($input + compact(ray('cat paying purpose isGift')), r\acct($uid), $doTx);
-  if ($doTx and $xid) say('funds distributed');
+  if ($xid) {
+    if ($doTx) say('funds distributed');
+  } else $xid = $xid0; // don't lose existing transaction record
 
   $by = ray(tr(PAYBY_OPTS))[$by];
   $created = $orig['created'] ?: now();

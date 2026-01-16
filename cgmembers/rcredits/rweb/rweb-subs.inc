@@ -539,6 +539,7 @@ function flagsDesc($n, $list) {
  */
 function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if (is_array($label)) list ($label, $help, $x, $options) = $label + ['', '', [], []];
+
   if ($type == 'item' and nni($x, 'field_suffix')) $x['markup'] = '<div class="presuffix">' . $x['markup'] . '</div>';
   if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
 

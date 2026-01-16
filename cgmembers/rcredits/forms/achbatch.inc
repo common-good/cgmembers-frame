@@ -37,6 +37,7 @@ function achBatch($args) {
   extract($bankData = (array) $b); // see BANK_KEYS in defs.inc
   [$destName, $destNum, $routing0] = [$b->name, $b->routing, $b->routing];
   u\setDft($balance, $b->balanced);
+  if (test()) [$maxDailyAchIn, $maxDailyAchOut] = [T_MAX_DAILY_ACH_IN, T_MAX_DAILY_ACH_OUT];
 
   if (is_numeric($way)) { // transferring funds to or from a dedicated money storage account
     $offshore = $way;
@@ -52,7 +53,7 @@ function achBatch($args) {
     } elseif (!in($way, 'IN OUT')) {
       return softErr(t('"way" must be IN, OUT, or BOTH.'));
     } else {
-      if ($way == 'IN') $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0', compact('today'));
+      if ($way == 'IN') $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0 AND pid IS NULL', compact('today'));
       if ($way == 'OUT') $maxDailyAchOut -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today AND amount<=0', compact('today'));
       $crit = ' AND amount' . ($way == 'IN' ? '>0' : '<=0');
     }

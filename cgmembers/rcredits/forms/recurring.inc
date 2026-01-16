@@ -44,6 +44,7 @@ function formRecurring($form, &$sta, $args = '') {
     LEFT JOIN txs x ON x.recursId=tm.id
     LEFT JOIN tx_requests i ON i.recursId=tm.id
     WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tm.from,tm.to) 
+    AND period<>:PER_1
     AND $extraCrit
     GROUP BY tm.id
     ORDER BY tm.end IS NOT NULL, tm.to=:myid, tm.start DESC, tm.id DESC
@@ -92,7 +93,7 @@ function addLine($info, $classes, $url, $person = FALSE) {
   $button = $button ? "<a href=\"$url&do=stop\" title=\"$button\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
 
   if ($person) {
-    $fWho = db\get('fullName', 'people', ray('pid', $fWho));
+    $fWho = db\get('fullName', 'people', ray('pid', $fWho)) . t(' (non-member)');
   } else {
     $a = r\acct($fWho);
     $fWho = $a->bestName;
