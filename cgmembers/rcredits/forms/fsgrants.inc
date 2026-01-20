@@ -118,8 +118,9 @@ function formFSGrants_submit($form, &$sta) {
   $by = ray(tr(PAYBY_OPTS))[$by];
   $created = $orig['created'] ?: now();
   if ($received and !$received0 and !$documented and $amount >= UNDOC_GRANT_MAX) {
-    [$grantorName, $fullName, $email, $amt] = [$fullName, $mya->fullName, $mya->email, u\fmtAmt($amount)];
-    r\acct($uid)->tell('needs-documentation', compact(ray('fullName grantorName amt')), t('grantdoc-required'));
+    $a = r\acct($uid);
+    [$grantorName, $fullName, $amt] = [$fullName, $a->fullName, u\fmtAmt($amount)];
+    $a->tell('grantdoc-required', compact(ray('fullName grantorName amt')));
     say('sponsee notified');
   }
 
