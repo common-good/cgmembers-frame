@@ -575,8 +575,10 @@ function doit(what, vs) {
       if ($('#edit-period').val() == 'once') period.hide(); else repeat.hide();
     }
     const stay = $('.form-item-stay'); stay.find('input').val(-1); // reset on error
-    const qid = $('.form-item-qid'); qid.hide();
-    const pass = $('.form-item-pass'); pass.hide();
+
+    const qid = $('.form-item-qid'); qid.toggle(vs['stripePublicKey'] == null);
+    const pass = $('.form-item-pass'); pass.toggle(vs['stripePublicKey'] == null);
+    
     const ccPctVal = parseFloat(vs['ccPct']) / 100;
     const ccPlusVal = parseFloat(vs['ccPlus']) / 100;
     const fsPctVal = parseFloat($('#edit-fspct').val());
@@ -599,7 +601,7 @@ function doit(what, vs) {
       erDiv.html('');
     });
     
-    if (stay.length) {
+    if (stay.length > 1) { // 3 when signed out and asking if user is a member, 1 when only members are allowed
       nonMember = $('#nonMember'); nonMember.hide(); // making this const sometimes keeps us from showing it (JQuery bug?)
       paySet = $('#paySet'); paySet.hide();
       submit.hide();

@@ -1988,6 +1988,7 @@ X;
    * @param assoc $tweaks: fields and values to adjust
    * @param string $prefixOld: something to add before the original account name, to distinguish it
    * for example, r\acct('NEWDDD')->cloneUser(ray('federalId legalName', 383838293, 'Aacme Inc.'));
+   * WARNING: this function is far from perfect
    */
   public function cloneUser($tweaks = [], $prefixOld = 'FBO ') {
     $row = db\row('users', ray('uid', $oldUid = $this->uid));
@@ -1997,9 +1998,11 @@ X;
     
     $DBTX = db_transaction();
     
-    db\update('users', ray('uid name fullName', $oldUid, $name, $fullName), 'uid');
+    $flags = $this->flags & ~u\bit(B_OK);
+    db\update('users', ray('uid name fullName balance flags', $oldUid, $name, $fullName, 0, $flags), 'uid');
     $uid = r\regionalInsert('users', 'uid', (array) $row);
-    foreach (ray('u_company:uid, u_photo:uid, u_relations:main, u_relations:other') as $tnm => $idFnm) {
+
+    foreach (ray('u_company:uid, u_photo:uid, u_relations:main, u_relations:other') as $tnm => $idFnm) { // clone auxiliary tables
       if ($r = db\row($tnm, ray($idFnm, $oldUid))) {
         $r->$idFnm = $uid;
         if ($tnm == 'u_relations') {
@@ -2008,7 +2011,8 @@ X;
         } else db\insert($tnm, (array) $r, $idFnm);
       }
     }
-    $subs = compact(ray('uid oldUid'));
+
+    $subs = compact(ray('uid oldUid')); // move invoices and timed transactions to apply only to the clone
     db\q("UPDATE tx_timed SET `to`=:uid WHERE `to`=:oldUid AND payerType<>'person' AND `end` IS NULL", $subs);
     foreach (ray('payer payee') as $fnm) db\q("UPDATE tx_requests SET $fnm=:uid WHERE $fnm=:oldUid AND status IN (:TX_PENDING, :TX_APPROVED)", $subs);
     
