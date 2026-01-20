@@ -83,8 +83,7 @@ function formFSGrants_validate($form, &$sta) {
   if ($email and !u\validEmail($email)) return txErr('bad email', 'email');
   if ($err = u\badAmount($amount, '>0')) return txErr($err, 'amount');
 
-  $dtFlds = ray('ckDate documented' . (nni($orig, 'received') ? '' : ' received'));
-  foreach ($dtFlds as $k) if (!$$k) $$k = NULL; elseif ($err = u\badDate($$k)) return txErr("$k: $err", $k);
+  foreach (ray('ckDate documented') as $k) if (!$$k) $$k = NULL; elseif ($err = u\badDate($$k)) return txErr("$k: $err", $k);
   
   if ($received and !$by) return txErr(t('You must specify a payment method.'));
   if ($received and $by == B_CHECK and !($ckDate and $ckNum)) return txErr(t('You must provide check number and date.'));
@@ -106,7 +105,7 @@ function formFSGrants_submit($form, &$sta) {
   [$paying, $purpose, $isGift] = [FALSE, t('grant'), TRUE];
   $doTx = (!$xid and $received and ($documented or $amount < UNDOC_GRANT_MAX)); // time to credit the account
   $uid = $orig['uid'] ?: $mya->id;
-  foreach (ray('documented received ckDate') as $k) if (!$$k) $$k = NULL; // redundant, but doing it in _validate fails for <input>
+  foreach (ray('documented received ckDate') as $k) if (!$$k) $$k = $orig[$k] ?: NULL; // redundant, but doing it in _validate fails for <input>
 
   $DBTX = \db_transaction();
   $xid0 = $xid;

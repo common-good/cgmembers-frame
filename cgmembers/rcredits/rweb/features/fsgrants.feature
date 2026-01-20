@@ -121,7 +121,7 @@ Scenario: An administrator views an expected grant
 Scenario: A sponsored partner marks a received grant documented
   When member ".ZZC" submits "co/grants/id=3" with:
   | fullName | email  | phone        | address | city | state | zip   | amount | by  | received | documented |*
-  | Flo Sixy | f@z.co | 666-666-6666 | 6 Fr St | Fton | MA    | 01006 | 6,000  | ach | %mdY     | %mdY       |
+  | Flo Sixy | f@z.co | 666-666-6666 | 6 Fr St | Fton | MA    | 01006 | 6,000  | ach | %now     | %mdY       |
   Then these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
   |   5 | 2   | %UID_OUTER | .ZZC  | 6000   | grant    |             | D-FBO       | %E_OUTER |
@@ -131,7 +131,7 @@ Scenario: A sponsored partner marks a received grant documented
   | 2   | .ZZC  | 6000   | %now      | %now    | 6   |             |
   And these "grants":
   | id | uid  | pid | amount | created  | by    | xid | received | documented |*
-  | 3  | .ZZC | 6   | 6000   | %now0-3d | ach   | 2   | %now0    | %now0      |
+  | 3  | .ZZC | 6   | 6000   | %now0-3d | ach   | 2   | %now     | %now0      |
   And we say "status": "funds distributed"
   And we say "status": "info saved"
 
