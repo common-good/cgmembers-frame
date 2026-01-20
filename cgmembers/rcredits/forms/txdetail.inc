@@ -103,7 +103,7 @@ X;
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);
-    $suffix = join(' ', $eids);
+    $suffix = join(' ', nn($eids, []));
     if (nni($ids, $eid) != E_PRIME) $suffix .=  ' ' . buttino('', t('Delete this auxiliary transaction'));
     $submit = submit(t('Update'), '', '', suffix($suffix));
     if ($reversesXid or count($ids) > 1) jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
