@@ -31,6 +31,7 @@ Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   | When:        |
   | Honoring:    |
   | %PROJECT member |
+  | %PROJECT members save time and card fees! |
   | Name:        |
   | Phone:       |
   | Email:       |
@@ -41,6 +42,33 @@ Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   | Pay by:      |
   | Note:        |
   | Donate       |
+  
+Scenario: A non-member clicks a link to donate to an unauthorized organization
+  Given button code "buttonCode" for:
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
+  And members have:
+  | uid  | coFlags |*
+  | .ZZC |         |
+  When member "?" visits "pay/code=%buttonCode"
+  Then we show "Donate to Our Pub" with:
+  | Donation:    |
+  | When:        |
+  | Honoring:    |
+  | Account ID:  |
+  | Password:    |
+  | Not a %PROJECT member yet? |
+  | Note:        |
+  | Donate       |
+  And without:
+  | Name:        |
+  | Phone:       |
+  | Email:       |
+  | Country:     |
+  | Postal Code: |
+  | Next         |
+  | Pay by:      |
+  | cover        |
 
 Scenario: A non-member submits donation information to Stripe
   Given next codes are "strCid123 strId456 secret78"

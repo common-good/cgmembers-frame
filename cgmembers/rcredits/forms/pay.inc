@@ -65,12 +65,12 @@ function formPay($form, &$sta, $args = NULL) {
     $qid = $pass = $paySet = $nonMember = $stay = $stayLabel = NULL;
   } else {
     [$qid, $pass] = w\signinFlds($s_id);
-    [$paySet, $nonMember, $stay, $stayLabel] = nonMember($isGift, $s_id);
+    [$paySet, $nonMember, $stay, $stayLabel] = nonMember($isGift, $s_id, $coA);
   }
   
   $note = textFld(t('Note:'), [t('About the payment')]);
 
-  $form = compact(ray('logo title subtext details stayLabel stay qid pass nonMember paySet note'));
+  $form = compact(ray('logo title subtext details qid pass stayLabel stay nonMember paySet note'));
   foreach (ray('isGift coId credit for return fsPct recursId button') as $k) $form[$k] = hidfld(nn($$k, NULL));
   
   $noteSuffix = suffix(lnk('', t('Add note'))); // set to [] to disable
@@ -80,7 +80,7 @@ function formPay($form, &$sta, $args = NULL) {
 
   js('https://js.stripe.com/v3/');
   $canceledMsg = u\ry('P', 'Payment is canceled.');
-  jsx('pay', ray('stripePublicKey ccPct ccPlus payeeName canceledMsg', STRIPE_PUBLIC, CC_PCT, CC_PLUS, $coA->bestName, $canceledMsg));
+  jsx('pay', ray('stripePublicKey ccPct ccPlus payeeName canceledMsg', $nonMember ? STRIPE_PUBLIC : NULL, CC_PCT, CC_PLUS, $coA->bestName, $canceledMsg));
 
   return cgForm($form);
 }
@@ -381,25 +381,29 @@ function itemDpy($for, $item, $s_item, $credit) {
   return [$itemDpy, $item, $forDpy];
 }
 
-function nonMember($isGift, $s_id) {
-  $payment = item('', t('Pay by:'));
-  $paymentErr = item('', NBSP);
-  $paySet = fieldSet('paySet', compact(ray('payment paymentErr')), BARE);
+function nonMember($isGift, $s_id, $coA) {
 
-  $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, tr('cover cc fee'), 0) : NULL;
-  $next = btnFld('', '', t('Next'));
-  $fullName = textFld(t('Name:'), [t('Your full name, properly capitalized')]);
-  $phone = phoneFld(t('Phone:'), [t('Your phone number')]);
-  $email = emailFld(t('Email:'), [t('Email')], dft(strhas($s_id, '@') ? $s_id : ''));
-  $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
-  $zip = zipFld(nn($zip), FALSE);
-  $nonMemberInfo = compact(ray('fullName phone email country zip coverCCFee next'));
-  $nonMember = fieldSet('nonMember', $nonMemberInfo, BARE);
-  
-  $signinMsg = t('%PROJECT members save time and card fees! ') . buttino('/signup', t('<big>Sign up here</big>')) . qBtn('signup-why');
+  $signupBtn = buttino('/signup', t('<big>Sign up here</big>')) . qBtn('signup-why');
 
-  $stay = boolFld('', $signinMsg);
-  $stayLabel = item('<br>' . t('Are you a %PROJECT member (yet 🙂)?'));
-  
-  return [$paySet, $nonMember, $stay, $stayLabel];
+  if ($coA->sponsored or $coA->ccOk) {
+    $payment = item('', t('Pay by:'));
+    $paymentErr = item('', NBSP);
+    $paySet = fieldSet('paySet', compact(ray('payment paymentErr')), BARE);
+
+    $coverCCFee = $isGift ? boxFld('coverCCFee', NBSP, tr('cover cc fee'), 0) : NULL;
+    $next = btnFld('', '', t('Next'));
+    $fullName = textFld(t('Name:'), [t('Your full name, properly capitalized')]);
+    $phone = phoneFld(t('Phone:'), [t('Your phone number')]);
+    $email = emailFld(t('Email:'), [t('Email')], dft(strhas($s_id, '@') ? $s_id : ''));
+    $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
+    $zip = zipFld(nn($zip), FALSE);
+    $nonMemberInfo = compact(ray('fullName phone email country zip coverCCFee next'));
+    $nonMember = fieldSet('nonMember', $nonMemberInfo, BARE);
+    $stay = boolFld('', t('%PROJECT members save time and card fees! ') . $signupBtn);
+    $stayLabel = item('<br>' . t('Are you a %PROJECT member (yet 🙂)?'));
+    return [$paySet, $nonMember, $stay, $stayLabel];
+  } else {  
+    $stay = item(t('Not a %PROJECT member yet? ') . $signupBtn);
+    return [NULL, NULL, $stay, NULL]; 
+  }    
 }

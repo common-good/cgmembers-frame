@@ -575,6 +575,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
+ *     TEST ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     TEST cgpay AMemberClicksAPayButton
  *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
@@ -735,7 +736,8 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
+ * in: TEST ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
+ *     TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
@@ -1230,6 +1232,7 @@ function statisticsGetSet($time) {
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  *     MAKE ccpay ANonmemberConfirmsAPaymentToACcOkOrganizationByCreditCard
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
@@ -2432,6 +2435,7 @@ function memberAjaxWith($id, $op, $ray) {
  * member (ARG) visits (ARG)
  *
  * in: MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     MAKE fbo ANonmemberDonatesToCommonGood
@@ -2608,6 +2612,7 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE cgpay AMemberClicksAPayButton
