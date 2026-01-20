@@ -176,9 +176,9 @@ Scenario: An admin marks an udocumented grant received
   | 2  | .ZZC | 5   | 5000   | %now0    | wire  |     | %now     |            |
   And we say "status": "sponsee notified"
   And we say "status": "info saved"
-  And we message "needs-documentation" to member ".ZZC" with subs:
-  | grantorName | amt    | topic             |*
-  | Eve Fivo    | $5,000 | grantdoc-required |
+  And we message "grantdoc-required" to member ".ZZC" with subs:
+  | grantorName | amt    |*
+  | Eve Fivo    | $5,000 |
 
 Scenario: An admin marks an udocumented grant received by check
   When member ".ZZC" submits "co/grants/id=2" with:
@@ -217,9 +217,9 @@ Scenario: An admin marks an udocumented grant received by check
   | 2  | .ZZC | 5   | 5000   | %now0   | check |     | %now     |            | 123   | %now0  |
   And we say "status": "sponsee notified"
   And we say "status": "info saved"
-  And we message "needs-documentation" to member ".ZZC" with subs:
-  | grantorName | amt    | topic             |*
-  | Eve Fivo    | $5,000 | grantdoc-required |
+  And we message "grantdoc-required" to member ".ZZC" with subs:
+  | grantorName | amt    |*
+  | Eve Fivo    | $5,000 |
   
   When member ".ZZC" submits "co/grants/id=2" with:
   | fullName   | Eve Fivo     |**
