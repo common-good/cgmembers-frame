@@ -83,7 +83,7 @@ EOF;
   $aExact = "a href=\"$base_url/help/payment-exchanges\"";
   $_aInvite = atag('/community/invite');
   $aAgent = "a href=\"$base_url/agent\"";
-  $help = t('Connect individual %PROJECT participants to your account &mdash; either as owners, employees, customer, or others, with limited or full access to the account. If they don\'t have an account yet, <%aInvite>invite them</a>! Each permission includes all the permissions above it.', compact(ray('aExact _aInvite aAgent')));
+  $help = t('Connect individual %PROJECT participants to your account &mdash; either as owners, employees, customers, or others, with limited or full access to the account. If they don\'t have an account yet, <%aInvite>invite them</a>! Each permission includes all the permissions above it.', compact(ray('aExact _aInvite aAgent')));
   //If they wish NOT to open a real account, create an <@aAgent>rPOS Sign-in Account</a> for them.
 
   $subtext = '<span id="account-label">' . t('Current Account') . ":</span> <span id='account-identifiers'>$acctIdentifiers</span><br><br>$help";

@@ -46,8 +46,8 @@ function formFSGrants($form, &$sta, $args = '') {
   $optNums = array_flip($opts);
   $by = radiosFld(REQ . t('Method:'), '', dft($by ? $optNums[$by] : B_ACH), $opts);
   
-  $ckNum = $mya->admin ? textFld(t('Ck Number:'), '', dft($ckNum)) : NULL;
-  $ckDate = $mya->admin ? dateFld(t('Ck Date:'), '', dft($ckDate)) : NULL;
+  $ckNum = $mya->admin ? textFld(t('Ck Number:'), '', dft($ckNum)) : hidFld($ckNum);
+  $ckDate = $mya->admin ? dateFld(t('Ck Date:'), '', dft($ckDate)) : hidFld($ckDate);
 
   if ($received) {
     $got = item(fmtDt($received), t('Received:'));
