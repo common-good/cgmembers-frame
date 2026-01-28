@@ -87,7 +87,9 @@ Scenario: A sponsored partner adds an expected grant
   | wire |
   | Documented: |
   And without:
-  | Received: |
+  | Received:  |
+  | Ck Number: |
+  | Ck Date:   |
   When member ".ZZC" submits "co/grants/id=add" with:
   | fullName | email | phone        | address | city | state | zip   | amount | by    | documented |*
   | Jay Fund | j@    | 413-999-9999 | 1 J St. | Jton | NJ    | 09999 | 9,000  | check | %mdY       |  
