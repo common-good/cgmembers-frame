@@ -65,6 +65,7 @@ function do1099s($type, $testMode = FALSE, $extra = [], $rows = FALSE) {
   
   extract(just('ein year badNames badTINs omit', $extra ?: [], [NULL, date('Y') - 1, [], [], [] ]));
   $testMode = $testMode ? 'T' : '';
+//  foreach (ray('NEBADI NECABD') as $qid) $omit[] = r\acct($qid)->uid;
 
   if (!in($type, array_keys(ray(TEN99TYPES)))) return u\FAIL(t('Bad 1099 type (must be an index of %TEN99TYPES): %type', compact('type')));
   $flnm = (($ein and $ein != CGF_EIN) ? t('guest-') : '') . "Y$year$testMode-forms1099$type.txt";
