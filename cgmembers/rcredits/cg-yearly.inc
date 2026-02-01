@@ -192,7 +192,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
     $bCount++;
     $a = r\acct($payee); $id = $a->id;
     if (!$a->federalId) {
-      err1099($a->fullName . t(' does not have a social security number.'));
+      err1099("$a->fullName ($a->mainQid) " . t('does not have a social security number.'));
       return 0; // might be better to just skip it and send admin a message (to get most of the reporting done)
     }
     $acctFields = ray('nm qid co addr ein txCount', u\asciiOnly($a->legalName), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId, $txCount);
@@ -279,7 +279,12 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
   $payeeAddr = pad($address, 40) . sp(40) . pad($city, 40) . pad($st, 2) . pad(u\digits($zip), 9);
 
   if (count($amount) != AMT_COUNT) return err1099(t('There must be %amt amount fields. You have only %cnt.', 'amt cnt', AMT_COUNT, count($amount)));
-  $amounts = ''; foreach ($amount as $amt) $amounts .= fmtAmt($amt, 12);
+  $amounts = '';
+  for ($m = 0, $xamt = 0; $m < AMT_COUNT; $m++) {
+    [$amt, $xamt] = [$amount[$m] + $xamt, 0];
+    if ($amt < 0) [$xamt, $amt] = [$amt, 0];
+    $amounts .= fmtAmt($amt, 12);
+  }
 
   $twoBadTINs = sp(1); // "2" if IRS griped twice within 3 calendar years that the payee provided a bad name and/or TIN. Otherwise blank.
   $withheld = u\lpad(0, 12) . u\lpad(0, 12); // state and local tax withheld (none)
