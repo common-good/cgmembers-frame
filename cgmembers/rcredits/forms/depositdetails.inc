@@ -65,7 +65,7 @@ EOF;
   $lines[] = t('<tr><td></td><td><b>IN</b> (%cntIn)</td><td>%totIn</td></tr>', 'cntIn totIn', $cntIn, u\fmtAmt($totIn, ''));
   $lines[] = t('<tr><td></td><td><b>OUT</b> (%cntOut)</td><td>%totOut</td></tr>', 'cntOut totOut', $cntIn, u\fmtAmt($totOut, ''));
   */
-  $lines = join("\n", $lines);
+  $lines = join("\n", nn($lines, []));
   
   $hdrs = t('<tr><th>Tx #</th><th>Name</th><th>Amount</th><th>Description</th></tr>');
 

@@ -50,7 +50,12 @@ EOF
   jsx('taxinfo');
 
   $form = compact(ray('title year subtext txCount gross noCard withheld'));
-  for ($i = 1; $i <= 12; $i++) $form["mo$i"] = item(u\fmtAmt($row["amt$i"], '$'), date("F", mktime(0, 0, 0, $i)) . ':');
+  
+  for ($i = 1, $xamt = 0; $i <= 12; $i++) {
+    [$amt, $xamt] = [$row["amt$i"] + $xamt, 0];
+    if ($amt < 0) [$xamt, $amt] = [$amt, 0];
+    $form["mo$i"] = item(u\fmtAmt($amt, '$'), date("F", mktime(0, 0, 0, $i)) . ':');
+  }
   return cgform($form + compact('posttext'), '', 'left');
 }
 

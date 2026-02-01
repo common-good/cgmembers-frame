@@ -73,21 +73,21 @@ Scenario: A sponsored partner visits the grants page
 Scenario: A sponsored partner adds an expected grant
   When member ".ZZC" visits "co/grants/id=add"
   Then we show "Expected Grants" with:
-  | Grantor Name: |
-  | Email: |
-  | Phone: |
-  | Postal Addr: |
-  | City: |
-  | State: |
-  | Postal Code: |
-  | Expected Amount: |
-  | Method: |
-  | check |
-  | ach |
-  | wire |
-  | Documented: |
+  | Grantor Name: ||
+  | Email: ||
+  | Phone: ||
+  | Postal Addr: ||
+  | City: ||
+  | State: ||
+  | Postal Code: ||
+  | Expected Amount: ||
+  | Method: ||
+  | check ||
+  | ach ||
+  | wire ||
+  | Documented: ||
+  | Received: | No |
   And without:
-  | Received:  |
   | Ck Number: |
   | Ck Date:   |
   When member ".ZZC" submits "co/grants/id=add" with:
@@ -111,12 +111,12 @@ Scenario: An administrator views an expected grant
   | State:           | Massachusetts |
   | Postal Code:     | 01006 |
   | Expected Amount: | 6000.00 |
-  | Received:        | %mdY |
   | Method:          | |
   | check            | |
   | ach              | |
   | wire             | |
   | Documented:      | |
+  | Received:        | %mdY |
 
 # Rule: When a grant has been received and adequately documented, funds get distributed.
 

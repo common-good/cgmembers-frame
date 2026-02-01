@@ -49,18 +49,20 @@ function formFSGrants($form, &$sta, $args = '') {
   $ckNum = $mya->admin ? textFld(t('Ck Number:'), '', dft($ckNum)) : hidFld($ckNum);
   $ckDate = $mya->admin ? dateFld(t('Ck Date:'), '', dft($ckDate)) : hidFld($ckDate);
 
-  if ($received) {
-    $got = item(fmtDt($received), t('Received:'));
-  } else $got = $mya->admin ? boxFld('got', t('Received:'), '', FALSE) : NULL;
+  if ($mya->admin) {
+    [$received, $got] = $received 
+    ? [dateFld(t('Received:'), '', dft($received)), NULL]
+    : [hidFld(NULL), boxFld('got', t('Received:'), '', FALSE)];
+  } else [$received, $got] = [hidFld($received), item($received ? fmtDt($received) : t('No'), t('Received:'))];
   
   $documented = dateFld(t('Documented:'), t('Date the sponsored organization emailed a copy of the grant agreement to %PROJECT'), dft($documented));
   
   $submit = submit();
   $orig = hidFlds($orig);
-  foreach (ray('url seeAll received') as $k) $$k = hidFld($$k);
+  foreach (ray('url seeAll') as $k) $$k = hidFld($$k);
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
-  $form = compact(ray('title subtext fullName email phone address city state zip amount got by ckNum ckDate documented received submit orig url seeAll'));
+  $form = compact(ray('title subtext fullName email phone address city state zip amount by ckNum ckDate documented got received submit orig url seeAll'));
         
   jsx('contact');
   jsx('fsgrants', ray('byCheck undocMax', B_CHECK, UNDOC_GRANT_MAX));
