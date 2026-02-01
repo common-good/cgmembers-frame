@@ -1201,7 +1201,7 @@ function stripe(str, info, vs) {
       
     const submitHandler = async (ev) => { // user clicked "Pay" or "Donate"
       ev.preventDefault();
-      elements.submit();
+      await elements.submit();
       
       const msg = 'You are paying $%amt to %who. Okay?'.replace('%amt', fmtAmt(info.amount)).replace('%who', vs['payeeName']);
       const address = { postal_code:info.zip, country:'US' };
