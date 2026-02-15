@@ -22,11 +22,11 @@ Setup:
   | payee     | .ZZC         |
   | payeeType | %REF_ACCOUNT |
   | from      | %MATCH_PAYEE |
-  | to        | cgf          |
+  | to        | %UID_FSFEES  |
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
-  | purpose   | %FS_NOTE |
+  | purpose   | %FS_NOTE     |
   | minimum   | 0            |
   | useMax    |              |
   | amtMax    |              |
@@ -75,7 +75,7 @@ Scenario: A non-member donates to a sponsored member by check
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose                        | cat1        | cat2        | type     |*
   |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant (check #123, 09/01/2024) |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE                       | D-FBO       | FS-FEE      | %E_AUX   |
+  |   3 | 1   | .ZZC | %UID_FSFEES | 5      | %FS_NOTE                       | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 100    | %now      | %now    | 1   |
@@ -123,7 +123,7 @@ Scenario: A non-member donates to a sponsored member by direct ACH
   And these "txs":
   | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
   |   1 | 1   | %UID_OUTER | .ZZC  | 100    | grant    |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  |   3 | 1   | .ZZC | %UID_FSFEES | 5      | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
 
 Scenario: A non-member donates to a sponsored member by wire transfer
   Given members have:
@@ -142,8 +142,8 @@ Scenario: A non-member donates to a sponsored member by wire transfer
   And these "txs":
   | eid | xid | payer      | payee | amount    | purpose  | cat1        | cat2        | type     |*
   |   1 | 1   | %UID_OUTER | .ZZC  | 100       | grant    |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
-  |   4 | 1   | .ZZC       | cgf   | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  |   3 | 1   | .ZZC | %UID_TXFEES | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
+  |   4 | 1   | .ZZC | %UID_FSFEES | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
 
 Scenario: A non-member donates to Common Good
   Given members have:
@@ -289,9 +289,9 @@ Scenario: A member pays a sponsored member everything they have
   | op  | fbo | who  | amount | purpose|*
   | pay |   0 | .ZZC |    250 | my all |
   Then these "txs":
-  | eid | xid | created | amount | payer | payee | purpose  | taking | cat2        |*
-  |   1 |   1 | %today  |    250 | .ZZB  | .ZZC  | my all   | 0      | D-FBO       |
-  |   3 |   1 | %today  |  12.50 | .ZZC  | cgf   | %FS_NOTE | 0      | FS-FEE      |
+  | eid | xid | created | amount | payer | payee       | purpose  | taking | cat2        |*
+  |   1 |   1 | %today  |    250 | .ZZB  | .ZZC        | my all   | 0      | D-FBO       |
+  |   3 |   1 | %today  |  12.50 | .ZZC  | %UID_FSFEES | %FS_NOTE | 0      | FS-FEE      |
 
 Scenario: A sponsored member views their transaction history
   Given these "txs":
@@ -331,9 +331,9 @@ Scenario: A member donates to a sponsored organization
   | amount | note     | period | honor  | honored |*
   |    123 | awesome! | month  | memory | Mike    |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose  | type       |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | donation | %E_PRIME   |
-  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     |
+  | eid | xid | payer | payee       | amount | purpose  | type       |*
+  | 1   | 1   | .ZZA  | .ZZC        | 123    | donation | %E_PRIME   |
+  | 3   | 1   | .ZZC  | %UID_FSFEES | 6.15   | %FS_NOTE | %E_AUX     |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose  | payerType    | payeeType    | period |*
   | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | donation | %REF_ANYBODY | %REF_ANYBODY | month  |  
@@ -361,9 +361,9 @@ Scenario: A member pays a sponsored organization
   | op  | who     | amount | purpose | period | periods | isGift |*
   | pay | Our Pub | 123    | gift    | month  | 1       | 1      |
   Then these "txs":
-  | eid | xid | payer | payee | amount | purpose  | type       | cat1        | cat2        |*
-  | 1   | 1   | .ZZA  | .ZZC  | 123    | gift     | %E_PRIME   |             | D-FBO       |
-  | 3   | 1   | .ZZC  | cgf   | 6.15   | %FS_NOTE | %E_AUX     | D-FBO       | FS-FEE      |
+  | eid | xid | payer | payee       | amount | purpose  | type       | cat1        | cat2        |*
+  | 1   | 1   | .ZZA  | .ZZC        | 123    | gift     | %E_PRIME   |             | D-FBO       |
+  | 3   | 1   | .ZZC  | %UID_FSFEES | 6.15   | %FS_NOTE | %E_AUX     | D-FBO       | FS-FEE      |
   And these "tx_timed":
   | id | action   | from | to   | amount | portion | purpose | payerType    | payeeType    | period | periods |*
   | 1  | %ACT_PAY | .ZZA | .ZZC | 123    | 0       | gift    | %REF_ANYBODY | %REF_ANYBODY | month  | 1       |

@@ -475,7 +475,7 @@ function adjustFS() {
     $info = compact(ray('uid rule offBy portion rightFee rightPct donsToDate allIncome fee1pct fee1desc feesToDate purpose'));
     $msgs[] = t('adjusting FS fee for ') . $nm . ' ' . pr($info);
     db\update('tx_rules', ray('id portion purpose', $rule, round($rightPct/100, 4), $purpose), 'id');
-    $cat = [NULL, r\nick2cat('FS-FEE')];
+    $cat = [r\nick2cat('D-FBO'), r\nick2cat('FS-FEE')];
     r\acct($uid)->payApproved(CGID, $offBy, t('fiscal sponsorship fee adjustment'), FOR_GOODS, compact(ray('rule cat')));
   }
 
@@ -845,11 +845,12 @@ function sweep($item = ['end' => NOW]) {
   extract(just('end', $item ?: [], NOW)); // default is for testing
   
   $cgA = r\acct(CGID);
-  foreach (ray(t('regular roundup crumb step-up'), UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS) as $type => $uid) {
+  foreach (ray(t('regular roundup crumb step-up tx-fees fs-fees'), UID_REGULARS, UID_ROUNDUPS, UID_CRUMBS, UID_STEPUPS, UID_TXFEES, UID_FSFEES) as $type => $uid) {
+    if (!strhas($type, '-fees')) $type .= t(' donations');
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {
-      $z = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations: ') . fmtDt($end, 'MMM YYYY'), FOR_GOODS, ray('created gift', $end, TRUE));
+      $z = be\transfer('payment', $a, $cgA, $amt, "$type: " . fmtDt($end, 'MMM YYYY'), FOR_GOODS, ray('created gift', $end, TRUE));
       if (!$z->ok) r\tellAdmin($type . t(' sweep failed: ') . $z->msg);
     }
   }

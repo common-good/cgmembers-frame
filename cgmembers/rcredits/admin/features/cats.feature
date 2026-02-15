@@ -25,7 +25,7 @@ Setup:
   | payee     | .ZZC         |
   | payeeType | %REF_ACCOUNT |
   | from      | %MATCH_PAYEE |
-  | to        | cgf          |
+  | to        | %UID_FSFEES  |
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
@@ -52,16 +52,16 @@ Scenario: admin sets most categories and sends to QBO
   | 202 |  22 | %now-5m |    202 | %UID_OUTER | cgf   | by ACH  |      | outer |          | gift    |
   | 203 |  23 | %now-5m |    203 | %UID_OUTER | cgf   | by ACHs |      | outer |     2003 | gift    |
 # non-member gifts to a fiscally sponsored project
-  | 301 |  31 | %now-5m |    301 | %UID_OUTER | .ZZC  | by CC   |      | outer |          | cc,gift |
-  | 311 |  31 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | cc,gift |
-  | 321 |  31 | %now-5m |      9 | .ZZC       | cgf   | cc fee  |  312 | xfee  |          | cc,gift |
-  | 302 |  32 | %now-5m |    302 | %UID_OUTER | .ZZC  | by ACH  |      | outer |          | gift    |
-  | 312 |  32 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
-  | 303 |  33 | %now-5m |    303 | %UID_OUTER | .ZZC  | by ACHs |      | outer |     2003 | gift    |
-  | 313 |  33 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
+  | 301 |  31 | %now-5m |    301 | %UID_OUTER | .ZZC       | by CC   |      | outer |          | cc,gift |
+  | 311 |  31 | %now-5m |      9 | .ZZC       | %UID_FSFEES| %FS_NOTE|  311 | aux   |          | cc,gift |
+  | 321 |  31 | %now-5m |      9 | .ZZC       | %UID_TXFEES| cc fee  |  312 | xfee  |          | cc,gift |
+  | 302 |  32 | %now-5m |    302 | %UID_OUTER | .ZZC       | by ACH  |      | outer |          | gift    |
+  | 312 |  32 | %now-5m |      9 | .ZZC       | %UID_FSFEES| %FS_NOTE|  311 | aux   |          | gift    |
+  | 303 |  33 | %now-5m |    303 | %UID_OUTER | .ZZC       | by ACHs |      | outer |     2003 | gift    |
+  | 313 |  33 | %now-5m |      9 | .ZZC       | %UID_FSFEES| %FS_NOTE|  311 | aux   |          | gift    |
 # non-member payment (or gift) to some other member company (CC only)
-  | 401 |  41 | %now-5m |    401 | %UID_OUTER | .ZZF  | by CC   |      | outer |          | cc      |
-  | 411 |  41 | %now-5m |     12 | .ZZF       | cgf   | cc fee  |  412 | xfee  |          | cc      |
+  | 401 |  41 | %now-5m |    401 | %UID_OUTER | .ZZF       | by CC   |      | outer |          | cc      |
+  | 411 |  41 | %now-5m |     12 | .ZZF       | %UID_TXFEES| cc fee  |  412 | xfee  |          | cc      |
 # member gifts to CG  
   | 501 |  51 | %now-5m |    501 | .ZZB       | cgf   | once    |      | prime |          | gift    |
   | 502 |  52 | %now-5m |    502 | .ZZF       | cgf   | once co |      | prime |          | gift    |
@@ -76,17 +76,17 @@ Scenario: admin sets most categories and sends to QBO
   | 509 |  59 | %now-5m |    509 | cgf        | .ZZB  | labor   |      | prime |          |         |
   | 500 |  50 | %now-5m |    500 | cgf        | .ZZF  | other   |      | prime |          |         |
 # member gifts to a fiscally sponsored project
-  | 601 |  61 | %now-5m |    601 | .ZZB       | .ZZC  | once    |      | prime |          | gift    |
-  | 611 |  61 | %now-5m |     18 | .ZZC       | cgf   | %FS_NOTE|  611 | aux   |          | gift    |
-  | 602 |  62 | %now-5m |    602 | .ZZF       | .ZZC  | once co |      | prime |          | gift    |
-  | 612 |  62 | %now-5m |     18 | .ZZC       | cgf   | %FS_NOTE|  611 | aux   |          | gift    |
-  | 603 |  63 | %now-5m |    603 | .ZZB       | .ZZF  | thing   |      | prime |          | gift    |
-  | 613 |  63 | %now-5m |     30 | .ZZB       | .ZZC  | stepup  |  613 | aux   |          | gift    |
-  | 623 |  63 | %now-5m |      1 | .ZZC       | cgf   | %FS_NOTE|  611 | aux   |          | gift    |
-  | 604 |  64 | %now-5m |    604 | .ZZB       | .ZZC  | regular |      | prime |     6004 | gift    |
-  | 614 |  64 | %now-5m |     18 | .ZZC       | cgf   | %FS_NOTE|  611 | aux   |          | gift    |
-  | 605 |  65 | %now-5m |    605 | .ZZB       | .ZZC  | non-don |      | prime |          |         |
-  | 615 |  65 | %now-5m |     18 | .ZZC       | cgf   | %FS_NOTE|  611 | aux   |          |         |
+  | 601 |  61 | %now-5m |    601 | .ZZB       | .ZZC       | once    |      | prime |          | gift    |
+  | 611 |  61 | %now-5m |     18 | .ZZC       | %UID_FSFEES| %FS_NOTE|  611 | aux   |          | gift    |
+  | 602 |  62 | %now-5m |    602 | .ZZF       | .ZZC       | once co |      | prime |          | gift    |
+  | 612 |  62 | %now-5m |     18 | .ZZC       | %UID_FSFEES| %FS_NOTE|  611 | aux   |          | gift    |
+  | 603 |  63 | %now-5m |    603 | .ZZB       | .ZZF       | thing   |      | prime |          | gift    |
+  | 613 |  63 | %now-5m |     30 | .ZZB       | .ZZC       | stepup  |  613 | aux   |          | gift    |
+  | 623 |  63 | %now-5m |      1 | .ZZC       | %UID_FSFEES| %FS_NOTE|  611 | aux   |          | gift    |
+  | 604 |  64 | %now-5m |    604 | .ZZB       | .ZZC       | regular |      | prime |     6004 | gift    |
+  | 614 |  64 | %now-5m |     18 | .ZZC       | %UID_FSFEES| %FS_NOTE|  611 | aux   |          | gift    |
+  | 605 |  65 | %now-5m |    605 | .ZZB       | .ZZC       | non-don |      | prime |          |         |
+  | 615 |  65 | %now-5m |     18 | .ZZC       | %UID_FSFEES| %FS_NOTE|  611 | aux   |          |         |
 # not sure 605 should be handled as a donation (but fiscally sponsored projects should not receive 
 # anything but donations through CG, unless they have a separate CG account. Yes?)
 
@@ -263,10 +263,10 @@ Scenario: a non-member makes a recurring ACH donation to a sponsored project
   Given these "txs":
   | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   |*
 # non-member gifts to a fiscally sponsored project
-  | 302 |  32 | %now-5m |    302 | %UID_OUTER | .ZZC  | by ACH  |      | outer |          | gift    |
-  | 312 |  32 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
-  | 303 |  33 | %now-5m |    303 | %UID_OUTER | .ZZC  | by ACHs |      | outer |        1 | gift    |
-  | 313 |  33 | %now-5m |      9 | .ZZC       | cgf   | %FS_NOTE|  311 | aux   |          | gift    |
+  | 302 |  32 | %now-5m |    302 | %UID_OUTER | .ZZC       | by ACH  |      | outer |          | gift    |
+  | 312 |  32 | %now-5m |      9 | .ZZC       | %UID_FSFEES| %FS_NOTE|  311 | aux   |          | gift    |
+  | 303 |  33 | %now-5m |    303 | %UID_OUTER | .ZZC       | by ACHs |      | outer |        1 | gift    |
+  | 313 |  33 | %now-5m |      9 | .ZZC       | %UID_FSFEES| %FS_NOTE|  311 | aux   |          | gift    |
   And these "txs2":
   | xid | payee | amount | created | deposit | completed | pid | bankAccount  | bankTxId |*
   |  32 | .ZZC  |    302 | %now-2d | %now0   | %now      | 102 | %T_BANK_ACCT | %now1234 |

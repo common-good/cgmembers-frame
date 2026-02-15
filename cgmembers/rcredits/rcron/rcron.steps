@@ -234,6 +234,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalanceAfterCreditLineTimesOut
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
+ *     MAKE monthly TxfeeAndFsfeeBucketsAreDumpedIntoCommonGood
  *     MAKE recurs ARecurringTransactionCannotBeCompletedBecauseTargetAccountIsClosed
  *     TEST risk Setup
  *     BOTH tickle MemberHasNegativeBalanceForSeveralMonths
@@ -421,6 +422,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
  *     TEST monthly CrumbAndRoundupDonationsAreMade
+ *     BOTH monthly TxfeeAndFsfeeBucketsAreDumpedIntoCommonGood
  *     BOTH monthly CrumbsAreInvoiced
  *     MAKE notices Setup
  *     BOTH notices AMemberGetsSomeNotices
@@ -566,6 +568,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     MAKE monthly PaperStatementWarningsAreSent
  *     MAKE monthly CrumbAndRoundupDonationsAreMade
+ *     MAKE monthly TxfeeAndFsfeeBucketsAreDumpedIntoCommonGood
  *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices

@@ -162,7 +162,7 @@ Scenario: A non-member confirms a donation to a sponsored organization by credit
   | payee     | .ZZC         |
   | payeeType | %REF_ACCOUNT |
   | from      | %MATCH_PAYEE |
-  | to        | cgf          |
+  | to        | %UID_FSFEES  |
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
@@ -202,10 +202,10 @@ Scenario: A non-member confirms a donation to a sponsored organization by credit
   | xid | payee | amount | completed | deposit | pid |*
   | 1   | .ZZC  | 123    | %now      |    %now | 1   |
   And these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | cat1       | cat2        | type     |*
-  | 1   | 1   | %UID_OUTER | .ZZC  | 123    | donation | POOL-A     | D-FBO       | %E_OUTER |
-  | 3   | 1   | .ZZC       | cgf   | 6.15   | %FS_NOTE | D-FBO      | FS-FEE      | %E_AUX   |
-  | 4   | 1   | .ZZC       | cgf   | 3.99   | cc fee   | FBO-TX-FEE | TX-FEE-BACK | %E_XFEE  |
+  | eid | xid | payer      | payee       | amount | purpose  | cat1       | cat2        | type     |*
+  | 1   | 1   | %UID_OUTER | .ZZC        | 123    | donation | POOL-A     | D-FBO       | %E_OUTER |
+  | 3   | 1   | .ZZC       | %UID_FSFEES | 6.15   | %FS_NOTE | D-FBO      | FS-FEE      | %E_AUX   |
+  | 4   | 1   | .ZZC       | %UID_TXFEES | 3.99   | cc fee   | FBO-TX-FEE | TX-FEE-BACK | %E_XFEE  |
 
 Scenario: A non-member clicks a link to pay a ccOk organization by Stripe
   Given button code "buttonCode" for:

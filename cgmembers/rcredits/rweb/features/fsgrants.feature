@@ -25,7 +25,7 @@ Setup:
   | payee     | .ZZC         |
   | payeeType | %REF_ACCOUNT |
   | from      | %MATCH_PAYEE |
-  | to        | cgf          |
+  | to        | %UID_FSFEES  |
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
@@ -43,10 +43,10 @@ Setup:
   | 2  | .ZZC | 5   | 5000   | %now0    | ach   |     |          |            |
   | 3  | .ZZC | 6   | 6000   | %now0-3d | wire  |     | %now     |            |
   And these "txs":
-  | eid | xid | payer      | payee | amount    | purpose  | cat1        | cat2        | type     |*
-  |   1 | 1   | %UID_OUTER | .ZZC  | 100       | grant    |             | D-FBO       | %E_OUTER |
-  |   3 | 1   | .ZZC       | cgf   | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
-  |   4 | 1   | .ZZC       | cgf   | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee       | amount    | purpose  | cat1        | cat2        | type     |*
+  |   1 | 1   | %UID_OUTER | .ZZC        | 100       | grant    |             | D-FBO       | %E_OUTER |
+  |   3 | 1   | .ZZC       | %UID_TXFEES | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
+  |   4 | 1   | .ZZC       | %UID_FSFEES | 5         | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid | bankAccount |*
   | 1   | .ZZC  | 100    | %now      | %now    | 4   |             |
@@ -125,9 +125,9 @@ Scenario: A sponsored partner marks a received grant documented
   | fullName | email  | phone        | address | city | state | zip   | amount | by  | received | documented |*
   | Flo Sixy | f@z.co | 666-666-6666 | 6 Fr St | Fton | MA    | 01006 | 6,000  | ach | %now     | %mdY       |
   Then these "txs":
-  | eid | xid | payer      | payee | amount | purpose  | cat1        | cat2        | type     |*
-  |   5 | 2   | %UID_OUTER | .ZZC  | 6000   | grant    |             | D-FBO       | %E_OUTER |
-  |   6 | 2   | .ZZC       | cgf   | 300    | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee       | amount | purpose  | cat1        | cat2        | type     |*
+  |   5 | 2   | %UID_OUTER | .ZZC        | 6000   | grant    |             | D-FBO       | %E_OUTER |
+  |   6 | 2   | .ZZC       | %UID_FSFEES | 300    | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid | bankAccount |*
   | 2   | .ZZC  | 6000   | %now      | %now    | 6   |             |
@@ -151,10 +151,10 @@ Scenario: An admin marks a documented grant received
   | id | uid  | pid | amount | created  | by    | xid | received | documented |*
   | 2  | .ZZC | 5   | 5000   | %now0    | wire  | 2   | %now     | %now0-1d   |
   And these "txs":
-  | eid | xid | payer      | payee | amount    | purpose  | cat1        | cat2        | type     |*
-  |   5 | 2   | %UID_OUTER | .ZZC  | 5000      | grant    |             | D-FBO       | %E_OUTER |
-  |   6 | 2   | .ZZC       | cgf   | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
-  |   7 | 2   | .ZZC       | cgf   | 250       | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee       | amount    | purpose  | cat1        | cat2        | type     |*
+  |   5 | 2   | %UID_OUTER | .ZZC        | 5000      | grant    |             | D-FBO       | %E_OUTER |
+  |   6 | 2   | .ZZC       | %UID_TXFEES | %WIRE_FEE | wire fee | FBO-TX-FEE  | TX-FEE-BACK | %E_XFEE  |
+  |   7 | 2   | .ZZC       | %UID_FSFEES | 250       | %FS_NOTE | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid | bankAccount |*
   | 2   | .ZZC  | 5000   | %now      | %now    | 5   |             |
@@ -239,9 +239,9 @@ Scenario: An admin marks an udocumented grant received by check
   | ckDate     | %mdY-1d      |
   
   Then these "txs":
-  | eid | xid | payer      | payee | amount    | purpose                    | cat1        | cat2        | type     |*
-  |   5 | 2   | %UID_OUTER | .ZZC  | 5000      | grant (check #123, %mdY-1d) |             | D-FBO       | %E_OUTER |
-  |   6 | 2   | .ZZC       | cgf   | 250       | %FS_NOTE                   | D-FBO       | FS-FEE      | %E_AUX   |
+  | eid | xid | payer      | payee       | amount    | purpose                    | cat1        | cat2        | type     |*
+  |   5 | 2   | %UID_OUTER | .ZZC        | 5000      | grant (check #123, %mdY-1d) |             | D-FBO       | %E_OUTER |
+  |   6 | 2   | .ZZC       | %UID_FSFEES | 250       | %FS_NOTE                   | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid | bankAccount |*
   | 2   | .ZZC  | 5000   | %now      | %now    | 5   |             |

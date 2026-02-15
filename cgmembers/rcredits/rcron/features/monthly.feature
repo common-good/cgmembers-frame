@@ -122,7 +122,46 @@ Scenario: Crumb and roundup donations are made
   Then count "tx_hdrs" is 14
   And count "tx_requests" is 0
   # still
+
+Scenario: tx-fee and fs-fee buckets are dumped into Common Good
+  Given members have:
+  | uid  | coFlags   |*
+  | .ZZC | sponsored |
+  And these "tx_rules":
+  | id        | 1            |**
+  | payer     |              |
+  | payerType | %REF_ANYBODY |
+  | payee     | .ZZC         |
+  | payeeType | %REF_ACCOUNT |
+  | from      | %MATCH_PAYEE |
+  | to        | %UID_FSFEES  |
+  | action    | %ACT_SURTX   |
+  | amount    | 0            |
+  | portion   | .05          |
+  | purpose   | %FS_NOTE     |
+  | minimum   | 0            |
+  | useMax    |              |
+  | amtMax    |              |
+  | template  |              |
+  | start     | %now-30d     |
+  | end       |              |
+  | code      |              |
+  And these "txs":  
+  | eid | xid | created   | amount | payer | payee  | purpose  |*
+  | 102 |  12 | %today-6d | 100    | .ZZA  | .ZZC   | donation |
+  | 103 |  12 | %today-6d | 5      | .ZZC  | fs-fee | %FS_NOTE |
+  | 104 |  12 | %today-6d | 3.20   | .ZZC  | tx-fee | cc fee   |
+  # there's never a cc fee for a member transaction, but this will test the cron code well enough
   
+  When cron runs "everyMonth"
+  Then these "txs": 
+  | xid | created        | amount | payer  | payee | purpose      | flags           |*
+  | 13  | %(%daystart-1) |   4.40 | .ZZC   | crumb | ?            | thx,gift,crumbs |
+  | 14  | %(%daystart-1) |   1.00 | round  | cgf   | ?            | gift            |
+  | 15  | %(%daystart-1) |   4.40 | crumb  | cgf   | ?            | gift            |
+  | 16  | %(%daystart-1) |   3.20 | tx-fee | cgf   | tx-fees: %mY | gift            |
+  | 17  | %(%daystart-1) |   5.00 | fs-fee | cgf   | fs-fees: %mY | gift            |
+
 Scenario: Crumbs are invoiced
   Given these "txs":
   | xid | created   | amount | payer | payee | purpose |*

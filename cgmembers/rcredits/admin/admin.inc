@@ -87,6 +87,8 @@ function setupBasicAccounts($withEIN = TRUE) {
   new r\Acct(ray($canKeys, UID_ROUNDUPS, t('roundups'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_CRUMBS, t('crumbs'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_STEPUPS, t('stepups'), PROJECT, $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, UID_TXFEES, t('txfees'), PROJECT, $cgf->community, $flagsCo));
+  new r\Acct(ray($canKeys, UID_FSFEES, t('fsfees'), PROJECT, $cgf->community, $flagsCo));
   new r\Acct(ray($canKeys, UID_BANK, t('cttyfund'), t('Bank'), r\serverUid(), $flagsCo));
   new r\Acct(ray($canKeys, UID_OUTER, t('txs-outer'), t('Txs Outer'), r\serverUid(), $flagsCo));
   

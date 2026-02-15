@@ -26,7 +26,7 @@ Setup:
   | payee     | .ZZC         |
   | payeeType | %REF_ACCOUNT |
   | from      | %MATCH_PAYEE |
-  | to        | cgf          |
+  | to        | %UID_FSFEES  |
   | action    | %ACT_SURTX   |
   | amount    | 0            |
   | portion   | .05          |
@@ -47,9 +47,9 @@ Setup:
   | 1   | %UID_OUTER | .ZZC  | 250000 | grant   | D-FBO       | %E_OUTER | .ZZB | gift  |
   | 2   | %UID_OUTER | .ZZC  | -200   | labor   | FBO-LABOR   | %E_OUTER | .ZZB |       |
   And these "tx_entries":
-  | id | xid | uid  | amount | description   | entryType | cat    | rule |*
-  | -4 | 1   | .ZZC | -12500 | %FS_NOTE (5%) | %E_AUX    | D-FBO  | 1    |
-  | 4  | 1   | cgf  | 12500  | %FS_NOTE (5%) | %E_AUX    | FS-FEE | 1    |
+  | id | xid | uid         | amount | description   | entryType | cat    | rule |*
+  | -4 | 1   | .ZZC        | -12500 | %FS_NOTE (5%) | %E_AUX    | D-FBO  | 1    |
+  | 4  | 1   | %UID_FSFEES | 12500  | %FS_NOTE (5%) | %E_AUX    | FS-FEE | 1    |
   Then balances:
   | uid  | balance |*
   | .ZZC | 237300  |

@@ -15,8 +15,8 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
-define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
+const SPECIAL_IDS = 'ctty regulars crumb round stepups tx-fee fs-fee cgf bank';
+define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %UID_TXFEES %UID_FSFEES %CGID %UID_BANK', 'ctty', r\serverUid()));
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule received documented xid';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc

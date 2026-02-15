@@ -852,7 +852,7 @@ function setCat(&$txes, $tx, $i) {
   
   $nick = NULL; // in the if/else chain below, either return with $txes[$i]->cat set OR try to set $nick
 
-  if ($type == E_AUX and strhas($for, FS_NOTE)) {
+  if ($type == E_AUX and ($j_uid == UID_FSFEES or strhas($for, FS_NOTE))) {
     $nick = $in ? 'FS-FEE' : 'D-FBO';
   } elseif (r\hasCats($j_uid) and in($type, E_PRIMES)) { // transfer from one CG-owned CG account to another
     $nick = 'CG2CG';
