@@ -48,7 +48,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   if (is_null($res)) {
     $err = t('Error in query. %msg: "%sql"', ray('sql msg', $sql, $dbERR ? $dbERR->getMessage() : t('Query')));
     if ($channel == TX_WEB) w\err($err);
-    flog($err);
+/**/flog($err);
     if (!$mya or $mya->admin) if (!isDEV) {
       include_once R_ROOT . '/cg.inc'; // this was missing once
       r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));

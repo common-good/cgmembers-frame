@@ -36,6 +36,29 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'expandTx':
+      extract(just('uids xid template', $data, NULL));
+      $template = base64_decode($template);
+      $uids = plain($uids); // since we're using it in SQL
+      $toMe = 'uid2 IN (:uids)';
+      $cols = tr("IF($toMe,uid1,uid2) AS uid, IF($toMe,for2,for1) AS purpose, IF($toMe,amt,-amt) AS amt, type", compact('uids'));
+      $where = tr("xid=:xid AND (uid1 IN (:uids) OR $toMe) ORDER BY eid", compact('uids'));
+      $sql = "SELECT $cols FROM txs WHERE $where";
+      $rows = db\rows($cols, 'txs', $where, compact(ray('xid uids')));
+      foreach (ray('expand xid date name purpose amount runBalance buttons') as $k) $subs0[$k] = '';
+      $amt1 = '';
+      $auxTxs = '';
+      
+      foreach ($rows as $row) {
+        extract((array) $row);
+        if (in($type, E_PRIMES)) {$amt1 = $amt; continue;} // don't duplicate the prime entry (but fix its amount)
+        $name = db\get('fullName', 'users', compact('uid'));
+        $amount = number_format($amt, 2);
+        $subs = compact(ray('name purpose amount'));
+        $auxTxs .= tr($template, $subs + $subs0);
+      }
+      return ajaxRet(compact(ray('auxTxs, amt1')));
+    
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));

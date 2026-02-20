@@ -1761,7 +1761,7 @@ function txsRpt($amt, $count, $accts, $type) {
  */
 function dateRange($args, $url, $choices = [], $settings = '', $downloadable = TRUE) {
   global $txDays;
-  extract(just('period starting ending states', $args));
+  extract(just('period starting ending states hideFees', $args, NULL));
   u\setDft($states, $settings);
 
   if ($choices) {
@@ -1773,6 +1773,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   u\setDft($period, strpos($url, 'pending') ? TX_DEFAULT_INV_PERIOD : TX_DEFAULT_PERIOD);
   list ($starting, $ending) = rangeDates(nn($period), nn($starting), nn($ending));
   $url = BASE_URL . "/$url/period=$period&starting=$starting&ending=$ending&states=$states";
+  if (isset($hideFees)) $url .= "&hideFees=$hideFees";
 
   $showAdvanced2 = '<a id="showAdvanced">advanced</a>';
   $submitPeriod = submi(t('Show')); // label has to be different from submitDates (see below)

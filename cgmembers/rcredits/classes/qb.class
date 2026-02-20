@@ -214,7 +214,7 @@ class QB {
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids()));
 
-    $txs = be\getTxs($uids, $start, $end, ray('omitBankTxs includeSelfTxs catsOnly', $omitBankTxs, TRUE, TRUE));
+    $txs = be\getTxs($uids, $start, $end, ray('omitBankTxs includeSelfTxs catsOnly omitAux', $omitBankTxs, TRUE, TRUE, FALSE));
 
     foreach ($txs as $entries) {
       extract(just('xid description created banking cat2 uif2 uid2 name', $entries[0]));

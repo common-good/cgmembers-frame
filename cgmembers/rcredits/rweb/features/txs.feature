@@ -65,7 +65,7 @@ Scenario: A member looks at transactions for the past year
   | Out          | - |   460.00 |          |
   | End          |   | 1,585.00 | %dmy     |
   And with:
-  | Tx# | Date    | Name          | Purpose                  | Amount   |  Balance | Action |
+  | Tx# | Date    | Name          | Purpose                  | Amount   |  Balance |        |
   |  6  | %mdy-4d | --            | to bank                  |   -33.00 | 1,585.00 |        |
   |  5  | %mdy-4d | --            | to bank                  |   -22.00 | 1,618.00 |        |
   | 50  | %mdy-5d | Bea Two       | (reverses tx #44)           |   -10.00 | 1,640.00 |        |

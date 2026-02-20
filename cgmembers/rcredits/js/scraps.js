@@ -449,8 +449,32 @@ function doit(what, vs) {
     showPage(0);
     break;
 
-  case 'reverse-tx':
+  case 'txs':
     $('.txRow .buttons a[title="' + vs['title'] + '"]').click(function () {return yesGo(this.href, vs['msg']);});
+    $(document).on('click', '.expand .do', function () {
+      var $that = $(this);
+      var xid = $(this).closest('.txentry').find('.xid a').text();
+
+      var $t = $(this).closest('.txentry').clone();
+      const classes = 'expand xid date name purpose amount runBalance buttons'.split(' ');
+      classes.forEach(cls => { $t.find('.' + cls).html('%' + cls); });
+      var template = $t.prop('outerHTML');
+      template = btoa(unescape(encodeURIComponent(template))); // encode so Drupal doesn't strip out the HTML tags
+      
+      post('expandTx', {xid, template, uids:vs['uids']}, function (j) {
+        if (j.ok) {
+          var $amtDiv = $that.closest('.txentry').find('.amount div');
+          $that.removeClass('do').addClass('undo').attr('amt1', $amtDiv.text());;
+          $that.closest('.txentry').after(j.auxTxs);
+          if (j.amt1 !== '') $amtDiv.text(j.amt1);
+        }
+      });
+    });
+    $(document).on('click', '.expand .undo', function () { // not .click because some applicable divs don't exist yet
+      $(this).removeClass('undo').addClass('do');
+      $(this).closest('.txentry').find('.amount div').text($(this).attr('amt1'));
+      $(this).closest('.txentry').nextAll('.txentry').remove();
+    });
     break;
 
   case 'relations':
@@ -460,21 +484,21 @@ function doit(what, vs) {
     });
     $('#relations .btn[name^="delete-"]').click(function () {
       var data = {name: $(this).attr('name'), v:0};
-      var that = $(this);
+      var $that = $(this);
       post('relations', data, function (j) {
         report(j);
-        if (j.ok) that.closest('tr').remove(); // delete line
+        if (j.ok) $that.closest('tr').remove(); // delete line
       });
     });
     $('#relations select').change(function () { // permission
       var data = {name: $(this).attr('name'), v:$(this).val()};
-      var that = $(this);
+      var $that = $(this);
       post('relations', data, function (j) {
         if (j.ok) {
           if (j.message) $.alert('Success', j.message);
         } else {
           $.alert('Error', j.message);
-          that.val(j.v0);
+          $that.val(j.v0);
         }
       });
     });

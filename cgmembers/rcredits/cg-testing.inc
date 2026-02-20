@@ -38,7 +38,7 @@ function output($msg, $color = 'error') {
 
   if (!isPRODUCTION and !nn($wholeModule)) { // make sure we don't do this on production
     \drupal_set_message(color($msg, $color));
-    if (isDEV and $channel == TX_AJAX) flog($msg);
+/**/if (isDEV and $channel == TX_AJAX) flog($msg);
   }
   
   return $color == 'error' ? FALSE : TRUE;

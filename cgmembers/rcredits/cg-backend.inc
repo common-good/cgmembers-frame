@@ -29,21 +29,25 @@ require_once R_ROOT . '/classes/txentry.class';
  *     AND B_QBOK flag off> 
  *     NOTE: usually cats are set manually or by be\setCat(),
  *       but CC donations are handled differently and cat1 gets set here in Qb::sendCCTx()
+ *   omitAux: <include only the main transaction>
+ *   hideFees: (for CGID only) <hide fee-only entries (especially transaction fees and FS fees from sponsees)>
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($uids)) $uids = [$uids];
 
-  extract(just('omitBankTxs includeSelfTxs catsOnly', $extra, FALSE));
+  extract(just('omitBankTxs includeSelfTxs catsOnly omitAux hideFees', $extra, FALSE));
 
   $fromMe = 'x.uid1 IN (:uids)';
   $toMe = 'x.uid2 IN (:uids)';
+
   $where = tr("($fromMe %or $toMe)", 'or', $includeSelfTxs ? 'OR' : 'XOR');
   $where .= ' AND !(x.amt=0 AND x.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
+  $wherex = str_replace('x.', '', $where); // criteria for base table when $omitAux
   
-  if ($omitBankTxs) $where .= ' AND (t2.bankAccount IS NULL OR t2.pid IS NOT NULL)';
+  if ($omitBankTxs) $where .= ' AND (x2.bankAccount IS NULL OR x2.pid IS NOT NULL)';
   if ($catsOnly) {
     $where .= " AND (x.cat1 IS NOT NULL OR x.cat2 IS NOT NULL OR x.uid1=:UID_OUTER) AND NOT x.:IS_QBOK";
     $catUids = join(',', r\catUids());
@@ -55,16 +59,41 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   // tReversed and eReversed refer to the transaction that this transaction reverses.
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction. 
 
+  if ($omitAux) {
+    $txHCols = db\cols('tx_hdrs');
+    $txsCols2 = $txsCols1 = join(',', $txHCols); // start with just the header columns
+    $txsColRay = array_fill_keys(array_slice(db\cols('txs'), count($txHCols)), "''"); // cols in txs but not in tx_hdrs
+    $eCols = '(SELECT GROUP_CONCAT(id) FROM tx_entries WHERE xid=x1.xid AND uid IN (:uids)) AS eids';
+
+    $txsCols1 .= ',' . join(',', array_keys($txsColRay));
+    $txsCols1 = str_replace(',amt,', ",(SELECT SUM(amount) FROM tx_entries WHERE xid=x1.xid AND uid IN (:uids)) AS amt,", $txsCols1);
+    $txs1 = "SELECT $eCols,$txsCols1 FROM txs x1 WHERE $wherex and type IN :E_PRIMES"; // first half
+
+    if ($uids[0] == CGID and !$hideFees) {
+      $amt = 'SUM(amt)';
+      [$uid1, $uid2] = ['uid1', 'uid2'];
+      $for1 = t("'(fees)'"); // probably never used
+      $for2 = "IF((SELECT SUM(1) FROM tx_entries WHERE xid=xu.xid AND uid=:CGID AND id>0) = 1, for2, $for1)";
+      $txsColRay = array_replace($txsColRay, compact(ray('amt uid1 uid2 for1 for2'))); // modified these, but keep the original order
+      foreach ($txsColRay as $k => $v) $txsCols2 .= ", $v AS $k";
+      $eCols = str_replace('x1.', 'xu.', $eCols);
+      $txs2 = "UNION SELECT $eCols,$txsCols2 FROM txs xu WHERE xu.uid2=:CGID AND NOT EXISTS (SELECT 1 FROM tx_entries WHERE xid=xu.xid AND type IN :E_PRIMES AND uid<>:CGID)"; // include transactions where only the fees show up in CG's account
+    } else $txs2 = '';
+    
+    $txsTable = "($txs1 $txs2)";
+    
+  } else $txsTable = 'txs';
+
   $sql = <<< X
-    SELECT x.*, t2.txid, (t2.bankAccount IS NULL) AS noBank, t2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
-      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
+    SELECT x.*, x2.txid, (x2.bankAccount IS NULL) AS noBank, x2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
+      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed,
       c.category
-    FROM txs x
+    FROM $txsTable x
     LEFT JOIN users u ON u.uid=IF($toMe, x.uid1, x.uid2)
-    LEFT JOIN txs2 t2 ON t2.xid=x.xid
+    LEFT JOIN txs2 x2 ON x2.xid=x.xid
     LEFT JOIN tx_timed tm ON tm.id=x.recursId
     LEFT JOIN tx_rules ru ON ru.id=x.rule
     LEFT JOIN tx_requests i ON i.nvid=x.rel AND x.relType='I'
@@ -72,7 +101,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
     WHERE $where ORDER BY $order
 X;
 
-///  showq($sql, ray('uids', join(',', $uids)));
+///  die(pr(showq($sql, ray('uids', join(',', $uids)))));
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
@@ -91,7 +120,7 @@ X;
   if ($entries) $txs[] = $entries;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
-  $balance = balanceAsOf($uids, $starting);
+  $balance = $hideFees ? NULL : balanceAsOf($uids, $starting);
   
   foreach ($txs as $i => $entries) {
     extract(just('actorId type xid pid uid name', $entries[0]));
@@ -100,7 +129,7 @@ X;
     $newEntries = [];
     $myAmount = 0; foreach ($entries as $entry) $myAmount += $entry['amount'];
     $myAmount = round($myAmount, 2);
-    $balance = round($balance + $myAmount, 2);
+    if (!$hideFees) $balance = round($balance + $myAmount, 2);
     if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'txs2_bank', compact('xid')) ?: $xid; // old checks
     
     foreach ($entries as $j => $entry) {
@@ -244,15 +273,21 @@ function statusDesc($status) {
 /**
  * Processes a set of transactions, e.g., for generating a report.
  * @param TxProcessor $processor: an implementation of the TxProcessor interface to interact with
- * @param integer $starting: the starting unix time
- * @param integer $ending: the ending unix time
  * @param mixed $uids: the uid or uids whose transactions we're going to process
  *        if $uids is an array it is the set of uids;
  *        if $uids is an integer it is the only uid
- * @param integer $jid: the joint account holder (if any)
+ * @param integer $starting: the starting unix time
+ * @param integer $ending: the ending unix time
+ * @param assoc $options:
+ *   bool $descending: whether set up the transaction in reverse order
+ *   bool $omitAux: whether to omit auxiliary transactions -- defaults to NO
+ *   bool $hideFees: whether to hide the fee-only transactions for Common Good's account
  * @return TRUE on success, FALSE otherwise.
  */
-function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending=FALSE) {
+function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $options = []) {
+  extract(just('descending omitAux hideFees', $options, FALSE)); 
+  if (test()) $omitAux = FALSE; // no tests for omitAux yet
+  
   if (strhas(get_class($processor), 'Combo')) {
 // NO    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));
     $txs = getCustTxs($uids, NULL, $starting, $ending);
@@ -264,20 +299,24 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
     return;
   }
   
-  $txs = getTxs($uids, $starting, $ending);
+  $txs = getTxs($uids, $starting, $ending, compact(ray('omitAux hideFees')));
   if ($descending) $txs = array_reverse($txs);
   
   // Now process the transactions
   $processor->hdr();
   $first = TRUE;
+  $txParity = 1; // for when omitting auxiliary entries ($omitAux)
   
   foreach ($txs as $entries) {
+    if ($hideFees) $entries[0]['hideFees'] = TRUE;
+    $entries[0]['expandable'] = ($omitAux and strhas($entries[0]['eids'], ','));
     $processor->txnHdr($entries[0], $first ? 'none' : '');
     foreach ($entries as $j => $entry) {
-      $processor->processEntry($entry, $j & 1);
+      $processor->processEntry($entry, $omitAux ? $txParity : $j & 1);
     }
     $processor->txnFtr($entries[0]);
     $first = FALSE;
+    $txParity = 1 - $txParity; // 0 or 1
   }
   
   $processor->ftr();
