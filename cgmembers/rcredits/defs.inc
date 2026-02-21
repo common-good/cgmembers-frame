@@ -809,6 +809,7 @@ $GLOBALS['emailSubjects'] = array(
   'post-message' => t('Response to your Offers & Needs post'),
   'post-expires' => t('Your Offers & Needs post is expiring!'),
   'post-notice' => t('recent Offers & Needs near you'),
+  'cc-payment-failed' => t('Credit Card Payment Failed - to %coName'),
 );
 foreach (ray(' gift- cggift- fbo-') as $k) foreach (ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
 

@@ -5,10 +5,10 @@ SO I can save on memory and labor.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed        |             |  -200 |
-  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |             |     0 |
+  | uid  | fullName | phone        | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
+  | .ZZA | Abe One  | 413-111-1111 | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
+  | .ZZB | Bea Two  | 413-222-2222 | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed        |             |  -200 |
+  | .ZZC | Cor Pub  | 413-333-3333 | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |             |     0 |
   And these "txs":
   | xid | created | amount | payer | payee | purpose |*
   |   1 | %now-4m |    100 | .ZZB | .ZZA | loan    |
@@ -146,6 +146,44 @@ Scenario: A second recurring payment can be completed from a non-member by card
   | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
   | 3   | %now    | %now      | 10     | .ZZB  | 123 | %NUL        | %NUL      |
   
+Scenario: A second recurring payment from a non-member by card fails
+  Given these "people":
+  | pid | fullName | email |*
+  | 123 | Ned Nine | 9@    |
+  And next cc payment will fail
+  And these "tx_timed":
+  | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
+  |  8 | pay    | %now0-8d | %MATCH_PAYER | .ZZC |     10 | week   | pmt     | %REF_PERSON | 123   | strId456 |
+  And these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   2 | %now-8d |     10 | %UID_OUTER | .ZZC  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 2   | %now-8d | %now-8d   | 10     | .ZZC  | 123 | %NUL        | %NUL      |
+  When cron runs "recurs"
+  Then we tell admin "Stripe charge failed" with subs:
+  | amount |*
+  | 10     |
+  And we email "cc-payment-failed" to member "9@example.com" with subs:
+  | noFrame       | 1                                    |**
+  | date          | %mdY                                 |
+  | amount        | $10                                  |
+  | qid           | .ZZC                                 |
+  | coName        | Cor Pub                              |
+  | coPostalAddr  | 3 C, C, CT                           |
+  | coPhone       | +1 413 333 3333                      |
+  | erMsg         | invalid card                         |
+  | fullName      | Ned Nine                             |
+  | howOften      | weekly                               |
+  | recurCanceled | All future recurrences are canceled. |
+  | giftLink      | ?                                    |
+  | site          | %BASE_URL                            |
+  | orgPhone      | %CGF_PHONE                           |
+  | emailCoded    | %60%21PYylzG3tpygMrwwtrgw            |
+  And these "tx_timed":
+  | id | end  |*
+  | 8  | %now |
+
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":
   | id | action | start      | from | to   | amount | period | purpose |*

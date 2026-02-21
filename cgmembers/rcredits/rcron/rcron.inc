@@ -304,6 +304,8 @@ EOF;
  * @return: [ok, msg] (for Stripe only)
  */
 function recur($template) {
+  global $testCCFail;
+    
   extract(just('id lastRecur period periods start end duration durations action from to purpose flags amount payerType payer stripeId', $template));
   $recursId = $id;
 
@@ -348,8 +350,20 @@ function recur($template) {
       require_once R_ROOT . '/stripe.inc';
       $info['deposit'] = now();
       $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
-      if (!is_object($erMsg = $paymentIntent)) {
+      if (!is_object($erMsg = $paymentIntent) or $erMsg = nn($testCCFail)) {
+        include_once R_ROOT . '/forms/code.inc';
         r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
+
+        $recurs = ($period != PER_1);
+        $howOften = $recurs ? r\recurDesc($period, $periods) : '';
+        $recurCanceled = $recurs ? t('All future recurrences are canceled.') : '';
+        $giftLink = BASE_URL . '/pay/code=' . w\code(ray('item account secret', $purpose, $coA->mainQid, $coA->emailCode));
+
+        $subs = ray('noFrame date amount', TRUE, fmtDt(now()), u\fmtAmt($amount));
+        $subs += ray('coName coPostalAddr coPhone erMsg', $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), lcfirst($erMsg));
+        $subs += compact(ray('fullName howOften recurCanceled giftLink'));
+        r\rMail('cc-payment-failed', [$email => $fullName], $subs);
+        if ($recurs) db\update('tx_timed', ray('id end', $id, now()), 'id'); // end the recurring
         return [FALSE, $erMsg]; // probably a canceled or expired card
       }
 
