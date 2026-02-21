@@ -464,7 +464,6 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $tellingAdmin = nn($tellingAdmin, 0) + 1; if ($tellingAdmin > 2) return; // don't loop (for example because log file is missing)
 /**/  if (isDEV and !test() and $channel == TX_WEB) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
-  $to = nni($subs, 'to', R_ADMIN_EMAIL);
   $message = t($index, $subs);
   foreach (ray(NOLOG_FLDS) as $k) unset($subs[$k]); // secret stuff
 
@@ -474,7 +473,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   
   $currentAcct = $mya ? $mya->nameAndQid() : NULL;
   $keyAcct = $keyA ? $keyA->nameAndQid() : NULL;
-  $email = $tellCOA ? $tellCOA->cttyA->email : $to; // tell cAdmin if appropriate, else superAdmin
+  $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 100 ? $index : '';
