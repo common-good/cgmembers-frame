@@ -3,7 +3,7 @@
  * @file
  * Definitions required for any part of the Common Good system, including app testing
  */
-const R_VERSION = '3.62z'; // software version
+const R_VERSION = '3.63a'; // software version
 
 define('R_ROOT', str_replace('\\', '/', __DIR__)); // str_replace for Windows systems (always use / not \ )
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
@@ -809,6 +809,7 @@ $GLOBALS['emailSubjects'] = array(
   'post-message' => t('Response to your Offers & Needs post'),
   'post-expires' => t('Your Offers & Needs post is expiring!'),
   'post-notice' => t('recent Offers & Needs near you'),
+  'cc-payment-failed' => t('Credit Card Payment Failed - to %coName'),
 );
 foreach (ray(' gift- cggift- fbo-') as $k) foreach (ray('member nonmember') as $m) $GLOBALS['emailSubjects'][$k . "thanks-$m"] = t('Thank you for your donation!');
 

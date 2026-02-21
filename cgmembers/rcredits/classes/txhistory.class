@@ -42,13 +42,14 @@ class TxHistory implements TxProcessor {
     /* $net = w\popHelp(t('Net'), t('The net change in account balance')); */
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
-    $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons);
+    $guts = $this->guts($xid, $date, $name, $purpose, $amount, $runBalance);
     $downBtns = ''; foreach (ray('CSV QBO') as $k) $downBtns .= buttino("$this->baseUrl&download=$k", $k, '', '', ray('title', t('Download these transactions in %k format.', compact('k'))));
     $downBtns .= buttino("$this->baseUrl&download=Combo", 'Combo', '', '', ray('title', t('Download (for this period) all invoices and transactions with invoiced members.')));
 
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
   <div id="txs-links" class="row">
+    <div class="expand"></div>
     <div class="showMore col-xs-3">
       <a title="Show more transactions per page"><span class="glyphicon glyphicon-plus"></span>Show more</a>
     </div>
@@ -65,9 +66,12 @@ class TxHistory implements TxProcessor {
       <a class="prevPage" title="Previous Page"><span class="glyphicon glyphicon-triangle-left"></span></a>
       <a class="nextPage" title="Next Page"><span class="glyphicon glyphicon-triangle-right"></span></a>
     </div>
+    <div class="buttons"></div>
   </div>
   <div class="row txRow thead head page--1 PAGE--1">
+    <div class="expand"></div>
 $guts
+    <div class="buttons"></div>
   </div>
   <div class="tbody">
 EOF;
@@ -81,18 +85,17 @@ EOF;
     global $mya;
     
     $this->dateValue = fmtDt($info['created'], 'MM/dd/yy');
-    $this->runBalance = u\fmtAmt($info['balance'], '');
+    $this->runBalance = nni($info, 'hideFees') ? NBSP : u\fmtAmt($info['balance'], '');
 
     $class = "row txRow ";
     $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
     $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
-    $this->body .= "<tbody class=\"$class\">\n";
     $xid = $info['xid'];
 
     // I am payee and amount > 0 or I am payer and amount < 0
     $reallyToMe = $info['myAmount'] > 0;
 
-    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->admReverseBankTx) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe)) {
+    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->admReverseBankTx) and !$info['reversedBy'] and !($info['isDisputed'] and !$reallyToMe) and in($info['type'], E_PRIMES)) {
       $this->buttons = w\btn("$this->baseUrl&undo=$xid", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
     } else $this->buttons = '';
     
@@ -114,23 +117,28 @@ EOF;
    * @param int $parity: mod 2 of entry number for this transaction, starting with 0
    */
   public function processEntry($info, $parity) {
-    if (in_array($info['uid'], $this->uids)) return;
-    extract(just('name description amount xid banking', $info));
+    $tx = $this;
+    extract(just('uid name description amount xid banking expandable hideFees', $info, NULL));
+
+    $expandable = $expandable ? '<div class="do"></div>' : '';
+    if (in_array($uid, $tx->uids)) return;
     $amount = u\fmtAmt($amount, '');
-    if (!$this->dateValue) $xid = '';
-    $guts = $this->guts($xid, $this->dateValue, $name, $description, $amount, $this->runBalance, $this->buttons);
+    if (!$tx->dateValue) $xid = '';
+    $guts = $tx->guts($xid, $tx->dateValue, $name, $description, $amount, $tx->runBalance);
     $parity = $parity ? ' odd' : ' even';
 
-    $this->body .= <<<EOF
+    $tx->body .= <<<EOF
 <div class="txentry$parity">
+  <div class="expand">$expandable</div>
 $guts
+  <div class="buttons">$tx->buttons</div>
 </div>
 EOF;
 
-    $this->dateValue = $this->runBalance = $this->buttons = ''; // don't repeat these for auxiliary entries
+    $tx->dateValue = $tx->runBalance = $tx->buttons = ''; // don't repeat these for auxiliary entries
   }
 
-  private function guts($xid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
+  private function guts($xid, $date, $name, $purpose, $amount, $runBalance) {
     foreach (ray('xid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
 
     $return = u\pry($this->baseUrl);
@@ -149,7 +157,6 @@ EOF;
     <div class="amount col-sm-5"><div>$amount</div></div>
     <div class="runBalance col-sm-7"><div>$runBalance</div></div>
   </div>
-  <div class="buttons col-xs-1">$buttons</div>
 X;
   }
 
@@ -167,7 +174,7 @@ X;
    */
   public function ftr() {
     if ($this->count < 1) {
-      $this->body .= '<div><div colspan=6>' . t('no txs') . '</div></div>';
+      $this->body .= '<div class="expand"></div><div>' . t('no txs') . '</div>';
     }
     $this->body .= "</div>\n</div>\n</div>\n";
   }

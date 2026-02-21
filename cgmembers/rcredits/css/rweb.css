@@ -1316,13 +1316,15 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #txlsit .txentry {clear:both}
 #txlist .txentry.even >div {background-color:#f0fff0} /* same as .even above */
 #txlist .txentry.odd >div {background-color:#daffda}
-#txlist .txentry div.buttons {background-color:white;}
+#txlist .txentry div.buttons,
+#txlist .txentry div.expand {background-color:white;}
 #txlist .txentry >div {border-bottom:1px solid white;}
 
 #txlist .xid-date, 
 #txlist .name-purpose, 
 #txlist .amount-runBalance {padding: 0;}
-#txlist .xid, #txlist .date {text-align:center;}
+#txlist .xid, #txlist .date {text-align:center; min-height:17px;}
+#txlist .amount #txlist .runBalance {min-height:17px;}
 #txlist .xid {font-weight:bold;}
 #txlist .disputed .xid {background-color:red; color:white;}
 #txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
@@ -1336,7 +1338,11 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   #txlist .amount-runBalance div {padding-right:15px;}
 }
  
-#txlist .row .buttons {padding:5px 0 4px 0; border:0; max-width:50px;}
+#txlist .row .expand, #txlist .expand, #txlist .row .buttons {width:4.166666667%; float:left; padding:5px 0 4px 0; border:0;}
+#txlist .row .expand, #txlist .expand {text-align:right;}
+#txlist .row .expand .do::before {content: "▶";}
+#txlist .row .expand .undo::before {content: "▼";}
+
 #txlist .row .buttons div {max-width:50%;}
 #txlist .buttons a.btn-xs {font-size:9px; margin:0;}
 #txlist .buttons div {padding:0;}
@@ -1345,16 +1351,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #txlist .sepRow {display:inline-block; width: 100%; height: 1px;}
 #txlist .separator {border-top: 1px solid #d9d9d9; height: 1px; width: 100%; padding:0; margin:0;}
 #txlist .separator.none {border-top: 1px solid white;}
-/* #txlist .sepBlank {width:8.3333%; border:0; height:1px; padding:0;margin:0;} */
 
-#txlist .txRow {display:none;}
 #txlist .txRow.head,
 #txlist .txRow.page-0 {display:block;}
 
 #txlist .row.head >div {border-bottom:0;}
-/* #txlist .row.head >div {border-bottom:0; padding-bottom:0; padding-top:5px; padding-bottom:5px;} */
 #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white;}
-/* #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white; padding-bottom: 5px; padding-top: 5px;} */
 #txlist .row.head .buttons {display:none;}
 #txlist .row.head .reward {font-size:100%;}
 #txlist tr:hover {background-color:#aaffaa;}

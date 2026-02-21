@@ -138,6 +138,7 @@ function weNoticeToMember($notice, $id) {return t\notice($notice, $id);}
  * we tell admin (ARG) with subs: (ARG)
  *
  * in: TEST monthly PaperStatementWarningsAreSent
+ *     TEST recurs ASecondRecurringPaymentFromANonmemberByCardFails
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -158,6 +159,7 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  *     TEST notices AMemberGetsSomeWeeklyNotices
  *     TEST notices AMemberGetsPostNotices
  *     TEST posts AParticipantGetsANoticeAboutAnExpiringPost
+ *     TEST recurs ASecondRecurringPaymentFromANonmemberByCardFails
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
@@ -437,6 +439,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
  *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
  *     BOTH recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     BOTH recurs ASecondRecurringPaymentFromANonmemberByCardFails
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
@@ -580,6 +583,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByACH
  *     MAKE recurs ASecondRecurringPaymentCanBeCompletedFromANonmemberByCard
+ *     MAKE recurs ASecondRecurringPaymentFromANonmemberByCardFails
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
@@ -679,3 +683,14 @@ function onlyThese($thing, $list) { return (t\count($thing, count($list)) and t\
  * in: MAKE eachacct AUserBecomesAnInternationalCriminal
  */
 function variableIs($k, $v) {return t\varIs($k, $v);}
+
+/**
+ * next cc payment will fail
+ *
+ * in: MAKE recurs ASecondRecurringPaymentFromANonmemberByCardFails
+ */
+function nextCcPaymentWillFail() {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testCCFail; $testCCFail = 'invalid card';
+  return TRUE;
+}

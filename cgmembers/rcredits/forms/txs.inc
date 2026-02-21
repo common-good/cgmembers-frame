@@ -19,7 +19,9 @@ function formTxs($form, &$sta, $args = '') {
   
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, mobile, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
 
-  extract(just('period undo download', $args, NULL)); 
+  if (is_string($args)) $args = urlq2ray($args);
+  if ($mya->id == CGID) u\setDft($args['hideFees'], 0);
+  extract(just('period undo download hideFees', $args, NULL)); 
   
   global $testPeriod; $testPeriod = $period ?: TX_DEFAULT_PERIOD; // remember for tests
   if ($undo) if ($result = reverseTx($undo, $sta, $args)) return $result;
@@ -30,7 +32,7 @@ function formTxs($form, &$sta, $args = '') {
   require_once R_ROOT . "/classes/txhistory$download.class"; // choose the right TxHistory class
   $class = "CG\\Web\\TxHistory$download";
   $processor = new $class($uids, $url, $starting, $ending);
-  be\processTxs($processor, $uids, $starting, $ending, !$download);
+  be\processTxs($processor, $uids, $starting, $ending, ray('descending omitAux hideFees', !$download, TRUE, $hideFees));
 
   if (test() and $download) return;
   if ($download) exit();
@@ -42,12 +44,18 @@ function formTxs($form, &$sta, $args = '') {
 
   $divider = item('<hr>');
   $title = t('Transaction History');
+
+  [$text, $href] = strhas($url, 'hideFees=0')
+  ? [str_replace('hideFees=0', 'hideFees=1', $url), t('Hide Fees')]
+  : [str_replace('hideFees=1', 'hideFees=0', $url), t('Show Fees')];
+  if ($mya->id == CGID) $title = item($title, '', '', suffix(buttino($text, $href)));
+
   extract(just('simple advanced downloadMsg', $dateRange));
   $dateRange = w\fieldSet('dateRange', compact(ray('simple advanced downloadMsg')), BARE);
   $form = compact(ray('title dateRange summary transactions'));
   
   jsx('paginate', compact('pgFactor'));
-  jsx('reverse-tx', 'msg title', t('Reverse this transaction?'), t('Reverse'));
+  jsx('txs', 'msg title uids', t('Reverse this transaction?'), t('Reverse'), join(',', $uids));
   /* jsx('advanced-dates', compact('pgFactor')); */
   return cgform($form);
 }
@@ -64,6 +72,7 @@ function formTxs_submit($form, &$sta) {
  */
 function reverseTx($xid, &$sta, $args) {
   global $mya;
+  if (is_array($args)) $args = http_build_query($args);
 
   if (!$xid = (int) nn($xid)) return FALSE;
   if (!$mya->lastTx(compact('xid'))) return err($mya->admRegion ? t('That is not a transaction for this account.') : t('That transaction does not exist.'));
