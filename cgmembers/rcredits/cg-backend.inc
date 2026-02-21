@@ -45,7 +45,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   $where .= ' AND !(x.amt=0 AND x.type=:E_BANK)'; // hides bank account verifications
   if (is_integer($starting)) $where .= " AND x.created>=$starting";
   if (is_integer($ending)) $where .= " AND x.created<=$ending";
-  $wherex = str_replace('x.', '', $where); // criteria for base table when $omitAux
+  $wherex = str_replace('x.', 'xu.', $where); // criteria for base table when $omitAux
   
   if ($omitBankTxs) $where .= ' AND (x2.bankAccount IS NULL OR x2.pid IS NOT NULL)';
   if ($catsOnly) {
@@ -63,21 +63,20 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
     $txHCols = db\cols('tx_hdrs');
     $txsCols2 = $txsCols1 = join(',', $txHCols); // start with just the header columns
     $txsColRay = array_fill_keys(array_slice(db\cols('txs'), count($txHCols)), "''"); // cols in txs but not in tx_hdrs
-    $eCols = '(SELECT GROUP_CONCAT(id) FROM tx_entries WHERE xid=x1.xid AND uid IN (:uids)) AS eids';
+    $eCount = '(SELECT SUM(1) FROM tx_entries WHERE xid=xu.xid AND uid IN (:uids))';
 
     $txsCols1 .= ',' . join(',', array_keys($txsColRay));
-    $txsCols1 = str_replace(',amt,', ",(SELECT SUM(amount) FROM tx_entries WHERE xid=x1.xid AND uid IN (:uids)) AS amt,", $txsCols1);
-    $txs1 = "SELECT $eCols,$txsCols1 FROM txs x1 WHERE $wherex and type IN :E_PRIMES"; // first half
+    $txsCols1 = str_replace(',amt,', ",(SELECT SUM(amount) FROM tx_entries WHERE xid=xu.xid AND uid IN (:uids)) AS amt,", $txsCols1);
+    $txs1 = "SELECT $eCount AS eCount,$txsCols1 FROM txs xu WHERE $wherex and type IN :E_PRIMES"; // first half
 
     if ($uids[0] == CGID and !$hideFees) {
       $amt = 'SUM(amt)';
       [$uid1, $uid2] = ['uid1', 'uid2'];
-      $for1 = t("'(fees)'"); // probably never used
-      $for2 = "IF((SELECT SUM(1) FROM tx_entries WHERE xid=xu.xid AND uid=:CGID AND id>0) = 1, for2, $for1)";
+      $for1 = t("'total fees'"); // probably never used except for $for2
+      $for2 = "IF($eCount = 1, for2, $for1)";
       $txsColRay = array_replace($txsColRay, compact(ray('amt uid1 uid2 for1 for2'))); // modified these, but keep the original order
       foreach ($txsColRay as $k => $v) $txsCols2 .= ", $v AS $k";
-      $eCols = str_replace('x1.', 'xu.', $eCols);
-      $txs2 = "UNION SELECT $eCols,$txsCols2 FROM txs xu WHERE xu.uid2=:CGID AND NOT EXISTS (SELECT 1 FROM tx_entries WHERE xid=xu.xid AND type IN :E_PRIMES AND uid<>:CGID)"; // include transactions where only the fees show up in CG's account
+      $txs2 = "UNION SELECT $eCount AS eCount,$txsCols2 FROM txs xu WHERE $wherex AND xu.uid2=:CGID AND NOT EXISTS (SELECT 1 FROM tx_entries WHERE xid=xu.xid AND entryType IN :E_PRIMES AND uid=:CGID) GROUP BY xu.xid"; // include transactions where only the fees show up in CG's account
     } else $txs2 = '';
     
     $txsTable = "($txs1 $txs2)";
@@ -309,7 +308,7 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $options = 
   
   foreach ($txs as $entries) {
     if ($hideFees) $entries[0]['hideFees'] = TRUE;
-    $entries[0]['expandable'] = ($omitAux and strhas($entries[0]['eids'], ','));
+    $entries[0]['expandable'] = ($omitAux and $entries[0]['eCount'] > 1);
     $processor->txnHdr($entries[0], $first ? 'none' : '');
     foreach ($entries as $j => $entry) {
       $processor->processEntry($entry, $omitAux ? $txParity : $j & 1);
