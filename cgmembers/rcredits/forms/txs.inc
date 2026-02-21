@@ -20,7 +20,7 @@ function formTxs($form, &$sta, $args = '') {
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, mobile, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
 
   if (is_string($args)) $args = urlq2ray($args);
-  if ($mya->id == CGID) u\setDft($args['hideFees'], 0);
+  if ($mya->id == CGID) u\setDft($args['hideFees'], 1);
   extract(just('period undo download hideFees', $args, NULL)); 
   
   global $testPeriod; $testPeriod = $period ?: TX_DEFAULT_PERIOD; // remember for tests
