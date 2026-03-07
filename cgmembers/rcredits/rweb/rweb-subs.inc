@@ -942,7 +942,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   $formSta['build_info'] = compact('args');
   $formSta['cache'] = TRUE;
 //    $formSta['method'] = 'post';
-  if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help')) {
+  if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help') and $function != 'Signin') {
     if ($mya and $mya->admWhileDown) {
       say(t('The system is DOWN.'));
       //if (!$mya->cttyUp) say(t('The community is DOWN.'));
