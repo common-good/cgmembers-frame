@@ -23,7 +23,7 @@ function formDashboard($form, &$sta, $args = '') {
   $special = $endorse = $continue = NULL;
   
   if ($mya->ok and !$mya->co) {
-    $special = item(t('|<%aCovid>COVID-19</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"'), '', '', clas('m-nolabs'));
+//    $special = item(t('|<%aCovid>COVID-19</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"'), '', '', clas('m-nolabs'));
     if (FALSE and !$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
       $endorseText = t('<h2>We need your help to grow.</h2>');
       $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
