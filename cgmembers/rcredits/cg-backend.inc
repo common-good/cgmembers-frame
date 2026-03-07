@@ -85,7 +85,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
 
   $sql = <<< X
     SELECT x.*, x2.txid, (x2.bankAccount IS NULL) AS noBank, x2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
-      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, $special,
+      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed,
