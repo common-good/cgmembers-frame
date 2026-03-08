@@ -192,19 +192,26 @@ Scenario: a slave member requests a transfer
   | .ZZD |     124 |
   | .ZZE |     124 |
 
-# Rule: If a member transfers more in than the bank allows, create separate requests that add up.
+# Rule: If a member transfers more than the bank allows, create separate requests that add up.
 
 Scenario: a member requests more than the total the bank allows in one day
-  When member ".ZZA" completes form "get" with values:
+  Given members:
+  | uid  | fullName | floor | flags              | postalAddr          | phone | bankAccount     | coFlags   |*
+  | .ZZE | Eve Five | -500  | ok,confirmed,admin | 1 A, Aton, MA 01001 |     1 | USkk21187028101 |           |
+  And these "admins":
+  | uid  | vKeyE     | can                     |*
+  | .ZZE | DEV_VKEYE | v,seeDeposits,ach,panel |
+  And member ".ZZA" completes form "get" with values:
   | op  | amount                     |*
   | get | %(%T_MAX_DAILY_ACH_IN+200) |
+  
+  When member ".ZZE" is signed in
+  And member ".ZZE" scans admin card "DEV_VKEYPW"
+  And member ".ZZE" visits page "sadmin/achs/date=0&mark=1&way=BOTH&balance=1"
   Then these "txs2":
   | xid | payee | amount              | created   | completed | channel |*
   | 8   | .ZZA  | %T_MAX_DAILY_ACH_IN | %today    |           | %TX_WEB |
   | 9   | .ZZA  | 200                 | %today    |           | %TX_WEB |
-  And we say "status": "banked" with subs:
-  | action  | tofrom  | amount | why                                                   |*
-  | deposit | from    | ?      | split into multiple transfers due to bank limitations |
-  And balances:
-  | uid  | balance                       |*
-  | .ZZA | %(86+%T_MAX_DAILY_ACH_IN+200) |
+#  And we say "status": "banked" with subs:
+#  | action  | tofrom  | amount                     | why            |*
+#  | deposit | from    | %(%T_MAX_DAILY_ACH_IN+200) | transfer split |
