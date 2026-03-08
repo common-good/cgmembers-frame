@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Specialized settings for this rCredits server
+ * Specialized settings for this Common Good server
  */
 
 const R_SERVER_ID = 'NEW'; // qid header for this region's server (New England / Western MA)

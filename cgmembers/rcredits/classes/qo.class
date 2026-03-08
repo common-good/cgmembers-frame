@@ -24,6 +24,8 @@ class Qo {
    */
   function __construct($main, $agent = '') {
     $qo = $this;
+    
+    if (empty($main)) return NULL;
     if (is_numeric($main)) return list ($qo->main, $qo->agent) = [$main, $agent]; // agent may be empty
 
     if (substr($main, 0, 1) == '.') return $qo->mainQid = R_SERVER_ID . substr($main, 1); // abbreviated

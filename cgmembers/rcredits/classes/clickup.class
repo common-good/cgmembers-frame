@@ -45,7 +45,7 @@ class Clickup {
       }
       foreach ($cu->getOtherLists($s->id) as $list) db\updateOrInsert('cu_lists', just('id name', $list) + ray('space', $s->id));
     }
-    w\say('Done.');
+    w\say('Clickup update done.');
   }
 
   /**
