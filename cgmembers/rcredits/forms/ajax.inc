@@ -289,7 +289,7 @@ function stripeTx($data) {
   
   [$ok, $msg] = cr\recur($template);
   db\del('queue', ray('id', $queueId));
-  if ($period == PER_1) db\del('tx_timed', compact('id')); // we don't need to keep timed records for one-timers
+  if ($period == PER_1 and !test()) db\del('tx_timed', compact('id')); // we don't need to keep timed records for one-timers
 
   return $ok ? ajaxMsg(u\ry('P', $msg)) : ajaxErr($msg);
 }
