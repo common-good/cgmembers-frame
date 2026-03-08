@@ -78,7 +78,7 @@ And with:
   | contact    | Jane Dough |**
   | contactTitle | Director |
   | fullName   | Bread Co   |
-  | to         | partnerships@%CG_DOMAIN |
+  | to         | info@%CG_DOMAIN |
   # etc
   | oversight  | people |
   | justice    | everyone is welcome |
@@ -154,7 +154,7 @@ Scenario: A signed-in individual member applies for fiscal sponsorship
   | contact    | Jane Dough |**
   | contactTitle | Director |
   | fullName   | Bread Co   |
-  | to         | partnerships@%CG_DOMAIN |
+  | to         | info@%CG_DOMAIN |
   # etc
   | oversight  | people |
   | justice    | everyone is welcome |
@@ -234,7 +234,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | contact    | Bea Two |**
   | contactTitle | Director |
   | fullName   | Cor Pub |
-  | to         | partnerships@%CG_DOMAIN |
+  | to         | info@%CG_DOMAIN |
   # etc
   | oversight  | people |
   | justice    | everyone is welcome |
