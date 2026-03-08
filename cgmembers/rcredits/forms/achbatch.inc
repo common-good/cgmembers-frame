@@ -50,13 +50,13 @@ function achBatch($args) {
     if ($way == 'BOTH') {
       $maxDailyAchTotal -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today', compact('today'));
       $crit = '';
-    } elseif (!in($way, 'IN OUT')) {
-      return softErr(t('"way" must be IN, OUT, or BOTH.'));
     } else {
-      if ($way == 'IN') $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0 AND pid IS NULL', compact('today'));
-      if ($way == 'OUT') $maxDailyAchOut -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today AND amount<=0', compact('today'));
+      if (!in($way, 'IN OUT')) return softErr(t('"way" must be IN, OUT, or BOTH.'));
       $crit = ' AND amount' . ($way == 'IN' ? '>0' : '<=0');
     }
+    
+    $maxDailyAchIn -= db\sum('amount', 'txs2', 'deposit>=:today AND amount>0 AND pid IS NULL', compact('today'));
+    $maxDailyAchOut -= db\sum('ABS(amount)', 'txs2', 'deposit>=:today AND amount<=0', compact('today'));
   }
 
   $date = (int) $date; // prevent SQL injection
@@ -95,16 +95,18 @@ function achBatch($args) {
   // Collect pending transfers, outgoing first (in case absolute value is limited), largest first
   
   $sql = <<< X
-    SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid FROM txs2 
-    WHERE ($where) AND ABS(amount)<=$maxDailyAchTotal AND amount BETWEEN -$maxDailyAchOut AND $maxDailyAchIn
-    AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
+    SELECT xid,payee,amount,deposit,bankAccount,isSavings,pid,
+      IF(amount>0, LEAST(amount, $maxDailyAchIn), GREATEST(amount, -$maxDailyAchOut)) AS `limit`
+    FROM txs2 WHERE ($where) AND bankAccount IS NOT NULL ORDER BY amount>0, ABS(amount) DESC, xid
 X;
 
+  ///echo showq($sql);
   $q = db\q($sql); // omit "outer" payments by check/wire/CC (anything but ACH, for which we have the bankAccount)
   $depositDt = $mark ? now() : NULL; // a single unique time for each batch
 
   $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
+    maybeSplitRow($row);
     $amount = $row['amount'];
     if ($credits + $debits + abs($amount) > $maxDailyAchTotal) continue;
     if ($amount < 0 ? ($credits - $amount > $maxDailyAchOut) : ($debits + $amount > $maxDailyAchIn)) continue;
@@ -163,6 +165,21 @@ X;
   if (test()) return !$testRecs = $recs;
 /**/  echo join("\n", $recs);
   exit();
+}
+
+/**
+ * Split the transfer request if it's for more than the daily limit.
+ */
+function maybeSplitRow(&$row) {
+  extract(just('xid payee amount limit', $row));
+  if (abs($amount) < abs($limit)) return;
+  
+  // split the transfer request into (a) the limit and (b) the remainder for another day
+  $extra = db\get('recursId,flags,cat2,for2 AS purpose', 'txs', compact('xid'));
+  $DBTX = \db_transaction();
+  db\update('txs2', ray('xid amount', $xid, $limit), 'xid'); $row['amount'] = $limit;
+  be\createUsdTransfer(r\acct($payee), $amount - $limit, just('pid bankAccount', $row) + $extra);
+  unset($DBTX);
 }
 
 /**

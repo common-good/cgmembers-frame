@@ -117,26 +117,20 @@ function lock_acquire($name, $timeout = 30.0) {
       ->condition('name', $name)
       ->condition('value', _lock_id())
       ->execute();
-    if (!$success) {
-      // The lock was broken.
-      unset($locks[$name]);
-    }
+
+    if (!$success) unset($locks[$name]); // The lock was broken.
+
     return $success;
-  }
-  else {
+  } else {
     // Optimistically try to acquire the lock, then retry once if it fails.
     // The first time through the loop cannot be a retry.
     $retry = FALSE;
-    // We always want to do this code at least once.
     
-/*  do { // maybe do this instead?
+    do { // We always want to do this code at least once.
       if (db\exists('semaphore', compact('name'))) {
         $retry = $retry ? FALSE : lock_may_be_available($name);
-      } else try { */
-    
-    do {
-      try {
-	    db\insert('semaphore', ray('name value expire', $name, _lock_id(), $expire), 'name');
+      } else try {
+	      db\insert('semaphore', ray('name value expire', $name, _lock_id(), $expire), 'name');
         /* db_insert('semaphore')
           ->fields(array(
             'name' => $name,
@@ -148,8 +142,7 @@ function lock_acquire($name, $timeout = 30.0) {
         $locks[$name] = TRUE;
         // We never need to try again.
         $retry = FALSE;
-      }
-      catch (PDOException $e) {
+      } catch (PDOException $e) {
         // Suppress the error. If this is our first pass through the loop,
         // then $retry is FALSE. In this case, the insert must have failed
         // meaning some other request acquired the lock but did not release it.

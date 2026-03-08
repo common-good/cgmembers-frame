@@ -459,7 +459,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
 /**
  * bank data: (ARG)
  *
- * in: MAKE ach AdminDownloadsUnbalancedACHRequestsAgain
+ * in: 
  */
 function bankData($list) {
   global $testOnly; if ($testOnly) return FALSE;

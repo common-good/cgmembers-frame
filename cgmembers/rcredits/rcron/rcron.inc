@@ -53,7 +53,7 @@ function run() {
 
   $original_user = $GLOBALS['user']; // Force the current user to anonymous to ensure consistent permissions on cron runs.
   $GLOBALS['user'] = \drupal_anonymous_user();
-  \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts
+  \drupal_set_time_limit(4 * 60); // time out a minute before the next cron starts (Handled adequately now with flock in crontab?)
   if (!\lock_acquire('cron', 4 * 60)) return u\log(t('Attempted to run cron while it was already running.'));
   
   db\del('sessions', 'timestamp < :NOW-:SESSION_LIFE'); // remove stagnant sessions
@@ -1140,7 +1140,7 @@ function completeUsdTxs() {
 function completeUsdTx($item) {
   extract(just('xid channel', $item));
   be\completeUsdTx($xid);
-  be\usdTxFollowup($xid);
+  be\usdTxFollowup($xid); // this is just the reporting, so no use enclosing it in a DBTX with completeUsdTx()
 }
 
 /**

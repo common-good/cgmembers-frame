@@ -72,6 +72,7 @@ Scenario: A member's rules come into play
   | start     | %now          | %now          | %now          |
   | end       |               |               |               |
   | code      |               |               |               |
+  And showing tx details
   When member ".ZZB" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Cor Pub | 100    | %FOR_GOODS | labor   |
