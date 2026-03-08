@@ -35,8 +35,8 @@ require_once R_ROOT . '/classes/txentry.class';
  */
 function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
   if (is_integer($uids)) $uids = [$uids];
-
   extract(just('omitBankTxs includeSelfTxs catsOnly omitAux hideFees', $extra, FALSE));
+  global $testShowAux; if (isset($testShowAux)) $omitAux = !$testShowAux;
 
   $fromMe = 'x.uid1 IN (:uids)';
   $toMe = 'x.uid2 IN (:uids)';
@@ -67,7 +67,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
 
     $txsCols1 .= ',' . join(',', array_keys($txsColRay));
     $txsCols1 = str_replace(',amt,', ",(SELECT SUM(amount) FROM tx_entries WHERE xid=xu.xid AND uid IN (:uids)) AS amt,", $txsCols1);
-    $txs1 = "SELECT $eCount AS eCount,$txsCols1 FROM txs xu WHERE $wherex and type IN :E_PRIMES"; // first half
+    $txs1 = "SELECT $eCount AS eCount,$txsCols1 FROM txs xu WHERE $wherex AND type IN :E_PRIMES"; // first half
 
     if ($uids[0] == CGID and !$hideFees) {
       $amt = 'SUM(amt)';
@@ -85,7 +85,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
 
   $sql = <<< X
     SELECT x.*, x2.txid, (x2.bankAccount IS NULL) AS noBank, x2.pid, u.uid, u.fullName AS name, tm.period, tm.periods, ru.portion, $toMe AS toMe, 
-      IF($toMe, amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
+      IF($toMe OR '$txsTable'<>'txs', amt, -amt) AS amount, IF($toMe, for2, for1) AS description, IF($toMe, agt2, agt1) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=x.uid2, ru.from IN (:MATCH_PAYER, x.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=x.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=x.xid AND d.status=:DS_OPEN)) AS isDisputed,
@@ -140,7 +140,8 @@ X;
       }
 
       $description = txDesc($entry) . r\shortCat($entry['category']);
-      $newEntries[] = compact(ray('myAmount balance byMe banking xid description')) + $entry;
+      $amount = $omitAux ? $myAmount : $entry['amount'];
+      $newEntries[] = compact(ray('amount myAmount balance byMe banking xid description')) + $entry;
     }
     $txs[$i] = $newEntries;
   }
@@ -285,7 +286,7 @@ function statusDesc($status) {
  */
 function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $options = []) {
   extract(just('descending omitAux hideFees', $options, FALSE)); 
-  if (test()) $omitAux = FALSE; // no tests for omitAux yet
+  global $testShowAux; if (isset($testShowAux)) $omitAux = !$testShowAux;
   
   if (strhas(get_class($processor), 'Combo')) {
 // NO    $bUids = db\col('payer', 'tx_requests', 'payee IN (:uids)', compact('uids'));

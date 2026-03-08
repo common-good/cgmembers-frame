@@ -110,6 +110,7 @@ Scenario: A member looks at transactions with roundups
   Then balances:
   | uid  | balance |*
   | .ZZA | 1535.00 |
+
   When member ".ZZA" visits page "history/transactions/period=15"
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
@@ -120,13 +121,21 @@ Scenario: A member looks at transactions with roundups
   | End          |   | 1,535.00 | %dmy     |
   And with:
   | Tx# | Date    | Name       | Purpose                  | Amount  |  Balance |~do |
-  |     | %mdy    | Corner Pub | sundries                 |  -49.95 | 1,535.00 |    |
-  |     |         | %PROJECT   | roundup donation         |   -0.05 |          |    | 
+  | 41  | %mdy    | Corner Pub | sundries                 |  -50.00 | 1,535.00 |    |
   |  6  | %mdy-4d | --         | to bank                  |  -33.00 | 1,585.00 |    |
   |  5  | %mdy-4d | --         | to bank                  |  -22.00 | 1,618.00 |    |
   | 50  | %mdy-5d | Bea Two    | (reverses tx #44)        |  -10.00 | 1,640.00 |    |
   | 49  | %mdy-6d | Bea Two    | cash V                   | -100.00 | 1,650.00 |    |
   | 48  | %mdy-1w | Corner Pub | this Q                   | -120.00 | 1,750.00 |    |
+
+  When showing tx details
+  And member ".ZZA" visits page "history/transactions/period=15"
+  Then with:
+  | Tx# | Date    | Name       | Purpose                  | Amount  |  Balance |~do |
+  | 41  | %mdy    | Corner Pub | sundries                 |  -49.95 | 1,535.00 |    |
+  |     |         | %PROJECT   | roundup donation         |   -0.05 |          |    | 
+  And without:
+  | -50.00 |
 
 Scenario: Admin reverses a bank transfer
   Given members:

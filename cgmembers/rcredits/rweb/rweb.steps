@@ -259,6 +259,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     MAKE boxes Setup
  *     MAKE ccpay Setup
  *     MAKE cgpay Setup
@@ -340,7 +341,6 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST ccpay ANonmemberConfirmsDonationIntent
  *     TEST ccpay AMemberDonatesToACcOkOrganization
  *     TEST ccpay AMemberPaysACcOkOrganization
@@ -774,6 +774,7 @@ function with($content) {return weShow($content);}
  *     TEST txdetail AnAdminAsksToViewOrEditATransaction
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
 function without($content) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -812,7 +813,6 @@ function withoutOptions($options) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST ccpay Setup
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
@@ -874,6 +874,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     MAKE cgpay AMemberClicksAPayButton
  *     MAKE cgpay AMemberClicksAnExpiredPayButton
  *     MAKE cgpay AMemberClicksAPayButtonWithVariableAmount
@@ -1734,7 +1735,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     BOTH bank ASlaveMemberRequestsATransfer
- *     TEST bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
+ *     BOTH bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     TEST boxes AMemberSignsInForTheFirstTimeOnADevice
  *     BOTH boxes AMemberSignsInAgain
  *     BOTH boxes AMemberTransactsAndBoxIdGetsRecorded
@@ -2595,7 +2596,8 @@ function varPencrypts($var, $ray) {
 /**
  * member (ARG) scans admin card (ARG)
  *
- * in: MAKE txs AdminReversesABankTransfer
+ * in: MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
+ *     MAKE txs AdminReversesABankTransfer
  */
 function memberScansAdminCard($id, $vKeyPw) {return t\memberScansAdminCard($id, $vKeyPw);}
 
@@ -2728,3 +2730,21 @@ function varIsRay($var, $ray) {
   t\fixTestVars($ray);
   return $testOnly ? t\eq(t('test Var'), nni($testVars, $var), $want = $ray) : ($testVars[$var] = $ray or TRUE);
 }
+
+/**
+ * showing tx details
+ *
+ * in: MAKE stepup AMembersRulesComeIntoPlay
+ *     MAKE txs AMemberLooksAtTransactionsWithRoundups
+ */
+function showingTxDetails() {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testShowAux; return $testShowAux = TRUE;
+}
+
+/**
+ * member (ARG) is signed in
+ *
+ * in: MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
+ */
+function memberIsSignedIn($id) {return t\isSignedIn($id);}

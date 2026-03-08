@@ -1761,7 +1761,7 @@ function clear($ch = 0) {
   global $testRewardStep; $testRewardStep = 500;
   global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
 
-  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs boxId';
+  $vars = 'lastGo formOut formArray formSta testOp testConfirmation testLink tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr testVars testRecs boxId testShowAux';
   foreach (ray($vars) as $k) { global $$k; $$k = NULL; }
 
   $formOut['text'] = '';
