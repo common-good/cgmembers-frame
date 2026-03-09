@@ -32,7 +32,7 @@ function formTxs($form, &$sta, $args = '') {
   require_once R_ROOT . "/classes/txhistory$download.class"; // choose the right TxHistory class
   $class = "CG\\Web\\TxHistory$download";
   $processor = new $class($uids, $url, $starting, $ending);
-  be\processTxs($processor, $uids, $starting, $ending, ray('descending omitAux hideFees', !$download, TRUE, $hideFees));
+  be\processTxs($processor, $uids, $starting, $ending, ray('descending omitAux hideFees', !$download, !$download, $hideFees));
 
   if (test() and $download) return;
   if ($download) exit();
