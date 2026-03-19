@@ -92,11 +92,12 @@ Scenario: admin downloads unbalanced ACH requests again
   | txid | payee | amount                       | created | deposit  | completed | pid | bankAccount     |*
   | 6000 | .ZZB  |   -100                       | %now-1d | %now0    | %now-1d   |     | USkk21187028102 |
   | 6001 | .ZZA  |     -1                       | %now-2w | 0        | %now-2w   |     | USkk21187028101 |
-  | 6002 | .ZZB  | %(-%T_MAX_DAILY_ACH_OUT+200) | %now0   | 0        | %now0     |     | USkk21187028102 |
+  | 6002 | .ZZB  | %(-%T_MAX_DAILY_ACH_OUT-500) | %now0   | 0        | %now0     |     | USkk21187028102 |
   When member ".ZZA" visits page "sadmin/achs/date=0&mark=1&way=OUT&balance=0"
   Then these "txs2":
   | txid | payee | amount                      | created | deposit  | completed |*
-  | 5003 | .ZZB  |   -100                      | %now-1d | %now     | %now-1d   |
-  | 6000 | .ZZB  |   -100                      | %now-1d | %now0    | %now-1d   |
-  | 6001 | .ZZA  |     -1                      | %now-2w | 0        | %now-2w   |
-  | 6002 | .ZZB  |%(-%T_MAX_DAILY_ACH_OUT+200) | %now0   | %now     | %now0     |
+  | 5003 | .ZZB  | -100                        | %now-1d | 0        | %now-1d   |
+  | 6000 | .ZZB  | -100                        | %now-1d | %now0    | %now-1d   |
+  | 6001 | .ZZA  | -1                          | %now-2w | 0        | %now-2w   |
+  | 6002 | .ZZB  |%(-%T_MAX_DAILY_ACH_OUT+100) | %now0   | %now     | %now0     |
+  | 6003 | .ZZB  | -600                        | %now    | 0        | 0         |

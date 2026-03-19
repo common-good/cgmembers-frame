@@ -172,12 +172,13 @@ X;
  */
 function maybeSplitRow(&$row) {
   extract(just('xid payee amount limit', $row));
-  if (abs($amount) < abs($limit)) return;
+  if (abs($amount) <= abs($limit)) return;
   
   // split the transfer request into (a) the limit and (b) the remainder for another day
   $extra = db\get('recursId,flags,cat2,for2 AS purpose', 'txs', compact('xid'));
   $DBTX = \db_transaction();
-  db\update('txs2', ray('xid amount', $xid, $limit), 'xid'); $row['amount'] = $limit;
+  db\update('txs2', ray('xid amount', $xid, $limit), 'xid');
+  $row['amount'] = $limit;
   be\createUsdTransfer(r\acct($payee), $amount - $limit, just('pid bankAccount', $row) + $extra);
   unset($DBTX);
 }

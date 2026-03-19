@@ -489,7 +489,7 @@ function adjustFS() {
     $info = compact(ray('uid rule offBy portion rightFee rightPct donsToDate allIncome fee1pct fee1desc feesToDate purpose'));
     $msgs[] = t('adjusting FS fee for ') . $nm . ' ' . pr($info);
     db\update('tx_rules', ray('id portion purpose', $rule, round($rightPct/100, 4), $purpose), 'id');
-    $cat = [NULL, r\nick2cat('FS-FEE')];
+    $cat = [r\nick2cat('D-FBO'), r\nick2cat('FS-FEE')];
     r\acct($uid)->payApproved(CGID, $offBy, t('fiscal sponsorship fee adjustment'), FOR_GOODS, compact(ray('rule cat')));
   }
 
