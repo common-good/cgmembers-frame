@@ -47,7 +47,7 @@ function formTxDetail($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT t.created, t.channel, t.boxId, t.amt, t2.pid, t.type, t.for$me AS forMe, t.for$you AS forYou, t.cat$me AS cat, c.category,
-      uMe.uid AS meId, eid, recursId, rule, reversesXid, t.flags,
+      uMe.uid AS meId, eid, recursId, rule, reversesXid, t.flags, t.deleted,
       uMe.fullName as meNm, IF(t.agt$me=t.uid$me, '', CONCAT(' ($by', agtMe.fullName, ')')) AS meAgt,
       uYou.fullName as youNm, IF(t.agt$you=t.uid$you, '', CONCAT(' ($by', agtYou.fullName, ')')) AS youAgt,
       p.fullName as nonMemberName
@@ -70,10 +70,12 @@ X;
 
   [$youWay, $meWay] = u\order($toMe, t('From:'), t('To:'));
   [$youPOV, $mePOV] = ['', ' *']; // whose point of view
-  $title = t('Transaction #%xid Detail', compact('xid'));
+  $title = t('Transaction #%xid', compact('xid'));
+  if ($deleted) $title .= t(' <b class="loud">DELETED</b> ') . fmtDt($deleted);
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
   if ($uid1 == UID_OUTER and $nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
-  $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
+  [$suffixYou, $suffixMe] = $mya->admEditTx ? u\order($toMe, buttino('', t('Re-thank')), '') : ['', ''];
+  $nmYou = item("$youNm$youAgt$youPOV $suffixYou", $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), short() + vmin(-999999));
@@ -91,22 +93,23 @@ X;
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
   $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags, '', short() + suffix(u\bits($flags, TX_FLAGS)));
-  $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
+  $nmMe = item("$meNm$meAgt$mePOV $suffixMe", $meWay);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
     $entryType = selectFld(REQ . t('Type:'), '', short() + dft($type), ray(E_TYPES));
     $recursId = intFld(t('Recurs Id:'), '', short() + dft($recursId));
     $rule = intFld(t('Rule:'), '', short() + dft($rule));
-    $suffix = ($reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
+    $suffix = ($deleted == 0 and $reversesXid and !in($uid2, [UID_OUTER, UID_BANK])) ? suffix(buttino('', t('Delete this reversed transaction pair'))) : [];
     $reversesXid = intFld(t('Reverses Xid:'), '', short() + dft($reversesXid) + $suffix);
 
     $ids = db\keyed('DISTINCT ABS(id), entryType', 'tx_entries', compact('xid'));
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);
     $suffix = join(' ', nn($eids, []));
     if (nni($ids, $eid) != E_PRIME) $suffix .=  ' ' . buttino('', t('Delete this auxiliary transaction'));
+
+    jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
     $submit = submit(t('Update'), '', '', suffix($suffix));
-    if ($reversesXid or count($ids) > 1) jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
   } else $phone = $entryType = $submit = $toMe = $xid = $eid = $recursId = $rule = $reversesXid = NULL;
 

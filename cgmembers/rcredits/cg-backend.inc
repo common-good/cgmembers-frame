@@ -1139,18 +1139,15 @@ EOF;
 
 /**
  * Thank a payer for a transaction, especially for a donation to CG or a fiscally sponsored account, and report to recipient.
- * @param int $xid: the transaction ID (used only for type cggift and fbo)
- * @param string $type:
- *   gift - donation not to CG or its sponsored projects
- *   cggift - donation to CG
- *   fbo - donation to a sponsored PROJECT
- *   purchase - not a donation
- * @param string $item: item description
+ * @param int $xid: the transaction ID
+ * @param string $item: item description (defaults to for1 in transaction #xid)
+ * @param bool $only: <just thank donor/payer; don't tell the recipient>
  * @return result message
  */
-function thanks($xid, $item) {
+function thanks($xid, $item = NULL, $only = FALSE) {
   $tx = r\tx($xid);
 
+  u\setDft($item, $tx->for1);
   $member = is_null($tx->pid); // empty and isset fail here
   $id = $tx->pid ?: $tx->uid1;
   $amount = $tx->amt2;
@@ -1186,7 +1183,7 @@ function thanks($xid, $item) {
 
     $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail', $fullName, u\fmtPhone($phone), $postalAddr, $email);
     unset($subs['fullName']); // salutation to co name, not payer name
-    $coA->tellIn($report, $subs);
+    if (!$only) $coA->tellIn($report, $subs);
 
     // $msg = tr($coA->giftThanksMsg, $subs0); // thanks for donation to an organization not sponsored by CG
     $subs = $subs0 + ray('noFrame coName coPostalAddr coPhone msg giftThanks toCancel', 
@@ -1208,6 +1205,7 @@ function thanks($xid, $item) {
     
   }
   
+  if ($only) $msg = t('Payment acknowledgment has been sent.');
   w\say($msg);
   return $msg;
 }

@@ -49,7 +49,7 @@ Setup:
 
 Scenario: an admin asks to view or edit a transaction
   When member "A:D" visits "history/transaction/xid=46"
-  Then we show "Transaction #46 Detail" with:
+  Then we show "Transaction #46" with:
   | Date        | %ymd-3m       |
   | Amount      | -240          |
   | For         | what G        |
@@ -65,7 +65,7 @@ Scenario: an admin asks to view or edit a community transaction
   | xid | created   | amount | payer | payee | purpose |*
   |  51 | %today-5d |     51 | ctty  | .ZZB  | loan    |
   When member ".ZZD" visits "history/transaction/xid=51"
-  Then we show "Transaction #51 Detail" with:
+  Then we show "Transaction #51" with:
   | Date        | %ymd-5d       |
   | Amount      | -51           |
   | For         | loan          |

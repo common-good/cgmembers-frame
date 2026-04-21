@@ -313,7 +313,7 @@ Scenario: A sponsored member views their transaction history
   | 1  | %mdy | Dee Forn (non-member) | grant   |  100.00 |  100.00 |
 
   When member "C:A" visits "history/transaction/xid=1"
-  Then we show "Transaction #1 Detail" with:
+  Then we show "Transaction #1" with:
   | Date        | %mdY |
   | Amount      | 100 |
   | For         | grant |
