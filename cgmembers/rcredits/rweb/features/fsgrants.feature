@@ -59,8 +59,8 @@ Setup:
   | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
-  | .ZZC |      83 |
-  | cgf  |      17 |
+  | .ZZC | %(95-%WIRE_FEE) |
+  | cgf  | %(5+%WIRE_FEE)  |
 
 Scenario: A sponsored partner visits the grants page
   When member ".ZZC" visits "co/grants"
