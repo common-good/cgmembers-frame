@@ -36,6 +36,11 @@ function ajax($args = NULL) {
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   switch ($op) {
+    case 'rethank':
+      extract(just('xid', $data, NULL));
+      $msg = be\thanks($xid, NULL, TRUE);
+      return ajaxMsg($msg);
+      
     case 'expandTx':
       extract(just('uids xid template', $data, NULL));
       $template = base64_decode($template);

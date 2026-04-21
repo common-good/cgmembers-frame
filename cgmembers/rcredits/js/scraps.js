@@ -82,6 +82,12 @@ function doit(what, vs) {
     break;
     
   case 'txdetail':
+    $('#edit-nmYou .buttino, #edit-nmMe .buttino').click(function () {
+      yesno('Send another thank-you to this payer (nothing will be send to the recipient)?', function () {
+        post('rethank', {xid:vs['xid']}, function (j) {report(j);});
+      });
+    });
+    
     $('.form-item-reversesXid .suffix .buttino').click(function () {
       post('delPair', {xid:vs['xid']}, function (j) {
         report(j, function () {if (j.ok) location.href = vs['url'];});

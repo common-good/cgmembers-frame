@@ -73,7 +73,8 @@ X;
   $title = t('Transaction #%xid Detail', compact('xid'));
   $created = editIf($mya->admEditTx, 'datetime', t('Date/Time:'), $created, fmtDt($created) . ' ' . fmtTime($created));
   if ($uid1 == UID_OUTER and $nonMemberName) ${$meId == UID_OUTER ? 'meNm' : 'youNm'} = $nonMemberName . t(' (non-member)');
-  $nmYou = item($youNm . $youAgt . $youPOV, $youWay);
+  [$suffixYou, $suffixMe] = $mya->admEditTx ? u\order($toMe, buttino('', t('Re-thank')), '') : ['', ''];
+  $nmYou = item("$youNm$youAgt$youPOV $suffixYou", $youWay);
   
   if (!$toMe) $amt = -$amt; // get amount to me (negate if from me)
   $amount = editIf($mya->admEditTx, 'num', t('Amount:'), $amt, u\fmtAmt($amt), short() + vmin(-999999));
@@ -91,7 +92,7 @@ X;
   $version = $channel == TX_APP ? t(' (v. %version)', 'version', db\get('version', 'r_boxes', ray('id', $boxId))) : '';
   $chan = item(ray(TX_CHANNELS)[$channel] . $boxMsg . $version, t('Channel:'));
   $flags = editIf($mya->admEditTx, '', t('Flags:'), $flags, '', short() + suffix(u\bits($flags, TX_FLAGS)));
-  $nmMe = item($meNm . $meAgt . $mePOV, $meWay);
+  $nmMe = item("$meNm$meAgt$mePOV $suffixMe", $meWay);
 
   if ($mya->admEditTx) {
     $phone = item($phone ? u\fmtPhone($phone) : '', t('Phone:'));
@@ -105,8 +106,9 @@ X;
     foreach ($ids as $id => $etyp) $eids[] = lnk("/history/transaction/xid=$xid&eid=$id&return=$return", ray(E_TYPES)[$etyp]);
     $suffix = join(' ', nn($eids, []));
     if (nni($ids, $eid) != E_PRIME) $suffix .=  ' ' . buttino('', t('Delete this auxiliary transaction'));
+
+    jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
     $submit = submit(t('Update'), '', '', suffix($suffix));
-    if ($reversesXid or count($ids) > 1) jsx('txdetail', ray('xid eid url', $xid, $eid, $return ? u\dePry($return) : ''));
     foreach (ray('toMe xid eid') as $k) $$k = hidFld($$k);
   } else $phone = $entryType = $submit = $toMe = $xid = $eid = $recursId = $rule = $reversesXid = NULL;
 
