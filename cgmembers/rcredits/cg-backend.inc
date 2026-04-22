@@ -1179,7 +1179,7 @@ function thanks($xid, $item = NULL, $only = FALSE) {
 //    $note = (!$member and u\starts($notes, fmtDt(now(), 'dmY'))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
     
     $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
-    $subs0 += ray('date item amount', fmtDt(now()), $item, $amtDpy);
+    $subs0 += ray('date item amount', fmtDt($tx->created), $item, $amtDpy);
 
     $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail', $fullName, u\fmtPhone($phone), $postalAddr, $email);
     unset($subs['fullName']); // salutation to co name, not payer name
