@@ -5,8 +5,10 @@
  * Also used by /do.php, for no-sign-in database changes
  */
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED); // suppress PHP 8.4+ deprecations until codebase migrates off PDO::MYSQL_ATTR_* and implicit nullable params
+
 strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we expect)
- 
+
 global $base_url, $base_path, $base_root;
 global $databases, $drupal_hash_salt;
 global $cookie_domain, $is_https, $base_secure_url, $base_insecure_url;
@@ -36,10 +38,10 @@ ini_set('session.use_trans_sid', '0');
 ini_set('session.cache_limiter', ''); // Don't send HTTP headers using PHP's session handler.
 ini_set('session.cookie_httponly', '1'); // Use httponly session cookies.
 
-ini_set('error_reporting', E_ALL);
+ini_set('error_reporting', E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED); // mirror the early error_reporting() call
 ini_set('max_execution_time', isDEV ? 0 : (4 * 60)); // don't ever timeout processing when developing
-ini_set('session.gc_probability', 1); // garbage collection this fraction of the time on startup (numerator)
-ini_set('session.gc_divisor', 0); // (denominator) - disable random garbage collection (do it in cron instead)
+ini_set('session.gc_probability', 0); // disable random garbage collection (do it in cron instead) - PHP 8 disallows gc_divisor=0
+ini_set('session.gc_divisor', 100);
 define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? (12 * HOUR_SECS) : (24 * MIN_SECS)); // standard 24 mins (more for admin)
 //define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? (5) : (2 * MIN_SECS)); // for testing
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
