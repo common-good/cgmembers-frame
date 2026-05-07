@@ -19,7 +19,7 @@ include_once R_ROOT . '/cg-util.inc';
  * @ingroup logging_severity_levels
  */
 function drupal_error_levels() {
-  return [
+  $levels = [
     E_ERROR => ['Error', WATCHDOG_ERROR],
     E_WARNING => ['Warning', WATCHDOG_WARNING],
     E_PARSE => ['Parse error', WATCHDOG_ERROR],
@@ -33,9 +33,10 @@ function drupal_error_levels() {
     E_USER_NOTICE => ['User notice', WATCHDOG_NOTICE],
     E_DEPRECATED => ['Deprecated function', WATCHDOG_DEPRECATED],
     E_USER_DEPRECATED => ['User deprecated function', WATCHDOG_USER_DEPRECATED],
-    E_STRICT => ['Strict warning', WATCHDOG_DEBUG],
     E_RECOVERABLE_ERROR => ['Recoverable fatal error', WATCHDOG_ERROR],
   ];
+  if (defined('E_STRICT')) $levels[E_STRICT] = ['Strict warning', WATCHDOG_DEBUG]; // E_STRICT removed in PHP 8.4
+  return $levels;
 }
 
 /**
@@ -63,6 +64,7 @@ function handleError($level, $msg, $file, $line, $trace = NULL) {
     foreach ($ignore as $k) if (strpos($msg, $k) !== FALSE) return; // work around flaws in fopen and file_get_contents
   }
   if ($severity == WATCHDOG_DEBUG) return;
+  if ($severity == WATCHDOG_DEPRECATED or $severity == WATCHDOG_USER_DEPRECATED) return; // PHP 8.4+ deprecations should not crash the bootstrap
 ///  debug($context); echo pr($context); // handy when debugging
 
   $nasty = ($severity < WATCHDOG_WARNING);
