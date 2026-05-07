@@ -460,6 +460,7 @@ EOF
   'email plus' => t('If you want to use the same email address for this account, add a plus sign (+) and an arbitrary tag to the local part, for example "%emailTagged".'), // used in user.module
   'forgot password' => t('If you just forgot the password to the other account, <%a>click here</a> to request a new password.'), // used in user.module
   'bad name' => t('That is not a plausible name.'),
+  'code FLN' => t('There is a problem with your account application. Please contact our support staff at %CGF_PHONE. Tell them code FLN.'),
   'bad phone' => t('That is not a proper phone number.'),
   'not your account' => t('That is not your account ID.'),
   'bad account number' => t('Your bank account number must be 3-17 digits long.'),
