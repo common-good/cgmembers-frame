@@ -101,7 +101,7 @@ function formSignup_validate($form, &$sta) {
   $err = u\badName($fullName); if ($err) return err($err, ['field' => 'fullName'], 'fullName');
   if (r\isCriminal($fullName, FALSE)) {
     r\tellAdmin(t('New potential member flagged as criminal'), $sta['input']);
-    return softErr(t('code FLN'));
+    return softErr(tr('code FLN'));
   }
   $fullName = u\normalizeCase($fullName);
 
