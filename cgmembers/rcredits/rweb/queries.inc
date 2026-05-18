@@ -15,10 +15,11 @@ use CG\Util as u;
  */
 
 global $mya;
+const FSCATMAP = 'fsFeeCat:FS-FEE, fsInCat:D-FBO, stepupCat:D-STEPUP, fsStepupCat:D-FBO-STEPUP, fsOutCat1:FIRST-FS-EXPENSE, fsOutCat9:LAST-FS-EXPENSE, fsToPerson:GRANT-PERSON, fsToOrg:GRANT-ORG';
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = r\annualAmt();
-$fsFeeCat = r\nick2cat('FS-FEE');
+foreach (ray(FSCATMAP) as $cat => $nick) $$cat = r\nick2cat($nick);
 
 if ($mya and $mya->admin) {
   $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
@@ -107,20 +108,22 @@ if ($mya and $mya->admin) {
       
   1 . t('Fiscal Sponsorships Last FY') =>
     "SELECT LEFT(FROM_UNIXTIME(u.created), 10) AS Since, fullName AS Partner, CONCAT(city, ', ', abbreviation) AS Location,
-      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x2.outLastFY AS ExpenseLastFY, x1.inLastFY AS GiftsLastFY, Mission
+      IF(ru.portion IS NULL, '', CONCAT(100*ru.portion, '%')) AS Fee, x2.outLastFY AS ExpenseLastFY, x2.grantsOutLastFY AS GrantsLastFY, x1.inLastFY AS GiftsLastFY, Mission
       FROM users u 
       LEFT JOIN u_company c USING (uid) 
       LEFT JOIN r_states s ON s.id=u.state
       LEFT JOIN tx_rules ru ON ru.payee=u.uid
       LEFT JOIN (
-        SELECT uid2 AS uid, SUM(amt) AS inLastFY
+        SELECT uid2 AS uid, cat2, SUM(amt) AS inLastFY
         FROM txs t WHERE t.created BETWEEN $fy0 AND $fy9 AND uid1<>:UID_BANK GROUP BY uid
       ) x1 USING(uid)
       LEFT JOIN (
-        SELECT IF(uid1=:UID_BANK, uid2, uid1) AS uid, SUM(IF(uid1=:UID_BANK, -amt, amt)) AS outLastFY
+        SELECT IF(uid1=:UID_BANK, uid2, uid1) AS uid, cat1, SUM(IF(uid1=:UID_BANK, -amt, amt)) AS outLastFY,
+          SUM(IF(cat1 IN ($fsToPerson, $fsToOrg), amt, 0)) AS grantsOutLastFY
         FROM txs t WHERE t.created BETWEEN $fy0 AND $fy9 AND uid2<>:CGID GROUP BY uid
       ) x2 USING(uid)
-      WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
+      WHERE (x1.cat2 IN ($fsInCat, $fsStepupCat, $stepupCat) OR x2.cat1 BETWEEN $fsOutCat1 AND $fsOutCat9 OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
+//      WHERE u.:IS_OK AND (coFlags & (1<<:CO_SPONSORED) OR uid=:CGID) ORDER BY x2.outLastFY DESC, u.fullName",
   
   1 . t('1099K') . $fyDesc =>
     "SELECT u.mainQid! AS ID, FORMAT(SUM(x.amt), 2) AS amount, u.fullName as name, u.postalAddr!

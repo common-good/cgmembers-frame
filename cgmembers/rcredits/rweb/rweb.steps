@@ -179,6 +179,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
+ *     MAKE signup AMemberRegistersWithCriminalName
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup ASurtxAmountRoundsToZero
  *     MAKE stepup CommonGoodGetsAStepupDonation
@@ -475,6 +476,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
+ *     TEST signup AMemberRegistersWithCriminalName
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
@@ -1881,6 +1883,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
  *     MAKE signup AMemberChoosesProxies
+ *     MAKE signup AMemberRegistersWithCriminalName
  *     MAKE sponsor Setup
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup
