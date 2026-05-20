@@ -72,7 +72,7 @@ function achBatch($args) {
   list ($recType, $priority, $recSize, $blocking, $format) = [1, 1, 94, 10, 1];
   $fileIdModifier = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9); never send two files on the same day, so this can be static
   $datetime = fmtDt(now(), 'yyMMddHHmm');
-  list ($originNum, $originName, $ref) = [CGF_EIN, $coName, ''];
+  list ($originNum, $originName, $ref) = [CGF_EIN, $way == 'OUT' ? $coNameCR : $coName, ''];
   $companyId = $coIdPrefix . CGF_EIN;
   
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEHDR))), $ray);
@@ -137,7 +137,7 @@ X;
   if ($balance and $offset != 0) { // no need for an offset entry if file is already balanced or not supposed to be balanced
     list ($recType, $data, $addendaFlag) = [6, '', 0];
     list ($txCode, $routing, $account, $amount, $id, $name) // offset record parameters
-      = [$offset < 0 ? 22 : 27, $routing0, $acctIn, abs($offset), t('CTTYFUND OFFSET'), $coName];
+      = [$offset < 0 ? 22 : 27, $routing0, $acctIn, abs($offset), t('CTTYFUND OFFSET'), $originName];
     $count++;
     if ($offset <= 0) $credits -= $offset; else $debits += $offset;
     $hash += substr($routing, 0, 8);
