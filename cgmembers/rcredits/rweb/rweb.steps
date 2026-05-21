@@ -1214,6 +1214,9 @@ function agentCardCodeIs($id, $cardCode2) {
  *
  * in: MAKE community CronCalculatesTheStatistics
  *     MAKE dashboard Setup
+ *     MAKE fbo FiscalSponsorshipFeesAreNotAdjusted
+ *     MAKE fbo FiscalSponsorshipFeesAreAdjusted
+ *     MAKE fbo FiscalSponsorshipFeesHaveAMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  */
 function cronRuns($op) {return t\cronRuns($op);}
@@ -1791,6 +1794,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
+ *     BOTH fbo FiscalSponsorshipFeesAreNotAdjusted
+ *     BOTH fbo FiscalSponsorshipFeesAreAdjusted
+ *     BOTH fbo FiscalSponsorshipFeesHaveAMinimum
  *     MAKE flow Setup
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws

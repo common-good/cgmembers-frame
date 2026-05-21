@@ -273,6 +273,7 @@ EOF
   'wire fee' => t('wire transfer fee'),
   'cover cc fee' => t('<span>Check here to cover the transaction processing fee (%CC_PCT% + %CC_PLUS¢).</span>'), // must include <span> (see 'pay' in scraps.js)
   'cover FS fee' => t('<span>Check here to cover the fiscal sponsorship fee (%fee%).</span>'), // must include <span> (see 'pay' in scraps.js)
+  'fs fee adjust' => t('fiscal sponsorship fee adjustment'),
   'sponsee notified' => t('The sponsee has been notified that this grant was received, but needs documentation.'),
   'grantdoc-required' => t('Your %amt grant from %grantorName has been received, but needs documentation before the funds can be released to your account. At your convenience, please email a copy of the grant agreement to %PROJECT at %CGF_EMAIL. Then sign in to your account and on the Company menu choose "Grants Expected" to enter the date you emailed us the agreement.'),
     

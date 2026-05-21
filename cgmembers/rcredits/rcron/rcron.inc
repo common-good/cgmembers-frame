@@ -459,6 +459,7 @@ function adjustFS() {
     $nmSub = compact('nm');
     $donsToDate = db\sum('amt', 'txs_noreverse', ':IS_GIFT AND uid2=:uid', compact('uid'));
     if ($donsToDate <= 0) continue;
+
     if (!$ruleRow = db\row('tx_rules', "action=:ACT_SURTX AND payee=:uid AND purpose LIKE 'fiscal sponsorship fee%' AND `end` IS NULL", compact('uid'))) {$msgs[] = t('missing FS rule for ') . $nm; continue;}
     extract(just('id portion', $ruleRow)); $rule = $id;
     $feesCrit = compact(ray('uid rule'));
@@ -490,7 +491,7 @@ function adjustFS() {
     $msgs[] = t('adjusting FS fee for ') . $nm . ' ' . pr($info);
     db\update('tx_rules', ray('id portion purpose', $rule, round($rightPct/100, 4), $purpose), 'id');
     $cat = [r\nick2cat('D-FBO'), r\nick2cat('FS-FEE')];
-    r\acct($uid)->payApproved(CGID, $offBy, t('fiscal sponsorship fee adjustment'), FOR_GOODS, compact(ray('rule cat')));
+    r\acct($uid)->payApproved(CGID, $offBy, tr('fs fee adjust'), FOR_GOODS, compact(ray('rule cat')));
   }
 
   if ($msg = join("\n", nn($msgs, []))) {
@@ -507,16 +508,16 @@ function adjustFS() {
  * @return [$fee, $pct]: the expected fee total and correct percentage going forward
  */
 function fsFee($dons, $fee1pct) {
-  $CK = 100000;
+  $CK = 100000; // rate adjusts with every $100k (chunk) of donations
   $pct = $fee1pct;
   $fee = 0;
   
-  while ($dons > $CK) {
-    $fee += $CK * $pct / 100;
+  while ($dons > $CK and $pct > $fee1pct - FS_FEE_SPREAD) {
+    $fee += $CK * $pct / 100; // original pct of first chunk, 0.5% less for next chunk, etc.
     $dons -= $CK;
     $pct -= 0.5;
   }
-  $fee += $dons * $pct / 100;
+  $fee += $dons * $pct / 100; // add current percentage of donations beyond the most recent change point
   $fee = round($fee, 2);
 
   return [$fee, $pct];

@@ -418,3 +418,36 @@ Scenario: a sponsored organization moves credit to the bank
   And we message "banked" to member ".ZZC" with subs:
   | action  | tofrom | amount | why             |*
   | deposit | to     | $86    | as soon as possible |
+
+Scenario: Fiscal sponsorship fees are not adjusted
+  Given these "txs":
+  | eid | xid | payer | payee | amount | purpose | cat2   | type     | agt2 | flags | rule |*
+  | 1   | 1   | .ZZA  | .ZZC  | 100000 | grant   | D-FBO  | %E_PRIME | .ZZA | gift  |      |
+  | 2   | 1   | .ZZC  | cgf   | 5000   | 5%fsfee | FS-FEE | %E_AUX   | .ZZC | gift  | 1    |
+  When cron runs "adjustFS"
+  Then these "tx_rules":
+  | id        | 1            |**
+  | portion   | .05          |
+
+Scenario: Fiscal sponsorship fees are adjusted
+  Given these "txs":
+  | eid | xid | payer | payee | amount | purpose | cat2   | type     | agt2 | flags | rule |*
+  | 1   | 1   | .ZZA  | .ZZC  | 110000 | grant   | D-FBO  | %E_PRIME | .ZZA | gift  |      |
+  | 2   | 1   | .ZZC  | cgf   | 5500   | 5%fsfee | FS-FEE | %E_AUX   | .ZZC | gift  | 1    |
+  When cron runs "adjustFS"
+  Then these "tx_rules":
+  | id        | 1            |**
+  | portion   | .045         |
+  And these "txs":
+  | xid | payer | payee | amount | purpose       | rule |*
+  | 2   | .ZZC  | cgf   | -50    | fs fee adjust | 1    |
+
+Scenario: Fiscal sponsorship fees have a minimum
+  Given these "txs":
+  | eid | xid | payer | payee | amount  | purpose | cat2   | type     | agt2 | flags | rule |*
+  | 1   | 1   | .ZZA  | .ZZC  | 9999999 | grant   | D-FBO  | %E_PRIME | .ZZA | gift  |      |
+  | 2   | 1   | .ZZC  | cgf   | 250000  | 5%fsfee | FS-FEE | %E_AUX   | .ZZC | gift  | 1    |
+  When cron runs "adjustFS"
+  Then these "tx_rules":
+  | id        | 1                        |**
+  | portion   | %(.05-FS_FEE_SPREAD/100) |
