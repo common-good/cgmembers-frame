@@ -1012,9 +1012,9 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
     $did = ''; // no real-time report from here
     $appMsg = $toMe ? '' : t('drew from');
   } elseif (in($type, 'payment, invoice payment')) {
-    $notices = ['you paid', 'paid you'];
-    $did = t('paid');
-    $appMsg = 'paid';
+    $notices = u\order($positive, 'you paid', 'paid you');
+    $did = $positive ? t('paid') : t('received from');
+    $appMsg = $did;
   } elseif ($type == 'undo') {
     if ($tx->otherA->isBank()) {
       $notices = ['', 'bank tx canceled'];
