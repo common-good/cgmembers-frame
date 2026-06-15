@@ -59,11 +59,18 @@ function cgpaySso() {
 
   // Promote this request to the target user. _drupal_session_write() at
   // shutdown reads $user->uid and writes that into the new sessions row, keyed
-  // by session_id(). A non-empty $_SESSION marks the session as "changed" so
-  // the write actually fires (otherwise short-circuits as anonymous-no-data).
+  // by session_id().
   global $user;
   $user = (object) ['uid' => $uid];
-  $_SESSION['cgpay_sso_login'] = REQUEST_TIME;
+
+  // Populate the session vars cgmembers bootstrap reads on the FOLLOWING request
+  // (when the browser arrives at the PHP site with our cookie). r\setAcct() with
+  // no args reads w\svar('myid') / w\svar('agentId') — which are stored as
+  // serialized values under the SVAR_HEADER ('rcredits_') prefix in $_SESSION
+  // (see rweb-subs.inc:svar). Without these, $mya is NULL and r\access() fails
+  // every permission check, so /history etc. redirect to the signin page.
+  $_SESSION[SVAR_HEADER . 'myid'] = serialize($uid);
+  $_SESSION[SVAR_HEADER . 'agentId'] = serialize($uid);
 
   // session_id() now holds the cookie value the browser will send back to demo
   // to authenticate as this user. Drupal writes it to both sid and ssid on
