@@ -51,15 +51,23 @@ function cgpaySso() {
   if (!$a) return exitJust(X_NOTFOUND);
   if (!$a->ok) return exitJust(X_FORBIDDEN);
 
-  // Promote this request to the target user. setAcct() is what the regular
-  // signin form runs after a verified password (see forms/signin.inc). It
-  // updates the global $user, populates $_SESSION, and lets Drupal's
-  // _drupal_session_write() persist a real session row at end of request.
-  r\setAcct($uid, []);
+  // The SSO request itself came in without a session cookie, so Drupal never
+  // called session_start() at boot — meaning _drupal_session_write() won't fire
+  // automatically at shutdown. Start the session machinery now so the shutdown
+  // handler is wired up.
+  if (!drupal_session_started()) drupal_session_start();
 
-  // session_id() now holds the value Drupal will write to sessions.ssid (and
-  // sessions.sid, since the site is HTTPS-only). That's what the browser will
-  // send back to the PHP host as the SSESS cookie.
+  // Promote this request to the target user. _drupal_session_write() at
+  // shutdown reads $user->uid and writes that into the new sessions row, keyed
+  // by session_id(). A non-empty $_SESSION marks the session as "changed" so
+  // the write actually fires (otherwise short-circuits as anonymous-no-data).
+  global $user;
+  $user = (object) ['uid' => $uid];
+  $_SESSION['cgpay_sso_login'] = REQUEST_TIME;
+
+  // session_id() now holds the cookie value the browser will send back to demo
+  // to authenticate as this user. Drupal writes it to both sid and ssid on
+  // HTTPS-only sites.
   $cookieVal = session_id();
 
   // Menu categories for this user. Permission rules live in PHP (cg-menu.inc);
