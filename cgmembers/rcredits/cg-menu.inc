@@ -247,6 +247,7 @@ function menu($submenu = '') {
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from our JS scripts
     'api' => ['call', 'API', '1', ANY, 'api'],
+    'cgpay-sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
