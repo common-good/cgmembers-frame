@@ -51,23 +51,16 @@ function cgpaySso() {
   if (!$a) return exitJust(X_NOTFOUND);
   if (!$a->ok) return exitJust(X_FORBIDDEN);
 
-  // Fresh session IDs — distinct from the (ephemeral) session of THIS request.
-  $sid = drupal_random_key();
-  $ssid = drupal_random_key();
+  // Promote this request to the target user. setAcct() is what the regular
+  // signin form runs after a verified password (see forms/signin.inc). It
+  // updates the global $user, populates $_SESSION, and lets Drupal's
+  // _drupal_session_write() persist a real session row at end of request.
+  r\setAcct($uid, []);
 
-  // Direct INSERT — the codebase's db\insert() helper expects an 'id' primary-key
-  // column that this table doesn't have (sessions uses sid/ssid as the keys).
-  $row = [
-    'uid' => $uid,
-    'acct' => $uid,              // viewing own account
-    'sid' => $sid,
-    'ssid' => $ssid,
-    'hostname' => ip_address(),
-    'timestamp' => REQUEST_TIME,
-    'cache' => 0,
-    'session' => '',             // Drupal hydrates on the user's next request
-  ];
-  db\q('INSERT INTO sessions SET uid=:uid, acct=:acct, sid=:sid, ssid=:ssid, hostname=:hostname, timestamp=:timestamp, cache=:cache, session=:session', $row);
+  // session_id() now holds the value Drupal will write to sessions.ssid (and
+  // sessions.sid, since the site is HTTPS-only). That's what the browser will
+  // send back to the PHP host as the SSESS cookie.
+  $cookieVal = session_id();
 
   // Menu categories for this user. Permission rules live in PHP (cg-menu.inc);
   // here we just expose top-level categories the cgpay dashboard renders as links.
@@ -77,8 +70,8 @@ function cgpaySso() {
 
   return exitJson([
     'cookieName' => session_name(),
-    'sid'        => $sid,
-    'ssid'       => $ssid,
+    'sid'        => $cookieVal,
+    'ssid'       => $cookieVal,
     'menu'       => $menu,
   ], X_OK);
 }
