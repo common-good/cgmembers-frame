@@ -23,8 +23,9 @@ use CG\Db as db;
  *   5. cgpay POC responds to the browser with Set-Cookie for that session,
  *      scoped to Domain=.commongood.earth so the cookie reaches the PHP site
  *
- * Shared secret lives in config.json under key `cgpaySsoSecret`. It is rejected
- * unless both ends present a non-empty matching value.
+ * Shared secret lives in config.json under key `cgpaySsoSecret` and is exposed at
+ * boot time as the CGPAY_SSO_SECRET constant (see defs.inc). It is rejected unless
+ * both ends present a non-empty matching value.
  *
  * This endpoint is NOT called from the browser — only from the cgpay server.
  * No CORS headers, no session/login UI.
@@ -33,7 +34,7 @@ function cgpaySso() {
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') return exitJust(X_SYNTAX);
 
   // Shared-secret auth. Refuse if config is missing — fail closed, not open.
-  $expected = config('cgpaySsoSecret');
+  $expected = CGPAY_SSO_SECRET;
   $provided = nni($_SERVER, 'HTTP_X_CG_INTERNAL_TOKEN');
   if (empty($expected) || empty($provided) || !hash_equals($expected, $provided)) {
     return exitJust(X_UNAUTH);

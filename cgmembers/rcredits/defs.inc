@@ -69,6 +69,7 @@ define('STRIPE_PUBLIC', config('stripePublic'));
 define('STRIPE_SECRET', config('stripeSecret'));
 define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
+define('CGPAY_SSO_SECRET', config('cgpaySsoSecret', '')); // shared secret for the SvelteKit cgpay POC /cgpay-sso handoff; empty disables the endpoint
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
