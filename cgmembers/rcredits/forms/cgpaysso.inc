@@ -2,6 +2,7 @@
 namespace CG\Web;
 use CG as r;
 use CG\Db as db;
+use CG\Util as u;
 
 /**
  * @file
@@ -77,6 +78,25 @@ function cgpaySso() {
   // HTTPS-only sites.
   $cookieVal = session_id();
 
+  // Create a fresh `box-<QID>` device record + cookie. Acct::boxId() normally
+  // does this on a web signin, but its web-channel path reads the existing
+  // device code from $_COOKIE — which is empty on this server-to-server call.
+  // Inline the new-code path: generate a code, write the r_boxes row, return
+  // the cookie name and value so SvelteKit can forward it scoped to the shared
+  // parent domain alongside the SSESS cookie. Without this, downstream PHP
+  // features that look the device up in r_boxes don't recognise it.
+  $boxName = 'box-' . $a->mainQid;
+  $boxValue = u\code();
+  $boxnum = (db\get('MAX(boxnum)', 'r_boxes', ['uid' => $uid]) ?: 0) + 1;
+  db\insert('r_boxes', [
+    'uid' => $uid,
+    'code' => $boxValue,
+    'boxnum' => $boxnum,
+    'created' => now(),
+    'access' => now(),
+    'channel' => TX_WEB,
+  ]);
+
   // Menu categories for this user. Permission rules live in PHP (cg-menu.inc);
   // here we just expose top-level categories the cgpay dashboard renders as links.
   $menu = ['Dashboard', 'History', 'Community', 'Settings'];
@@ -84,9 +104,11 @@ function cgpaySso() {
   if ($a->can(B_ADMIN)) $menu[] = 'Admin';
 
   return exitJson([
-    'cookieName' => session_name(),
-    'sid'        => $cookieVal,
-    'ssid'       => $cookieVal,
-    'menu'       => $menu,
+    'cookieName'      => session_name(),
+    'sid'             => $cookieVal,
+    'ssid'            => $cookieVal,
+    'menu'            => $menu,
+    'boxCookieName'   => $boxName,
+    'boxCookieValue'  => $boxValue,
   ], X_OK);
 }
