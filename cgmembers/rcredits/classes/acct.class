@@ -228,7 +228,7 @@ class Acct {
       case 'slave': return ($jid = $a->jid and $jid < $a->id); // slave in a joint account
       case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
       case 'masterA': return $a->slave ? $a->jA : $a;
-      case 'helperA': return $a->helper ? r\acct($a->helper) : '';
+      case 'helperA': return r\acct($a->helper ?: UID_SUPER);
       case 'usa': return ($a->country == US_COUNTRY_ID);
       case 'card': return ($a->ok and $a->stepsDone('card'));
       case 'vote': return ($a->ok and $a->stepsDone('vote'));
