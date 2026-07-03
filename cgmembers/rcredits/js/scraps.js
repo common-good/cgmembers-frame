@@ -304,8 +304,9 @@ function doit(what, vs) {
     var pay;
     var purpose = $('#edit-purpose');
     var cat = $('#edit-cat');
-    $('.btn-pay, .btn-charge').click(function () {
-      pay = has($(this).attr('class'), 'btn-pay');
+
+    var porch = function () {
+      pay = vs['porch'] == 'dashboard' ? has($(this).attr('class'), 'btn-pay') : (vs['porch'] == 'pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
       $('#dashboard').hide();
       $('.w-pay').toggle(pay);
@@ -329,7 +330,10 @@ function doit(what, vs) {
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
       mem0Click(true);
-    });
+    };
+    
+    if (vs['porch'] == 'dashboard') $('.btn-pay, .btn-charge').click(porch); else porch();
+    
     if (vs['hasCats'] == 1) $('#edit-who').change(function () {
       var otherId = $('.whoId', $(this).parents('form:first'));
       if (purpose.val() == '' || cat.val() == '') post('suggestTxDesc', {
