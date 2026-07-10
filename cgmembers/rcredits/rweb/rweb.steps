@@ -405,7 +405,9 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
+ *     TEST ccpay ANonmemberClicksALinkToDonateToAClosedAccount
  *     TEST cgpay AMemberClicksAnExpiredPayButton
+ *     TEST cgpay AMemberClicksAPayButtonForAClosedAccount
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     TEST contact AMemberUpdatesContactInfo
@@ -879,6 +881,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  *     MAKE cgpay AMemberClicksAPayButton
  *     MAKE cgpay AMemberClicksAnExpiredPayButton
+ *     MAKE cgpay AMemberClicksAPayButtonForAClosedAccount
  *     MAKE cgpay AMemberClicksAPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -1238,10 +1241,12 @@ function statisticsGetSet($time) {
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE boxes AMemberTransactsAndBoxIdGetsRecorded
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToAClosedAccount
  *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberConfirmsADonationToASponsoredOrganizationByCreditCard
  *     MAKE ccpay ANonmemberConfirmsAPaymentToACcOkOrganizationByCreditCard
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
+ *     MAKE cgpay AMemberClicksAPayButtonForAClosedAccount
  *     MAKE cgpay AMemberRedeemsStoreCreditOverspendingAZeroBalance
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
@@ -2444,7 +2449,8 @@ function memberAjaxWith($id, $op, $ray) {
 /**
  * member (ARG) visits (ARG)
  *
- * in: MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
+ * in: MAKE ccpay ANonmemberClicksALinkToDonateToAClosedAccount
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     MAKE fbo ANonmemberDonatesToASponsoredMemberByCheck
@@ -2622,12 +2628,14 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  * button code (ARG) for: (ARG)
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE ccpay ANonmemberClicksALinkToDonateToAClosedAccount
  *     MAKE ccpay ANonmemberClicksALinkToDonateToACcOkOrganizationByStripe
  *     MAKE ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     MAKE ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     MAKE ccpay AMemberDonatesToACcOkOrganization
  *     MAKE cgpay AMemberClicksAPayButton
  *     MAKE cgpay AMemberClicksAnExpiredPayButton
+ *     MAKE cgpay AMemberClicksAPayButtonForAClosedAccount
  *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberClicksAPayButtonWithVariableAmount
  *     MAKE cgpay AMemberSubmitsAPayButtonPaymentWithAccountIDAndChosenAmount

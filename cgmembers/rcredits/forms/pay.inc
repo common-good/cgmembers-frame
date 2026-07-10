@@ -20,6 +20,7 @@ function formPay($form, &$sta, $args = NULL) {
 
   if ($code = nni($args, 'code')) { // customer clicked a coded button
     if (!$ray = getCGPayArgs($args, $mya) or !$coA = nni($ray, 'coA')) return; // error message already shown
+    if (!$coA->ok) return softErr('inactive');
     extract(just($codeFlds, $ray, NULL));
   } else { // vanilla CG donation page
     foreach (ray($codeFlds) as $k) $$k = NULL;
