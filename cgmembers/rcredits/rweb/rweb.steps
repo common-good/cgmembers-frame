@@ -179,6 +179,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
+ *     MAKE signup AMemberRegistersWithCriminalName
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup ASurtxAmountRoundsToZero
  *     MAKE stepup CommonGoodGetsAStepupDonation
@@ -475,6 +476,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
+ *     TEST signup AMemberRegistersWithCriminalName
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorshipWithoutManagePermission
@@ -1212,6 +1214,9 @@ function agentCardCodeIs($id, $cardCode2) {
  *
  * in: MAKE community CronCalculatesTheStatistics
  *     MAKE dashboard Setup
+ *     MAKE fbo FiscalSponsorshipFeesAreNotAdjusted
+ *     MAKE fbo FiscalSponsorshipFeesAreAdjusted
+ *     MAKE fbo FiscalSponsorshipFeesHaveAMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  */
 function cronRuns($op) {return t\cronRuns($op);}
@@ -1789,6 +1794,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fbo AMemberDonatesToASponsoredOrganization
  *     TEST fbo AMemberPaysASponsoredOrganization
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
+ *     BOTH fbo FiscalSponsorshipFeesAreNotAdjusted
+ *     BOTH fbo FiscalSponsorshipFeesAreAdjusted
+ *     BOTH fbo FiscalSponsorshipFeesHaveAMinimum
  *     MAKE flow Setup
  *     TEST flow AMemberDraws
  *     TEST flow AJointAccountSlaveMemberDraws
@@ -1881,6 +1889,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
  *     MAKE signup AMemberChoosesProxies
+ *     MAKE signup AMemberRegistersWithCriminalName
  *     MAKE sponsor Setup
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup

@@ -273,6 +273,7 @@ EOF
   'wire fee' => t('wire transfer fee'),
   'cover cc fee' => t('<span>Check here to cover the transaction processing fee (%CC_PCT% + %CC_PLUS¢).</span>'), // must include <span> (see 'pay' in scraps.js)
   'cover FS fee' => t('<span>Check here to cover the fiscal sponsorship fee (%fee%).</span>'), // must include <span> (see 'pay' in scraps.js)
+  'fs fee adjust' => t('fiscal sponsorship fee adjustment'),
   'sponsee notified' => t('The sponsee has been notified that this grant was received, but needs documentation.'),
   'grantdoc-required' => t('Your %amt grant from %grantorName has been received, but needs documentation before the funds can be released to your account. At your convenience, please email a copy of the grant agreement to %PROJECT at %CGF_EMAIL. Then sign in to your account and on the Company menu choose "Grants Expected" to enter the date you emailed us the agreement.'),
     
@@ -460,6 +461,7 @@ EOF
   'email plus' => t('If you want to use the same email address for this account, add a plus sign (+) and an arbitrary tag to the local part, for example "%emailTagged".'), // used in user.module
   'forgot password' => t('If you just forgot the password to the other account, <%a>click here</a> to request a new password.'), // used in user.module
   'bad name' => t('That is not a plausible name.'),
+  'code FLN' => t('There is a problem with your account application. Please contact our support staff at %CGF_PHONE. Tell them code FLN.'),
   'bad phone' => t('That is not a proper phone number.'),
   'not your account' => t('That is not your account ID.'),
   'bad account number' => t('Your bank account number must be 3-17 digits long.'),

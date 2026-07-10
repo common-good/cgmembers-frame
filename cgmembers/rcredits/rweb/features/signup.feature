@@ -312,3 +312,12 @@ Scenario: A member registers again
   Then we say "error": "duplicate email|forgot password" with subs:
   | a                                          |*
   | a href="settings/password/a%40example.com" |
+
+Scenario: A member registers with criminal name
+  Given these "ofac":
+  | nm    | co |*
+  | chris | 0  |
+  When member "?" confirms form "signup" with values:
+  | fullName | email | phone        |  zip  | acctType     | cq | ca |*
+  | Chris    | c@    | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
+  Then we say "error": "code FLN"

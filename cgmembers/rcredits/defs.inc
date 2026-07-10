@@ -33,10 +33,10 @@ const DEV_VPRIVK_FLNM = R_ROOT . '/misc/devkeys/v.privk'; // location of private
 const DEV_CONFIG_FLNM = R_ROOT . '/misc/config-models/cgAdmin-dev.html'; // location of config file for vKeyPw for testing
 const T_BANK_ACCT = 'USkk21187028112345'; // bank account for tests
 const BANK_TX_LIMITS = '1:30000,7:9999999,52:9999999,365:9999999'; // WAS 1:30000,7:80000,52:160000,365:320000 member limits per day (subject to ACH limits), week, 7-week, year (admin is exempt, so members can request exceptions)
-const BANK_KEYS = 'name routing acctIn acctOut coName coIdPrefix balanced achPrefix sameDay cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, company ID prefix, balanced?, prefix ("_" means blank), same-day requests, cutoff time, maximum daily ACH total IN, OUT, TOTAL
+const BANK_KEYS = 'name routing acctIn acctOut coName coNameCR coIdPrefix balanced achPrefix sameDay cutoff maxDailyAchIn maxDailyAchOut maxDailyAchTotal';
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, in, out, our company name, our company name for ACH Credit requests, company ID prefix, balanced?, prefix ("_" means blank), same-day requests, cutoff time, maximum daily ACH total IN, OUT, TOTAL
 //  'BSL' => 'Brattleboro S&L, 211672476, 500718598, 500718598, Common Good, 1, 0, _, 0, 3pm, 9999999, 9999999, 100000',
-  'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, Common Good MM, 9, 0, _, 1, 5pm, 5000, 30000, 9999999',
+  'CFB' => 'Climate First Bank, 063117011, 1079807, 1079807, Common Good MM, Common Good CR, 9, 0, _, 1, 2pm, 5000, 30000, 9999999',
 ];
 const T_MAX_DAILY_ACH_IN = 1234; // maxDailyAchIn for tests
 const T_MAX_DAILY_ACH_OUT = 9876; // maxDailyAchOut for tests
@@ -424,6 +424,7 @@ const DUPTX_SECS = 3 * MIN_SECS; // number of minutes before a duplicate transac
 const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
 define('FS_NOTE', t('fiscal sponsorship fee')); // standard message for this in tx_timed / aux transactions
+const FS_FEE_SPREAD = 3; // how many points between starting and end fiscal sponsorship fee percentages
 const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
 //const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
 const CREDIT_WITH_SSN = 200; // amount of initial creditline when SSN is verified

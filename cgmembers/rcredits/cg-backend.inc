@@ -1012,9 +1012,9 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
     $did = ''; // no real-time report from here
     $appMsg = $toMe ? '' : t('drew from');
   } elseif (in($type, 'payment, invoice payment')) {
-    $notices = ['you paid', 'paid you'];
-    $did = t('paid');
-    $appMsg = 'paid';
+    $notices = u\order($positive, 'you paid', 'paid you');
+    $did = $positive ? t('paid') : t('received from');
+    $appMsg = $did;
   } elseif ($type == 'undo') {
     if ($tx->otherA->isBank()) {
       $notices = ['', 'bank tx canceled'];
@@ -1179,7 +1179,7 @@ function thanks($xid, $item = NULL, $only = FALSE) {
 //    $note = (!$member and u\starts($notes, fmtDt(now(), 'dmY'))) ? str_replace(': ', '', strstr(strstr($notes, ': ') . "\n", "\n", TRUE)) : '';
     
     $amtDpy = u\fmtAmt($amount) . ($period != PER_1 ? (' ' . r\recurDesc($period, $periods)) : '');
-    $subs0 += ray('date item amount', fmtDt(now()), $item, $amtDpy);
+    $subs0 += ray('date item amount', fmtDt($tx->created), $item, $amtDpy);
 
     $subs = $subs0 + ray('fromName fromPhone fromAddress fromEmail', $fullName, u\fmtPhone($phone), $postalAddr, $email);
     unset($subs['fullName']); // salutation to co name, not payer name
