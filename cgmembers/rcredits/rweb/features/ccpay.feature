@@ -21,6 +21,16 @@ Setup:
   | .ZZB |       0 |
   | .ZZC |       0 |
 
+Scenario: A non-member clicks a link to donate to a closed account
+  Given button code "buttonCode" for:
+  | account | secret | for    |*
+  | .ZZC    | Cc3    | donate |
+  And members have:
+  | uid  | flags               |*
+  | .ZZC | member,co,confirmed |
+  When member "?" visits "pay/code=%buttonCode"
+  Then we say "error": "inactive"
+  
 Scenario: A non-member clicks a link to donate to a ccOk organization by Stripe
   Given button code "buttonCode" for:
   | account | secret | for    |*
