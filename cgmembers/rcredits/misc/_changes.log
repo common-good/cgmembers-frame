@@ -1,3 +1,9 @@
+2026-07-14 feat/grants-form-v2-ui
+. added Fund field to the Expected Grants admin form (fsgrants.inc)
+. added grantor autocomplete on the Grantor Name field: typeahead over prior grantors, selecting one auto-fills the contact fields
+. added ajax `suggestGrantor` op (forms/ajax.inc) that calls the shared grantorAutocompleteRows() helper
+. added /cgpay-funders-export endpoint (CSV or MailerLite-shaped export of all funders, with grant count / total / last-grant-at aggregates)
+
 2026-07-14 feat/grants-form-v2-api
 . added fund column to grants table (Fund within grant-making organization, per William):
     ALTER TABLE grants ADD `fund` VARCHAR(255) NULL AFTER `pid`;

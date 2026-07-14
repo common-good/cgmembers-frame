@@ -298,6 +298,7 @@ function doit(what, vs) {
       if (toggleCkFlds(vs)) $('.form-item-ckNum input').focus();
     });
     $('.form-item-amount input').change(function () {$('.form-item-documented').toggle(this.value >= vs['undocMax'])});
+    suggestGrantor('#edit-fullname', vs['sponseeUid']);
     break;
     
   case 'tx':

@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const FSGRANTS_FLDS = 'id uid pid xid amount by ckNum ckDate documented received created'; // just the fields we handle here (and omitting pid)
+const FSGRANTS_FLDS = 'id uid pid xid amount by fund ckNum ckDate documented received created'; // just the fields we handle here (and omitting pid)
 require_once R_ROOT . '/forms/tx.inc'; // for txErr()
 require_once R_ROOT . '/forms/people.inc'; // for PEOPLE_FLDS
 
@@ -40,6 +40,8 @@ function formFSGrants($form, &$sta, $args = '') {
   $zip = zipFld($zip);
   $methods = ray(METHOD_OPTS);
 
+  $fund = textFld(t('Fund:'), [t('Specific Fund (if any) within that grant-making organization')], dft($fund));
+
   $amount = numFld(REQ . t('Expected Amount:'), [t('Amount')], dft($amount) + vmin(.01));
 
   $opts = ray(tr(PAYBY_OPTS));
@@ -62,10 +64,10 @@ function formFSGrants($form, &$sta, $args = '') {
   foreach (ray('url seeAll') as $k) $$k = hidFld($$k);
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
-  $form = compact(ray('title subtext fullName email phone address city state zip amount by ckNum ckDate documented got received submit orig url seeAll'));
-        
+  $form = compact(ray('title subtext fullName email phone address city state zip amount by fund ckNum ckDate documented got received submit orig url seeAll'));
+
   jsx('contact');
-  jsx('fsgrants', ray('byCheck undocMax', B_CHECK, UNDOC_GRANT_MAX));
+  jsx('fsgrants', ray('byCheck undocMax sponseeUid', B_CHECK, UNDOC_GRANT_MAX, $myid));
 
   return cgform($form);
 }
