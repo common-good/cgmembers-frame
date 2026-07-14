@@ -1,3 +1,10 @@
+2026-07-14 feat/grants-form-v2-api
+. added fund column to grants table (Fund within grant-making organization, per William):
+    ALTER TABLE grants ADD `fund` VARCHAR(255) NULL AFTER `pid`;
+. extended /cgpay-grants endpoint with PATCH support for editing existing grant records
+. added smart people-table resolution for grantor edits (create-new-on-name-change, silent-fill-missing, log-changes-and-alert-on-existing-field-update -- rules per William)
+. added /cgpay-people-autocomplete endpoint (people table lookup: prior grantors OR prior donors to this sponsee)
+
 2022-11-01 feature/postmark2
 . fixed shortcomings in postmark feature
 
