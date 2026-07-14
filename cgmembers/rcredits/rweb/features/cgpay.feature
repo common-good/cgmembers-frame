@@ -31,7 +31,17 @@ Scenario: A member clicks an expired pay button
   | .ZZC    | Cc3    | food | 23.50  | %now-1d |
   When member "?" visits page "pay/code=%buttonCode"
   Then we say "error": "button expired"
-
+  
+Scenario: A member clicks a pay button for a closed account
+  Given button code "buttonCode" for:
+  | account | secret | item | amount | expires |*
+  | .ZZC    | Cc3    | food | 23.50  |         |
+  And members have:
+  | uid  | flags               |*
+  | .ZZC | member,co,confirmed |
+  When member "?" visits page "pay/code=%buttonCode"
+  Then we say "error": "inactive"
+  
 Scenario: A member submits a pay button payment with account ID
   Given button code "buttonCode" for:
   | account | secret | item | amount |*

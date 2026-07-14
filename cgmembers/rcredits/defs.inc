@@ -427,6 +427,8 @@ const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transactio
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
 define('FS_NOTE', t('fiscal sponsorship fee')); // standard message for this in tx_timed / aux transactions
 const FS_FEE_SPREAD = 3; // how many points between starting and end fiscal sponsorship fee percentages
+const FSCATMAP = 'fsFeeCat:FS-FEE, fsInCat:D-FBO, stepupCat:D-STEPUP, fsStepupCat:D-FBO-STEPUP, fsOutCat1:FIRST-FS-EXPENSE, fsOutCat9:LAST-FS-EXPENSE, fsToPerson:GRANT-PERSON, fsToOrg:GRANT-ORG';
+
 const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
 //const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
 const CREDIT_WITH_SSN = 200; // amount of initial creditline when SSN is verified

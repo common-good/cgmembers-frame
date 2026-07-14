@@ -310,6 +310,7 @@ function getCGPayArgs($args, $mya) {
 
   if ($expires and $expires < now()) return softErr(tr('button expired'));
   if (!$account or !$coA = r\acct($account)) return exitErr(t('That account does not exist.'));
+  if (!$coA->ok) return softErr('inactive');
   $coId = $coA->id;
   if ($mya and $mya->id == $coId) return softErr(t('Making a payment to yourself is not permitted.'));
   if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));
