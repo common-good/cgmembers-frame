@@ -67,6 +67,13 @@ function ajax($args = NULL) {
     case 'suggestWho': // get selections for a whoFld (see w\whoFldSubmit()
       $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
       return exitJust(u\jsonize($res ? array_values($res) : []));
+
+    case 'suggestGrantor': // autocomplete over prior grantors for the Expected Grants form
+      $q = trim((string) nni($data, 'q'));
+      if (strlen($q) < 2) return exitJust(u\jsonize([]));
+      $sponseeUid = (int) (nni($data, 'sponseeUid') ?: $myid);
+      require_once R_ROOT . '/forms/cgpaypeople.inc';
+      return exitJust(u\jsonize(grantorAutocompleteRows($sponseeUid, $q, 20)));
     
     case 'suggestNonmember':
     /*  foreach (ray('fullName email phone, fullName address city state zip') as $flds) {
