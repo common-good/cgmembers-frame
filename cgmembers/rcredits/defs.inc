@@ -262,6 +262,15 @@ const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
 const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
 
+// Grant agreement upload (Phase 3.5 PR B). All optional — features degrade gracefully if unset.
+// DRIVE_SERVICE_ACCOUNT_JSON_PATH points to a service-account credentials JSON downloaded from
+// Google Cloud Console. DRIVE_ROOT_FOLDER_ID is the Drive folder ID that CONTAINS the yearly
+// "Grant Contracts YYYY" subfolders (share it with the service account's email as Editor).
+if (!defined('DRIVE_SERVICE_ACCOUNT_JSON_PATH')) define('DRIVE_SERVICE_ACCOUNT_JSON_PATH', '');
+if (!defined('DRIVE_ROOT_FOLDER_ID')) define('DRIVE_ROOT_FOLDER_ID', '');
+const GRANT_CONTRACTS_FOLDER_PATTERN = 'Grant Contracts %year%';
+const GRANT_AGREEMENT_MIME_TYPES = 'application/pdf application/msword application/vnd.openxmlformats-officedocument.wordprocessingml.document image/jpeg image/png';
+
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
 define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));

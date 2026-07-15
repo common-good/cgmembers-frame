@@ -1,3 +1,12 @@
+2026-07-15 feat/grants-form-v2-agreement-upload
+. added driveFileId column to grants table (Google Drive file ID for uploaded agreements):
+    ALTER TABLE grants ADD `driveFileId` VARCHAR(64) NULL AFTER `fund`;
+. added Grant Agreement file upload field to fsgrants.inc (conditionally shown when amount >= UNDOC_GRANT_MAX)
+. added cg-drive.inc — direct-HTTPS Google Drive integration (service-account JWT auth, no google/apiclient dep)
+. uploads land in "Grant Contracts YYYY" subfolder of DRIVE_ROOT_FOLDER_ID; filename per William's convention: "{YYYY-MM-DD} {grantor} ${amount} to {sponsee}.{ext}"
+. when admin uploads an agreement (previously missing), the sponsee receives an emailed copy automatically
+. defs.inc: DRIVE_SERVICE_ACCOUNT_JSON_PATH, DRIVE_ROOT_FOLDER_ID, GRANT_CONTRACTS_FOLDER_PATTERN, GRANT_AGREEMENT_MIME_TYPES
+
 2026-07-14 feat/grants-form-v2-ui
 . added Fund field to the Expected Grants admin form (fsgrants.inc)
 . added grantor autocomplete on the Grantor Name field: typeahead over prior grantors, selecting one auto-fills the contact fields

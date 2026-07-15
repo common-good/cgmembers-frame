@@ -277,6 +277,8 @@ EOF
   'sponsee notified' => t('The sponsee has been notified that this grant was received, but needs documentation.'),
   'grantdoc-required' => t('Your %amt grant from %grantorName has been received, but needs documentation before the funds can be released to your account. At your convenience, please email a copy of the grant agreement to %PROJECT at %CGF_EMAIL. Then sign in to your account and on the Company menu choose "Grants Expected" to enter the date you emailed us the agreement.'),
   'grantor-contact-changed' => t('Sponsee (uid %sponsee) changed contact info for grantor "%grantor" — fields updated: %fields.'),
+  'grant-agreement-received' => t('Your %amt grant from %grantorName has been received and the grant agreement is now on file. The agreement copy is stored in our Google Drive and can be viewed here: %driveLink'),
+  'drive-upload-failed' => t('Google Drive upload failed for file "%file": %err'),
 
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',
