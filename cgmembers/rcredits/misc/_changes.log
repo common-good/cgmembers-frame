@@ -1,3 +1,22 @@
+2026-07-20 feat/tx-notify-recipients
+. new tx_notify_recipients table (up to 2 extra staff contacts per account for money-movement notices):
+    CREATE TABLE tx_notify_recipients (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      uid BIGINT NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) DEFAULT NULL,
+      phone VARCHAR(32) DEFAULT NULL,
+      wantEmail TINYINT(1) NOT NULL DEFAULT 1,
+      wantText TINYINT(1) NOT NULL DEFAULT 0,
+      created INT UNSIGNED NOT NULL,
+      KEY uid (uid)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+. added forms/txnotifyprefs.inc — new "Transaction Notification Recipients" preferences form (settings/notice-recipients)
+. added cg-tx-notify.inc — email/SMS fan-out on money-movement notices + Twilio wrapper (feature-flagged)
+. hooked the fan-out into cg-backend.inc's tx-notification path (right after the primary $a->tell())
+. defs.inc: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, TX_NOTIFY_MAX_RECIPIENTS
+. no account access / no login for recipients — money-movement notices ONLY (per Jose's spec 2026-07-10)
+
 2022-11-01 feature/postmark2
 . fixed shortcomings in postmark feature
 

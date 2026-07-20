@@ -1042,7 +1042,12 @@ function sendNotifications($mya, $type, $tx, $shortfall, $doTell = TRUE) {
       $notice = 'paid you linked';
       $args['_aPayLink'] = $testLink = $a->doLink('addr', $otherA->id); // link to address, so merchant can ship or nonprofit can thank
     }
-    if ($notice and !$a->isCanonic and $doTell) $a->tell($notice, $args, '', $inout);
+    if ($notice and !$a->isCanonic and $doTell) {
+      $a->tell($notice, $args, '', $inout);
+      // Also fan out to the account's extra tx-notify recipients (Phase 3.5 PR C).
+      require_once R_ROOT . '/cg-tx-notify.inc';
+      \CG\notifyTxExtras($a, $inout, $args);
+    }
     $isMe = (($mya ? $mya->id : $tx->actorId) == $a->uid);
     if ($isMe) $myArgs = $args; // don't use tx->toMe here, in case using eLinkAcct, not $mya
   }

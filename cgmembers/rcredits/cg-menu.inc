@@ -111,6 +111,7 @@ function menu($submenu = '') {
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(), 'cog'],
     'settings/notices' => ['sub', t('Notices'), 'NoticePrefs', ANY, '', t(), 'envelope'],
+    'settings/notice-recipients' => ['sub', t('Transaction Notification Recipients'), 'TxNotifyPrefs', ANY, '', t(), 'bell'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
