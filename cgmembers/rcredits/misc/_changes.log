@@ -1,6 +1,5 @@
 2026-07-15 feat/grants-form-v2-agreement-upload
-. added driveFileId column to grants table (Google Drive file ID for uploaded agreements):
-    ALTER TABLE grants ADD `driveFileId` VARCHAR(64) NULL AFTER `fund`;
+. added driveFileId column to grants table via Phinx migration db/migrations/20260722193100_grants_add_drive_file_id.php (Google Drive file ID for uploaded agreements)
 . added Grant Agreement file upload field to fsgrants.inc (conditionally shown when amount >= UNDOC_GRANT_MAX)
 . added cg-drive.inc — direct-HTTPS Google Drive integration (service-account JWT auth, no google/apiclient dep)
 . uploads land in "Grant Contracts YYYY" subfolder of DRIVE_ROOT_FOLDER_ID; filename per William's convention: "{YYYY-MM-DD} {grantor} ${amount} to {sponsee}.{ext}"
