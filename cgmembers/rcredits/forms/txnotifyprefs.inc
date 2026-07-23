@@ -5,93 +5,79 @@ use CG as r;
 use CG\Util as u;
 use CG\Db as db;
 
-require_once R_ROOT . '/cg-tx-notify.inc';
-
 /**
- * Manage "Transaction Notification Recipients" — up to TX_NOTIFY_MAX_RECIPIENTS
- * extra contacts who receive money-movement notices for this account. Recipients
- * have no login and no other account access.
+ * Manage "Transaction Notification Recipients" for a company account.
+ *
+ * Design (per William 2026-07-22 / Jose 2026-07-22):
+ *   Recipients must be existing CG accounts (u_relations of this company with
+ *   permission >= READ). No new table; each relation's channel preference lives
+ *   on its u_relations row (txNotifyEmail, txNotifyText).
+ *
+ * For personal accounts, this form isn't relevant — they set their own tx-notice
+ * preferences on the Notices page (forms/noticeprefs.inc).
  */
 function formTxNotifyPrefs($form, &$sta, $args = '') {
   global $mya;
 
   $title = t('Transaction Notification Recipients');
-  $subtext = t('Add up to %max extra people who should receive an email or text whenever your account receives or sends money. They will not have access to your account &mdash; just the amount, who it was with, and when.', ray('max', TX_NOTIFY_MAX_RECIPIENTS));
 
-  $existing = \CG\txNotifyRecipients($mya->id);
-  $fields = [];
-
-  for ($i = 1; $i <= TX_NOTIFY_MAX_RECIPIENTS; $i++) {
-    $rec = $existing[$i - 1] ?? null;
-    $suffix = "_$i";
-
-    ${"name$suffix"}      = textFld(t('Name @n:', 'n', $i), '', ['name' => "name$suffix", 'value' => $rec->name ?? '']);
-    ${"email$suffix"}     = emailFld(t('Email @n:', 'n', $i), '', ['name' => "email$suffix", 'value' => $rec->email ?? '']);
-    ${"phone$suffix"}     = phoneFld(t('Phone @n:', 'n', $i), '', ['name' => "phone$suffix", 'value' => $rec->phone ?? '']);
-    ${"wantEmail$suffix"} = boxFld("wantEmail$suffix", t('Email @n', 'n', $i), '', (bool) ($rec->wantEmail ?? 1));
-    ${"wantText$suffix"}  = boxFld("wantText$suffix",  t('Text @n',  'n', $i), '', (bool) ($rec->wantText  ?? 0));
-
-    foreach (['name', 'email', 'phone', 'wantEmail', 'wantText'] as $k) $fields[] = "$k$suffix";
+  if (!$mya->co) {
+    $subtext = t('This preference is only relevant for company accounts. To manage your own notification preferences, go to the <%a>Notices</a> page.', '_a', atag('/settings/notices'));
+    return cgform(compact('title', 'subtext'));
   }
 
-  $submit = submit(t('Save Recipients'));
+  $subtext = t('Choose which authorized users should receive email or text notifications when money moves into or out of this account. Recipients must already have at least read access on this company (managed via <%a>Relations</a>).', '_a', atag('/settings/relations'));
 
-  $formData = compact(ray('title subtext ' . join(' ', $fields) . ' submit'));
-  return cgform($formData);
-}
+  $sql = "SELECT r.reid, r.other AS uid, u.fullName, r.txNotifyEmail, r.txNotifyText, u.phone
+          FROM u_relations r JOIN users u ON u.uid = r.other
+          WHERE r.main = :main AND r.permission >= :readPerm
+          ORDER BY u.fullName";
+  $rows = db\q($sql, ['main' => (int) $mya->id, 'readPerm' => r\perm(B_READ)])->fetchAll(\PDO::FETCH_OBJ);
 
-function formTxNotifyPrefs_validate($form, &$sta) {
-  for ($i = 1; $i <= TX_NOTIFY_MAX_RECIPIENTS; $i++) {
-    $rec = txNotifyPrefsReadRow($sta['input'], $i);
-    if ($rec === null) continue; // whole row blank — allowed
-
-    if ($rec['name'] === '')                             return txNotifyErr(t('Recipient @n: name is required.', 'n', $i), "name_$i");
-    if ($rec['email'] === '' && $rec['phone'] === '')    return txNotifyErr(t('Recipient @n: at least one of email or phone is required.', 'n', $i), "email_$i");
-    if ($rec['email'] !== '' && !u\validEmail($rec['email'])) return txNotifyErr(t('Recipient @n: bad email.', 'n', $i), "email_$i");
-    if ($rec['phone'] !== '' && ($err = u\badPhone($rec['phone']))) return txNotifyErr("Recipient $i: $err", "phone_$i");
-    if (!$rec['wantEmail'] && !$rec['wantText'])         return txNotifyErr(t('Recipient @n: choose at least one channel (email or text).', 'n', $i), "wantEmail_$i");
-    if ($rec['wantEmail'] && $rec['email'] === '')       return txNotifyErr(t('Recipient @n: cannot want email without an email address.', 'n', $i), "email_$i");
-    if ($rec['wantText']  && $rec['phone'] === '')       return txNotifyErr(t('Recipient @n: cannot want text without a phone number.', 'n', $i), "phone_$i");
+  if (!$rows) {
+    $list = item(t('No authorized users found. Add users via <%a>Relations</a> before assigning notification preferences.', '_a', atag('/settings/relations')));
+    return cgform(compact('title', 'subtext', 'list'));
   }
+
+  $lines = [u\tableRow(ray('Person,Phone,Email,Text'))];
+  $fieldNames = [];
+  foreach ($rows as $rec) {
+    $reid = (int) $rec->reid;
+    $emailKey = "email_$reid";
+    $textKey  = "text_$reid";
+    ${$emailKey} = boxFld($emailKey, '', '', (bool) $rec->txNotifyEmail);
+    ${$textKey}  = boxFld($textKey,  '', '', (bool) $rec->txNotifyText);
+    $phone = $rec->phone ?: '<em>' . t('none on file') . '</em>';
+    $lines[] = u\tableRow(ray('name phone email text', $rec->fullName, $phone, ${$emailKey}, ${$textKey}));
+    $fieldNames[] = $emailKey;
+    $fieldNames[] = $textKey;
+  }
+  $list = "<table>\n" . join('', $lines) . "</table>\n";
+
+  $submit = submit(t('Save Preferences'));
+  $sta['no_cache'] = TRUE;
+
+  return cgform(compact('title', 'subtext', 'list', 'submit'));
 }
 
 function formTxNotifyPrefs_submit($form, &$sta) {
   global $mya;
+  if (!$mya->co) return w\go('/settings/notice-recipients');
 
-  $rows = [];
-  for ($i = 1; $i <= TX_NOTIFY_MAX_RECIPIENTS; $i++) {
-    $rec = txNotifyPrefsReadRow($sta['input'], $i);
-    if ($rec !== null) $rows[] = $rec;
-  }
+  $sql = "SELECT r.reid, u.phone FROM u_relations r JOIN users u ON u.uid = r.other
+          WHERE r.main = :main AND r.permission >= :readPerm";
+  $reids = db\q($sql, ['main' => (int) $mya->id, 'readPerm' => r\perm(B_READ)])->fetchAll(\PDO::FETCH_OBJ);
 
   $DBTX = \db_transaction();
-  db\del('tx_notify_recipients', 'uid=:uid', ['uid' => $mya->id]);
-  foreach ($rows as $rec) {
-    db\insert('tx_notify_recipients', $rec + ['uid' => $mya->id, 'created' => now()]);
+  foreach ($reids as $rec) {
+    $reid = (int) $rec->reid;
+    $txNotifyEmail = (int) (bool) nni($sta['input'], "email_$reid");
+    $txNotifyText  = (int) (bool) nni($sta['input'], "text_$reid");
+    if ($txNotifyText and empty($rec->phone)) $txNotifyText = 0; // no phone -> can't text; silently correct
+    db\update('u_relations', ray('reid txNotifyEmail txNotifyText', $reid, $txNotifyEmail, $txNotifyText), 'reid');
   }
   unset($DBTX);
 
   say('info saved');
   return w\go('/settings/notice-recipients');
-}
-
-/**
- * Read one row's inputs. Returns NULL if the whole row is blank (allowed), or a
- * normalized associative array ready to insert into tx_notify_recipients.
- */
-function txNotifyPrefsReadRow($input, $i) {
-  $name  = trim((string) nni($input, "name_$i"));
-  $email = trim((string) nni($input, "email_$i"));
-  $phone = trim((string) nni($input, "phone_$i"));
-  $wantEmail = (int) (bool) nni($input, "wantEmail_$i");
-  $wantText  = (int) (bool) nni($input, "wantText_$i");
-
-  if ($name === '' && $email === '' && $phone === '') return null;
-
-  return compact('name', 'email', 'phone', 'wantEmail', 'wantText');
-}
-
-function txNotifyErr($msg, $field = '') {
-  say($msg, 'alert');
-  return w\formErr($field);
 }

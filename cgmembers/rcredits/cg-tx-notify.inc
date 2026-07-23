@@ -5,80 +5,69 @@ use CG\Db as db;
 
 /**
  * @file
- * Money-movement notification fan-out to per-account "extra recipients"
- * (Phase 3.5 PR C).
+ * Money-movement notification fan-out for company accounts (Phase 3.5 PR C).
  *
- * The primary account holder still gets their notice via Acct::tell() as before.
- * This module adds an *additional* fan-out to up to TX_NOTIFY_MAX_RECIPIENTS
- * staff/contacts that the account has configured on the settings/notice-recipients
- * page. Recipients have no login; they only receive transactional info.
+ * Design (per William 2026-07-22 / Jose 2026-07-22):
+ *   - Recipients are existing Common Good accounts (u_relations entries), not
+ *     free-form contacts. Only relations with permission >= READ are eligible.
+ *   - Each relation stores channel preferences on its u_relations row
+ *     (txNotifyEmail, txNotifyText — added by migration 20260722193200).
+ *   - When Acct::tell fires on a company account for a money-movement notice
+ *     (SEND_IN or SEND_OUT), it recurses here to notify each opted-in relation
+ *     via r\rMail (email) and/or the Twilio wrapper (text).
  *
- * Delivery:
- *   - email: uses r\rMail() (already-wired PostMark path). Always fires when the
- *     recipient has an email address and wantEmail is on.
- *   - SMS:   uses direct HTTPS to Twilio (no twilio/sdk dep, matches the cg-drive
- *     pattern). No-op if Twilio config is empty — email still fires.
- *
- * Called from cg-backend.inc's tx-notification path immediately after the primary
- * $a->tell($notice, ...) firing.
+ * Twilio config (defs.inc): TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+ * TWILIO_FROM_NUMBER. Empty => SMS is a silent no-op (email still fires).
  */
 
 /**
- * Fan out a money-movement notification to $a's extra recipients.
+ * For a company account's money-movement notice, notify each opted-in relation.
+ * Called from Acct::tell(), after the primary tell path completes.
  *
- * @param object $a       The account whose transaction fired the notification.
- * @param string $inout   'in' (received) or 'out' (sent).
- * @param array  $args    Substitutions for the primary notice — we cherry-pick
- *                        amount, counterparty, timestamp from here.
+ * @param object $a       Company account whose transaction fired the notice.
+ * @param string $index   Message template key (e.g. 'paid you', 'you paid').
+ * @param array  $subs    Message substitutions.
+ * @param string $type    SEND_IN or SEND_OUT (already validated by caller).
  */
-function notifyTxExtras($a, $inout, array $args) {
+function notifyTxRelations($a, $index, array $subs, $type) {
   if (!$a || !$a->id) return;
-  $rows = txNotifyRecipients($a->id);
+
+  $sql = "SELECT r.other AS uid, r.txNotifyEmail, r.txNotifyText
+          FROM u_relations r
+          WHERE r.main = :main AND r.permission >= :readPerm
+          AND (r.txNotifyEmail > 0 OR r.txNotifyText > 0)";
+  $rows = db\q($sql, ['main' => (int) $a->id, 'readPerm' => r\perm(B_READ)])->fetchAll(\PDO::FETCH_OBJ);
   if (!$rows) return;
 
-  $amount = nni($args, 'amount') ?: nni($args, 'amt');
-  $counterparty = nni($args, 'otherName') ?: nni($args, 'other') ?: '';
-  $when = date('Y-m-d g:i a', now());
-  $verb = $inout === 'out' ? 'sent' : 'received';
-  $sponseeName = $a->fullName ?: $a->bestName;
-
-  $subject = "$sponseeName $verb $amount";
-  $body = "$sponseeName $verb $amount " . ($counterparty ? ($inout === 'out' ? "to $counterparty" : "from $counterparty") . " " : '') . "on $when.";
-
   foreach ($rows as $rec) {
-    if ($rec->wantEmail && $rec->email) txNotifySendEmail($rec, $subject, $body);
-    if ($rec->wantText  && $rec->phone) txNotifySendSms($rec, $body);
+    $other = r\acct((int) $rec->uid);
+    if (!$other || !$other->ok) continue;
+
+    if ($rec->txNotifyEmail) {
+      try {
+        r\rMail($index, $other, $subs, nni($subs, 'reply') ?: 'ctty');
+      } catch (\Throwable $e) {
+        r\tellAdmin('tx-notify-email-failed', ray('to err', $other->email, $e->getMessage()));
+      }
+    }
+
+    if ($rec->txNotifyText and $other->phone) {
+      try {
+        twilioSend($other->phone, txNotifyBodyForSms($subs));
+      } catch (\Throwable $e) {
+        r\tellAdmin('tx-notify-sms-failed', ray('to err', $other->phone, $e->getMessage()));
+      }
+    }
   }
 }
 
 /**
- * Load the recipient rows for an account, capped at TX_NOTIFY_MAX_RECIPIENTS.
- * Public so txnotifyprefs.inc can list them.
+ * Compact SMS body — amount, counterparty, timestamp (per Jose's spec).
  */
-function txNotifyRecipients($uid) {
-  $rows = db\q(
-    'SELECT id, uid, name, email, phone, wantEmail, wantText FROM tx_notify_recipients WHERE uid=:uid ORDER BY id LIMIT ' . (int) TX_NOTIFY_MAX_RECIPIENTS,
-    ['uid' => (int) $uid]
-  )->fetchAll(\PDO::FETCH_OBJ);
-  return $rows ?: [];
-}
-
-function txNotifySendEmail($rec, $subject, $body) {
-  $to = ['fullName' => $rec->name, 'email' => $rec->email];
-  try {
-    r\rMail('tx-notify-recipient', $to, ['subject' => $subject, 'body' => $body], 'ctty');
-  } catch (\Throwable $e) {
-    r\tellAdmin('tx-notify-email-failed', ray('to err', $rec->email, $e->getMessage()));
-  }
-}
-
-function txNotifySendSms($rec, $body) {
-  if (!twilioConfigured()) return; // silent no-op until Jose approves Twilio budget
-  try {
-    twilioSend($rec->phone, $body);
-  } catch (\Throwable $e) {
-    r\tellAdmin('tx-notify-sms-failed', ray('to err', $rec->phone, $e->getMessage()));
-  }
+function txNotifyBodyForSms(array $subs) {
+  $amt = nni($subs, 'amount') ?: nni($subs, 'amt') ?: '';
+  $other = nni($subs, 'otherName') ?: nni($subs, 'other') ?: '';
+  return trim(sprintf('%s %s %s', $amt, $other ? "w/ $other" : '', date('Y-m-d g:i a', now())));
 }
 
 /*  ---- Twilio wrapper: direct HTTPS, no vendor/twilio dep -------------------- */
@@ -88,13 +77,14 @@ function twilioConfigured() {
 }
 
 /**
- * Send an SMS via Twilio's REST API. Throws \RuntimeException on failure.
+ * Send an SMS via Twilio's REST API. Silent no-op when Twilio is unconfigured.
  * @param string $to    E.164 destination number (e.g. "+14155552671").
- * @param string $body  Message text (Twilio auto-splits at 160 chars for GSM-7).
- * @return string       Twilio message SID on success.
+ * @param string $body  Message text (Twilio splits at 160 chars for GSM-7).
+ * @return string       Twilio message SID on success, '' on no-op / failure.
+ * @throws \RuntimeException on Twilio HTTP failure.
  */
 function twilioSend($to, $body) {
-  if (!twilioConfigured()) throw new \RuntimeException('Twilio not configured');
+  if (!twilioConfigured()) return '';
   $sid = TWILIO_ACCOUNT_SID;
   $url = "https://api.twilio.com/2010-04-01/Accounts/$sid/Messages.json";
 

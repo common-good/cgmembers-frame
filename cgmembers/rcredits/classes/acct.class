@@ -894,6 +894,7 @@ EOF;
    */
   public function tell($index, $subs = [], $topic = '', $type = '') {
     $a = $this;
+    $type0 = $type; // preserve original: user pref may downgrade $type below, but relation fan-out looks at the original
     global $channel, $testMessages;
     
     $subs['uid'] = $uid = $a->id;
@@ -908,19 +909,30 @@ EOF;
     $subs['topic'] = tr($topic, $subs);
     $testMessages[] = compact(ray('uid index subs topic type'));
 
-    if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
-
-    // not sending an email right now; queue a notice or send immediately, as appropriate to type
-    $message = $subbedIndex;
-    $created = now();
-    if ($type and $notices = ray($a->notices) and $notices[$type] == SEND_NOW) $type = ''; // immediate when no type or explicitly immediate
-    if (test()) f('t.output', t('Actual %thing [%index] to %fullName: %message', 'thing index fullName message', $type ? t('notice') : t('message'), $index, $a->fullName, $message));
-
-    if ($type) {
-      return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
+    if (nni($GLOBALS['emailSubjects'], $index)) {
+      $result = r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
     } else {
-      return r\rMail('message', $a, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty');
+      // not sending an email right now; queue a notice or send immediately, as appropriate to type
+      $message = $subbedIndex;
+      $created = now();
+      if ($type and $notices = ray($a->notices) and $notices[$type] == SEND_NOW) $type = ''; // immediate when no type or explicitly immediate
+      if (test()) f('t.output', t('Actual %thing [%index] to %fullName: %message', 'thing index fullName message', $type ? t('notice') : t('message'), $index, $a->fullName, $message));
+
+      if ($type) {
+        $result = db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
+      } else {
+        $result = r\rMail('message', $a, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty');
+      }
     }
+
+    // Phase 3.5 PR C: for company money-movement notices, fan out to authorized relations
+    // per their u_relations.txNotifyEmail / txNotifyText preferences.
+    if ($a->co and in($type0, [SEND_IN, SEND_OUT])) {
+      require_once R_ROOT . '/cg-tx-notify.inc';
+      \CG\notifyTxRelations($a, $index, $subs, $type0);
+    }
+
+    return $result;
   }
 
   public function tellIn($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_IN);}

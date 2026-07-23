@@ -262,12 +262,8 @@ const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
 const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
 
-// Transaction notification recipients (Phase 3.5 PR C). Each account may name up to
-// TX_NOTIFY_MAX_RECIPIENTS extra staff/contacts to receive money-movement notifications
-// (email always, SMS optional per recipient). Recipients have no login and no account access.
-const TX_NOTIFY_MAX_RECIPIENTS = 2;
-
-// Twilio config for SMS delivery. All optional — SMS is a no-op if unset (email still fires).
+// Twilio config for SMS delivery (Phase 3.5 PR C). All optional — SMS is a silent no-op if unset (email still fires).
+// Used by cg-tx-notify.inc's twilioSend() when fanning out money-movement notices to a company's u_relations.
 if (!defined('TWILIO_ACCOUNT_SID')) define('TWILIO_ACCOUNT_SID', '');
 if (!defined('TWILIO_AUTH_TOKEN')) define('TWILIO_AUTH_TOKEN', '');
 if (!defined('TWILIO_FROM_NUMBER')) define('TWILIO_FROM_NUMBER', ''); // e.g. +14155552671

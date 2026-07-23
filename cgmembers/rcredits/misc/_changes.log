@@ -1,10 +1,10 @@
-2026-07-20 feat/tx-notify-recipients
-. new tx_notify_recipients table via Phinx migration db/migrations/20260722193200_tx_notify_recipients.php (up to TX_NOTIFY_MAX_RECIPIENTS extra staff contacts per account for money-movement notices)
-. added forms/txnotifyprefs.inc — new "Transaction Notification Recipients" preferences form (settings/notice-recipients)
-. added cg-tx-notify.inc — email/SMS fan-out on money-movement notices + Twilio wrapper (feature-flagged)
-. hooked the fan-out into cg-backend.inc's tx-notification path (right after the primary $a->tell())
-. defs.inc: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, TX_NOTIFY_MAX_RECIPIENTS
-. no account access / no login for recipients — money-movement notices ONLY (per Jose's spec 2026-07-10)
+2026-07-22 feat/tx-notify-recipients (design reworked per William 2026-07-22, Jose OK)
+. added txNotifyEmail + txNotifyText columns to u_relations via Phinx migration db/migrations/20260722193200_urelations_tx_notify.php
+. new forms/txnotifyprefs.inc — for company accounts, lists u_relations with permission >= READ + channel-preference checkboxes (email / text) per row
+. new cg-tx-notify.inc — Twilio wrapper + notifyTxRelations() helper called from Acct::tell
+. Acct::tell (classes/acct.class): for company accounts on money-movement notices (SEND_IN / SEND_OUT), recurses through u_relations after the primary tell path completes
+. defs.inc: Twilio config (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER) — empty defaults = SMS silent no-op
+. settings/notice-recipients menu route registered in cg-menu.inc — visible on company accounts, no-op message on personal accounts
 
 2022-11-01 feature/postmark2
 . fixed shortcomings in postmark feature
