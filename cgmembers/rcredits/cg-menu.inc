@@ -249,7 +249,8 @@ function menu($submenu = '') {
     'api' => ['call', 'API', '1', ANY, 'api'],
     'cgpay-sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
     'cgpay-lookup' => ['call', 'CGPay Lookup', '', ANY, 'cgpayLookup'], // server-to-server: SvelteKit cgpay POC identifier (qid/name/email/phone) -> uid resolution
-    'cgpay-grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create
+    'cgpay-grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
+    'cgpay-people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
