@@ -6,6 +6,12 @@
 . defs.inc: Twilio config (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER) — empty defaults = SMS silent no-op
 . settings/notice-recipients menu route registered in cg-menu.inc — visible on company accounts, no-op message on personal accounts
 
+2026-07-14 feat/grants-form-v2-api
+. added fund column to grants table via Phinx migration db/migrations/20260722193000_grants_add_fund.php (Fund within grant-making organization, per William)
+. extended /cgpay-grants endpoint with PATCH support for editing existing grant records
+. added smart people-table resolution for grantor edits (create-new-on-name-change, silent-fill-missing, log-changes-and-alert-on-existing-field-update -- rules per William)
+. added /cgpay-people-autocomplete endpoint (people table lookup: prior grantors OR prior donors to this sponsee)
+
 2022-11-01 feature/postmark2
 . fixed shortcomings in postmark feature
 
