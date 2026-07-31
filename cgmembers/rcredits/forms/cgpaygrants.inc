@@ -193,6 +193,28 @@ function cgpayGrantsValidateGrantor($body, array &$errors) {
     $errors['fullName'] = t('Please enter a valid name for the grantor.');
   }
 
+  // Address is required (per William 2026-07-31: we send acknowledgments to the grantor
+  // and may need the mailing address for grant records). City / state / zip are all
+  // part of a complete address, so all four required together.
+  $address = trim((string) nni($body, 'address'));
+  if ($address === '') $errors['address'] = t('Please enter the grantor\'s street address.');
+
+  $city = trim((string) nni($body, 'city'));
+  if ($city === '') $errors['city'] = t('Please enter the grantor\'s city.');
+
+  $state = nni($body, 'state');
+  if ($state === null || (int) $state <= 0) {
+    $errors['state'] = t('Please select the grantor\'s state.');
+  }
+
+  $zip = trim((string) nni($body, 'zip'));
+  if ($zip === '') {
+    $errors['zip'] = t('Please enter the grantor\'s zip code.');
+  } elseif (u\badZip($zip)) {
+    $errors['zip'] = t('That is the wrong format for a zip code.');
+  }
+
+  // Email + phone remain optional but validated if provided.
   $email = trim((string) nni($body, 'email'));
   if ($email !== '' && !u\validEmail($email)) {
     $errors['email'] = t('That is the wrong format for an email address.');
@@ -201,11 +223,6 @@ function cgpayGrantsValidateGrantor($body, array &$errors) {
   $phone = trim((string) nni($body, 'phone'));
   if ($phone !== '' && u\badPhone($phone)) {
     $errors['phone'] = t('That is the wrong format for a phone number.');
-  }
-
-  $zip = trim((string) nni($body, 'zip'));
-  if ($zip !== '' && u\badZip($zip)) {
-    $errors['zip'] = t('That is the wrong format for a zip code.');
   }
 }
 
