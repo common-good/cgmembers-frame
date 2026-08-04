@@ -89,6 +89,7 @@ function formFSGrants_validate($form, &$sta) {
   
   if ($received and !$by) return txErr(t('You must specify a payment method.'));
   if ($received and $by == B_CHECK and !($ckDate and $ckNum)) return txErr(t('You must provide check number and date.'));
+  if ($received and !is_numeric($received)) $received = strtotime($received);
   
   u\preray(compact(ray('fullName zip phone ckDate received documented amount')), $sta['input']);
 }
