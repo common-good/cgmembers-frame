@@ -234,6 +234,13 @@ X;
     unset($DBTX);
   }
   db\q('DELETE FROM x_txs2 WHERE amount=0'); // no need to track these
+  
+  // Nudge accounts that haven't had a transaction recently
+  $qtrAgo = strtotime('today -90 days');
+  foreach (ray('NEWARJ NEWBWN NEWCGO') as $qid) $omitUids[] = r\qo($qid)->id; // people who don't want to see the "whats up" message
+  $omitUids = join(',', $omitUids);
+  
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx, activated FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND uid NOT IN ($omitUids) AND u.:IS_OK GROUP BY uid HAVING UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(IFNULL(lastTx, activated)))) = $qtrAgo"); // do this just once per gap: inquire if no tx in 90 days
 }
 
 /**
@@ -759,14 +766,8 @@ function everyWeek() {
  */
 function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
-  $qtrAgo = strtotime('today -90 days');
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
 
-  foreach (ray('NEWARJ NEWBWN NEWCGO') as $qid) $omitUids[] = r\qo($qid)->id; // people who don't want to see the "whats up" message
-  $omitUids = join(',', $omitUids);
-  
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx, activated FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:UID_CANON9 AND uid NOT IN ($omitUids) AND u.:IS_OK GROUP BY uid HAVING UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(IFNULL(lastTx, activated)))) = $qtrAgo"); // do this just once per gap: inquire if no tx in 90 days
-  
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
