@@ -5,6 +5,11 @@
 . Acct::tell (classes/acct.class): for company accounts on money-movement notices (SEND_IN / SEND_OUT), recurses through u_relations after the primary tell path completes
 . defs.inc: Twilio config (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER) — empty defaults = SMS silent no-op
 . settings/notice-recipients menu route registered in cg-menu.inc — visible on company accounts, no-op message on personal accounts
+2026-07-14 feat/grants-form-v2-ui
+. added Fund field to the Expected Grants admin form (fsgrants.inc)
+. added grantor autocomplete on the Grantor Name field: typeahead over prior grantors, selecting one auto-fills the contact fields
+. added ajax `suggestGrantor` op (forms/ajax.inc) that calls the shared grantorAutocompleteRows() helper
+. added /cgpay-funders-export endpoint (CSV or MailerLite-shaped export of all funders, with grant count / total / last-grant-at aggregates)
 
 2026-07-14 feat/grants-form-v2-api
 . added fund column to grants table via Phinx migration db/migrations/20260722193000_grants_add_fund.php (Fund within grant-making organization, per William)

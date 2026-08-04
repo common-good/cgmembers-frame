@@ -265,7 +265,40 @@ function suggestWho(sel, restrict) {
   );
 
 }
-    
+
+/**
+ * Typeahead over prior grantors for the Expected Grants form.
+ * On select, fills the sibling contact fields (email, phone, address, city, state, zip).
+ * @param string sel: selector for the grantor-name input
+ * @param int    sponseeUid: current sponsee uid (used to rank prior donors first)
+ */
+function suggestGrantor(sel, sponseeUid) {
+  var grantors = new Bloodhound({
+    identify: function(o) { return o.pid; },
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('fullName'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: {
+      url: ajaxUrl + '?op=suggestGrantor&data=' + encodeURIComponent(JSON.stringify({sponseeUid: sponseeUid, q: '%QUERY'})).replace('%25QUERY', '%QUERY') + '&sid=' + ajaxSid,
+      wildcard: '%QUERY'
+    }
+  });
+
+  $(sel).on('typeahead:select typeahead:autocomplete', function(ev, o) {
+    var form = $(sel).closest('form');
+    if (o.email)   $('input[name=email]',   form).val(o.email);
+    if (o.phone)   $('input[name=phone]',   form).val(o.phone);
+    if (o.address) $('input[name=address]', form).val(o.address);
+    if (o.city)    $('input[name=city]',    form).val(o.city);
+    if (o.state && o.state > 0) $('select[name=state]', form).val(o.state);
+    if (o.zip)     $('input[name=zip]',     form).val(o.zip);
+  });
+
+  $(sel).wrap('<div></div>').typeahead(
+    { minLength: 2, highlight: true },
+    { name: 'grantors', source: grantors, display: 'fullName' }
+  );
+}
+
 var signoutWarning = 'You still there? (otherwise we\'ll sign you out, to protect your account)';
 
 function sessionTimeout() {

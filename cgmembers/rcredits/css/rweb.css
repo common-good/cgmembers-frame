@@ -153,11 +153,11 @@ a.list-group-item:hover {background-color:#b4dcfe;} /* for non-dropdown menus */
 /*nav.navbar.navbar-inverse .container {max-height:50px;}*/
 nav.navbar.navbar-inverse .container {display:block; max-height:50px;}
 #navbar, .submenu .popover {
-  background-image: linear-gradient(#04519b, #044687 60%, #033769);
+  background: #0946A6;                /* match commongood.earth promo-site header */
   background-repeat: no-repeat;
   -webkit-filter: none;
   filter: none;
-  border-bottom: 1px solid #022241;
+  border-bottom: 1px solid #063579;
 }
 
 #site-name {visibility:hidden;}
