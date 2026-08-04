@@ -431,6 +431,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
  *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceived
  *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
+ *     TEST fsgrants AnAdminMarksAnReceivedGrantDocumented
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest TheClubAddsAProposedInvestment
@@ -1812,6 +1813,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST fsgrants AnAdminMarksADocumentedGrantReceived
  *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceived
  *     TEST fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
+ *     BOTH fsgrants AnAdminMarksAnReceivedGrantDocumented
  *     MAKE invest Setup
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     BOTH invest AMemberBuysAStakeInTheClub
@@ -2549,6 +2551,7 @@ function nextCaptchaIs($ca) {
  *     MAKE fsgrants AnAdminMarksADocumentedGrantReceived
  *     MAKE fsgrants AnAdminMarksAnUdocumentedGrantReceived
  *     MAKE fsgrants AnAdminMarksAnUdocumentedGrantReceivedByCheck
+ *     MAKE fsgrants AnAdminMarksAnReceivedGrantDocumented
  *     MAKE joint AMemberAsksToJoinAnExistingAccount
  *     MAKE joint AMemberAsksToJoinToSelf
  *     MAKE sponsor ANonmemberAppliesForFiscalSponsorship
