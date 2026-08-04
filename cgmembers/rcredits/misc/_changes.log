@@ -1,3 +1,10 @@
+2026-07-22 feat/tx-notify-recipients (design reworked per William 2026-07-22, Jose OK)
+. added txNotifyEmail + txNotifyText columns to u_relations via Phinx migration db/migrations/20260722193200_urelations_tx_notify.php
+. new forms/txnotifyprefs.inc — for company accounts, lists u_relations with permission >= READ + channel-preference checkboxes (email / text) per row
+. new cg-tx-notify.inc — Twilio wrapper + notifyTxRelations() helper called from Acct::tell
+. Acct::tell (classes/acct.class): for company accounts on money-movement notices (SEND_IN / SEND_OUT), recurses through u_relations after the primary tell path completes
+. defs.inc: Twilio config (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER) — empty defaults = SMS silent no-op
+. settings/notice-recipients menu route registered in cg-menu.inc — visible on company accounts, no-op message on personal accounts
 2026-07-14 feat/grants-form-v2-ui
 . added Fund field to the Expected Grants admin form (fsgrants.inc)
 . added grantor autocomplete on the Grantor Name field: typeahead over prior grantors, selecting one auto-fills the contact fields

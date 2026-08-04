@@ -262,6 +262,12 @@ const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
 const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
 
+// Twilio config for SMS delivery (Phase 3.5 PR C). All optional — SMS is a silent no-op if unset (email still fires).
+// Used by cg-tx-notify.inc's twilioSend() when fanning out money-movement notices to a company's u_relations.
+if (!defined('TWILIO_ACCOUNT_SID')) define('TWILIO_ACCOUNT_SID', '');
+if (!defined('TWILIO_AUTH_TOKEN')) define('TWILIO_AUTH_TOKEN', '');
+if (!defined('TWILIO_FROM_NUMBER')) define('TWILIO_FROM_NUMBER', ''); // e.g. +14155552671
+
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
 define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));
