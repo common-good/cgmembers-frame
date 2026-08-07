@@ -40,7 +40,6 @@ function formTxNotifyPrefs($form, &$sta, $args = '') {
   }
 
   $lines = [u\tableRow(ray('Person,Phone,Email,Text'))];
-  $fieldNames = [];
   foreach ($rows as $rec) {
     $reid = (int) $rec->reid;
     $emailKey = "email_$reid";
@@ -49,8 +48,6 @@ function formTxNotifyPrefs($form, &$sta, $args = '') {
     ${$textKey}  = boxFld($textKey,  '', '', (bool) $rec->txNotifyText);
     $phone = $rec->phone ?: '<em>' . t('none on file') . '</em>';
     $lines[] = u\tableRow(ray('name phone email text', $rec->fullName, $phone, ${$emailKey}, ${$textKey}));
-    $fieldNames[] = $emailKey;
-    $fieldNames[] = $textKey;
   }
   $list = "<table>\n" . join('', $lines) . "</table>\n";
 

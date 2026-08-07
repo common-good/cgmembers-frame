@@ -43,6 +43,13 @@ function formNoticePrefs($form, &$sta, $args = '') {
   $list = "<table>\n" . join('', $lines) . "</table>\n";
   
   jsx('notice-prefs', compact('code'));
-  
-  return cgform(compact(ray('title subtext list')));
+
+  // Company accounts can also designate which authorized relations receive
+  // transaction notifications. Show a link to that form (which lives at
+  // /settings/notice-recipients but no longer has its own menu entry).
+  $posttext = ($mya and $mya->co)
+    ? t('<p><%a>Extra Notification Recipients</a> - choose which authorized users also receive email or text notifications when money moves in or out of this account.</p>', '_a', atag('/settings/notice-recipients'))
+    : NULL;
+
+  return cgform(compact(ray('title subtext list posttext')));
 }
