@@ -5,24 +5,24 @@
   },
  "environments": {
     "default_migration_table": "phinxlog",
-    "default_database": "development",
+    "default_database": "test",
 
-    "development": {
+    "test": {
       "adapter": "mysql",
       "host": "localhost",
-      "name": "cg",
-      "user": "root",
-      "pass": "",
+      "name": "test",
+      "user": "test",
+      "pass": "pass",
       "port": "3306",
       "charset": "utf8"
     },
-    
-    "testing": {
+
+    "dev": {
       "adapter": "mysql",
       "host": "localhost",
-      "name": "testing_db",
-      "user": "root",
-      "pass": "",
+      "name": "dev",
+      "user": "dev",
+      "pass": "pass",
       "port": "3306",
       "charset": "utf8"
     },
@@ -30,19 +30,39 @@
     "staging": {
       "adapter": "mysql",
       "host": "localhost",
-      "name": "testing_db",
-      "user": "root",
-      "pass": "",
+      "name": "staging",
+      "user": "staging",
+      "pass": "pass",
       "port": "3306",
       "charset": "utf8"
     },
 
-    "production": {
+    "demo": {
       "adapter": "mysql",
       "host": "localhost",
-      "name": "production_db",
-      "user": "root",
-      "pass": "",
+      "name": "demo",
+      "user": "demo",
+      "pass": "pass",
+      "port": "3306",
+      "charset": "utf8"
+    },
+
+    "beta": {
+      "adapter": "mysql",
+      "host": "localhost",
+      "name": "beta",
+      "user": "beta",
+      "pass": "pass",
+      "port": "3306",
+      "charset": "utf8"
+    },
+
+    "main": {
+      "adapter": "mysql",
+      "host": "localhost",
+      "name": "main",
+      "user": "main",
+      "pass": "pass",
       "port": "3306",
       "charset": "utf8"
     }

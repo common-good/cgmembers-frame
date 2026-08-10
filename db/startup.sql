@@ -17,17 +17,11 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `cg`
---
-CREATE DATABASE IF NOT EXISTS `cg` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `cg`;
-
 DELIMITER $$
 --
 -- Functions
 --
-CREATE DEFINER=`cg_user`@`localhost` FUNCTION `perYear` (`period` ENUM('once','day','week','month','quarter','year','forever'), `periods` INT(11)) RETURNS TINYINT(4)  RETURN (CASE period
+CREATE FUNCTION `perYear` (`period` ENUM('once','day','week','month','quarter','year','forever'), `periods` INT(11)) RETURNS TINYINT(4)  RETURN (CASE period
         WHEN 'forever' THEN 0
         WHEN 'year' THEN 1
         WHEN 'quarter' THEN 4
