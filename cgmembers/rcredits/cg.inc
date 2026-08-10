@@ -563,7 +563,7 @@ function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if sp
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
- * If no admin is signed in with super permission (or partially signed in -- see w\superSignin()), return FALSE.
+ * If no admin is signed in with super permission -- or partially signed in but not w\superSignin()ed) -- return FALSE.
  */
 function vKey() {
   global $mya, $channel;
@@ -571,7 +571,7 @@ function vKey() {
   $ermsg = t(' Create a new vKeyE and vKeyPw (see acct::makeVKeyE).');
 
   if (!$mya or empty($vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->agentId))) or empty($vKeyPw = r\cryptCook('vKeyPw'))) {
-    $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!');
+    $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!') . $ermsg;
     r\tellAdmin($msg . trace());
     return w\softErr($msg);
   }
