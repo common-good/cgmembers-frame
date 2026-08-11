@@ -39,6 +39,7 @@
   "ssnUser": "abc123",
   "ssnPass": "abc123",
   "ssnRequest": "(not used in development)",
+  "cgpaySsoSecret": "openssl rand -base64 48"
 
   "comments": "See documentation config.json.howto.md"
 }

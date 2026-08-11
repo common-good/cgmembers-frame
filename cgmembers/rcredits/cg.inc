@@ -572,9 +572,10 @@ function vKey() {
 
   if (!$mya or empty($vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->agentId))) or empty($vKeyPw = r\cryptCook('vKeyPw'))) {
     $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!') . $ermsg;
-    r\tellAdmin($msg . trace());
+    r\tellAdmin($msg . t(' (User %nm)', 'nm', $mya->fullName));
     return w\softErr($msg);
   }
+
   return u\decry('R', $vKeyE, $vKeyPw);
 }
 

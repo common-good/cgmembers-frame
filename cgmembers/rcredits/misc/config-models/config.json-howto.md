@@ -42,32 +42,33 @@ For maximum security, the method list for "V" should include pp.
 
 ### SMTP
 
-*cgSmtpServer* SMTP server address (generally not needed for development)
-*cgSmtpTls*    tls or ssl -- encryption method for swiftmailer
-*cgSmtpPort*   SMTP port (normally 587)
-*cgSmtpUser*   SMTP username
-*cgSmtpPass*   SMTP password
+*cgSmtpServer*   SMTP server address (generally not needed for development)
+*cgSmtpTls*      tls or ssl -- encryption method for swiftmailer
+*cgSmtpPort*     SMTP port (normally 587)
+*cgSmtpUser*     SMTP username
+*cgSmtpPass*     SMTP password
 
 ### Social Security Number Verification (for example by nationalpublicdata.com)
 
-*ssnUser*      username for SSN verification service
-*ssnPass*      password for SSN verification service
-*ssnRequest*   template for REST request for SSN verification
+*ssnUser*        username for SSN verification service
+*ssnPass*        password for SSN verification service
+*ssnRequest*     template for REST request for SSN verification
 
 ### Other
   
-*stage*        development, staging, game, or production
-*baseUrl*      URL of the application
-*promoUrl*     URL of the Common Good Promotional site
-*coApiUrl*     URL of the APIs for co-branding partners
-*cgfEmail*     email address for contacting Common Good
+*stage*          development, staging, game, or production
+*baseUrl*        URL of the application
+*promoUrl*       URL of the Common Good Promotional site
+*coApiUrl*       URL of the APIs for co-branding partners
+*cgfEmail*       email address for contacting Common Good
 
-*dkimPrivate*  private key for email encryption, base64 encoded with EOLs replaced by spaces (not used in development)
-*dkimPublic*   public key for email encryption, base64 encoded with EOLs replaced by spaces (not used, here for reference)
-*geocodeKey*   account identifier for opencagedata.com geo-coding service
-*inviteKey*    arbitrary string of 0s and 1s, for generating invitation codes (must be 10101 for development tests to work)
-*stripePublic* publishable key for Stripe transaction processing
-*stripeSecret* secret key for Stripe transaction processing
+*dkimPrivate*    private key for email encryption, base64 encoded with EOLs replaced by spaces (not used in development)
+*dkimPublic*     public key for email encryption, base64 encoded with EOLs replaced by spaces (not used, here for reference)
+*geocodeKey*     account identifier for opencagedata.com geo-coding service
+*inviteKey*      arbitrary string of 0s and 1s, for generating invitation codes (must be 10101 for development tests to work)
+*stripePublic*   publishable key for Stripe transaction processing
+*stripeSecret*   secret key for Stripe transaction processing
+*cgpaySsoSecret* an arbitrary 48-character random string, converted to base64, for our app to communicate with the server
 
 
 =================================================================================

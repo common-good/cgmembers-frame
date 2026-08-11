@@ -1765,9 +1765,11 @@ X;
    *   vKeyE gets saved in the admins table. vKeyPw is returned, b64'd, for cgAdmin.html on a flash drive or as html for a printable QR.
    * @param bool $anonymizing: if true, use encryption type "r" for storing vKeyE (instead of "R")
    * @return HTML for a printable QR image for the account holder to scan to get super powers
+   * OR (if not $showQr) @return the password, base64-encoded
    */
   public function makeVKeyE($vKey = NULL, $vKeyPw = NULL, $showQr = TRUE, $anonymizing = FALSE) {
     $a = $this; $uid = $a->id;
+
     $vKey = isset($vKey) ? u\unfmtKey($vKey) : r\vKey();
     if (!$vKey) return t('No private key given or available.');
     require_once R_ROOT . '/forms/showqr.inc'; // for qrHtml()

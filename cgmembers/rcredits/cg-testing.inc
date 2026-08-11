@@ -185,10 +185,7 @@ function fixData(&$info, $direct = FALSE) {
  */
 function setDevVKey() {
   if (isPRODUCTION) return;
-  $key = file_get_contents(DEV_VPRIVK_FLNM);
-  $pw = getDevVKeyPw();
-  a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
-  return $pw;
+  return a(UID_SUPER)->makeVKeyE(DEV_VPRIVK_FLNM, getDevVKeyPw(), FALSE);
 }
 
 /**
