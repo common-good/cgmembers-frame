@@ -58,6 +58,7 @@ function setupBasicAccounts($withEIN = TRUE) {
   $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_OK, B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
+  $a1->update('pass', 'k'); // any non-empty password on DEV allows admin to sign in with any non-empty password (temporary)
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', mb_strtolower($v));
