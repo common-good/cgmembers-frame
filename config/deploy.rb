@@ -27,12 +27,29 @@ set :keep_releases, 5 # defaults to 5
 
 set :ssh_options, {
   # verify_host_key: :secure # Uncomment to require manually verifying the host key before first deploy.
-#  keys: ENV['CG_DEPLOY_KEY'] ? [ENV['CG_DEPLOY_KEY']] : nil,  # nil if unset → Capistrano falls back to default discovery
+  # keys: ENV['CG_DEPLOY_KEY'] ? [ENV['CG_DEPLOY_KEY']] : nil,  # nil if unset → Capistrano falls back to default discovery
   forward_agent: false,
   auth_methods: %w(publickey),
   user: stage,
   port: 7822  
 }
+
+# Admin-signin bootstrap files (§17) — test only. Requires shared/misc to be
+# populated once (see §17's updated first step); this copies it into every
+# fresh release automatically from then on. Doesn't replace §17's manual
+# cleanup step (rm -rf .../misc, disable admin) after each redeploy — this
+# only automates re-exposing it, not removing it again.
+namespace :deploy do
+  desc 'Copy admin bootstrap keys into place (test only)'
+  task :copy_admin_keys do
+    on roles(:app) do
+      if fetch(:stage).to_s == "test"
+        execute :cp, "-r", shared_path.join("misc").to_s, release_path.join("cgmembers/rcredits").to_s
+      end
+    end
+  end
+  after 'deploy:updated', 'deploy:copy_admin_keys'
+end
 
 after 'deploy:published', 'restarter:restart_nginx'
 after 'deploy:published', 'restarter:restart_php_fpm'
