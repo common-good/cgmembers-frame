@@ -2412,7 +2412,7 @@ function badCaptcha($sta) {
  */
 function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTribs = 'id=adhoc') {
   u\EXPECT(!$colClasses or count($colClasses) == count($heads), 'wrong aligns count');
-  if ($rows = (array) $rows) u\EXPECT(count((array) $rows[0]) == count($heads), 'wrong heads count');
+  if ($rows = (array) $rows) u\EXPECT(empty($rows[0]) or count((array) $rows[0]) == count($heads), 'wrong heads count');
   
   $heads = makeRow('th', $heads, $colClasses);
   if ($rows = array_values($rows)) {
