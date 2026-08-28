@@ -53,7 +53,7 @@ function notifyTxRelations($a, $index, array $subs, $type) {
 
     if ($rec->txNotifyText and $other->phone) {
       try {
-        twilioSend($other->phone, txNotifyBodyForSms($subs));
+        twilioSend($other->phone, txNotifyBodyForSms($subs, $type));
       } catch (\Throwable $e) {
         r\tellAdmin('tx-notify-sms-failed', ray('to err', $other->phone, $e->getMessage()));
       }
@@ -62,12 +62,26 @@ function notifyTxRelations($a, $index, array $subs, $type) {
 }
 
 /**
- * Compact SMS body — amount, counterparty, timestamp (per Jose's spec).
+ * SMS body: brand + amount + direction + counterparty + timestamp.
+ * Example: "Common Good: $50.00 in from Jane Doe (Aug 25 3:15pm)"
+ * Kept short to fit one SMS segment (160 chars GSM-7).
+ *
+ * @param array  $subs  Message substitutions (typical keys: amount, otherName).
+ * @param string $type  SEND_IN or SEND_OUT - drives "in from" vs "out to" wording.
  */
-function txNotifyBodyForSms(array $subs) {
+function txNotifyBodyForSms(array $subs, $type = '') {
   $amt = nni($subs, 'amount') ?: nni($subs, 'amt') ?: '';
   $other = nni($subs, 'otherName') ?: nni($subs, 'other') ?: '';
-  return trim(sprintf('%s %s %s', $amt, $other ? "w/ $other" : '', date('Y-m-d g:i a', now())));
+  $direction = $type === SEND_IN ? 'in from' : ($type === SEND_OUT ? 'out to' : '');
+  $when = date('M j g:ia', now());
+
+  $parts = ['Common Good:'];
+  if ($amt !== '') $parts[] = $amt;
+  if ($direction and $other) $parts[] = "$direction $other";
+  elseif ($other) $parts[] = "w/ $other";
+  $parts[] = "($when)";
+
+  return join(' ', $parts);
 }
 
 /*  ---- Twilio wrapper: direct HTTPS, no vendor/twilio dep -------------------- */
