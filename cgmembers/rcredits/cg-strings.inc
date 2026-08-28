@@ -303,7 +303,7 @@ EOF
   'confirm funding' => t('%confirmAction %amount to %otherName?'),
   'please confirm' => t('To confirm, type: %nonce'),
   'verification code' => t('Your verification code for using %PROJECT online is: %nonce'), // used in rWeb
-  'whats up' => t('<p>You have not had any %PROJECT transactions in the past month. Most members have at least one transaction per month, so this is a little unusual and we hope all is well with you.</p><p>No need to reply. But please email or call us if you have any problems or questions.</p>'),
+  'whats up' => t('<p>You have not had any %PROJECT transactions in the past 90 days. Most members have at least one transaction per quarter, so this is a little unusual and we hope all is well with you.</p><p>No need to reply. But please email or call us if you have any problems or questions.</p>'),
   'co promo' => t('And if you need more promotional cards to hand out to customers, just let us know!'),
   'thank tell' => t('Thank you for telling us!'),
   'acct deleted' => t('Your account has been deleted.'),
