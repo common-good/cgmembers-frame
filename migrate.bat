@@ -1,1 +1,1 @@
-phinx migrate -e development %1 %2 %3 %4
+phinx migrate -e test %1 %2 %3 %4

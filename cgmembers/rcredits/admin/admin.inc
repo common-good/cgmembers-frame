@@ -58,6 +58,7 @@ function setupBasicAccounts($withEIN = TRUE) {
   $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_OK, B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
+  $a1->update('pass', 'k'); // any non-empty password on DEV allows admin to sign in with any non-empty password (temporary)
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', mb_strtolower($v));
@@ -1010,7 +1011,7 @@ function anonymize($encrypting = FALSE) {
   foreach (ray('cache cache_bootstrap cache_form cu_folders cu_lists cu_members cu_spaces cu_tasks cu_times legacy_x_invoices legacy_x_txs messages r_boxes changes r_do r_honors r_invites r_near x_company x_photos x_relations x_shout x_txs2 x_users') as $k) db\q("TRUNCATE $k");
   
   if ($encrypting) { 
-    $vKeyPw = t\setDevVKey(a(UID_SUPER), TRUE); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
+    $vKeyPw = t\setDevVKey(); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
     db\q('DELETE FROM admins'); // should be db\q('DELETE FROM admins WHERE uid<>:UID_SUPER'); (make the previous line work)
     a(1)->update('pass', '123');
     $pass = db\get('pass', 'users', 'uid=1');

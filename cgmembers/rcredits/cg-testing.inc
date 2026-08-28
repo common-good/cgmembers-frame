@@ -16,7 +16,7 @@ use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
-define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
+define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %cgf %UID_BANK', 'ctty cgf', r\serverUid(), r\qo('NEWAAB')->id)); // can't use CGID here because when recreating db, CGID hasn't been set yet in call from createBasicAccounts()
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule received documented xid';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
@@ -180,16 +180,12 @@ function fixData(&$info, $direct = FALSE) {
 }
 
 /**
- * Set vKeyE and vKeyPw for admin and optionally for the specified account. Return vKeyPw.
+ * Set vKeyE and vKeyPw for admin. Return vKeyPw.
  * @return vKeyPw
  */
-function setDevVKey($a = NULL) {
+function setDevVKey() {
   if (isPRODUCTION) return;
-  $key = file_get_contents(DEV_VPRIVK_FLNM);
-  $pw = getDevVKeyPw();
-  a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
-  if ($a and $a->id != UID_SUPER) $a->makeVKeyE($key, $pw, FALSE);
-  return $pw;
+  return a(UID_SUPER)->makeVKeyE(DEV_VPRIVK_FLNM, getDevVKeyPw(), FALSE);
 }
 
 /**

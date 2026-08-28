@@ -81,7 +81,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     if (!$uid = r\loginString($qid)) return say(t('bad login', '_a', atag('/settings/password')), 'qid');
     if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
     $a = r\acct($uid);
-    $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
+    $success = (isDEV and $uid == 1) ? !empty($a1pw = $a->pass) : ($a and $a->passwordOkay($pass, 'pass', $err)); // accept any nonempty admin pass on dev machine until admin pass is set to NULL ("$a1pw =" is required for this line to work)
     w\updateFlood($sta, $success, $err); // should be before pw2 and vKeyE checks
     if (!$success) return say($err, 'qid');
     $sta['input']['uid'] = $uid;

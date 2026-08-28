@@ -104,14 +104,16 @@ function goFar($url, $params = '') {
 function superSignin($vKeyPw = '') {
   global $mya;
 
-  if (isDEV and !$vKeyPw and $mya->id == UID_SUPER and empty(db\get('vKeyE', 'admins', 'uid=:UID_SUPER'))) { // set up V-encryption automatically on dev
+  if ($vKeyPw) {
+    r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0); // this, together with the stored vKeyE in admins, make r\vKey() work
+    if (!r\vKey()) return softErr(t('Your superAdmin password is invalid.'));
+    if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+  } else {
+    if (!isDEV or $mya->id != UID_SUPER) return w\err(t('That is not a valid SuperAdmin QR or password.'));
     if (!test()) w\say(t('Setting up V-encryption automatically for user "admin" in development environment.')); // say this so we notice if it somehow gets on a non-dev machine
-    $vKeyPw = t\setDevVKey($mya); // sets up vKeyE
-  } elseif (!$vKeyPw) return r\deleteCook('vKeyPw');
-  
-  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0); // this, together with the stored vKeyE in admins, make r\vKey() work
-  if (!r\vKey()) return softErr(t('Your superAdmin password is invalid.'));
-  if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+    $vKeyPw = t\setDevVKey(); // sets up vKeyE
+    r\setCryptCook('vKeyPw', u\b64decode($vKeyPw));    
+  }
   
   foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
     $a = r\acct($uid);

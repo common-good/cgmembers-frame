@@ -1,5 +1,5 @@
 {
-  "stage": "development",
+  "stage": "test",
   "baseUrl": "http://localhost/cg/cgmembers",
   "promoUrl": "http://CommonGood.earth",
   "coApiUrl": "http://%website/cgapi/%etc",
@@ -10,11 +10,11 @@
   "cgSmtpUser": "info@example.com",
   "cgSmtpPass": "",
   "db": {
-    "name": "cg",
+    "name": "test",
     "driver": "mysql",
     "host": "localhost",
     "port": "3306",
-    "user": "cg_user",
+    "user": "test",
     "pass": "pass",
     "salt": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     "word": "0123456789abcdef0123456789abcdef",
@@ -39,6 +39,7 @@
   "ssnUser": "abc123",
   "ssnPass": "abc123",
   "ssnRequest": "(not used in development)",
+  "cgpaySsoSecret": "openssl rand -base64 48"
 
   "comments": "See documentation config.json.howto.md"
 }

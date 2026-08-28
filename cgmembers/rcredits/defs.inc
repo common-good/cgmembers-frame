@@ -16,12 +16,11 @@ $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (S
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
-
-define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
+/**/  if (!in($stage, 'test dev staging demo main')) die('Invalid value for stage in configuration file.');
+define('isDEV', in($stage, 'test dev')); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
-define('isPRODUCTION', $stage == 'production');
-/**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
+define('isPRODUCTION', !isDEV); // demo, staging, and beta also have stage = "main"
 
 const SOCKET_PORT = 8081; // app websocket port
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
