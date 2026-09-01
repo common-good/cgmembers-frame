@@ -672,7 +672,7 @@ function btnShowDiv($divId, $title, $style='success', $size = 'xs') {
  *   title: form title
  *   orig: original values of the requested record
  *   url: the page URL
- *   
+ *   btns: an object of the possible buttons   
  */
 function crud($tnm, $args, $idFld, $flds, $order = NULL, $callback = NULL) {
   include_once R_ROOT . '/admin/admin.inc';
@@ -681,21 +681,18 @@ function crud($tnm, $args, $idFld, $flds, $order = NULL, $callback = NULL) {
   $url = strstr($_SERVER['REQUEST_URI'] . "/$idFld", "/$idFld", TRUE) . "/$idFld"; // URL for editing or other operations
   if (strhas($crit, ';')) return hack(t('Caller attempted code injection in crud'));
   if (!$crit) $crit = '1'; // return all records if no criteria
+  $btns = crudBtns();
 
   $id = $$idFld;
   $title = ucwords(strtr($tnm, ray('u_ tx_ cu_', 'Account ', 'Tx ', 'Clickup ')));
-  if ($id != 'add') $title .= btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
-  if ($id) $title .= btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
-  
+  if ($id != 'add') $title .= $btns->add;
+  if ($id) $title .= $btns->lst; 
+  if (is_numeric($id)) $title .= $btns->del;
   $endNow = in($tnm, 'tx_rules tx_timed'); // records in these tables get ended, not deleted
-  
-  $xBtn = btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
-  if (is_numeric($id)) $title .= $xBtn;
 
   if (!$id) {
-    if ($xsearch = r\cook('search')) $title .= btn('', 'xO', 'success', 'md', clas('xsearch') + ['title' => t('Previous Search')]);
-    $title .= btn('', 'O', 'success', 'md', clas('search') + ['title' => t('Search')])
-    . tr('<input type="text" class="searchbox" name="edit-search" id="edit-search"/>', compact('search'));
+    if ($xsearch = r\cook('search')) $title .= $btns->xsearch;
+    $title .= $btns->search . tr('<input type="text" class="searchbox" name="edit-search" id="edit-search"/>', compact('search'));
   } else $xsearch = NULL;
 
   $ret = FALSE;
@@ -748,7 +745,20 @@ function crud($tnm, $args, $idFld, $flds, $order = NULL, $callback = NULL) {
   $msg = $endNow ? t('End this rule (#%id)?', $subs) : t('Delete this %tnm record (#%id)?', $subs);
   jsx('crud', compact(ray('msg url id xsearch'))); // must be last, in case id changes
 
-  return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig url")));
+  return $ret ? compact('ret') : (just($flds, $orig) + compact(ray("id title orig url btns")));
+}
+
+/**
+ * Return an object of crud operations buttons.
+ */
+function crudBtns() {
+  $add = btn('', '+', 'success', 'md', clas('add') + ['title' => t('Add')]);
+  $lst = btn('', '=', 'default', 'md', clas('list') + ['title' => t('List')]);
+  $del = btn('', 'X', 'danger', 'md', clas('delete') + ['title' => t('Delete')]);
+  $xsearch = btn('', 'xO', 'success', 'md', clas('xsearch') + ['title' => t('Previous Search')]);
+  $search = btn('', 'O', 'success', 'md', clas('search') + ['title' => t('Search')]);
+  
+  return (object) compact(ray('add lst del xsearch search'));
 }
 
 function NEWitem($value, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('value') + $other);}
