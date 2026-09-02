@@ -451,6 +451,21 @@ function formFooter() {
   $links = join(' | ', $links);
   list ($copyright, $nonprofit) = ray(t('copyright, a nonprofit organization'));
   
+  // Build a small version indicator (git sha + release timestamp) so admins can
+  // tell what is currently deployed on test/dev/staging/etc. - answers William's
+  // 2026-08-28 ask ("hard to know what is currently deployed on test. and pay-test.").
+  // capistrano writes REVISION with the deployed git sha; the release-dir mtime
+  // is when the deploy happened. Both are absent in local dev - falls back to "-".
+  $verSha = '-';
+  $verBuiltAt = '';
+  $revFile = R_ROOT . '/../../REVISION'; // /home/<stage>/cg/current/REVISION
+  if (is_readable($revFile)) {
+    $verSha = substr(trim((string) @file_get_contents($revFile)), 0, 7) ?: '-';
+    $ts = @filemtime($revFile);
+    if ($ts) $verBuiltAt = date('Y-m-d H:i', $ts);
+  }
+  $verSuffix = $verBuiltAt ? " &middot; $verBuiltAt" : '';
+
   $markup = tr(<<< X
 |<hr><div id="footer-menu">
 $links
@@ -460,6 +475,7 @@ $links
 %CGF_POSTALADDR<br>
 %CGF_PHONE (messages) &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <div class="no-print"><br>IP: %ip
+<div class="app-version" title="Currently deployed build">$verSha$verSuffix</div>
 $helpModal</div>
 X
   , '_aSite _aEmail ip', atag(r\promoLink()), u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
