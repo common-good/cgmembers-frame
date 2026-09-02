@@ -170,6 +170,13 @@ function cgpayGrantsParseFlds($body, $required, array &$errors) {
     $out['fund'] = trim((string) nni($body, 'fund')) ?: null;
   }
 
+  // Drive file id for the uploaded grant agreement PDF (Phase 3.5 PR B).
+  // Optional. The SvelteKit /api/grants POST uploads to Drive and passes the id here;
+  // stored in grants.drive_file_id so admins can look up the agreement later.
+  if (array_key_exists('driveFileId', $body)) {
+    $out['drive_file_id'] = trim((string) nni($body, 'driveFileId')) ?: null;
+  }
+
   // Check-specific fields (per William 2026-08-04): when payment method is check,
   // capture check number + check date up front so they land in the transaction
   // description at release time. Required for check, ignored otherwise.
