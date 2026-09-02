@@ -12,10 +12,33 @@ Setup:
   And members have:
   | uid  | coType  |*
   | .ZZC | %CO_LLC |
+  And members:
+  | uid         | .ZZF |**
+  | contact     | Bea Two |
+  | contactTitle | Director |
+  | fullName    | Far Co |
+  | legalName   | %CGF_LEGALNAME |
+  | federalId   | %CGF_EIN |
+  | flags       | co,ok,bankOk |
+  | coFlags     | sponsored, flip |
+  | phone       | 413-987-6543 |
+  | email       | f@ |
+  | country     | US |
+  | zip         | 01301 |
+  | coType      | %CO_LLC |
+  | source      | news |
+  | mission     | thrive |
+  | activities  | do stuff |
+  | gross       | 123456.78 |
+  | employees   | 9 |
+  | checksIn    | 30 |
+  | checksOut   | 40 |
+  | bankAccount | USkk9000001 |
   And these "u_relations":
   | main | other | permission |*
   | .ZZC | .ZZA  | read       |
   | .ZZC | .ZZB  | manage     |
+  | .ZZF | .ZZB  | manage     |
 
 Scenario: A non-member applies for fiscal sponsorship
   When member "?" visits "co/sponsor"
@@ -261,28 +284,7 @@ Scenario: A signed-in company applies for fiscal sponsorship
   | checksOut  | 40 |
 
 Scenario: A fiscally sponsored applicant updates its settings
-  Given members:
-  | uid        | .ZZF |**
-  | contact    | Bea Two |
-  | contactTitle | Director |
-  | fullName   | Far Co |
-  | legalName  | %CGF_LEGALNAME |
-  | federalId  | %CGF_EIN |
-  | flags      | co,ok |
-  | coFlags    | sponsored, flip |
-  | phone      | 413-987-6543 |
-  | email      | f@ |
-  | country    | US |
-  | zip        | 01301 |
-  | coType     | %CO_LLC |
-  | source     | news |
-  | mission    | thrive |
-  | activities | do stuff |
-  | gross      | 123456.78 |
-  | employees  | 9 |
-  | checksIn   | 30 |
-  | checksOut  | 40 |
-  And these "u_relations":
+  Given these "u_relations":
   | main | other | permission |*
   | .ZZF | .ZZB  | manage     |
   When member "F:B" visits "co/sponsor"
@@ -322,7 +324,7 @@ Scenario: A fiscally sponsored applicant updates its settings
   | fullName   | Far Co |
   | legalName  | %CGF_LEGALNAME |
   | federalId  | %CGF_EIN |
-  | flags      | co,member,ok,ided |
+  | flags      | co,member,ok,ided,bankOk |
   | coFlags    | sponsored, flip |
   | phone      | 413-987-6543 |
   | email      | f@ |
@@ -335,3 +337,19 @@ Scenario: A fiscally sponsored applicant updates its settings
   | employees  | 9 |
   | checksIn   | 35 |
   | checksOut  | 45 |
+
+# Funds moved from a bank account to a CG fiscally sponsored account are assumed to represent cash donations
+
+Scenario: a sponsee draws credit from the bank
+  When member "F:B" completes form "get" with values:
+  | op  | amount | cat   |*
+  | get | 50     | D-FBO |
+  Then these "txs2":
+  | txid | payee | amount | created | completed | channel | xid | deposit |*
+  | 1    |  .ZZF | 50     | %now    |         0 | %TX_WEB |   1 |       0 |
+  And these "txs":
+  | xid | created | amount | payer | payee | purpose        | taking |*
+  | 1   | %todayd |      0 | bank  | .ZZF  | cash donations |      1 |
+  And we say "status": "banked|bank tx number" with subs:
+  | action | tofrom  | amount | checkNum | why             |*
+  | draw   | from    | $50    |        1 | as soon as possible |
