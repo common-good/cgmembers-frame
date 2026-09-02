@@ -385,6 +385,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* Footer */
 #footer, #footer label {text-align:center; margin:0 5px;}
 #edit-footerText .control-label {display:none;}
+.app-version {margin-top:0.5rem;font-size:0.75rem;color:#888;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
 
 /* Accounts Selector */
 #accounts {position:absolute; left:0; top:0; width:100%;}

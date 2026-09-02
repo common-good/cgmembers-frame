@@ -475,7 +475,7 @@ $links
 %CGF_POSTALADDR<br>
 %CGF_PHONE (messages) &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <div class="no-print"><br>IP: %ip
-<div class="app-version" style="margin-top:0.5rem;font-size:0.75rem;color:#888;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;" title="Currently deployed build">$verSha$verSuffix</div>
+<div class="app-version" title="Currently deployed build">$verSha$verSuffix</div>
 $helpModal</div>
 X
   , '_aSite _aEmail ip', atag(r\promoLink()), u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
