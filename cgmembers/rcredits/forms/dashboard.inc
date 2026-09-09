@@ -18,11 +18,12 @@ function formDashboard($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
   extract(just('stay', $args, NULL));
 
-  if ($mya->admSeeAccts and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
-
-  // Members land on the new SvelteKit POC dashboard when configured (see CGPAY_URL).
-  // /dashboard?stay=1 keeps the user on this PHP dashboard for fallback / debug.
+  // Members (including admins) land on the new SvelteKit POC dashboard when configured
+  // (see CGPAY_URL). /dashboard?stay=1 keeps the user on this PHP dashboard for fallback / debug.
+  // Admins reach /sadmin/summary directly via that URL (or when CGPAY_URL is empty, below).
   if (CGPAY_URL and !$stay) return go(CGPAY_URL);
+
+  if ($mya->admSeeAccts and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
 
   $special = $endorse = $continue = NULL;
   
