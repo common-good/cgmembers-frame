@@ -114,6 +114,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberInvites
  *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
+ *     MAKE sponsor ASponseeDrawsCreditFromTheBank
  *     MAKE tx AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForLoanreimbursement
@@ -321,7 +322,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
- *     BOTH sponsor AFiscallySponsoredApplicantUpdatesItsSettings
+ *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     MAKE statement Setup
  *     MAKE stepup Setup
  *     MAKE tx Setup
@@ -383,6 +384,7 @@ function members($list) {return t\members($list);}
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberRegistersAgain
+ *     TEST sponsor ASponseeDrawsCreditFromTheBank
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
@@ -1899,6 +1901,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE signup AMemberRegistersWithCriminalName
  *     MAKE sponsor Setup
  *     MAKE sponsor AFiscallySponsoredApplicantUpdatesItsSettings
+ *     TEST sponsor ASponseeDrawsCreditFromTheBank
  *     MAKE statement Setup
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
