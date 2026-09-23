@@ -1,6 +1,6 @@
 require 'capistrano/console'
 set :application, "cgmembers-frame"
-set :repo_url, 'git@github-cg:common-good/cgmembers-frame.git'
+set :repo_url, 'https://github.com/common-good/cgmembers-frame.git'
 set :local_user, ENV['USER'] || ENV['USERNAME'] || `whoami`.chomp # shows (in the logs) who did the deployment
 stage0 = fetch(:stage).to_s   # whatever was typed after `cap`
 set :stage, (stage = stage0.chomp("-backup"))
