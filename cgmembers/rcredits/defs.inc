@@ -11,7 +11,7 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
-const TEST_ANON = (FALSE and !isPRODUCTION); // set this to TRUE and... (in development) to test a\anonymize() -- then start by recreating the db
+const TEST_ANON = FALSE; // set this to TRUE (in development) to test a\anonymize() -- then start by recreating the db
 $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 
@@ -20,7 +20,7 @@ $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents(
 define('isDEV', in($stage, 'test dev')); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
-define('isPRODUCTION', !isDEV); // demo, staging, and beta also have stage = "main"
+define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
 
 const SOCKET_PORT = 8081; // app websocket port
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
@@ -43,9 +43,13 @@ const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\ban
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
-$base_url = config('baseUrl');
+$host = $_SERVER['HTTP_HOST']) ?? NULL; // expect proper host unless running app-socket or cron
+if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
+$env = preg_match('#/home/([^/]+)/cg/#', __DIR__, $m) ? $m[1] : NULL; // eg /home/test/cg/releases/...
+if ($env === 'main') $env = 'members'; // special case for production URL
+$base_url = config('baseUrl') ?: ('https://' . ($host ?? "$env.commongood.earth")); // use env for non-http requests, like cron
 
-$requestUri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : NULL; // can't use nni() yet
+$requestUri = $_SERVER['REQUEST_URI'] ?? NULL;
 define('GEOCODE_KEY', config('geocodeKey'));
 define('BASE_URL', $base_url);
 define('LOCAL_URL', config('localUrl', $base_url));
@@ -113,8 +117,6 @@ const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these t
 const DEV_ONLY_MSG = 'only on development machine';
 const DEMO_CTTY = -2; // uid of demo community on demo server
 
-$host = strtolower(@$_SERVER['HTTP_HOST']); // expect proper host unless running app-socket or cron
-if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
