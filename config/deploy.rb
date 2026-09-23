@@ -25,7 +25,7 @@ set :tmp_dir, "/home/#{stage}/tmp"
 
 append :linked_files, "config/config.json"
 append :linked_files, "config/phinx.json"
-append :linked_dirs, "cgLogs", "cgPhotoTemp", "vendor", "cgmembers/.well-known"
+append :linked_dirs, "cgLogs", "cgPhotoTemp", "msgs", "vendor"
 
 set :keep_releases, 5 # defaults to 5
 
