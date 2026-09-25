@@ -16,13 +16,15 @@ include_once __DIR__ . '/tx.inc'; // include all Pay and Charge functionality
 function formDashboard($form, &$sta, $args = '') {
   global $base_url;
   global $mya; $myid = $mya->id;
-  extract(just('stay', $args, NULL));
+  // Admin acting on someone else's account: show the admin summary so they don't
+  // accidentally adjust settings on their own account via the member-view dashboard.
+  // (The "Simple Dashboard" button on /sadmin/summary links directly to CGPAY_URL to
+  // reach the node dashboard - no /dashboard round-trip needed.) Admins in their own
+  // account (proSe) fall through to CGPAY_URL like any other member. Per William,
+  // 2026-09-24.
+  if ($mya->admSeeAccts and !$mya->proSe) return go('/sadmin/summary');
 
-  if ($mya->admSeeAccts and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
-
-  // Members land on the new SvelteKit POC dashboard when configured (see CGPAY_URL).
-  // /dashboard?stay=1 keeps the user on this PHP dashboard for fallback / debug.
-  if (CGPAY_URL and !$stay) return go(CGPAY_URL);
+  if (CGPAY_URL) return go(CGPAY_URL);
 
   $special = $endorse = $continue = NULL;
   
