@@ -3,9 +3,9 @@ set :application, "cgmembers-frame"
 set :repo_url, 'https://github.com/common-good/cgmembers-frame.git'
 set :local_user, ENV['USER'] || ENV['USERNAME'] || `whoami`.chomp # shows (in the logs) who did the deployment
 stage0 = fetch(:stage).to_s   # whatever was typed after `cap`
-set :stage, (stage = stage0.chomp("-backup"))
-raise "No pay setup for stage '#{stage}'" unless %w[test dev staging demo beta main].include?(stage)
-subdomain = stage0.include?("-backup") ? "backup" : stage 
+set :stage, (stage = stage0.chomp("-standby"))
+raise "No cg setup for stage '#{stage}'" unless %w[test dev staging demo beta main].include?(stage)
+subdomain = stage0.include?("-standby") ? "standby" : stage 
 
 case stage   # whatever was typed after `cap`
 when "test"
