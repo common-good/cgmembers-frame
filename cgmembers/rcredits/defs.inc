@@ -43,7 +43,7 @@ const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\ban
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
-$host = $_SERVER['HTTP_HOST']) ?? NULL; // expect proper host unless running app-socket or cron
+$host = $_SERVER['HTTP_HOST'] ?? NULL; // expect proper host unless running app-socket or cron
 if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 $env = preg_match('#/home/([^/]+)/cg/#', __DIR__, $m) ? $m[1] : NULL; // eg /home/test/cg/releases/...
 if ($env === 'main') $env = 'members'; // special case for production URL
