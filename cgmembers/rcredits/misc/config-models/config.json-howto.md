@@ -68,6 +68,7 @@ For maximum security, the method list for "V" should include pp.
 *inviteKey*      arbitrary string of 0s and 1s, for generating invitation codes (must be 10101 for development tests to work)
 *stripePublic*   publishable key for Stripe transaction processing
 *stripeSecret*   secret key for Stripe transaction processing
+*cgpayUrl*       URL of the cgpay web app
 *cgpaySsoSecret* an arbitrary 48-character random string, converted to base64, for our app to communicate with the server
 
 
