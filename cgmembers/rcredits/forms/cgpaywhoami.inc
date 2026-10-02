@@ -47,6 +47,7 @@ function cgpayWhoami() {
 
   return exitJson([
     'uid'       => (int) $a->id,
+    'qid'       => $a->mainQid,
     'name'      => $a->bestName,
     'sponsored' => (bool) $a->sponsored,
     'menu'      => $menu,
