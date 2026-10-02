@@ -250,6 +250,7 @@ function menu($submenu = '') {
     'api' => ['call', 'API', '1', ANY, 'api'],
     'cgpay-sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
     'cgpay-lookup' => ['call', 'CGPay Lookup', '', ANY, 'cgpayLookup'], // server-to-server: SvelteKit cgpay POC identifier (qid/name/email/phone) -> uid resolution
+    'cgpay-whoami' => ['call', 'CGPay Whoami', '', ANY, 'cgpayWhoami'], // server-to-server: SvelteKit cgpay POC session -> current uid/name/menu (called on every SSR so PHP is authoritative)
     'cgpay-grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
     'cgpay-people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
     'cgpay-funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
