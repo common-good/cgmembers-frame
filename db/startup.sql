@@ -21,7 +21,7 @@ DELIMITER $$
 --
 -- Functions
 --
-CREATE FUNCTION `perYear` (`period` ENUM('once','day','week','month','quarter','year','forever'), `periods` INT(11)) RETURNS TINYINT(4)  RETURN (CASE period
+CREATE FUNCTION `perYear` (`period` ENUM('once','day','week','month','quarter','year','forever'), `periods` INT(11)) RETURNS TINYINT(4) DETERMINISTIC RETURN (CASE period
         WHEN 'forever' THEN 0
         WHEN 'year' THEN 1
         WHEN 'quarter' THEN 4

@@ -32,6 +32,7 @@ use CG\Util as u;
  * No CORS headers, no session/login UI.
  */
 function cgpaySso() {
+  global $channel; $channel = TX_API;
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') return exitJust(X_SYNTAX);
 
   // Shared-secret auth. Refuse if config is missing — fail closed, not open.
