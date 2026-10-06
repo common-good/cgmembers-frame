@@ -42,7 +42,7 @@ function cgpayWhoami() {
   // Fall back to uid when acct hasn't been written yet (fresh session).
   $row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid]);
   if (!$row) return exitJust(X_UNAUTH);
-  $uid = (int) ($row['acct'] ?? 0) ?: (int) ($row['uid'] ?? 0);
+  $uid = (int) ($row->acct ?? 0) ?: (int) ($row->uid ?? 0);
   if (!$uid) return exitJust(X_UNAUTH);
 
   $a = r\acct($uid);
