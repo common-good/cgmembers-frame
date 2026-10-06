@@ -36,13 +36,13 @@ function cgpayWhoami() {
   if ($ssid === '') return exitJust(X_SYNTAX);
 
   // sessions.uid is the agent (signed-in user). The active account the user is
-  // currently acting on lives in the session's `myid` svar - and changes when
-  // an admin or multi-account member switches account on the PHP side. Prefer
-  // that so node reflects account switches made over on PHP (per William,
-  // 2026-10-05). Fall back to sessions.uid when the svar isn't set yet.
-  $vars = sessionVars($ssid);
-  if (!$vars) return exitJust(X_UNAUTH);
-  $uid = (int) ($vars['myid'] ?? $vars['uid'] ?? 0);
+  // currently acting on lives in sessions.acct - Acct::setAcct writes it on
+  // every account switch (`db\update('sessions', ray('uid acct ssid', ...), 'ssid')`
+  // in acct.class). Prefer that so node reflects account switches made on PHP.
+  // Fall back to uid when acct hasn't been written yet (fresh session).
+  $row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid]);
+  if (!$row) return exitJust(X_UNAUTH);
+  $uid = (int) ($row['acct'] ?? 0) ?: (int) ($row['uid'] ?? 0);
   if (!$uid) return exitJust(X_UNAUTH);
 
   $a = r\acct($uid);
