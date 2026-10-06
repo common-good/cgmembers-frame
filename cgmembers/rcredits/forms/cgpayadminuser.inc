@@ -41,7 +41,7 @@ function cgpayAdminUser() {
 
   $row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid]);
   if (!$row) return exitJust(X_UNAUTH);
-  $callerUid = (int) ($row['acct'] ?? 0) ?: (int) ($row['uid'] ?? 0);
+  $callerUid = (int) ($row->acct ?? 0) ?: (int) ($row->uid ?? 0);
   if (!$callerUid) return exitJust(X_UNAUTH);
   $me = r\acct($callerUid);
   if (!$me || !$me->can(B_ADMIN)) return exitJust(X_UNAUTH);
@@ -61,12 +61,12 @@ function cgpayAdminUser() {
     'uid'       => (int) $a->id,
     'qid'       => $a->mainQid,
     'name'      => $a->bestName,
-    'loginName' => $userRow['name'] ?? '',
-    'fullName'  => $userRow['fullName'] ?? '',
-    'email'     => $userRow['email'] ?? '',
-    'phone'     => $userRow['phone'] ?? '',
-    'created'   => (int) ($userRow['created'] ?? 0),
-    'flags'     => (int) ($userRow['flags'] ?? 0),
+    'loginName' => $userRow->name ?? '',
+    'fullName'  => $userRow->fullName ?? '',
+    'email'     => $userRow->email ?? '',
+    'phone'     => $userRow->phone ?? '',
+    'created'   => (int) ($userRow->created ?? 0),
+    'flags'     => (int) ($userRow->flags ?? 0),
     'balance'   => (float) $a->balance,
     'co'        => (bool) $a->co,
     'sponsored' => (bool) $a->sponsored,
