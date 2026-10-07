@@ -255,6 +255,7 @@ function menu($submenu = '') {
     'cgpay-admin-sponsees' => ['call', 'CGPay Admin Sponsees', '', ANY, 'cgpayAdminSponsees'], // server-to-server: SvelteKit admin dashboard sponsees list with grants roll-ups
     'cgpay-admin-user' => ['call', 'CGPay Admin User', '', ANY, 'cgpayAdminUser'], // server-to-server: SvelteKit admin user detail (profile + tx history + grants history)
     'cgpay-admin-user-update' => ['call', 'CGPay Admin User Update', '', ANY, 'cgpayAdminUserUpdate'], // server-to-server: SvelteKit admin contact-fields update + audit-trail write
+    'cgpay-admin-user-action' => ['call', 'CGPay Admin User Action', '', ANY, 'cgpayAdminUserAction'], // server-to-server: SvelteKit admin single-account activate/deactivate
     'cgpay-grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
     'cgpay-people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
     'cgpay-funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
