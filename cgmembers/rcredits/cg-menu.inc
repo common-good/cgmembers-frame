@@ -253,6 +253,7 @@ function menu($submenu = '') {
     'cgpay-admin-overview' => ['call', 'CGPay Admin Overview', '', ANY, 'cgpayAdminOverview'], // server-to-server: SvelteKit admin dashboard aggregate counts (members, sponsees, txs, grants)
     'cgpay-admin-members' => ['call', 'CGPay Admin Members', '', ANY, 'cgpayAdminMembers'], // server-to-server: SvelteKit admin dashboard paginated members list
     'cgpay-admin-sponsees' => ['call', 'CGPay Admin Sponsees', '', ANY, 'cgpayAdminSponsees'], // server-to-server: SvelteKit admin dashboard sponsees list with grants roll-ups
+    'cgpay-admin-sponsee' => ['call', 'CGPay Admin Sponsee', '', ANY, 'cgpayAdminSponsee'], // server-to-server: SvelteKit admin sponsee detail (identity + grants rollups + relations + tx history)
     'cgpay-admin-user' => ['call', 'CGPay Admin User', '', ANY, 'cgpayAdminUser'], // server-to-server: SvelteKit admin user detail (profile + tx history + grants history)
     'cgpay-admin-user-update' => ['call', 'CGPay Admin User Update', '', ANY, 'cgpayAdminUserUpdate'], // server-to-server: SvelteKit admin contact-fields update + audit-trail write
     'cgpay-admin-user-action' => ['call', 'CGPay Admin User Action', '', ANY, 'cgpayAdminUserAction'], // server-to-server: SvelteKit admin single-account activate/deactivate
