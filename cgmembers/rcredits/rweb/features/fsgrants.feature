@@ -222,8 +222,12 @@ Scenario: An admin marks an udocumented grant received by check
   And we message "grantdoc-required" to member ".ZZC" with subs:
   | grantorName | amt    |*
   | Eve Fivo    | $5,000 |
-  
-  When member ".ZZC" submits "co/grants/id=2" with:
+
+Scenario: An admin marks an received grant documented
+  Given these "grants":
+  | id | uid  | pid | amount | created  | by    | xid | received | documented | ckNum | ckDate |*
+  | 4  | .ZZC | 5   | 5000   | %now0-1d | check |     | %now-1d  |            | 123   | %now0  |
+  When member ".ZZC" submits "co/grants/id=4" with:
   | fullName   | Eve Fivo     |**
   | email      | e@z.co       |
   | phone      | 555-555-5555 |
@@ -233,15 +237,17 @@ Scenario: An admin marks an udocumented grant received by check
   | zip        | 01005        |
   | amount     | 5,000        |
   | by         | check        |
-  | received   | %mdY-1d      |
+  | received   | %now-1d      |
   | documented | %mdY         |
-  | ckNum      | 123          |
-  | ckDate     | %mdY-1d      |
-  
-  Then these "txs":
-  | eid | xid | payer      | payee | amount    | purpose                    | cat1        | cat2        | type     |*
-  |   5 | 2   | %UID_OUTER | .ZZC  | 5000      | grant (check #123, %mdY-1d) |             | D-FBO       | %E_OUTER |
-  |   6 | 2   | .ZZC       | cgf   | 250       | %FS_NOTE                   | D-FBO       | FS-FEE      | %E_AUX   |
+  | ckNum      | 456          |
+  | ckDate     | %mdY-7d      |
+  Then these "grants":
+  | id | uid  | pid | amount | created  | by    | xid | received | documented | ckNum | ckDate   |*
+  | 4  | .ZZC | 5   | 5000   | %now0-1d | check | 2   | %now-1d  | %now0      | 456   | %now0-7d |
+  And these "txs":
+  | eid | xid | payer      | payee | amount    | purpose                     | cat1        | cat2        | type     |*
+  |   5 | 2   | %UID_OUTER | .ZZC  | 5000      | grant (check #456, %mdY-7d) |             | D-FBO       | %E_OUTER |
+  |   6 | 2   | .ZZC       | cgf   | 250       | %FS_NOTE                    | D-FBO       | FS-FEE      | %E_AUX   |
   And these "txs2":
   | xid | payee | amount | completed | deposit | pid | bankAccount |*
   | 2   | .ZZC  | 5000   | %now      | %now    | 5   |             |

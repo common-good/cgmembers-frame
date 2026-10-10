@@ -21,14 +21,16 @@ function formFSGrants($form, &$sta, $args = '') {
   if (!$seeAll) $args['crit'] = "uid=$myid";
 
 //  $order = tr('amount<%UNDOC_GRANT_MAX OR documented>0, -IFNULL(received, %PHP_INT_MAX)');
-  extract($zot = crud('grants', $args, 'id', FSGRANTS_FLDS, 'created DESC')); // get ret or [id, title, orig, url]
+  extract($zot = crud('grants', $args, 'id', FSGRANTS_FLDS, 'created DESC')); // get ret or FSGRANTS_FLDS+[id, title, orig, url]
   if (nn($ret)) return $ret;
   
   if ($pid) {
     extract(just(PEOPLE_FLDS, $pRec = db\row('people', compact('pid'))));
   } else foreach (ray(PEOPLE_FLDS) as $k) $$k = '';
 
-  $title = t('Expected Grants');
+  $title = t('Grants Expected');
+  if (!$xid) $title .= $btns->del;
+  
   $subtext = t('Please complete as much information as you can for the grantor. For grants of %max or more, we also need a copy of the grant agreement.', ray('max', u\fmtAmt(UNDOC_GRANT_MAX))) . '<br>' . NBSP;
 
   $fullName = textFld(REQ . t('Grantor Name:'), [t('Grantor name properly capitalized')], dft($fullName));
@@ -91,6 +93,7 @@ function formFSGrants_validate($form, &$sta) {
   
   if ($received and !$by) return txErr(t('You must specify a payment method.'));
   if ($received and $by == B_CHECK and !($ckDate and $ckNum)) return txErr(t('You must provide check number and date.'));
+  if ($received and !is_numeric($received)) $received = strtotime($received);
   
   u\preray(compact(ray('fullName zip phone ckDate received documented amount')), $sta['input']);
 }
