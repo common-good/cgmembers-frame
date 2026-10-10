@@ -111,7 +111,7 @@ When adding a new endpoint: create `forms/cgpay<name>.inc`, register in `cg-menu
 
 Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_description.php`. Run via `./migrate.sh` (production) or `./jr-migrate.sh` (jr environment).
 
-Since 2026-07-13 the schema-change pattern is **manual SQL logged in `_changes.log`** for straightforward changes; use Phinx migrations only when the change needs rollback safety or programmatic transformation. Ask William if unsure which path to use.
+**Every database structure change is a Phinx migration** - no manual SQL. Each migration file documents its own change. A fresh install (`recreate.sh`) loads `db/startup.sql` and then runs all migrations, so anything not in a migration is missing on new installs. From time to time we archive all Phinx migrations (into `db/migrations/archived/`) and create a new `db/startup.sql` that includes everything up to that point. `cgmembers/rcredits/misc/pre-git-changes.log` is an old change log (mostly from before git), not a place to record schema changes.
 
 ## Branch / deploy flow
 

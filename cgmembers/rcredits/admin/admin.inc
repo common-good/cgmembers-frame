@@ -610,7 +610,7 @@ function fixStats() {
  f('a.getBanks');
 */
 function getBanks() {
-  return; // seldom used (and move SQL name fixes here? see changes.log)
+  return; // seldom used (and move SQL name fixes here? see misc/pre-git-changes.log)
   $fieldNames = 'route branch fedRoute type modified newRoute name address city state zip phone status view';
   $lens = ray('9 1 9 1 6 9 36 36 20 2 9 10 1 1'); // also 5 chars of filler at end
   $fields = array_combine(ray($fieldNames), $lens);
