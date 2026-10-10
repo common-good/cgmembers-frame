@@ -100,9 +100,10 @@ function cgpaySso() {
 
   // Menu categories for this user. Permission rules live in PHP (cg-menu.inc);
   // here we just expose top-level categories the cgpay dashboard renders as links.
-  $menu = ['Dashboard', 'History', 'Community', 'Settings'];
+  $menu = ['Dashboard', 'History', 'Community'];
   if ($a->co) $menu[] = 'Company';
   if ($a->can(B_ADMIN)) $menu[] = 'Admin';
+  $menu[] = 'Settings'; // always last
 
   return exitJson([
     'cookieName'      => session_name(),

@@ -48,9 +48,10 @@ function cgpayWhoami() {
   $a = r\acct($uid);
   if (!$a) return exitJust(X_UNAUTH);
 
-  $menu = ['Dashboard', 'History', 'Community', 'Settings'];
+  $menu = ['Dashboard', 'History', 'Community'];
   if ($a->co) $menu[] = 'Company';
   if ($a->can(B_ADMIN)) $menu[] = 'Admin';
+  $menu[] = 'Settings'; // always last
 
   return exitJson([
     'uid'       => (int) $a->id,
