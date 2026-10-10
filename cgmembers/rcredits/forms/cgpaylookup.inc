@@ -28,6 +28,7 @@ use CG\Util as u;
  * defs.inc). One secret for both endpoints — no point splitting it.
  */
 function cgpayLookup() {
+  global $channel; $channel = TX_API;
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') return exitJust(X_SYNTAX);
 
   $expected = CGPAY_SSO_SECRET;
@@ -37,6 +38,7 @@ function cgpayLookup() {
   }
 
   $body = json_decode(file_get_contents('php://input'), TRUE);
+  u\loga('in', $body);
   $identifier = isset($body['identifier']) ? trim((string) $body['identifier']) : '';
   if ($identifier === '') return exitJust(X_SYNTAX);
 

@@ -1,27 +1,31 @@
 require 'capistrano/console'
 set :application, "cgmembers-frame"
-set :repo_url, 'git@github-cg:common-good/cgmembers-frame.git'
+set :repo_url, 'https://github.com/common-good/cgmembers-frame.git'
 set :local_user, ENV['USER'] || ENV['USERNAME'] || `whoami`.chomp # shows (in the logs) who did the deployment
+stage0 = fetch(:stage).to_s   # whatever was typed after `cap`
+set :stage, (stage = stage0.chomp("-standby"))
+raise "No cg setup for stage '#{stage}'" unless %w[test dev staging demo beta main].include?(stage)
+subdomain = stage0.include?("-standby") ? "standby" : stage 
 
-case (stage = fetch(:stage).to_s)   # whatever was typed after `cap`
+case stage   # whatever was typed after `cap`
 when "test"
   ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp # defaults to current checked-out branch
 when "dev"
   set :branch, "develop"
 when "staging"
   ask :branch, "main"
-else # demo, beta, or main
-  set :branch, "main"
+when "main", "beta", "demo"
+  ask :branch, "main"   # ask temporarily while getting set up
 end
 
-server "#{stage}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
+server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
 set :deploy_to, "/home/#{stage}/cg" # defaults to /var/www/my_app_name
 set :pty, true # defaults to false
 set :tmp_dir, "/home/#{stage}/tmp"
 
 append :linked_files, "config/config.json"
 append :linked_files, "config/phinx.json"
-append :linked_dirs, "cgLogs", "cgPhotoTemp", "vendor", "cgmembers/.well-known"
+append :linked_dirs, "cgLogs", "cgPhotoTemp", "msgs", "vendor"
 
 set :keep_releases, 5 # defaults to 5
 
