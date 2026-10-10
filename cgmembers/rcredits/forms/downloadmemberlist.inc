@@ -134,6 +134,7 @@ X;
     $a = r\acct($id); $uid = $a->id;
     $type = $a->ok ? 'member' : ($a->activated ? 'deactivated' : 'notyet');
     if ($a->co) $type .= ' company';
+    if ($a->ok and $a->co and $a->sponsored and !in($a->name, 'albitasgiftfund foodfund')) $type .= ' sponsee';
     
     if ($anonymous) {
       foreach ($fields as $k) $$k = $a->$k; // do this first. some will be null.
