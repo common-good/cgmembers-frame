@@ -72,7 +72,7 @@ function ajax($args = NULL) {
       $q = trim((string) nni($data, 'q'));
       if (strlen($q) < 2) return exitJust(u\jsonize([]));
       $sponseeUid = (int) (nni($data, 'sponseeUid') ?: $myid);
-      require_once R_ROOT . '/forms/cgpaypeople.inc';
+      require_once R_ROOT . '/forms/cgpaypeopleautocomplete.inc';
       return exitJust(u\jsonize(grantorAutocompleteRows($sponseeUid, $q, 20)));
     
     case 'suggestNonmember':
