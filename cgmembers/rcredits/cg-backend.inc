@@ -1647,9 +1647,11 @@ function createUsdTransfer($a, $amount, $options = []) {
   
   extract(just('created completed pid cat purpose deposit bankAccount recursId flags', $options, NULL));
 
-  u\setDft($created, now());
-  u\setDft($purpose, $amount > 0 ? t('from bank') : t('to bank'));
   $payee = $a->id;
+  u\setDft($created, now());
+  u\setDft($purpose, $amount > 0 
+  ? ($a->sponsored ? t('cash donations') : t('from bank')) // all bank transfers to a sponsored account are cash donations
+  : t('to bank'));
 
   list ($eType, $deposit, $bankId, $bankAccount) = $pid
   ? [E_OUTER, $deposit ?: 0, UID_OUTER, $bankAccount] // transfer to or from a non-member (with no CG account)

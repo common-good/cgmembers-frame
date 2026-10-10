@@ -12,6 +12,8 @@ use CG\Web as w;
  * Download the member list for the current community
  */
 
+define('EXPORT_PARAMS', 'do allCttys status types chimp anonymous');
+
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
 
@@ -63,7 +65,6 @@ function formDownloadMemberList_submit($form, &$sta) {
 /**
  * Download the member list for the current community
  */
-define('EXPORT_PARAMS', 'do allCttys status types chimp anonymous');
 
 function export($params) {
   extract(just(EXPORT_PARAMS, $params, NULL));
@@ -76,62 +77,101 @@ function export($params) {
   . ($types == 0 ? t('-members') : ($types == 1 ? t('-orgs') : t('-accounts')));
   u\startDown($filename);
   $delimiter = $chimp ? "\t" : ',';
+  $other = !($anonymous or $chimp);
   
   $fields = $anonymous ?
     'uid city state zip type'
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : ($chimp ? 'id name phone email city state zip community type code'
+  : ($chimp ? 'id name phone email city state zip community type code types since monthly toCG toSponsees'
   : 'id fullName manages lastTx solar snap phone email address city state zip community type code modified created');
   u\csv($fields = ray($fields), $delimiter);
 
-  // add actual accounts
-  $where = $allCttys ? '1' : 'community=:cttyId';
-  if ($status == 0) $where .= ' AND :IS_OK';
-  if ($status == 1) $where .= ' AND NOT :IS_OK';
+  if ($chimp) { // calculate financial data all at once for efficiency
+    $sql = <<<X
+      SELECT u1.uid AS id, u1.fullName as `name`,
+      ROUND(SUM(IF(t.created>=:NOW-:YEAR_SECS, amt, 0))/12, 2) AS monthly,
+      SUM(IF(uid2=:CGID AND t.:IS_GIFT, amt, 0)) AS toCG,
+      SUM(IF(c.coFlags&(1<<:CO_SPONSORED) AND t.:IS_GIFT, amt, 0)) AS toSponsees
+      FROM users u1
+        LEFT JOIN txs t ON t.uid1=u1.uid
+        LEFT JOIN users u2 ON u2.uid=t.uid2
+        LEFT JOIN u_company c ON c.uid=u2.uid
+      WHERE u1.uid>:UID_CANON9 AND (NOT u1.activated OR u1.:IS_OK)
+      GROUP BY u1.uid ORDER BY u1.:IS_OK, -u1.signed, -u1.created;
+X;
 
-  if ($types == 0) $where .= ' AND NOT :IS_CO';
-  if ($types == 1) $where .= ' AND :IS_CO';
+/* This would give us monthly money in AND out, but it takes too long:
+      SELECT u.uid AS id, u.fullName as `name`,
+      ROUND(SUM(IF(t.created>=:NOW-:YEAR_SECS, amt, 0))/12, 2) AS monthly,
+      SUM(IF(u.uid=uid1 AND uid2=:CGID AND t.:IS_GIFT, amt, 0)) AS toCG,
+      SUM(IF(u.uid=uid1 AND c.coFlags&(1<<:CO_SPONSORED) AND t.:IS_GIFT, amt, 0)) AS toSponsees
+      FROM users u
+      LEFT JOIN txs t ON u.uid IN (uid1, uid2)
+      LEFT JOIN users u2 ON u.uid=t.uid2
+      LEFT JOIN u_company c ON c.uid=u2.uid
+      WHERE u.uid>:UID_CANON9 AND (NOT u.activated OR u.:IS_OK)
+      GROUP BY u.uid ORDER BY u.:IS_OK, -u.signed, -u.created;
+      
+*/
+    $q = db\q($sql);
+  } else {
+    // add actual accounts
+    $where = $allCttys ? '1' : 'community=:cttyId';
+    if ($status == 0) $where .= ' AND :IS_OK';
+    if ($status == 1) $where .= ' AND NOT :IS_OK';
 
-  $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:UID_CANON9 AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
+    if ($types == 0) $where .= ' AND NOT :IS_CO';
+    if ($types == 1) $where .= ' AND :IS_CO';
+
+    $sql = "SELECT uid AS id, fullName AS `name` FROM users WHERE uid>:UID_CANON9 AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
+    $q = db\q($sql, $allCttys ? [] : ray('cttyId', $cttyA->id));
+  }
   
-  $q = db\q($sql, $allCttys ? [] : ray('cttyId', $cttyA->id));
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    $a = r\acct($id);
+    $a = r\acct($id); $uid = $a->id;
     $type = $a->ok ? 'member' : ($a->activated ? 'deactivated' : 'notyet');
     if ($a->co) $type .= ' company';
     
     if ($anonymous) {
       foreach ($fields as $k) $$k = $a->$k; // do this first. some will be null.
       $zip = $a->zip;
-      foreach (ray('weekly monthly secret') as $k) $$k = $a->can(u\consta('b', $k));
-      $notices = $monthly ? t('monthly') : ($weekly ? t('weekly') : t('daily'));
+      if (in('notices', $fields)) {
+        foreach (ray('weekly monthly secret') as $k) $$k = $a->can(u\consta('b', $k));
+        $notices = $monthly ? t('monthly') : ($weekly ? t('weekly') : t('daily'));
+      }
       $state = r\realstate($state);
-      if ($routing = substr($a->bankAccount, 4, 9)) {
-        $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
-      } else $bankName = '';
+      if (in('bankName', $fields)) {
+        if ($routing = substr($a->bankAccount, 4, 9)) {
+          $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
+        } else $bankName = '';
+      }
     } else {
-      list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
-      if (strlen($firstname ?: '') < 2 and strlen($mid ?: '') > 2) $firstname = $mid;
-      $name = $firstname ?: $a->fullName; // Company name or person's first name
       $email = $a->email;
-      $phone = $a->phone;
-      list ($address, $city, $state, $zip) = $a->postalAddr
-      ? u\parseAddr($a->postalAddr)
-      : [$a->address, $a->city, $a->st, $a->zip];
-      $phone = u\fmtPhone($phone);
+      $phone = u\fmtPhone($a->phone);
+
+      [$address, $city, $state, $zip] = (in('address', $fields) and $a->postalAddr)
+        ? u\parseAddr($a->postalAddr)
+        : [$a->address, $a->city, $a->st, $a->zip];
+        
       $id = $a->mainQid;
       $code = $a->doCode(); 
-      $asof = $modified = fmtDt(now());
-      $manages = db\get('fullName', 'u_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
-      $tx = $a->lastTx;
-      $lastTx = empty($tx) ? '' : fmtDt($tx->created, TRUE);
+      $modified = fmtDt(now());
+      if (in('manages', $fields)) $manages = db\get('fullName', 'u_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:uid', compact('uid'));
+      if (in('lastTx', $fields)) $lastTx = empty($tx = $a->lastTx) ? '' : fmtDt($tx->created, TRUE);
       $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';
       $snap = $a->snap ? t('SNAP') : '';
-      $special = '';
-// (BROKEN)      $special = $a->special;
+      $special = ''; // (BROKEN)      $special = $a->special;
+      $types = preg_replace('/\W+/', '/', ' ' . u\bits($a->flags) . ' ' . ($a->co ? u\bits($a->coFlags, CO_FLAGS) : '') . ' ');
+      $since = fmtDt($a->created);
+
+/*      $sql = 'SELECT SUM(amt) AS tot FROM txs WHERE uid1=:uid';
+      $monthly = db\sum('amt', 'txs', ':uid IN (uid1, uid2) AND created>=:NOW-:YEAR_SECS', compact('uid')) / 12;
+      $toCG = db\sum('amt', 'txs', 'uid1=:uid AND uid2=:CGID AND :IS_GIFT', compact('uid'));
+      $toSponsees = db\sum('amt', 'txs t JOIN users u ON t.uid2=u.uid', 'uid1=:uid AND u.:CO_SPONSORED AND t.:IS_GIFT', compact('uid'));
+      */
     }
     $community = r\cttyName($a->community, TRUE);
     $created = fmtDt($a->created);
