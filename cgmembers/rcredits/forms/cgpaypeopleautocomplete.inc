@@ -8,7 +8,7 @@ use CG\Db as db;
  * Grantor autocomplete endpoint for the SvelteKit cgpay POC.
  *
  * Exposes:
- *   GET /cgpay-people-autocomplete?uid=<sponsee_uid>&q=<query>&limit=<n>
+ *   GET /cgpay-people-autocomplete?uid=<sponsee_uid>&search=<query>&limit=<n>
  *     → list of candidate grantors matching <query>. See grantorAutocompleteRows().
  *
  * Requires the same X-CG-Internal-Token shared secret used by other /cgpay-*
@@ -25,7 +25,7 @@ function cgpayPeopleAutocomplete() {
   if (!$a) return exitJust(X_NOTFOUND);
   if (!$a->sponsored) return exitJust(X_FORBIDDEN);
 
-  $q = trim((string) nni($_GET, 'q'));
+  $q = trim((string) nni($_GET, 'search')); // not 'q': Drupal reads $_GET['q'] as the page path
   if (strlen($q) < 2) return exitJson(['people' => []], X_OK);
 
   $limit = (int) nni($_GET, 'limit');
