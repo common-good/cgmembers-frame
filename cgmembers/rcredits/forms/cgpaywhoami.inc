@@ -15,7 +15,8 @@ use CG\Db as db;
  *   POC POST /cgpay-whoami
  *     X-CG-Internal-Token: <shared secret>
  *     body: {"ssid": "<value of the SSESS... cookie>"}
- *   200 {"uid": <int>, "name": "<bestName>", "sponsored": <bool>, "menu": [...]}
+ *   200 {"uid": <int>, "name": "<bestName>", "sponsored": <bool>,
+ *        "admin": <bool>, "menu": [...]}
  *   401 no matching session, or bad/missing shared secret
  *   400 missing ssid
  *
@@ -48,9 +49,11 @@ function cgpayWhoami() {
   $a = r\acct($uid);
   if (!$a) return exitJust(X_UNAUTH);
 
+  $isAdmin = (bool) $a->can(B_ADMIN);
+
   $menu = ['Dashboard', 'History', 'Community'];
   if ($a->co) $menu[] = 'Company';
-  if ($a->can(B_ADMIN)) $menu[] = 'Admin';
+  if ($isAdmin) $menu[] = 'Admin';
   $menu[] = 'Settings'; // always last
 
   return exitJson([
@@ -58,6 +61,7 @@ function cgpayWhoami() {
     'qid'       => $a->mainQid,
     'name'      => $a->bestName,
     'sponsored' => (bool) $a->sponsored,
+    'admin'     => $isAdmin,
     'menu'      => $menu,
   ], X_OK);
 }
