@@ -16,8 +16,8 @@ $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (S
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
-/**/  if (!in($stage, 'test dev staging demo main')) die('Invalid value for stage in configuration file.');
-define('isDEV', in($stage, 'test dev')); // (used in settings file and elsewhere)
+/**/  if (!in_array($stage, explode(' ', 'test dev staging demo main'))) die('Invalid value for stage in configuration file.');
+define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
