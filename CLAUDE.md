@@ -16,7 +16,7 @@ The live Common Good member site, admin panel, and transaction engine. Drupal-7-
 - PHP 7.4+ on Apache/nginx
 - MariaDB / MySQL 5.7+
 - Drupal 7 core (heavily customized; `hook_menu`, `db_query`, `drupal_form_submit`, etc.)
-- Gherkin-for-Drupal for Behat-style feature tests
+- Gherkin for feature tests, via the in-repo compiler in the `cgmembers/gherkin` submodule (GherkinForDrupal); it has Common Good extensions (see Testing)
 - Phinx for migrations
 - Capistrano for deploys
 - Git submodule: `GherkinForDrupal` (SSH-aliased origin per environment)
@@ -43,8 +43,8 @@ cgmembers/
       cgpaywhoami.inc          /cgpay-whoami - session -> user identity
       cgpaygrants.inc          /cgpay-grants - grant CRUD from node
     rweb/                      user-facing web pages (dashboard, history, etc.)
+    <module>/features/         Gherkin .feature files (in rweb, admin, api, rcron, rsmart, rvote, smp)
       rweb-subs.inc            shared web utilities
-      features/                Gherkin tests (.feature files)
     rsmart/                    "smart" pos client (older mobile-first flow)
     rcron/                     scheduled jobs
     rvote/                     voting features
@@ -61,15 +61,23 @@ config/
 Every `cg-*.inc` file declares a namespace. In callers, they're imported with a short alias by convention:
 
 ```php
-use CG as r;                // core "credits" logic
-use CG\Db as db;           // database helpers
-use CG\Util as u;          // utility functions
-use CG\Backend as be;      // backend / tx engine
-use CG\Web as w;           // web-form helpers
-use CG\Risk as k;          // risk analysis
+use CG as r;               // functions closely related to the Common Good payment system
+use CG\Backend as be;      // backend utilities, farther from the front than r\
+use CG\Util as u;          // generic utility functions
+use CG\Db as db;           // database helpers (the file declares CG\DB; both spellings appear)
+use CG\Web as w;           // web interface and form helpers
+use CG\Admin as a;         // administrator functions
 use CG\Txs as x;           // transactions
+use CG\Testing as t;       // behavioral test interface
+use CG\Risk as k;          // risk analysis
+use CG\Vote as v;          // democracy functions
+use CG\Cron as cr;         // cron jobs
 use CG\QR as qr;           // QR codes
 ```
+
+Also: `y\` (CG\Special) and `san\` (CG\Sanity) are rarely used; `s\` was the ancient Android app and is going away.
+
+Drupal functions are called with just a leading backslash (`\drupal_function()`) so they stand out and can be eliminated eventually. Avoid adding new Drupal dependencies.
 
 Reading `r\loginString($id)` or `db\get('uid', 'sessions', ...)` or `u\fmtAmt($n)` is idiomatic. Match this style in new code.
 
@@ -123,20 +131,37 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 
 ## Testing
 
-- **Gherkin/Behat features:** `cgmembers/rcredits/**/features/*.feature`. Run with the Gherkin-for-Drupal harness (submodule).
-- Test data: features declare `Setup` sections with member fixtures (uids like `.ZZA`, `.ZZB`, `.ZZC`, `.ZZF`).
-- Test env admin bypass: on DEV, admin (uid=1) sign-in accepts any non-empty password (`signin.inc:84`).
-- Test accounts on the test env: `Abe One` / `Bea Two` / etc. with password `k`. Full-name form works; short names may not.
+- **Feature files:** `cgmembers/rcredits/<module>/features/*.feature`. The in-repo Gherkin compiler (`cgmembers/gherkin/compile.php`; extensions documented in `cgmembers/gherkin/howto.txt`) compiles them into generated `.test` files and a `<module>.steps` file. Never edit the generated `.test` files; rerun the compiler. In a `.steps` file, edit only parameter names and the code inside function bodies. The compiler adds a stub for each new step at the end of the file and never changes existing bodies (so a new function's body is for you to write).
+- **Gherkin extensions:** matrix arguments (`*`, `**`), a `Variants:` section, a `Setup:` first scenario run before each scenario, magic `%` arguments (`%today-20d`, `%random`, ...), and `Skip`/`Resume`. Steps must make the Given true (and only test the Then); see `howto.txt`.
+- **Rules:** group scenarios under the business rule they illustrate with a comment line like `# Rule: ...` (see `rweb/features/bank.feature`). `compile.php` recognizes only `Feature`, `Variants`, `Setup`, and `Scenario`, so the real Gherkin `Rule:` keyword is not usable here yet.
+- **Test accounts:** features declare `Setup` fixtures with feature-local uids like `.ZZA`, `.ZZB`, `.ZZC`, `.ZZF`. Separately, `a\makeTestAccounts()` (admin.inc) creates the standard accounts Abe One, Bea Two, Citre, Dee Four, Eli Five, Flo Six, Gisette, Hal Ate, Ida Nine as `.ZPA` ... `.ZPI` (`NEWZPA`... in base-26 letters; the same accounts as the legacy app's `K6...` ids). cgpay's tests call them Abe, Bea, Cit, ... Prefer these names in new features here too, instead of `.ZZA`-style uids. Non-production servers only.
+- **Test passwords:** the individual standard accounts have password `k` (`Abe One` / `Bea Two` full-name form works; short names may not). Company accounts (Citre, Gisette) have no password; sign in as an agent.
+- **Dev admin bypass:** on DEV, admin (uid=1) sign-in accepts any non-empty password (`forms/signin.inc`, around line 84). Not in production.
+- **Test endpoint** (used by cgpay's Playwright tests): `testops()` in `forms/api.inc`, POST `<api base>/test` with `version` and `op`. Ops: `initialize` (reset the standard accounts and delete their stray txs), `rows` (txs among those accounts; txs table only), `update` (users table only). Refuses to run on production or stage. Spec: `api/features/test.feature`. The legacy cgpay PWA depends on the existing `api.inc` ops: never remove or change one (add a new op instead).
 
 ## Conventions
 
 - **No em-dashes** (`-`) anywhere in code, PRs, commit messages, or comments (per Chris's preference).
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
-- **Comments:** default to none. Only add for non-obvious *why*.
+- **Comments:** default to none. Only add for non-obvious *why*. Exception, function headers: see Code style.
 - **Namespaces:** always alias with the standard short form (`CG\Db as db`, etc.).
 - **`t()` vs `tr()`:** static-known strings use `t()`; runtime interpolation uses `tr()`.
-- **Whitespace and casing:** follow existing patterns in the file you're touching. William has strong preferences; when in doubt, match the surrounding style.
+- **Whitespace and casing:** see Code style below; when in doubt, match the surrounding style.
+
+## Code style
+
+The conventions here aim at minimal visual clutter. Match the surrounding file.
+
+- Keep code as short as possible without losing clarity; minimize non-blank lines. A block should be understandable with a few seconds of study, and so should a single line.
+- Make small low-level tool functions instead of repeating code patterns, even if the tool is more complex inside. Allow flexible argument number and type when that is convenient for callers: many simple calls beat a simple callee.
+- Use conventional short names: `k` key, `v` value, `i` index, `a`/`acct` account object, `tx` transaction object, `q` query, `ray` array.
+- Helpers used heavily: `ray()` (build arrays from space/comma-separated strings), `just()` (pick keys from an array), `in()` (search a list), and `compact()`/`extract()`.
+- Follow Eclipse defaults or PSR-2, except: two-space indent (no tabs); a simple `if` can go on one line; a simple `else` can follow the closing brace (`} else {zot();}`); `TRUE`, `FALSE`, `NULL` are capitalized; simple single-line functions can go on one line.
+- camelCase for variables and functions; lowercase-with-hyphens for filenames and URLs; lowercase_underscores only where Drupal requires them.
+- No inline scripts or styles (strict Content Security Policy): use `w\js()`, `w\jsx()`, `w\css()`.
+- Function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for. Existing `@param`-style headers stay as they are.
+- Temporary debugging statements (`debug(`, `die(`, `print_r(`, `lug(`, `flog(`, `echo`) must be removed before upload. Any such line that is meant to stay begins with `///` (inactive) or `/**/` (active).
 
 ## Common gotchas
 
@@ -149,7 +174,7 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 
 ## Cross-repo
 
-Companion repo: `cgpay` (SvelteKit + adapter-node - modernized member-facing UI). See its `CLAUDE.md` for the node-side conventions. Local checkout typically at `/Users/admin/Work/CommonGood/cgpay`.
+Companion repo: `cgpay` (SvelteKit + adapter-node - modernized member-facing UI). See its `CLAUDE.md` for the node-side conventions and for local setup, which varies by developer (Windows and Mac).
 
 ## People
 
