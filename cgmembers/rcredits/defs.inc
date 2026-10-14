@@ -704,7 +704,8 @@ const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const B_COVERCC = 23; // covers processing fees
 const B_COVERFS = 24; // covers fiscal sponsorship fees
-const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs';
+const B_SHORTLOAN = 25; // short-term loan
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs shortloan';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice
