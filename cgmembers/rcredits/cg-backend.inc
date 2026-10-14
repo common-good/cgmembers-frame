@@ -67,7 +67,7 @@ function getTxs($uids, $starting = NULL, $ending = NULL, $extra = []) {
 
     $txsCols1 .= ',' . join(',', array_keys($txsColRay));
     $txsCols1 = str_replace(',amt,', ",(SELECT SUM(amount) FROM tx_entries WHERE xid=xu.xid AND uid IN (:uids)) AS amt,", $txsCols1);
-    $txs1 = "SELECT $eCount AS eCount,$txsCols1 FROM txs xu WHERE $wherex AND type IN :E_PRIMES"; // first half
+    $txs1 = "SELECT $eCount AS eCount,$txsCols1 FROM txs xu WHERE $wherex HAVING type IN :E_PRIMES OR eCount=1"; // first half
 
     if ($uids[0] == CGID and !$hideFees) {
       $amt = 'SUM(amt)';
