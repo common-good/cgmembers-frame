@@ -177,28 +177,22 @@ function cgpayGrantsParseFlds($body, $required, array &$errors) {
     $out['drive_file_id'] = trim((string) nni($body, 'driveFileId')) ?: null;
   }
 
-  // Check-specific fields (per William 2026-08-04): when payment method is check,
-  // capture check number + check date up front so they land in the transaction
-  // description at release time. Required for check, ignored otherwise.
-  $isCheck = (nn($out, 'by') === 'check');
-  if ($isCheck || array_key_exists('ckNum', $body) || array_key_exists('ckDate', $body)) {
-    $ckNum = trim((string) nni($body, 'ckNum'));
-    if ($isCheck && $ckNum === '') {
-      $errors['ckNum'] = t('Please enter the check number.');
-    } elseif ($ckNum !== '') {
-      $out['ckNum'] = $ckNum;
-    }
+  // Check-specific fields: capture check number + check date so they land in
+  // the transaction description at release time. These are admin-only fields
+  // (per William 2026-10-09, cgpay #180): sponsees reporting a check grant
+  // don't have the check in hand, so the node form hides them and never sends
+  // the keys. An admin reporting on their behalf fills them in. Validated when
+  // present, never required here - requirement lives in the admin UI.
+  $ckNum = trim((string) nni($body, 'ckNum'));
+  if ($ckNum !== '') $out['ckNum'] = $ckNum;
 
-    $ckDateRaw = trim((string) nni($body, 'ckDate'));
-    if ($isCheck && $ckDateRaw === '') {
-      $errors['ckDate'] = t('Please enter the check date.');
-    } elseif ($ckDateRaw !== '') {
-      $ts = is_numeric($ckDateRaw) ? (int) $ckDateRaw : strtotime($ckDateRaw);
-      if (!$ts) {
-        $errors['ckDate'] = t('That is the wrong format for a date.');
-      } else {
-        $out['ckDate'] = $ts;
-      }
+  $ckDateRaw = trim((string) nni($body, 'ckDate'));
+  if ($ckDateRaw !== '') {
+    $ts = is_numeric($ckDateRaw) ? (int) $ckDateRaw : strtotime($ckDateRaw);
+    if (!$ts) {
+      $errors['ckDate'] = t('That is the wrong format for a date.');
+    } else {
+      $out['ckDate'] = $ts;
     }
   }
 
