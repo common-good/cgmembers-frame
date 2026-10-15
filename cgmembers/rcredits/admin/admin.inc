@@ -97,6 +97,8 @@ function setupBasicAccounts($withEIN = TRUE) {
 /**
  * Re-setup the test cards on the DEMO server (or other dev server).
  * @param bool $print: if true show corresponding objects for mocking in the app
+ * Abe is the administrator. Bea manages Citre; Abe sells for it. Flo manages Gisette, which is fiscally sponsored.
+ * Individuals: Abe, Bea, Dee, Eli, Flo, Hal, Ida (password k). Companies: Citre, Gisette.
  */
 function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
@@ -165,8 +167,9 @@ function makeTestAccounts($print = FALSE) {
       $CID = strtoupper("$cid:$id");
       $coA = a(TEST_QID_HD . $cid);
       $coA->setDftAppCans();
-      $perm = $id == 'b' ? B_SELL : B_MANAGE;
-      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
+      if ($cid == 'g') $coA->setCoBit(CO_SPONSORED); // Gisette is the fiscally sponsored test company
+      $perm = $id == 'a' ? B_SELL : B_MANAGE;
+      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'a' ? 2 : 1));
       $a->update('cardCode2', $cardCode2 = "98765$id");
       foreach (ray(S_CO) as $k) $coA->stepDone($k); // this gets done twice when there are 2 agents for a company, but no harm
       if ($print) {
@@ -178,6 +181,10 @@ function makeTestAccounts($print = FALSE) {
       }
     }
     foreach (ray(S_CARD) as $k) $a->stepDone($k);
+    if ($id == 'a') { // Abe is the test administrator, with every permission except the very secure ones
+      $a->setBit('admin');
+      $a->setAdminBits(array_diff(ray(A_LIST), ray(A_VLIST)));
+    }
   }
   
   db\del('txs', 'uid1 IN (:testUids) OR uid2 IN (:testUids)', compact('testUids'));
