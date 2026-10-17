@@ -37,11 +37,11 @@ cgmembers/
     api/                       JSON/HTTP API handlers used by clients
     classes/                   PHP classes (Acct, etc.)
     forms/                     Drupal form callbacks (formFoo, formFoo_validate, formFoo_submit)
-      cgpay*.inc               server-to-server endpoints for the SvelteKit app
-      cgpaysso.inc             /cgpay-sso - create session for verified uid
-      cgpaylookup.inc          /cgpay-lookup - identifier -> uid
-      cgpaywhoami.inc          /cgpay-whoami - session -> user identity
-      cgpaygrants.inc          /cgpay-grants - grant CRUD from node
+      cgpay/                   server-to-server endpoints for the SvelteKit app (function cgpayFoo is in cgpay/foo.inc)
+        sso.inc                /cgpay/sso - create session for verified uid
+        lookup.inc             /cgpay/lookup - identifier -> uid
+        whoami.inc             /cgpay/whoami - session -> user identity
+        grants.inc             /cgpay/grants - grant CRUD from node
     rweb/                      user-facing web pages (dashboard, history, etc.)
       rweb-subs.inc            shared web utilities
       features/                Gherkin tests (.feature files)
@@ -96,16 +96,16 @@ All POST-only, all require `X-CG-Internal-Token: <CGPAY_SSO_SECRET>` header, all
 
 | Path | Purpose | File |
 |---|---|---|
-| `/cgpay-sso` | create session for verified uid, set device cookie | `forms/cgpaysso.inc` |
-| `/cgpay-lookup` | identifier (qid, email, phone, name) -> uid | `forms/cgpaylookup.inc` |
-| `/cgpay-whoami` | session ssid -> `{uid, name, sponsored, menu}` | `forms/cgpaywhoami.inc` |
-| `/cgpay-grants` | grant CRUD from SvelteKit | `forms/cgpaygrants.inc` |
-| `/cgpay-people-autocomplete` | grantor typeahead | `forms/cgpaypeopleautocomplete.inc` |
-| `/cgpay-funders-export` | funder CSV export | `forms/cgpayfundersexport.inc` |
+| `/cgpay/sso` | create session for verified uid, set device cookie | `forms/cgpay/sso.inc` |
+| `/cgpay/lookup` | identifier (qid, email, phone, name) -> uid | `forms/cgpay/lookup.inc` |
+| `/cgpay/whoami` | session ssid -> `{uid, name, sponsored, menu}` | `forms/cgpay/whoami.inc` |
+| `/cgpay/grants` | grant CRUD from SvelteKit | `forms/cgpay/grants.inc` |
+| `/cgpay/people-autocomplete` | grantor typeahead | `forms/cgpay/peopleautocomplete.inc` |
+| `/cgpay/funders-export` | funder CSV export | `forms/cgpay/fundersexport.inc` |
 
 Shared secret: `config.json` key `cgpaySsoSecret` -> constant `CGPAY_SSO_SECRET` (see `defs.inc`).
 
-When adding a new endpoint: create `forms/cgpay<name>.inc`, register in `cg-menu.inc`, mirror the existing pattern (POST-only guard, secret verify, JSON body parse, JSON response). Menu rebuild required on deploy.
+When adding a new endpoint: create `forms/cgpay/<name>.inc` with a function named `cgpay<Name>` (menu1() in `cg-menu.inc` maps the function name to that file), register the path `cgpay/<name>` in `cg-menu.inc`, mirror the existing pattern (POST-only guard, secret verify, JSON body parse, JSON response). Menu rebuild required on deploy.
 
 ## Migrations
 
@@ -144,7 +144,7 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 - **Menu registry is cached.** After editing `cg-menu.inc`, run the menu rebuild or your new route 404s.
 - **`.gitmodules` uses SSH aliases** (`github-cg:`, `github-pay:`) for `GherkinForDrupal`. If deploy fails on submodule fetch, check that the deploy user has the SSH stanza configured.
 - **Session cookies (`SSESS...`) are set with `Domain=.commongood.earth`** so both PHP and cgpay see them. Never scope narrower without coordinated changes on the cgpay side.
-- **`$mya`** is the global "current account" - populated by session bootstrap. In server-to-server endpoints (like `/cgpay-*`), it may be unset; use `r\acct($uid)` explicitly.
+- **`$mya`** is the global "current account" - populated by session bootstrap. In server-to-server endpoints (like `/cgpay/*`), it may be unset; use `r\acct($uid)` explicitly.
 - **Dev-only admin password bypass** at `signin.inc:84` accepts any non-empty password when uid=1 on DEV. Not present in production.
 
 ## Cross-repo
