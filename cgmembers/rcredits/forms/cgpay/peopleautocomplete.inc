@@ -13,7 +13,7 @@ use CG\Db as db;
  *
  * Requires the same X-CG-Internal-Token shared secret used by other /cgpay/*
  * endpoints (CGPAY_SSO_SECRET, see defs.inc). Also holds cgpaySharedSecretOk(),
- * which forms/cgpay/cgpayfundersexport.inc loads from here.
+ * which forms/cgpay/fundersexport.inc loads from here.
  */
 function cgpayPeopleAutocomplete() {
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'GET') return exitJust(X_SYNTAX);

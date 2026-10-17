@@ -3,7 +3,7 @@ namespace CG\Web;
 use CG as r;
 use CG\Db as db;
 
-require_once R_ROOT . '/forms/cgpay/cgpaypeopleautocomplete.inc'; // for cgpaySharedSecretOk()
+require_once R_ROOT . '/forms/cgpay/peopleautocomplete.inc'; // for cgpaySharedSecretOk()
 
 /**
  * @file

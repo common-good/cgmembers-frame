@@ -305,7 +305,7 @@ function menu1($path, $title, $type, $function, $args, $perms = '') {
 
   $formName = ($args and !is_numeric($args[0])) ? $args[0] : $function;
   $file = strtolower("forms/$formName.inc");
-  if (!file_exists(R_ROOT . "/$file")) $file = strtolower("forms/cgpay/$formName.inc"); // server-to-server endpoints for the node app
+  if (!file_exists(R_ROOT . "/$file") and u\starts(strtolower($formName), 'cgpay')) $file = strtolower('forms/cgpay/' . substr($formName, 5) . '.inc'); // server-to-server endpoints for the node app: cgpaySso is in forms/cgpay/sso.inc
   if (!file_exists(R_ROOT . "/$file")) $file = $smart ? 'rsmart/rsmart.inc' : ($admin ? 'admin/admin-forms.inc' : 'rweb/rweb.inc');
   
   $item = array(
