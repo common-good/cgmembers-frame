@@ -12,7 +12,7 @@ use CG\Db as db;
  * the PHP side (or signs out), the very next node navigation sees the change.
  *
  * Flow:
- *   POC POST /cgpay-whoami
+ *   POC POST /cgpay/whoami
  *     X-CG-Internal-Token: <shared secret>
  *     body: {"ssid": "<value of the SSESS... cookie>"}
  *   200 {"uid": <int>, "name": "<bestName>", "sponsored": <bool>,
@@ -21,7 +21,7 @@ use CG\Db as db;
  *   400 missing ssid
  *
  * Shared secret is CGPAY_SSO_SECRET (config.json `cgpaySsoSecret`); same key as
- * /cgpay-sso and /cgpay-lookup. Fails closed when either side has an empty value.
+ * /cgpay/sso and /cgpay/lookup. Fails closed when either side has an empty value.
  */
 function cgpayWhoami() {
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') return exitJust(X_SYNTAX);

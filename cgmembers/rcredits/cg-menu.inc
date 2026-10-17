@@ -248,12 +248,12 @@ function menu($submenu = '') {
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from our JS scripts
     'api' => ['call', 'API', '1', ANY, 'api'],
-    'cgpay-sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
-    'cgpay-lookup' => ['call', 'CGPay Lookup', '', ANY, 'cgpayLookup'], // server-to-server: SvelteKit cgpay POC identifier (qid/name/email/phone) -> uid resolution
-    'cgpay-whoami' => ['call', 'CGPay Whoami', '', ANY, 'cgpayWhoami'], // server-to-server: SvelteKit cgpay POC session -> current uid/name/menu (called on every SSR so PHP is authoritative)
-    'cgpay-grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
-    'cgpay-people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
-    'cgpay-funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
+    'cgpay/sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
+    'cgpay/lookup' => ['call', 'CGPay Lookup', '', ANY, 'cgpayLookup'], // server-to-server: SvelteKit cgpay POC identifier (qid/name/email/phone) -> uid resolution
+    'cgpay/whoami' => ['call', 'CGPay Whoami', '', ANY, 'cgpayWhoami'], // server-to-server: SvelteKit cgpay POC session -> current uid/name/menu (called on every SSR so PHP is authoritative)
+    'cgpay/grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
+    'cgpay/people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
+    'cgpay/funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
@@ -305,6 +305,7 @@ function menu1($path, $title, $type, $function, $args, $perms = '') {
 
   $formName = ($args and !is_numeric($args[0])) ? $args[0] : $function;
   $file = strtolower("forms/$formName.inc");
+  if (!file_exists(R_ROOT . "/$file")) $file = strtolower("forms/cgpay/$formName.inc"); // server-to-server endpoints for the node app
   if (!file_exists(R_ROOT . "/$file")) $file = $smart ? 'rsmart/rsmart.inc' : ($admin ? 'admin/admin-forms.inc' : 'rweb/rweb.inc');
   
   $item = array(
