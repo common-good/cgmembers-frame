@@ -551,8 +551,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST showqr ACardMemberDisplaysTheirQR
- *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
- *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
@@ -1304,6 +1302,9 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
+ *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
+ *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
+ *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
