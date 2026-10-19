@@ -963,7 +963,7 @@ function anonymize($encrypting = FALSE) {
     $pin = randDigits(4);
     $snap = $a->snap ? randDigits() : '';
     if ($signupCo = $a->signupCo) { $signupCo['company'] = wordName() . ' Co'; $signupCo['companyPhone'] = '+1' . mt_rand(2, 9) . randDigits(9); }
-    if (!$a->co) $pass = '123'; // make it easy to sign into any account
+    if (!$a->co) $pass = 'k'; // make it easy to sign into any account
  
     foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer idProof') as $k) $$k = u\randomString(12, 'word');
     foreach (ray($empties = 'notes photo appData ssnData partnerInfo') as $k) $$k = '';
@@ -1013,7 +1013,7 @@ function anonymize($encrypting = FALSE) {
   if ($encrypting) { 
     $vKeyPw = t\setDevVKey(); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
     db\q('DELETE FROM admins'); // should be db\q('DELETE FROM admins WHERE uid<>:UID_SUPER'); (make the previous line work)
-    a(1)->update('pass', '123');
+    a(1)->update('pass', 'k');
     $pass = db\get('pass', 'users', 'uid=1');
     db\q('UPDATE users SET pass=IF(:IS_CO, NULL, :pass) WHERE uid>:UID_CANON9', compact('pass'));
     w\say(t('<h2>Done anonymizing!</h2>
