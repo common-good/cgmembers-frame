@@ -13,12 +13,12 @@ use CG\Util as u;
  * storage (`grants` table + grantor contact in `people` table) and validation.
  *
  * Flow:
- *   GET   /cgpay-grants?uid=<uid>   → list that user's expected grants
- *   POST  /cgpay-grants             → create a new expected grant
- *   PATCH /cgpay-grants             → update an existing expected grant
+ *   GET   /cgpay/grants?uid=<uid>   → list that user's expected grants
+ *   POST  /cgpay/grants             → create a new expected grant
+ *   PATCH /cgpay/grants             → update an existing expected grant
  *
- * All require the same X-CG-Internal-Token shared secret used by /cgpay-sso
- * and /cgpay-lookup (CGPAY_SSO_SECRET, see defs.inc).
+ * All require the same X-CG-Internal-Token shared secret used by /cgpay/sso
+ * and /cgpay/lookup (CGPAY_SSO_SECRET, see defs.inc).
  *
  * Validation errors (per William + Jose 2026-07-31):
  *   Instead of returning the FIRST error only, ALL field-level errors are

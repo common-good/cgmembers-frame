@@ -8,12 +8,12 @@ use CG\Db as db;
  * Grantor autocomplete endpoint for the SvelteKit cgpay POC.
  *
  * Exposes:
- *   GET /cgpay-people-autocomplete?uid=<sponsee_uid>&search=<query>&limit=<n>
+ *   GET /cgpay/people-autocomplete?uid=<sponsee_uid>&search=<query>&limit=<n>
  *     → list of candidate grantors matching <query>. See grantorAutocompleteRows().
  *
- * Requires the same X-CG-Internal-Token shared secret used by other /cgpay-*
+ * Requires the same X-CG-Internal-Token shared secret used by other /cgpay/*
  * endpoints (CGPAY_SSO_SECRET, see defs.inc). Also holds cgpaySharedSecretOk(),
- * which forms/cgpayfundersexport.inc loads from here.
+ * which forms/cgpay/fundersexport.inc loads from here.
  */
 function cgpayPeopleAutocomplete() {
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'GET') return exitJust(X_SYNTAX);
@@ -36,7 +36,7 @@ function cgpayPeopleAutocomplete() {
 }
 
 /**
- * Verify the shared-secret header used by all /cgpay-* server-to-server endpoints.
+ * Verify the shared-secret header used by all /cgpay/* server-to-server endpoints.
  */
 function cgpaySharedSecretOk() {
   $expected = CGPAY_SSO_SECRET;
@@ -47,7 +47,7 @@ function cgpaySharedSecretOk() {
 /**
  * Autocomplete-shaped rows: matching people who have ever been a grantor,
  * with prior donors to $sponseeUid promoted to the top.
- * Shared by /cgpay-people-autocomplete (server-to-server) and the admin ajax
+ * Shared by /cgpay/people-autocomplete (server-to-server) and the admin ajax
  * `suggestGrantor` op in forms/ajax.inc.
  *
  * @param int    $sponseeUid  Used only for ORDER BY (prior-donor-to-this-sponsee ranks first).

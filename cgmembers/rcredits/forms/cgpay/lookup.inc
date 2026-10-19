@@ -14,7 +14,7 @@ use CG\Util as u;
  * (including the encrypted-email path), and this endpoint extends it with phone.
  *
  * Flow:
- *   POC POST /cgpay-lookup with X-CG-Internal-Token: <shared secret>
+ *   POC POST /cgpay/lookup with X-CG-Internal-Token: <shared secret>
  *     body: {"identifier": "<whatever the user typed>"}
  *   This endpoint returns:
  *     200 {"uid": <int>}  on match
@@ -24,7 +24,7 @@ use CG\Util as u;
  *
  * The POC then SELECTs `users.pass` by uid and verifies the password itself.
  *
- * Shared secret is the same one used by /cgpay-sso (CGPAY_SSO_SECRET, see
+ * Shared secret is the same one used by /cgpay/sso (CGPAY_SSO_SECRET, see
  * defs.inc). One secret for both endpoints — no point splitting it.
  */
 function cgpayLookup() {
