@@ -15,7 +15,7 @@ use CG\Util as u;
  *
  *   1. Browser → POST /api/login on cgpay POC
  *   2. cgpay POC verifies password (existing)
- *   3. cgpay POC calls POST /cgpay-sso on this server (server-to-server)
+ *   3. cgpay POC calls POST /cgpay/sso on this server (server-to-server)
  *      with X-CG-Internal-Token: <shared secret> and JSON body {"uid": <int>}
  *   4. This endpoint:
  *        - verifies the shared secret

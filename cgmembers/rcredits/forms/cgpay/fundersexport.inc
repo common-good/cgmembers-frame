@@ -3,18 +3,18 @@ namespace CG\Web;
 use CG as r;
 use CG\Db as db;
 
-require_once R_ROOT . '/forms/cgpaypeopleautocomplete.inc'; // for cgpaySharedSecretOk()
+require_once R_ROOT . '/forms/cgpay/peopleautocomplete.inc'; // for cgpaySharedSecretOk()
 
 /**
  * @file
  * Funder export endpoint for the SvelteKit cgpay POC.
  *
  * Exposes:
- *   GET /cgpay-funders-export?format=<csv|mailerlite>
+ *   GET /cgpay/funders-export?format=<csv|mailerlite>
  *     → downloadable CSV of all funders (everyone who has ever been a grantor).
  *       `mailerlite` format uses the column headers MailerLite expects for imports.
  *
- * Requires the same X-CG-Internal-Token shared secret used by other /cgpay-*
+ * Requires the same X-CG-Internal-Token shared secret used by other /cgpay/*
  * endpoints (CGPAY_SSO_SECRET, see defs.inc).
  */
 function cgpayFundersExport() {
