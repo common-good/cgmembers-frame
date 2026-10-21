@@ -452,10 +452,11 @@ function testops($params) {
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      if (!in($table, 'txs')) return exitJust(X_SYNTAX);
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id"];
+      if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
-        $rows = db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid");
-        $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
+        $rows = db\rows('*', $table, $where);
+        if ($table == 'txs') $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
         return exitJson($rows, X_OK);
       } catch (\Exception $er) {
         return exitJust(X_SYNTAX);
