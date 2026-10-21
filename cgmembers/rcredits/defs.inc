@@ -16,8 +16,8 @@ $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (S
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
-/**/  if (!in($stage, 'test dev staging demo main')) die('Invalid value for stage in configuration file.');
-define('isDEV', in($stage, 'test dev')); // (used in settings file and elsewhere)
+/**/  if (!in_array($stage, explode(' ', 'test dev staging demo main'))) die('Invalid value for stage in configuration file.');
+define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
@@ -704,7 +704,8 @@ const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const B_COVERCC = 23; // covers processing fees
 const B_COVERFS = 24; // covers fiscal sponsorship fees
-const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs';
+const B_SHORTLOAN = 25; // short-term loan
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs shortloan';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice

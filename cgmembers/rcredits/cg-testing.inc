@@ -402,7 +402,7 @@ function doAccounts($info = []) {
   $name = u\shortName($fullName);
   u\setDft($legalName, $fullName);
   //  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
-  if (trim(nn($pass)) === '') $pass = '123';
+  if (trim(nn($pass)) === '') $pass = 'k';
 
   $zza = r\qo('.ZZA')->id;
   $zpa = r\qo('.ZPA')->id;
