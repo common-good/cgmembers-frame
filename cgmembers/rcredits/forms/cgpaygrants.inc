@@ -273,7 +273,7 @@ function cgpayGrantsResolveGrantorPid($body, $sponseeUid, $fallbackPid = null) {
 
   if (!$grantorPid || strcasecmp(trim((string) $existing->fullName), $fullName) !== 0) {
     // No prior grantor, or the name changed — treat as a new entity.
-    return db\insert('people', ['fullName' => $fullName] + $contact, 'pid');
+    return (int) db\insert('people', ['fullName' => $fullName] + $contact, 'pid'); // int, not the string insert returns, or the caller takes it for an error message
   }
 
   // Same grantor — apply smart field-update rules.
