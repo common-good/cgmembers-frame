@@ -40,7 +40,7 @@ function api($arg = null) {
   $channel = TX_APP;
   unset($params['q']); // Drupal adds this
   u\loga('in:' . $arg, $params);
-  setHeaders();
+  setHeaders($arg);
   if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
   if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_SYNTAX);
   $requireActive = in($arg, REQUIRE_ACTIVE);
@@ -74,8 +74,6 @@ function api($arg = null) {
  *         name is the name (fullName) on the account
  */
 function accounts($params) {
-  global $nextCode; // tests usurp generated device code, using this instead
-
   foreach (ray('identifier password version') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
 
   if ($identifier == 'getCardCodes' and $code = substr($password, 0, DEVICE_MAXLEN)) { // repairing older data
@@ -96,23 +94,54 @@ function accounts($params) {
   if (!$list = be\accountChoices(r\acct($myid), B_BUY, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
-    $a = r\acct($uid, $myid);
-    $isCo = $a->co;
-    if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
-    $accountId = qr\url($a, 'main'); // r\acct($uid)
-    $cardCode = $a->cardCode();
-    $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
-///    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
-    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
-//    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
-    $qr = myQr($a);
-    $selling = $isCo ? explode("\n", $a->selling) : NULL;
-    $accounts[] = compact(ray('accountId cardCode deviceId qr isCo name selling'));
+    if ($one = accountInfo(r\acct($uid, $myid), $name, $version)) $accounts[] = $one;
   }
 
   if (!nn($accounts)) return exitJust(X_NOTFOUND);
   
   return exitJson(compact(ray('accounts')), X_OK);
+}
+
+/**
+ * Build the description of one account for a device (shared by /accounts and /handoff).
+ * @param acct $a: the account (with the signed-in agent already set)
+ * @param string $name: the name to show for the account
+ * @param int $version: the app version
+ * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling], or NULL if the account can't use the app yet
+ */
+function accountInfo($a, $name, $version) {
+  global $nextCode; // tests usurp generated device code, using this instead
+
+  $isCo = $a->co;
+  if ($a->stepsLeft($isCo ? 'coapp' : 'app')) return NULL; // no using app without card permission
+  $accountId = qr\url($a, 'main');
+  $cardCode = $a->cardCode();
+  $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
+  $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
+  $qr = myQr($a);
+  $selling = $isCo ? explode("\n", $a->selling) : NULL;
+  return compact(ray('accountId cardCode deviceId qr isCo name selling'));
+}
+
+/**
+ * POST /handoff
+ * Return the signed-in node (SSO session) account in the same form as /accounts, so the legacy app can link to it.
+ * The session cookie identifies the account (no password, no device credentials).
+ *
+ * @return a JSON hash:
+ *   accounts: an array with one account (see /accounts)
+ *   dashboardUrl: where to return the member after the transaction (config cgpayUrl)
+ */
+function handoff($params) {
+  $ssid = nni($_COOKIE, session_name());
+  if (!$ssid or !$row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid])) return exitJust(X_UNAUTH);
+  $agent = (int) nni((array) $row, 'uid');
+  $uid = (int) nni((array) $row, 'acct') ?: $agent; // sessions.acct is the account being acted on (see cgpaywhoami.inc)
+  if (!$uid or !$a = r\acct($uid, $agent ?: $uid)) return exitJust(X_UNAUTH);
+  if (!$a->ok) return exitJust(X_FORBIDDEN);
+
+  if (!$info = accountInfo($a, $a->fullName, nni($params, 'version'))) return exitJust(X_NOTFOUND);
+  return exitJson(['accounts' => [$info], 'dashboardUrl' => CGPAY_URL], X_OK);
 }
 
 function myQr($a) {
@@ -550,7 +579,7 @@ function authOk($arg, $params, $requireActive, $noBox = FALSE) {
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     if (!$noBox) $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
-  } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
+  } elseif (!in($arg, 'accounts handoff lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;
 }
@@ -565,8 +594,21 @@ function fixVersion(&$params) {
   if (count($vv) == 3) $params['version'] = $vv[0] * 10000 + $vv[1] * 100 + $vv[2] * 1;
 }
 
-function setHeaders() {
-  header('Access-Control-Allow-Origin: *');
+/**
+ * The origins of the legacy app that may call /handoff with the session cookie.
+ */
+function handoffOrigins() {
+  $origins = ['https://cgpay.commongood.earth', 'https://cgpay-staging.commongood.earth'];
+  if (isDEV) $origins[] = 'http://localhost:3000';
+  return $origins;
+}
+
+function setHeaders($arg = '') {
+  $origin = nni($_SERVER, 'HTTP_ORIGIN');
+  if ($arg == 'handoff' and $origin and in_array($origin, handoffOrigins())) { // credentials need an exact origin, not *
+    header("Access-Control-Allow-Origin: $origin");
+    header('Vary: Origin');
+  } else header('Access-Control-Allow-Origin: *');
   header('Access-Control-Allow-Methods: *'); // GET,HEAD,OPTIONS,POST,PUT
   header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers');
   header('Access-Control-Expose-Headers: *');
