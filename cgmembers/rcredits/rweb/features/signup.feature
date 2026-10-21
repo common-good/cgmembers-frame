@@ -268,7 +268,7 @@ Scenario: A member confirms social security number
 #  When member ".ZZB" visits page "dashboard"
   When member "?" confirms form "signin" with values:
   | qid  | pass |*
-  | .ZZB | 123  |
+  | .ZZB | k    |
   Then we show "Confirm Your SSN"
   
   When member ".ZZB" completes form "settings/ssn" with values:
