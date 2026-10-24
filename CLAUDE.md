@@ -121,6 +121,10 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 
 **Every database structure change is a Phinx migration** - no manual SQL. Each migration file documents its own change. A fresh install (`recreate.sh`) loads `db/startup.sql` and then runs all migrations, so anything not in a migration is missing on new installs. From time to time we archive all Phinx migrations (into `db/migrations/archived/`) and create a new `db/startup.sql` that includes everything up to that point. `cgmembers/rcredits/misc/pre-git-changes.log` is an old change log (mostly from before git), not a place to record schema changes.
 
+**Deleted-records archives:** a table with a corresponding deleted-records table (`x_<name>`, for example `u_relations` and `x_relations`) must get every structure change in both tables, in the same migration. Loop over both names; see `db/migrations/archived/20230811023357_thermometer.php` (`foreach (ray('u_company x_company') as $tnm)`).
+
+**Names:** table names use underscores, but field names and other identifiers are camelCase (`txNotifyEmail`, not `tx_notify_email`).
+
 ## Branch / deploy flow
 
 - Default base branch: `develop`
