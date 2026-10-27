@@ -8,15 +8,14 @@ Setup:
 Scenario: The app asks to initialize the test data
   When test op "initialize" with: ""
   Then members:
-  | uid  | fullName | flags                                   | city |*
-  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt    | Aton |
-  | .ZPB | Bea Two  | member,confirmed,ok,carded,ided,debt    | Bton |
-  | .ZPC | Citre    | member,confirmed,ok,carded,ided,debt,co | Cton |
-  | .ZPD | Dee Four | member,confirmed,ok,carded,ided,debt    | Dton |
+  | uid  | fullName | flags                                      | city |*
+  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt,admin | Aton |
+  | .ZPB | Bea Two  | member,confirmed,ok,carded,ided,debt       | Bton |
+  | .ZPC | Citre    | member,confirmed,ok,carded,ided,debt,co    | Cton |
+  | .ZPD | Dee Four | member,confirmed,ok,carded,ided,debt       | Dton |
   And these "u_relations":
   | main | agent | num | permission |*
-  | .ZPC | .ZPA  |   1 | manage     |
-  | .ZPC | .ZPB  |   2 | sell       |
+  | .ZPC | .ZPB  |   1 | manage     |
   | .ZPG | .ZPF  |   1 | manage     |
   And member ".ZPA" has "card" steps done: "all"
   And count "txs" is 0
@@ -25,11 +24,11 @@ Scenario: The app asks to initialize the test data
 Scenario: The app asks to initialize the test data when there are previous transactions
 # without touching other data on the server
   Given members:
-  | uid  | fullName | flags                                   | city |*
-  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt    | Aton |
-  | .ZPI | Ida Nine | member,confirmed,ok,carded,ided,debt    | Iton |
-  | .ZZA | Zeta1    | member,confirmed,ok,carded,ided,debt,co | Zton |
-  | .ZZZ | Zeta2    | member,confirmed,ok,carded,ided,debt    | Zton |
+  | uid  | fullName | flags                                      | city |*
+  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt,admin | Aton |
+  | .ZPI | Ida Nine | member,confirmed,ok,carded,ided,debt       | Iton |
+  | .ZZA | Zeta1    | member,confirmed,ok,carded,ided,debt,co    | Zton |
+  | .ZZZ | Zeta2    | member,confirmed,ok,carded,ided,debt       | Zton |
   And these "txs":
   | uid1 | uid2 | amount | created |*
   | .ZPA | .ZPI | 12     | %now-1d |
@@ -45,11 +44,11 @@ Scenario: The app asks to initialize the test data when there are previous trans
 
 Scenario: The app asks us for transaction data
   Given members:
-  | uid  | fullName | flags                                   | city |*
-  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt    | Aton |
-  | .ZPI | Ida Nine | member,confirmed,ok,carded,ided,debt    | Iton |
-  | .ZZA | Zeta1    | member,confirmed,ok,carded,ided,debt,co | Zton |
-  | .ZZZ | Zeta2    | member,confirmed,ok,carded,ided,debt    | Zton |
+  | uid  | fullName | flags                                      | city |*
+  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt,admin | Aton |
+  | .ZPI | Ida Nine | member,confirmed,ok,carded,ided,debt       | Iton |
+  | .ZZA | Zeta1    | member,confirmed,ok,carded,ided,debt,co    | Zton |
+  | .ZZZ | Zeta2    | member,confirmed,ok,carded,ided,debt       | Zton |
   And these "txs":
   | xid | uid1 | uid2 | amount | created |*
   | 1   | .ZPA | .ZPI | 12     | %now-1d |
