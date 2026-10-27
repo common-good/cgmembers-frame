@@ -536,8 +536,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST changeaccount AMemberChangesAccount
- *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
+ * in: TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
@@ -604,10 +603,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
- *     TEST dashboard AMemberClicksTheDashboardTab
- *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
- *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
- *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST donate AMemberDonates
  *     TEST donate AMemberMakesANewRecurringDonation
@@ -744,7 +739,6 @@ function with($content) {return weShow($content);}
  * in: TEST ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
- *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -1299,6 +1293,11 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST changeaccount AMemberChangesAccount
+ *     TEST dashboard AMemberClicksTheDashboardTab
+ *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
+ *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard

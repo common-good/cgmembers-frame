@@ -312,7 +312,9 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
     
   } elseif ($isTxs2 = u\starts($tnm, 'txs2') or in($tnm, TRACK_DELETED)) {
     $xtnm = in($tnm, 'users') ? "x_$tnm" : ($isTxs2 ? 'x_txs2' : preg_replace('/^._/', 'x_', $tnm));
-    $q = db\q("INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where", $subs);
+    $sql = "INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where";
+    $q = db\q($sql, $subs);
+    u\EXPECT($q, 'bad delete query (probably field count mismatch): ' . showQ($sql, $subs)); // pr(compact(ray('xtnm tnm where subs'))));
     if ($q->rowCount() > 0 and $isTxs2) { // need to delete related txs records as well as txs2 records
       if ($xids = db\col('xid', $tnm, $where, $subs)) $ok = db\del('txs', 'xid IN (:xids)', compact('xids'));
     }
