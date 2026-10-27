@@ -36,16 +36,27 @@ function cgpaySignup() {
   $body = json_decode(file_get_contents('php://input'), TRUE);
   if (!is_array($body)) return exitJust(X_SYNTAX);
 
-  $fullName = trim((string) nni($body, 'fullName'));
-  $email    = trim((string) nni($body, 'email'));
-  $phone    = trim((string) nni($body, 'phone'));
-  $zip      = trim((string) nni($body, 'zip'));
-  $country  = (int) (nni($body, 'country') ?: US_COUNTRY_ID);
-  $accepted = (bool) nni($body, 'agreementAccepted');
+  $fullName     = trim((string) nni($body, 'fullName'));
+  $email        = trim((string) nni($body, 'email'));
+  $phone        = trim((string) nni($body, 'phone'));
+  $zip          = trim((string) nni($body, 'zip'));
+  $country      = (int) (nni($body, 'country') ?: US_COUNTRY_ID);
+  $accepted     = (bool) nni($body, 'agreementAccepted');
+  $captchaToken = trim((string) nni($body, 'captchaToken'));
 
   // optional carry-through fields - preserve acquisition + inviter attribution
   $invitationCode = trim((string) nni($body, 'invitationCode'));
   $source         = trim((string) nni($body, 'source'));
+
+  // Verify the captcha before touching the database. Fails closed when TURNSTILE_SECRET
+  // is set but the token is missing or rejected; falls open when the secret is unset
+  // (local dev without a Cloudflare account still runs through this endpoint).
+  if (TURNSTILE_SECRET !== '') {
+    if ($captchaToken === '') return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);
+    if (!verifyTurnstile($captchaToken, nni($_SERVER, 'REMOTE_ADDR'))) {
+      return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);
+    }
+  }
 
   $errors = [];
 
@@ -114,4 +125,32 @@ function cgpaySignup() {
     'qid'    => $a->mainQid,
     'status' => 'verify_email',
   ], X_OK);
+}
+
+/**
+ * Verify a Cloudflare Turnstile token against siteverify. Returns TRUE on success,
+ * FALSE on any failure (network, parse, or Turnstile rejecting the token).
+ *
+ * See https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
+ */
+function verifyTurnstile($token, $remoteIp) {
+  $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+  $post = http_build_query(array_filter([
+    'secret'   => TURNSTILE_SECRET,
+    'response' => $token,
+    'remoteip' => $remoteIp ?: NULL,
+  ]));
+
+  $ctx = stream_context_create(['http' => [
+    'method'  => 'POST',
+    'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
+    'content' => $post,
+    'timeout' => 5,
+    'ignore_errors' => TRUE,
+  ]]);
+  $raw = @file_get_contents($url, FALSE, $ctx);
+  if ($raw === FALSE) return FALSE;
+
+  $data = json_decode($raw, TRUE);
+  return is_array($data) && !empty($data['success']);
 }
