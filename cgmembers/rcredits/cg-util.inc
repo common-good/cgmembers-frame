@@ -1617,8 +1617,8 @@ function unSerialFix($s) {
 function vetObjectInfo($info, $fields, $reqFields, $objectName) {
   list ($reqKeys, $allowedKeys, $infoKeys) = [ray($reqFields), ray($fields), array_keys($info)];
   list ($missing, $extra) = [array_diff($reqKeys, $infoKeys), array_diff($infoKeys, $allowedKeys)];
-  u\EXPECT($missing == [], "missing fields in $objectName:" . pr($missing) . "\npassed: " . pr($infoKeys));
-  u\EXPECT($extra == [], "extra fields in $objectName:" . pr($extra));
+  if ($missing != []) u\FAIL("missing fields in $objectName:" . pr($missing) . "\npassed: " . pr($infoKeys));
+  if ($extra != []) u\FAIL("extra fields in $objectName:" . pr($extra));
 }
 
 /**
