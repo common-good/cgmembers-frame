@@ -608,7 +608,7 @@ function setV($name, $value) {
     db\del('variable', 'name', $name);
   } else {
     $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
-    u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+    if (!$res) u\FAIL('cannot setV: ' . pr(compact(ray('name value'))));
   }
 
   cache_clear_all('variables', 'cache_bootstrap');
@@ -1408,7 +1408,7 @@ function fullQid($q) {
 /**/ function lug($s) {u\loga('debug', $s);}
 function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function args() {return debug_backtrace()[1];}
-function showq($sql, $subs = []) {return strtr(u\qSubs($sql), u\prefixKeys(':', $subs));}
+function showq($sql, $subs = []) {return strtr(u\qSubs($sql), u\prefixKeys(':', array_map(function ($v) {return is_array($v) ? join(',', $v) : $v;}, $subs)));}
 /**/ function dnp($s) {print_r($s); debug($s); return $s;}
 
 function who($s = '', $agent = '') {

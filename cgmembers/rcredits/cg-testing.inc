@@ -325,7 +325,7 @@ function doRecords($list, $thing) {
   global $testOnly;
 
   if (is_object($list)) $list = (array) $list;
-  u\EXPECT(is_array(nn($list)) and !is_numeric(key(nn($list[0]))), 'doThing object should be an assoc: ' . pr($list));
+  if (!(is_array(nn($list)) and !is_numeric(key(nn($list[0]))))) u\FAIL('doThing object should be an assoc: ' . pr($list));
   $func0 = 'CG\\Testing\\do';
   $func = $func0 . ucfirst(substr($thing, (strpos($thing, '_') ?: -1) + 1));
   if (!function_exists($func) or u\starts($thing, 'x_')) $func = $func0 . 'Thing';
@@ -589,12 +589,12 @@ function doRequests($info) {
   if ($testOnly) return verifyRecord('tx_requests', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
-  u\EXPECT($missing == [], "missing fields " . pr($missing));
+  if ($missing != []) u\FAIL("missing fields " . pr($missing));
 
   $invInfo = just('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, now()]);
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId reversesXid', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
-  u\EXPECT(!empty($nvid), 'failed updateOrInsert into tx_requests: ' . pr($invInfo));
+  if (empty($nvid)) u\FAIL('failed updateOrInsert into tx_requests: ' . pr($invInfo));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
     // No -- don't do this, because there is insufficient information
@@ -1943,7 +1943,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 
   if (!$content) return FALSE; // probably an accidental single-row array with no labels
-  u\EXPECT(is_numeric(key($content[0])), 'shown with should be array, not assoc: ' . pr($content));
+  if (!is_numeric(key($content[0]))) u\FAIL('shown with should be array, not assoc: ' . pr($content));
   $ray = call_user_func_array('array_merge', $content);
 
   $xi = $i = 0;
