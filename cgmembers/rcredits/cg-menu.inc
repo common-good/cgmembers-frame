@@ -254,6 +254,8 @@ function menu($submenu = '') {
     'cgpay/grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
     'cgpay/people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
     'cgpay/funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
+    'cgpay/reset-request' => ['call', 'CGPay Reset Request', '', ANY, 'cgpayResetRequest'], // server-to-server: SvelteKit cgpay forgot-password flow -- look up identifier, send one-time code by email or SMS (identifier-enumeration-safe)
+    'cgpay/reset-verify' => ['call', 'CGPay Reset Verify', '', ANY, 'cgpayResetVerify'], // server-to-server: SvelteKit cgpay forgot-password flow -- verify code + set new password + create session
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
