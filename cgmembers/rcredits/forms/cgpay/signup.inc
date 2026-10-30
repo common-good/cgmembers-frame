@@ -48,10 +48,18 @@ function cgpaySignup() {
   $invitationCode = trim((string) nni($body, 'invitationCode'));
   $source         = trim((string) nni($body, 'source'));
 
-  // Verify the captcha before touching the database. Fails closed when TURNSTILE_SECRET
-  // is set but the token is missing or rejected; falls open when the secret is unset
-  // (local dev without a Cloudflare account still runs through this endpoint).
-  if (TURNSTILE_SECRET !== '') {
+  // Verify the captcha before touching the database. Fails closed on anything
+  // but a Cloudflare-approved token: a missing/rejected token, OR a missing
+  // TURNSTILE_SECRET in a non-dev environment (prod/staging without the secret
+  // set would otherwise silently have no captcha at all). Dev envs still fall
+  // open when the secret is empty so local setup without a Cloudflare account
+  // can run the full signup path.
+  if (TURNSTILE_SECRET === '') {
+    if (!isDEV) {
+      \watchdog('cgpay-signup', 'TURNSTILE_SECRET is not set in a non-dev environment; refusing signup to avoid an unguarded endpoint.', [], WATCHDOG_CRITICAL);
+      return exitJson(['errors' => ['captcha' => t('Captcha check is misconfigured on the server. Please contact support.')]], X_FORBIDDEN);
+    }
+  } else {
     if ($captchaToken === '') return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);
     if (!verifyTurnstile($captchaToken, nni($_SERVER, 'REMOTE_ADDR'))) {
       return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);

@@ -43,6 +43,15 @@ function cgpaySignupVerify() {
   $a = r\acct($uid);
   if (!$a) return exitJust(X_NOTFOUND);
 
+  // Refuse if this account has already completed the signup/agreement step.
+  // Without this check, a stale oneTimePass (for example, a password-reset code
+  // issued to an already-active member) would be enough to overwrite `signed`,
+  // the password, and the session on an existing account. The password-reset
+  // flow lives at /cgpay/reset-verify instead.
+  if ((int) $a->signed > 0) {
+    return exitJson(['errors' => ['code' => t('That code is wrong or has expired.')]], X_SYNTAX);
+  }
+
   // Verify the code against the account's one-time pass.
   if (!$a->passwordOkay($code, '', $err)) {
     return exitJson(['errors' => ['code' => t('That code is wrong or has expired.')]], X_SYNTAX);
