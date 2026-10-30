@@ -74,6 +74,8 @@ define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
 define('CGPAY_SSO_SECRET', config('cgpaySsoSecret', '')); // shared secret for the SvelteKit cgpay POC /cgpay/sso handoff; empty disables the endpoint
 define('CGPAY_URL', config('cgpayUrl', '')); // SvelteKit POC dashboard URL — if set, /dashboard redirects there so the new dashboard becomes the canonical landing place
+define('TURNSTILE_SECRET', config('turnstileSecret', '')); // Cloudflare Turnstile server-side secret used by /cgpay-signup to verify the captcha token; empty disables verification (fail-open for dev)
+define('TURNSTILE_SITEKEY', config('turnstileSitekey', '')); // Cloudflare Turnstile client-side sitekey; informational on PHP since the widget runs on node, but kept with the secret so both live in one place
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
