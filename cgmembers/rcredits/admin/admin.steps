@@ -480,19 +480,27 @@ function cronRuns($op) {return t\cronRuns($op);}
  * a transaction sets variable (ARG) and ends: (ARG)
  *
  * in: MAKE transactions ATransactionEndsNormally
+ *     MAKE transactions ATransactionIsRolledBack
+ *     MAKE transactions AJobFailsInsideAFunctionHoldingTheTransaction
+ *     MAKE transactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     MAKE transactions AQueryFailsInsideATransaction
  */
 function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets($name, $how);}
 
 /**
  * variable (ARG) is set
  *
- * in: MAKE transactions ATransactionEndsNormally
+ * in: TEST transactions ATransactionEndsNormally
+ *     TEST transactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
  */
 function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
 
 /**
  * variable (ARG) is not set
  *
- * in: MAKE transactions ATransactionIsRolledBack
+ * in: TEST transactions ATransactionIsRolledBack
+ *     TEST transactions AJobFailsInsideAFunctionHoldingTheTransaction
+ *     TEST transactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     TEST transactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
