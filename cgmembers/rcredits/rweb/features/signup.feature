@@ -149,8 +149,9 @@ Scenario: A member verifies email
 #  |       |       |
 #  Then we show "You: Bea Two" with:
 #  | Get a Card |
-  Then we show "You: Bea Two" with:
-  | Get a Vote |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Bea Two" with:
+#  | Get a Vote |
   And member ".ZZB" steps left ""
   And members:
   | uid  | flags  | task |*
@@ -234,10 +235,11 @@ Scenario: A member chooses proxies
   | nextStep |
   Then we say "status": "info saved|success"
   And member ".ZZB" steps left ""
-  And we show "You: Bea Two" with:
-  | Shortcuts |
-  And without:
-  | Get a |
+  And we redirect to "%CGPAY_URL"
+#  And we show "You: Bea Two" with:
+#  | Shortcuts |
+#  And without:
+#  | Get a |
   And we say "status": "voter tentative|pioneer thanks"
 
 
@@ -274,7 +276,8 @@ Scenario: A member confirms social security number
   When member ".ZZB" completes form "settings/ssn" with values:
   | federalId   |*
   | 123-45-6789 |
-  Then we show "You: Bea Two"
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Bea Two"
 
 Scenario: A newbie registers with no case
   When member "?" confirms form "signup" with values:

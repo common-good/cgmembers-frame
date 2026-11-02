@@ -135,8 +135,8 @@ Scenario: A member confirms request to make a short-term loan
   | op  | who     | amount | isLoan | purpose |*
   | pay | Our Pub | 100    | 1      | yourock |
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose | boxId | taking | flags |*
-  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      |       |
+  | xid | created | amount | payer | payee | purpose | boxId | taking | flags     |*
+  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      | shortloan |
   And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose            |*
   | 1    | %now    |    100 | .ZZC  | .ZZA  | Repaying %mdY loan |

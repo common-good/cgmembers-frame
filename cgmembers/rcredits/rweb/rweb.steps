@@ -84,6 +84,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -541,7 +542,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invite AMemberInvites
- *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -553,7 +553,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
- *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
@@ -697,10 +696,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanySuppliesCompanyInformation
- *     TEST signupco ACompanySuppliesCrumbsChoices
  *     TEST signup AMemberDonates
- *     TEST signup AMemberVerifiesEmail
- *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
@@ -766,7 +762,6 @@ function with($content) {return weShow($content);}
  *     TEST showrecurs ANonadminLooksAtTheirRecurringPayments
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanySuppliesCrumbsChoices
- *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
@@ -937,6 +932,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AMemberWithAJoinedAccountViewsInvoices
@@ -1263,6 +1259,7 @@ function statisticsGetSet($time) {
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
+ *     BOTH joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
@@ -1298,6 +1295,8 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST dashboard ACompanyAgentClicksTheDashboardTab
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
@@ -1306,6 +1305,11 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
+ *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
+ *     TEST signupco ACompanySuppliesCrumbsChoices
+ *     TEST signup AMemberVerifiesEmail
+ *     TEST signup AMemberChoosesProxies
+ *     TEST signup AMemberConfirmsSocialSecurityNumber
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weRedirectTo($page) {
@@ -2181,6 +2185,7 @@ function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $tas
  *
  * in: MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  */
 function stepDone($step) {global $mya; return t\doneStep($mya->id, $step);}
