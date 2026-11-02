@@ -172,6 +172,10 @@ The conventions here aim at minimal visual clutter. Match the surrounding file.
 - **`$mya`** is the global "current account" - populated by session bootstrap. In server-to-server endpoints (like `/cgpay/*`), it may be unset; use `r\acct($uid)` explicitly.
 - **Dev-only admin password bypass** at `signin.inc:84` accepts any non-empty password when uid=1 on DEV. Not present in production.
 
+## Watch list
+
+Before you add or change a `db_transaction()` / `$DBTX`, a `try/catch` that could swallow `u\FAIL()`, or a `db\q()` call inside a transaction, read the matching entry in `docs/watch-list.md`. Add new triggers there (and one line here), not details here.
+
 ## Cross-repo
 
 Companion repo: `cgpay` (SvelteKit + adapter-node - modernized member-facing UI). See its `CLAUDE.md` for the node-side conventions and for local setup, which varies by developer (Windows and Mac).
