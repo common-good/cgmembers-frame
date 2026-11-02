@@ -28,7 +28,7 @@ define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_st
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
-  global $mya, $dbERR; // PDOException set in database.inc
+  global $mya, $dbERR, $dbTry; // PDOException set in database.inc
 
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if ($where = $subs and !strihas($sql, ':')) {
@@ -54,10 +54,21 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
       r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
     }
     $dbERR = $err; // pass this to insert
-    if (\Database::getConnection()->inTransaction()) u\FAIL($err); // otherwise the caller may ignore the NULL and commit the half-done job
+    if (!$dbTry and \Database::getConnection()->inTransaction()) u\FAIL($err); // otherwise the caller may ignore the NULL and commit the half-done job
   } else $dbERR = NULL;
   
   return $res;
+}
+
+/**
+ * Do a query that is allowed to fail, even inside a transaction (eg a duplicate key means there is nothing to do).
+ * Returns NULL on failure, just like db\q() does outside a transaction.
+ */
+function qTry($sql, $subs = []) {
+  global $dbTry;
+  $dbTry = TRUE;
+  try {return db\q($sql, $subs);}
+  finally {$dbTry = FALSE;}
 }
 
 /**

@@ -484,6 +484,7 @@ function cronRuns($op) {return t\cronRuns($op);}
  *     MAKE transactions AJobFailsInsideAFunctionHoldingTheTransaction
  *     MAKE transactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
  *     MAKE transactions AQueryFailsInsideATransaction
+ *     MAKE transactions AQueryThatIsAllowedToFailDoesNotAbortTheTransaction
  */
 function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets($name, $how);}
 
@@ -492,6 +493,7 @@ function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets(
  *
  * in: TEST transactions ATransactionEndsNormally
  *     TEST transactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     TEST transactions AQueryThatIsAllowedToFailDoesNotAbortTheTransaction
  */
 function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
 
