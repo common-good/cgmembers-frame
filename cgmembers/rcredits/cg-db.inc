@@ -54,6 +54,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
       r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
     }
     $dbERR = $err; // pass this to insert
+    if (\Database::getConnection()->inTransaction()) u\FAIL($err); // otherwise the caller may ignore the NULL and commit the half-done job
   } else $dbERR = NULL;
   
   return $res;
@@ -125,10 +126,8 @@ function update($table, $info, $key = 'id') {
     if (is_array($v)) u\FAIL('array in update param'); // exception fails if called in $DBTX
   }
   $sql = "UPDATE $table SET " . substr($sql, 1) . " WHERE `$key`=:$key";
-  try {
-    $result = db\q($sql, $info, !$key);
-    return TRUE;
-  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
+  db\q($sql, $info, !$key);
+  return TRUE;
 }
 
 /**
@@ -155,17 +154,14 @@ function insert($table, $info, $key = 'id') {
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
-  try {
-    $result = db\q($sql, $info, TRUE);
-    if ($result) return $result; // if there is no serial field, result will be false, so check
+  $result = db\q($sql, $info, TRUE);
+  if ($result) return $result; // if there is no serial field, result will be false, so check
 
-    if ($dbERR) u\FAIL($dbERR);
-    u\EXPECT($key and isset($info[$key]), 'no primary key');
-    $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
-    u\EXPECT(!is_null($res), 'insert failed');
-    return $res;
-
-  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
+  if ($dbERR) u\FAIL($dbERR);
+  u\EXPECT($key and isset($info[$key]), 'no primary key');
+  $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
+  u\EXPECT(!is_null($res), 'insert failed');
+  return $res;
 }
 
 /**

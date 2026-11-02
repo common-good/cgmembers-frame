@@ -2275,7 +2275,7 @@ function getDevVKeyE() { setDevVKey(); return db\get('vKeyE', 'admins', 'uid=:UI
 /**
  * Set a variable inside a transaction held by a function, then end the transaction as told:
  * "normally", "rolls back" (explicitly), "fails" (u\FAIL exception, which unwinds past the function's $DBTX),
- * or "fails, caller rolls back" (the caller holds the $DBTX, catches the failure, and rolls back, as in rcron).
+ * "bad query" (a failed db\q inside the transaction), or "fails, caller rolls back" (the caller holds the $DBTX, catches the failure, and rolls back, as in rcron).
  */
 function transactionSets($name, $how) {
   if ($how == 'fails, caller rolls back') {
@@ -2291,6 +2291,7 @@ function transactionSets($name, $how) {
     \setV($name, 1);
     if ($how == 'rolls back') $DBTX->rollback();
     if ($how == 'fails') u\FAIL('test failure');
+    if ($how == 'bad query') db\q('UPDATE zzNoSuchTable SET a=1 WHERE b=2'); // fails, returning NULL (outside a transaction)
   };
   try {$job();} catch (\Exception $e) {}
   return TRUE;
