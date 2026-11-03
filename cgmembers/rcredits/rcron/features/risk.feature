@@ -64,13 +64,13 @@ Setup:
   |  13 | %now-1d |     10 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
   |  14 | %now-1d |     11 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
   And these "txs2":
-  | txid | payee | amount | completed |*
-  |    1 | .ZZA  |    400 | %now-2m  |  
-  |    2 | .ZZB  |    100 | %now-2m  |  
-  |    3 | .ZZC  |    300 | %now-2m  |  
-  |    4 | .ZZE  |    200 | %now     |  
-  |    5 | .ZZF  |   -600 | %now     |  
-  |    6 | .ZZC  |   -500 | %now     |
+  | txid | payee | amount | created  | completed |*
+  |    1 | .ZZA  |    400 | %now-2m  | %now-2m   |
+  |    2 | .ZZB  |    100 | %now-2m  | %now-2m   |
+  |    3 | .ZZC  |    300 | %now-2m  | %now-2m   |
+  |    4 | .ZZE  |    200 | %now     | %now      |
+  |    5 | .ZZF  |   -600 | %now     | %now      |
+  |    6 | .ZZC  |   -500 | %now     | %now      |
   And member field values:
   | uid  | field      | value |*
   | .ZZB | community  |    -2 |
@@ -91,7 +91,6 @@ Setup:
   | .ZZH |     1 |
   | .ZZI |     1 |
 
-Skip because the risk calculations changed: ZZA gets extra moreIn,bigDay; 7Week threshold is 1570 not 1270; tx 1 gets b2p. Decide what is right, update, then Resume
 Scenario: We calculate risks
   When cron runs "acctRisk"
   When cron runs "acctRisk"
@@ -117,9 +116,10 @@ Scenario: We calculate risks
   When cron runs "txRisk"
   Then these "txs":
   | xid | risks |*
-  |   1 | |
-  |   2 | |
-  |   3 | |
+  # the community's signup rewards are company payments to individuals (b2p); Eve (xid 3) is a suspect account
+  |   1 | b2p |
+  |   2 | b2p |
+  |   3 | b2p,toSuspect |
   |   4 | exchange,p2p |
   |   5 | cashIn,inhouse,toSuspect,bigTo,biggestTo |
   |   6 | p2p,bigTo,biggestTo |
@@ -131,7 +131,6 @@ Scenario: We calculate risks
   |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,origins |
   |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,suspectOut |
   |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,origins,suspectOut |
-Resume
 Skip (below is just a comment for later)
 708  3  11-Feb  250.00  Ctty  ZZE  signup  B2p, ToSuspect
 220  17  11-Jun  300.00  Bank  ZZC  from bank  CashIn, ToSuspect
