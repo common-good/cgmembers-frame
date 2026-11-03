@@ -37,6 +37,6 @@ To add an entry, give it a trigger short enough to recognize at a glance, and ad
 
 **When:** you write or change code that calls `db\q()` (or anything built on it) inside a `$DBTX` and checks, or ignores, its return value.
 
-**Check:** `DatabaseConnection::quer` catches the `PDOException` and returns `NULL` (it does not throw). `db\q()` logs the failure and returns `NULL`. Inside a transaction, `db\q()` now also calls `u\FAIL()`, so the transaction rolls back; do not rely on a `NULL` return to handle a failed query there. If a query is *expected* to fail (a duplicate-key probe), do it outside the transaction or catch the failure as in `r\regionalInsert`.
+**Check:** `DatabaseConnection::quer` catches the `PDOException` and returns `NULL` (it does not throw). `db\q()` logs the failure and returns `NULL`. Inside a transaction, `db\q()` now also calls `u\FAIL()`, so the transaction rolls back; do not rely on a `NULL` return to handle a failed query there. If a query is *expected* to fail (a duplicate-key probe), call it as `db\qTry()` instead (it returns `NULL` like the old `db\q()` and does not abort the transaction; `changeUid` does this), or do it outside the transaction.
 
 **Why:** callers that ignored the `NULL` carried on and the transaction committed the half-done work.
