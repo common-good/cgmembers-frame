@@ -518,7 +518,6 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
- *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signup AMemberSignsUp
  */
@@ -551,7 +550,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST signin AMemberClicksALinkToResetPassword
- *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
  *     TEST signup AMemberSignsUp
@@ -691,7 +689,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
- *     TEST signupandpay AMemberClicksACGPayButton
  *     TEST signupco ACompanyTriesToSignUpDirectly
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
@@ -970,7 +967,6 @@ function balances($list) {return t\balances($list);}
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signout AMemberSignsOut
  *     MAKE signout AMemberTimesOutAndSignsOutAutomatically
- *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupco ACompanyTriesToSignUpDirectly
  *     MAKE signupco SomeoneWantsToOpenACompanyAccount
  *     MAKE signupco ACompanySignsUp
@@ -1443,7 +1439,6 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -2102,7 +2097,7 @@ function memberOnetimepasswordIsExpires($id, $pass, $expires) {
 /**
  * next random password is (ARG)
  *
- * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ * in: 
  */
 function nextRandomPasswordIs($code) {global $nextPass; return $nextPass = $code;}
 
@@ -2331,12 +2326,11 @@ function memberStepsUpWith($id, $rows) {
  */
 function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
   global $testOnly; if ($testOnly) return FALSE;
-  
+
   // assume relations page for now
-  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
-  $val = u\consta('b', $value) - B_RELATED;
-///  debug("$fld-$linei val=$val page=$page id=$id1");
-  return TRUE; // HANGS return t\dojs($page, $id1, "$('select[name=\"$fld-$linei\"').val($val).change();"); // js to simulate dropdown selection
+  $linei = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  $v = u\consta('b', $value) - B_RELATED;
+  return relationsAjax($id1, "$fld-$linei", $v); // what the page's JS posts when a dropdown changes
 }
 
 /**
@@ -2346,8 +2340,22 @@ function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
  */
 function memberDeletesRelationTo($id1, $id2) {
   global $testOnly; if ($testOnly) return FALSE;
-  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
-  return TRUE; // HANGS return t\dojs('settings/relations', $id1, "$('.btn[name=\"delete-$linei\"').click();"); // js to simulate dropdown selection
+  $linei = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  return relationsAjax($id1, "delete-$linei", 0);
+}
+
+/**
+ * Do what the relations page does (via ajax) when a dropdown changes or a delete button is clicked.
+ * We call the ajax handler directly (no browser), so the page's JS itself is not tested.
+ */
+function relationsAjax($id, $name, $v) {
+  global $mya;
+  include_once R_ROOT . '/forms/ajax.inc';
+  t\login($id);
+  [$myid, $aid] = [$mya->id, $mya->agentId];
+  [$sid, $data] = [session_id(), u\jsonize(compact('name', 'v'))];
+  t\output(w\ajax(['op' => 'relations'] + compact(ray('sid data myid aid'))));
+  return TRUE;
 }
 
 /**
@@ -2421,7 +2429,7 @@ function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 /**
  * member (ARG) clicks (ARG) on page (ARG) with: (ARG)
  *
- * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ * in: 
  */
 function memberClicksOnPageWith($id, $button, $page, $info) {
   global $testOnly;
@@ -2657,8 +2665,6 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
- *     MAKE signupandpay AMemberClicksACGPayButton
- *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
 function buttonCodeFor($var, $args) { 
   include_once R_ROOT . '/forms/code.inc';

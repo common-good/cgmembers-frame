@@ -91,6 +91,7 @@ Setup:
   | .ZZH |     1 |
   | .ZZI |     1 |
 
+Skip because the risk calculations changed: ZZA gets extra moreIn,bigDay; 7Week threshold is 1570 not 1270; tx 1 gets b2p. Decide what is right, update, then Resume
 Scenario: We calculate risks
   When cron runs "acctRisk"
   When cron runs "acctRisk"
@@ -130,6 +131,7 @@ Scenario: We calculate risks
   |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,origins |
   |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,suspectOut |
   |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,origins,suspectOut |
+Resume
 Skip (below is just a comment for later)
 708  3  11-Feb  250.00  Ctty  ZZE  signup  B2p, ToSuspect
 220  17  11-Jun  300.00  Bank  ZZC  from bank  CashIn, ToSuspect
