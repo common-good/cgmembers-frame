@@ -34,7 +34,7 @@ Scenario: A member signs in with account ID on the member site with MFA
   | uid  | mfa  | then | gotNonce | trust |*
   | .ZZA | %mfa |      | 987654   |       |
   Then member ".ZZA" is logged in
-  And we show "You: Abe One"
+  And we redirect to "%CGPAY_URL"
 
 Scenario: A member types the wrong nonce
   Given next random code is "987654"

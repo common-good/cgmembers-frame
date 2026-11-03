@@ -212,5 +212,6 @@ Scenario: An unverified company agent completes a company account
   When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
   Then we say "status": "info saved|success"
-  And we say "status": "co tentative|pioneer thanks"
+  And we redirect to "%CGPAY_URL"
+#  And we say "status": "co tentative|pioneer thanks"
   And member ".ZZC" steps left ""
