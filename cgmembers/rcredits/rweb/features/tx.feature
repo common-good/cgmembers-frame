@@ -208,15 +208,17 @@ Scenario: A member confirms request to pay a member company
 #  | field |*
 #  | "For" |
 
-# Rule: A member must complete at least one in-person transaction before making or requesting any online payment (not used by our current community, but another community may want it)
-Skip This is now allowed, as an implicit invitation (3 scenarios)
+# Rule: A member must complete at least one in-person transaction before making or requesting any online payment --  not used by our current community (so Skipped), but another community may want it.
+Skip This is now allowed, so no error
 Scenario: A member asks to charge another member before making an rCard purchase
   Given member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "error": "no photoid"
+Resume
 
+Skip This is now allowed, so no error
 Scenario: A member asks to charge another member before the other has made an rCard purchase
   Given member ".ZZB" has no photo ID recorded
   When member ".ZZA" completes form "tx/charge" with values:
@@ -225,7 +227,9 @@ Scenario: A member asks to charge another member before the other has made an rC
   Then we say "error": "other no photoid" with subs:
   | who     |*
   | Bea Two |
-  
+Resume
+
+Skip This is now allowed, so no error
 Scenario: A member confirms payment of an invoice before making a Common Good Card purchase
   Given member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
