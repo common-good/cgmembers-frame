@@ -31,7 +31,7 @@ To add an entry, give it a trigger short enough to recognize at a glance, and ad
 | `rcron/app-socket.php` | outermost catch of a separate daemon |
 | Drupal core catches (`cache`, `session`, `install`, `update`, `schema`, `theme`, `xmlrpc`, `common.inc` cron, `query.inc`) | database layer or cron; no CG transaction held across them |
 
-**Why:** before this, a crash or a failed step inside a `$DBTX` saved whatever the transaction had done so far (a half-finished multi-step job, such as a bank-transfer request queued twice). Tests: `admin/features/transactions.feature`.
+**Why:** before this, a crash or a failed step inside a `$DBTX` saved whatever the transaction had done so far (a half-finished multi-step job, such as a bank-transfer request queued twice). Tests: `admin/features/db-transactions.feature`.
 
 ## Failed queries inside a transaction
 
