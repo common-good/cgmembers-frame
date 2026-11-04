@@ -230,6 +230,7 @@ Scenario: A member confirms payment of an invoice before making a Common Good Ca
   | op  | who     | amount | goods      | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
   Then we say "error": "first at home"
+Resume
   
 Skip (not sure about this feature)
 Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
