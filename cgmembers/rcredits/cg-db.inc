@@ -28,7 +28,7 @@ define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_st
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
-  global $mya, $dbERR; // PDOException set in database.inc
+  global $mya, $dbERR, $dbTry; // PDOException set in database.inc
 
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if ($where = $subs and !strihas($sql, ':')) {
@@ -54,9 +54,21 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
       r\tellAdmin('sql error', compact(ray('sql subs retId log channel err dbERR')));
     }
     $dbERR = $err; // pass this to insert
+    if (!$dbTry and \Database::getConnection()->inTransaction()) u\FAIL($err); // otherwise the caller may ignore the NULL and commit the half-done job
   } else $dbERR = NULL;
   
   return $res;
+}
+
+/**
+ * Do a query that is allowed to fail, even inside a transaction (eg a duplicate key means there is nothing to do).
+ * Returns NULL on failure, just like db\q() does outside a transaction.
+ */
+function qTry($sql, $subs = []) {
+  global $dbTry;
+  $dbTry = TRUE;
+  try {return db\q($sql, $subs);}
+  finally {$dbTry = FALSE;}
 }
 
 /**
@@ -125,10 +137,8 @@ function update($table, $info, $key = 'id') {
     if (is_array($v)) u\FAIL('array in update param'); // exception fails if called in $DBTX
   }
   $sql = "UPDATE $table SET " . substr($sql, 1) . " WHERE `$key`=:$key";
-  try {
-    $result = db\q($sql, $info, !$key);
-    return TRUE;
-  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
+  db\q($sql, $info, !$key);
+  return TRUE;
 }
 
 /**
@@ -155,17 +165,14 @@ function insert($table, $info, $key = 'id') {
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
-  try {
-    $result = db\q($sql, $info, TRUE);
-    if ($result) return $result; // if there is no serial field, result will be false, so check
+  $result = db\q($sql, $info, TRUE);
+  if ($result) return $result; // if there is no serial field, result will be false, so check
 
-    if ($dbERR) u\FAIL($dbERR);
-    u\EXPECT($key and isset($info[$key]), 'no primary key');
-    $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
-    u\EXPECT(!is_null($res), 'insert failed');
-    return $res;
-
-  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
+  if ($dbERR) u\FAIL($dbERR);
+  u\EXPECT($key and isset($info[$key]), 'no primary key');
+  $res = db\get($key, $table, just($key, $info)); // return the supplied id if success
+  u\EXPECT(!is_null($res), 'insert failed');
+  return $res;
 }
 
 /**

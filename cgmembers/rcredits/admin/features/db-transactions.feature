@@ -21,3 +21,11 @@ Scenario: A caller rolls back a failed job and later jobs still commit
   
   When a transaction sets variable "zzTx2" and ends: "normally"
   Then variable "zzTx2" is set
+
+Scenario: A query fails inside a transaction
+  When a transaction sets variable "zzTx" and ends: "bad query"
+  Then variable "zzTx" is not set
+
+Scenario: A query that is allowed to fail does not abort the transaction
+  When a transaction sets variable "zzTx" and ends: "tolerated bad query"
+  Then variable "zzTx" is set
