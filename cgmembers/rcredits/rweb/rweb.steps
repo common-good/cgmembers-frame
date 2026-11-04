@@ -119,7 +119,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE tx AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForLoanreimbursement
- *     MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -179,6 +178,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
+ *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE signup AMemberRegistersWithCriminalName
@@ -384,6 +384,7 @@ function members($list) {return t\members($list);}
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
+ *     TEST signup AMemberRegistersBadName
  *     TEST signup AMemberRegistersAgain
  *     TEST sponsor ASponseeDrawsCreditFromTheBank
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
@@ -491,7 +492,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx AMemberConfirmsRequestToMakeAShorttermLoan
- *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST txdetail AnAdminChangesADepositedBankTransactionAmount
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
@@ -542,7 +542,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invite AMemberInvites
  *     TEST joint AMemberAsksToJoinToSelf
- *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -563,7 +562,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberSetsBacking
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
- *     TEST signup AMemberConfirmsSocialSecurityNumber
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 
@@ -689,6 +687,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
+ *     TEST signupandpay ANonmemberClicksACGPayButton
  *     TEST signupco ACompanyTriesToSignUpDirectly
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
@@ -967,6 +966,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signout AMemberSignsOut
  *     MAKE signout AMemberTimesOutAndSignsOutAutomatically
+ *     MAKE signupandpay ANonmemberClicksACGPayButton
  *     MAKE signupco ACompanyTriesToSignUpDirectly
  *     MAKE signupco SomeoneWantsToOpenACompanyAccount
  *     MAKE signupco ACompanySignsUp
@@ -1303,6 +1303,7 @@ function membersHave($list) {return t\membersHave($list);}
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
  *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signupco ACompanySuppliesCrumbsChoices
+ *     TEST signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
  *     TEST signup AMemberVerifiesEmail
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberConfirmsSocialSecurityNumber
@@ -2024,7 +2025,7 @@ function strStarts($haystack, $needle) {
 /**
  * member (ARG) is unconfirmed
  *
- * in: MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ * in: 
  */
 function memberIsUnconfirmed($id) {
   global $testOnly;
@@ -2665,6 +2666,7 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
+ *     MAKE signupandpay ANonmemberClicksACGPayButton
  */
 function buttonCodeFor($var, $args) { 
   include_once R_ROOT . '/forms/code.inc';
