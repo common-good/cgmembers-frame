@@ -381,7 +381,7 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
     } else { // change
       if ($merge) merge($table, $field, $oldUid, $newUid);
       flog(t('. changing old to new'));
-      db\q("UPDATE $table SET `$field`=:newUid WHERE $where", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
+      db\qTry("UPDATE $table SET `$field`=:newUid WHERE $where", compact('newUid', 'oldUid')); // has no effect if record was deleted or new exists
     }
   }
 

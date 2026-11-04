@@ -45,6 +45,17 @@ function drupal_error_levels() {
 function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTrace());}
 
 /**
+ * Roll back every open database transaction (and savepoint), if any.
+ * A DatabaseTransaction commits when destroyed, and die() destroys it, so a crash must roll back first.
+ */
+function rollbackAll() {
+  try {
+    $db = \Database::getConnection();
+    if ($db->inTransaction()) $db->rollback();
+  } catch (\Throwable $e) {} // no connection yet, or nothing to roll back
+}
+
+/**
  * Handle all errors, including warnings.
  * On production, all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
  * On dev, all errors die with stack trace, except from PHP window where the error is displayed with just the caller
@@ -68,6 +79,7 @@ function handleError($level, $msg, $file, $line, $trace = NULL) {
 ///  debug($context); echo pr($context); // handy when debugging
 
   $nasty = ($severity < WATCHDOG_WARNING);
+  if ($nasty or !isPRODUCTION) rollbackAll(); // we're about to stop, so don't let open $DBTX destructors commit a half-done job
   $title = $nasty ? t('CRASH!') : t('WARNING');
   $file = basename($file);
   $msg = preg_replace('/[^\x0A\x20-\x7E]/','', $msg);

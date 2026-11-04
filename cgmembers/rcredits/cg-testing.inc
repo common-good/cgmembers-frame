@@ -2267,3 +2267,31 @@ function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
 function getDevVKeyPw() { preg_match("/value='([^']+)'/", file_get_contents(DEV_CONFIG_FLNM), $m); return $m[1]; }
 function getDevVKeyE() { setDevVKey(); return db\get('vKeyE', 'admins', 'uid=:UID_SUPER'); }
+
+/**
+ * Set a variable inside a transaction held by a function, then end the transaction as told:
+ * "normally", "rolls back" (explicitly), "fails" (u\FAIL exception, which unwinds past the function's $DBTX),
+ * "bad query" (a failed db\q inside the transaction), "tolerated bad query" (a failed db\qTry, which does not abort), or "fails, caller rolls back" (the caller holds the $DBTX, catches the failure, and rolls back, as in rcron).
+ */
+function transactionSets($name, $how) {
+  if ($how == 'fails, caller rolls back') {
+    try {
+      $DBTX = \db_transaction();
+      \setV($name, 1);
+      (function () {u\FAIL('test failure');})();
+    } catch (\Exception $e) {$DBTX->rollback();}
+    return TRUE;
+  }
+  $job = function () use ($name, $how) {
+    $DBTX = \db_transaction();
+    \setV($name, 1);
+    if ($how == 'rolls back') $DBTX->rollback();
+    if ($how == 'fails') u\FAIL('test failure');
+    if ($how == 'bad query') db\q('UPDATE zzNoSuchTable SET a=1 WHERE b=2'); // fails, returning NULL (outside a transaction)
+    if ($how == 'tolerated bad query') db\qTry('UPDATE zzNoSuchTable SET a=1 WHERE b=2'); // fails, but the job carries on
+  };
+  try {$job();} catch (\Exception $e) {}
+  return TRUE;
+}
+
+function variableIsSet($name, $want) {return t\eq("variable $name is set", (int) $want, (int) (bool) db\exists('variable', 'name=:name', compact('name')));}

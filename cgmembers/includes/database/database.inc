@@ -1908,11 +1908,19 @@ class DatabaseTransaction {
     $this->connection->pushTransaction($this->name);
   }
 
+  /**
+   * TRUE after u\FAIL() threw while a transaction was open (see cg-util.inc).
+   * An exception unwinding out of a function destroys its $DBTX before any exception handler runs,
+   * so the destructor must know to roll back instead of commit. Cleared when the outermost transaction ends.
+   */
+  public static $failing = FALSE;
+
   public function __destruct() {
     // If we rolled back then the transaction would have already been popped.
-    if (!$this->rolledBack) {
-      $this->connection->popTransaction($this->name);
-    }
+    if ($this->rolledBack) return;
+    if (self::$failing) {
+      try {$this->rollback();} catch (Exception $e) {} // undo just this layer (all of it, if outermost)
+    } else $this->connection->popTransaction($this->name);
   }
 
   /**
@@ -1936,7 +1944,8 @@ class DatabaseTransaction {
    */
   public function rollback() {
     $this->rolledBack = TRUE;
-    $this->connection->rollback($this->name);
+    try {$this->connection->rollback($this->name);}
+    finally {if (!$this->connection->inTransaction()) self::$failing = FALSE;} // callers that catch a failure roll back explicitly
   }
 }
 
