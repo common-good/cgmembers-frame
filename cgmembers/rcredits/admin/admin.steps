@@ -483,6 +483,8 @@ function cronRuns($op) {return t\cronRuns($op);}
  *     MAKE dbtransactions ATransactionIsRolledBack
  *     MAKE dbtransactions AJobFailsInsideAFunctionHoldingTheTransaction
  *     MAKE dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     MAKE dbtransactions AQueryFailsInsideATransaction
+ *     MAKE dbtransactions AQueryThatIsAllowedToFailDoesNotAbortTheTransaction
  */
 function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets($name, $how);}
 
@@ -491,6 +493,7 @@ function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets(
  *
  * in: TEST dbtransactions ATransactionEndsNormally
  *     TEST dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     TEST dbtransactions AQueryThatIsAllowedToFailDoesNotAbortTheTransaction
  */
 function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
 
@@ -500,5 +503,6 @@ function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
  * in: TEST dbtransactions ATransactionIsRolledBack
  *     TEST dbtransactions AJobFailsInsideAFunctionHoldingTheTransaction
  *     TEST dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ *     TEST dbtransactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
