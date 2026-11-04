@@ -475,3 +475,30 @@ function bankData($list) {
  * in: MAKE cats ANonmemberMakesARecurringACHDonationToASponsoredProject
  */
 function cronRuns($op) {return t\cronRuns($op);}
+
+/**
+ * a transaction sets variable (ARG) and ends: (ARG)
+ *
+ * in: MAKE dbtransactions ATransactionEndsNormally
+ *     MAKE dbtransactions ATransactionIsRolledBack
+ *     MAKE dbtransactions AJobFailsInsideAFunctionHoldingTheTransaction
+ *     MAKE dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ */
+function aTransactionSetsVariableAndEnds($name, $how) {return t\transactionSets($name, $how);}
+
+/**
+ * variable (ARG) is set
+ *
+ * in: TEST dbtransactions ATransactionEndsNormally
+ *     TEST dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ */
+function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
+
+/**
+ * variable (ARG) is not set
+ *
+ * in: TEST dbtransactions ATransactionIsRolledBack
+ *     TEST dbtransactions AJobFailsInsideAFunctionHoldingTheTransaction
+ *     TEST dbtransactions ACallerRollsBackAFailedJobAndLaterJobsStillCommit
+ */
+function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
