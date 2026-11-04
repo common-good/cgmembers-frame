@@ -78,6 +78,7 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
     try {
       if (db\insert($table, $record, $idField)) return $id;
     } catch (\Exception $e) { // BIG MYSTERY: why does this happen sometimes with no collision?
+      \DatabaseTransaction::$failing = FALSE; // we're carrying on, so an enclosing transaction should too
       r\tellAdmin(t('cannot save regional: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
   }

@@ -609,7 +609,10 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
   return ''; // no error
 }
 
-function FAIL($message) {throw new \Exception($message);}
+function FAIL($message) {
+  if (class_exists('DatabaseTransaction', FALSE) and \Database::getConnection()->inTransaction()) \DatabaseTransaction::$failing = TRUE; // tell open $DBTX destructors to roll back, not commit
+  throw new \Exception($message);
+}
 
 function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');
