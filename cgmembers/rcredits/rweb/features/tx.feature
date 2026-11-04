@@ -208,6 +208,7 @@ Scenario: A member confirms request to pay a member company
 #  | field |*
 #  | "For" |
 
+# Rule: A member must complete at least one in-person transaction before making or requesting any online payment (not used by our current community, but another community may want it)
 Skip this is now allowed, as an implicit invitation (3 scenarios)
 Scenario: A member asks to charge another member before making an rCard purchase
   Given member ".ZZA" has no photo ID recorded
