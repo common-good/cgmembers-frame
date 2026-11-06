@@ -141,6 +141,10 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 - **Test accounts:** features declare `Setup` fixtures with feature-local uids like `.ZZA`, `.ZZB`, `.ZZC`, `.ZZF`. Separately, `a\makeTestAccounts()` (admin.inc) creates the standard accounts Abe One, Bea Two, Citre, Dee Four, Eli Five, Flo Six, Gisette, Hal Ate, Ida Nine as `.ZPA` ... `.ZPI` (`NEWZPA`... in base-26 letters; the same accounts as the legacy app's `K6...` ids). cgpay's tests call them Abe, Bea, Cit, ... Prefer these names in new features here too, instead of `.ZZA`-style uids. Non-production servers only.
 - **Test passwords:** accounts created in features (`doAccounts()` in `cg-testing.inc`) default to password `k`, and so do the individual standard accounts from `makeTestAccounts()`. Company standard accounts (Citre, Gisette) have no password; sign in as an agent. Sign-in by full name (`Abe One`) is known to work; short names may not.
 - **Dev admin bypass:** on DEV, admin (uid=1) sign-in accepts any non-empty password (`forms/signin.inc`, around line 84). Not in production.
+- **Running the whole suite:** run each module through the web endpoint, one div at a time: `http://localhost/cg/cgmembers/tests?module=rcredits/<module>&div=<n>&feature=&scene=&variant=&restart=1&compile=1` (`curl -L` with a cookie jar works). Modules: admin (2 divs), rvote, rcron (2), rsmart (2), api, rweb (6). To run one feature, set `feature=<name>` and leave `div` empty. Run only one at a time: runs share the database and clobber each other. Local Apache needs `xdebug.mode=off`; when testing main-based branches, `config.json` stage must be `development`.
+- **Reading the results:** each run replaces the contents of the `test` table in the test database (the page `/sadmin/test-results/top=1` just shows it). Summary row: `SELECT value FROM test WHERE id<0` (ok count, and `no: _` when nothing failed). Failing scenarios: `SELECT value FROM test WHERE value LIKE '%FAIL....%'` (strip the HTML tags); the other rows have the step-by-step output.
+- **Expected state:** every scenario passes. A scenario turned off with `Skip` in a feature file is not a failure (each has a note saying why). Any failure is a regression: fix it or report it, and do not skip it to get green.
+- **Skips:** `Skip` switches a test off temporarily; it never fixes anything. Put the reason on the `Skip` line, end the skipped section with `Resume`, and take the `Skip` (and `Resume`) out as soon as the tests it covers should run again. Do not turn off several scenarios with one `Skip`: that would hide tests that were probably meant to come back, so make one skip per scenario. To list every current skip and commented-out scenario: `grep -rnE "^(Skip|#\s*Scenario)" cgmembers/rcredits --include=*.feature`.
 - **Test endpoint** (used by cgpay's Playwright tests): `testops()` in `forms/api.inc`, POST `<api base>/test` with `version` and `op`. Ops: `initialize` (reset the standard accounts and delete their stray txs), `rows` (txs among those accounts; txs table only), `update` (users table only). Refuses to run on production or stage. Spec: `api/features/test.feature`. The legacy cgpay PWA depends on the existing `api.inc` ops: never remove or change one (add a new op instead).
 
 ## Conventions
@@ -175,6 +179,10 @@ The conventions here aim at minimal visual clutter. Match the surrounding file.
 - **Session cookies (`SSESS...`) are set with `Domain=.commongood.earth`** so both PHP and cgpay see them. Never scope narrower without coordinated changes on the cgpay side.
 - **`$mya`** is the global "current account" - populated by session bootstrap. In server-to-server endpoints (like `/cgpay/*`), it may be unset; use `r\acct($uid)` explicitly.
 - **Dev-only admin password bypass** at `signin.inc:84` accepts any non-empty password when uid=1 on DEV. Not present in production.
+
+## Watch list
+
+Before you add or change a `db_transaction()` / `$DBTX`, a `try/catch` that could swallow `u\FAIL()`, or a `db\q()` call inside a transaction, read the matching entry in `docs/watch-list.md`. Add new triggers there (and one line here), not details here.
 
 ## Cross-repo
 
