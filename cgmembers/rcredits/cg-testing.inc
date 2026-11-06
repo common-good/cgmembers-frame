@@ -484,6 +484,7 @@ function doTxs($info) {
   foreach ($info as $k => $v) if (!$v) $info[$k] = (in($k, 'flags risks goods channel amt id') ? 0 : NULL); // interpret empty fields
 
   if ($testOnly) {
+    if (isset($info['risks']) and !is_numeric($info['risks'])) $info['risks'] = getRisks($info['risks'], K_TX_RISKS); // risk names (eg b2p,toSuspect) to bits
     return verifyRecord('txs', $info);
  
   } else { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)

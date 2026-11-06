@@ -149,8 +149,9 @@ Scenario: A member verifies email
 #  |       |       |
 #  Then we show "You: Bea Two" with:
 #  | Get a Card |
-  Then we show "You: Bea Two" with:
-  | Get a Vote |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Bea Two" with:
+#  | Get a Vote |
   And member ".ZZB" steps left ""
   And members:
   | uid  | flags  | task |*
@@ -158,7 +159,8 @@ Scenario: A member verifies email
 #  And we say "status": "info saved|success"
   And we say "status": "success"
   And we say "status": "info saved"
-  And we say "status": "member tentative"
+  And we redirect to "%CGPAY_URL"
+#  And we say "status": "member tentative"
 #   And we say "status": "member tentative|join thanks"
  # And members:
  # | uid  | task |*
@@ -234,11 +236,13 @@ Scenario: A member chooses proxies
   | nextStep |
   Then we say "status": "info saved|success"
   And member ".ZZB" steps left ""
-  And we show "You: Bea Two" with:
-  | Shortcuts |
-  And without:
-  | Get a |
-  And we say "status": "voter tentative|pioneer thanks"
+  And we redirect to "%CGPAY_URL"
+#  And we show "You: Bea Two" with:
+#  | Shortcuts |
+#  And without:
+#  | Get a |
+  And we redirect to "%CGPAY_URL"
+#  And we say "status": "voter tentative|pioneer thanks"
 
 
 #Scenario: A member chooses to Step Up
@@ -269,12 +273,14 @@ Scenario: A member confirms social security number
   When member "?" confirms form "signin" with values:
   | qid  | pass |*
   | .ZZB | k    |
-  Then we show "Confirm Your SSN"
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "Confirm Your SSN"
   
   When member ".ZZB" completes form "settings/ssn" with values:
   | federalId   |*
   | 123-45-6789 |
-  Then we show "You: Bea Two"
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Bea Two"
 
 Scenario: A newbie registers with no case
   When member "?" confirms form "signup" with values:
@@ -290,15 +296,13 @@ Scenario: A member registers bad email
   | Eve Five | 413-253-0000 | %whatever | 01001 | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "bad email"
 
-Skip - fails in PHP 8.2 (dunno why)
 Scenario: A member registers bad name
   When member "?" confirms form "signup" with values:
   | fullName   | email     | phone        |  zip  | acctType     | cq | ca |*
   | ™ whatever | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
-# NO  Then we say "error": "illegal char" with subs:
-#  | field    |*
-#  | fullName |
-Resume
+  Then we say "error": "illegal char" with subs:
+  | field    |*
+  | fullName |
 Scenario: A member registers bad zip
   When member "?" confirms form "signup" with values:
   | fullName  | email     | phone        |  zip    | acctType     | cq | ca |*

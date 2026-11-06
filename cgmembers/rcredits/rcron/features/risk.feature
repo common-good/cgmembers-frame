@@ -64,13 +64,13 @@ Setup:
   |  13 | %now-1d |     10 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
   |  14 | %now-1d |     11 | .ZZF  | .ZZE  | cash    | %TX_WEB |         |
   And these "txs2":
-  | txid | payee | amount | completed |*
-  |    1 | .ZZA  |    400 | %now-2m  |  
-  |    2 | .ZZB  |    100 | %now-2m  |  
-  |    3 | .ZZC  |    300 | %now-2m  |  
-  |    4 | .ZZE  |    200 | %now     |  
-  |    5 | .ZZF  |   -600 | %now     |  
-  |    6 | .ZZC  |   -500 | %now     |
+  | txid | payee | amount | created  | completed |*
+  |    1 | .ZZA  |    400 | %now-2m  | %now-2m   |
+  |    2 | .ZZB  |    100 | %now-2m  | %now-2m   |
+  |    3 | .ZZC  |    300 | %now-2m  | %now-2m   |
+  |    4 | .ZZE  |    200 | %now     | %now      |
+  |    5 | .ZZF  |   -600 | %now     | %now      |
+  |    6 | .ZZC  |   -500 | %now     | %now      |
   And member field values:
   | uid  | field      | value |*
   | .ZZB | community  |    -2 |
@@ -116,9 +116,10 @@ Scenario: We calculate risks
   When cron runs "txRisk"
   Then these "txs":
   | xid | risks |*
-  |   1 | |
-  |   2 | |
-  |   3 | |
+  # the community's signup rewards are company payments to individuals (b2p); Eve (xid 3) is a suspect account
+  |   1 | b2p |
+  |   2 | b2p |
+  |   3 | b2p,toSuspect |
   |   4 | exchange,p2p |
   |   5 | cashIn,inhouse,toSuspect,bigTo,biggestTo |
   |   6 | p2p,bigTo,biggestTo |

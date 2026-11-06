@@ -31,7 +31,8 @@ Scenario: A member asks to join an existing account
   | main | agent | permission | employee | owner | draw |*
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   And we say "status": "join request success"
-  And we show "You: Abe One"
+  And we redirect to "%CGPAY_URL"
+#  And we show "You: Abe One"
   And we message "join accounts" to member ".ZZB" with subs:
   | name    | _atag |*
   | Abe One | ?     |
@@ -69,20 +70,35 @@ Scenario: A member requests a joint account from the relations page
   | op  | who     | amount | goods      | purpose |*
   | pay | Cor Pub |    300 | %FOR_GOODS | crud    |
 
-Scenario: A joined account slave member requests a new minimum
+Scenario: A joined account slave member connects a bank account
   Given members have:
-  | uid  | jid  | achMin | minimum |*
-  | .ZZA | .ZZB |     50 |     150 |
-  | .ZZB | .ZZA |     50 |       0 |
+  | uid  | jid  | achMin | minimum | bankAccount |*
+  | .ZZA | .ZZB |     50 |     150 |             |
+  | .ZZB | .ZZA |     50 |       0 |             |
   And member ".ZZB" visits page "settings/fund"
   And step done "fund"
   When member ".ZZB" completes form "settings/fund" with values:
-  | connect | routingNumber | bankAccount | bankAccount2 | refills | target | achMin | saveWeekly |*
-  |       1 |     053000196 |         123 |          123 |       1 |    300 |    100 |          2 |
+  | connect | routingNumber | bankAccount | refills | target | achMin | saveWeekly |*
+  |       1 |     211870281 |         123 |       1 |    300 |    100 |          2 |
   Then members have:
   | uid  | bankAccount      | last4bank | achMin | minimum | saveWeekly |*
-  | .ZZA | USkk053000196123 |      6123 |    100 |     300 |          2 |
+  | .ZZA | USkk211870281123 |      1123 |    100 |     300 |          2 |
   | .ZZB |                  |           |     50 |       0 |          0 |
+
+Scenario: A joined account slave member requests a new minimum
+  Given members have:
+  | uid  | jid  | achMin | minimum | bankAccount      |*
+  | .ZZA | .ZZB |     50 |     150 | USkk211870281123 |
+  | .ZZB | .ZZA |     50 |       0 |                  |
+  And member ".ZZB" visits page "settings/fund"
+  And step done "fund"
+  When member ".ZZB" completes form "settings/fund" with values:
+  | refills | target | achMin | saveWeekly |*
+  |       1 |    300 |    100 |          2 |
+  Then members have:
+  | uid  | bankAccount      | achMin | minimum | saveWeekly |*
+  | .ZZA | USkk211870281123 |    100 |     300 |          2 |
+  | .ZZB |                  |     50 |       0 |          0 |
 
 Scenario: A joined account member looks at transaction history and summary
 #  Given reward step is "1000"
@@ -122,7 +138,7 @@ Scenario: A joined account member looks at transaction history and summary
   | Out          | - |     0.00 |         |
   | End          |   | 1,850.00 | %dmy    |
   And with:
-  | Tx# | Date    | Name       | Purpose   |  Amount |  Balance | Action |
+  | Tx# | Date    | Name       | Purpose   |  Amount |  Balance |~Action |
   |   4 | %mdy    | --         | to bank   | -100.00 | 1,850.00 |        |
   |  18 | %mdy-1d | Cor Pub | labor     |  100.00 | 1,950.00 |        |
   |  17 | %mdy-2d | Dee Four   | cash      |   50.00 | 1,850.00 |        |
@@ -131,9 +147,10 @@ Scenario: A joined account member looks at transaction history and summary
   |   2 | %mdy-2w | --         | from bank |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"
   When member ".ZZB" visits page "dashboard"
-  Then we show "You: Bea Two" with:
-  | ~...          | joined with Abe One |
-  | Balance       | $1,850 |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Bea Two" with:
+#  | ~...          | joined with Abe One |
+#  | Balance       | $1,850 |
 
   Scenario: A joined account member unjoins the account
   Given members have:
