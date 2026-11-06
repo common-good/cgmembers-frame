@@ -136,8 +136,12 @@ function cgpaySignup() {
   // means the visitor came through the Food Fund promo at some point before
   // signing up. Legacy /signup only looked at exact-match (signup.inc:154),
   // but with the accumulate-all cookie model the token can sit alongside others
-  // like "cge food NEWABC".
-  if ($source2 !== '' && in_array('food', explode(' ', $source2), TRUE)) $a->stepDone('food', FALSE);
+  // like "cge food NEWABC" or (once cg4.us ships typed tokens) "a:cge w:food q:NEWABE".
+  // Strip the optional a:/w:/q: prefix before the compare so either shape matches.
+  if ($source2 !== '') {
+    $tokens = array_map(function ($t) { return preg_replace('/^[awq]:/', '', $t); }, explode(' ', $source2));
+    if (in_array('food', $tokens, TRUE)) $a->stepDone('food', FALSE);
+  }
 
   if ($invitationCode !== '') invitation($invitationCode, $uid);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', ['myid' => $uid, 'email' => u\cry('P', $email)]);
