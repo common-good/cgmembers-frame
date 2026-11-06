@@ -1058,6 +1058,7 @@ function badName(&$name) {
     return 'illegal char';
   } */
   if (empty($name)) return '';
+  if (!mb_check_encoding($name, 'UTF-8')) return 'illegal char'; // (preg_replace with /u returns NULL for invalid UTF-8, which would silently empty the name)
   $name = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $name);
   $name = trim(preg_replace('/ +/', ' ', $name));
   if (strlen(u\shortName($name)) > USERNAME_MAX_LENGTH) return 'too long';

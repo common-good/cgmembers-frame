@@ -47,9 +47,10 @@ Setup:
 
 Scenario: A member clicks the dashboard tab
   When member ".ZZA" visits page "dashboard"
-  Then we show "You: Abe One" with:
-  | Account   | NEWZZA | Show QR |
-  | Balance   | $10    |         |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Abe One" with:
+#  | Account   | NEWZZA | Show QR |
+#  | Balance   | $10    |         |
   
 Scenario: A member clicks the dashboard tab with roundups
   Given these "txs":
@@ -59,17 +60,20 @@ Scenario: A member clicks the dashboard tab with roundups
   Then balances:
   | uid  | balance |*
   | .ZZB |  144.98 |
-  And we show "You: Bea Two" with:
-  | Balance       | $144 |
+  And we redirect to "%CGPAY_URL"
+#  And we show "You: Bea Two" with:
+#  | Balance       | $144 |
 
 Scenario: An agent clicks the dashboard tab without permission to manage
   When member "A:B" visits page "dashboard"
-  Then we show "You: Abe One" with:
-  | Balance       | $10 |
-  And without:
-  | Make This a Joint |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Abe One" with:
+#  | Balance       | $10 |
+#  And without:
+#  | Make This a Joint |
 
 Scenario: A company agent clicks the dashboard tab
   When member "C:A" visits page "dashboard"
-  Then we show "You: Corner Pub" with:
-  | Balance       | $365 |
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Corner Pub" with:
+#  | Balance       | $365 |

@@ -135,8 +135,8 @@ Scenario: A member confirms request to make a short-term loan
   | op  | who     | amount | isLoan | purpose |*
   | pay | Our Pub | 100    | 1      | yourock |
   Then these "txs":
-  | xid | created | amount | payer | payee | purpose | boxId | taking | flags |*
-  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      |       |
+  | xid | created | amount | payer | payee | purpose | boxId | taking | flags     |*
+  |   1 | %now    |    100 | .ZZA  | .ZZC  | yourock | 2     | 0      | shortloan |
   And these "tx_requests":
   | nvid | created | amount | payer | payee | purpose            |*
   | 1    | %now    |    100 | .ZZC  | .ZZA  | Repaying %mdY loan |
@@ -208,46 +208,43 @@ Scenario: A member confirms request to pay a member company
 #  | field |*
 #  | "For" |
 
-Skip this is now allowed, as an implicit invitation (3 scenarios)
-Scenario: A member asks to charge another member before making an rCard purchase
+# Rule: A member must complete at least one in-person transaction before making or requesting any online payment --  not used by our current community (so Skipped), but another community may want it.
+Skip This is now allowed, so no error
+Scenario: A member asks to charge another member before having a photo ID
   Given member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   Then we say "error": "no photoid"
+Resume
 
-Scenario: A member asks to charge another member before the other has made an rCard purchase
+Skip This is now allowed, so no error
+Scenario: A member asks to charge another member before the other has a photo ID
   Given member ".ZZB" has no photo ID recorded
   When member ".ZZA" completes form "tx/charge" with values:
-  | op     | who     | amount | goods | purpose |*
-  | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "error": "other no photoid" with subs:
-  | who     |*
-  | Bea Two |
-  
-Scenario: A member confirms payment of an invoice before making a Common Good Card purchase
-  Given member ".ZZA" confirms form "tx/pay" with values:
-  | op  | who     | amount | goods      | purpose |*
-  | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
-  Then we say "error": "first at home"
-  
-Skip (not sure about this feature)
-Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
-  Given member ".ZZB" has no photo ID recorded
-  When member ".ZZA" completes form "tx/pay" with values:
-  | op  | who     | amount | goods | purpose |*
-  | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then we say "error": "other no photoid" with subs:
   | who     |*
   | Bea Two |
 Resume
 
+Skip This is now allowed, so no error
+Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
+  Given member ".ZZA" confirms form "tx/pay" with values:
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
+  Then we say "error": "first at home"
+Resume
+
+Skip This is now allowed, so no error
 Scenario: A new member asks to pay another member before making a Common Good Card purchase
   Given member ".ZZA" is unconfirmed
   When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "status": "first at home|when resolved"
+  Then we say "error": "first at home|when resolved"
+Resume
 
 Scenario: A member pays another member repeatedly
   Given these "tx_timed":
