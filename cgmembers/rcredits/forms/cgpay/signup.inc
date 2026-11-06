@@ -47,6 +47,10 @@ function cgpaySignup() {
   // optional carry-through fields - preserve acquisition + inviter attribution
   $invitationCode = trim((string) nni($body, 'invitationCode'));
   $source         = trim((string) nni($body, 'source'));
+  // The node proxy reads $_COOKIE['ad'] (set when the visitor arrived from a
+  // cg4.us/a=XXX QR/link) and forwards it as source2 so the new signup path
+  // carries the same attribution the legacy /signup form picks up itself.
+  $source2        = trim((string) nni($body, 'source2'));
 
   // Verify the captcha before touching the database. Fails closed on anything
   // but a Cloudflare-approved token: a missing/rejected token, OR a missing
@@ -105,6 +109,11 @@ function cgpaySignup() {
   $fullName = u\normalizeCase($fullName);
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
+  // Combine source + source2 the same way the legacy /signup form does
+  // (signup.inc:133): the source stored on the Acct is "UPPER(source2)-source"
+  // so the two attributions survive together through to reporting.
+  if ($source2 !== '') $source = trim(mb_strtoupper($source2) . '-' . $source, '-');
+
   $info = compact(ray('fullName email phone country zip city state'));
   if ($source !== '') $info['source'] = $source;
   if ($invitationCode !== '') $info['code'] = $invitationCode;
@@ -116,6 +125,10 @@ function cgpaySignup() {
   // mark email + extras the legacy form marks
   $a->update('email', u\cry('P', $email));
   $a->setRisk('rents');
+
+  // Food Fund promo marker: source2=food means the visitor came from cg4.us/food
+  // (same special case the legacy signup form handles at signup.inc:154).
+  if ($source2 === 'food') $a->stepDone('food', FALSE);
 
   if ($invitationCode !== '') invitation($invitationCode, $uid);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', ['myid' => $uid, 'email' => u\cry('P', $email)]);
