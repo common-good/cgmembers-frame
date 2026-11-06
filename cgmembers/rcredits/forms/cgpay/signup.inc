@@ -109,10 +109,13 @@ function cgpaySignup() {
   $fullName = u\normalizeCase($fullName);
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
-  // Combine source + source2 the same way the legacy /signup form does
-  // (signup.inc:133): the source stored on the Acct is "UPPER(source2)-source"
-  // so the two attributions survive together through to reporting.
-  if ($source2 !== '') $source = trim(mb_strtoupper($source2) . '-' . $source, '-');
+  // source2 holds the full space-separated list of /a= / /q= sources the
+  // visitor accumulated before signing up (cg4.us appends to the `ad` cookie
+  // for any non-member rather than overwriting, so we can see the whole path
+  // - e.g. "cge brochure26 NEWABC" - not just the last touch). Store it as-is
+  // in the `source` field if there is one, otherwise keep whatever `source`
+  // the browser passed (invitation / helper attribution, kept separate).
+  if ($source2 !== '' && $source === '') $source = $source2;
 
   $info = compact(ray('fullName email phone country zip city state'));
   if ($source !== '') $info['source'] = $source;
@@ -126,9 +129,12 @@ function cgpaySignup() {
   $a->update('email', u\cry('P', $email));
   $a->setRisk('rents');
 
-  // Food Fund promo marker: source2=food means the visitor came from cg4.us/food
-  // (same special case the legacy signup form handles at signup.inc:154).
-  if ($source2 === 'food') $a->stepDone('food', FALSE);
+  // Food Fund promo marker: 'food' anywhere in the space-separated source2 list
+  // means the visitor came through the Food Fund promo at some point before
+  // signing up. Legacy /signup only looked at exact-match (signup.inc:154),
+  // but with the accumulate-all cookie model the token can sit alongside others
+  // like "cge food NEWABC".
+  if ($source2 !== '' && in_array('food', explode(' ', $source2), TRUE)) $a->stepDone('food', FALSE);
 
   if ($invitationCode !== '') invitation($invitationCode, $uid);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', ['myid' => $uid, 'email' => u\cry('P', $email)]);
