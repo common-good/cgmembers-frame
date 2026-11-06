@@ -102,7 +102,7 @@ X;
 
 ///  die(pr(showq($sql, ray('uids', join(',', $uids)))));
   $q = db\q($sql, compact('uids'));
-  u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
+  if (!$q) u\FAIL("Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
@@ -198,7 +198,7 @@ X;
 
 ///  showq($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
   $q = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
-  u\EXPECT($q, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
+  if (!$q) u\FAIL("Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
 
   $myBalance = balanceAsOf($aUids[0], $starting);
   $entries[] = ray('tid created uid name description balance invoiced paid', '', $starting, '', '', t('Opening balance'), $myBalance, '', '');
@@ -1656,7 +1656,7 @@ function createUsdTransfer($a, $amount, $options = []) {
   list ($eType, $deposit, $bankId, $bankAccount) = $pid
   ? [E_OUTER, $deposit ?: 0, UID_OUTER, $bankAccount] // transfer to or from a non-member (with no CG account)
   : [E_BANK, 0, $amount >= 0 ? UID_BANK : UID_BANK, nni($a->vsecure, 'bankAccount', NULL)];
-  u\EXPECT($bankAccount or $deposit or ($pid and $amount < 0), 'bad bank account in bank transfer request: ' . pr($options + compact('payee')));
+  if (!($bankAccount or $deposit or ($pid and $amount < 0))) u\FAIL('bad bank account in bank transfer request: ' . pr($options + compact('payee')));
 
   $tx0 = ray('goods flags actorId actorAgentId channel created recursId', FOR_USD, $flags ?: 0, $payee, $payee, $channel, $created, $recursId);
   $tx = new r\Tx($tx0);

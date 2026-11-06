@@ -33,7 +33,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   if ($code) {
     if (!$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact(ray('args code info')));
     extract(just('op v', $info, NULL));
-    u\EXPECT($op == 'inv' and $v == $nvid, t('handleInvoice fake') . pr(compact(ray('args code info'))));
+    if (!($op == 'inv' and $v == $nvid)) u\FAIL(t('handleInvoice fake') . pr(compact(ray('args code info'))));
 //    if (!w\itsMyBox($payer)) return w\go($ret, t('You can pay an invoice only on a device you have signed in from.'), 'ERR');
   }
   

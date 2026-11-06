@@ -608,7 +608,7 @@ function setV($name, $value) {
     db\del('variable', 'name', $name);
   } else {
     $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
-    u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+    if (!$res) u\FAIL('cannot setV: ' . pr(compact(ray('name value'))));
   }
 
   cache_clear_all('variables', 'cache_bootstrap');
