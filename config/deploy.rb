@@ -44,10 +44,10 @@ set :ssh_options, {
 # cleanup step (rm -rf .../misc, disable admin) after each redeploy — this
 # only automates re-exposing it, not removing it again.
 namespace :deploy do
-  desc 'Copy admin bootstrap keys into place (test only)'
+  desc 'Copy admin bootstrap keys into place (test only, if shared/misc exists)'
   task :copy_admin_keys do
     on roles(:app) do
-      if fetch(:stage).to_s == "test"
+      if fetch(:stage).to_s == "test" && test("[ -d #{shared_path}/misc ]")
         execute :cp, "-r", shared_path.join("misc").to_s, release_path.join("cgmembers/rcredits").to_s
       end
     end
