@@ -48,8 +48,9 @@ function cgpaySignup() {
   $invitationCode = trim((string) nni($body, 'invitationCode'));
   $source         = trim((string) nni($body, 'source'));
   // The node proxy reads $_COOKIE['ad'] (set when the visitor arrived from a
-  // cg4.us/a=XXX QR/link) and forwards it as source2 so the new signup path
-  // carries the same attribution the legacy /signup form picks up itself.
+  // cg4.us/a=XXX / w=XXX / q=XXX QR or link) and forwards it as source2 so the
+  // new signup path carries the same attribution the legacy /signup form picks
+  // up itself.
   $source2        = trim((string) nni($body, 'source2'));
 
   // Verify the captcha before touching the database. Fails closed on anything
@@ -109,12 +110,14 @@ function cgpaySignup() {
   $fullName = u\normalizeCase($fullName);
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
-  // source2 holds the full space-separated list of /a= / /q= sources the
-  // visitor accumulated before signing up (cg4.us appends to the `ad` cookie
-  // for any non-member rather than overwriting, so we can see the whole path
-  // - e.g. "cge brochure26 NEWABC" - not just the last touch). Store it as-is
-  // in the `source` field if there is one, otherwise keep whatever `source`
-  // the browser passed (invitation / helper attribution, kept separate).
+  // source2 holds the full space-separated list of sources the visitor
+  // accumulated before signing up (cg4.us appends to the `ad` cookie for any
+  // non-member rather than overwriting, so we see the whole path - e.g.
+  // "cge brochure26 card NEWABE" - not just the last touch). cg4.us has three
+  // URL types that feed this cookie: a= go-to-app, w= go-to-website, q=
+  // company account ID. Store it as-is in the `source` field if there is one,
+  // otherwise keep whatever `source` the browser passed (invitation / helper
+  // attribution, kept separate).
   if ($source2 !== '' && $source === '') $source = $source2;
 
   $info = compact(ray('fullName email phone country zip city state'));
