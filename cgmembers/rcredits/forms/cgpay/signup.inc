@@ -16,7 +16,7 @@ use CG\Util as u;
  *   4. generates a one-time verification code + emails it to the member
  *   5. returns {uid, qid, status: 'verify_email'}
  *
- * Verification + password-set happen on the companion /cgpay-signup-verify
+ * Verification + password-set happen on the companion /cgpay/signup-verify
  * endpoint. The SSO cookie is NOT set here - the account cannot act until it
  * is verified.
  *
@@ -123,10 +123,13 @@ function cgpaySignup() {
   tellStaffNewMember($info + ['acctType' => CO_PERSONAL, 'qid' => $a->mainQid, 'name' => $a->name]);
 
   // Generate + email the verification code. Reuses `oneTimePass` which already
-  // handles expiry; the cgpay-signup-verify endpoint checks against the same
+  // handles expiry; the cgpay/signup-verify endpoint checks against the same
   // field. Not the final password - member sets that on the verify step.
+  // The `verify-cgpay` template links at CGPAY_URL/signup/verify (the node app)
+  // and carries both qid and code in the URL so the member can finish the flow
+  // in a new tab or on a different device.
   $code = $a->oneTimePass();
-  $a->tell('verify', ray('name qid code', $a->name, $a->mainQid, $code));
+  $a->tell('verify-cgpay', ['name' => $a->name, 'qid' => $a->mainQid, 'code' => $code, 'cgpayUrl' => CGPAY_URL]);
 
   return exitJson([
     'uid'    => $uid,
