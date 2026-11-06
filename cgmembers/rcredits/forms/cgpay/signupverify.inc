@@ -45,6 +45,9 @@ function cgpaySignupVerify() {
 
   if ($code === '' || $newPassword === '') return exitJust(X_SYNTAX);
   if (!$uid && $qid === '') return exitJust(X_SYNTAX);
+  // Match the node proxy's minimum (web/src/routes/api/signup-verify/+server.ts)
+  // so a browser that skips client validation still gets a sane message.
+  if (strlen($newPassword) < 8) return exitJson(['errors' => ['newPassword' => t('Password must be at least 8 characters.')]], X_SYNTAX);
 
   // Accept either a uid (node has it from sessionStorage during the same-tab flow)
   // or a qid (from the ?qid=... in the verification email link, which may open in
