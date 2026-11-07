@@ -7,8 +7,8 @@
  * Gives the account the member, confirmed, ok and admin flags and every admin permission, makes its
  * superAdmin key (from the dev key), sets a random sign-in password and saves the QR code to scan as a PNG.
  * Replaces signing in as the temporary admin.
- * The password has 11 characters of a 32-character alphabet (55 bits; no look-alike characters, no shift key): about
- * 5 years on average for an attacker who stole the hash and tries a hundred million guesses a second.
+ * The password has 12 characters of a 32-character alphabet (60 bits; no look-alike characters, no shift key): about
+ * 180 years on average for an attacker who stole the hash and tries a hundred million guesses a second.
  */
 use CG as r;
 use CG\DB as db;
@@ -33,7 +33,7 @@ $id = db\get('id', 'admins', ['uid' => $a->id]);
 db\updateOrInsert('admins', ['id' => $id, 'uid' => $a->id, 'can' => (1 << count(ray(A_LIST))) - 1]);
 
 $abc = 'abcdefghijkmnpqrstuvwxyz23456789';
-for ($pass = '', $i = 0; $i < 11; $i++) $pass .= $abc[random_int(0, strlen($abc) - 1)];
+for ($pass = '', $i = 0; $i < 12; $i++) $pass .= $abc[random_int(0, strlen($abc) - 1)];
 $a->update(['pass' => $pass]);
 
 $uri = qr\generate($pw, '', t('%PROJECT SuperAdmin'));
