@@ -49,13 +49,6 @@ function formSignin($form, &$sta, $arg = '') {
 }
 
 /**
- * Replacement for user_login_authenticate_validate()
- * See the original function for explanation of flood control.
- * Accept account ID or email, with password.
- * Sets $sta['uid'] to signify successful authentication.
- * @param string $type: 'acct', 'pw', or 'both' -- what parameters to check
- */
-/**
  * Tell whether to refuse this sign-in because the account is an admin whose password is not strong enough.
  * Only on production (the standard test accounts have deliberately simple passwords). The password is known only now, at sign-in.
  */
@@ -63,6 +56,13 @@ function adminPassTooWeak($a, $pass, $prod = isPRODUCTION) {
   return $prod and $a->admin and !u\strongPass($pass, u\pwAvoid($a));
 }
 
+/**
+ * Replacement for user_login_authenticate_validate()
+ * See the original function for explanation of flood control.
+ * Accept account ID or email, with password.
+ * Sets $sta['uid'] to signify successful authentication.
+ * @param string $type: 'acct', 'pw', or 'both' -- what parameters to check
+ */
 function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('qid pass vKeyPw mfa gotNonce trust then', $sta['input'], NULL)); // mfa/gotNonce/trust are from mfa()
 

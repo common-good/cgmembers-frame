@@ -10,8 +10,8 @@ use CG\Web as w;
 
 /**
  * Tell whether this user may use the PHP window: anyone on a local machine, else an admin with the code permission.
- * @param bool $local: whether this is a local machine (a parameter so a test can try the online case)
  * The superAdmin (uid 1) passes every permission check, so it is refused here explicitly.
+ * @param bool $local: whether this is a local machine (a parameter so a test can try the online case)
  */
 function phpWindowOk($local = isLOCAL) {
   global $mya;
