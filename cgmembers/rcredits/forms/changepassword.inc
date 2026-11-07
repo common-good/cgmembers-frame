@@ -26,6 +26,9 @@ function formChangePassword_validate($form, &$sta) {
   if (!$mya or !$mya->admin) {
     if (isset($pass) and !$mya->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
   }
+  if ($mya and $mya->admin and !u\strongPass(nn($sta['input']['pw']), array_merge(ray($mya->fullName), [strstr($mya->email, '@', TRUE)]))) {
+    return say(t('An administrator password must be at least 12 characters, with at least 8 different ones, and hard to guess (no name, email or common word). A long random one from a password manager is best.'), 'pw');
+  }
 }
 
 function formChangePassword_submit($form, &$sta) {

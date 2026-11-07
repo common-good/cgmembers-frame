@@ -2313,3 +2313,15 @@ function phpWindowOpenTo($list) {
   $mya = $mya0;
   return TRUE;
 }
+
+/**
+ * Check which passwords count as strong enough for an admin.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function strongPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] is strong", $row['ok'], u\strongPass($row['pw']) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}

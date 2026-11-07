@@ -53,3 +53,14 @@ Scenario: The PHP window is for local machines and for admins with the code perm
   | .ZZA  | yes  |
   | .ZZB  | no   |
   | super | no   |
+
+Scenario: An administrator password must be strong
+  Then these passwords are strong enough for an admin:
+  | pw                           | ok  |*
+  | k                            | no  |
+  | abcdefghijk                  | no  |
+  | zzzzzzzzzzzzzzz1             | no  |
+  | Password1234!                | no  |
+  | qwertyuiop12                 | no  |
+  | kqhmw3nx7ety                 | yes |
+  | correct horse battery staple | yes |

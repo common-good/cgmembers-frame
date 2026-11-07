@@ -1901,6 +1901,21 @@ function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s
 function honorDesc($honor) {return $honor == 'other' ? ' ' : t(' in %honor of ', compact('honor'));}
 function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(",$hay,", ",$needle,"));}
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
+/**
+ * Tell whether a password is strong enough for an administrator: at least 12 characters, at least 8 different ones,
+ * at least 60 bits by a simple estimate (length times the size of the character pool used), and nothing obvious in it.
+ * The estimate is a floor for random-looking passwords, not a guarantee for human-made ones, so long and random is best.
+ * @param string $pw: the proposed password
+ * @param array $avoid: words (name, email name, etc.) the password must not contain
+ */
+function strongPass($pw, $avoid = []) {
+  $len = mb_strlen($pw);
+  if ($len < 12 or count(array_unique(mb_str_split($pw))) < 8) return FALSE;
+  $pool = (preg_match('/[a-z]/', $pw) ? 26 : 0) + (preg_match('/[A-Z]/', $pw) ? 26 : 0) + (preg_match('/\d/', $pw) ? 10 : 0) + (preg_match('/[^0-9A-Za-z]/', $pw) ? 33 : 0);
+  if (!$pool or $len * \log($pool, 2) < 60) return FALSE;
+  foreach (array_merge(ray('password passw0rd qwerty letmein commongood'), $avoid) as $w) if (mb_strlen($w) >= 4 and mb_stripos($pw, $w) !== FALSE) return FALSE;
+  return TRUE;
+}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
