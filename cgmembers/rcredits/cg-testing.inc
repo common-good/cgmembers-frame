@@ -2296,3 +2296,20 @@ function transactionSets($name, $how) {
 }
 
 function variableIsSet($name, $want) {return t\eq("variable $name is set", (int) $want, (int) (bool) db\exists('variable', 'name=:name', compact('name')));}
+
+/**
+ * Check who may use the PHP window when the server is not a local machine.
+ * @param array $list: rows of who (account id, or "super" for the superAdmin) and open (yes or no)
+ */
+function phpWindowOpenTo($list) {
+  global $mya;
+  include_once R_ROOT . '/forms/php.inc';
+  $mya0 = $mya;
+  foreach ($list as $row) {
+    $mya = $row['who'] == 'super' ? r\acct(UID_SUPER) : t\acct($row['who']);
+    $res = t\eq("PHP window open to $row[who]", $row['open'], w\phpWindowOk(FALSE) ? 'yes' : 'no');
+    if ($res !== TRUE) {$mya = $mya0; return $res;}
+  }
+  $mya = $mya0;
+  return TRUE;
+}

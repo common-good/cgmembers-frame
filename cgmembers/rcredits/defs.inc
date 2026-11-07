@@ -21,7 +21,7 @@ define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file 
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
-define('isLOCAL', in_array(nn($_SERVER['REMOTE_ADDR']), ['127.0.0.1', '::1']) and in_array(nn($_SERVER['HTTP_HOST']), ['localhost', '127.0.0.1']) and !nn($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
+define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
 const SOCKET_PORT = 8081; // app websocket port
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)

@@ -176,6 +176,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
  *     MAKE rules Setup
  *     MAKE super AnAdminPrintsChecks
+ *     MAKE super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -506,3 +507,10 @@ function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
  *     TEST dbtransactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
+
+/**
+ * the PHP window, away from a local machine, is open to: (ARG)
+ *
+ * in: TEST super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
+ */
+function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpenTo($list);}

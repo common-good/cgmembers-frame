@@ -43,3 +43,13 @@ Scenario: An admin tries to do an admin thing with insufficient permissions
   | page | Checks |**
 
 Scenario: A superAdmin grants super permission to another admin
+
+Scenario: The PHP window is for local machines and for admins with the code permission
+  Given these "admins":
+  | uid  | vKeyE     | can  |*
+  | .ZZA | DEV_VKEYE | code |
+  Then the PHP window, away from a local machine, is open to:
+  | who   | open |*
+  | .ZZA  | yes  |
+  | .ZZB  | no   |
+  | super | no   |
