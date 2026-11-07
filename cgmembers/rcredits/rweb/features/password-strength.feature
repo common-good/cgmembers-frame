@@ -16,7 +16,11 @@ Scenario: The server applies the same minimum as the strength bar
   | aB3$efgh          |        | yes |
   | aB3$efg           |        | no  |
   | abcdefghijklmno1  |        | no  |
-  | abcdefghijklmnoP1 |        | yes |
+  | tnmkrhzjwpqlxyuP1|        | yes |
   | Zephyr9$Ab        |        | yes |
   | Zephyr9$Ab        | zephyr | no  |
-  | zephyr9$AbCdEf    | zephyr | yes |
+  | zephyr9$KtRmQw    | zephyr | yes |
+  | Liverpool#99      |        | no  |
+  | Monkey123!        |        | no  |
+  | Tx7Liverpool99    |        | no  |
+  | Tx7#Liv3rp00l#99  |        | yes |
