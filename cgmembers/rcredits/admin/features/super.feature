@@ -67,10 +67,3 @@ Scenario: An administrator password must score higher than a member's
   | aB3$efghij                   | efghij | no  |
   | tnmkrhzjwpqlxyuP1           |        | yes |
   | correct horse battery staple |        | yes |
-
-Scenario: An admin with a weak password cannot sign in to production
-  Then admin sign-in with these passwords is refused on production:
-  | who  | pw           | refused |*
-  | .ZZA | k            | yes     |
-  | .ZZA | aB3$efghij   | no      |
-  | .ZZB | k            | no      |

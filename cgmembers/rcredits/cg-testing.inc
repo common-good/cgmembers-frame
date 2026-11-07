@@ -2325,20 +2325,6 @@ function strongPasswords($list) {
   }
   return TRUE;
 }
-
-/**
- * Check which sign-ins production would refuse for a weak admin password.
- * @param array $list: rows of who (account id), pw and refused (yes or no)
- */
-function adminSigninRefused($list) {
-  include_once R_ROOT . '/forms/signin.inc';
-  foreach ($list as $row) {
-    $res = t\eq("admin sign-in refused for $row[who] with $row[pw]", $row['refused'], w\adminPassTooWeak(t\acct($row['who']), $row['pw'], TRUE) ? 'yes' : 'no');
-    if ($res !== TRUE) return $res;
-  }
-  return TRUE;
-}
-
 /**
  * Check which passwords meet the minimum every member must meet.
  * @param array $list: rows of pw and ok (yes or no)

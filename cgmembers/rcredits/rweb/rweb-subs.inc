@@ -1061,7 +1061,6 @@ function pickPassword($reset = TRUE, $req = '') {
   global $mya;
   $admin = ($mya and $mya->admin);
   $help = t('Type carefully (your password will not be visible when you sign in).') . ' ' . t('The bar fills as the password gets stronger: longer is better, and so are capitals, lower case, digits and punctuation. Common words, your name and your email count as only one letter each.');
-  if ($admin) $help .= ' ' . t('An administrator password must fill the bar further (for example 10 characters with all four kinds of character).');
   $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), $help, autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
   jsx('pw', ['min' => $admin ? PW_MIN_SCORE_ADMIN : PW_MIN_SCORE, 'avoid' => join(',', array_merge(ray(PW_COMMON), $mya ? u\pwAvoid($mya) : []))]);
   focusOn('pw');
