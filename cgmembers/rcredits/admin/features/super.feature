@@ -64,3 +64,10 @@ Scenario: An administrator password must be strong
   | qwertyuiop12                 | no  |
   | kqhmw3nx7ety                 | yes |
   | correct horse battery staple | yes |
+
+Scenario: An admin with a weak password cannot sign in to production
+  Then admin sign-in with these passwords is refused on production:
+  | who  | pw           | refused |*
+  | .ZZA | k            | yes     |
+  | .ZZA | kqhmw3nx7ety | no      |
+  | .ZZB | k            | no      |

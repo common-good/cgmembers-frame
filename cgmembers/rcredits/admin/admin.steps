@@ -521,3 +521,10 @@ function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpe
  * in: TEST super AnAdministratorPasswordMustBeStrong
  */
 function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
+
+/**
+ * admin sign-in with these passwords is refused on production: (ARG)
+ *
+ * in: TEST super AnAdminWithAWeakPasswordCannotSignInToProduction
+ */
+function adminSigninWithThesePasswordsIsRefusedOnProduction($list) {return t\adminSigninRefused($list);}
