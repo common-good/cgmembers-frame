@@ -9,9 +9,20 @@ use CG\Admin as a;
 use CG\Web as w;
 
 /**
+ * Tell whether this user may use the PHP window: anyone on a local machine, else an admin with the code permission.
+ * @param bool $local: whether this is a local machine (a parameter so a test can try the online case)
+ * The superAdmin (uid 1) passes every permission check, so it is refused here explicitly.
+ */
+function phpWindowOk($local = isLOCAL) {
+  global $mya;
+  return $local or ($mya and $mya->agentId != UID_SUPER and $mya->admCode);
+}
+
+/**
  * Generates the execute form.
  */
 function formPhp($form, &$sta, $res = '') {
+  if (!phpWindowOk()) return softErr(t('The PHP window is available only on a local development machine or to an admin with the code permission.'));
   $res = item($res, BARE);
   $code = areaFld(BARE, '', dft(getV('code')));
 ///  $code = str_replace('href', 'hruf', $code); // needed occasionally if we type something that looks like a hack
@@ -21,6 +32,7 @@ function formPhp($form, &$sta, $res = '') {
 
 function formPhp_validate($form, &$sta) {
   global $mya;
+  if (!phpWindowOk()) return w\err(t('The PHP window is not available to this account.'));
   extract(just('code', $sta['input']));
 
   if (!!isPRODUCTION) { // safety precaution

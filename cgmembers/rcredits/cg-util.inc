@@ -1901,6 +1901,35 @@ function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s
 function honorDesc($honor) {return $honor == 'other' ? ' ' : t(' in %honor of ', compact('honor'));}
 function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(",$hay,", ",$needle,"));}
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
+/**
+ * Score a password the way the password page's strength bar does (see pwScore in js/scraps.js):
+ * one point for each kind of character present (non-ASCII, capital, lower case, digit, other) plus 1/7 point per character.
+ * First, any common word (PW_COMMON) or word in $avoid (the member's name parts and email name) inside the password
+ * counts as one character, its first letter, so the password cannot lean on them.
+ * @param string $pw: the proposed password
+ * @param array $avoid: words (name, email name, etc.) to shrink to one character each
+ */
+function pwScore($pw, $avoid = []) {
+  $words = array_filter(array_merge(ray(PW_COMMON), $avoid), function ($w) {return mb_strlen($w) >= 4;});
+  usort($words, function ($a, $b) {return mb_strlen($b) <=> mb_strlen($a);});
+  foreach ($words as $w) $pw = preg_replace_callback('/' . preg_quote($w, '/') . '/iu', function ($m) {return mb_substr($m[0], 0, 1);}, $pw);
+  $kinds = ['/[^\x00-\x7f]/', '/[A-Z]/', '/[a-z]/', '/[0-9]/', '/[^\[A-Za-z0-9]/'];
+  return array_sum(array_map(function ($re) use ($pw) {return (int) preg_match($re, $pw);}, $kinds)) + mb_strlen($pw) / 7;
+}
+
+/**
+ * Tell whether a password meets the minimum score (see pwScore), which is higher for an administrator.
+ * The page hides the submit button until it does; this is the server's own check.
+ * @param bool $admin: whether the password is for an administrator
+ */
+function okPass($pw, $admin = FALSE, $avoid = []) {return pwScore($pw, $avoid) >= ($admin ? PW_MIN_SCORE_ADMIN : PW_MIN_SCORE);}
+function strongPass($pw, $avoid = []) {return okPass($pw, TRUE, $avoid);}
+
+/**
+ * Return the words from an account (name parts, email name) that its password must not lean on.
+ */
+function pwAvoid($a) {return array_values(array_filter(array_merge(ray($a->fullName), [strstr($a->email, '@', TRUE) ?: '']), function ($w) {return mb_strlen($w) >= 4;}));}
+
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}

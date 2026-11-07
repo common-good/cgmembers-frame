@@ -2296,3 +2296,57 @@ function transactionSets($name, $how) {
 }
 
 function variableIsSet($name, $want) {return t\eq("variable $name is set", (int) $want, (int) (bool) db\exists('variable', 'name=:name', compact('name')));}
+
+/**
+ * Check who may use the PHP window when the server is not a local machine.
+ * @param array $list: rows of who (account id, or "super" for the superAdmin) and open (yes or no)
+ */
+function phpWindowOpenTo($list) {
+  global $mya;
+  include_once R_ROOT . '/forms/php.inc';
+  $mya0 = $mya;
+  foreach ($list as $row) {
+    $mya = $row['who'] == 'super' ? r\acct(UID_SUPER) : t\acct($row['who']);
+    $res = t\eq("PHP window open to $row[who]", $row['open'], w\phpWindowOk(FALSE) ? 'yes' : 'no');
+    if ($res !== TRUE) {$mya = $mya0; return $res;}
+  }
+  $mya = $mya0;
+  return TRUE;
+}
+
+/**
+ * Check which passwords count as strong enough for an admin.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function strongPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] is strong", $row['ok'], u\strongPass($row['pw'], ray(nn($row['avoid']))) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}
+
+/**
+ * Check which sign-ins production would refuse for a weak admin password.
+ * @param array $list: rows of who (account id), pw and refused (yes or no)
+ */
+function adminSigninRefused($list) {
+  include_once R_ROOT . '/forms/signin.inc';
+  foreach ($list as $row) {
+    $res = t\eq("admin sign-in refused for $row[who] with $row[pw]", $row['refused'], w\adminPassTooWeak(t\acct($row['who']), $row['pw'], TRUE) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}
+
+/**
+ * Check which passwords meet the minimum every member must meet.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function okPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] meets the member minimum", $row['ok'], u\okPass($row['pw'], FALSE, ray(nn($row['avoid']))) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}

@@ -43,3 +43,34 @@ Scenario: An admin tries to do an admin thing with insufficient permissions
   | page | Checks |**
 
 Scenario: A superAdmin grants super permission to another admin
+
+Scenario: The PHP window is for local machines and for admins with the code permission
+  Given these "admins":
+  | uid  | vKeyE     | can  |*
+  | .ZZA | DEV_VKEYE | code |
+  Then the PHP window, away from a local machine, is open to:
+  | who   | open |*
+  | .ZZA  | yes  |
+  | .ZZB  | no   |
+  | super | no   |
+
+Scenario: An administrator password must score higher than a member's
+  Then these passwords are strong enough for an admin:
+  | pw                           | avoid  | ok  |*
+  | k                            |        | no  |
+  | abcdefghijk                  |        | no  |
+  | zzzzzzzzzzzzzzz1             |        | no  |
+  | Password1234!                |        | no  |
+  | qwertyuiop12                 |        | no  |
+  | aB3$efghi                    |        | no  |
+  | aB3$efghij                   |        | yes |
+  | aB3$efghij                   | efghij | no  |
+  | tnmkrhzjwpqlxyuP1           |        | yes |
+  | correct horse battery staple |        | yes |
+
+Scenario: An admin with a weak password cannot sign in to production
+  Then admin sign-in with these passwords is refused on production:
+  | who  | pw           | refused |*
+  | .ZZA | k            | yes     |
+  | .ZZA | aB3$efghij   | no      |
+  | .ZZB | k            | no      |

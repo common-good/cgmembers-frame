@@ -176,6 +176,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
  *     MAKE rules Setup
  *     MAKE super AnAdminPrintsChecks
+ *     MAKE super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -506,3 +507,24 @@ function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
  *     TEST dbtransactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
+
+/**
+ * the PHP window, away from a local machine, is open to: (ARG)
+ *
+ * in: TEST super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
+ */
+function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpenTo($list);}
+
+/**
+ * these passwords are strong enough for an admin: (ARG)
+ *
+ * in: TEST super AnAdministratorPasswordMustScoreHigherThanAMembers
+ */
+function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
+
+/**
+ * admin sign-in with these passwords is refused on production: (ARG)
+ *
+ * in: TEST super AnAdminWithAWeakPasswordCannotSignInToProduction
+ */
+function adminSigninWithThesePasswordsIsRefusedOnProduction($list) {return t\adminSigninRefused($list);}
