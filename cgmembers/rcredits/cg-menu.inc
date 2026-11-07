@@ -176,7 +176,7 @@ function menu($submenu = '') {
     'sadmin/focuses' => ['sub', t('Focuses'), 'Focuses 2', 'admPrintChecks'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
-    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
+    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isLOCAL ? ANY : 'admCode'],
 
     'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admCode', 'checkSanity'],
     'sadmin/set-cats' => ['call', t('Set Accounting Categories'), 'SetCats', 'admEditTx'],
