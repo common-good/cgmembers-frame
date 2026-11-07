@@ -7,12 +7,14 @@
  * Gives the account the member, confirmed, ok and admin flags and every admin permission, makes its
  * superAdmin key (from the dev key), sets a random sign-in password and saves the QR code to scan as a PNG.
  * Replaces signing in as the temporary admin.
- * The password has 12 characters of a 32-character alphabet (60 bits; no look-alike characters, no shift key): about
- * 180 years on average for an attacker who stole the hash and tries a hundred million guesses a second.
+ * The password has 10 characters from a 64-character set (capitals, lower case, digits and 8 punctuation marks, no look-alikes),
+ * with all four kinds present as an admin password requires: about 59 bits, roughly 90 years on average for an attacker
+ * who stole the hash and tries a hundred million guesses a second.
  */
 use CG as r;
 use CG\DB as db;
 use CG\QR as qr;
+use CG\Util as u;
 
 define('DRUPAL_ROOT', __DIR__ . '/../..');
 require_once __DIR__ . '/../bootstrap.inc';
@@ -32,8 +34,10 @@ $pw = $a->makeVKeyE(file_get_contents(DEV_VPRIVK_FLNM), NULL, FALSE);
 $id = db\get('id', 'admins', ['uid' => $a->id]);
 db\updateOrInsert('admins', ['id' => $id, 'uid' => $a->id, 'can' => (1 << count(ray(A_LIST))) - 1]);
 
-$abc = 'abcdefghijkmnpqrstuvwxyz23456789';
-for ($pass = '', $i = 0; $i < 12; $i++) $pass .= $abc[random_int(0, strlen($abc) - 1)];
+$abc = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!#$%*+=?';
+do {
+  for ($pass = '', $i = 0; $i < 10; $i++) $pass .= $abc[random_int(0, strlen($abc) - 1)];
+} while (!u\strongPass($pass, u\pwAvoid($a)));
 $a->update(['pass' => $pass]);
 
 $uri = qr\generate($pw, '', t('%PROJECT SuperAdmin'));

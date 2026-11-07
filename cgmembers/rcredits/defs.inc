@@ -11,6 +11,9 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
+const PW_MIN_SCORE = 5.14; // minimum password score for a member (u\pwScore): 8 characters with capital, lower case, digit and punctuation
+const PW_COMMON = 'password passw0rd qwerty letmein welcome iloveyou monkey dragon sunshine football 123456 commongood'; // words that count as one character inside a password
+const PW_MIN_SCORE_ADMIN = 5.42; // for an administrator: 10 characters with all four kinds (or 17 with three kinds)
 const TEST_ANON = FALSE; // set this to TRUE (in development) to test a\anonymize() -- then start by recreating the db
 $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));

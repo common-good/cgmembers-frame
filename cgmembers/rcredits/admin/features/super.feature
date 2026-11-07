@@ -54,20 +54,23 @@ Scenario: The PHP window is for local machines and for admins with the code perm
   | .ZZB  | no   |
   | super | no   |
 
-Scenario: An administrator password must be strong
+Scenario: An administrator password must score higher than a member's
   Then these passwords are strong enough for an admin:
-  | pw                           | ok  |*
-  | k                            | no  |
-  | abcdefghijk                  | no  |
-  | zzzzzzzzzzzzzzz1             | no  |
-  | Password1234!                | no  |
-  | qwertyuiop12                 | no  |
-  | kqhmw3nx7ety                 | yes |
-  | correct horse battery staple | yes |
+  | pw                           | avoid  | ok  |*
+  | k                            |        | no  |
+  | abcdefghijk                  |        | no  |
+  | zzzzzzzzzzzzzzz1             |        | no  |
+  | Password1234!                |        | no  |
+  | qwertyuiop12                 |        | no  |
+  | aB3$efghi                    |        | no  |
+  | aB3$efghij                   |        | yes |
+  | aB3$efghij                   | efghij | no  |
+  | abcdefghijklmnoP1            |        | yes |
+  | correct horse battery staple |        | yes |
 
 Scenario: An admin with a weak password cannot sign in to production
   Then admin sign-in with these passwords is refused on production:
   | who  | pw           | refused |*
   | .ZZA | k            | yes     |
-  | .ZZA | kqhmw3nx7ety | no      |
+  | .ZZA | aB3$efghij   | no      |
   | .ZZB | k            | no      |

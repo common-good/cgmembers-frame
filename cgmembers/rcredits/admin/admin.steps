@@ -518,7 +518,7 @@ function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpe
 /**
  * these passwords are strong enough for an admin: (ARG)
  *
- * in: TEST super AnAdministratorPasswordMustBeStrong
+ * in: TEST super AnAdministratorPasswordMustScoreHigherThanAMembers
  */
 function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
 

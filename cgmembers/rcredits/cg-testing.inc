@@ -2320,7 +2320,7 @@ function phpWindowOpenTo($list) {
  */
 function strongPasswords($list) {
   foreach ($list as $row) {
-    $res = t\eq("password $row[pw] is strong", $row['ok'], u\strongPass($row['pw']) ? 'yes' : 'no');
+    $res = t\eq("password $row[pw] is strong", $row['ok'], u\strongPass($row['pw'], ray(nn($row['avoid']))) ? 'yes' : 'no');
     if ($res !== TRUE) return $res;
   }
   return TRUE;
@@ -2334,6 +2334,18 @@ function adminSigninRefused($list) {
   include_once R_ROOT . '/forms/signin.inc';
   foreach ($list as $row) {
     $res = t\eq("admin sign-in refused for $row[who] with $row[pw]", $row['refused'], w\adminPassTooWeak(t\acct($row['who']), $row['pw'], TRUE) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}
+
+/**
+ * Check which passwords meet the minimum every member must meet.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function okPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] meets the member minimum", $row['ok'], u\okPass($row['pw'], FALSE, ray(nn($row['avoid']))) ? 'yes' : 'no');
     if ($res !== TRUE) return $res;
   }
   return TRUE;

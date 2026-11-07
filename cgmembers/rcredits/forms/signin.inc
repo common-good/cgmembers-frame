@@ -60,7 +60,7 @@ function formSignin($form, &$sta, $arg = '') {
  * Only on production (the standard test accounts have deliberately simple passwords). The password is known only now, at sign-in.
  */
 function adminPassTooWeak($a, $pass, $prod = isPRODUCTION) {
-  return $prod and $a->admin and !u\strongPass($pass, array_merge(ray($a->fullName), [strstr($a->email, '@', TRUE)]));
+  return $prod and $a->admin and !u\strongPass($pass, u\pwAvoid($a));
 }
 
 function formSignin_validate($form, &$sta, $type = 'both') {
@@ -92,7 +92,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     $success = (isDEV and $uid == 1) ? !empty($a1pw = $a->pass) : ($a and $a->passwordOkay($pass, 'pass', $err)); // accept any nonempty admin pass on dev machine until admin pass is set to NULL ("$a1pw =" is required for this line to work)
     w\updateFlood($sta, $success, $err); // should be before pw2 and vKeyE checks
     if (!$success) return say($err, 'qid');
-    if (adminPassTooWeak($a, $pass)) return say(t('Your administrator password is too weak. Please <a>reset it</a> and choose a strong one (at least 12 characters, hard to guess).', '_a', atag('/settings/password')), 'qid');
+    if (adminPassTooWeak($a, $pass)) return say(t('Your administrator password is too weak. Please <a>reset it</a> and choose a strong one (for example 10 characters with capitals, lower case, digits and punctuation).', '_a', atag('/settings/password')), 'qid');
     $sta['input']['uid'] = $uid;
     if ($a->canMfa) return preMFA($uid, $then); // go show a second authentication page for multi-factor (or not)
   }
