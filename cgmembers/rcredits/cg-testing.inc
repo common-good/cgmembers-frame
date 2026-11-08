@@ -1813,6 +1813,7 @@ function clear($ch = 0) {
     'r_tous',             // users
     'r_usd2',             // tx_hdrs
     'r_user_industries',  // r_industries, users
+    'reset_codes',        // users
     'semaphore',          // -
     'sessions',           // users
     'tx_bads',            // -

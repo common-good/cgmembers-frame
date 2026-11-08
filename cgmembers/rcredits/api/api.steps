@@ -40,6 +40,7 @@ function extraSetup() {
  * members: (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE cgpay Setup
  *     MAKE comments Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
@@ -62,6 +63,11 @@ function balances($list) {return t\balances($list);}
  * these (ARG): (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     MAKE comments Setup
  *     MAKE idphoto Setup
  *     MAKE identity Setup
@@ -156,6 +162,11 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  * we reply (ARG) with JSON: (ARG)
  *
  * in: TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     TEST cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST transactions TheAppAsksToChargeACustomer
@@ -261,7 +272,12 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we reply (ARG)
  *
- * in: TEST comments TheAppAsksToSubmitAComment
+ * in: TEST cgpay TheNodeAppAsksToSendAMalformedCode
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     TEST cgpay TheNodeAppCompletesAResetTooLate
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
  *     TEST info TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadActorId
@@ -323,7 +339,10 @@ function weReplyWithJSONValues($wantStatus, $want) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST test TheAppAsksToInitializeTheTestData
+ * in: TEST cgpay TheNodeAppCompletesAVerifiedReset
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
 function countIs($what, $count) {return t\count($what, $count);}
@@ -334,3 +353,38 @@ function countIs($what, $count) {return t\count($what, $count);}
  * in: TEST comments TheAppAsksToSubmitAComment
  */
 function weTellPromoWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs, 'info@' . CG_DOMAIN);}
+
+/**
+ * cgpay posts (ARG) with: (ARG)
+ *
+ * in: MAKE cgpay TheNodeAppAsksToEmailAResetCode
+ *     MAKE cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     MAKE cgpay TheNodeAppAsksToSendAMalformedCode
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ */
+function cgpayPostsWith($url, $params) {
+  global $testOnly, $testBody; if ($testOnly) return FALSE;
+  u\EXPECT(CGPAY_SSO_SECRET, 'Set cgpaySsoSecret in config.json to run the cgpay endpoint tests.');
+  $params = $params[0];
+  t\fixTestVars($params);
+  t\fixData($params);
+  $testBody = json_encode($params);
+  t\SERVER('REQUEST_METHOD', 'POST');
+  t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', CGPAY_SSO_SECRET);
+  return t\memberVisitsPage('?', "cgpay/$url");
+}
+
+/**
+ * we email (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
+ */
+function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
