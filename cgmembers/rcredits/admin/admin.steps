@@ -506,3 +506,15 @@ function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
  *     TEST dbtransactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
+
+/**
+ * QBO rejects tx (ARG)
+ *
+ * in: MAKE cats QBORejectsATransaction
+ */
+function qBORejectsTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbTxs; $testQbReject = $doc;
+  $testQbTxs = []; // earlier scenarios can leave records here
+  return TRUE;
+}

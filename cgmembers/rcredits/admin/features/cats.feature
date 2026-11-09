@@ -282,3 +282,26 @@ Scenario: a non-member makes a recurring ACH donation to a sponsored project
   And member ".ZZA" submits "sadmin/set-cats" with:
   | start | %now-9m |**
   And member ".ZZA" visits "qbo/op=txs"
+
+# Rule: a transaction QBO rejects is not marked as sent, so the next export retries it
+Scenario: QBO rejects a transaction
+  Given these "txs":
+  | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   | cat2   |*
+  | 951 |  95 | %now-5m |   -951 | %UID_OUTER | ctty  | loan    |      | outer |          |         | INVEST |
+  | 961 |  96 | %now-4m |   -961 | %UID_OUTER | ctty  | loan    |      | outer |          |         | INVEST |
+  And these "txs2":
+  | xid | payee | amount | created | deposit | completed | pid | bankAccount  | bankTxId |*
+  |  95 | ctty  |   -951 | %now-5m | %now-5d | %now-6d   | 101 | %NUL         | 0        |
+  |  96 | ctty  |   -961 | %now-4m | %now-5d | %now-6d   | 101 | %NUL         | 0        |
+  And QBO rejects tx "cg#95"
+  When member ".ZZA" submits "sadmin/set-cats" with:
+  | start | %now-9m |**
+  And member ".ZZA" visits "qbo/op=txs"
+  Then we say "error": "qbo rejected" with subs:
+  | doc   | msg        |*
+  | cg#95 | no details |
+  And QBO gets nothing else
+  And these "tx_hdrs":
+  | xid | flags |*
+  |  95 |       |
+  |  96 |       |
