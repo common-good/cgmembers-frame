@@ -11,6 +11,21 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
+const PW_MIN_SCORE = 5.14; // minimum password score for a member (u\pwScore): 8 characters with capital, lower case, digit and punctuation
+const PW_COMMON = 'password passw0rd p4ssword passwd pass1234 letmein welcome admin administrator login root toor guest '
+  . 'testing changeme default master secret access trustno1 temp1234 qwerty qwertyuiop qwerty123 asdfgh '
+  . 'asdfghjkl zxcvbn zxcvbnm azerty 1qaz2wsx 1q2w3e 123456 1234567 12345678 123456789 1234567890 654321 '
+  . '111111 000000 121212 112233 123123 abc123 abcd1234 abcdef abcdefg 7777777 888888 iloveyou iloveu forever '
+  . 'lovely family friend friends money dollar bitcoin blessed jesus heaven nothing anything monkey dragon '
+  . 'sunshine football baseball basketball soccer hockey golf1234 batman superman spiderman starwars pokemon '
+  . 'naruto matrix shadow ninja hunter killer ranger tiger eagle freedom princess angel angels babygirl '
+  . 'butterfly flower cookie cheese chocolate pepper ginger rainbow thunder lightning michael jennifer jessica '
+  . 'ashley daniel andrew joshua matthew jordan nicole hannah thomas charlie jackson george robert william '
+  . 'richard david james harley buster bailey maggie samantha elizabeth christopher anthony brandon austin '
+  . 'taylor computer internet monday sunday friday mustang ferrari porsche corvette yankees cowboys liverpool '
+  . 'arsenal chelsea barcelona madrid samsung google january february april june july august september october '
+  . 'november december summer winter spring autumn commongood common cgpay cgmembers rcredits rcredit'; // words that count as one character inside a password (see u\pwScore)
+const PW_MIN_SCORE_ADMIN = 5.42; // for an administrator: 10 characters with all four kinds (or 17 with three kinds)
 const TEST_ANON = FALSE; // set this to TRUE (in development) to test a\anonymize() -- then start by recreating the db
 $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
@@ -21,6 +36,7 @@ define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file 
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
+define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
 const SOCKET_PORT = 8081; // app websocket port
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
