@@ -18,7 +18,8 @@ when "main", "beta", "demo"
   ask :branch, "main"   # ask temporarily while getting set up
 end
 
-server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
+# The SSH port comes from your ~/.ssh/config (Host *.commongood.earth); ask William for it.
+server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage
 set :deploy_to, "/home/#{stage}/cg" # defaults to /var/www/my_app_name
 set :pty, true # defaults to false
 set :tmp_dir, "/home/#{stage}/tmp"
@@ -34,8 +35,7 @@ set :ssh_options, {
   # keys: ENV['CG_DEPLOY_KEY'] ? [ENV['CG_DEPLOY_KEY']] : nil,  # nil if unset → Capistrano falls back to default discovery
   forward_agent: false,
   auth_methods: %w(publickey),
-  user: stage,
-  port: 7822  
+  user: stage
 }
 
 # Admin-signin bootstrap files (§17) — test only. Requires shared/misc to be

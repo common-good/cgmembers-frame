@@ -47,8 +47,7 @@ set :tmp_dir, "/home/new/tmp"
 set :ssh_options, {
   forward_agent: false,
   auth_methods: %w(publickey),
-  user: "new",
-  port: 7822
+  user: "new"
 }
 
 #
