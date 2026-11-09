@@ -46,14 +46,19 @@ function cgpaySignupVerify() {
   if ($code === '' || $newPassword === '') return exitJust(X_SYNTAX);
   if (!$uid && $qid === '') return exitJust(X_SYNTAX);
   // Match the node proxy's minimum (web/src/routes/api/signup-verify/+server.ts)
-  // so a browser that skips client validation still gets a sane message.
-  if (strlen($newPassword) < 8) return exitJson(['errors' => ['newPassword' => t('Password must be at least 8 characters.')]], X_SYNTAX);
+  // so a browser that skips client validation still gets a sane message. mb_strlen,
+  // not strlen, so a multi-byte password is not under-counted by its UTF-8 byte length.
+  if (mb_strlen($newPassword) < 8) return exitJson(['errors' => ['newPassword' => t('Password must be at least 8 characters.')]], X_SYNTAX);
 
   // Accept either a uid (node has it from sessionStorage during the same-tab flow)
   // or a qid (from the ?qid=... in the verification email link, which may open in
   // a different tab/device where sessionStorage is empty). r\acct() takes either.
   $a = $uid ? r\acct($uid) : r\acct(mb_strtoupper($qid));
   if (!$a) return exitJust(X_NOTFOUND);
+  // In the qid-only flow (email link opened in a fresh tab/device), the request
+  // has qid but no uid, so $uid stays 0. The session + r_boxes row + response
+  // all need the real uid, so resolve it from the account now that we have it.
+  $uid = (int) $a->id;
 
   // Refuse if this account has already completed the signup/agreement step.
   // Without this check, a stale oneTimePass (for example, a password-reset code
