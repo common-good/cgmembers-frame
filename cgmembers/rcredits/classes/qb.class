@@ -232,8 +232,7 @@ class QB {
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (test()) $testQbTxs[] = $qbTx; else
-        $this->ds->Add($qbTx);
+        if (!$this->add($qbTx)) break; // stop, so nothing gets flagged as sent unless QBO took it
         r\setQbOk($xid);
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
@@ -286,8 +285,7 @@ X;
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (test()) $testQbTxs[] = $qbTx; else
-        $this->ds->Add($qbTx);
+        if (!$this->add($qbTx)) break;
 
         $this->sendTxs(FALSE, $deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
@@ -362,6 +360,16 @@ X;
 // (not needed and doesn't work)   if ($id == LOAN_CAT) $$DetailType->Entity = $this->getEntity($Description);
     $line = compact(ray("Description Amount DetailType $DetailType"));
     $qbTx->Line[] = new qbData\IPPLine($line);
+  }
+
+  private function add($qbTx) {
+    global $testQbTxs, $testQbReject; // $testQbReject: DocNumber a test wants QBO to reject
+    $doc = $qbTx->DocNumber;
+    if (test() and $doc != nn($testQbReject)) {$testQbTxs[] = $qbTx; return TRUE;}
+    if (!test() and $this->ds->Add($qbTx)) return TRUE;
+    $error = test() ? NULL : $this->ds->getLastError();
+    w\err(tr('qbo rejected', ray('doc msg', $doc, $error ? $error->getResponseBody() : t('no details'))));
+    return FALSE;
   }
 
   /**
