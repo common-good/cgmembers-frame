@@ -110,6 +110,8 @@ All POST-only, all require `X-CG-Internal-Token: <CGPAY_SSO_SECRET>` header, all
 | `/cgpay/grants` | grant CRUD from SvelteKit | `forms/cgpay/grants.inc` |
 | `/cgpay/people-autocomplete` | grantor typeahead | `forms/cgpay/peopleautocomplete.inc` |
 | `/cgpay/funders-export` | funder CSV export | `forms/cgpay/fundersexport.inc` |
+| `/cgpay/signup` | new-member signup -- create unverified Acct + email code | `forms/cgpay/signup.inc` |
+| `/cgpay/signup-verify` | confirm code + set password + create session | `forms/cgpay/signupverify.inc` |
 
 Shared secret: `config.json` key `cgpaySsoSecret` -> constant `CGPAY_SSO_SECRET` (see `defs.inc`).
 
