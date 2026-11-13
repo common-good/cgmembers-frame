@@ -2,6 +2,8 @@
 
 The live Common Good member site, admin panel, and transaction engine. Drupal-7-derived PHP, evolving since ~2010. Handles authentication, accounts, transactions, grants, notifications, and admin tooling. The SvelteKit companion (`cgpay`) uses this app as the source of truth for identity and business logic.
 
+cgmembers-frame and cgpay are one application in two parts. Guidance for both lives in the "Shared guidance" section near the top of cgpay's CLAUDE.md; read it before working here. Use a local cgpay checkout if it is at least as current as cgpay's `develop`; otherwise read that section on GitHub (`develop` branch).
+
 ## What this repo is
 
 - **`cgmembers/`** - the app (Drupal 7 install with the `rcredits` module carrying most Common Good logic)
@@ -151,26 +153,21 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 
 ## Conventions
 
-- **No em-dashes** (`-`) anywhere in code, PRs, commit messages, or comments (per Chris's preference).
-- **Commit messages: title only, no body.** Details go in PR descriptions.
-- **No `Co-Authored-By: Claude` trailers** on commits.
-- **Comments:** default to none. Only add for non-obvious *why*. Exception, function headers: see Code style.
-- **Namespaces:** always alias with the standard short form (`CG\Db as db`, etc.).
+See also cgpay's Shared guidance (see the top of this file): plain ASCII, commit messages, comments and function headers, code style, public repos.
+
+- **Namespaces:** always alias with the standard short form (`CG\Db as db`, etc.), and keep the standard alias lines even when the file doesn't use them yet.
 - **`t()` vs `tr()`:** static-known strings use `t()`; runtime interpolation uses `tr()`.
 - **Whitespace and casing:** see Code style below; when in doubt, match the surrounding style.
 
 ## Code style
 
-The conventions here aim at minimal visual clutter. Match the surrounding file.
+The general code style is in cgpay's Shared guidance. PHP specifics:
 
-- Keep code as short as possible without losing clarity; minimize non-blank lines. A block should be understandable with a few seconds of study, and so should a single line.
-- Make small low-level tool functions instead of repeating code patterns, even if the tool is more complex inside. Allow flexible argument number and type when that is convenient for callers: many simple calls beat a simple callee.
-- Use conventional short names: `k` key, `v` value, `i` index, `a`/`acct` account object, `tx` transaction object, `q` query, `ray` array.
+- More conventional short names: `acct` account object (besides `a`), `ray` array.
 - Helpers used heavily: `ray()` (build arrays from space/comma-separated strings), `just()` (pick keys from an array), `in()` (search a list), and `compact()`/`extract()`.
 - Follow Eclipse defaults or PSR-2, except: two-space indent (no tabs); a simple `if` can go on one line; a simple `else` can follow the closing brace (`} else {zot();}`); `TRUE`, `FALSE`, `NULL` are capitalized; simple single-line functions can go on one line.
 - camelCase for variables and functions; lowercase-with-hyphens for filenames and URLs; lowercase_underscores only where Drupal requires them.
 - No inline scripts or styles (strict Content Security Policy): use `w\js()`, `w\jsx()`, `w\css()`.
-- Function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for. Existing `@param`-style headers stay as they are.
 - Temporary debugging statements (`debug(`, `die(`, `print_r(`, `lug(`, `flog(`, `echo`) must be removed before upload. Any such line that is meant to stay begins with `///` (inactive) or `/**/` (active).
 
 ## Common gotchas
