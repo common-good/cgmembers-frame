@@ -1785,6 +1785,7 @@ function _GET($ray = NULL) {
 function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
   if ($otherA->co and $otherA->proSe) return; // don't try to contact a company without an agent
   if ($otherA->co and $action == 'request') return; // don't ask companies questions
+  if (isLOCAL) return; // no websocket server to reach from a developer's machine (each try waits for a connection timeout)
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
   require_once R_ROOT . '/cg-qr.inc';
 
