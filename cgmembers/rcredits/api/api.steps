@@ -41,6 +41,7 @@ function extraSetup() {
  *
  * in: MAKE transactions Setup
  *     MAKE accounts Setup
+ *     MAKE cgpay Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -71,6 +72,11 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -166,6 +172,11 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST transactions TheAppAsksToChargeACustomerWithADateOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  *     TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     TEST cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST identity TheAppAsksToIdentifyACustomer
  */
@@ -264,6 +275,11 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ *     TEST cgpay TheNodeAppAsksToSendAMalformedCode
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     TEST cgpay TheNodeAppCompletesAResetTooLate
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     TEST info TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
@@ -324,7 +340,10 @@ function weReplyWithJSONValues($wantStatus, $want) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST test TheAppAsksToInitializeTheTestData
+ * in: TEST cgpay TheNodeAppCompletesAVerifiedReset
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
 function countIs($what, $count) {return t\count($what, $count);}
@@ -392,3 +411,38 @@ function sessionBelongsToMember($sid, $id) {
   global $testOnly; if ($testOnly) return FALSE;
   return db\q('INSERT INTO sessions (uid, sid, ssid, timestamp) VALUES (:uid, :sid, :sid, :now)', ['uid' => t\uid($id), 'sid' => $sid, 'now' => now()]);
 }
+
+/**
+ * cgpay posts (ARG) with: (ARG)
+ *
+ * in: MAKE cgpay TheNodeAppAsksToEmailAResetCode
+ *     MAKE cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     MAKE cgpay TheNodeAppAsksToSendAMalformedCode
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ */
+function cgpayPostsWith($url, $params) {
+  global $testOnly, $testBody; if ($testOnly) return FALSE;
+  u\EXPECT(CGPAY_SSO_SECRET, 'Set cgpaySsoSecret in config.json to run the cgpay endpoint tests.');
+  $params = $params[0];
+  t\fixTestVars($params);
+  t\fixData($params);
+  $testBody = json_encode($params);
+  t\SERVER('REQUEST_METHOD', 'POST');
+  t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', CGPAY_SSO_SECRET);
+  return t\memberVisitsPage('?', "cgpay/$url");
+}
+
+/**
+ * we email (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
+ */
+function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
