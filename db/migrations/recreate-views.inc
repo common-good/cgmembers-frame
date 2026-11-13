@@ -26,7 +26,7 @@ function createViews($m, $migDt) {
   if (!$m->isMigratingUp()) $migDt -= 1; // when rolling back, don't do the latest changes
   
   cgpr('clearing views');
-  $q = $m->query('SELECT table_name FROM information_schema.views');
+  $q = $m->query('SELECT table_name FROM information_schema.views WHERE table_schema=DATABASE()');
   while ($table = $q->fetchColumn()) {
     $m->doSql('  DROP VIEW IF EXISTS ' . $table);
   }
@@ -140,6 +140,14 @@ X;
   
   if ($migDt < 20220717) return;
   $m->doSql('CREATE VIEW tx_credits AS SELECT nvid AS id, created, payee AS fromUid, payer AS toUid, amount, status AS xid, purpose FROM tx_requests_all WHERE amount<0');
-  
+
+  if ($migDt < 20261113) return;
+  // users split into the person or company (upeople) and the account (accounts), for new code until the real split
+  $co = 1 << 6; // B_CO in rcredits/defs.inc
+  $pFlds = 'fullName email phone city state zip country latitude longitude trust source created name pass login notices';
+  $aFlds = array_diff(array_map(function($f) {return $f->getName();}, $m->table('users')->getColumns()), ray("uid $pFlds"));
+  $m->doSql('CREATE ALGORITHM=MERGE VIEW upeople AS SELECT uid AS id, ' . strtr($pFlds, ' ', ',') . ", NULL AS notes, (flags & $co) > 0 AS isCo FROM users");
+  $m->doSql('CREATE ALGORITHM=MERGE VIEW accounts AS SELECT uid AS id, created, ' . join(',', $aFlds) . ' FROM users');
+
   cgpr('done recreating views!');
 }
