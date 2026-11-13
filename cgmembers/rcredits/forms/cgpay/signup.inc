@@ -1,0 +1,193 @@
+<?php
+namespace CG\Web;
+use CG as r;
+use CG\Db as db;
+use CG\Util as u;
+
+/**
+ * @file
+ * Server-to-server signup endpoint for the SvelteKit cgpay app.
+ *
+ * The cgpay /signup page POSTs here through its /api/signup proxy. This
+ * endpoint:
+ *   1. verifies the shared secret
+ *   2. validates the body (reusing the same checks the legacy PHP /signup form uses)
+ *   3. creates a new Acct in the "unverified" state (no `signed` bit yet)
+ *   4. generates a one-time verification code + emails it to the member
+ *   5. returns {uid, qid, status: 'verify_email'}
+ *
+ * Verification + password-set happen on the companion /cgpay/signup-verify
+ * endpoint. The SSO cookie is NOT set here - the account cannot act until it
+ * is verified.
+ *
+ * Shared secret: config.json `cgpaySsoSecret` -> CGPAY_SSO_SECRET.
+ */
+function cgpaySignup() {
+  global $channel; $channel = TX_API;
+
+  if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') return exitJust(X_SYNTAX);
+
+  $expected = CGPAY_SSO_SECRET;
+  $provided = nni($_SERVER, 'HTTP_X_CG_INTERNAL_TOKEN');
+  if (empty($expected) || empty($provided) || !hash_equals($expected, $provided)) {
+    return exitJust(X_UNAUTH);
+  }
+
+  $body = json_decode(file_get_contents('php://input'), TRUE);
+  if (!is_array($body)) return exitJust(X_SYNTAX);
+
+  $fullName     = trim((string) nni($body, 'fullName'));
+  $email        = trim((string) nni($body, 'email'));
+  $phone        = trim((string) nni($body, 'phone'));
+  $zip          = trim((string) nni($body, 'zip'));
+  $country      = (int) (nni($body, 'country') ?: US_COUNTRY_ID);
+  $accepted     = (bool) nni($body, 'agreementAccepted');
+  $captchaToken = trim((string) nni($body, 'captchaToken'));
+
+  // optional carry-through fields - preserve acquisition + inviter attribution
+  $invitationCode = trim((string) nni($body, 'invitationCode'));
+  $source         = trim((string) nni($body, 'source'));
+  // The node proxy reads $_COOKIE['ad'] (set when the visitor arrived from a
+  // cg4.us/a=XXX / w=XXX / q=XXX QR or link) and forwards it as source2 so the
+  // new signup path carries the same attribution the legacy /signup form picks
+  // up itself.
+  $source2        = trim((string) nni($body, 'source2'));
+
+  // Verify the captcha before touching the database. Fails closed on anything
+  // but a Cloudflare-approved token: a missing/rejected token, OR a missing
+  // TURNSTILE_SECRET in a non-dev environment (prod/staging without the secret
+  // set would otherwise silently have no captcha at all). Dev envs still fall
+  // open when the secret is empty so local setup without a Cloudflare account
+  // can run the full signup path.
+  if (TURNSTILE_SECRET === '') {
+    if (!isDEV) {
+      \watchdog('cgpay-signup', 'TURNSTILE_SECRET is not set in a non-dev environment; refusing signup to avoid an unguarded endpoint.', [], WATCHDOG_CRITICAL);
+      return exitJson(['errors' => ['captcha' => t('Captcha check is misconfigured on the server. Please contact support.')]], X_FORBIDDEN);
+    }
+  } else {
+    if ($captchaToken === '') return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);
+    if (!verifyTurnstile($captchaToken, nni($_SERVER, 'REMOTE_ADDR'))) {
+      return exitJson(['errors' => ['captcha' => t('Captcha check failed. Please reload the page and try again.')]], X_SYNTAX);
+    }
+  }
+
+  $errors = [];
+
+  if ($fullName === '') {
+    $errors['fullName'] = t('Please enter your full name.');
+  } elseif ($err = u\badName($fullName)) {
+    $errors['fullName'] = $err;
+  } elseif (r\isCriminal($fullName, FALSE)) {
+    // flagged name: tell admin, soft-fail with the FLN support code (mirrors legacy flow)
+    r\tellAdmin(t('New potential member flagged as criminal'), $body);
+    return exitJson(['errors' => ['fullName' => tr('code FLN')]], X_SYNTAX);
+  }
+
+  if ($phone === '') {
+    $errors['phone'] = t('Please enter your phone number.');
+  } elseif ($err = u\badPhone($phone)) {
+    $errors['phone'] = $err;
+  }
+
+  if ($email === '') {
+    $errors['email'] = t('Please enter your email address.');
+  } elseif (!emailOkay($email, FALSE)) {
+    $errors['email'] = t('That email address is not valid or is already in use.');
+  } elseif (emailDupCo($email)) {
+    $errors['email'] = t('That email is already registered to a company account.');
+  }
+
+  if ($zip === '') {
+    $errors['zip'] = t('Please enter your ZIP code.');
+  } elseif ($err = u\badZip($zip, $country)) {
+    $errors['zip'] = $err;
+  }
+
+  if (!$accepted) $errors['agreementAccepted'] = t('You must agree to the Common Good Agreement to continue.');
+
+  if ($errors) return exitJson(['errors' => $errors], X_SYNTAX);
+
+  $fullName = u\normalizeCase($fullName);
+  list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
+
+  // source2 holds the full space-separated list of sources the visitor
+  // accumulated before signing up (cg4.us appends to the `ad` cookie for any
+  // non-member rather than overwriting, so we see the whole path - e.g.
+  // "cge brochure26 card NEWABE" - not just the last touch). cg4.us has three
+  // URL types that feed this cookie: a= go-to-app, w= go-to-website, q=
+  // company account ID. Store it as-is in the `source` field if there is one,
+  // otherwise keep whatever `source` the browser passed (invitation / helper
+  // attribution, kept separate).
+  if ($source2 !== '' && $source === '') $source = $source2;
+
+  $info = compact(ray('fullName email phone country zip city state'));
+  if ($source !== '') $info['source'] = $source;
+  if ($invitationCode !== '') $info['code'] = $invitationCode;
+
+  $a = new r\Acct($info);
+  if (!$a) return exitJust(X_SYNTAX);
+  $uid = (int) $a->id;
+
+  // mark email + extras the legacy form marks
+  $a->update('email', u\cry('P', $email));
+  $a->setRisk('rents');
+
+  // Food Fund promo marker: 'food' anywhere in the space-separated source2 list
+  // means the visitor came through the Food Fund promo at some point before
+  // signing up. Legacy /signup only looked at exact-match (signup.inc:154),
+  // but with the accumulate-all cookie model the token can sit alongside others
+  // like "cge food NEWABC" or (once cg4.us ships typed tokens) "a:cge w:food q:NEWABE".
+  // Strip the optional a:/w:/q: prefix before the compare so either shape matches.
+  if ($source2 !== '') {
+    $tokens = array_map(function ($t) { return preg_replace('/^[awq]:/', '', $t); }, explode(' ', $source2));
+    if (in_array('food', $tokens, TRUE)) $a->stepDone('food', FALSE);
+  }
+
+  if ($invitationCode !== '') invitation($invitationCode, $uid);
+  db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', ['myid' => $uid, 'email' => u\cry('P', $email)]);
+
+  tellStaffNewMember($info + ['acctType' => CO_PERSONAL, 'qid' => $a->mainQid, 'name' => $a->name]);
+
+  // Generate + email the verification code. Reuses `oneTimePass` which already
+  // handles expiry; the cgpay/signup-verify endpoint checks against the same
+  // field. Not the final password - member sets that on the verify step.
+  // The `verify-cgpay` template links at CGPAY_URL/signup/verify (the node app)
+  // and carries both qid and code in the URL so the member can finish the flow
+  // in a new tab or on a different device.
+  $code = $a->oneTimePass();
+  $a->tell('verify-cgpay', ['name' => $a->name, 'qid' => $a->mainQid, 'code' => $code, 'cgpayUrl' => CGPAY_URL]);
+
+  return exitJson([
+    'uid'    => $uid,
+    'qid'    => $a->mainQid,
+    'status' => 'verify_email',
+  ], X_OK);
+}
+
+/**
+ * Verify a Cloudflare Turnstile token against siteverify. Returns TRUE on success,
+ * FALSE on any failure (network, parse, or Turnstile rejecting the token).
+ *
+ * See https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
+ */
+function verifyTurnstile($token, $remoteIp) {
+  $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+  $post = http_build_query(array_filter([
+    'secret'   => TURNSTILE_SECRET,
+    'response' => $token,
+    'remoteip' => $remoteIp ?: NULL,
+  ]));
+
+  $ctx = stream_context_create(['http' => [
+    'method'  => 'POST',
+    'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
+    'content' => $post,
+    'timeout' => 5,
+    'ignore_errors' => TRUE,
+  ]]);
+  $raw = @file_get_contents($url, FALSE, $ctx);
+  if ($raw === FALSE) return FALSE;
+
+  $data = json_decode($raw, TRUE);
+  return is_array($data) && !empty($data['success']);
+}

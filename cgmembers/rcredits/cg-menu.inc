@@ -176,7 +176,7 @@ function menu($submenu = '') {
     'sadmin/focuses' => ['sub', t('Focuses'), 'Focuses 2', 'admPrintChecks'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
-    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
+    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isLOCAL ? ANY : 'admCode'],
 
     'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admCode', 'checkSanity'],
     'sadmin/set-cats' => ['call', t('Set Accounting Categories'), 'SetCats', 'admEditTx'],
@@ -256,6 +256,8 @@ function menu($submenu = '') {
     'cgpay/funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
     'cgpay/reset-deliver' => ['call', 'CGPay Reset Deliver', '', ANY, 'cgpayResetDeliver'], // server-to-server: SvelteKit cgpay password reset -- send the reset code the node app made, by email or text
     'cgpay/reset-complete' => ['call', 'CGPay Reset Complete', '', ANY, 'cgpayResetComplete'], // server-to-server: SvelteKit cgpay password reset -- set the new password after node verified the code
+    'cgpay/signup' => ['call', 'CGPay Signup', '', ANY, 'cgpaySignup'], // server-to-server: SvelteKit cgpay signup flow -- create unverified account + email verification code
+    'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
