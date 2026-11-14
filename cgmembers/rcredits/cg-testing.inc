@@ -114,7 +114,7 @@ function fixData(&$info, $direct = FALSE) {
   if (nni($info, 'item')) {
     if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat')); // fix cat for post_cats
   } else foreach (ray('cat cat1 cat2') as $k) if (isset($$k) and $$k) $$k = r\nick2cat($$k); // fix cat for tx_cats
-  if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if ($T and $T->feature == 'posts' and isset($method) and !$testOnly and !$isTableData) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
