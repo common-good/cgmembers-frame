@@ -172,7 +172,6 @@ The general code style is in cgpay's Shared guidance. PHP specifics:
 
 ## Common gotchas
 
-- **`cgweb_ro` DB user lacks SELECT on some tables** (`u_company`, `txs2` historically). The SvelteKit companion has defensive fallbacks; on the PHP side, use the app's own DB user which has full access.
 - **Menu registry is cached.** After editing `cg-menu.inc`, run the menu rebuild or your new route 404s.
 - **`.gitmodules` uses SSH aliases** (`github-cg:`, `github-pay:`) for `GherkinForDrupal`. If deploy fails on submodule fetch, check that the deploy user has the SSH stanza configured.
 - **Session cookies (`SSESS...`) are set with `Domain=.commongood.earth`** so both PHP and cgpay see them. Never scope narrower without coordinated changes on the cgpay side.
