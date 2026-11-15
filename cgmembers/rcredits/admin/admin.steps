@@ -521,3 +521,16 @@ function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpe
  * in: TEST super AnAdministratorPasswordMustScoreHigherThanAMembers
  */
 function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
+
+/**
+ * QBO rejects tx (ARG)
+ *
+ * in: MAKE cats QBORejectsATransaction
+ *     MAKE cats QBORejectsATransactionInABankTransfer
+ */
+function qBORejectsTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbTxs; $testQbReject = $doc;
+  $testQbTxs = []; // earlier scenarios can leave records here
+  return TRUE;
+}
