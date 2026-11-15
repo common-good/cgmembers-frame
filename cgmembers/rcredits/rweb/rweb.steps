@@ -96,6 +96,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signin AMemberAsksForANewPasswordForAnUnknownAccount
  *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signupco ACompanySignsUp
@@ -175,6 +176,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberTypesTheWrongPassword
  *     MAKE signin AMemberTypesAnUnknownUsernameID
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
@@ -462,6 +464,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
+ *     TEST signin AMemberTriesToResetAPasswordToAWeakOne
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     TEST signupco ACompanySignsUp
@@ -1438,6 +1441,7 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
  *     MAKE signin AMemberAsksForANewPasswordForAccountID
  *     MAKE signin AMemberAsksForANewPasswordForEmail
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  */
@@ -2784,3 +2788,10 @@ function showingTxDetails() {
  * in: MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
+
+/**
+ * these passwords meet the member minimum: (ARG)
+ *
+ * in: TEST passwordstrength TheServerAppliesTheSameMinimumAsTheStrengthBar
+ */
+function thesePasswordsMeetTheMemberMinimum($list) {return t\okPasswords($list);}

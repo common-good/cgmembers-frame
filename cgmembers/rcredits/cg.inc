@@ -563,6 +563,25 @@ function deleteAllCooks($except = '') {foreach ($_COOKIE as $k => $v) if (!in($k
 function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if specifying $except (clearer)
 
 /**
+ * Make duplicate session cookies harmless. Older code set the session cookie on other scopes (the host alone, a parent
+ * domain), so a browser sends several with the same name, oldest first, and PHP keeps the first: a stale one logs the
+ * member out. Use the copy that has a live session here and expire the host-only and parent-domain copies (never the
+ * current scope, never another cookie name). Return the domains expired ('' is the host-only copy), for tests.
+ */
+function healSessionCookies() {
+  global $cookie_domain, $is_https;
+  $name = session_name();
+  if (preg_match_all('/(?:^|;\s*)' . preg_quote($name, '/') . '=([^;]*)/', nni($_SERVER, 'HTTP_COOKIE'), $m) < 2) return [];
+  $col = $is_https ? 'ssid' : 'sid';
+  foreach ($m[1] as $v) if (db\get('uid', 'sessions', "$col=:sid", ['sid' => $v = urldecode($v)])) {$_COOKIE[$name] = $v; break;}
+
+  $doms = ['']; $parts = explode('.', ltrim($cookie_domain, '.'));
+  while (count($parts) > 2) {array_shift($parts); $doms[] = '.' . join('.', $parts);}
+  if (!test()) foreach ($doms as $d) setcookie($name, '', ['expires' => 1, 'path' => '/', 'domain' => $d, 'secure' => $is_https, 'httponly' => TRUE]);
+  return $doms;
+}
+
+/**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
  * If no admin is signed in with super permission -- or partially signed in but not w\superSignin()ed) -- return FALSE.
  */

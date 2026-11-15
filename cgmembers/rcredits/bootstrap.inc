@@ -2097,6 +2097,7 @@ function drupal_bootstrap() {
   require_once R_ROOT . '/cg-testing.inc'; // 
 
   require_once DRUPAL_ROOT . '/includes/session.inc';
+  r\healSessionCookies();
   drupal_session_initialize();
   
   $jsCode = isDEV ? nni($_GET, 'jsCode') : ''; // for testing

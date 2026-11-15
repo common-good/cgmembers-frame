@@ -115,6 +115,16 @@ Scenario: A member clicks a link to reset password
   #Then we show "You: Abe One"
   And member ".ZZA" is logged in
 
+Scenario: A member tries to reset a password to a weak one
+  Given next random code is "wHatEveR"
+  And member "?" completes form "settings/password" with values:
+  | qid           |*
+  | a@example.com |
+  When member "?" confirms form "reset/qid=NEWZZA&code=wHatEveR" with values:
+  | pw       |*
+  | Passw0rd!|
+  Then we say "error": "weak pass"
+
 Scenario: A member clicks a link to reset password with wrong code
   Given next random code is "wHatEveR"
   And member "?" completes form "settings/password" with values:
