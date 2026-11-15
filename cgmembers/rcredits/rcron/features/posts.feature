@@ -20,7 +20,7 @@ Setup:
   | longitude   | -72.8        | -72.8        |
   Given these "posts":
   | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created   | end | confirmed |* 
-  | 1      | offer | fish | big one | food | 0       | 0        | 0         | .01    | 1   | %now-360d |     | 1 |
+  | 1      | offer | fish | big one | food | 0       | 0        | 0         | .01    | 1   | %now-518395n |     | 1 |
   | 2      | offer | duck | big two | food | 0       | 0        | 0         | .01    | 4   | %now-1d   |     | 1 |
 
 Scenario: a participant gets a notice about an expiring post
