@@ -202,6 +202,7 @@ class QB {
    *   L   +   -
    *
    * @param bool $omitBankTxs: <don't handle txs for bank transfers> (normally called with this TRUE after handling txs through the latest bank transfer date)
+   * @return FALSE if QBO rejected a transaction (so the caller must not flag later ones as sent), else TRUE
    */
   public function sendTxs($omitBankTxs, $end = NOW) { // usually call only from sendBankTxs
     global $testQbTxs;
@@ -209,7 +210,7 @@ class QB {
     $start = strtotime('7/1/2022');
 //    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
-    $cnt = 0;
+    $cnt = 0; $ok = TRUE;
     $sql = 'SELECT DISTINCT uid2 FROM txs WHERE uid1=:UID_OUTER AND created BETWEEN :start AND :end';
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids()));
@@ -218,7 +219,7 @@ class QB {
 
     foreach ($txs as $entries) {
       extract(just('xid description created banking cat2 uif2 uid2 name', $entries[0]));
-      if (!$this->isNew("cg#$xid")) break;
+      if (!$this->isNew("cg#$xid")) {$ok = FALSE; break;}
 
       if ($banking) {
         if (r\acct($uid2)->sponsored) $description .= ': ' . strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
@@ -232,7 +233,7 @@ class QB {
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (!$this->add($qbTx)) break; // stop, so nothing gets flagged as sent unless QBO took it
+        if (!$this->add($qbTx)) {$ok = FALSE; break;} // stop, so nothing gets flagged as sent unless QBO took it
         r\setQbOk($xid);
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
@@ -240,6 +241,7 @@ class QB {
     list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $xid] : ['', ''];
 //    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
     w\say(t('QBO export complete: ') . pr(ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9)));
+    return $ok;
   }
 
   /**
@@ -287,7 +289,7 @@ X;
       } else {
         if (!$this->add($qbTx)) break;
 
-        $this->sendTxs(FALSE, $deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
+        if (!$this->sendTxs(FALSE, $deposit)) break; // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
