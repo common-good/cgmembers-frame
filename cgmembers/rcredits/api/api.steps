@@ -456,3 +456,20 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  * in: TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
  */
 function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith($wantStatus, json_encode(['errors' => [$field => tr($index)]]));}
+
+/**
+ * member (ARG) one-time password is (ARG)
+ *
+ * in: MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
+ *     TEST cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
+ */
+function memberOnetimePasswordIs($id, $pass) {
+  global $testOnly;
+  if (!$a = r\acct($uid = t\uid($id))) return FALSE;
+  if (!$testOnly) {
+    $expires = REQUEST_TIME + R_SIGNIN_HOURS * HOUR_SECS;
+    $oneTimePass = compact('pass', 'expires');
+    $a->update(compact('oneTimePass'));
+  }
+  return ($a->oneTimePass['pass'] == $pass and $a->oneTimePass['expires'] > REQUEST_TIME);
+}
