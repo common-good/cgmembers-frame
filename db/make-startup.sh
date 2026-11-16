@@ -50,6 +50,7 @@ dup=$(echo "$listed" | uniq -d); new=$(comm -23 <(echo "$all") <(echo "$listed")
 [ -n "$dup" ] && { echo "Listed twice in KEEP/SKIP: $dup"; exit 1; }
 [ -n "$new" ] && { echo "Add each of these tables to KEEP or SKIP in $0:" $new; exit 1; }
 [ -n "$gone" ] && echo "Warning: no longer in the database (remove from KEEP/SKIP):" $gone
+SKIP=$(comm -12 <(echo "$all") <(echo $SKIP | tr ' ' '\n' | sort)) # only the tables that exist
 nonempty=$(for t in $SKIP; do [ -n "$(sql -e "SELECT 1 FROM \`$t\` LIMIT 1" $A)" ] && echo -n "$t "; done || true)
 
 v=$(sql -e "SELECT MAX(version) FROM phinxlog" $A)
