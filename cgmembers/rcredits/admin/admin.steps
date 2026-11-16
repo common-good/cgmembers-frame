@@ -33,6 +33,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  */
 function extraSetup() {
   t\clear(TX_WEB);
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = NULL; $testQbHave = $testQbTxs = []; // QBO stand-ins, which would otherwise carry over from the last scenario
 }
 
 /**
