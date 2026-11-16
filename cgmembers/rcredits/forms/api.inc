@@ -107,7 +107,7 @@ function accounts($params) {
  * @param acct $a: the account (with the signed-in agent already set)
  * @param string $name: the name to show for the account
  * @param int $version: the app version
- * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling], or NULL if the account can't use the app yet
+ * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling, real], or NULL if the account can't use the app yet
  */
 function accountInfo($a, $name, $version) {
   global $nextCode; // tests usurp generated device code, using this instead
@@ -120,7 +120,8 @@ function accountInfo($a, $name, $version) {
   $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
   $qr = myQr($a);
   $selling = $isCo ? explode("\n", $a->selling) : NULL;
-  return compact(ray('accountId cardCode deviceId qr isCo name selling'));
+  $real = (bool) isPRODUCTION; // real QR codes (RC2.ME) or test ones (RC4.ME)
+  return compact(ray('accountId cardCode deviceId qr isCo name selling real'));
 }
 
 /**
