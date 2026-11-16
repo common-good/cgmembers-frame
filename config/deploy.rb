@@ -53,10 +53,21 @@ namespace :deploy do
     end
   end
   after 'deploy:updated', 'deploy:copy_admin_keys'
+
+  desc 'Hit the site (rebuilds the menu if it changed) and warn if the /cgpay routes are missing'
+  task :check_menu do
+    on roles(:app) do
+      url = "https://#{subdomain}.commongood.earth"
+      execute :curl, "-s -o /dev/null -m 60 #{url}/", raise_on_non_zero_exit: false
+      code = capture(:curl, "-s -o /dev/null -m 30 -w '%{http_code}' -X POST #{url}/cgpay/whoami", raise_on_non_zero_exit: false).to_s.strip
+      warn "WARNING: #{url}/cgpay/whoami returned #{code}, expected 401. The menu may be stale (try /sadmin/util/reset-menu)." unless code == "401"
+    end
+  end
 end
 
 after 'deploy:published', 'restarter:restart_nginx'
 after 'deploy:published', 'restarter:restart_php_fpm'
+after 'restarter:restart_php_fpm', 'deploy:check_menu'
 
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp # defaults to develop (main branch is main)
 # set :format, :airbrussh # defaults to :airbrussh
