@@ -63,7 +63,7 @@ Scenario: The node app completes a verified reset
   | 7  | .ZPB | x        | %now+9n | 0     | email   | %now-1n | %now-1n |
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
-  | 7       | .ZPB | newpass99   |
+  | 7       | .ZPB | Tulip-Rain-42   |
   Then we reply "ok" with JSON:
   | ok   |*
   | true |
@@ -78,7 +78,7 @@ Scenario: The node app completes a reset that was never verified
   | 7  | .ZPB | x        | %now+9n | 0     | email   | %now-1n |
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
-  | 7       | .ZPB | newpass99   |
+  | 7       | .ZPB | Tulip-Rain-42   |
   Then we reply "forbidden"
   And count "reset_codes" is 1
 
@@ -88,7 +88,7 @@ Scenario: The node app completes a reset for the wrong account
   | 7  | .ZPB | x        | %now+9n | 0     | email   | %now-1n | %now-1n |
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
-  | 7       | .ZPC | newpass99   |
+  | 7       | .ZPC | Tulip-Rain-42   |
   Then we reply "forbidden"
 
 Scenario: The node app completes a reset too late
@@ -97,7 +97,7 @@ Scenario: The node app completes a reset too late
   | 7  | .ZPB | x        | %now+9n | 0     | email   | %now-1n | %now-10n |
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
-  | 7       | .ZPB | newpass99   |
+  | 7       | .ZPB | Tulip-Rain-42   |
   Then we reply "forbidden"
 
 Scenario: The node app completes a verified reset with a short password
@@ -107,5 +107,15 @@ Scenario: The node app completes a verified reset with a short password
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
   | 7       | .ZPB | short       |
+  Then we reply "syntax"
+  And count "reset_codes" is 1
+
+Scenario: The node app completes a verified reset with a weak password
+  Given these "reset_codes":
+  | id | uid  | codeHash | expires | tries | channel | created | usedAt  |*
+  | 7  | .ZPB | x        | %now+9n | 0     | email   | %now-1n | %now-1n |
+  When cgpay posts "reset-complete" with:
+  | resetId | uid  | newPassword |*
+  | 7       | .ZPB | newpass99   |
   Then we reply "syntax"
   And count "reset_codes" is 1

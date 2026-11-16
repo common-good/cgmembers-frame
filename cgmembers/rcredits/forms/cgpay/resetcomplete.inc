@@ -12,7 +12,8 @@ use CG\Util as u;
  * calling, so this refuses unless that row exists for this uid and was spent in the last RESET_GRACE
  * seconds. The row is deleted here, so a repeat call fails. On success it ends every session the
  * member has, tells them by email, and replies {ok: true}; node then signs them in with cgpay/sso.
- * 400 means the password itself was refused; 403 means no verified reset.
+ * 400 means the password itself was refused (with {errors: {newPassword: msg}} when it is too weak; the row is kept,
+ * so node can let the member try another password with the same code); 403 means no verified reset.
  */
 define('RESET_GRACE', 120);
 
@@ -36,6 +37,7 @@ function cgpayResetComplete() {
   $a = r\acct($uid);
   if (!$usedAt or $usedAt < now() - RESET_GRACE or !$a or ($a->co and !$a->trialco)) return exitJust(X_FORBIDDEN);
   if (strlen($pw) < 8 or strlen($pw) > 128) return exitJust(X_SYNTAX);
+  if (!u\okPass($pw, $a->admin, u\pwAvoid($a))) return exitJson(['errors' => ['newPassword' => tr('weak pass')]], X_SYNTAX);
 
   db\del('reset_codes', ['id' => $resetId]);
   $a->update('pass', $pw); // hashes it
