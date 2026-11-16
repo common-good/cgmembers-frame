@@ -85,7 +85,11 @@ class Qo {
       if ($agt = nn($qo->agent)) return $agt;
       if (nn($qo->agentQid)) return $qo->agent = qo($qo->agentQid)->id;
       list ($main, $num) = [$qo->id, u\a2n($qo->agentCode) + 1]; // agentNum 1 is A
-      return $qo->agent = r\relation('other', 'main=:main AND otherNum=:num', compact('main', 'num'));
+      $agt = r\relation('other', 'main=:main AND otherNum=:num', compact('main', 'num'));
+      if (!$agt and $num == 1 and db\count('u_relations', 'main=:main', compact('main')) == 1) { // legacy sole agent never numbered (the app encodes it as A)
+        $agt = r\relation('other', 'main=:main AND otherNum=0', compact('main'));
+      }
+      return $qo->agent = $agt;
     } else return $qo->id();
   }
   

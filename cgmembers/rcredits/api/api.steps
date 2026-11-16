@@ -41,6 +41,7 @@ function extraSetup() {
  *
  * in: MAKE transactions Setup
  *     MAKE accounts Setup
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE cgpay Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
@@ -50,6 +51,8 @@ function extraSetup() {
  *     MAKE comments Setup
  *     MAKE sessioncookies Setup
  *     MAKE identity Setup
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function members($list) {return t\members($list);}
 
@@ -72,6 +75,7 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
+ *     BOTH accounts ALegacyAgentSignsInToTheApp
  *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
  *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
@@ -85,6 +89,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE identity Setup
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -130,6 +136,7 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadProof
  *     MAKE transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  *     MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutAPassword
  *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
@@ -157,6 +164,8 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');}
 
@@ -180,6 +189,7 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST identity TheAppAsksToIdentifyACustomer
+ *     TEST identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -216,6 +226,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
  *     TEST transactions TheAppAsksToChargeACustomerWithABadProof
+ *     TEST accounts ALegacyAgentSignsInToTheApp
  *     TEST accounts AMemberTriesToSignInWithoutAnIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutAPassword
  *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
@@ -238,6 +249,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     TEST identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -304,6 +316,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     TEST test TheAppAsksToInitializeTheTestData
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}

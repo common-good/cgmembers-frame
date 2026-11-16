@@ -114,6 +114,7 @@ function accountInfo($a, $name, $version) {
 
   $isCo = $a->co;
   if ($a->stepsLeft($isCo ? 'coapp' : 'app')) return NULL; // no using app without card permission
+  $a->setAgentNum(); // legacy agents may lack a number, and the app needs one to identify itself later
   $accountId = qr\url($a, 'main');
   $cardCode = $a->cardCode();
   $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
