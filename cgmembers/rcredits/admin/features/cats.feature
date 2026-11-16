@@ -329,3 +329,27 @@ Scenario: QBO rejects a transaction in a bank transfer
   | xid | flags |*
   |  97 |       |
   |  98 |       |
+
+# Rule: an export that stopped partway resumes without sending a bank transfer to QBO twice
+Scenario: QBO already has a bank transfer from an export that stopped partway
+  Given these "txs":
+  | eid | xid | created | amount | payer      | payee | purpose | rule | type  | recursId | flags   | cat2   |*
+  | 971 |  97 | %now-5m |    971 | %UID_OUTER | ctty  | gift    |      | outer |          |         | D-ONCE |
+  | 981 |  98 | %now-4m |    981 | %UID_OUTER | ctty  | gift    |      | outer |          |         | D-ONCE |
+  And these "txs2":
+  | xid | payee | amount | created | deposit | completed | pid | bankAccount  | bankTxId |*
+  |  97 | ctty  |    971 | %now-5m | %now0   | %now-4m   | 102 | %T_BANK_ACCT | %now1234 |
+  |  98 | ctty  |    981 | %now-4m | %now0   | %now-4m   | 102 | %T_BANK_ACCT | %now1234 |
+  And QBO has tx "cgFund#%now0"
+  When member ".ZZA" submits "sadmin/set-cats" with:
+  | start | %now-9m |**
+  And member ".ZZA" visits "qbo/op=txs"
+  Then QBO gets Tx "cg#97":"gift (One-time Donations) [Zeta Zot (non-member)]" dated "%ymd-5m" with entries:
+  | 971 Debit ctty | 971 Credit D-ONCE |
+  And QBO gets Tx "cg#98":"gift (One-time Donations) [Zeta Zot (non-member)]" dated "%ymd-4m" with entries:
+  | 981 Debit ctty | 981 Credit D-ONCE |
+  And QBO gets nothing else
+  And these "tx_hdrs":
+  | xid | flags |*
+  |  97 | qbok  |
+  |  98 | qbok  |
