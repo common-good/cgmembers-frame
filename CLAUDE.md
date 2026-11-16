@@ -77,6 +77,8 @@ use CG\Cron as cr;         // cron jobs
 use CG\QR as qr;           // QR codes
 ```
 
+Keep a file's alias lines even when it uses none of them, and copy the block from a neighboring file when starting a new one: the block is a fixed per-file convention, so code added later can use any alias without editing the header.
+
 Also: `y\` (CG\Special) and `san\` (CG\Sanity) are rarely used; `s\` was the ancient Android app and is going away.
 
 Drupal functions are called with just a leading backslash (`\drupal_function()`) so they stand out and can be eliminated eventually. Avoid adding new Drupal dependencies.
