@@ -530,7 +530,19 @@ function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPassword
  */
 function qBORejectsTx($doc) {
   global $testOnly; if ($testOnly) return FALSE;
-  global $testQbReject, $testQbTxs; $testQbReject = $doc;
-  $testQbTxs = []; // earlier scenarios can leave records here
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = $doc;
+  $testQbHave = $testQbTxs = []; // earlier scenarios can leave these set
+  return TRUE;
+}
+
+/**
+ * QBO has tx (ARG)
+ *
+ * in: MAKE cats QBOAlreadyHasABankTransferFromAnExportThatStoppedPartway
+ */
+function qBOHasTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbHave = [$doc];
+  $testQbReject = NULL; $testQbTxs = []; // earlier scenarios can leave these set
   return TRUE;
 }

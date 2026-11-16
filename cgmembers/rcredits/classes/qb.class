@@ -272,7 +272,7 @@ X;
       extract($row);
       if ($cnt == 0) $dt1 = $deposit;
       $DocNumber = "cgFund#$deposit";
-      if (!$this->isNew($DocNumber)) break;
+      $have = $this->inQbo($DocNumber); // QBO already has it when an earlier export stopped partway through this deposit
       
       $PrivateNote = $reversal ? t('reversal') : ($txCnt > 1 ? t('ACH batch') : t('single bank transfer'));
       
@@ -287,7 +287,7 @@ X;
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (!$this->add($qbTx)) break;
+        if (!$have and !$this->add($qbTx)) break;
 
         if (!$this->sendTxs(FALSE, $deposit)) break; // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
@@ -410,14 +410,17 @@ X;
     return $cnt;
   }
    
+  private function inQbo($doc) {
+    global $testQbHave; // DocNumbers a test wants QBO to have already
+    return test() ? in_array($doc, $testQbHave ?: []) : (bool) $this->get('Id', 'JournalEntry', "DocNumber='$doc'");
+  }
+
   /**
    * If the transaction has already been sent to QBO, show an error message and return FALSE (else return TRUE).
    * @param string $id: the journal entry identifier
    */
   private function isNew($id) {
-    if (test() or QSEND_TEST) return TRUE;
-    if (!$this->get('Id', 'JournalEntry', "DocNumber='$id'")) return TRUE;
-    if (u\starts($id, 'cgFund#')) return TRUE; // ignore if QBO already has this bank transfer (no doubt caused by a crash while processing transactions up to that deposit date)
+    if (QSEND_TEST or !$this->inQbo($id)) return TRUE;
 //    $xid = substr($id, strpos($id, '#') + 1);
 //    if (TRUE or $xid <= 163686) {r\setQbOk($xid); return TRUE;} // delete this line and the preceding after 7/1/2022
     w\err(t('Transaction %id has already been transferred! Stopping...', compact('id')));
