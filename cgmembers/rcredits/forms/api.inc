@@ -599,14 +599,17 @@ function fixVersion(&$params) {
  * The origins of the legacy app that may call /handoff with the session cookie.
  */
 function handoffOrigins() {
-  $origins = ['https://cgpay.commongood.earth', 'https://cgpay-staging.commongood.earth'];
-  if (isDEV) $origins[] = 'http://localhost:3000';
-  return $origins;
+  return ['https://cgpay.commongood.earth', 'https://cgpay-staging.commongood.earth'];
+}
+
+// Dev only: the legacy app on any localhost port (parallel test slots each use their own).
+function handoffOriginOk($origin) {
+  return in_array($origin, handoffOrigins()) or (isDEV and preg_match('~^http://localhost:\d+$~', $origin));
 }
 
 function setHeaders($arg = '') {
   $origin = nni($_SERVER, 'HTTP_ORIGIN');
-  if ($arg == 'handoff' and $origin and in_array($origin, handoffOrigins())) { // credentials need an exact origin, not *
+  if ($arg == 'handoff' and $origin and handoffOriginOk($origin)) { // credentials need an exact origin, not *
     header("Access-Control-Allow-Origin: $origin");
     header('Vary: Origin');
   } else header('Access-Control-Allow-Origin: *');
