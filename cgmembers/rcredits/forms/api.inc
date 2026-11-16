@@ -448,6 +448,8 @@ function testops($params) {
       //t\clear(TX_APP); 
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
       db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
+      db\q("UPDATE users SET floor=-9999 WHERE uid $uidCrit"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
+      foreach (db\col('uid', 'users', "uid $uidCrit") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
       break;
       
     case 'rows':
@@ -466,7 +468,12 @@ function testops($params) {
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
-      foreach ($ray as $i => $row) db\update($table, (array) $row, 'uid');
+      $special = SECURE_FLDS . ' ' . VSECURE_FLDS; // encrypted fields (bankAccount, for example) go through the account object
+      foreach ($ray as $row) {
+        $row = (array) $row;
+        if ($sp = just($special, $row)) r\acct($row['uid'])->update($sp);
+        if (count($rest = justNOT($special, $row)) > 1) db\update($table, $rest, 'uid');
+      }
       break;
       
     default: return exitJust(X_SYNTAX);
