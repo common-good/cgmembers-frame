@@ -77,6 +77,7 @@ function cgpaySignupVerify() {
   // Check ok BEFORE writing anything, so a forbidden account doesn't get left
   // half-updated with a new password / signed flag / cleared oneTimePass.
   if (!$a->ok) return exitJust(X_FORBIDDEN);
+  if (!u\okPass($newPassword, $a->admin, u\pwAvoid($a))) return exitJson(['errors' => ['newPassword' => tr('weak pass')]], X_SYNTAX);
 
   // Store the real password and clear the one-time pass so the code can't be
   // reused. Acct::update1() hashes `pass` for us via r\passHash (see acct.class);
