@@ -452,7 +452,7 @@ function testops($params) {
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id"];
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid"];
       if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
         $rows = db\rows('*', $table, $where);
