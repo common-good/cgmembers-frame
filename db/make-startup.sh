@@ -24,7 +24,7 @@ SKIP="cache cache_bootstrap cache_form cache_menu flood menu_links menu_router q
 fresh() { sql -e "DROP DATABASE IF EXISTS $1; CREATE DATABASE $1"; sql $1 < $2; }
 tables() { sql -e "SELECT table_name FROM information_schema.tables WHERE table_schema='$1' AND table_type='BASE TABLE'" | sort; }
 schema() { mysqldump $R --no-data --routines --triggers --skip-comments --skip-dump-date $1 | sed -e '/enable the sandbox mode/d' -e 's/ DEFINER=`[^`]*`@`[^`]*`//g'; }
-data() { mysqldump $R --no-create-info --skip-triggers --skip-extended-insert --order-by-primary --hex-blob --skip-comments --skip-dump-date $1 $KEEP | sed '/enable the sandbox mode/d'; }
+data() { mysqldump $R --no-create-info --skip-triggers --order-by-primary --hex-blob --skip-comments --skip-dump-date $1 $KEEP | sed '/enable the sandbox mode/d'; }
 sums() { for t in $KEEP; do echo "$t $(sql -e "CHECKSUM TABLE \`$t\`" $1 | cut -f2)"; done; }
 
 # phinx cannot use root's socket login, so it runs as a temporary user. The views it recreates name that user as definer,
@@ -63,7 +63,8 @@ diff <(schema $A) <(schema $B) > /dev/null || { echo "Schema differs:"; diff <(s
 diff <(sums $A) <(sums $B) || { echo "KEEP data differs (table checksums above)"; exit 1; }
 for t in $SKIP; do [ -n "$(sql -e "SELECT 1 FROM \`$t\` LIMIT 1" $B)" ] && { echo "SKIP table $t has data"; exit 1; }; done || true
 
+rows=$(for t in $KEEP; do sql -e "SELECT COUNT(*) FROM \`$t\`" $B; done | awk '{n += $1} END {print n}')
 mv $OUT.new $OUT; sql -e "DROP DATABASE $A; DROP DATABASE $B"
-echo "Wrote $OUT ($(grep -c '^INSERT' $OUT) rows, $(echo "$all" | wc -l) tables). Schema and KEEP data match the old file plus migrations."
+echo "Wrote $OUT ($rows rows, $(echo "$all" | wc -l) tables). Schema and KEEP data match the old file plus migrations."
 [ -n "$nonempty" ] && echo "Data left out (SKIP tables that had rows in the old file): $nonempty"
 exit 0
