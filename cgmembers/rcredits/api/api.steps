@@ -77,6 +77,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
  *     MAKE cgpay TheNodeAppCompletesAResetTooLate
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -343,6 +344,7 @@ function weReplyWithJSONValues($wantStatus, $want) {
  * in: TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
@@ -425,6 +427,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
  *     MAKE cgpay TheNodeAppCompletesAResetTooLate
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
  */
 function cgpayPostsWith($url, $params) {
   global $testOnly, $testBody; if ($testOnly) return FALSE;
@@ -446,3 +449,10 @@ function cgpayPostsWith($url, $params) {
  *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
+
+/**
+ * we reply (ARG) with field error (ARG): (ARG)
+ *
+ * in: TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ */
+function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith($wantStatus, json_encode(['errors' => [$field => tr($index)]]));}

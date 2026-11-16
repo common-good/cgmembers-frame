@@ -117,5 +117,5 @@ Scenario: The node app completes a verified reset with a weak password
   When cgpay posts "reset-complete" with:
   | resetId | uid  | newPassword |*
   | 7       | .ZPB | newpass99   |
-  Then we reply "syntax"
+  Then we reply "syntax" with field error "newPassword": "weak pass"
   And count "reset_codes" is 1
