@@ -448,6 +448,7 @@ function testops($params) {
     case 'initialize': 
       //t\clear(TX_APP); 
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
+      foreach (ray('app_tokens app_codes') as $tnm) db\q("DELETE FROM $tnm WHERE uid $uidCrit"); // the store app's sign-ins
       db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
       db\q("UPDATE users SET floor=-9999 WHERE uid $uidCrit"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
       foreach (db\col('uid', 'users', "uid $uidCrit") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
@@ -455,7 +456,7 @@ function testops($params) {
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid"];
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'app_tokens' => "uid $uidCrit ORDER BY id"];
       if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
         $rows = db\rows('*', $table, $where);

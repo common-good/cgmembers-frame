@@ -46,6 +46,7 @@ function extraSetup() {
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE sessioncookies Setup
@@ -78,6 +79,7 @@ function balances($list) {return t\balances($list);}
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE identity Setup
@@ -308,6 +310,7 @@ function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $tas
  * in: MAKE test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  */
 function testOpWith($op, $args) {
   if (is_array($args)) $args = $args[0];
@@ -335,6 +338,7 @@ function testOpWith($op, $args) {
  *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
  *     TEST info TheAppAsksForRecentTransactions
  *     TEST test TheAppAsksUsForTransactionData
+ *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
