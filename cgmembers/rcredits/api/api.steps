@@ -41,6 +41,7 @@ function extraSetup() {
  *
  * in: MAKE transactions Setup
  *     MAKE accounts Setup
+ *     MAKE appsignin Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -71,6 +72,8 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
+ *     TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -85,6 +88,12 @@ function these($thing, $list) {return t\these($thing, $list);}
  * next random code is (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
+ *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -209,6 +218,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
+ *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
  *     TEST info TheAppAsksForRecentTransactionsWithAMissingParameter
  *     TEST info TheAppAsksForRecentTransactionsWithABadCount
  *     TEST info TheAppAsksForRecentTransactionsWithACountOutOfRange
@@ -287,6 +297,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE appsignin Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
@@ -306,7 +317,23 @@ function testOpWith($op, $args) {
 /**
  * we reply (ARG) with JSON values: (ARG)
  *
- * in: TEST info TheAppAsksForRecentTransactions
+ * in: TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin AMemberSignsInByEmailAddress
+ *     TEST appsignin AWrongPasswordGetsNoToken
+ *     TEST appsignin AnUnknownAccountGetsNoToken
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     TEST appsignin AnotherDeviceIsNotTrusted
+ *     TEST appsignin TheAppAsksForItsDeviceCredentials
+ *     TEST appsignin AMadeupTokenIsRefused
+ *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     TEST appsignin AOnetimeCodeOpensALivePageOnce
+ *     TEST appsignin AOnetimeCodeWorksOnlyOnce
+ *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     TEST info TheAppAsksForRecentTransactions
  *     TEST test TheAppAsksUsForTransactionData
  */
 function weReplyWithJSONValues($wantStatus, $want) {
@@ -324,7 +351,15 @@ function weReplyWithJSONValues($wantStatus, $want) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST test TheAppAsksToInitializeTheTestData
+ * in: TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin AWrongPasswordGetsNoToken
+ *     TEST appsignin AnUnknownAccountGetsNoToken
+ *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
 function countIs($what, $count) {return t\count($what, $count);}
@@ -391,4 +426,79 @@ function expiredScopesAre($want) {
 function sessionBelongsToMember($sid, $id) {
   global $testOnly; if ($testOnly) return FALSE;
   return db\q('INSERT INTO sessions (uid, sid, ssid, timestamp) VALUES (:uid, :sid, :sid, :now)', ['uid' => t\uid($id), 'sid' => $sid, 'now' => now()]);
+}
+
+/**
+ * cgpay posts (ARG) with: (ARG)
+ *
+ * in: MAKE appsignin AMemberSignsInToTheApp
+ *     MAKE appsignin AMemberSignsInByEmailAddress
+ *     MAKE appsignin AWrongPasswordGetsNoToken
+ *     MAKE appsignin AnUnknownAccountGetsNoToken
+ *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
+ *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin TheAppAsksForItsDeviceCredentials
+ *     MAKE appsignin AMadeupTokenIsRefused
+ *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
+ *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ */
+function cgpayPostsWith($op, $args) {
+  global $testOnly; if ($testOnly) return FALSE;
+  return appPost($op, $args, TRUE);
+}
+
+/**
+ * Post the fields to the server-to-server endpoint cgpay/<op>, with the shared secret or without.
+ */
+function appPost($op, $args, $withSecret) {
+  $_POST = nni($args, 0) ?: [];
+  t\fixTestVars($_POST);
+  t\fixData($_POST);
+  t\SERVER('REQUEST_METHOD', 'POST');
+  t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', $withSecret ? CGPAY_SSO_SECRET : '');
+  t\pageForm("cgpay/$op");
+  return TRUE;
+}
+
+/**
+ * a stranger posts (ARG) with: (ARG)
+ *
+ * in: MAKE appsignin ACallerWithoutTheSharedSecretIsRefused
+ */
+function aStrangerPostsWith($op, $args) {
+  global $testOnly; if ($testOnly) return FALSE;
+  return appPost($op, $args, FALSE);
+}
+
+/**
+ * we email (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ */
+function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
+
+/**
+ * reply (ARG) is kept as var (ARG)
+ *
+ * in: MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin TheAppAsksForItsDeviceCredentials
+ *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
+ *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ */
+function replyIsKeptAsVar($field, $var) {
+  global $testOnly, $testVars; if ($testOnly) return FALSE;
+  $got = json_decode(t\getExitMsg(), TRUE);
+  return isset($got[$field]) and ($testVars[$var] = $got[$field]) !== NULL;
 }

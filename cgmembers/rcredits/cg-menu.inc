@@ -256,6 +256,12 @@ function menu($submenu = '') {
     'cgpay/funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
     'cgpay/signup' => ['call', 'CGPay Signup', '', ANY, 'cgpaySignup'], // server-to-server: SvelteKit cgpay signup flow -- create unverified account + email verification code
     'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
+    'cgpay/app-signin' => ['call', 'CGPay App Signin', '', ANY, 'cgpayAppSignin'], // server-to-server: store app token sign-in, step 1 (password; MFA handle or token)
+    'cgpay/app-mfa' => ['call', 'CGPay App MFA', '', ANY, 'cgpayAppMfa'], // server-to-server: store app token sign-in, step 2 (emailed passcode)
+    'cgpay/app-device' => ['call', 'CGPay App Device', '', ANY, 'cgpayAppDevice'], // server-to-server: store app token -> device credentials
+    'cgpay/app-enter' => ['call', 'CGPay App Enter', '', ANY, 'cgpayAppEnter'], // server-to-server: store app token -> one-time code for opening a live page
+    'cgpay/app-redeem' => ['call', 'CGPay App Redeem', '', ANY, 'cgpayAppRedeem'], // server-to-server: one-time code -> uid and page (single use)
+    'cgpay/app-revoke' => ['call', 'CGPay App Revoke', '', ANY, 'cgpayAppRevoke'], // server-to-server: store app sign-out (one device or everywhere)
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
