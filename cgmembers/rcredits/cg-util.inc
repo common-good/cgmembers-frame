@@ -1796,7 +1796,7 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   $name = $actorA->fullName;
   
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
-  $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+  $url = config('appSocketHost', (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth');
 
 //  textalk/websocket
 /**/ set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
