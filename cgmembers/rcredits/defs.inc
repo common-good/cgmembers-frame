@@ -17,10 +17,10 @@ $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents(
 
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
-define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
+define('isDEV', in_array($stage, ['test', 'dev', 'development'])); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
-define('isPRODUCTION', $stage == 'production');
+define('isPRODUCTION', in_array($stage, ['main', 'production'])); // develop's names (test dev main) work here too, so one config.json serves both
 /**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
 
 define('SOCKET_PORT', (int) config('appSocketPort', 8081)); // app websocket port (environments that share a server need different ones)
@@ -44,7 +44,9 @@ const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\ban
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
-$base_url = config('baseUrl');
+$env = preg_match('#/home/([^/]+)/cg/#', __DIR__, $m) ? $m[1] : NULL; // eg /home/main/cg/releases/...
+if ($env === 'main') $env = 'members'; // special case for production URL
+$base_url = config('baseUrl') ?: ('https://' . ($_SERVER['HTTP_HOST'] ?? "$env.commongood.earth")); // use env for non-http requests, like cron
 
 $requestUri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : NULL; // can't use nni() yet
 define('GEOCODE_KEY', config('geocodeKey'));
