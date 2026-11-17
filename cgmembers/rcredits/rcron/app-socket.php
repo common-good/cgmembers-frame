@@ -106,7 +106,7 @@ try {
   $pf = DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid'; @mkdir(dirname($pf), 0775, TRUE); file_put_contents($pf, getmypid()); // lets a deploy restart us
   $server->run();
 } catch (\Exception $er) {
-/**/ flog("App socket overall er: " . $er->message());
+/**/ flog("App socket overall er: " . $er->getMessage());
 }
 
 function er($msg, $conn) {
