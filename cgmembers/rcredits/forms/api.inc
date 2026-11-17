@@ -448,6 +448,7 @@ function testops($params) {
     case 'initialize': 
       //t\clear(TX_APP); 
       a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
+      db\q("UPDATE users SET flags=flags & ~:bit WHERE uid $uidCrit", ['bit' => 1 << B_MFA]);
       foreach (ray('app_tokens app_codes') as $tnm) db\q("DELETE FROM $tnm WHERE uid $uidCrit"); // the store app's sign-ins
       db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
       db\q("UPDATE users SET floor=-9999 WHERE uid $uidCrit"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
@@ -466,6 +467,15 @@ function testops($params) {
         return exitJust(X_SYNTAX);
       }
       
+    case 'mfaOn': // turn multi-factor authentication on for a test account (initialize turns it off again)
+      if (!$uid = (int) nni($params, 'uid') or !db\exists('users', "uid=:uid AND uid $uidCrit", compact('uid'))) return exitJust(X_SYNTAX);
+      db\q('UPDATE users SET flags=flags | :bit WHERE uid=:uid', ['bit' => 1 << B_MFA, 'uid' => $uid]);
+      break;
+
+    case 'passcode': // the passcode that a store app sign-in handle (from /cgpay/app-signin) says was emailed
+      if (!$ray = u\decryRay(nni($params, 'handle')) or !$nonce = nni($ray, 'nonce')) return exitJust(X_SYNTAX);
+      return exitJson(compact('nonce'), X_OK);
+
     case 'update':
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
