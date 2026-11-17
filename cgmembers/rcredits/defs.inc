@@ -38,7 +38,7 @@ define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
 define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
-const SOCKET_PORT = 8081; // app websocket port
+define('SOCKET_PORT', (int) config('appSocketPort', 8081)); // app websocket port (environments that share a server need different ones)
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
 const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
