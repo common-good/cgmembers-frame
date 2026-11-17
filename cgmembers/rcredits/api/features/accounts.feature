@@ -39,6 +39,26 @@ Scenario: A member signs in to the app for a list of accounts to choose from
   Then we reply "ok" with JSON:
   | accounts | %accounts |**
 
+# Rule: Signing in numbers a legacy agent's relation, so the app can identify the agent later
+
+Scenario: A legacy agent signs in to the app
+  Given members:
+  | uid  | fullName | phone  | email | cc  | flags | city | state |*
+  | .ZPD | Dee Co   | +20004 | d@    | ccD | ok,co | Dton | DE    |
+  And these "u_relations":
+  | main | agent | num | permission |*
+  | .ZPD | .ZPA  |   0 | manage     |
+  | .ZPD | .ZPB  |   0 | manage     |
+  And member ".ZPD" has "co" steps done: "all"
+  When app posts "accounts" with:
+  | identifier | password |*
+  | .ZPA       | Aa1      |
+  Then we reply "ok" with: "?"
+  And these "u_relations":
+  | main | other | otherNum | permission |*
+  | .ZPD | .ZPA  |        1 | manage     |
+  | .ZPD | .ZPB  |        0 | manage     |
+
 Scenario: A member tries to sign in without an identifier
   When app posts "accounts" with:
   | identifier | password |*

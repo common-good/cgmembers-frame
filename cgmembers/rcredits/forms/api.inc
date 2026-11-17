@@ -99,6 +99,7 @@ function accounts($params) {
     $a = r\acct($uid, $myid);
     $isCo = $a->co;
     if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
+    $a->setAgentNum(); // legacy agents may lack a number, and the app needs one to identify itself later
     $accountId = qr\url($a, 'main'); // r\acct($uid)
     $cardCode = $a->cardCode();
     $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
