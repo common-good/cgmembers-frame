@@ -472,7 +472,7 @@ function testops($params) {
       db\q('UPDATE users SET flags=flags | :bit WHERE uid=:uid', ['bit' => 1 << B_MFA, 'uid' => $uid]);
       break;
 
-    case 'passcode': // the passcode that a store app sign-in handle (from /cgpay/app-signin) says was emailed
+    case 'passcode': // the passcode that a store app sign-in handle (from /cgpay/signin) says was emailed
       if (!$ray = u\decryRay(nni($params, 'handle')) or !$nonce = nni($ray, 'nonce')) return exitJust(X_SYNTAX);
       return exitJson(compact('nonce'), X_OK);
 

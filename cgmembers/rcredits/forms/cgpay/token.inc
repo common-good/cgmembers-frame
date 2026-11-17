@@ -7,7 +7,7 @@ use CG\Util as u;
 
 /**
  * @file
- * Shared code of the store app's token sign-in endpoints (/cgpay/app-signin, app-mfa, app-device, app-enter, app-redeem, app-revoke).
+ * Shared code of the store app's token sign-in endpoints (/cgpay/signin, app-mfa, app-device, app-enter, app-redeem, app-revoke).
  *
  * The app signs in once and keeps a revocable token (only its sha256 is stored, in app_tokens). Every call
  * comes from the node server (X-CG-Internal-Token, like /cgpay/sso), never from the browser. Errors are JSON

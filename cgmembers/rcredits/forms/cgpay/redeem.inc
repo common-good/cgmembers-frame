@@ -3,13 +3,13 @@ namespace CG\Web;
 use CG as r;
 use CG\Db as db;
 
-require_once __DIR__ . '/apptoken.inc';
+require_once __DIR__ . '/token.inc';
 
 /**
- * /cgpay/app-redeem: trade a one-time code for the member and the page to open (single use).
+ * /cgpay/redeem: trade a one-time code for the member and the page to open (single use).
  *   body: {code}; 200 {uid, to}; 401 {error: bad-code}
  */
-function cgpayAppRedeem() {
+function cgpayRedeem() {
   if (($in = appIn()) === FALSE) return;
   $h = appHash(nni($in, 'code'));
   $row = db\row('app_codes', 'codeHash=:h AND usedAt IS NULL AND expires>:now', ['h' => $h, 'now' => now()]);

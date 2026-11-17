@@ -17,7 +17,7 @@ Setup:
 # Rule: The right password signs the app in with a token, and only the token's hash is kept.
 
 Scenario: A member signs in to the app
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label  | deviceKey |*
   | .ZPA       | Aa1      | Pixel  | key1      |
   Then we reply "ok" with JSON values:
@@ -29,7 +29,7 @@ Scenario: A member signs in to the app
   | .ZPA | Pixel | 0       |
 
 Scenario: A member signs in by email address
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label |*
   | a@         | Aa1      | Pixel |
   Then we reply "ok" with JSON values:
@@ -37,7 +37,7 @@ Scenario: A member signs in by email address
   | ?     |
 
 Scenario: A wrong password gets no token
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | wrong    | Pixel |
   Then we reply "unauth" with JSON values:
@@ -46,7 +46,7 @@ Scenario: A wrong password gets no token
   And count "app_tokens" is 0
 
 Scenario: An unknown account gets no token
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPZ       | Aa1      | Pixel |
   Then we reply "unauth" with JSON values:
@@ -55,7 +55,7 @@ Scenario: An unknown account gets no token
   And count "app_tokens" is 0
 
 Scenario: A caller without the shared secret is refused
-  When a stranger posts "app-signin" with:
+  When a stranger posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   Then we reply "unauth" with: "?"
@@ -65,7 +65,7 @@ Scenario: A caller without the shared secret is refused
 
 Scenario: A member with MFA is asked for the passcode
   Given next random code is "12345678"
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   Then we reply "ok" with JSON values:
@@ -78,11 +78,11 @@ Scenario: A member with MFA is asked for the passcode
 
 Scenario: The right passcode signs the app in
   Given next random code is "12345678"
-  And cgpay posts "app-signin" with:
+  And cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   And reply "mfa" is kept as var "mfa"
-  When cgpay posts "app-mfa" with:
+  When cgpay posts "mfa" with:
   | mfa  | code     | trust |*
   | %mfa | 12345678 | 0     |
   Then we reply "ok" with JSON values:
@@ -94,11 +94,11 @@ Scenario: The right passcode signs the app in
 
 Scenario: A wrong passcode gets no token
   Given next random code is "12345678"
-  And cgpay posts "app-signin" with:
+  And cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   And reply "mfa" is kept as var "mfa"
-  When cgpay posts "app-mfa" with:
+  When cgpay posts "mfa" with:
   | mfa  | code     | trust |*
   | %mfa | 99999999 | 0     |
   Then we reply "unauth" with JSON values:
@@ -110,18 +110,18 @@ Scenario: A wrong passcode gets no token
 
 Scenario: A trusted device signs in without a passcode
   Given next random code is "12345678"
-  And cgpay posts "app-signin" with:
+  And cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   And reply "mfa" is kept as var "mfa"
-  And cgpay posts "app-mfa" with:
+  And cgpay posts "mfa" with:
   | mfa  | code     | trust |*
   | %mfa | 12345678 | 1     |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-revoke" with:
+  And cgpay posts "revoke" with:
   | token  |*
   | %token |
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   Then we reply "ok" with JSON values:
@@ -131,14 +131,14 @@ Scenario: A trusted device signs in without a passcode
 
 Scenario: Another device is not trusted
   Given next random code is "12345678"
-  And cgpay posts "app-signin" with:
+  And cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   And reply "mfa" is kept as var "mfa"
-  And cgpay posts "app-mfa" with:
+  And cgpay posts "mfa" with:
   | mfa  | code     | trust |*
   | %mfa | 12345678 | 1     |
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Tablet | key3  |
   Then we reply "ok" with JSON values:
@@ -148,11 +148,11 @@ Scenario: Another device is not trusted
 # Rule: A token gives the device credentials until it is revoked.
 
 Scenario: The app asks for its device credentials
-  Given cgpay posts "app-signin" with:
+  Given cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   And reply "token" is kept as var "token"
-  When cgpay posts "app-device" with:
+  When cgpay posts "device" with:
   | token  |*
   | %token |
   Then we reply "ok" with JSON values:
@@ -160,7 +160,7 @@ Scenario: The app asks for its device credentials
   | ?   |
 
 Scenario: A made-up token is refused
-  When cgpay posts "app-device" with:
+  When cgpay posts "device" with:
   | token |*
   | abc   |
   Then we reply "unauth" with JSON values:
@@ -168,14 +168,14 @@ Scenario: A made-up token is refused
   | bad-token |
 
 Scenario: A signed-out token no longer works
-  Given cgpay posts "app-signin" with:
+  Given cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-revoke" with:
+  And cgpay posts "revoke" with:
   | token  |*
   | %token |
-  When cgpay posts "app-device" with:
+  When cgpay posts "device" with:
   | token  |*
   | %token |
   Then we reply "unauth" with JSON values:
@@ -185,18 +185,18 @@ Scenario: A signed-out token no longer works
 
 Scenario: Signing out everywhere ends every device and its trust
   Given next random code is "12345678"
-  And cgpay posts "app-signin" with:
+  And cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   And reply "mfa" is kept as var "mfa"
-  And cgpay posts "app-mfa" with:
+  And cgpay posts "mfa" with:
   | mfa  | code     | trust |*
   | %mfa | 12345678 | 1     |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-revoke" with:
+  And cgpay posts "revoke" with:
   | token  | everywhere |*
   | %token | 1          |
-  When cgpay posts "app-signin" with:
+  When cgpay posts "signin" with:
   | identifier | password | label | deviceKey |*
   | .ZPB       | Bb2      | Pixel | key2      |
   Then we reply "ok" with JSON values:
@@ -206,15 +206,15 @@ Scenario: Signing out everywhere ends every device and its trust
 # Rule: A token opens a live page once, through a one-time code.
 
 Scenario: A one-time code opens a live page once
-  Given cgpay posts "app-signin" with:
+  Given cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-enter" with:
+  And cgpay posts "enter" with:
   | token  | to      |*
   | %token | history |
   And reply "code" is kept as var "code"
-  When cgpay posts "app-redeem" with:
+  When cgpay posts "redeem" with:
   | code  |*
   | %code |
   Then we reply "ok" with JSON values:
@@ -222,18 +222,18 @@ Scenario: A one-time code opens a live page once
   | ?   | history |
   
 Scenario: A one-time code works only once
-  Given cgpay posts "app-signin" with:
+  Given cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-enter" with:
+  And cgpay posts "enter" with:
   | token  |*
   | %token |
   And reply "code" is kept as var "code"
-  And cgpay posts "app-redeem" with:
+  And cgpay posts "redeem" with:
   | code  |*
   | %code |
-  When cgpay posts "app-redeem" with:
+  When cgpay posts "redeem" with:
   | code  |*
   | %code |
   Then we reply "unauth" with JSON values:
@@ -241,15 +241,15 @@ Scenario: A one-time code works only once
   | bad-code |
 
 Scenario: A page on another site cannot be asked for
-  Given cgpay posts "app-signin" with:
+  Given cgpay posts "signin" with:
   | identifier | password | label |*
   | .ZPA       | Aa1      | Pixel |
   And reply "token" is kept as var "token"
-  And cgpay posts "app-enter" with:
+  And cgpay posts "enter" with:
   | token  | to                     |*
   | %token | https://evil.example/x |
   And reply "code" is kept as var "code"
-  When cgpay posts "app-redeem" with:
+  When cgpay posts "redeem" with:
   | code  |*
   | %code |
   Then we reply "ok" with JSON values:

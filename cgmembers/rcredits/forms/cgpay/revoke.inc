@@ -3,14 +3,14 @@ namespace CG\Web;
 use CG as r;
 use CG\Db as db;
 
-require_once __DIR__ . '/apptoken.inc';
+require_once __DIR__ . '/token.inc';
 
 /**
- * /cgpay/app-revoke: sign out.
+ * /cgpay/revoke: sign out.
  *   body: {token} signs out that device (it stays trusted for MFA); {token, everywhere: 1} signs out all the member's devices and ends their trust;
  *   {uid} (no token) does the latter, for when the password changes. 200 {revoked: <count>}; 401 {error: bad-token}
  */
-function cgpayAppRevoke() {
+function cgpayRevoke() {
   if (($in = appIn()) === FALSE) return;
   extract(just('token uid everywhere', $in, ''));
   $now = now();
