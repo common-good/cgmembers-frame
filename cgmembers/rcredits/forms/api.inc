@@ -203,9 +203,14 @@ function confirms($params) {
   extract(just('id yesno whyNot', $params, NULL));
 
   if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
+  if (!db\q('SELECT GET_LOCK(:k, 10)', ['k' => "inv$id"])->fetchField()) return exitJust(X_DENIED); // the app resends when a reply is slow, so handle repeats one at a time
   if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
   if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
+  $done = $inv['status'] >= TX_PAID ? 1 : ($inv['status'] == TX_DENIED ? 0 : -1);
+  if ($done == (int) $yesno) return exitJson('', X_OK); // a repeat of an earlier confirmation
+  if ($done >= 0) return exitJust(X_DENIED); // contradicts an earlier confirmation
   $inv['reason'] = $whyNot;
+  $inv['balFirst'] = (int) $mya->balFirst; // as on the web form
   
   if (!$ok = handleInvoice($yesno ? 'pay' : 'deny', $inv['amount'], $inv)) return exitJust(X_DENIED);
   exitJson('', X_OK);
