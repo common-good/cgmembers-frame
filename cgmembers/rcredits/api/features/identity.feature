@@ -76,3 +76,32 @@ Scenario: The app asks to identify a customer with a really bad id
   | deviceId | actorId | otherId  |*
   | devC     | K6VMDCC | nonsense |
   Then we reply "notfound" with: "?"
+
+# Rule: An agent whose relation was never numbered (legacy data) is the app's agent A only when there is no doubt
+
+Scenario: The app asks to identify a customer, as the sole legacy agent of a company
+  Given members:
+  | uid  | fullName | phone  | email | cc  | flags | city | state |*
+  | .ZPD | Dee Co   | +20004 | d@    | ccD | ok,co | Dton | DE    |
+  And these "u_relations":
+  | main | agent | num | permission |*
+  | .ZPD | .ZPA  |   0 | buy        |
+  When app posts "identity" with:
+  | deviceId | actorId  | otherId    |*
+  | devD     | L6VMDCD0 | K6VMDCBccB |
+  Then we reply "got" with JSON:
+  | name    | agent | location | limit | creditLine | avgBalance | trustRatio | since    | selling | isell |*
+  | Bea Two |       | Bton, MA |     0 |          0 |          0 |          0 | %now0-2w | []      | []    |
+
+Scenario: The app asks to identify a customer, as one of several legacy agents of a company
+  Given members:
+  | uid  | fullName | phone  | email | cc  | flags | city | state |*
+  | .ZPD | Dee Co   | +20004 | d@    | ccD | ok,co | Dton | DE    |
+  And these "u_relations":
+  | main | agent | num | permission |*
+  | .ZPD | .ZPA  |   0 | buy        |
+  | .ZPD | .ZPB  |   0 | buy        |
+  When app posts "identity" with:
+  | deviceId | actorId  | otherId    |*
+  | devD     | L6VMDCD0 | K6VMDCBccB |
+  Then we reply "unauth" with: "?"
