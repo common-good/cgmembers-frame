@@ -39,7 +39,8 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE transactions Setup
+ * in: MAKE confirms Setup
+ *     MAKE transactions Setup
  *     MAKE accounts Setup
  *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE cgpay Setup
@@ -59,14 +60,18 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST info Setup
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     TEST info Setup
  */
 function balances($list) {return t\balances($list);}
 
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE transactions Setup
+ * in: MAKE confirms Setup
+ *     TEST confirms TheAppConfirmsAPaymentRequest
+ *     MAKE transactions Setup
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToPayACustomer
  *     BOTH transactions TheAppAsksToUndoAChargeToACustomer
@@ -119,7 +124,10 @@ function appGetsWith($url, $params, $method = 'get') {
 /**
  * app posts (ARG) with: (ARG)
  *
- * in: MAKE transactions TheAppAsksToChargeACustomer
+ * in: MAKE confirms TheAppConfirmsAPaymentRequest
+ *     MAKE confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     MAKE confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToPayACustomer
  *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
  *     MAKE transactions TheAppAsksToUndoAPaymentToACustomer
@@ -221,7 +229,10 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
 /**
  * we reply (ARG) with: (ARG)
  *
- * in: TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     TEST confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
@@ -354,7 +365,8 @@ function weReplyWithJSONValues($wantStatus, $want) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST cgpay TheNodeAppCompletesAVerifiedReset
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
