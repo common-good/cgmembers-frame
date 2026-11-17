@@ -54,3 +54,12 @@ Scenario: The app denies a payment request after paying it
   | deviceId | actorId | id | yesno | version | whyNot |*
   | devA     | K6VMDCA | 1  | 0     | 4.0.0   | oops   |
   Then we reply "denied" with: "?"
+
+Scenario: The app denies a payment request again
+  Given app posts "confirms" with:
+  | deviceId | actorId | id | yesno | version | whyNot |*
+  | devA     | K6VMDCA | 1  | 0     | 4.0.0   | oops   |
+  When app posts "confirms" with:
+  | deviceId | actorId | id | yesno | version | whyNot |*
+  | devA     | K6VMDCA | 1  | 0     | 4.0.0   | oops   |
+  Then we reply "ok" with: "?"
