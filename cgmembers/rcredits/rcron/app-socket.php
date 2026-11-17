@@ -104,6 +104,7 @@ try {
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
 /**/ flog($startMsg);
+  file_put_contents(DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid', getmypid()); // lets a deploy restart us
   $server->run();
 } catch (\Exception $er) {
 /**/ flog("App socket overall er: " . $er->message());

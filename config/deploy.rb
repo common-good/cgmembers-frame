@@ -54,6 +54,16 @@ namespace :deploy do
   end
   after 'deploy:updated', 'deploy:copy_admin_keys'
 
+  desc 'Stop the app websocket switchboard (if it left a pid file); cron restarts it from the new release, not one a deploy will delete'
+  task :restart_switchboard do
+    on roles(:app) do
+      pid = shared_path.join("cgLogs/Socket/switchboard.pid")
+      if test("[ -f #{pid} ]")
+        execute "kill $(cat #{pid}) 2>/dev/null; rm -f #{pid}", raise_on_non_zero_exit: false # cron starts the new one within 5 minutes
+      end
+    end
+  end
+
   desc 'Hit the site (rebuilds the menu if it changed) and warn if the /cgpay routes are missing'
   task :check_menu do
     on roles(:app) do
@@ -68,6 +78,7 @@ end
 after 'deploy:published', 'restarter:restart_nginx'
 after 'deploy:published', 'restarter:restart_php_fpm'
 after 'restarter:restart_php_fpm', 'deploy:check_menu'
+after 'deploy:published', 'deploy:restart_switchboard'
 
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp # defaults to develop (main branch is main)
 # set :format, :airbrussh # defaults to :airbrussh
