@@ -445,7 +445,10 @@ function resetTestAccts($uidMin, $uidMax) {
   foreach ($own as $t => $where) db\q("DELETE FROM $t WHERE $where");
   foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
   if (nni($snap, 'v') == $v) {
-    foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+    foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) {
+      if ($t == 'admins') unset($row['id']); // a counter only, and an admin outside the test accounts may hold it by now
+      db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+    }
     return;
   }
 
