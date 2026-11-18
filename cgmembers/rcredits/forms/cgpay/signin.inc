@@ -23,19 +23,5 @@ function cgpaySignin() {
 
   $sta = [];
   if (!$uid = appFind($identifier)) {w\updateFlood($sta, FALSE); return appErr('bad-login', X_UNAUTH);} // counts against the IP
-  if (w\flooding($uid, $sta, $err)) return appErr('flooding', X_TOOMANY);
-  $a = r\acct($uid);
-  $success = ($a and $a->passwordOkay($password, 'pass', $err));
-  w\updateFlood($sta, $success, $err);
-  if (!$success) return appErr('bad-login', X_UNAUTH);
-  if (!$a->ok) return appErr('not-ok', X_FORBIDDEN);
-  if (isPRODUCTION and $a->admin and !u\strongPass($password, u\pwAvoid($a))) return appErr('weak-admin-password', X_FORBIDDEN);
-
-  if (!$a->canMfa or appTrusted($uid, $deviceKey)) return appIssue($uid, $label, $deviceKey, FALSE);
-
-  $nonce = u\randomString(8, 'digits') . '';
-  r\rMail('confirm-signin', $uid, compact('nonce'));
-  $expires = now() + APP_MFA_SECS;
-  $uid .= '';
-  return exitJson(['mfa' => u\cryRay(compact(ray('uid nonce expires label deviceKey')))], X_OK);
+  return appVerify($uid, $password, $label, $deviceKey);
 }

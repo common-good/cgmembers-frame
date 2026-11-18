@@ -63,7 +63,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   // no special $dom parameter -- must be region code
   if (!$subdom = strtoupper($dom) or !$code) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
-  $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
+  $qrDom = ray(QR_DOMS)[(int) REAL_CARDS];
 
 //  if (!$a = qr\acct("HTTP://$subdom.$qrDom/$code", TRUE)) return softErr(t('That is not a valid %PROJECT card.'));
   $res = r\Qo::qr2("$subdom.$qrDom/$code");

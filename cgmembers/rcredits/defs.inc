@@ -34,8 +34,10 @@ $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents(
 /**/  if (!in_array($stage, explode(' ', 'test dev staging demo main'))) die('Invalid value for stage in configuration file.');
 define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
+define('STAGE', $stage);
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
+define('REAL_CARDS', !isDEMO); // every server but demo shows real (RC2.ME) cards, so the store app takes a test card as "switch to demo"
 define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
 define('SOCKET_PORT', (int) config('appSocketPort', 8081)); // app websocket port (environments that share a server need different ones)

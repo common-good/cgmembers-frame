@@ -260,6 +260,7 @@ function menu($submenu = '') {
     'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
     'cgpay/signin' => ['call', 'CGPay Signin', '', ANY, 'cgpaySignin'], // server-to-server: store app token sign-in, step 1 (password; MFA handle or token)
     'cgpay/mfa' => ['call', 'CGPay MFA', '', ANY, 'cgpayMfa'], // server-to-server: store app token sign-in, step 2 (emailed passcode)
+    'cgpay/card' => ['call', 'CGPay Card', '', ANY, 'cgpayCard'], // server-to-server: store app sign-in by a scanned card (switching to or from demo)
     'cgpay/device' => ['call', 'CGPay Device', '', ANY, 'cgpayDevice'], // server-to-server: store app token -> device credentials
     'cgpay/account' => ['call', 'CGPay Account', '', ANY, 'cgpayAccount'], // server-to-server: store app token -> an account an admin typed
     'cgpay/unlock' => ['call', 'CGPay Unlock', '', ANY, 'cgpayUnlock'], // server-to-server: store app token + password again -> ok (before changing account or settings)

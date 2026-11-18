@@ -121,7 +121,7 @@ function accountInfo($a, $name, $version) {
   $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
   $qr = myQr($a);
   $selling = $isCo ? explode("\n", $a->selling) : NULL;
-  $real = (bool) isPRODUCTION; // real QR codes (RC2.ME) or test ones (RC4.ME)
+  $real = REAL_CARDS; // real QR codes (RC2.ME) or test ones (RC4.ME)
   return compact(ray('accountId cardCode deviceId qr isCo name selling real'));
 }
 
