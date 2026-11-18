@@ -92,6 +92,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE appsignin Setup
  *     TEST appsignin AMemberSignsInToTheApp
  *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
@@ -116,6 +117,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -299,7 +301,8 @@ function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 /**
  * members have: (ARG)
  *
- * in: MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
+ * in: MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -378,6 +381,7 @@ function testOpWith($op, $args) {
  *     TEST appsignin AMadeupTokenIsRefused
  *     TEST appsignin ASignedoutTokenNoLongerWorks
  *     TEST appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     TEST appsignin AOnetimeCodeOpensALivePageOnce
  *     TEST appsignin AOnetimeCodeWorksOnlyOnce
  *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
@@ -514,6 +518,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AMadeupTokenIsRefused
  *     MAKE appsignin ASignedoutTokenNoLongerWorks
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
@@ -575,6 +580,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin TheAppAsksForItsDeviceCredentials
  *     MAKE appsignin ASignedoutTokenNoLongerWorks
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor

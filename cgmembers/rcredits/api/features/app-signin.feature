@@ -209,6 +209,29 @@ Scenario: Signing out everywhere ends every device and its trust
   | mfa |*1
   | ?   |
 
+Scenario: A new password signs the app out on every device and ends its trust
+  Given next random code is "12345678"
+  And cgpay posts "signin" with:
+  | identifier | password | label | deviceKey |*
+  | .ZPB       | Bb2      | Pixel | key2      |
+  And reply "mfa" is kept as var "mfa"
+  And cgpay posts "mfa" with:
+  | mfa  | code     | trust |*
+  | %mfa | 12345678 | 1     |
+  And reply "token" is kept as var "token"
+  And members have:
+  | uid  | pass   |*
+  | .ZPB | Bb2new |
+  When cgpay posts "device" with:
+  | token  |*
+  | %token |
+  Then we reply "unauth" with JSON values:
+  | error     |*1
+  | bad-token |
+  And these "app_tokens":
+  | uid  | trusted |*
+  | .ZPB | 0       |
+
 # Rule: A token opens a live page once, through a one-time code.
 
 Scenario: A one-time code opens a live page once

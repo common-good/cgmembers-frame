@@ -537,7 +537,10 @@ class Acct {
 
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
-    if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
+    if (isset($info['pass'])) {
+      if ($info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
+      db\q('UPDATE app_tokens SET trusted=0, revoked=IFNULL(revoked, :now) WHERE uid=:uid', ['now' => now(), 'uid' => $a->id]); // a new password signs the store app out everywhere and ends MFA trust
+    }
     if (isset($info['dob']) and !$a->co) { // use new dob to adjust yob and underage flag
       $dob = $info['dob'] ?: ($a->yob ? strtotime("$a->yob-12-31 11:59:59pm") : ($a->created ?: now()));
       if (!isset($info['yob'])) $a->update('yob', $dob ? date('Y', $dob) : ''); // remember birth year for demographics
