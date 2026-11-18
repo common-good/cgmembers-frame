@@ -73,8 +73,10 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
+ *     MAKE appsignin Setup
  *     TEST appsignin AMemberSignsInToTheApp
  *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -336,6 +338,11 @@ function testOpWith($op, $args) {
  *     TEST appsignin AOnetimeCodeOpensALivePageOnce
  *     TEST appsignin AOnetimeCodeWorksOnlyOnce
  *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     TEST appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     TEST appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     TEST appsignin TheRightPasswordUnlocks
+ *     TEST appsignin AWrongPasswordDoesNotUnlock
  *     TEST info TheAppAsksForRecentTransactions
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
@@ -451,6 +458,13 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin SigningInListsTheAccountsTheMemberMayActFor
+ *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     MAKE appsignin AnAdminTypesAnAccount
+ *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     MAKE appsignin TheRightPasswordUnlocks
+ *     MAKE appsignin AWrongPasswordDoesNotUnlock
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -500,9 +514,39 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     MAKE appsignin AnAdminTypesAnAccount
+ *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     MAKE appsignin TheRightPasswordUnlocks
+ *     MAKE appsignin AWrongPasswordDoesNotUnlock
  */
 function replyIsKeptAsVar($field, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
   $got = json_decode(t\getExitMsg(), TRUE);
   return isset($got[$field]) and ($testVars[$var] = $got[$field]) !== NULL;
+}
+
+/**
+ * reply list (ARG) includes: (ARG)
+ *
+ * in: TEST appsignin SigningInListsTheAccountsTheMemberMayActFor
+ *     TEST appsignin AnAdminTypesAnAccount
+ */
+function replyListIncludes($field, $want) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $got = nni(json_decode(t\getExitMsg(), TRUE) ?: [], $field) ?: [];
+  if (!isset($got[0])) $got = [$got];
+  $s = function ($v) {return is_bool($v) ? ($v ? 'true' : 'false') : (is_null($v) ? 'NULL' : (is_array($v) ? 'array' : (string) $v));};
+  foreach ($want as $one) {
+    t\fixData($one);
+    $found = FALSE;
+    foreach ($got as $g) {
+      $found = TRUE;
+      foreach ($one as $k => $v) if (!array_key_exists($k, $g) or ($v === '?' ? $g[$k] === NULL : $s($v) !== $s($g[$k]))) $found = FALSE;
+      if ($found) break;
+    }
+    if (!$found) return t\output('No match in ' . $field . ' for ' . pr($one) . ' in ' . pr($got)) and FALSE;
+  }
+  return TRUE;
 }

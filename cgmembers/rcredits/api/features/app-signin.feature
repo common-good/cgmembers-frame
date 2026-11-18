@@ -11,6 +11,12 @@ Setup:
   | .ZPA | Abe One  | +20001 | a@    | ccA | ok     | Aa1  | Aton | AL    |
   | .ZPB | Bea Two  | +20002 | b@    | ccB | ok,mfa | Bb2  | Bton | MA    |
   | .ZPD | Dee Four | +20004 | d@    | ccD |        | Dd4  | Dton | DC    |
+  | .ZPC | Coco Co  | +20003 | c@    | ccC | ok,co  |      | Cton | CA    |
+  | .ZPE | Eve Five | +20005 | e@    | ccE | ok,admin | Ee5 | Eton | NY    |
+  | .ZPF | Flo Six  | +20006 | f@    | ccF | ok     | Ff6  | Fton | FL    |
+  And these "u_relations":
+  | main | agent | num | permission |*
+  | .ZPC | .ZPA  |   1 | manage     |
   And member ".ZPA" has "card" steps done: "all"
   And member ".ZPB" has "card" steps done: "all"
 
@@ -255,3 +261,97 @@ Scenario: A page on another site cannot be asked for
   Then we reply "ok" with JSON values:
   | to        |*1
   | dashboard |
+
+# Rule: The app gets every account the member may act for, and opens the live site acting for the one chosen.
+
+Scenario: Signing in lists the accounts the member may act for
+  When cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  Then reply list "accounts" includes:
+  | uid  | name    | isCo  | device |*
+  | .ZPA | Abe One | false | ?      |
+  | .ZPC | Coco Co | true  | %NUL   |
+
+Scenario: The app opens the live site acting for another account
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  And cgpay posts "enter" with:
+  | account | token  |*
+  | .ZPC    | %token |
+  And reply "code" is kept as var "code"
+  When cgpay posts "redeem" with:
+  | code  |*
+  | %code |
+  Then we reply "ok" with JSON values:
+  | to        |*1
+  | dashboard |
+  And these "app_codes":
+  | uid  | account | dest      |*
+  | .ZPA | .ZPC    | dashboard |
+
+Scenario: The app cannot open the live site for an account the member does not manage
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPF       | Ff6      | Pixel |
+  And reply "token" is kept as var "token"
+  When cgpay posts "enter" with:
+  | account | token  |*
+  | .ZPC    | %token |
+  Then we reply "forbidden" with JSON values:
+  | error       |*1
+  | not-allowed |
+
+# Rule: An admin may type an account to act for; others only choose from their list.
+
+Scenario: An admin types an account
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPE       | Ee5      | Pixel |
+  And reply "token" is kept as var "token"
+  When cgpay posts "account" with:
+  | token  | who  |*
+  | %token | .ZPB |
+  Then reply list "account" includes:
+  | uid  | name    |*
+  | .ZPB | Bea Two |
+
+Scenario: A member who is not an admin cannot type an account outside their list
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  When cgpay posts "account" with:
+  | token  | who  |*
+  | %token | .ZPB |
+  Then we reply "forbidden" with JSON values:
+  | error       |*1
+  | not-allowed |
+
+# Rule: The app can ask for the password again before changing account or settings.
+
+Scenario: The right password unlocks
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  When cgpay posts "unlock" with:
+  | token  | password |*
+  | %token | Aa1      |
+  Then we reply "ok" with JSON values:
+  | ok |*1
+  | 1  |
+
+Scenario: A wrong password does not unlock
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  When cgpay posts "unlock" with:
+  | token  | password |*
+  | %token | wrong    |
+  Then we reply "unauth" with JSON values:
+  | error     |*1
+  | bad-login |

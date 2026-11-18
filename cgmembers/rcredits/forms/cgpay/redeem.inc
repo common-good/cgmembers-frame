@@ -6,8 +6,8 @@ use CG\Db as db;
 require_once __DIR__ . '/token.inc';
 
 /**
- * /cgpay/redeem: trade a one-time code for the member and the page to open (single use).
- *   body: {code}; 200 {uid, to}; 401 {error: bad-code}
+ * /cgpay/redeem: trade a one-time code for the member, the account they act for and the page to open (single use).
+ *   body: {code}; 200 {uid, account, to}; 401 {error: bad-code}
  */
 function cgpayRedeem() {
   if (($in = appIn()) === FALSE) return;
@@ -15,5 +15,5 @@ function cgpayRedeem() {
   $row = db\row('app_codes', 'codeHash=:h AND usedAt IS NULL AND expires>:now', ['h' => $h, 'now' => now()]);
   if (!$row) return appErr('bad-code', X_UNAUTH);
   db\update('app_codes', ['id' => $row->id, 'usedAt' => now()]);
-  return exitJson(['uid' => (int) $row->uid, 'to' => $row->dest], X_OK);
+  return exitJson(['uid' => (int) $row->uid, 'account' => (int) $row->account, 'to' => $row->dest], X_OK);
 }

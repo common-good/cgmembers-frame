@@ -2,12 +2,13 @@
 namespace CG\Web;
 use CG\Web as w;
 use CG as r;
+use CG\Backend as be;
 use CG\Db as db;
 use CG\Util as u;
 
 /**
  * @file
- * Shared code of the store app's token sign-in endpoints (/cgpay/signin, app-mfa, app-device, app-enter, app-redeem, app-revoke).
+ * Shared code of the store app's token sign-in endpoints (/cgpay/signin, mfa, device, account, enter, redeem, unlock, revoke).
  *
  * The app signs in once and keeps a revocable token (only its sha256 is stored, in app_tokens). Every call
  * comes from the node server (X-CG-Internal-Token, like /cgpay/sso), never from the browser. Errors are JSON
@@ -52,7 +53,36 @@ function appIssue($uid, $label, $deviceKey, $trust) {
   $trusted = $trust ? 1 : 0;
   $label = mb_substr(trim((string) $label), 0, 60);
   db\insert('app_tokens', compact(ray('uid tokenHash deviceHash label trusted created lastUsed expires')));
-  return exitJson(['token' => $token, 'uid' => (int) $uid, 'device' => appDevice($uid)], X_OK);
+  return exitJson(['token' => $token] + appMember($uid), X_OK);
+}
+
+/**
+ * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), and the accounts they may act for.
+ */
+function appMember($uid) {
+  $accounts = [];
+  foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) if ($one = appAccount($id, $uid, $name)) $accounts[] = $one;
+  return ['uid' => (int) $uid, 'admin' => (bool) r\acct($uid)->admSeeAccts, 'accounts' => $accounts];
+}
+
+/**
+ * Return one account as the app keeps it: uid, name, isCo, photo (a data URL of the thumbnail, so it shows offline, or NULL),
+ * and device (the credentials the transaction screens use, or NULL if the account can't use the app yet).
+ */
+function appAccount($id, $agent, $name = '') {
+  include_once R_ROOT . '/forms/api.inc';
+  if (!$a = r\acct($id, $agent)) return NULL;
+  $photo = $a->thumb ? 'data:image/jpeg;base64,' . base64_encode($a->thumb) : NULL;
+  return ['uid' => (int) $id, 'name' => $name ?: $a->bestName, 'isCo' => (bool) $a->co, 'photo' => $photo, 'device' => accountInfo($a, $a->fullName, APP_API_VERSION)];
+}
+
+/**
+ * Return whether the member may act for the account: a relation with permission, or an admin's reach (the rules of change-account, see changeWho()).
+ */
+function appMayAct($uid, $id) {
+  if ($id == $uid) return TRUE;
+  if (!$a = r\acct($id, $uid)) return FALSE;
+  return $a->can() or ($a->admin and ($a->admRegion or $a->community == $a->agentA->community));
 }
 
 /**
@@ -64,15 +94,6 @@ function appRow($token) {
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
   db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
   return $row;
-}
-
-/**
- * Return the account credentials the app's transaction screens use (see accountInfo()), or NULL if this account can't use the app yet.
- */
-function appDevice($uid) {
-  include_once R_ROOT . '/forms/api.inc';
-  $a = r\acct($uid, $uid);
-  return $a ? accountInfo($a, $a->fullName, APP_API_VERSION) : NULL;
 }
 
 /**

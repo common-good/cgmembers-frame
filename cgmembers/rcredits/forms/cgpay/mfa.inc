@@ -10,7 +10,7 @@ require_once __DIR__ . '/token.inc';
 /**
  * /cgpay/mfa: the store app's second sign-in step.
  *   body: {mfa (the handle from /cgpay/signin), code (the passcode we emailed), trust (skip this step on this device from now on)}
- *   200 {token, uid, device}; 401 {error: bad-handle | bad-code | expired}; 429 {error: flooding}
+ *   200 {token, uid, admin, accounts}; 401 {error: bad-handle | bad-code | expired}; 429 {error: flooding}
  * Wrong codes count as failed sign-ins (flood control), so the 8-digit code cannot be guessed.
  */
 function cgpayMfa() {

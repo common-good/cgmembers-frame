@@ -27,6 +27,7 @@ class AppTokens extends AbstractMigration {
     $c = $this->table('app_codes', ray('id comment', TRUE, 'one-time codes that turn an app token into a live-site session; only a hash of each code is kept'));
 
     $c->addColumn('uid', 'integer', ray('length null comment', phx::INT_BIG, FALSE, 'record ID of the member'));
+    $c->addColumn('account', 'integer', ray('length null comment', phx::INT_BIG, FALSE, 'record ID of the account the member acts for on the live site'));
     $c->addColumn('codeHash', 'string', ray('length null comment', 64, FALSE, 'sha256 of the code'));
     $c->addColumn('dest', 'string', ray('length null comment', 255, FALSE, 'live-site path to open after sign-in'));
     $c->addColumn('expires', 'integer', ray('length null comment', phx::INT_BIG, FALSE, 'date/time the code stops working'));
