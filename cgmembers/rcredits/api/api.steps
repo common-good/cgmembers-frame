@@ -42,6 +42,7 @@ function extraSetup() {
  * in: MAKE transactions Setup
  *     MAKE accounts Setup
  *     MAKE cgpay Setup
+ *     MAKE cgpaysignupverify Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
@@ -428,6 +429,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE cgpay TheNodeAppCompletesAResetTooLate
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
 function cgpayPostsWith($url, $params) {
   global $testOnly, $testBody; if ($testOnly) return FALSE;
@@ -454,14 +456,14 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  * we reply (ARG) with field error (ARG): (ARG)
  *
  * in: TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     TEST cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
 function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith($wantStatus, json_encode(['errors' => [$field => tr($index)]]));}
 
 /**
  * member (ARG) one-time password is (ARG)
  *
- * in: MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
- *     TEST cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
+ * in: BOTH cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
 function memberOnetimePasswordIs($id, $pass) {
   global $testOnly;
