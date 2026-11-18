@@ -120,6 +120,8 @@ All POST-only, all require `X-CG-Internal-Token: <CGPAY_SSO_SECRET>` header, all
 | `/cgpay/enter` | token -> one-time code for opening a live page | `forms/cgpay/enter.inc` |
 | `/cgpay/redeem` | one-time code -> uid and page (single use) | `forms/cgpay/redeem.inc` |
 | `/cgpay/revoke` | store app sign-out (one device, or everywhere) | `forms/cgpay/revoke.inc` |
+| `/cgpay/account` | token + typed account -> that account's credentials (admins, or accounts the member may act for) | `forms/cgpay/account.inc` |
+| `/cgpay/unlock` | token + password again -> ok (before the app changes account or settings) | `forms/cgpay/unlock.inc` |
 
 Each endpoint function needs its own file: for `cgpayFoo` the menu loads only `forms/cgpay/foo.inc`. A function put in another endpoint's file can pass in the Gherkin harness (where that file may already be loaded) and still crash over HTTP.
 
