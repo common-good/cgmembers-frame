@@ -77,6 +77,8 @@ use CG\Cron as cr;         // cron jobs
 use CG\QR as qr;           // QR codes
 ```
 
+Keep a file's alias lines even when it uses none of them, and copy the block from a neighboring file when starting a new one: the block is a fixed per-file convention, so code added later can use any alias without editing the header.
+
 Also: `y\` (CG\Special) and `san\` (CG\Sanity) are rarely used; `s\` was the ancient Android app and is going away.
 
 Drupal functions are called with just a leading backslash (`\drupal_function()`) so they stand out and can be eliminated eventually. Avoid adding new Drupal dependencies.
@@ -133,7 +135,7 @@ When adding a new endpoint: create `forms/cgpay/<name>.inc` with a function name
 
 Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_description.php`. Run via `./migrate.sh` (production) or `./jr-migrate.sh` (jr environment).
 
-**Every database structure change is a Phinx migration** - no manual SQL. Each migration file documents its own change. A fresh install (`recreate.sh`) loads `db/startup.sql` and then runs all migrations, so anything not in a migration is missing on new installs. From time to time we archive all Phinx migrations (into `db/migrations/archived/`) and create a new `db/startup.sql` that includes everything up to that point. `cgmembers/rcredits/misc/pre-git-changes.log` is an old change log (mostly from before git), not a place to record schema changes.
+**Every database structure change is a Phinx migration** - no manual SQL. Each migration file documents its own change. A fresh install (`recreate.sh`) loads `db/startup.sql` and then runs all migrations, so anything not in a migration is missing on new installs. From time to time (before a release, not in every PR, since each run rewrites the whole file), run `db/make-startup.sh` to regenerate `db/startup.sql` from the old file plus all migrations; `phinxlog` marks them done, so they need not be archived. A new table must first be added to the script's KEEP or SKIP list. `cgmembers/rcredits/misc/pre-git-changes.log` is an old change log (mostly from before git), not a place to record schema changes.
 
 **Deleted-records archives:** a table with a corresponding deleted-records table (`x_<name>`, for example `u_relations` and `x_relations`) must get every structure change in both tables, in the same migration. Loop over both names; see `db/migrations/archived/20230811023357_thermometer.php` (`foreach (ray('u_company x_company') as $tnm)`).
 
@@ -182,7 +184,6 @@ The general code style is in cgpay's Shared guidance. PHP specifics:
 
 ## Common gotchas
 
-- **`cgweb_ro` DB user lacks SELECT on some tables** (`u_company`, `txs2` historically). The SvelteKit companion has defensive fallbacks; on the PHP side, use the app's own DB user which has full access.
 - **Menu registry is cached.** After editing `cg-menu.inc`, run the menu rebuild or your new route 404s.
 - **`.gitmodules` uses SSH aliases** (`github-cg:`, `github-pay:`) for `GherkinForDrupal`. If deploy fails on submodule fetch, check that the deploy user has the SSH stanza configured.
 - **Session cookies (`SSESS...`) are set with `Domain=.commongood.earth`** so both PHP and cgpay see them. Never scope narrower without coordinated changes on the cgpay side.

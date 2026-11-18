@@ -33,6 +33,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  */
 function extraSetup() {
   t\clear(TX_WEB);
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = NULL; $testQbHave = $testQbTxs = []; // QBO stand-ins, which would otherwise carry over from the last scenario
 }
 
 /**
@@ -521,3 +522,28 @@ function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpe
  * in: TEST super AnAdministratorPasswordMustScoreHigherThanAMembers
  */
 function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
+
+/**
+ * QBO rejects tx (ARG)
+ *
+ * in: MAKE cats QBORejectsATransaction
+ *     MAKE cats QBORejectsATransactionInABankTransfer
+ */
+function qBORejectsTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = $doc;
+  $testQbHave = $testQbTxs = []; // earlier scenarios can leave these set
+  return TRUE;
+}
+
+/**
+ * QBO has tx (ARG)
+ *
+ * in: MAKE cats QBOAlreadyHasABankTransferFromAnExportThatStoppedPartway
+ */
+function qBOHasTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbHave = [$doc];
+  $testQbReject = NULL; $testQbTxs = []; // earlier scenarios can leave these set
+  return TRUE;
+}

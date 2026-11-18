@@ -19,6 +19,7 @@ function formTests($form, &$sta) {
 //  ini_set('memory_limit', '48MB'); // setting this to 48MB or more results in a 500 error or White Screen of Death
   \drupal_get_messages(); // clear messages
   db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
+  a\clearCache(); // so no test can depend on values cached by earlier runs
   $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart api')); // this gets used in test.php (skip smp)
 
   test(TRUE);

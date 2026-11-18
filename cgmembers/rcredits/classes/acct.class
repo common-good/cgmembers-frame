@@ -645,7 +645,7 @@ class Acct {
    */
   public function setAgentNum() {
     $a = $this;
-    if ($a->proSe or r\qo($a->qid)->agentCode) return;
+    if ($a->proSe or !$a->relFld('reid') or r\qo($a->qid)->agentCode) return;
     $otherNum = db\max('otherNum', 'u_relations', 'main=:main', ['main' => $a->id]) + 1;
     $a->setRel(compact('otherNum'));
     return $otherNum;

@@ -21,14 +21,14 @@ const APP_MFA_SECS = 600; // life of the second sign-in step
 const APP_API_VERSION = 40206; // the legacy app's version, so the device id has the current format
 
 /**
- * Check the method and shared secret, then return the request fields (posted fields under test), or FALSE after replying with the error.
+ * Check the method and shared secret, then return the request fields, or FALSE after replying with the error.
  */
 function appIn() {
   global $channel; $channel = TX_API;
   if (nni($_SERVER, 'REQUEST_METHOD') !== 'POST') {exitJust(X_SYNTAX); return FALSE;}
   $given = (string) nni($_SERVER, 'HTTP_X_CG_INTERNAL_TOKEN');
   if (CGPAY_SSO_SECRET === '' or !hash_equals(CGPAY_SSO_SECRET, $given)) {exitJust(X_UNAUTH); return FALSE;}
-  $in = test() ? $_POST : (json_decode(file_get_contents('php://input'), TRUE) ?: []);
+  $in = json_decode(test() ? nni($GLOBALS, 'testBody') : file_get_contents('php://input'), TRUE) ?: [];
   if (filter_var(nni($in, 'ip'), FILTER_VALIDATE_IP)) $_SERVER['REMOTE_ADDR'] = $in['ip']; // the caller is the node server, so flood control must see the member's address, not its own
   return $in;
 }

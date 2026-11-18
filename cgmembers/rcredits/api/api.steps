@@ -39,8 +39,11 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE transactions Setup
+ * in: MAKE confirms Setup
+ *     MAKE transactions Setup
  *     MAKE accounts Setup
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
+ *     MAKE cgpay Setup
  *     MAKE appsignin Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
@@ -51,20 +54,26 @@ function extraSetup() {
  *     MAKE comments Setup
  *     MAKE sessioncookies Setup
  *     MAKE identity Setup
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function members($list) {return t\members($list);}
 
 /**
  * balances: (ARG)
  *
- * in: TEST info Setup
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     TEST info Setup
  */
 function balances($list) {return t\balances($list);}
 
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE transactions Setup
+ * in: MAKE confirms Setup
+ *     TEST confirms TheAppConfirmsAPaymentRequest
+ *     MAKE transactions Setup
  *     TEST transactions TheAppAsksToChargeACustomer
  *     TEST transactions TheAppAsksToPayACustomer
  *     BOTH transactions TheAppAsksToUndoAChargeToACustomer
@@ -73,6 +82,13 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToPayACustomerAndAddATip
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
+ *     BOTH accounts ALegacyAgentSignsInToTheApp
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
  *     MAKE appsignin Setup
  *     TEST appsignin AMemberSignsInToTheApp
  *     TEST appsignin TheRightPasscodeSignsTheAppIn
@@ -85,6 +101,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE identity Setup
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -119,7 +137,11 @@ function appGetsWith($url, $params, $method = 'get') {
 /**
  * app posts (ARG) with: (ARG)
  *
- * in: MAKE transactions TheAppAsksToChargeACustomer
+ * in: MAKE confirms TheAppConfirmsAPaymentRequest
+ *     MAKE confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     MAKE confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     MAKE confirms TheAppDeniesAPaymentRequestAgain
+ *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToPayACustomer
  *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
  *     MAKE transactions TheAppAsksToUndoAPaymentToACustomer
@@ -136,6 +158,7 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE transactions TheAppAsksToChargeACustomerWithABadProof
  *     MAKE transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  *     MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE accounts AMemberTriesToSignInWithoutAnIdentifier
  *     MAKE accounts AMemberTriesToSignInWithoutAPassword
  *     MAKE accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
@@ -163,6 +186,8 @@ function appGetsWith($url, $params, $method = 'get') {
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     MAKE identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');}
 
@@ -179,8 +204,14 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST transactions TheAppAsksToChargeACustomerWithADateOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWhoHasInsufficientFunds
  *     TEST accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     TEST cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST identity TheAppAsksToIdentifyACustomer
+ *     TEST identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -212,11 +243,16 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
 /**
  * we reply (ARG) with: (ARG)
  *
- * in: TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST confirms TheAppConfirmsTheSamePaymentRequestAgain
+ *     TEST confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     TEST confirms TheAppDeniesAPaymentRequestAgain
+ *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange
  *     TEST transactions TheAppAsksToChargeACustomerWithABadDate
  *     TEST transactions TheAppAsksToChargeACustomerWithABadProof
+ *     TEST accounts ALegacyAgentSignsInToTheApp
  *     TEST accounts AMemberTriesToSignInWithoutAnIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutAPassword
  *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
@@ -240,6 +276,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
+ *     TEST identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -278,6 +315,11 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST transactions TheAppAsksToChargeACustomerWithABadActorId
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
+ *     TEST cgpay TheNodeAppAsksToSendAMalformedCode
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     TEST cgpay TheNodeAppCompletesAResetTooLate
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     TEST info TheAppAsksForRecentTransactionsWithABadActorId
  *     TEST comments TheAppAsksToSubmitAComment
  *     TEST comments TheAppAsksToSubmitACommentWithABadActorId
@@ -301,6 +343,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE accounts Setup
+ *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE appsignin Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  */
@@ -362,7 +405,12 @@ function weReplyWithJSONValues($wantStatus, $want) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST appsignin AMemberSignsInToTheApp
+ * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
+ *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     TEST appsignin AMemberSignsInToTheApp
  *     TEST appsignin AWrongPasswordGetsNoToken
  *     TEST appsignin AnUnknownAccountGetsNoToken
  *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
@@ -442,7 +490,18 @@ function sessionBelongsToMember($sid, $id) {
 /**
  * cgpay posts (ARG) with: (ARG)
  *
- * in: MAKE appsignin AMemberSignsInToTheApp
+ * in: MAKE cgpay TheNodeAppAsksToEmailAResetCode
+ *     MAKE cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
+ *     MAKE cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
+ *     MAKE cgpay TheNodeAppAsksToSendAMalformedCode
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
+ *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
+ *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
+ *     MAKE cgpay TheNodeAppCompletesAResetTooLate
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
+ *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     MAKE appsignin AMemberSignsInToTheApp
  *     MAKE appsignin AMemberSignsInByEmailAddress
  *     MAKE appsignin AWrongPasswordGetsNoToken
  *     MAKE appsignin AnUnknownAccountGetsNoToken
@@ -472,16 +531,18 @@ function cgpayPostsWith($op, $args) {
 }
 
 /**
- * Post the fields to the server-to-server endpoint cgpay/<op>, with the shared secret or without.
+ * Post the fields as JSON to the server-to-server endpoint cgpay/<op>, with the shared secret or without.
  */
 function appPost($op, $args, $withSecret) {
-  $_POST = nni($args, 0) ?: [];
-  t\fixTestVars($_POST);
-  t\fixData($_POST);
+  global $testBody;
+  u\EXPECT(CGPAY_SSO_SECRET, 'Set cgpaySsoSecret in config.json to run the cgpay endpoint tests.');
+  $params = nni($args, 0) ?: [];
+  t\fixTestVars($params);
+  t\fixData($params);
+  $testBody = json_encode($params);
   t\SERVER('REQUEST_METHOD', 'POST');
   t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', $withSecret ? CGPAY_SSO_SECRET : '');
-  t\pageForm("cgpay/$op");
-  return TRUE;
+  return t\memberVisitsPage('?', "cgpay/$op");
 }
 
 /**
@@ -497,7 +558,10 @@ function aStrangerPostsWith($op, $args) {
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ * in: TEST cgpay TheNodeAppAsksToEmailAResetCode
+ *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
+ *     TEST cgpay TheNodeAppCompletesAVerifiedReset
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
@@ -550,3 +614,10 @@ function replyListIncludes($field, $want) {
   }
   return TRUE;
 }
+
+/**
+ * we reply (ARG) with field error (ARG): (ARG)
+ *
+ * in: TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ */
+function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith($wantStatus, json_encode(['errors' => [$field => tr($index)]]));}

@@ -12,9 +12,11 @@
 define('DRUPAL_ROOT', getcwd());
 require_once __DIR__ . '/rcredits/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-if (R_VERSION != getv('version', '')) {
+// rebuild when the route definitions change, not only when R_VERSION is bumped (a forgotten bump left routes missing)
+$menuSig = md5(R_VERSION . md5_file(__DIR__ . '/rcredits/cg-menu.inc') . md5_file(__DIR__ . '/rcredits/rcredits.module'));
+if ($menuSig != getv('menuSig', '')) {
   \menu_rebuild();
-  setv('version', R_VERSION);
+  setv('menuSig', $menuSig);
 }
 //\setV('up', 1);
 menu_execute_active_handler();

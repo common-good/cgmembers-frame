@@ -1783,6 +1783,7 @@ function _GET($ray = NULL) {
  * Send a message to our websocket to pass on to the appropriate app user.
  */
 function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note = '') {
+  if (isLOCAL) return; // a developer's machine has no websocket, and the shared one is unreachable (the connect hangs 5 seconds)
   if ($otherA->co and $otherA->proSe) return; // don't try to contact a company without an agent
   if ($otherA->co and $action == 'request') return; // don't ask companies questions
   require_once DRUPAL_ROOT . '/../vendor/autoload.php';
@@ -1797,7 +1798,7 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   $name = $actorA->fullName;
   
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
-  $url = (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth';
+  $url = config('appSocketHost', (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth');
 
 //  textalk/websocket
 /**/ set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
