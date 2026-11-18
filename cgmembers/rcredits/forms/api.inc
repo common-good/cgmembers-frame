@@ -425,13 +425,50 @@ function comments($params) {
 }
 
 /**
+ * Put the standard test accounts (.ZPA to .ZPI) back to their starting state: the accounts, their relations, and the rows scenarios add for them.
+ * The first call (and the first after makeTestAccounts() changes) makes the accounts the slow way and keeps a copy of their rows. Later calls clear the rows and put the copy back.
+ */
+function resetTestAccts($uidMin, $uidMax) {
+  $in = "BETWEEN $uidMin AND $uidMax";
+  $ours = "uid $in OR uid=" . DEMO_CTTY; // the accounts and the community account they belong to
+  $own = ['users' => $ours, 'u_photo' => $ours, 'u_company' => $ours, 'admins' => $ours, 'u_relations' => "main $in OR other $in"]; // what makeTestAccounts() makes
+  $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes']; // what scenarios add (all keyed by uid)
+  $db = db\q('SELECT DATABASE()')->fetchField();
+  $f = sys_get_temp_dir() . '/cg-test-accts-' . md5(R_ROOT . $db) . '.ser';
+  $v = md5_file(R_ROOT . '/admin/admin.inc') . md5(serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
+  $snap = is_file($f) ? @unserialize(file_get_contents($f), ['allowed_classes' => FALSE]) : NULL;
+
+  db\del('txs', "uid1 $in OR uid2 $in");
+  db\del('txs2', "payee $in");
+  db\del('tx_requests', "payee $in OR payer $in");
+  db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $in); // including txs that were deleted before
+  foreach ($own as $t => $where) db\q("DELETE FROM $t WHERE $where");
+  foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
+  if (nni($snap, 'v') == $v) {
+    foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+    return;
+  }
+
+  a\makeTestAccounts();
+  db\q("UPDATE users SET floor=-9999 WHERE uid $in"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
+  foreach (db\col('uid', 'users', "uid $in") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
+
+  $rows = [];
+  foreach ($own as $t => $where) {
+    $q = db\q("SELECT * FROM $t WHERE $where");
+    while ($row = $q->fetchAssoc()) $rows[$t][] = $row;
+  }
+  file_put_contents($f, serialize(['v' => $v, 'rows' => $rows]));
+}
+
+/**
  * POST /test
  * 
  * Put or get test data.
  *
  * @param string $op: the test operation (see below)
  * plust other parameters depending on the operation:
- *   initialize (): creates default data (especially for Release A)
+ *   initialize (): puts the standard test accounts (.ZPA to .ZPI) and the rows scenarios add for them back to the starting state
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
  *   update (table, {keyedValues}) where the first keyed value is the record key
@@ -452,11 +489,7 @@ function testops($params) {
 
   switch ($op) {
     case 'initialize': 
-      //t\clear(TX_APP); 
-      a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
-      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
-      db\q("UPDATE users SET floor=-9999 WHERE uid $uidCrit"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
-      foreach (db\col('uid', 'users', "uid $uidCrit") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
+      resetTestAccts($uidMin, $uidMax);
       break;
       
     case 'rows':
