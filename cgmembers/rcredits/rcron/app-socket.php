@@ -103,8 +103,9 @@ try {
 
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
+  $pf = DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid'; @mkdir(dirname($pf), 0775, TRUE); // flog needs the dir
 /**/ flog($startMsg);
-  $pf = DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid'; @mkdir(dirname($pf), 0775, TRUE); file_put_contents($pf, getmypid()); // lets a deploy restart us
+  file_put_contents($pf, getmypid()); // lets a deploy restart us
   $server->run();
 } catch (\Exception $er) {
 /**/ flog("App socket overall er: " . $er->getMessage());
