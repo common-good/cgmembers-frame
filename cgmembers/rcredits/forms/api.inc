@@ -605,7 +605,7 @@ function fixVersion(&$params) {
  * The origins of the legacy app that may call /handoff with the session cookie.
  */
 function handoffOrigins() {
-  return ['https://cgpay.commongood.earth', 'https://cgpay-staging.commongood.earth'];
+  return HANDOFF_ORIGINS;
 }
 
 // Dev only: the legacy app on any localhost port (parallel test slots each use their own).

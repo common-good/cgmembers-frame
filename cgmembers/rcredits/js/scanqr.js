@@ -2,6 +2,7 @@ import QrScanner from './x/qr-scanner.min.js';
   
 QrScanner.WORKER_PATH = 'rcredits/js/x/qr-scanner-worker.min.js';
 var front = getCookie('frontCamera');
+var vs = parseUrlQuery($('#script-scanqr').attr('src').replace(/^[^\?]+\??/,'')); // RC2 and RC4: hosts a card scan goes to
 
 navigator.mediaDevices.getUserMedia({video: { // constraints
     width: {
@@ -30,10 +31,7 @@ navigator.mediaDevices.getUserMedia({video: { // constraints
             var dot = slash[2].split('.');
             var uri = '/card/' + dot[0] + '/' + slash[3];
 
-            if (dot[2] == 'ME') {
-              if (dot[1] == 'RC2') {location.href = 'https://new.commongood.earth' + uri; throw '';}
-              if (dot[1] == 'RC4') {location.href = 'https://demo.commongood.earth' + uri; throw '';}
-            }
+            if (dot[2] == 'ME' && vs[dot[1]]) {location.href = 'https://' + vs[dot[1]] + uri; throw '';}
           }
           $('#edit-result').html('<center><h2>No valid QR code found.</h2><p><a href="' + result + '">' + result + '</a></p></center>').show();
 

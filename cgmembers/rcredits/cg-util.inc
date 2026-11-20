@@ -1798,7 +1798,7 @@ function tellApp($action, $actorA, $otherA, $amount, $purpose, $created, $note =
   $name = $actorA->fullName;
   
   $msg = json_encode(compact(ray('op deviceId actorId otherId name action amount purpose created note')));
-  $url = config('appSocketHost', (isSTAGE or isPRODUCTION) ? 'new.commongood.earth' : 'demo.commongood.earth');
+  $url = parse_url(BASE_URL, PHP_URL_HOST); // the switchboard runs on the same server as the site
 
 //  textalk/websocket
 /**/ set_error_handler(function ($eNum, $eStr, $eFlnm, $eLine) { flog(compact(ray('eNum eStr eFlnm eLine'))); }); // ignore errors (don't mark data corrupt in anyone's app)
