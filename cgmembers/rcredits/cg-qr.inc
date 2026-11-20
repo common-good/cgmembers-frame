@@ -92,7 +92,7 @@ function url($a, $type = 'card') {
   $i = array_search($regLen . $tailLen, ray('12 13 22 23 32 33 34 44 45'));
   u\EXPECT($i !== FALSE, 'bad piece lengths in qo->qr mainQid=' . $qo->mainQid);
   $fmt = u\n2a($i * 4 + $agtCodeLen, 1, 36);
-  $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
+  $qrDom = ray(QR_DOMS)[(int) REAL_CARDS];
 //  $testFlag = isPRODUCTION ? '-A' : '.'; // test mode indicator for short version (-A only while transitioning from old app (3/2023))
   if ($type == 'short') u\FAIL('short QR url is deprecated'); // return "$fmt$region$tail$agentCode$cardCode$testFlag";
   if ($type == 'main') return "$fmt$region$tail$agentCode";
@@ -105,12 +105,13 @@ function url($a, $type = 'card') {
  * Interpret a CG card QR code as an account (from an actual card or an abbreviated one from our app).
  * @param string $qr: the QR code to interpret
  * @param bool $requireCode: require card code (code is also required if supplied!)
+ * @param bool $isTestCard: (RETURNED) the QR is a test card's (RC4.ME)
  * @return NULL on error, else the account.
  */
-function acct($qr, $requireCode) {
-  if (!$qid = qid($qr, $cardCode)) return NULL; // cardCode is returned
+function acct($qr, $requireCode, &$isTestCard = NULL) {
+  if (!$qid = qid($qr, $cardCode, $isTestCard)) return NULL; // cardCode is returned
   if (!$a = r\acct($qid)) return NULL;
-  if (($requireCode or !empty($cardCode)) and $cardCode != $a->cardCode()) return NULL;
+  if (($requireCode or !empty($cardCode)) and !$a->cardCodeIs($cardCode)) return NULL;
   return r\acct($qid);
 }
 
@@ -118,9 +119,10 @@ function acct($qr, $requireCode) {
  * Interpret a CG card QR code (from an actual card or an abbreviated one from our app).
  * @param string $qr: the QR code to interpret
  * @param string $cardCode: (RETURNED) the cardCode part of the QR
+ * @param bool $isTestCard: (RETURNED) the QR is a test card's (RC4.ME)
  * @return NULL on error, else the account's QID.
  */
-function qid($qr, &$cardCode = '') {
+function qid($qr, &$cardCode = '', &$isTestCard = NULL) {
   $parts = preg_split('~[/\\.-]~', $qr);
   $count = count($parts);
   

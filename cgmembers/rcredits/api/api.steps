@@ -43,10 +43,13 @@ function extraSetup() {
  *     MAKE transactions Setup
  *     MAKE accounts Setup
  *     MAKE accounts ALegacyAgentSignsInToTheApp
+ *     MAKE appcard Setup
  *     MAKE cgpay Setup
  *     MAKE appsignin Setup
  *     MAKE cgpaysignupverify Setup
  *     MAKE info Setup
+ *     MAKE appdemo Setup
+ *     MAKE appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -84,6 +87,8 @@ function balances($list) {return t\balances($list);}
  *     TEST transactions TheAppAsksToChargeACustomerWithABadOtherIdOffline
  *     MAKE accounts Setup
  *     BOTH accounts ALegacyAgentSignsInToTheApp
+ *     MAKE appcard Setup
+ *     TEST appcard ATestCardSignsTheAppInOnDemo
  *     MAKE cgpay TheNodeAppCompletesAVerifiedReset
  *     MAKE cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     MAKE cgpay TheNodeAppCompletesAResetForTheWrongAccount
@@ -96,6 +101,7 @@ function balances($list) {return t\balances($list);}
  *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE info Setup
+ *     BOTH appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -112,6 +118,9 @@ function these($thing, $list) {return t\these($thing, $list);}
  * next random code is (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     MAKE appcard SkippingMFAIsIgnoredAnywhereButDemo
  *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
@@ -350,6 +359,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  *
  * in: MAKE accounts Setup
  *     MAKE accounts ALegacyAgentSignsInToTheApp
+ *     MAKE appcard Setup
  *     MAKE appsignin Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  */
@@ -371,7 +381,20 @@ function testOpWith($op, $args) {
 /**
  * we reply (ARG) with JSON values: (ARG)
  *
- * in: TEST appsignin AMemberSignsInToTheApp
+ * in: TEST appcard ATestCardSignsTheAppInOnDemo
+ *     TEST appcard ACompanyCardSignsInItsCardholderActingForTheCompany
+ *     TEST appcard AMemberWithMFAWhoSkipsItOnDemoGetsNoPasscode
+ *     TEST appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     TEST appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     TEST appcard ARealCardWithoutThePasswordIsRefused
+ *     TEST appcard ARealCardWithAWrongPasswordIsRefused
+ *     TEST appcard ARealCardWithThePasswordSignsTheAppIn
+ *     TEST appcard SkippingMFAIsIgnoredAnywhereButDemo
+ *     TEST appcard ATestCardIsRefusedAnywhereButDemo
+ *     TEST appcard ARealCardIsRefusedOnDemo
+ *     TEST appcard ACardWithAWrongCardCodeIsRefused
+ *     TEST appcard ATokenFromAnotherServerIsRefused
+ *     TEST appsignin AMemberSignsInToTheApp
  *     TEST appsignin AMemberSignsInByEmailAddress
  *     TEST appsignin AWrongPasswordGetsNoToken
  *     TEST appsignin AnUnknownAccountGetsNoToken
@@ -400,6 +423,11 @@ function testOpWith($op, $args) {
  *     TEST appsignin TheRightPasswordUnlocks
  *     TEST appsignin AWrongPasswordDoesNotUnlock
  *     TEST info TheAppAsksForRecentTransactions
+ *     TEST appdemo AVisitorGetsAFreshDemoAccount
+ *     TEST appdemo ASecondVisitorGetsATokenOfTheirOwn
+ *     TEST appdemo ARealServerRefuses
+ *     TEST appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  */
@@ -419,6 +447,12 @@ function weReplyWithJSONValues($wantStatus, $want) {
  * count (ARG) is (ARG)
  *
  * in: TEST confirms TheAppConfirmsAPaymentRequest
+ *     TEST appcard AMemberWithMFAWhoSkipsItOnDemoGetsNoPasscode
+ *     TEST appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     TEST appcard ARealCardWithoutThePasswordIsRefused
+ *     TEST appcard ARealCardWithAWrongPasswordIsRefused
+ *     TEST appcard SkippingMFAIsIgnoredAnywhereButDemo
+ *     TEST appcard ACardWithAWrongCardCodeIsRefused
  *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
@@ -432,6 +466,11 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appsignin AWrongPasscodeGetsNoToken
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST appdemo AVisitorGetsAFreshDemoAccount
+ *     TEST appdemo ASecondVisitorGetsATokenOfTheirOwn
+ *     TEST appdemo ARealServerRefuses
+ *     TEST appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     TEST appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
@@ -504,7 +543,21 @@ function sessionBelongsToMember($sid, $id) {
 /**
  * cgpay posts (ARG) with: (ARG)
  *
- * in: MAKE cgpay TheNodeAppAsksToEmailAResetCode
+ * in: MAKE appcard ATestCardSignsTheAppInOnDemo
+ *     MAKE appcard ACompanyCardSignsInItsCardholderActingForTheCompany
+ *     MAKE appcard AMemberWithMFAWhoSkipsItOnDemoGetsNoPasscode
+ *     MAKE appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     MAKE appcard ARealCardWithoutThePasswordIsRefused
+ *     MAKE appcard ARealCardWithAWrongPasswordIsRefused
+ *     MAKE appcard ARealCardWithThePasswordSignsTheAppIn
+ *     MAKE appcard SkippingMFAIsIgnoredAnywhereButDemo
+ *     MAKE appcard ATestCardIsRefusedAnywhereButDemo
+ *     MAKE appcard ARealCardIsRefusedOnDemo
+ *     MAKE appcard ACardWithAWrongCardCodeIsRefused
+ *     MAKE appcard ATokenSaysWhichServerItIsFor
+ *     MAKE appcard ATokenFromAnotherServerIsRefused
+ *     MAKE cgpay TheNodeAppAsksToEmailAResetCode
  *     MAKE cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
  *     MAKE cgpay TheNodeAppAsksToSendACodeToACompanyonlyAccount
  *     MAKE cgpay TheNodeAppAsksToSendACodeToANonexistentAccount
@@ -546,6 +599,12 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
  *     MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
+ *     MAKE appdemo AVisitorGetsAFreshDemoAccount
+ *     MAKE appdemo ASecondVisitorGetsATokenOfTheirOwn
+ *     MAKE appdemo ARealServerRefuses
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
+ *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -580,7 +639,8 @@ function aStrangerPostsWith($op, $args) {
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST cgpay TheNodeAppAsksToEmailAResetCode
+ * in: TEST appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     TEST cgpay TheNodeAppAsksToEmailAResetCode
  *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
  *     TEST cgpay TheNodeAppCompletesAVerifiedReset
  *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
@@ -590,7 +650,8 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
 /**
  * reply (ARG) is kept as var (ARG)
  *
- * in: MAKE appsignin TheRightPasscodeSignsTheAppIn
+ * in: MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
@@ -613,6 +674,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
  */
 function replyIsKeptAsVar($field, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -651,6 +713,128 @@ function replyListIncludes($field, $want) {
  *     TEST cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
 function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith($wantStatus, json_encode(['errors' => [$field => tr($index)]]));}
+
+/**
+ * this server is demo
+ *
+ * in: MAKE appcard ATestCardSignsTheAppInOnDemo
+ *     MAKE appcard ACompanyCardSignsInItsCardholderActingForTheCompany
+ *     MAKE appcard AMemberWithMFAWhoSkipsItOnDemoGetsNoPasscode
+ *     MAKE appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     MAKE appcard ARealCardIsRefusedOnDemo
+ *     MAKE appcard ACardWithAWrongCardCodeIsRefused
+ *     MAKE appdemo AVisitorGetsAFreshDemoAccount
+ *     MAKE appdemo ASecondVisitorGetsATokenOfTheirOwn
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
+ *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ *     MAKE appdemo UnusedDemoAccountsArePurged
+ */
+function thisServerIsDemo() {
+  global $testOnly, $testDemo; if ($testOnly) return FALSE;
+  return $testDemo = TRUE;
+}
+
+/**
+ * var (ARG) is the (ARG) card of (ARG)
+ *
+ * in: MAKE appcard ATestCardSignsTheAppInOnDemo
+ *     MAKE appcard ACompanyCardSignsInItsCardholderActingForTheCompany
+ *     MAKE appcard AMemberWithMFAWhoSkipsItOnDemoGetsNoPasscode
+ *     MAKE appcard AMemberWithMFAWhoDoesNotSkipItOnDemoIsAskedForThePasscode
+ *     MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
+ *     MAKE appcard ARealCardWithoutThePasswordIsRefused
+ *     MAKE appcard ARealCardWithAWrongPasswordIsRefused
+ *     MAKE appcard ARealCardWithThePasswordSignsTheAppIn
+ *     MAKE appcard SkippingMFAIsIgnoredAnywhereButDemo
+ *     MAKE appcard ATestCardIsRefusedAnywhereButDemo
+ *     MAKE appcard ARealCardIsRefusedOnDemo
+ */
+function varIsTheCardOf($var, $kind, $who) {
+  global $testOnly, $testVars; if ($testOnly) return FALSE;
+  include_once R_ROOT . '/cg-qr.inc';
+  $qr = \CG\QR\url(r\acct(t\fullQid2($who)), 'card');
+  return (bool) $testVars[$var] = preg_replace('/RC[24]\.ME/', $kind == 'test' ? 'RC4.ME' : 'RC2.ME', $qr);
+}
+
+/**
+ * reply (ARG) starts with this server's tag
+ *
+ * in: TEST appcard ATokenSaysWhichServerItIsFor
+ */
+function replyStartsWithThisServersTag($field) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $got = json_decode(t\getExitMsg(), TRUE);
+  return t\eq($field, STAGE . '.', substr((string) nni($got, $field), 0, strlen(STAGE) + 1));
+}
+
+/**
+ * member (ARG) has a token from server (ARG) kept as var (ARG)
+ *
+ * in: MAKE appcard ATokenFromAnotherServerIsRefused
+ */
+function memberHasATokenFromServerKeptAsVar($who, $env, $var) {
+  global $testOnly, $testVars; if ($testOnly) return FALSE;
+  $testVars[$var] = $token = "$env." . bin2hex(random_bytes(32));
+  $created = $lastUsed = now();
+  $expires = $created + 30 * DAY_SECS;
+  return (bool) db\insert('app_tokens', ['uid' => t\uid($who), 'tokenHash' => hash('sha256', $token), 'label' => 'Pixel', 'trusted' => 0] + compact(ray('created lastUsed expires')));
+}
+
+/**
+ * (ARG) demo accounts were made today
+ *
+ * in: MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ */
+function demoAccountsWereMadeToday($n) {
+  global $testOnly; if ($testOnly) return FALSE;
+  for ($i = 0; $i < $n; $i++) \flood_register_event('cgpay_demo_accounts', DAY_SECS, 'all');
+  return TRUE;
+}
+
+/**
+ * demo accounts are purged
+ *
+ * in: MAKE appdemo UnusedDemoAccountsArePurged
+ */
+function demoAccountsArePurged() {
+  global $testOnly; if ($testOnly) return FALSE;
+  require_once R_ROOT . '/forms/cgpay/demo.inc';
+  \CG\Web\purgeDemoAccounts();
+  return TRUE;
+}
+
+/**
+ * member (ARG) is gone
+ *
+ * in: TEST appdemo UnusedDemoAccountsArePurged
+ */
+function memberIsGone($who) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  return !db\exists('users', 'uid=:uid', ['uid' => t\uid($who)]);
+}
+
+/**
+ * account var (ARG) is a demo account
+ *
+ * in: TEST appdemo ADemoAccountIsMarkedForThePurge
+ */
+function accountVarIsADemoAccount($var) {
+  global $testOnly, $testVars; if (!$testOnly) return FALSE;
+  return db\exists('users', 'uid=:uid AND source=:source', ['uid' => nni($testVars, $var), 'source' => 'store app demo']);
+}
+
+/**
+ * this address made (ARG) demo accounts this hour
+ *
+ * in: MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ */
+function thisAddressMadeDemoAccountsThisHour($n) {
+  global $testOnly; if ($testOnly) return FALSE;
+  for ($i = 0; $i < $n; $i++) \flood_register_event('cgpay_demo_account', HOUR_SECS, \ip_address());
+  return TRUE;
+}
 
 /**
  * member (ARG) one-time password is (ARG)

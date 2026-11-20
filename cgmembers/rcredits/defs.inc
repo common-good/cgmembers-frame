@@ -34,8 +34,10 @@ $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents(
 /**/  if (!in_array($stage, explode(' ', 'test dev staging demo main'))) die('Invalid value for stage in configuration file.');
 define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
+define('STAGE', $stage);
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
+define('REAL_CARDS', !isDEMO); // every server but demo shows real (RC2.ME) cards, so the store app takes a test card as "switch to demo"
 define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
 define('SOCKET_PORT', (int) config('appSocketPort', 8081)); // app websocket port (environments that share a server need different ones)
@@ -359,7 +361,7 @@ const X_TOOMANY = 429; // too many requests (DOS or too many failed password att
 const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
 
 // card format
-const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to demo and production servers, respectively (for QR codes)
+const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to demo and production servers, respectively (for QR codes); keep this order: code picks one with ray(QR_DOMS)[(int) REAL_CARDS]
 const CODE_LEN_MIN = 11; // some old cards have codes this short
 const CODE_LEN_MAX = 64; // head off db errors
 const REGION_LENS = '112233344'; // field lengths implied by format character divided by 4

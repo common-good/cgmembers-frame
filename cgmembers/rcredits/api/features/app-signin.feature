@@ -12,7 +12,7 @@ Setup:
   | .ZPB | Bea Two  | +20002 | b@    | ccB | ok,mfa | Bb2  | Bton | MA    |
   | .ZPD | Dee Four | +20004 | d@    | ccD |        | Dd4  | Dton | DC    |
   | .ZPC | Coco Co  | +20003 | c@    | ccC | ok,co  |      | Cton | CA    |
-  | .ZPE | Eve Five | +20005 | e@    | ccE | ok,admin | Ee5 | Eton | NY    |
+  | .ZPE | Eli Five | +20005 | e@    | ccE | ok,admin | Ee5 | Eton | NY    |
   | .ZPF | Flo Six  | +20006 | f@    | ccF | ok     | Ff6  | Fton | FL    |
   And these "u_relations":
   | main | agent | num | permission |*

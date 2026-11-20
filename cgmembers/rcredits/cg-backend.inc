@@ -1449,7 +1449,7 @@ function identify($who, $mya, $selfErr, $restrict, $returnObj = FALSE) {
     if (!nn($qid) and mb_strlen($who) > 3 and !strhas($who, ' ')) {
       include_once R_ROOT . '/cg-qr.inc';
       if ($qid = qr\qid($who, $cardCode) and $a = r\acct($qid)) {
-        if ($cardCode and $cardCode != $a->cardCode()) {
+        if ($cardCode and !$a->cardCodeIs($cardCode)) {
           $agt = $a->proSe ? '' : t(' with agent ') . $a->agentId;
           $err = tr('unfound', 'who where', $who, t('(that is the wrong cardCode for account ID %qid)', compact(ray('qid agt'))));
         } else $where = "($where OR uid=$a->id)";
