@@ -435,7 +435,7 @@ function resetTestAccts($uidMin, $uidMax) {
   $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes']; // what scenarios add (all keyed by uid)
   $db = db\q('SELECT DATABASE()')->fetchField();
   $f = sys_get_temp_dir() . '/cg-test-accts-' . md5(R_ROOT . $db) . '.ser';
-  $v = md5_file(R_ROOT . '/admin/admin.inc') . md5(serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
+  $v = md5(join(array_map(fn($k) => md5_file(R_ROOT . "/$k"), ray('admin/admin.inc classes/acct.class cg.inc'))) . serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
   $snap = is_file($f) ? @unserialize(file_get_contents($f), ['allowed_classes' => FALSE]) : NULL;
 
   db\del('txs', "uid1 $in OR uid2 $in");
@@ -446,7 +446,7 @@ function resetTestAccts($uidMin, $uidMax) {
   foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
   if (nni($snap, 'v') == $v) {
     foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) {
-      if ($t == 'admins') unset($row['id']); // a counter only, and an admin outside the test accounts may hold it by now
+      if ($k = nni(['admins' => 'id', 'u_relations' => 'reid'], $t)) unset($row[$k]); // a counter only, and a row outside the test accounts may hold it by now
       db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
     }
     return;
@@ -461,7 +461,8 @@ function resetTestAccts($uidMin, $uidMax) {
     $q = db\q("SELECT * FROM $t WHERE $where");
     while ($row = $q->fetchAssoc()) $rows[$t][] = $row;
   }
-  file_put_contents($f, serialize(['v' => $v, 'rows' => $rows]));
+  file_put_contents($tmp = "$f." . getmypid(), serialize(['v' => $v, 'rows' => $rows]));
+  rename($tmp, $f); // atomic, so a concurrent reset never reads half a copy
 }
 
 /**
