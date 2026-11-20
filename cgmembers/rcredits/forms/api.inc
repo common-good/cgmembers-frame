@@ -483,7 +483,7 @@ function resetTestAccts($uidMin, $uidMax) {
  *     where fieldList is '*' --  eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
 function testops($params) {
-  if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
+  if (!!isPRODUCTION or !!isSTAGE or !(isLOCAL or test())) return exitJust(X_FORBIDDEN); // a developer's own machine (or the feature tests) only
 
   if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
    
