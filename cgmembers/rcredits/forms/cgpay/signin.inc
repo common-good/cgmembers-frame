@@ -22,6 +22,7 @@ function cgpaySignin() {
   if ($identifier === '' or $password === '') return exitJust(X_SYNTAX);
 
   $sta = [];
+  if (w\ipFlooding($sta, $err)) return appErr('flooding', X_TOOMANY);
   if (!$uid = appFind($identifier)) {w\updateFlood($sta, FALSE); return appErr('bad-login', X_UNAUTH);} // counts against the IP
   return appVerify($uid, $password, $label, $deviceKey);
 }
