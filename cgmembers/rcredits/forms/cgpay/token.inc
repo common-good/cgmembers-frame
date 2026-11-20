@@ -70,13 +70,13 @@ function appVerify($uid, $password, $label, $deviceKey, $skipMfa = FALSE, $actFo
 /**
  * Return whether this server is demo. A developer's own machine can pretend to be (testops 'demo', and the feature tests), so the store app's env switching can be tested against one server; an online server never can.
  */
-function appDemo() {global $testDemo; return isDEMO or (test() and $testDemo) or (isLOCAL and !test() and getv('testDemo', 0));}
+function appDemo() {global $testDemo; return (bool) (isDEMO or (test() and $testDemo) or (isLOCAL and !test() and getv('testDemo', 0)));}
 
 /**
  * Return this server's tag for its tokens, so the app can tell which env a token is for and no env takes another's.
  * beta shares main's config (and database), so its tokens are main's.
  */
-function appEnv() {return STAGE . '.';}
+function appEnv() {return (appDemo() ? 'demo' : STAGE) . '.';} // a developer's machine acting as demo tags its tokens as demo's, as the app expects
 
 /**
  * Make a token for the member, record it, and reply with it and the device credentials the transaction screens need.

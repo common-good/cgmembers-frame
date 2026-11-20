@@ -204,6 +204,7 @@ function everyDay() {
   }
   
   queueNext('START'); // eachA seems to interfere with this and processing the queue is vital, so launch it first
+  if (isDEMO) {require_once R_ROOT . '/forms/cgpay/demo.inc'; w\purgeDemoAccounts();}
   db\q('DELETE FROM r_do WHERE completed<0 AND :NOW>-completed'); // completed<0 is -expiry time
 
   $cttys = db\q('SELECT uid AS ctty FROM users WHERE uid<0')->fetchCol();

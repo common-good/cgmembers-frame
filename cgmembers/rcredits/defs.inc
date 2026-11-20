@@ -361,7 +361,7 @@ const X_TOOMANY = 429; // too many requests (DOS or too many failed password att
 const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
 
 // card format
-const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to demo and production servers, respectively (for QR codes)
+const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to demo and production servers, respectively (for QR codes); keep this order: code picks one with ray(QR_DOMS)[(int) REAL_CARDS]
 const CODE_LEN_MIN = 11; // some old cards have codes this short
 const CODE_LEN_MAX = 64; // head off db errors
 const REGION_LENS = '112233344'; // field lengths implied by format character divided by 4

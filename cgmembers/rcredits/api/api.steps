@@ -48,6 +48,7 @@ function extraSetup() {
  *     MAKE appsignin Setup
  *     MAKE info Setup
  *     MAKE appdemo Setup
+ *     MAKE appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -99,6 +100,7 @@ function balances($list) {return t\balances($list);}
  *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE info Setup
+ *     BOTH appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -415,6 +417,8 @@ function testOpWith($op, $args) {
  *     TEST appdemo AVisitorGetsAFreshDemoAccount
  *     TEST appdemo ASecondVisitorGetsATokenOfTheirOwn
  *     TEST appdemo ARealServerRefuses
+ *     TEST appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  */
@@ -455,6 +459,8 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appdemo AVisitorGetsAFreshDemoAccount
  *     TEST appdemo ASecondVisitorGetsATokenOfTheirOwn
  *     TEST appdemo ARealServerRefuses
+ *     TEST appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     TEST appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
@@ -579,6 +585,9 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appdemo AVisitorGetsAFreshDemoAccount
  *     MAKE appdemo ASecondVisitorGetsATokenOfTheirOwn
  *     MAKE appdemo ARealServerRefuses
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
+ *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -642,6 +651,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
  */
 function replyIsKeptAsVar($field, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -692,6 +702,10 @@ function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith(
  *     MAKE appcard ACardWithAWrongCardCodeIsRefused
  *     MAKE appdemo AVisitorGetsAFreshDemoAccount
  *     MAKE appdemo ASecondVisitorGetsATokenOfTheirOwn
+ *     MAKE appdemo ADemoAccountIsMarkedForThePurge
+ *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ *     MAKE appdemo UnusedDemoAccountsArePurged
  */
 function thisServerIsDemo() {
   global $testOnly, $testDemo; if ($testOnly) return FALSE;
@@ -742,4 +756,58 @@ function memberHasATokenFromServerKeptAsVar($who, $env, $var) {
   $created = $lastUsed = now();
   $expires = $created + 30 * DAY_SECS;
   return (bool) db\insert('app_tokens', ['uid' => t\uid($who), 'tokenHash' => hash('sha256', $token), 'label' => 'Pixel', 'trusted' => 0] + compact(ray('created lastUsed expires')));
+}
+
+/**
+ * (ARG) demo accounts were made today
+ *
+ * in: MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ */
+function demoAccountsWereMadeToday($n) {
+  global $testOnly; if ($testOnly) return FALSE;
+  for ($i = 0; $i < $n; $i++) \flood_register_event('cgpay_demo_accounts', DAY_SECS, 'all');
+  return TRUE;
+}
+
+/**
+ * demo accounts are purged
+ *
+ * in: MAKE appdemo UnusedDemoAccountsArePurged
+ */
+function demoAccountsArePurged() {
+  global $testOnly; if ($testOnly) return FALSE;
+  require_once R_ROOT . '/forms/cgpay/demo.inc';
+  \CG\Web\purgeDemoAccounts();
+  return TRUE;
+}
+
+/**
+ * member (ARG) is gone
+ *
+ * in: TEST appdemo UnusedDemoAccountsArePurged
+ */
+function memberIsGone($who) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  return !db\exists('users', 'uid=:uid', ['uid' => t\uid($who)]);
+}
+
+/**
+ * account var (ARG) is a demo account
+ *
+ * in: TEST appdemo ADemoAccountIsMarkedForThePurge
+ */
+function accountVarIsADemoAccount($var) {
+  global $testOnly, $testVars; if (!$testOnly) return FALSE;
+  return db\exists('users', 'uid=:uid AND source=:source', ['uid' => nni($testVars, $var), 'source' => 'store app demo']);
+}
+
+/**
+ * this address made (ARG) demo accounts this hour
+ *
+ * in: MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
+ */
+function thisAddressMadeDemoAccountsThisHour($n) {
+  global $testOnly; if ($testOnly) return FALSE;
+  for ($i = 0; $i < $n; $i++) \flood_register_event('cgpay_demo_account', HOUR_SECS, \ip_address());
+  return TRUE;
 }

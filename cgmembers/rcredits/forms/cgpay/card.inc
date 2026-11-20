@@ -24,7 +24,7 @@ function cgpayCard() {
   $qr = trim($qr);
   $demo = appDemo();
   if (!qr\qid($qr, $code, $isTestCard)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);}
-  if ($isTestCard != $demo) return appErr('wrong-kind', X_DENIED); // from the QR's form alone, before any lookup, so it tells nothing about the account
+  if ((bool) $isTestCard !== $demo) return appErr('wrong-kind', X_DENIED); // from the QR's form alone, before any lookup, so it tells nothing about the account
   if (!$a = qr\acct($qr, TRUE)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);} // counts against the address, so card codes cannot be guessed
   if (!$demo and $password === '') return appErr('password-needed', X_UNAUTH);
   $actFor = ($a->ok and appMayAct($a->agentId, $a->id)) ? $a->id : NULL; // the card may be older than a change of permission
