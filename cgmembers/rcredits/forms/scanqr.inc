@@ -13,7 +13,7 @@ function formScanQr($form, &$sta, $args = '') {
   global $mya;
   extract(just('nothing', $args));
 
-  js('scanqr');
+  js('scanqr', CARD_HOSTS);
   
   $title = t('Scan a CG Card');
   
