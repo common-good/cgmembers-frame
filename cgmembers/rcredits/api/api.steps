@@ -114,6 +114,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
  *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
@@ -375,6 +376,7 @@ function testOpWith($op, $args) {
  *     TEST appsignin AnUnknownAccountGetsNoToken
  *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
  *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     TEST appsignin AWrongPasscodeGetsNoToken
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin AnotherDeviceIsNotTrusted
@@ -386,6 +388,7 @@ function testOpWith($op, $args) {
  *     TEST appsignin AOnetimeCodeOpensALivePageOnce
  *     TEST appsignin AOnetimeCodeWorksOnlyOnce
  *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     TEST appsignin AProtocolrelativePageCannotBeAskedForEither
  *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     TEST appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
  *     TEST appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
@@ -512,6 +515,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AnUnknownAccountGetsNoToken
  *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
@@ -523,6 +527,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
  *     MAKE appsignin SigningInListsTheAccountsTheMemberMayActFor
  *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
@@ -576,6 +581,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  * reply (ARG) is kept as var (ARG)
  *
  * in: MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
@@ -586,6 +592,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
  *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
  *     MAKE appsignin AnAdminTypesAnAccount

@@ -29,7 +29,10 @@ function appIn() {
   $given = (string) nni($_SERVER, 'HTTP_X_CG_INTERNAL_TOKEN');
   if (CGPAY_SSO_SECRET === '' or !hash_equals(CGPAY_SSO_SECRET, $given)) {exitJust(X_UNAUTH); return FALSE;}
   $in = json_decode(test() ? nni($GLOBALS, 'testBody') : file_get_contents('php://input'), TRUE) ?: [];
-  if (filter_var(nni($in, 'ip'), FILTER_VALIDATE_IP)) $_SERVER['REMOTE_ADDR'] = $in['ip']; // the caller is the node server, so flood control must see the member's address, not its own
+  if (filter_var(nni($in, 'ip'), FILTER_VALIDATE_IP)) {
+    $_SERVER['REMOTE_ADDR'] = $in['ip']; // the caller is the node server, so flood control must see the member's address, not its own
+    \drupal_static_reset('ip_address'); // ip_address() may have cached the node server's address already
+  }
   return $in;
 }
 
@@ -94,6 +97,13 @@ function appRow($token) {
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
   db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
   return $row;
+}
+
+/**
+ * Mark a one-time value used (kept with the one-time codes, by hash) and return whether this call was the first to use it.
+ */
+function appClaim($s, $uid, $expires) {
+  return (bool) db\q('INSERT IGNORE INTO app_codes SET uid=:uid, account=:uid, codeHash=:h, dest=:dest, expires=:expires, usedAt=:now', ['uid' => $uid, 'h' => appHash($s), 'dest' => '', 'expires' => $expires, 'now' => now()])->rowCount();
 }
 
 /**
