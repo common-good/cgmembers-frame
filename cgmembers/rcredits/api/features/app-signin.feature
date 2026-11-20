@@ -114,6 +114,21 @@ Scenario: A passcode handle signs the app in only once
   | error      |*1
   | bad-handle |
 
+Scenario: A passcode handle expires after ten minutes
+  Given next random code is "12345678"
+  And cgpay posts "signin" with:
+  | identifier | password | label | deviceKey |*
+  | .ZPB       | Bb2      | Pixel | key2      |
+  And reply "mfa" is kept as var "mfa"
+  And the time now is "%now+11n"
+  When cgpay posts "mfa" with:
+  | mfa  | code     | trust |*
+  | %mfa | 12345678 | 0     |
+  Then we reply "unauth" with JSON values:
+  | error   |*1
+  | expired |
+  And count "app_tokens" is 0
+
 Scenario: A wrong passcode gets no token
   Given next random code is "12345678"
   And cgpay posts "signin" with:
@@ -205,6 +220,36 @@ Scenario: A signed-out token no longer works
   | bad-token |
   And count "app_tokens" is 1
 
+Scenario: A token not used for 90 days stops working
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  And the time now is "%now+4m"
+  When cgpay posts "device" with:
+  | token  |*
+  | %token |
+  Then we reply "unauth" with JSON values:
+  | error     |*1
+  | bad-token |
+
+Scenario: A token in use keeps working past 90 days
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  And the time now is "%now+2m"
+  And cgpay posts "device" with:
+  | token  |*
+  | %token |
+  And the time now is "%now+4m"
+  When cgpay posts "device" with:
+  | token  |*
+  | %token |
+  Then we reply "ok" with JSON values:
+  | uid |*1
+  | ?   |
+
 Scenario: Signing out everywhere ends every device and its trust
   Given next random code is "12345678"
   And cgpay posts "signin" with:
@@ -278,6 +323,23 @@ Scenario: A one-time code works only once
   And cgpay posts "redeem" with:
   | code  |*
   | %code |
+  When cgpay posts "redeem" with:
+  | code  |*
+  | %code |
+  Then we reply "unauth" with JSON values:
+  | error    |*1
+  | bad-code |
+
+Scenario: A one-time code expires after a minute
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  And cgpay posts "enter" with:
+  | token  |*
+  | %token |
+  And reply "code" is kept as var "code"
+  And the time now is "%now+2n"
   When cgpay posts "redeem" with:
   | code  |*
   | %code |
