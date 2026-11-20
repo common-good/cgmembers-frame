@@ -1017,6 +1017,7 @@ EOF;
   }
   
   public function cardCode() {return $this->noAgent() ? $this->cardCode : $this->agentA->cardCode2;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
+  public function cardCodeIs($code) {return (string) $code !== '' and hash_equals((string) $this->cardCode(), (string) $code);} // strict and timing-safe: a loose compare takes "1e3" for "1000"
   
   private function noAgent() {return $this->proSe ?: ($this->admin and !r\relation(1, $this->id, $this->agentId));}
 

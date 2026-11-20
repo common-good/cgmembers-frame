@@ -67,7 +67,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
 //  if (!$a = qr\acct("HTTP://$subdom.$qrDom/$code", TRUE)) return softErr(t('That is not a valid %PROJECT card.'));
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
-  if (!$res or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
+  if (!$res or !$a = r\acct($res[0]) or !$a->cardCodeIs($res[1])) return softErr(t('That is not a valid %PROJECT card.'));
     
   if ($scannerA->id == $a->id) return softErr(t('You cannot transact with yourself, so there is no point in scanning your own card.'));
   

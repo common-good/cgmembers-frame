@@ -111,7 +111,7 @@ function url($a, $type = 'card') {
 function acct($qr, $requireCode, &$isTestCard = NULL) {
   if (!$qid = qid($qr, $cardCode, $isTestCard)) return NULL; // cardCode is returned
   if (!$a = r\acct($qid)) return NULL;
-  if (($requireCode or !empty($cardCode)) and $cardCode != $a->cardCode()) return NULL;
+  if (($requireCode or !empty($cardCode)) and !$a->cardCodeIs($cardCode)) return NULL;
   return r\acct($qid);
 }
 
