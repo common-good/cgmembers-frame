@@ -16,15 +16,17 @@ require_once __DIR__ . '/token.inc';
  */
 function cgpayCard() {
   if (($in = appIn()) === FALSE) return;
-  extract(just('qr password skipMfa label deviceKey', $in, ''));
+  foreach (just('qr password skipMfa label deviceKey', $in, '') as $k => $v) $$k = is_scalar($v) ? (string) $v : '';
   include_once R_ROOT . '/cg-qr.inc';
 
   $sta = [];
   if (w\ipFlooding($sta, $err)) return appErr('flooding', X_TOOMANY); // before the card lookup, so a blocked address learns nothing about cards
-  if (!$a = qr\acct(trim($qr), TRUE, $isTestCard)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);} // counts against the IP, so card codes cannot be guessed
+  $qr = trim($qr);
   $demo = appDemo();
-  if ($isTestCard != $demo) return appErr('wrong-kind', X_DENIED);
+  if (!qr\qid($qr, $code, $isTestCard)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);}
+  if ($isTestCard != $demo) return appErr('wrong-kind', X_DENIED); // from the QR's form alone, before any lookup, so it tells nothing about the account
+  if (!$a = qr\acct($qr, TRUE)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);} // counts against the address, so card codes cannot be guessed
   if (!$demo and $password === '') return appErr('password-needed', X_UNAUTH);
   $actFor = ($a->ok and appMayAct($a->agentId, $a->id)) ? $a->id : NULL; // the card may be older than a change of permission
-  return appVerify($a->agentId, $demo ? NULL : $password, $label, $deviceKey, $demo and $skipMfa, $actFor);
+  return appVerify($a->agentId, $demo ? NULL : $password, $label, $deviceKey, $demo and $skipMfa and $skipMfa !== '0', $actFor);
 }

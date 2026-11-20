@@ -501,7 +501,8 @@ function testops($params) {
       setv('testDemo', 0);
       break;
 
-    case 'demo': // make this test server act as demo (cards of the other kind, no MFA) for the store app's env-switch tests; initialize turns it off again
+    case 'demo': // make a developer's own server act as demo (cards of the other kind, no MFA) for the store app's env-switch tests; initialize turns it off again
+      if (!isLOCAL) return exitJust(X_FORBIDDEN);
       setv('testDemo', (int) !!nni($params, 'on'));
       break;
       

@@ -68,9 +68,9 @@ function appVerify($uid, $password, $label, $deviceKey, $skipMfa = FALSE, $actFo
 }
 
 /**
- * Return whether this server is demo. A test or dev server can pretend to be (testops 'demo', and the feature tests), so the store app's env switching can be tested against one server.
+ * Return whether this server is demo. A developer's own machine can pretend to be (testops 'demo', and the feature tests), so the store app's env switching can be tested against one server; an online server never can.
  */
-function appDemo() {global $testDemo; return isDEMO or (test() and $testDemo) or (isDEV and !test() and getv('testDemo', 0));}
+function appDemo() {global $testDemo; return isDEMO or (test() and $testDemo) or (isLOCAL and !test() and getv('testDemo', 0));}
 
 /**
  * Return this server's tag for its tokens, so the app can tell which env a token is for and no env takes another's.

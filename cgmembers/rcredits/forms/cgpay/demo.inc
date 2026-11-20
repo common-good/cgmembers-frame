@@ -18,7 +18,7 @@ const DEMO_ACCOUNTS_PER_HOUR = 20; // per address, so the endpoint cannot be use
 function cgpayDemo() {
   if (($in = appIn()) === FALSE) return;
   if (!appDemo()) return appErr('not-demo', X_NOTFOUND);
-  extract(just('label deviceKey', $in, ''));
+  foreach (just('label deviceKey', $in, '') as $k => $v) $$k = is_scalar($v) ? (string) $v : '';
   $ip = $_SERVER['REMOTE_ADDR'];
   if (!\flood_is_allowed('cgpay_demo_account', DEMO_ACCOUNTS_PER_HOUR, HOUR_SECS, $ip)) return appErr('flooding', X_TOOMANY);
   \flood_register_event('cgpay_demo_account', HOUR_SECS, $ip);
