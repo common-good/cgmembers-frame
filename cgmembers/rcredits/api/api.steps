@@ -128,6 +128,7 @@ function appGetsWith($url, $params, $method = 'get') {
  * in: MAKE confirms TheAppConfirmsAPaymentRequest
  *     MAKE confirms TheAppConfirmsTheSamePaymentRequestAgain
  *     MAKE confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     MAKE confirms TheAppDeniesAPaymentRequestAgain
  *     MAKE transactions TheAppAsksToChargeACustomer
  *     MAKE transactions TheAppAsksToPayACustomer
  *     MAKE transactions TheAppAsksToUndoAChargeToACustomer
@@ -233,6 +234,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  * in: TEST confirms TheAppConfirmsAPaymentRequest
  *     TEST confirms TheAppConfirmsTheSamePaymentRequestAgain
  *     TEST confirms TheAppDeniesAPaymentRequestAfterPayingIt
+ *     TEST confirms TheAppDeniesAPaymentRequestAgain
  *     TEST transactions TheAppAsksToChargeACustomerWithAMissingParameter
  *     TEST transactions TheAppAsksToChargeACustomerWithABadAmount
  *     TEST transactions TheAppAsksToChargeACustomerWithAnAmountOutOfRange

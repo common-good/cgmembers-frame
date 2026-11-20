@@ -107,7 +107,7 @@ function accounts($params) {
  * @param acct $a: the account (with the signed-in agent already set)
  * @param string $name: the name to show for the account
  * @param int $version: the app version
- * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling], or NULL if the account can't use the app yet
+ * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling, real], or NULL if the account can't use the app yet
  */
 function accountInfo($a, $name, $version) {
   global $nextCode; // tests usurp generated device code, using this instead
@@ -121,7 +121,8 @@ function accountInfo($a, $name, $version) {
   $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
   $qr = myQr($a);
   $selling = $isCo ? explode("\n", $a->selling) : NULL;
-  return compact(ray('accountId cardCode deviceId qr isCo name selling'));
+  $real = (bool) isPRODUCTION; // real QR codes (RC2.ME) or test ones (RC4.ME)
+  return compact(ray('accountId cardCode deviceId qr isCo name selling real'));
 }
 
 /**
@@ -424,13 +425,57 @@ function comments($params) {
 }
 
 /**
+ * Put the standard test accounts (.ZPA to .ZPI) back to their starting state: the accounts, their relations, and the rows scenarios add for them.
+ * The first call (and the first after makeTestAccounts() changes) makes the accounts the slow way and keeps a copy of their rows. Later calls clear the rows and put the copy back.
+ */
+function resetTestAccts($uidMin, $uidMax) {
+  $in = "BETWEEN $uidMin AND $uidMax";
+  $ours = "uid $in OR uid=" . DEMO_CTTY; // the accounts and the community account they belong to
+  $own = ['users' => $ours, 'u_photo' => $ours, 'u_company' => $ours, 'admins' => $ours, 'u_relations' => "main $in OR other $in"]; // what makeTestAccounts() makes
+  $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes']; // what scenarios add (all keyed by uid)
+  $db = db\q('SELECT DATABASE()')->fetchField();
+  $f = sys_get_temp_dir() . '/cg-test-accts-' . md5(R_ROOT . $db) . '.ser';
+  $v = md5(join(array_map(fn($k) => md5_file(R_ROOT . "/$k"), ray('admin/admin.inc classes/acct.class cg.inc'))) . serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
+  $snap = is_file($f) ? @unserialize(file_get_contents($f), ['allowed_classes' => FALSE]) : NULL;
+
+  db\del('txs', "uid1 $in OR uid2 $in");
+  db\del('txs2', "payee $in");
+  db\del('tx_requests', "payee $in OR payer $in");
+  db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $in); // including txs that were deleted before
+  foreach ($own as $t => $where) db\q("DELETE FROM $t WHERE $where");
+  foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
+  if (nni($snap, 'v') == $v) {
+    foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) {
+      if ($t == 'admins') unset($row['id']); // a counter only, and a row outside the test accounts may hold it by now
+      if ($t == 'u_relations') { // reid is a regional id, as newRelation() makes it: keep it unless another row took it meanwhile
+        if (db\exists($t, 'reid=:reid', ['reid' => $row['reid']])) unset($row['reid']);
+        r\regionalInsert($t, 'reid', $row, -r\acct($row['main'])->region);
+      } else db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+    }
+    return;
+  }
+
+  a\makeTestAccounts();
+  db\q("UPDATE users SET floor=-9999 WHERE uid $in"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
+  foreach (db\col('uid', 'users', "uid $in") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
+
+  $rows = [];
+  foreach ($own as $t => $where) {
+    $q = db\q("SELECT * FROM $t WHERE $where");
+    while ($row = $q->fetchAssoc()) $rows[$t][] = $row;
+  }
+  file_put_contents($tmp = "$f." . getmypid(), serialize(['v' => $v, 'rows' => $rows]));
+  rename($tmp, $f); // atomic, so a concurrent reset never reads half a copy
+}
+
+/**
  * POST /test
  * 
  * Put or get test data.
  *
  * @param string $op: the test operation (see below)
  * plust other parameters depending on the operation:
- *   initialize (): creates default data (especially for Release A)
+ *   initialize (): puts the standard test accounts (.ZPA to .ZPI) and the rows scenarios add for them back to the starting state
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
  *   update (table, {keyedValues}) where the first keyed value is the record key
@@ -451,14 +496,12 @@ function testops($params) {
 
   switch ($op) {
     case 'initialize': 
-      //t\clear(TX_APP); 
-      a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
-      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
+      resetTestAccts($uidMin, $uidMax);
       break;
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'users' => "uid $uidCrit ORDER BY uid"];
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'users' => "uid $uidCrit ORDER BY uid"];
       if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
         $rows = db\rows('*', $table, $where);
@@ -472,7 +515,12 @@ function testops($params) {
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
-      foreach ($ray as $i => $row) db\update($table, (array) $row, 'uid');
+      $special = SECURE_FLDS . ' ' . VSECURE_FLDS; // encrypted fields (bankAccount, for example) go through the account object
+      foreach ($ray as $row) {
+        $row = (array) $row;
+        if ($sp = just($special, $row)) r\acct($row['uid'])->update($sp);
+        if (count($rest = justNOT($special, $row)) > 1) db\update($table, $rest, 'uid');
+      }
       break;
       
     default: return exitJust(X_SYNTAX);

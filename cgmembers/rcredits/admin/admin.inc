@@ -97,7 +97,7 @@ function setupBasicAccounts($withEIN = TRUE) {
 /**
  * Re-setup the test cards on the DEMO server (or other dev server).
  * @param bool $print: if true show corresponding objects for mocking in the app
- * Abe is the administrator. Bea manages Citre; Abe sells for it. Flo manages Gisette, which is fiscally sponsored.
+ * Abe is the administrator. Bea manages Citre. Flo manages Gisette, which is fiscally sponsored. Each company has just that one relation.
  * Individuals: Abe, Bea, Dee, Eli, Flo, Hal, Ida (password k). Companies: Citre, Gisette.
  */
 function makeTestAccounts($print = FALSE) {
@@ -162,16 +162,15 @@ function makeTestAccounts($print = FALSE) {
   
   foreach (str_split('abdefhi') as $id) { // the individual accounts
     $a = a(TEST_QID_HD . $id);
-    if (in($id, 'a b f')) {
+    if (in($id, 'b f')) {
       $cid = $id == 'f' ? 'g' : 'c';
       $CID = strtoupper("$cid:$id");
       $coA = a(TEST_QID_HD . $cid);
       $coA->setDftAppCans();
       if ($cid == 'g') $coA->setCoBit(CO_SPONSORED); // Gisette is the fiscally sponsored test company
-      $perm = $id == 'a' ? B_SELL : B_MANAGE;
-      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'a' ? 2 : 1));
+      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm(B_MANAGE), TRUE, 1));
       $a->update('cardCode2', $cardCode2 = "98765$id");
-      foreach (ray(S_CO) as $k) $coA->stepDone($k); // this gets done twice when there are 2 agents for a company, but no harm
+      foreach (ray(S_CO) as $k) $coA->stepDone($k);
       if ($print) {
         $firstName = ray($a->fullName)[0];
         $info = $coInfo[$cid];
