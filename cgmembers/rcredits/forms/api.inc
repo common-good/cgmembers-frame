@@ -446,8 +446,11 @@ function resetTestAccts($uidMin, $uidMax) {
   foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
   if (nni($snap, 'v') == $v) {
     foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) {
-      if ($k = nni(['admins' => 'id', 'u_relations' => 'reid'], $t)) unset($row[$k]); // a counter only, and a row outside the test accounts may hold it by now
-      db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+      if ($t == 'admins') unset($row['id']); // a counter only, and a row outside the test accounts may hold it by now
+      if ($t == 'u_relations') { // reid is a regional id, as newRelation() makes it: keep it unless another row took it meanwhile
+        if (db\exists($t, 'reid=:reid', ['reid' => $row['reid']])) unset($row['reid']);
+        r\regionalInsert($t, 'reid', $row, -r\acct($row['main'])->region);
+      } else db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
     }
     return;
   }
