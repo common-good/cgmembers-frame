@@ -502,7 +502,7 @@ function testops($params) {
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'app_tokens' => "uid $uidCrit ORDER BY id"];
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'app_tokens' => "uid $uidCrit ORDER BY id", 'users' => "uid $uidCrit ORDER BY uid"];
       if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
         $rows = db\rows('*', $table, $where);
@@ -663,7 +663,7 @@ function fixVersion(&$params) {
  * The origins of the legacy app that may call /handoff with the session cookie.
  */
 function handoffOrigins() {
-  return ['https://cgpay.commongood.earth', 'https://cgpay-staging.commongood.earth'];
+  return HANDOFF_ORIGINS;
 }
 
 // Dev only: the legacy app on any localhost port (parallel test slots each use their own).
