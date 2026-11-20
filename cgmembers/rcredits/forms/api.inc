@@ -81,6 +81,7 @@ function accounts($params) {
      $a = r\acct($myid);
   } else {
     if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
+    if (w\ipFlooding($sta, $err)) return exitJson($err, X_TOOMANY);
     if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
     if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
 
