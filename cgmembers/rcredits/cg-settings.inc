@@ -6,6 +6,8 @@
 
 const R_SERVER_ID = 'NEW'; // qid header for this region's server (New England / Western MA)
 // other 3rd letters: M=ME H=NH V=VT C=CT R=RI P=PA B=Boston
+const CARD_HOSTS = ['RC2' => 'members.commongood.earth', 'RC4' => 'demo.commongood.earth']; // where scanning a real (RC2) or test (RC4) card goes
+const HANDOFF_ORIGINS = ['https://cgpay.commongood.earth']; // legacy app origins that may call /handoff
 const ADMIN_NAME = 'William Spademan';
 const SIGNATORY = 'Jose Cruz, Executive Director';
 const R_ADMIN_EMAIL = 'info@CommonGood.earth'; // regional admin email

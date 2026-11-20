@@ -18,7 +18,7 @@ use CG\Cron as cr;
  * cr\zot(arg1,...); // to run ALL daily functions, zot=everyDay
  *
  * Note: Timed cron is disabled on the staging site. Here's what the cron job would be:
-  <star>/5 * * * * curl https://new2.CommonGood.earth/cron.php?cron_key=w8x3lfzNQK1bxMz6RMTuF54mMInAs4b8SiVJO9zvWYg
+  <star>/5 * * * * curl https://new2.CommonGood.earth/cron.php?cron_key=<the site's cron_key>
   where <star> means * (not the same key as for the production site) 
  
  * @todo:

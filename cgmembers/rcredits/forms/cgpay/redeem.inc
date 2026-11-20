@@ -11,9 +11,8 @@ require_once __DIR__ . '/token.inc';
  */
 function cgpayRedeem() {
   if (($in = appIn()) === FALSE) return;
-  $h = appHash(nni($in, 'code'));
-  $row = db\row('app_codes', 'codeHash=:h AND usedAt IS NULL AND expires>:now', ['h' => $h, 'now' => now()]);
-  if (!$row) return appErr('bad-code', X_UNAUTH);
-  db\update('app_codes', ['id' => $row->id, 'usedAt' => now()]);
+  $h = appHash(nni($in, 'code')); $now = now();
+  if (!db\q('UPDATE app_codes SET usedAt=:now WHERE codeHash=:h AND usedAt IS NULL AND expires>:now', compact('h', 'now'))->rowCount()) return appErr('bad-code', X_UNAUTH); // one atomic claim, so two calls with the same code cannot both win
+  $row = db\row('app_codes', 'codeHash=:h', compact('h'));
   return exitJson(['uid' => (int) $row->uid, 'account' => (int) $row->account, 'to' => $row->dest], X_OK);
 }

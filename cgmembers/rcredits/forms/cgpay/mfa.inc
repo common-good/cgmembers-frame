@@ -22,8 +22,9 @@ function cgpayMfa() {
 
   $sta = [];
   if (w\flooding($uid, $sta, $err)) return appErr('flooding', X_TOOMANY);
-  $success = trim($code) === (string) $nonce;
+  $success = hash_equals((string) $nonce, trim($code));
   w\updateFlood($sta, $success, $err);
   if (!$success) return appErr('bad-code', X_UNAUTH);
+  if (!appClaim('mfa:' . $mfa, $uid, $expires)) return appErr('bad-handle', X_UNAUTH); // each handle signs in once
   return appIssue($uid, $label, $deviceKey, $trust, $actFor ?: NULL);
 }

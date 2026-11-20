@@ -35,7 +35,7 @@ function cgpaySignupVerify() {
     return exitJust(X_UNAUTH);
   }
 
-  $body = json_decode(file_get_contents('php://input'), TRUE);
+  $body = json_decode(test() ? nni($GLOBALS, 'testBody') : file_get_contents('php://input'), TRUE);
   if (!is_array($body)) return exitJust(X_SYNTAX);
 
   $uid         = (int) nni($body, 'uid');

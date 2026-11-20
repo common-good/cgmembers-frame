@@ -98,6 +98,22 @@ Scenario: The right passcode signs the app in
   | uid  | label | trusted |*
   | .ZPB | Pixel | 0       |
 
+Scenario: A passcode handle signs the app in only once
+  Given next random code is "12345678"
+  And cgpay posts "signin" with:
+  | identifier | password | label | deviceKey |*
+  | .ZPB       | Bb2      | Pixel | key2      |
+  And reply "mfa" is kept as var "mfa"
+  And cgpay posts "mfa" with:
+  | mfa  | code     | trust |*
+  | %mfa | 12345678 | 0     |
+  When cgpay posts "mfa" with:
+  | mfa  | code     | trust |*
+  | %mfa | 12345678 | 0     |
+  Then we reply "unauth" with JSON values:
+  | error      |*1
+  | bad-handle |
+
 Scenario: A wrong passcode gets no token
   Given next random code is "12345678"
   And cgpay posts "signin" with:
@@ -277,6 +293,22 @@ Scenario: A page on another site cannot be asked for
   And cgpay posts "enter" with:
   | token  | to                     |*
   | %token | https://evil.example/x |
+  And reply "code" is kept as var "code"
+  When cgpay posts "redeem" with:
+  | code  |*
+  | %code |
+  Then we reply "ok" with JSON values:
+  | to        |*1
+  | dashboard |
+
+Scenario: A protocol-relative page cannot be asked for either
+  Given cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  And reply "token" is kept as var "token"
+  And cgpay posts "enter" with:
+  | token  | to               |*
+  | %token | //evil.example/x |
   And reply "code" is kept as var "code"
   When cgpay posts "redeem" with:
   | code  |*
