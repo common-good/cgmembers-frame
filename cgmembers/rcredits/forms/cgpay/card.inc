@@ -20,6 +20,7 @@ function cgpayCard() {
   include_once R_ROOT . '/cg-qr.inc';
 
   $sta = [];
+  if (w\ipFlooding($sta, $err)) return appErr('flooding', X_TOOMANY); // before the card lookup, so a blocked address learns nothing about cards
   if (!$a = qr\acct(trim($qr), TRUE, $isTestCard)) {w\updateFlood($sta, FALSE); return appErr('bad-card', X_UNAUTH);} // counts against the IP, so card codes cannot be guessed
   $demo = appDemo();
   if ($isTestCard != $demo) return appErr('wrong-kind', X_DENIED);
