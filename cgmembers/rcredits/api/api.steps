@@ -124,6 +124,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
@@ -400,16 +401,20 @@ function testOpWith($op, $args) {
  *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
  *     TEST appsignin TheRightPasscodeSignsTheAppIn
  *     TEST appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
  *     TEST appsignin AWrongPasscodeGetsNoToken
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin AnotherDeviceIsNotTrusted
  *     TEST appsignin TheAppAsksForItsDeviceCredentials
  *     TEST appsignin AMadeupTokenIsRefused
  *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST appsignin ATokenNotUsedForDaysStopsWorking
+ *     TEST appsignin ATokenInUseKeepsWorkingPastDays
  *     TEST appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
  *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     TEST appsignin AOnetimeCodeOpensALivePageOnce
  *     TEST appsignin AOnetimeCodeWorksOnlyOnce
+ *     TEST appsignin AOnetimeCodeExpiresAfterAMinute
  *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
  *     TEST appsignin AProtocolrelativePageCannotBeAskedForEither
  *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
@@ -457,6 +462,7 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appsignin AnUnknownAccountGetsNoToken
  *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
  *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
  *     TEST appsignin AWrongPasscodeGetsNoToken
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin ASignedoutTokenNoLongerWorks
@@ -569,16 +575,20 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin TheAppAsksForItsDeviceCredentials
  *     MAKE appsignin AMadeupTokenIsRefused
  *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
  *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
  *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
  *     MAKE appsignin SigningInListsTheAccountsTheMemberMayActFor
@@ -643,15 +653,19 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  * in: MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin TheAppAsksForItsDeviceCredentials
  *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
  *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
  *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
  *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
  *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
  *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
@@ -837,3 +851,13 @@ function memberOnetimePasswordIs($id, $pass) {
   }
   return ($a->oneTimePass['pass'] == $pass and $a->oneTimePass['expires'] > REQUEST_TIME);
 }
+
+/**
+ * the time now is (ARG)
+ *
+ * in: MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
+ */
+function theTimeNowIs($tm) {return t\timeIs($tm);}
