@@ -76,6 +76,11 @@ function appVerify($uid, $password, $label, $deviceKey, $skipMfa = FALSE, $actFo
 function appDemo() {global $testDemo; return (bool) (isDEMO or (test() and $testDemo) or (isLOCAL and !test() and getv('testDemo', 0)));}
 
 /**
+ * Return whether the token carries this server's tag. A developer's machine acting as demo also takes its own stage's tokens, since in the tests one server stands in for both envs.
+ */
+function appTagOk($token) {return u\starts($token, appEnv()) or (isLOCAL and !test() and appDemo() and u\starts($token, STAGE . '.'));}
+
+/**
  * Return this server's tag for its tokens, so the app can tell which env a token is for and no env takes another's.
  * beta shares main's config (and database), so its tokens are main's.
  */
@@ -132,7 +137,7 @@ function appMayAct($uid, $id) {
  */
 function appRow($token) {
   $now = now();
-  $row = u\starts((string) $token, appEnv()) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
+  $row = appTagOk((string) $token) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
   db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
   return $row;

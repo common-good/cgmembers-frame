@@ -588,13 +588,13 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ *     MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  *     MAKE appdemo AVisitorGetsAFreshDemoAccount
  *     MAKE appdemo ASecondVisitorGetsATokenOfTheirOwn
  *     MAKE appdemo ARealServerRefuses
  *     MAKE appdemo ADemoAccountIsMarkedForThePurge
  *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
  *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
- *     MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -642,7 +642,6 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *
  * in: MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
  *     MAKE appsignin TheRightPasscodeSignsTheAppIn
- * in: MAKE appsignin TheRightPasscodeSignsTheAppIn
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin AWrongPasscodeGetsNoToken
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
