@@ -29,7 +29,7 @@ function appIn() {
   $given = (string) nni($_SERVER, 'HTTP_X_CG_INTERNAL_TOKEN');
   if (CGPAY_SSO_SECRET === '' or !hash_equals(CGPAY_SSO_SECRET, $given)) {exitJust(X_UNAUTH); return FALSE;}
   $in = json_decode(test() ? nni($GLOBALS, 'testBody') : file_get_contents('php://input'), TRUE) ?: [];
-  if (filter_var(nni($in, 'ip'), FILTER_VALIDATE_IP)) $_SERVER['REMOTE_ADDR'] = $in['ip']; // the caller is the node server, so flood control must see the member's address, not its own
+  if (filter_var(nni($in, 'ip'), FILTER_VALIDATE_IP)) {$_SERVER['REMOTE_ADDR'] = $in['ip']; \drupal_static_reset('ip_address');} // the caller is the node server, so flood control must see the member's address, not its own (ip_address() keeps what it read during bootstrap)
   return $in;
 }
 
