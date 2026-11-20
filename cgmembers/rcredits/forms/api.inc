@@ -498,6 +498,11 @@ function testops($params) {
   switch ($op) {
     case 'initialize': 
       resetTestAccts($uidMin, $uidMax);
+      setv('testDemo', 0);
+      break;
+
+    case 'demo': // make this test server act as demo (cards of the other kind, no MFA) for the store app's env-switch tests; initialize turns it off again
+      setv('testDemo', (int) !!nni($params, 'on'));
       break;
       
     case 'rows':
