@@ -47,6 +47,7 @@ function extraSetup() {
  *     MAKE cgpay Setup
  *     MAKE appsignin Setup
  *     MAKE info Setup
+ *     MAKE appdemo Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
@@ -411,6 +412,9 @@ function testOpWith($op, $args) {
  *     TEST appsignin TheRightPasswordUnlocks
  *     TEST appsignin AWrongPasswordDoesNotUnlock
  *     TEST info TheAppAsksForRecentTransactions
+ *     TEST appdemo AVisitorGetsAFreshDemoAccount
+ *     TEST appdemo EachVisitorGetsADifferentAccount
+ *     TEST appdemo ARealServerRefuses
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  */
@@ -448,6 +452,9 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appsignin AWrongPasscodeGetsNoToken
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST appdemo AVisitorGetsAFreshDemoAccount
+ *     TEST appdemo EachVisitorGetsADifferentAccount
+ *     TEST appdemo ARealServerRefuses
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
@@ -569,6 +576,9 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ *     MAKE appdemo AVisitorGetsAFreshDemoAccount
+ *     MAKE appdemo EachVisitorGetsADifferentAccount
+ *     MAKE appdemo ARealServerRefuses
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -632,6 +642,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ *     MAKE appdemo EachVisitorGetsADifferentAccount
  */
 function replyIsKeptAsVar($field, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -680,6 +691,8 @@ function weReplyWithFieldError($wantStatus, $field, $index) {return weReplyWith(
  *     MAKE appcard ThePasscodeAfterACompanyCardKeepsTheCompany
  *     MAKE appcard ARealCardIsRefusedOnDemo
  *     MAKE appcard ACardWithAWrongCardCodeIsRefused
+ *     MAKE appdemo AVisitorGetsAFreshDemoAccount
+ *     MAKE appdemo EachVisitorGetsADifferentAccount
  */
 function thisServerIsDemo() {
   global $testOnly, $testDemo; if ($testOnly) return FALSE;
