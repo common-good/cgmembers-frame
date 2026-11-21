@@ -78,6 +78,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
       db\del('sessions', 'uid', '1');
       \CG\admin\setupBasicAccounts(); // happens sometimes during testing
     }
+    if (w\ipFlooding($sta, $err)) return say($err, 'pass');
     if (!$uid = r\loginString($qid)) return say(t('bad login', '_a', atag('/settings/password')), 'qid');
     if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
     $a = r\acct($uid);

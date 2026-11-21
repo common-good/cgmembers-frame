@@ -44,11 +44,13 @@ function extraSetup() {
  *     MAKE accounts Setup
  *     MAKE accounts ALegacyAgentSignsInToTheApp
  *     MAKE cgpay Setup
+ *     MAKE appsignin Setup
  *     MAKE cgpaysignupverify Setup
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE sessioncookies Setup
@@ -88,10 +90,16 @@ function balances($list) {return t\balances($list);}
  *     MAKE cgpay TheNodeAppCompletesAResetTooLate
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     MAKE appsignin Setup
+ *     TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
  *     MAKE info Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  *     BOTH test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  *     MAKE idphoto Setup
  *     MAKE comments Setup
  *     MAKE identity Setup
@@ -104,6 +112,15 @@ function these($thing, $list) {return t\these($thing, $list);}
  * next random code is (ARG)
  *
  * in: MAKE accounts AMemberSignsInToTheAppForAListOfAccountsToChooseFrom
+ *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
+ *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -246,6 +263,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST accounts AMemberTriesToSignInWithoutANonexistentAccountIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutATotallyBadIdentifier
  *     TEST accounts AMemberTriesToSignInWithoutABadPassword
+ *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
  *     TEST info TheAppAsksForRecentTransactionsWithAMissingParameter
  *     TEST info TheAppAsksForRecentTransactionsWithABadCount
  *     TEST info TheAppAsksForRecentTransactionsWithACountOutOfRange
@@ -286,7 +304,8 @@ function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 /**
  * members have: (ARG)
  *
- * in: MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
+ * in: MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     MAKE identity TheAppAsksToIdentifyACustomerWithAnIdForAnInactiveAccount
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -331,6 +350,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  *
  * in: MAKE accounts Setup
  *     MAKE accounts ALegacyAgentSignsInToTheApp
+ *     MAKE appsignin Setup
  *     TEST test TheAppAsksToInitializeTheTestData
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
@@ -341,6 +361,7 @@ function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $tas
  * in: MAKE test TheAppAsksToInitializeTheTestData
  *     MAKE test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     MAKE test TheAppAsksUsForTransactionData
+ *     MAKE test TheAppAsksUsForTheStoreAppsSigninTokens
  */
 function testOpWith($op, $args) {
   if (is_array($args)) $args = $args[0];
@@ -350,8 +371,37 @@ function testOpWith($op, $args) {
 /**
  * we reply (ARG) with JSON values: (ARG)
  *
- * in: TEST info TheAppAsksForRecentTransactions
+ * in: TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin AMemberSignsInByEmailAddress
+ *     TEST appsignin AWrongPasswordGetsNoToken
+ *     TEST appsignin AnUnknownAccountGetsNoToken
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ *     TEST appsignin TheRightPasscodeSignsTheAppIn
+ *     TEST appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     TEST appsignin AnotherDeviceIsNotTrusted
+ *     TEST appsignin TheAppAsksForItsDeviceCredentials
+ *     TEST appsignin AMadeupTokenIsRefused
+ *     TEST appsignin ASignedoutTokenNoLongerWorks
+ *     TEST appsignin ATokenNotUsedForDaysStopsWorking
+ *     TEST appsignin ATokenInUseKeepsWorkingPastDays
+ *     TEST appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     TEST appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     TEST appsignin AOnetimeCodeOpensALivePageOnce
+ *     TEST appsignin AOnetimeCodeWorksOnlyOnce
+ *     TEST appsignin AOnetimeCodeExpiresAfterAMinute
+ *     TEST appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     TEST appsignin AProtocolrelativePageCannotBeAskedForEither
+ *     TEST appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     TEST appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     TEST appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     TEST appsignin TheRightPasswordUnlocks
+ *     TEST appsignin AWrongPasswordDoesNotUnlock
+ *     TEST info TheAppAsksForRecentTransactions
  *     TEST test TheAppAsksUsForTransactionData
+ *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -373,6 +423,15 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST cgpay TheNodeAppCompletesAResetThatWasNeverVerified
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     TEST cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     TEST appsignin AMemberSignsInToTheApp
+ *     TEST appsignin AWrongPasswordGetsNoToken
+ *     TEST appsignin AnUnknownAccountGetsNoToken
+ *     TEST appsignin ACallerWithoutTheSharedSecretIsRefused
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
+ *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     TEST appsignin ASignedoutTokenNoLongerWorks
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  */
@@ -456,18 +515,66 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE cgpay TheNodeAppCompletesAResetTooLate
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAShortPassword
  *     MAKE cgpay TheNodeAppCompletesAVerifiedResetWithAWeakPassword
+ *     MAKE appsignin AMemberSignsInToTheApp
+ *     MAKE appsignin AMemberSignsInByEmailAddress
+ *     MAKE appsignin AWrongPasswordGetsNoToken
+ *     MAKE appsignin AnUnknownAccountGetsNoToken
+ *     MAKE appsignin AMemberWithMFAIsAskedForThePasscode
+ *     MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin TheAppAsksForItsDeviceCredentials
+ *     MAKE appsignin AMadeupTokenIsRefused
+ *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
+ *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
+ *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
+ *     MAKE appsignin SigningInListsTheAccountsTheMemberMayActFor
+ *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     MAKE appsignin AnAdminTypesAnAccount
+ *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     MAKE appsignin TheRightPasswordUnlocks
+ *     MAKE appsignin AWrongPasswordDoesNotUnlock
  *     MAKE cgpaysignupverify TheNodeAppCompletesSignupWithAWeakPassword
  */
-function cgpayPostsWith($url, $params) {
-  global $testOnly, $testBody; if ($testOnly) return FALSE;
+function cgpayPostsWith($op, $args) {
+  global $testOnly; if ($testOnly) return FALSE;
+  return appPost($op, $args, TRUE);
+}
+
+/**
+ * Post the fields as JSON to the server-to-server endpoint cgpay/<op>, with the shared secret or without.
+ */
+function appPost($op, $args, $withSecret) {
+  global $testBody;
   u\EXPECT(CGPAY_SSO_SECRET, 'Set cgpaySsoSecret in config.json to run the cgpay endpoint tests.');
-  $params = $params[0];
+  $params = nni($args, 0) ?: [];
   t\fixTestVars($params);
   t\fixData($params);
   $testBody = json_encode($params);
   t\SERVER('REQUEST_METHOD', 'POST');
-  t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', CGPAY_SSO_SECRET);
-  return t\memberVisitsPage('?', "cgpay/$url");
+  t\SERVER('HTTP_X_CG_INTERNAL_TOKEN', $withSecret ? CGPAY_SSO_SECRET : '');
+  return t\memberVisitsPage('?', "cgpay/$op");
+}
+
+/**
+ * a stranger posts (ARG) with: (ARG)
+ *
+ * in: MAKE appsignin ACallerWithoutTheSharedSecretIsRefused
+ */
+function aStrangerPostsWith($op, $args) {
+  global $testOnly; if ($testOnly) return FALSE;
+  return appPost($op, $args, FALSE);
 }
 
 /**
@@ -476,8 +583,66 @@ function cgpayPostsWith($url, $params) {
  * in: TEST cgpay TheNodeAppAsksToEmailAResetCode
  *     TEST cgpay TheNodeAppAsksToTextAResetCodeButTextingIsNotAvailable
  *     TEST cgpay TheNodeAppCompletesAVerifiedReset
+ *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
+
+/**
+ * reply (ARG) is kept as var (ARG)
+ *
+ * in: MAKE appsignin TheRightPasscodeSignsTheAppIn
+ *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
+ *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
+ *     MAKE appsignin AnotherDeviceIsNotTrusted
+ *     MAKE appsignin TheAppAsksForItsDeviceCredentials
+ *     MAKE appsignin ASignedoutTokenNoLongerWorks
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
+ *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
+ *     MAKE appsignin ANewPasswordSignsTheAppOutOnEveryDeviceAndEndsItsTrust
+ *     MAKE appsignin AOnetimeCodeOpensALivePageOnce
+ *     MAKE appsignin AOnetimeCodeWorksOnlyOnce
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
+ *     MAKE appsignin APageOnAnotherSiteCannotBeAskedFor
+ *     MAKE appsignin AProtocolrelativePageCannotBeAskedForEither
+ *     MAKE appsignin TheAppOpensTheLiveSiteActingForAnotherAccount
+ *     MAKE appsignin TheAppCannotOpenTheLiveSiteForAnAccountTheMemberDoesNotManage
+ *     MAKE appsignin AnAdminTypesAnAccount
+ *     MAKE appsignin AMemberWhoIsNotAnAdminCannotTypeAnAccountOutsideTheirList
+ *     MAKE appsignin TheRightPasswordUnlocks
+ *     MAKE appsignin AWrongPasswordDoesNotUnlock
+ */
+function replyIsKeptAsVar($field, $var) {
+  global $testOnly, $testVars; if ($testOnly) return FALSE;
+  $got = json_decode(t\getExitMsg(), TRUE);
+  return isset($got[$field]) and ($testVars[$var] = $got[$field]) !== NULL;
+}
+
+/**
+ * reply list (ARG) includes: (ARG)
+ *
+ * in: TEST appsignin SigningInListsTheAccountsTheMemberMayActFor
+ *     TEST appsignin AnAdminTypesAnAccount
+ */
+function replyListIncludes($field, $want) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $got = nni(json_decode(t\getExitMsg(), TRUE) ?: [], $field) ?: [];
+  if (!isset($got[0])) $got = [$got];
+  $s = function ($v) {return is_bool($v) ? ($v ? 'true' : 'false') : (is_null($v) ? 'NULL' : (is_array($v) ? 'array' : (string) $v));};
+  foreach ($want as $one) {
+    t\fixData($one);
+    $found = FALSE;
+    foreach ($got as $g) {
+      $found = TRUE;
+      foreach ($one as $k => $v) if (!array_key_exists($k, $g) or ($v === '?' ? $g[$k] === NULL : $s($v) !== $s($g[$k]))) $found = FALSE;
+      if ($found) break;
+    }
+    if (!$found) return t\output('No match in ' . $field . ' for ' . pr($one) . ' in ' . pr($got)) and FALSE;
+  }
+  return TRUE;
+}
 
 /**
  * we reply (ARG) with field error (ARG): (ARG)
@@ -502,3 +667,13 @@ function memberOnetimePasswordIs($id, $pass) {
   }
   return ($a->oneTimePass['pass'] == $pass and $a->oneTimePass['expires'] > REQUEST_TIME);
 }
+
+/**
+ * the time now is (ARG)
+ *
+ * in: MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
+ *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
+ *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
+ *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
+ */
+function theTimeNowIs($tm) {return t\timeIs($tm);}

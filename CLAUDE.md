@@ -116,6 +116,16 @@ All POST-only, all require `X-CG-Internal-Token: <CGPAY_SSO_SECRET>` header, all
 | `/cgpay/funders-export` | funder CSV export | `forms/cgpay/fundersexport.inc` |
 | `/cgpay/signup` | new-member signup -- create unverified Acct + email code | `forms/cgpay/signup.inc` |
 | `/cgpay/signup-verify` | confirm code + set password + create session | `forms/cgpay/signupverify.inc` |
+| `/cgpay/signin` | store app sign-in step 1: password -> token, or an MFA handle | `forms/cgpay/signin.inc` |
+| `/cgpay/mfa` | store app sign-in step 2: emailed passcode -> token | `forms/cgpay/mfa.inc` |
+| `/cgpay/device` | token -> device credentials | `forms/cgpay/device.inc` |
+| `/cgpay/enter` | token -> one-time code for opening a live page | `forms/cgpay/enter.inc` |
+| `/cgpay/redeem` | one-time code -> uid and page (single use) | `forms/cgpay/redeem.inc` |
+| `/cgpay/revoke` | store app sign-out (one device, or everywhere) | `forms/cgpay/revoke.inc` |
+| `/cgpay/account` | token + typed account -> that account's credentials (admins, or accounts the member may act for) | `forms/cgpay/account.inc` |
+| `/cgpay/unlock` | token + password again -> ok (before the app changes account or settings) | `forms/cgpay/unlock.inc` |
+
+Each endpoint function needs its own file: for `cgpayFoo` the menu loads only `forms/cgpay/foo.inc`. A function put in another endpoint's file can pass in the Gherkin harness (where that file may already be loaded) and still crash over HTTP.
 
 Shared secret: `config.json` key `cgpaySsoSecret` -> constant `CGPAY_SSO_SECRET` (see `defs.inc`).
 
@@ -151,7 +161,7 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 - **Reading the results:** each run replaces the contents of the `test` table in the test database (the page `/sadmin/test-results/top=1` just shows it). Summary row: `SELECT value FROM test WHERE id<0` (ok count, and `no: _` when nothing failed). Failing scenarios: `SELECT value FROM test WHERE value LIKE '%FAIL....%'` (strip the HTML tags); the other rows have the step-by-step output.
 - **Expected state:** every scenario passes. A scenario turned off with `Skip` in a feature file is not a failure (each has a note saying why). Any failure is a regression: fix it or report it, and do not skip it to get green.
 - **Skips:** `Skip` switches a test off temporarily; it never fixes anything. Put the reason on the `Skip` line, end the skipped section with `Resume`, and take the `Skip` (and `Resume`) out as soon as the tests it covers should run again. Do not turn off several scenarios with one `Skip`: that would hide tests that were probably meant to come back, so make one skip per scenario. To list every current skip and commented-out scenario: `grep -rnE "^(Skip|#\s*Scenario)" cgmembers/rcredits --include=*.feature`.
-- **Test endpoint** (used by cgpay's Playwright tests): `testops()` in `forms/api.inc`, POST `<api base>/test` with `version` and `op`. Ops: `initialize` (reset the standard accounts and delete their stray txs), `rows` (txs among those accounts; txs table only), `update` (users table only). Refuses to run on production or stage. Spec: `api/features/test.feature`. The legacy cgpay PWA depends on the existing `api.inc` ops: never remove or change one (add a new op instead).
+- **Test endpoint** (used by cgpay's Playwright tests): `testops()` in `forms/api.inc`, POST `<api base>/test` with `version` and `op`. Ops: `initialize` (reset the standard accounts; delete their stray txs and store-app sign-ins; turn MFA off), `rows` (`txs`, `tx_requests`, `grants` or `app_tokens` of those accounts), `update` (users table only), `mfaOn` (turn MFA on for one standard account), `passcode` (the passcode a store-app MFA handle says was emailed). Refuses to run on production or stage. Spec: `api/features/test.feature`. The legacy cgpay PWA depends on the existing `api.inc` ops: never remove or change one (add a new op instead).
 
 ## Conventions
 

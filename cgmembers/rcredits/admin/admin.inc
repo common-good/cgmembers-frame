@@ -232,6 +232,9 @@ function changeUid($oldUid, $newUid = 0, $variant = 'change') {
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
     'admins:uid:D',
+    'app_codes:uid:D',
+    'app_codes:account:D',
+    'app_tokens:uid:D',
     'changes:rid:D', // sometimes rid is a uid
     'changes:changedBy:D',
     'grants:uid',

@@ -258,6 +258,14 @@ function menu($submenu = '') {
     'cgpay/reset-complete' => ['call', 'CGPay Reset Complete', '', ANY, 'cgpayResetComplete'], // server-to-server: SvelteKit cgpay password reset -- set the new password after node verified the code
     'cgpay/signup' => ['call', 'CGPay Signup', '', ANY, 'cgpaySignup'], // server-to-server: SvelteKit cgpay signup flow -- create unverified account + email verification code
     'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
+    'cgpay/signin' => ['call', 'CGPay Signin', '', ANY, 'cgpaySignin'], // server-to-server: store app token sign-in, step 1 (password; MFA handle or token)
+    'cgpay/mfa' => ['call', 'CGPay MFA', '', ANY, 'cgpayMfa'], // server-to-server: store app token sign-in, step 2 (emailed passcode)
+    'cgpay/device' => ['call', 'CGPay Device', '', ANY, 'cgpayDevice'], // server-to-server: store app token -> device credentials
+    'cgpay/account' => ['call', 'CGPay Account', '', ANY, 'cgpayAccount'], // server-to-server: store app token -> an account an admin typed
+    'cgpay/unlock' => ['call', 'CGPay Unlock', '', ANY, 'cgpayUnlock'], // server-to-server: store app token + password again -> ok (before changing account or settings)
+    'cgpay/enter' => ['call', 'CGPay Enter', '', ANY, 'cgpayEnter'], // server-to-server: store app token -> one-time code for opening a live page
+    'cgpay/redeem' => ['call', 'CGPay Redeem', '', ANY, 'cgpayRedeem'], // server-to-server: one-time code -> uid and page (single use)
+    'cgpay/revoke' => ['call', 'CGPay Revoke', '', ANY, 'cgpayRevoke'], // server-to-server: store app sign-out (one device or everywhere)
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );

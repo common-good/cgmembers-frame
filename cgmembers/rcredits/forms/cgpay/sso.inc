@@ -52,6 +52,12 @@ function cgpaySso() {
   $a = r\acct($uid);
   if (!$a) return exitJust(X_NOTFOUND);
   if (!$a->ok) return exitJust(X_FORBIDDEN);
+  $acct = isset($body['acct']) ? (int) $body['acct'] : 0;
+  $acct = $acct ?: $uid; // the account to act for (the store app's choice); the member stays the agent
+  if ($acct != $uid) {
+    require_once __DIR__ . '/token.inc';
+    if (!appMayAct($uid, $acct)) return exitJust(X_FORBIDDEN);
+  }
 
   // The SSO request itself came in without a session cookie, so Drupal never
   // called session_start() at boot — meaning _drupal_session_write() won't fire
@@ -71,13 +77,17 @@ function cgpaySso() {
   // serialized values under the SVAR_HEADER ('rcredits_') prefix in $_SESSION
   // (see rweb-subs.inc:svar). Without these, $mya is NULL and r\access() fails
   // every permission check, so /history etc. redirect to the signin page.
-  $_SESSION[SVAR_HEADER . 'myid'] = serialize($uid);
+  $_SESSION[SVAR_HEADER . 'myid'] = serialize($acct);
   $_SESSION[SVAR_HEADER . 'agentId'] = serialize($uid);
 
   // session_id() now holds the cookie value the browser will send back to demo
   // to authenticate as this user. Drupal writes it to both sid and ssid on
   // HTTPS-only sites.
   $cookieVal = session_id();
+  if ($acct != $uid) { // whoami reads the account from sessions.acct, which Drupal does not write: save the session now, then add it
+    drupal_session_commit();
+    db\q('UPDATE sessions SET acct=:acct WHERE sid=:s OR ssid=:s', ['acct' => $acct, 's' => $cookieVal]);
+  }
 
   // Create a fresh `box-<QID>` device record + cookie. Acct::boxId() normally
   // does this on a web signin, but its web-channel path reads the existing
