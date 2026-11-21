@@ -1090,7 +1090,7 @@ define('MAX_PW_FAILS', 10);
 define('MAX_IP_FAILS', 50);
 
 function flooding($uid, &$sta, &$err) {
-  if (test()) return !$uid;
+  if (floodOff()) return !$uid;
   $trigger = 'flood_control_triggered';
   if (ipFlooding($sta, $err)) return TRUE;
   
@@ -1114,12 +1114,17 @@ function flooding($uid, &$sta, &$err) {
  * so a blocked address gets the same answer for every identifier (otherwise "blocked" vs "bad login" tells it which accounts exist).
  */
 function ipFlooding(&$sta, &$err) {
-  if (test() or \flood_is_allowed('failed_login_attempt_ip', MAX_IP_FAILS, HOUR_SECS)) return FALSE;
+  if (floodOff() or \flood_is_allowed('failed_login_attempt_ip', MAX_IP_FAILS, HOUR_SECS)) return FALSE;
   $sta['flood_control_triggered'] = 'ip';
   $err = t('There have been too many failed sign-in attempts from your IP Address. Try again later.');
   r\tellAdmin($err, ['ip' => $_SERVER['REMOTE_ADDR']]);
   return TRUE;
 }
+
+/**
+ * Say whether flood control is off: in the tests, unless a scenario turns it on (t\floodOn(); every scenario starts with it off).
+ */
+function floodOff() {return test() and !\drupal_static('testFlood');}
 
 function noFlood($sta) {\flood_clear_event('failed_login_attempt_user', nni($sta, 'flood_control_user_identifier')); return NULL;}
 
