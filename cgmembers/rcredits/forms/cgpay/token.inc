@@ -166,11 +166,46 @@ function appRow($token) {
   $now = now();
   $row = appTagOk((string) $token) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
+  return appSlide($row);
+}
+
+/**
+ * Slide the token's expiry (and a manager's unlock) forward, since it is in use, and return the row.
+ */
+function appSlide($row) {
+  $now = now();
   $slide = ['lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS];
   if ((int) $row->unlockedUntil >= $now) $slide['unlockedUntil'] = $row->unlockedUntil = $now + APP_UNLOCK_SECS;
   db\update('app_tokens', ['id' => $row->id] + $slide);
   return $row;
 }
+
+/**
+ * Return the token a live-site session was opened from (app_tokens.id), slid forward; or NULL if the session must end:
+ * the token no longer works, or it is a cash register that has locked again (unused for APP_UNLOCK_SECS, or locked by the app).
+ */
+function appSessionRow($id) {
+  $row = db\row('app_tokens', 'id=:id AND revoked IS NULL AND expires>:now', ['id' => $id, 'now' => now()]);
+  return ($row and !appLocked($row)) ? appSlide($row) : NULL;
+}
+
+/**
+ * End this live-site session if it was opened from an app token that no longer allows it (see appSessionRow()), and send the page back to the app.
+ * Called on every live-site page of a session opened from the app.
+ */
+function appGate($id) {
+  if (appSessionRow($id)) return;
+  db\del('sessions', 'ssid', session_id());
+  session_unset();
+  r\setAcct(NULL);
+  header('Location: ' . (CGPAY_URL ?: '/'));
+  exit();
+}
+
+/**
+ * Return the one account this live-site session may act for (a cash register's company, see appOnly()), or 0 if it is not limited.
+ */
+function appSessionOnly() {return ($id = w\svar('appToken')) ? appOnly(appSessionRow($id)) : 0;}
 
 /**
  * Mark a one-time value used (kept with the one-time codes, by hash) and return whether this call was the first to use it.

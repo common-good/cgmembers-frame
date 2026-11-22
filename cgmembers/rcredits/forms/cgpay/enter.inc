@@ -19,6 +19,6 @@ function cgpayEnter() {
   if (!$a = r\acct(nni($in, 'account') ?: $row->uid) or !appMayAct($row->uid, $account = $a->id)) return appErr('not-allowed', X_FORBIDDEN);
   if (($only = appOnly($row)) and $account != $only) return appErr('locked', X_FORBIDDEN);
   $code = bin2hex(random_bytes(16));
-  db\insert('app_codes', ['uid' => $row->uid, 'account' => $account, 'codeHash' => appHash($code), 'dest' => $to, 'expires' => now() + APP_CODE_SECS]);
+  db\insert('app_codes', ['uid' => $row->uid, 'tokenId' => $row->id, 'account' => $account, 'codeHash' => appHash($code), 'dest' => $to, 'expires' => now() + APP_CODE_SECS]);
   return exitJson(['code' => $code, 'to' => $to], X_OK);
 }

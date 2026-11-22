@@ -256,6 +256,9 @@ function changeWho($zot, $args = '') {
     if ($mya->admin and !$mya->admRegion and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.'));
   }
 
+  require_once R_ROOT . '/forms/cgpay/token.inc';
+  if (($only = appSessionOnly()) and $mya->id != $only) return w\go($page, t('This device is a cash register. It can act only for its company.'));
+
   r\setAcct($mya); // set new current account
 
   if ($then) return then($then);
