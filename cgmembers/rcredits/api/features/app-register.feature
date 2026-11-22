@@ -85,7 +85,7 @@ Scenario: A manager makes the app the company's cash register
   | uid  | lockedTo | unlockedUntil |*
   | .ZPA | .ZPC     |               |
 
-Scenario: A locked token gets only the company's credentials
+Scenario: A locked token gets only the company's credentials and its member's name
   Given cgpay posts "lock" with:
   | token  | account |*
   | %token | .ZPC    |
@@ -93,8 +93,8 @@ Scenario: A locked token gets only the company's credentials
   | token  |*
   | %token |
   Then we reply "ok" with JSON values:
-  | uid  | lockedTo |*1
-  | .ZPA | .ZPC   |
+  | uid  | name    | lockedTo |*1
+  | .ZPA | Abe One | .ZPC     |
   And reply list "accounts" is:
   | uid  |*
   | .ZPC |

@@ -472,7 +472,7 @@ function testOpWith($op, $args) {
  *     TEST appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
  *     TEST appregister APersonalAccountCannotBeACashRegister
  *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
- *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentials
+ *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
  *     TEST appregister ALockedTokenOpensNoLivePage
  *     TEST appregister ALockedTokenCannotFetchAnotherAccount
  *     TEST appregister ALockedTokenCannotUnlockItself
@@ -700,7 +700,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
  *     MAKE appregister APersonalAccountCannotBeACashRegister
  *     MAKE appregister AManagerMakesTheAppTheCompanysCashRegister
- *     MAKE appregister ALockedTokenGetsOnlyTheCompanysCredentials
+ *     MAKE appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
  *     MAKE appregister ALockedTokenOpensNoLivePage
  *     MAKE appregister ALockedTokenCannotFetchAnotherAccount
  *     MAKE appregister ALockedTokenCannotUnlockItself
@@ -1003,7 +1003,7 @@ function theTimeNowIs($tm) {return t\timeIs($tm);}
  * in: TEST appregister AManagerGetsTheCompanyWithTheirOwnAccount
  *     TEST appregister SomeoneWhoMayBuyForACompanyButNotManageItDoesNotGetTheCompany
  *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
- *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentials
+ *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
  *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
  *     TEST appregister TheTokenOwnersOwnCardUnlocksEverything
  */

@@ -108,7 +108,7 @@ function appIssue($uid, $label, $deviceKey, $trust, $actFor = NULL) {
 }
 
 /**
- * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), the accounts they may act for
+ * Return what the app keeps about the member: uid, name (a locked cash register names whose password unlocks it), whether they switch accounts by typing (admins), the accounts they may act for
  * (companies only if they manage them), and lockedTo (the company a locked token works for, or 0). A locked token gets just that company (see appOnly()).
  */
 function appMember($uid, $row = NULL) {
@@ -119,7 +119,7 @@ function appMember($uid, $row = NULL) {
   } else foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) {
     if ((!r\acct($id)->co or appManages($uid, $id)) and $one = appAccount($id, $uid, $name)) $accounts[] = $one;
   }
-  return ['uid' => (int) $uid, 'admin' => !$only && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
+  return ['uid' => (int) $uid, 'name' => r\acct($uid)->fullName, 'admin' => !$only && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
 }
 
 /**
