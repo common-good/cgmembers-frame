@@ -61,6 +61,7 @@ function extraSetup() {
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  *     MAKE appregister Setup
+ *     MAKE apptx Setup
  */
 function members($list) {return t\members($list);}
 
@@ -117,6 +118,13 @@ function balances($list) {return t\balances($list);}
  *     TEST appregister ALockedTokenCannotUnlockItself
  *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
  *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
+ *     MAKE apptx Setup
+ *     TEST apptx TheAppChargesACustomerForACompany
+ *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     BOTH apptx TheAppUndoesAChargeItSent
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -232,6 +240,12 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     TEST apptx TheAppChargesACustomerForACompany
+ *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     TEST apptx TheAppUndoesAChargeItSent
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
+ *     TEST apptx TheAppIdentifiesACustomer
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -297,6 +311,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
  *     TEST identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -313,6 +328,7 @@ function weReplyWith($wantStatus, $want, $json = FALSE) {
  * member (ARG) has photo (ARG)
  *
  * in: MAKE idphoto TheAppAsksToShowACustomerIDPhoto
+ *     MAKE apptx TheAppShowsACustomersPhoto
  */
 function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 
@@ -458,6 +474,15 @@ function testOpWith($op, $args) {
  *     TEST appregister AnUnlockInUseLasts
  *     TEST appregister LockingAgainEndsTheUnlock
  *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
+ *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     TEST apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     TEST apptx AMadeupTokenIsRefused
+ *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     TEST apptx TheAppShowsACustomersPhoto
+ *     TEST apptx TheAppAsksForAPhotoWithoutTheCardsCode
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -502,6 +527,11 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     TEST appregister ALockedTokenOpensNoLivePage
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
+ *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -658,6 +688,22 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appregister AnUnlockInUseLasts
  *     MAKE appregister LockingAgainEndsTheUnlock
  *     MAKE appregister AnUnlockedCashRegisterCanBeLetGo
+ *     MAKE apptx TheAppChargesACustomerForACompany
+ *     MAKE apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     MAKE apptx TheAppUndoesAChargeItSent
+ *     MAKE apptx ATransactionWithAWrongProofIsRefused
+ *     MAKE apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     MAKE apptx TheAppSendsAChargeToAClosedAccountWhileOnline
+ *     MAKE apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     MAKE apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     MAKE apptx AMadeupTokenIsRefused
+ *     MAKE apptx TheAppIdentifiesACustomer
+ *     MAKE apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     MAKE apptx TheAppShowsACustomersPhoto
+ *     MAKE apptx TheAppAsksForAPhotoWithoutTheCardsCode
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -838,6 +884,7 @@ function replyStartsWithThisServersTag($field) {
  * member (ARG) has a token from server (ARG) kept as var (ARG)
  *
  * in: MAKE appcard ATokenFromAnotherServerIsRefused
+ *     MAKE apptx Setup
  */
 function memberHasATokenFromServerKeptAsVar($who, $env, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -945,3 +992,12 @@ function replyListIs($field, $want) {
   if (count($got) != count($want)) return t\output("$field has " . count($got) . ' items, not ' . count($want) . ': ' . pr($got)) and FALSE;
   return replyListIncludes($field, $want);
 }
+
+/**
+ * we message (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ */
+function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
