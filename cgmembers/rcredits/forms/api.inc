@@ -280,12 +280,12 @@ function transactions($params) {
   foreach (ray('pending offline') as $k) $params[$k] = $$k = ($$k == 'true'); // make these bool, modify params for error
   if (test()) $proof = $proof ? u\hash($gotProof = $proof) : $proof;
 
-  if (!$a = getAcct($otherId, FALSE, TRUE, $err) or !$a->ok) {
-    return $offline ? badTx($a, $params, $err) : postErr($err);
-  }
+  $a = getAcct($otherId, FALSE, FALSE, $err); // an inactive account is still named in a refused offline transaction's record
+  if ($a and !$a->ok) $err = t('That account is not active.');
+  if ($err) return $offline ? badTx($a, $params, $err) : postErr($err);
   $cardCode = $a->cardCode();
-  if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return exitJust(t('bad amount'), X_SYNTAX); // allow negatives
-  if (!is_numeric($created) or $created > now() + 2 * DAY_SECS - 1) return exitJust(t('bad date'), X_SYNTAX);
+  if ($err = u\badAmount($amount, '!=0', 2, MAX_AMOUNT)) return badTx($a, $params, t('bad amount'), X_SYNTAX); // allow negatives
+  if (!is_numeric($created) or $created > now() + 2 * DAY_SECS - 1) return badTx($a, $params, t('bad date'), X_SYNTAX);
   if ($created < now() - 90 * DAY_SECS) return badTx($a, $params, t('transaction date too far in the past'));
 
   $anyProof = FALSE;
@@ -301,7 +301,7 @@ function transactions($params) {
   if (!$anyProof) { // bad proof
     r\tellAdmin('bad proof', compact(ray('version testProofWanted testProofWantedUndo testProofWantedPay testProofWantedPayUndo actorId amount otherId cardCode created offline')));
     if (test()) f('t.output', "Wanted proof: $testProofWanted or $testProofWantedUndo or $testProofWantedPay or $testProofWantedPayUndo, got: $gotProof");
-    return exitJust(t('bad proof'), X_SYNTAX);
+    return badTx($a, $params, t('bad proof'), X_SYNTAX);
   }
   
   $goods = FOR_GOODS; $selfhelp = FALSE;
@@ -345,6 +345,7 @@ function transactions($params) {
     unset($DBTX);
   }
   
+  if (!$z->ok and $offline) return badTx($a, $params, $z->msg);
   return exitJson(ray('ok message', $z->ok, $selfhelp ? 'selfhelp tx' : $z->msg), X_OK);
 }
 
@@ -577,23 +578,26 @@ function getAcct($cardId, $requireCode = TRUE, $requireActive = TRUE, &$err = ''
 }
 
 /**
- * Tell the device owner about a failed background transaction
+ * Keep a refused transaction in tx_bads and tell staff. One taken offline (accepted on the device, goods given) is also
+ * told to $mya, the account it was for, so the money can still be collected.
  */
-function badTx($a, $info, $msg) {
+function keepBadTx($a, $info, $msg) {
   global $mya;
   extract(just('offline amount created', $info, NULL));
-  
-  $badFlds = 'version deviceId actorId otherId amount description created proof offline problem';
-  $info['offline'] = (int) $offline;  
-  $info['problem'] = $msg;
-  db\insert('tx_bads', just($badFlds, $info));
-  
+  db\insert('tx_bads', just('version deviceId actorId otherId amount description created proof', $info) + ['offline' => (int) $offline, 'problem' => $msg]);
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
   $dpy = ray('name account amount created by', $a ? $a->fullName : t('UNKNOWN'), $a ? $a->mainQid : '', u\fmtAmt($amount), fmtDt($created), $by);
-//    $mya->tell("bad forced tx|$message", $info);
+  if ($offline) $mya->tell("bad forced tx|$msg", $dpy);
   r\tellAdmin("bad forced tx|$msg", $info + $dpy);
-  
-  return postErr($msg); // offline transactions are always accepted
+}
+
+/**
+ * Refuse a transaction, keeping it (see keepBadTx). The reply: ok=false with the reason, or (status other than X_OK) the
+ * reason alone, kept only when offline.
+ */
+function badTx($a, $info, $msg, $status = X_OK) {
+  if ($status == X_OK or nni($info, 'offline')) keepBadTx($a, $info, $msg);
+  return $status == X_OK ? postErr($msg) : exitJust($msg, $status);
 }
 
 /**
