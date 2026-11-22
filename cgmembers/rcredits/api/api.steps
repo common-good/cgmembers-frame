@@ -116,7 +116,6 @@ function balances($list) {return t\balances($list);}
  *     TEST apptx TheAppChargesACustomerForACompany
  *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
  *     BOTH apptx TheAppUndoesAChargeItSent
- *     TEST apptx AnAdminActsForACompanyTheyHaveNoRelationWithWhichNamesNoAgent
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -235,7 +234,6 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST apptx TheAppChargesACustomerForACompany
  *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
  *     TEST apptx TheAppUndoesAChargeItSent
- *     TEST apptx AnAdminActsForACompanyTheyHaveNoRelationWithWhichNamesNoAgent
  *     TEST apptx TheAppIdentifiesACustomer
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
@@ -445,6 +443,7 @@ function testOpWith($op, $args) {
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
  *     TEST apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
  *     TEST apptx AMadeupTokenIsRefused
  *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
@@ -495,6 +494,7 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -633,7 +633,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE apptx ATransactionWithAWrongProofIsRefused
  *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
- *     MAKE apptx AnAdminActsForACompanyTheyHaveNoRelationWithWhichNamesNoAgent
+ *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
  *     MAKE apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
  *     MAKE apptx AMadeupTokenIsRefused
  *     MAKE apptx TheAppIdentifiesACustomer

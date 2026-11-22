@@ -20,7 +20,7 @@ function cgpayTx() {
 
 /**
  * Act for the account the app names (actorId, as on its transactions) if the token's member may: set $mya and the device box and return TRUE, or reply with the error and return FALSE.
- * The agent in actorId must be the token's member, except for an admin acting for an account they have no relation with (qr\url() then names no agent).
+ * The agent in actorId must be the token's member: an admin with no relation to the account may not transact for it.
  */
 function appActor($row, $actorId) {
   global $mya, $channel;
@@ -28,8 +28,7 @@ function appActor($row, $actorId) {
   $channel = TX_APP;
   $uid = $row->uid;
   $a = getAcct((string) $actorId, FALSE);
-  $agentOk = $a && ($a->agentId == $uid || ($a->proSe && !r\relation(1, $a->id, $uid)));
-  if (!$agentOk or !appMayAct($uid, $a->id)) {appErr('bad-actor', X_FORBIDDEN); return FALSE;}
+  if (!$a or $a->agentId != $uid or !appMayAct($uid, $a->id)) {appErr('bad-actor', X_FORBIDDEN); return FALSE;}
   $mya = $a;
   $a->boxId($row->deviceHash ?: "app$row->id", APP_API_VERSION);
   return TRUE;
