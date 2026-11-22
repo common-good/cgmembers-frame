@@ -8,16 +8,20 @@ use CG\Util as u;
 
 /**
  * @file
- * Shared code of the store app's token sign-in endpoints (/cgpay/signin, mfa, device, account, enter, redeem, unlock, revoke).
+ * Shared code of the store app's token sign-in endpoints (/cgpay/signin, mfa, device, account, enter, redeem, lock, unlock, revoke).
  *
  * The app signs in once and keeps a revocable token (only its sha256 is stored, in app_tokens). Every call
  * comes from the node server (X-CG-Internal-Token, like /cgpay/sso), never from the browser. Errors are JSON
  * {"error": "<code>"} so the app can word them itself.
+ *
+ * A token can be locked to a company the member manages (the app as a cash register, see /cgpay/lock): it then works for
+ * that company only, and opens nothing else (no live pages, no other accounts) until a manager unlocks it for a while (/cgpay/unlock).
  */
 
 const APP_TOKEN_DAYS = 90; // a token not used for this long stops working
 const APP_CODE_SECS = 60; // life of a one-time code for opening a live page
 const APP_MFA_SECS = 600; // life of the second sign-in step
+const APP_UNLOCK_SECS = 120; // a manager's unlock of a locked token lasts this long without use
 const APP_API_VERSION = 40206; // the legacy app's version, so the device id has the current format
 
 /**
@@ -104,13 +108,28 @@ function appIssue($uid, $label, $deviceKey, $trust, $actFor = NULL) {
 }
 
 /**
- * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), and the accounts they may act for.
+ * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), the accounts they may act for
+ * (companies only if they manage them), and lockedTo (the company a locked token works for, or 0). A locked token gets just that company.
  */
-function appMember($uid) {
+function appMember($uid, $row = NULL) {
   $accounts = [];
-  foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) if ($one = appAccount($id, $uid, $name)) $accounts[] = $one;
-  return ['uid' => (int) $uid, 'admin' => (bool) r\acct($uid)->admSeeAccts, 'accounts' => $accounts];
+  if ($locked = appLocked($row)) {
+    if ($one = appAccount($locked, $uid)) $accounts[] = $one;
+  } else foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) {
+    if ((!r\acct($id)->co or appManages($uid, $id)) and $one = appAccount($id, $uid, $name)) $accounts[] = $one;
+  }
+  return ['uid' => (int) $uid, 'admin' => !$locked && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
 }
+
+/**
+ * Return the company the token is locked to, if it is locked now (not within a manager's unlock), else 0.
+ */
+function appLocked($row) {return ($row and $row->lockedTo and (int) $row->unlockedUntil < now()) ? (int) $row->lockedTo : 0;}
+
+/**
+ * Return whether the member manages the company (the "manage" permission, or an admin's equivalent): only a manager may make the app the company's cash register.
+ */
+function appManages($uid, $id) {return ($a = r\acct($id, $uid) and $a->can(B_MANAGE));}
 
 /**
  * Return one account as the app keeps it: uid, name, isCo, photo (a data URL of the thumbnail, so it shows offline, or NULL),
@@ -129,6 +148,7 @@ function appAccount($id, $agent, $name = '') {
 function appMayAct($uid, $id) {
   if ($id == $uid) return TRUE;
   if (!$a = r\acct($id, $uid)) return FALSE;
+  if ($a->co) return $a->can(B_MANAGE); // the app acts for a company only as its manager (see appManages())
   return $a->can() or ($a->admin and ($a->admRegion or $a->community == $a->agentA->community));
 }
 
@@ -139,7 +159,9 @@ function appRow($token) {
   $now = now();
   $row = appTagOk((string) $token) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
-  db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
+  $slide = ['lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS];
+  if ((int) $row->unlockedUntil >= $now) $slide['unlockedUntil'] = $row->unlockedUntil = $now + APP_UNLOCK_SECS;
+  db\update('app_tokens', ['id' => $row->id] + $slide);
   return $row;
 }
 
