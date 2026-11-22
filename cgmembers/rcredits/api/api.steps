@@ -60,8 +60,8 @@ function extraSetup() {
  *     MAKE identity Setup
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
- *     MAKE appregister Setup
  *     MAKE apptx Setup
+ *     MAKE appregister Setup
  */
 function members($list) {return t\members($list);}
 
@@ -113,11 +113,6 @@ function balances($list) {return t\balances($list);}
  *     MAKE identity Setup
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
- *     MAKE appregister Setup
- *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
- *     TEST appregister ALockedTokenCannotUnlockItself
- *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
- *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
  *     MAKE apptx Setup
  *     TEST apptx TheAppChargesACustomerForACompany
  *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
@@ -125,6 +120,15 @@ function balances($list) {return t\balances($list);}
  *     TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     MAKE appregister Setup
+ *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
+ *     TEST appregister ALockedTokenCannotUnlockItself
+ *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
+ *     TEST appregister ALockedCashRegisterCharges
+ *     MAKE appregister ALockedCashRegisterUndoesACharge
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -246,6 +250,9 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx TheAppIdentifiesACustomer
+ *     TEST appregister ALockedCashRegisterCharges
+ *     TEST appregister ALockedCashRegisterUndoesACharge
+ *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -453,6 +460,15 @@ function testOpWith($op, $args) {
  *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
+ *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     TEST apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     TEST apptx AMadeupTokenIsRefused
+ *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     TEST apptx TheAppShowsACustomersPhoto
+ *     TEST apptx TheAppAsksForAPhotoWithoutTheCardsCode
  *     TEST appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
  *     TEST appregister APersonalAccountCannotBeACashRegister
  *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
@@ -474,15 +490,10 @@ function testOpWith($op, $args) {
  *     TEST appregister AnUnlockInUseLasts
  *     TEST appregister LockingAgainEndsTheUnlock
  *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
- *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
- *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
- *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
- *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
- *     TEST apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
- *     TEST apptx AMadeupTokenIsRefused
- *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
- *     TEST apptx TheAppShowsACustomersPhoto
- *     TEST apptx TheAppAsksForAPhotoWithoutTheCardsCode
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     TEST appregister AManagersProofMadeWithAnotherCardDoesNotLetItPay
+ *     TEST appregister ACashRegisterActsOnlyForItsCompany
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -526,12 +537,15 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
- *     TEST appregister ALockedTokenOpensNoLivePage
  *     TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     TEST appregister ALockedTokenOpensNoLivePage
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     TEST appregister ACashRegisterActsOnlyForItsCompany
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -664,6 +678,22 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appdemo ADemoAccountIsMarkedForThePurge
  *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
  *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ *     MAKE apptx TheAppChargesACustomerForACompany
+ *     MAKE apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     MAKE apptx TheAppUndoesAChargeItSent
+ *     MAKE apptx ATransactionWithAWrongProofIsRefused
+ *     MAKE apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     MAKE apptx TheAppSendsAChargeToAClosedAccountWhileOnline
+ *     MAKE apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     MAKE apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     MAKE apptx AMadeupTokenIsRefused
+ *     MAKE apptx TheAppIdentifiesACustomer
+ *     MAKE apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     MAKE apptx TheAppShowsACustomersPhoto
+ *     MAKE apptx TheAppAsksForAPhotoWithoutTheCardsCode
  *     MAKE appregister Setup
  *     MAKE appregister AManagerGetsTheCompanyWithTheirOwnAccount
  *     MAKE appregister SomeoneWhoMayBuyForACompanyButNotManageItDoesNotGetTheCompany
@@ -688,22 +718,13 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appregister AnUnlockInUseLasts
  *     MAKE appregister LockingAgainEndsTheUnlock
  *     MAKE appregister AnUnlockedCashRegisterCanBeLetGo
- *     MAKE apptx TheAppChargesACustomerForACompany
- *     MAKE apptx TheAppPaysACustomerFromTheMembersOwnAccount
- *     MAKE apptx TheAppUndoesAChargeItSent
- *     MAKE apptx ATransactionWithAWrongProofIsRefused
- *     MAKE apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
- *     MAKE apptx TheAppSendsAChargeToAClosedAccountWhileOnline
- *     MAKE apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
- *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
- *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
- *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
- *     MAKE apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
- *     MAKE apptx AMadeupTokenIsRefused
- *     MAKE apptx TheAppIdentifiesACustomer
- *     MAKE apptx TheAppIdentifiesACustomerForAnotherMembersAccount
- *     MAKE apptx TheAppShowsACustomersPhoto
- *     MAKE apptx TheAppAsksForAPhotoWithoutTheCardsCode
+ *     MAKE appregister ALockedCashRegisterCharges
+ *     MAKE appregister ALockedCashRegisterUndoesACharge
+ *     MAKE appregister ALockedCashRegisterDoesNotPay
+ *     MAKE appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     MAKE appregister AManagersProofMadeWithAnotherCardDoesNotLetItPay
+ *     MAKE appregister ACashRegisterActsOnlyForItsCompany
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;

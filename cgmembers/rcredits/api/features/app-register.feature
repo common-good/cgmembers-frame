@@ -7,11 +7,12 @@ SO a cashier can charge customers but reach nothing else: not the company's dash
 
 Setup:
   Given members:
-  | uid  | fullName | phone  | email | cc  | cc2  | flags  | pass | city | state |*
-  | .ZPA | Abe One  | +20001 | a@    | ccA | ccA2 | ok     | Aa1  | Aton | AL    |
-  | .ZPB | Bea Two  | +20002 | b@    | ccB | ccB2 | ok     | Bb2  | Bton | MA    |
-  | .ZPC | Coco Co  | +20003 | c@    | ccC |      | ok,co  |      | Cton | CA    |
-  | .ZPF | Flo Six  | +20006 | f@    | ccF | ccF2 | ok     | Ff6  | Fton | FL    |
+  | uid  | fullName | phone  | email | cc  | cc2  | flags  | pass | city | state | balance |*
+  | .ZPA | Abe One  | +20001 | a@    | ccA | ccA2 | ok     | Aa1  | Aton | AL    | 0       |
+  | .ZPB | Bea Two  | +20002 | b@    | ccB | ccB2 | ok     | Bb2  | Bton | MA    | 0       |
+  | .ZPC | Coco Co  | +20003 | c@    | ccC |      | ok,co  |      | Cton | CA    | 1000    |
+  | .ZPD | Dee Four | +20004 | d@    | ccD |      | ok     |      | Dton | DE    | 1000    |
+  | .ZPF | Flo Six  | +20006 | f@    | ccF | ccF2 | ok     | Ff6  | Fton | FL    | 0       |
   And these "u_relations":
   | main | agent | num | permission |*
   | .ZPC | .ZPA  |   1 | manage     |
@@ -337,3 +338,97 @@ Scenario: An unlocked cash register can be let go
   And these "app_tokens":
   | uid  | lockedTo |*
   | .ZPA |          |
+
+# Rule: A locked cash register charges for its company, and pays only after a manager's card unlocked it.
+
+Scenario: A locked cash register charges
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                       | offline | pending |*
+  | %token | 12     | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC012.00K6VMDCDccD%now | 0       | 0       |
+  Then we reply "ok" with JSON:
+  | ok   | message                  |*
+  | true | You charged Dee Four $12. |
+  And these "txs":
+  | actorId | uid1 | uid2 | agt2 | amt | for2  |*
+  | .ZPC    | .ZPD | .ZPC | .ZPA | 12  | stuff |
+
+Scenario: A locked cash register undoes a charge
+  Given these "txs":
+  | xid | actorId | uid1 | uid2 | agt1 | agt2 | amt | for2  | created | flags |*
+  | 1   | .ZPC    | .ZPD | .ZPC | .ZPD | .ZPA | 12  | stuff | %now0   |       |
+  And cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now0   | L6VMDCC012.00K6VMDCDccD%now0 | 0       | 0       |
+  Then we reply "ok" with JSON:
+  | ok   | message |*
+  | true | deleted |
+
+Scenario: A locked cash register does not pay
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC0-12.00K6VMDCDccD%now | 1       | 0       |
+  Then we reply "forbidden" with JSON values:
+  | error  |*1
+  | locked |
+  And count "txs" is 0
+  And these "tx_bads":
+  | actorId  | otherId | amount | offline | problem                                                |*
+  | L6VMDCC0 | K6VMDCD | -12    | 1       | This device is a cash register. Only a manager can pay from it. |
+
+Scenario: A manager's card lets a locked cash register pay offline
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending | manager | managerProof                 |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC0-12.00K6VMDCDccD%now | 1       | 0       | K6VMDCB | L6VMDCC0-12.00K6VMDCDccB%now |
+  Then we reply "ok" with JSON:
+  | ok   | message               |*
+  | true | You paid Dee Four $12. |
+  And these "txs":
+  | actorId | uid1 | uid2 | amt | for2  |*
+  | .ZPC    | .ZPC | .ZPD | 12  | stuff |
+
+Scenario: The card of someone who does not manage the company does not let it pay
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending | manager | managerProof                 |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC0-12.00K6VMDCDccD%now | 1       | 0       | K6VMDCF | L6VMDCC0-12.00K6VMDCDccF%now |
+  Then we reply "forbidden" with JSON values:
+  | error  |*1
+  | locked |
+  And count "txs" is 0
+
+Scenario: A manager's proof made with another card does not let it pay
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending | manager | managerProof                 |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC0-12.00K6VMDCDccD%now | 1       | 0       | K6VMDCB | L6VMDCC0-12.00K6VMDCDccD%now |
+  Then we reply "forbidden" with JSON values:
+  | error  |*1
+  | locked |
+
+Scenario: A cash register acts only for its company
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId | otherId | description | created | proof                      | offline | pending |*
+  | %token | 12     | K6VMDCA | K6VMDCD | stuff       | %now    | K6VMDCA12.00K6VMDCDccD%now | 0       | 0       |
+  Then we reply "forbidden" with JSON values:
+  | error     |*1
+  | bad-actor |
+  And count "txs" is 0
