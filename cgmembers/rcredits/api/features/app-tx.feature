@@ -11,6 +11,7 @@ Setup:
   | .ZPA | Abe One  | +20001 | a@    | ccA | ccA2 | ok     | Aa1  | Aton | AL    | 1000    | 0         |
   | .ZPB | Bea Two  | +20002 | b@    | ccB |      | ok     |      | Bton | MA    | 1000    | %now0-2w  |
   | .ZPC | Coco Co  | +20003 | c@    | ccC |      | ok,co  |      | Cton | CA    | 1000    | 0         |
+  | .ZPE | Eli Five | +20005 | e@    | ccE |      | ok,admin | Ee5 | Eton | NY  | 1000    | 0         |
   And these "u_company":
   | uid  | selling |*
   | .ZPC | stuff   |
@@ -19,6 +20,7 @@ Setup:
   | .ZPC | .ZPA  |   1 | manage     |
   And member ".ZPA" has a token from server "%STAGE" kept as var "tokA"
   And member ".ZPB" has a token from server "%STAGE" kept as var "tokB"
+  And member ".ZPE" has a token from server "%STAGE" kept as var "tokE"
 
 # Rule: The token stands in for the device id: the same transaction, with the same proof, goes through.
 
@@ -83,6 +85,17 @@ Scenario: A token acting as a company with no agent named is refused
   Then we reply "forbidden" with JSON values:
   | error     |*1
   | bad-actor |
+
+Scenario: An admin acts for a company they have no relation with, which names no agent
+  When cgpay posts "tx" with:
+  | token | amount | actorId | otherId | description | created | proof                       | offline | pending |*
+  | %tokE | 123    | K6VMDCC | K6VMDCB | stuff       | %now    | K6VMDCC123.00K6VMDCBccB%now | 0       | 0       |
+  Then we reply "ok" with JSON:
+  | ok   | message                   |*
+  | true | You charged Bea Two $123. |
+  And these "txs":
+  | actorId | uid1 | uid2 | amt | for2  | created |*
+  | .ZPC    | .ZPB | .ZPC | 123 | stuff | %now    |
 
 Scenario: A token acting as another member's own account is refused
   When cgpay posts "tx" with:
