@@ -119,7 +119,7 @@ function balances($list) {return t\balances($list);}
  *     BOTH apptx TheAppUndoesAChargeItSent
  *     TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
- *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  *     MAKE appregister Setup
  *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
  *     TEST appregister ALockedTokenCannotUnlockItself
@@ -460,7 +460,7 @@ function testOpWith($op, $args) {
  *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
- *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
  *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
@@ -684,7 +684,7 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE apptx ATransactionWithAWrongProofIsRefused
  *     MAKE apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     MAKE apptx TheAppSendsAChargeToAClosedAccountWhileOnline
- *     MAKE apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     MAKE apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
  *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
@@ -1019,6 +1019,6 @@ function replyListIs($field, $want) {
  *
  * in: TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
- *     TEST apptx TheAppSendsAnOfflineChargeTheTokensMemberMayNotMake
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}

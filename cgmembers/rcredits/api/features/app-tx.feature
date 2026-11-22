@@ -99,16 +99,16 @@ Scenario: The app sends a charge to a closed account while online
   | false | That account is not active. |
   And count "tx_bads" is 0
 
-Scenario: The app sends an offline charge the token's member may not make
+Scenario: The app sends an offline payment the token's member may not make
   When cgpay posts "tx" with:
-  | token | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
-  | %tokB | 123    | L6VMDCC0 | K6VMDCF | stuff       | %now    | L6VMDCC0123.00K6VMDCFccF%now | 1       | 0       |
+  | token | amount | actorId  | otherId | description | created | proof                         | offline | pending |*
+  | %tokB | -123   | L6VMDCC0 | K6VMDCF | stuff       | %now    | L6VMDCC0-123.00K6VMDCF%now    | 1       | 0       |
   Then we reply "forbidden" with JSON values:
   | error     |*1
   | bad-actor |
   And these "tx_bads":
   | deviceId | actorId  | otherId | amount | created | offline | problem                           |*
-  | token    | L6VMDCC0 | K6VMDCF | 123    | %now    | 1       | You may not act for that account. |
+  | token    | L6VMDCC0 | K6VMDCF | -123   | %now    | 1       | You may not act for that account. |
   And we message "bad forced tx|You may not act for that account." to member ".ZPB" with subs:
   | name    | account | amount | created | by |*
   | Flo Six | NEWZPF  | $123   | %mdY    |    |

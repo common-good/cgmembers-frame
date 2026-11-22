@@ -598,7 +598,7 @@ function keepBadTx($a, $info, $msg) {
   extract(just('offline amount created', $info, NULL));
   db\insert('tx_bads', just('version deviceId actorId otherId amount description created proof', $info) + ['offline' => (int) $offline, 'problem' => $msg]);
   $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
-  $dpy = ray('name account amount created by', $a ? $a->fullName : t('UNKNOWN'), $a ? $a->mainQid : '', u\fmtAmt($amount), fmtDt($created), $by);
+  $dpy = ray('name account amount created by', $a ? $a->fullName : t('UNKNOWN'), $a ? $a->mainQid : '', u\fmtAmt(abs($amount)), fmtDt($created), $by); // a payment's amount is negative
   if ($offline) $mya->tell("bad forced tx|$msg", $dpy);
   r\tellAdmin("bad forced tx|$msg", $info + $dpy);
 }
