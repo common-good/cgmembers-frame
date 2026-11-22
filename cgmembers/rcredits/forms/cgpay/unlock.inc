@@ -13,6 +13,7 @@ require_once __DIR__ . '/token.inc';
  *   body: {token, password, ip} or {token, qr, ip}
  *   200 {ok: 1} (plus, for a locked token, what /cgpay/device replies while it is unlocked, and unlockedBy: the uid of the manager whose card it was)
  *   401 {error: bad-token | bad-login | bad-card}; 403 {error: not-manager | not-locked}; 406 {error: wrong-kind}; 429 {error: flooding}
+ * Another manager's card opens only the company (see appOnly()); the token's member's password or own card opens everything.
  * Failures count against the member (password) or the address (card), like failed sign-ins. A locked token stays unlocked while it is used, until APP_UNLOCK_SECS pass without use or the app locks it again.
  */
 function cgpayUnlock() {
@@ -37,6 +38,6 @@ function cgpayUnlock() {
     if (!appManages($by = $a->agentId, $row->lockedTo)) return appErr('not-manager', X_FORBIDDEN);
   }
   if (!$row->lockedTo) return exitJson(['ok' => 1], X_OK);
-  db\update('app_tokens', ['id' => $row->id, 'unlockedUntil' => $row->unlockedUntil = now() + APP_UNLOCK_SECS]);
+  db\update('app_tokens', ['id' => $row->id, 'unlockedUntil' => $row->unlockedUntil = now() + APP_UNLOCK_SECS, 'unlockedBy' => $row->unlockedBy = $by]);
   return exitJson(['ok' => 1, 'unlockedBy' => (int) $by] + appMember($row->uid, $row), X_OK);
 }

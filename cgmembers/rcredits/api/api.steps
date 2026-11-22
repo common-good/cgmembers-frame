@@ -445,6 +445,10 @@ function testOpWith($op, $args) {
  *     TEST appregister ALockedTokenCannotFetchAnotherAccount
  *     TEST appregister ALockedTokenCannotUnlockItself
  *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     TEST appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     TEST appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     TEST appregister TheTokenOwnersOwnCardUnlocksEverything
  *     TEST appregister ACompanyCardOfAManagerUnlocksTheCashRegister
  *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
  *     TEST appregister ATestCardDoesNotUnlockARealCashRegister
@@ -641,6 +645,10 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appregister ALockedTokenCannotFetchAnotherAccount
  *     MAKE appregister ALockedTokenCannotUnlockItself
  *     MAKE appregister AnotherManagersCardUnlocksTheCashRegister
+ *     MAKE appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     MAKE appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     MAKE appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     MAKE appregister TheTokenOwnersOwnCardUnlocksEverything
  *     MAKE appregister ACompanyCardOfAManagerUnlocksTheCashRegister
  *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
  *     MAKE appregister ATestCardDoesNotUnlockARealCashRegister
@@ -799,6 +807,10 @@ function thisServerIsDemo() {
  *     MAKE appcard ATestCardIsRefusedAnywhereButDemo
  *     MAKE appcard ARealCardIsRefusedOnDemo
  *     MAKE appregister AnotherManagersCardUnlocksTheCashRegister
+ *     MAKE appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     MAKE appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     MAKE appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     MAKE appregister TheTokenOwnersOwnCardUnlocksEverything
  *     MAKE appregister ACompanyCardOfAManagerUnlocksTheCashRegister
  *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
  *     MAKE appregister ATestCardDoesNotUnlockARealCashRegister
@@ -925,6 +937,7 @@ function theTimeNowIs($tm) {return t\timeIs($tm);}
  *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
  *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentials
  *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister TheTokenOwnersOwnCardUnlocksEverything
  */
 function replyListIs($field, $want) {
   global $testOnly; if (!$testOnly) return FALSE;

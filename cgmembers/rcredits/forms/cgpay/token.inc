@@ -109,22 +109,29 @@ function appIssue($uid, $label, $deviceKey, $trust, $actFor = NULL) {
 
 /**
  * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), the accounts they may act for
- * (companies only if they manage them), and lockedTo (the company a locked token works for, or 0). A locked token gets just that company.
+ * (companies only if they manage them), and lockedTo (the company a locked token works for, or 0). A locked token gets just that company (see appOnly()).
  */
 function appMember($uid, $row = NULL) {
   $accounts = [];
-  if ($locked = appLocked($row)) {
-    if ($one = appAccount($locked, $uid)) $accounts[] = $one;
+  $locked = appLocked($row);
+  if ($only = appOnly($row)) {
+    if ($one = appAccount($only, $uid)) $accounts[] = $one;
   } else foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) {
     if ((!r\acct($id)->co or appManages($uid, $id)) and $one = appAccount($id, $uid, $name)) $accounts[] = $one;
   }
-  return ['uid' => (int) $uid, 'admin' => !$locked && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
+  return ['uid' => (int) $uid, 'admin' => !$only && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
 }
 
 /**
  * Return the company the token is locked to, if it is locked now (not within a manager's unlock), else 0.
  */
 function appLocked($row) {return ($row and $row->lockedTo and (int) $row->unlockedUntil < now()) ? (int) $row->lockedTo : 0;}
+
+/**
+ * Return the one account the token reaches, or 0 if not limited to one: a locked token reaches only its company, and so does one unlocked by
+ * another manager than the token's member (only the member's own password or card opens the member's other accounts).
+ */
+function appOnly($row) {return ($row and $row->lockedTo and (appLocked($row) or $row->unlockedBy != $row->uid)) ? (int) $row->lockedTo : 0;}
 
 /**
  * Return whether the member manages the company (the "manage" permission, or an admin's equivalent): only a manager may make the app the company's cash register.

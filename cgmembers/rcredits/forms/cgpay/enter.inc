@@ -17,6 +17,7 @@ function cgpayEnter() {
   $to = trim((string) nni($in, 'to')) ?: 'dashboard';
   $to = preg_match('~^[a-z0-9/_?&=.%-]*$~i', $to) && !preg_match('~^(/|%2f){2}~i', $to) ? ltrim($to, '/') : 'dashboard'; // a path on the live site, never another site (not even protocol-relative)
   if (!$a = r\acct(nni($in, 'account') ?: $row->uid) or !appMayAct($row->uid, $account = $a->id)) return appErr('not-allowed', X_FORBIDDEN);
+  if (($only = appOnly($row)) and $account != $only) return appErr('locked', X_FORBIDDEN);
   $code = bin2hex(random_bytes(16));
   db\insert('app_codes', ['uid' => $row->uid, 'account' => $account, 'codeHash' => appHash($code), 'dest' => $to, 'expires' => now() + APP_CODE_SECS]);
   return exitJson(['code' => $code, 'to' => $to], X_OK);

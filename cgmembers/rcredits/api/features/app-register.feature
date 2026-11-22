@@ -136,6 +136,7 @@ Scenario: A locked token cannot unlock itself
   | .ZPA | .ZPC     |
 
 # Rule: A manager's card, or the token owner's password, unlocks the token until it goes unused for two minutes.
+# Another manager's card opens only the company; the token owner's password or own card opens everything.
 
 Scenario: Another manager's card unlocks the cash register
   Given cgpay posts "lock" with:
@@ -147,14 +148,74 @@ Scenario: Another manager's card unlocks the cash register
   | %token | %card |
   Then we reply "ok" with JSON values:
   | ok | unlockedBy | uid  | lockedTo |*1
-  | 1  | .ZPB | .ZPA | 0      |
+  | 1  | .ZPB       | .ZPA | 0        |
+  And reply list "accounts" is:
+  | uid  |*
+  | .ZPC |
+  And these "app_tokens":
+  | uid  | lockedTo | unlockedUntil | unlockedBy |*
+  | .ZPA | .ZPC     | %now+2n       | .ZPB       |
+
+Scenario: Another manager's unlock opens the company's live page
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And var "card" is the "real" card of ".ZPB"
+  And cgpay posts "unlock" with:
+  | token  | qr    |*
+  | %token | %card |
+  When cgpay posts "enter" with:
+  | account | token  |*
+  | .ZPC    | %token |
+  Then we reply "ok" with JSON values:
+  | to        |*1
+  | dashboard |
+
+Scenario: Another manager's unlock opens none of the token owner's other accounts
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And var "card" is the "real" card of ".ZPB"
+  And cgpay posts "unlock" with:
+  | token  | qr    |*
+  | %token | %card |
+  When cgpay posts "enter" with:
+  | account | token  |*
+  | .ZPA    | %token |
+  Then we reply "forbidden" with JSON values:
+  | error  |*1
+  | locked |
+
+Scenario: Another manager's unlock cannot let the cash register go
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And var "card" is the "real" card of ".ZPB"
+  And cgpay posts "unlock" with:
+  | token  | qr    |*
+  | %token | %card |
+  When cgpay posts "lock" with:
+  | token  | account |*
+  | %token | 0       |
+  Then we reply "forbidden" with JSON values:
+  | error  |*1
+  | locked |
+
+Scenario: The token owner's own card unlocks everything
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And var "card" is the "real" card of ".ZPA"
+  When cgpay posts "unlock" with:
+  | token  | qr    |*
+  | %token | %card |
+  Then we reply "ok" with JSON values:
+  | ok | unlockedBy | lockedTo |*1
+  | 1  | .ZPA       | 0        |
   And reply list "accounts" is:
   | uid  |*
   | .ZPA |
   | .ZPC |
-  And these "app_tokens":
-  | uid  | lockedTo | unlockedUntil |*
-  | .ZPA | .ZPC     | %now+2n       |
 
 Scenario: A company card of a manager unlocks the cash register
   Given cgpay posts "lock" with:
