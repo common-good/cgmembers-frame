@@ -268,6 +268,9 @@ function menu($submenu = '') {
     'cgpay/enter' => ['call', 'CGPay Enter', '', ANY, 'cgpayEnter'], // server-to-server: store app token -> one-time code for opening a live page
     'cgpay/redeem' => ['call', 'CGPay Redeem', '', ANY, 'cgpayRedeem'], // server-to-server: one-time code -> uid and page (single use)
     'cgpay/revoke' => ['call', 'CGPay Revoke', '', ANY, 'cgpayRevoke'], // server-to-server: store app sign-out (one device or everywhere)
+    'cgpay/identity' => ['call', 'CGPay Identity', '', ANY, 'cgpayIdentity'], // server-to-server: store app token -> the scanned account's name, location and limit
+    'cgpay/photo' => ['call', 'CGPay Photo', '', ANY, 'cgpayPhoto'], // server-to-server: store app token -> the scanned account's photo
+    'cgpay/tx' => ['call', 'CGPay Tx', '', ANY, 'cgpayTx'], // server-to-server: store app token -> a transaction (or its undo), as /api/transactions
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );

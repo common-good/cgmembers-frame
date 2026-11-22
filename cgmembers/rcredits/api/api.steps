@@ -60,6 +60,7 @@ function extraSetup() {
  *     MAKE identity Setup
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
+ *     MAKE apptx Setup
  */
 function members($list) {return t\members($list);}
 
@@ -111,6 +112,10 @@ function balances($list) {return t\balances($list);}
  *     MAKE identity Setup
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
+ *     MAKE apptx Setup
+ *     TEST apptx TheAppChargesACustomerForACompany
+ *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     BOTH apptx TheAppUndoesAChargeItSent
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -226,6 +231,10 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST identity TheAppAsksToIdentifyACustomer
  *     TEST identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
+ *     TEST apptx TheAppChargesACustomerForACompany
+ *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     TEST apptx TheAppUndoesAChargeItSent
+ *     TEST apptx TheAppIdentifiesACustomer
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -291,6 +300,7 @@ function varIsEncrypted($var, $want) {return varIs($var, u\b64encode(u\cryPP($wa
  *     TEST identity TheAppAsksToIdentifyACustomerWithAnIdForANonexistentAccount
  *     TEST identity TheAppAsksToIdentifyACustomerWithAReallyBadId
  *     TEST identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
  */
 function weReplyWith($wantStatus, $want, $json = FALSE) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -307,6 +317,7 @@ function weReplyWith($wantStatus, $want, $json = FALSE) {
  * member (ARG) has photo (ARG)
  *
  * in: MAKE idphoto TheAppAsksToShowACustomerIDPhoto
+ *     MAKE apptx TheAppShowsACustomersPhoto
  */
 function memberHasPhoto($id, $photo) {return t\hasPic($id, $photo);}
 
@@ -430,6 +441,13 @@ function testOpWith($op, $args) {
  *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
+ *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     TEST apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     TEST apptx AMadeupTokenIsRefused
+ *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     TEST apptx TheAppShowsACustomersPhoto
+ *     TEST apptx TheAppAsksForAPhotoWithoutTheCardsCode
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -473,6 +491,8 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appdemo UnusedDemoAccountsArePurged
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -605,6 +625,18 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appdemo ADemoAccountIsMarkedForThePurge
  *     MAKE appdemo AnAddressThatMadeDemoAccountsThisHourGetsNoMore
  *     MAKE appdemo AfterDemoAccountsInADayNobodyGetsAnother
+ *     MAKE apptx TheAppChargesACustomerForACompany
+ *     MAKE apptx TheAppPaysACustomerFromTheMembersOwnAccount
+ *     MAKE apptx TheAppUndoesAChargeItSent
+ *     MAKE apptx ATransactionWithAWrongProofIsRefused
+ *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
+ *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
+ *     MAKE apptx ATokenActingAsAnotherMembersOwnAccountIsRefused
+ *     MAKE apptx AMadeupTokenIsRefused
+ *     MAKE apptx TheAppIdentifiesACustomer
+ *     MAKE apptx TheAppIdentifiesACustomerForAnotherMembersAccount
+ *     MAKE apptx TheAppShowsACustomersPhoto
+ *     MAKE apptx TheAppAsksForAPhotoWithoutTheCardsCode
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -773,6 +805,7 @@ function replyStartsWithThisServersTag($field) {
  * member (ARG) has a token from server (ARG) kept as var (ARG)
  *
  * in: MAKE appcard ATokenFromAnotherServerIsRefused
+ *     MAKE apptx Setup
  */
 function memberHasATokenFromServerKeptAsVar($who, $env, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
