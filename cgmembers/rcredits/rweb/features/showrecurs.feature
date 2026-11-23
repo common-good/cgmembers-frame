@@ -46,6 +46,16 @@ Scenario: A member looks at their Recurring Payments
   | [R] | Bea Two    | 43.00  | zipy      | Weekly     | %mdY-13m |          | %mdY-11m |         |
   | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          | [close] |
   
+Scenario: A member looks at a paused card donation in their Recurring Payments
+  Given these "tx_timed":
+  | id    | action | from         | to   | amount | purpose | period | start   | end | payerType   | payer | stripeId | failed  |*
+  | 99907 | pay    | %MATCH_PAYER | .ZZA | 12.00  | gift    | month  | %now-3d |     | %REF_PERSON | 123   | seti7    | %now-1d |
+  When member ".ZZA" visits page "history/recurring"
+  Then we show "Automated Payments" with:
+  |~Way | Who        | Amount | Purpose   | How often? | Starting | Next     | Ending   |~Close   |
+  | [L] | Ned Nine   | 99.87  | donation  | Weekly     | %mdY-2d  | %mdY+5d  |          | [close] |
+  | [L] | Ned Nine   | 12.00  | gift      | Monthly    | %mdY-3d  | Paused   |          | [close] |
+
 Scenario: A non-admin looks at their Recurring Payments
   Given members have:
   | uid  | flags      |*

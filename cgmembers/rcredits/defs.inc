@@ -479,6 +479,7 @@ const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // de
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 
 const CC_PCT = 3; // percentage of transaction amount to charge for credit card processing (PayPal was 1.99%)
+const CARD_LINK_DAYS = 25; // how long a link to update a non-member donor's card works (a paused card donation ends then too)
 const CC_PLUS = 30; // plus this many cents for credit card processing (PayPal was 49 cents)
 const WIRE_FEE = 15; // what our bank charges for incoming wire transfers
 define('METHOD_OPTS', t('email phone text')); // contact method options

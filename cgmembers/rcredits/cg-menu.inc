@@ -259,6 +259,7 @@ function menu($submenu = '') {
     'cgpay/signup' => ['call', 'CGPay Signup', '', ANY, 'cgpaySignup'], // server-to-server: SvelteKit cgpay signup flow -- create unverified account + email verification code
     'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
+    'update-card' => ['call', t('Update Card'), 'UpdateCard 1', ANY], // non-member donor replaces the card for recurring donations (link from cardLink())
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
 
