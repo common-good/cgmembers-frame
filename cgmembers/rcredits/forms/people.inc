@@ -34,8 +34,10 @@ function formPeople($form, &$sta, $args = '') {
   $latitude = numFld(t('Latitude:'), '', dft($latitude ?: 0) + $gpsExtra);
   $longitude = numFld(t('longitude:'), '', dft($longitude ?: 0) + $gpsExtra);
   $notes = areaFld(t('Notes:'), '', dft($notes));
-  $stripeCid = textFld(t('Stripe Cust ID:'), '', dft($stripeCid));
-  
+  include_once __DIR__ . '/updatecard.inc';
+  $cardBtn = (is_numeric($pid) and $stripeCid and cardRecurs($pid)) ? suffix(btn(cardLink($pid, $stripeCid), t('Copy card-update link'), 'default', 'sm', clas('btn-cardlink'))) : [];
+  $stripeCid = textFld(t('Stripe Cust ID:'), '', dft($stripeCid) + $cardBtn);
+
   $submit = submit();
   $orig = hidFlds($orig);
   $pid = hidFlds($pid);
@@ -44,6 +46,7 @@ function formPeople($form, &$sta, $args = '') {
   $form = compact(ray('title ' . PEOPLE_FLDS . ' submit orig'));
         
   jsx('contact');
+  jsx('people', ray('days', CARD_LINK_DAYS));
 
   return cgform($form);
 }

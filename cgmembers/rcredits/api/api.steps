@@ -144,6 +144,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin SigningOutEverywhereEndsEveryDeviceAndItsTrust
@@ -433,6 +434,9 @@ function testOpWith($op, $args) {
  *     TEST appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
  *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin TooManyFailedSigninsBlockTheAccountInTheAppToo
+ *     TEST appsignin AnAddressWithTooManyFailedSigninsGetsTheSameAnswerForAnUnknownAccount
+ *     TEST appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin AnotherDeviceIsNotTrusted
  *     TEST appsignin TheAppAsksForItsDeviceCredentials
@@ -528,6 +532,8 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST appsignin AMemberWithMFAIsAskedForThePasscode
  *     TEST appsignin APasscodeHandleExpiresAfterTenMinutes
  *     TEST appsignin AWrongPasscodeGetsNoToken
+ *     TEST appsignin TooManyFailedSigninsBlockTheAccountInTheAppToo
+ *     TEST appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
  *     TEST appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     TEST appsignin ASignedoutTokenNoLongerWorks
  *     TEST appdemo AVisitorGetsAFreshDemoAccount
@@ -650,6 +656,9 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin TooManyFailedSigninsBlockTheAccountInTheAppToo
+ *     MAKE appsignin AnAddressWithTooManyFailedSigninsGetsTheSameAnswerForAnUnknownAccount
+ *     MAKE appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin TheAppAsksForItsDeviceCredentials
@@ -775,6 +784,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin APasscodeHandleSignsTheAppInOnlyOnce
  *     MAKE appsignin APasscodeHandleExpiresAfterTenMinutes
  *     MAKE appsignin AWrongPasscodeGetsNoToken
+ *     MAKE appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
  *     MAKE appsignin ATrustedDeviceSignsInWithoutAPasscode
  *     MAKE appsignin AnotherDeviceIsNotTrusted
  *     MAKE appsignin TheAppAsksForItsDeviceCredentials
@@ -1022,3 +1032,21 @@ function replyListIs($field, $want) {
  *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
+
+/**
+ * flood control is on
+ *
+ * in: MAKE appsignin TooManyFailedSigninsBlockTheAccountInTheAppToo
+ *     MAKE appsignin AnAddressWithTooManyFailedSigninsGetsTheSameAnswerForAnUnknownAccount
+ *     MAKE appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
+ */
+function floodControlIsOn() {return t\floodOn();}
+
+/**
+ * member (ARG) has (ARG) failed sign-ins
+ *
+ * in: MAKE appsignin TooManyFailedSigninsBlockTheAccountInTheAppToo
+ *     MAKE appsignin AnAddressWithTooManyFailedSigninsGetsTheSameAnswerForAnUnknownAccount
+ *     MAKE appsignin TooManyWrongPasscodesBlockTheSecondSigninStep
+ */
+function memberHasFailedSignins($id, $n) {return t\failedSignins($id, $n);}

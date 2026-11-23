@@ -199,6 +199,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE tx AMemberAskToPayAnotherMemberTooMuchRepeatedly
  *     MAKE tx AMemberPaysAnotherMemberLater
  *     MAKE tx AMemberPaysBackedByAnInactiveCreditLine
+ *     MAKE signin AMemberWhoseAccountHadTooManyFailedSigninsIsBlocked
+ *     MAKE signin AnAddressWithTooManyFailedSigninsIsBlockedEvenForAnUnknownAccount
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -498,6 +500,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST txdetail AnAdminChangesADepositedBankTransactionAmount
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
+ *     TEST signin AMemberWhoseAccountHadTooManyFailedSigninsIsBlocked
+ *     TEST signin AnAddressWithTooManyFailedSigninsIsBlockedEvenForAnUnknownAccount
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -2795,3 +2799,19 @@ function memberIsSignedIn($id) {return t\isSignedIn($id);}
  * in: TEST passwordstrength TheServerAppliesTheSameMinimumAsTheStrengthBar
  */
 function thesePasswordsMeetTheMemberMinimum($list) {return t\okPasswords($list);}
+
+/**
+ * flood control is on
+ *
+ * in: MAKE signin AMemberWhoseAccountHadTooManyFailedSigninsIsBlocked
+ *     MAKE signin AnAddressWithTooManyFailedSigninsIsBlockedEvenForAnUnknownAccount
+ */
+function floodControlIsOn() {return t\floodOn();}
+
+/**
+ * member (ARG) has (ARG) failed sign-ins
+ *
+ * in: MAKE signin AMemberWhoseAccountHadTooManyFailedSigninsIsBlocked
+ *     MAKE signin AnAddressWithTooManyFailedSigninsIsBlockedEvenForAnUnknownAccount
+ */
+function memberHasFailedSignins($id, $n) {return t\failedSignins($id, $n);}

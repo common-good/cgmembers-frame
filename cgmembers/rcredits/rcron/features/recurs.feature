@@ -148,8 +148,8 @@ Scenario: A second recurring payment can be completed from a non-member by card
   
 Scenario: A second recurring payment from a non-member by card fails
   Given these "people":
-  | pid | fullName | email |*
-  | 123 | Ned Nine | 9@    |
+  | pid | fullName | email | stripeCid |*
+  | 123 | Ned Nine | 9@    | cus123    |
   And next cc payment will fail
   And these "tx_timed":
   | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId |*
@@ -175,14 +175,49 @@ Scenario: A second recurring payment from a non-member by card fails
   | erMsg         | invalid card                         |
   | fullName      | Ned Nine                             |
   | howOften      | weekly                               |
-  | recurCanceled | All future recurrences are canceled. |
-  | giftLink      | ?                                    |
+  | paused        | Your donation is paused until you update your card. |
+  | retry         | ?                                    |
   | site          | %BASE_URL                            |
   | orgPhone      | %CGF_PHONE                           |
   | emailCoded    | %60%21PYylzG3tpygMrwwtrgw            |
   And these "tx_timed":
+  | id | end | failed |*
+  | 8  |     | %now   |
+
+Scenario: A paused recurring payment from a non-member by card is not charged
+  Given these "people":
+  | pid | fullName | email | stripeCid |*
+  | 123 | Ned Nine | 9@    | cus123    |
+  And these "tx_timed":
+  | id | action | start    | from         | to   | amount | period | purpose | payerType   | payer | stripeId | failed  |*
+  |  8 | pay    | %now0-8d | %MATCH_PAYER | .ZZC |     10 | week   | pmt     | %REF_PERSON | 123   | strId456 | %now-1d |
+  And these "txs":
+  | xid | created | amount | payer      | payee | purpose | flags  | recursId | type     |*
+  |   2 | %now-8d |     10 | %UID_OUTER | .ZZC  | pmt     |        |        8 | %E_OUTER |
+  And these "txs2":
+  | xid | created | completed | amount | payee | pid | bankAccount | isSavings |*
+  | 2   | %now-8d | %now-8d   | 10     | .ZZC  | 123 | %NUL        | %NUL      |
+  When cron runs "recurs"
+  Then count "txs2" is 1
+  And these "tx_timed":
+  | id | end | failed  |*
+  | 8  |     | %now-1d |
+
+Scenario: A paused recurring payment from a non-member by card ends when the card-update link expires
+  Given these "people":
+  | pid | fullName | email | stripeCid |*
+  | 123 | Ned Nine | 9@    | cus123    |
+  And these "tx_timed":
+  | id | action | start     | from         | to   | amount | period | purpose | payerType   | payer | stripeId | failed   |*
+  |  8 | pay    | %now0-40d | %MATCH_PAYER | .ZZC |     10 | week   | pmt     | %REF_PERSON | 123   | strId456 | %now-26d |
+  When cron runs "recurs"
+  Then these "tx_timed":
   | id | end  |*
   | 8  | %now |
+  And we tell admin "Ended paused card donations" with subs:
+  | count |*
+  | 1     |
+  And count "txs2" is 0
 
 Scenario: A recurring payment happened yesterday
   Given these "tx_timed":
