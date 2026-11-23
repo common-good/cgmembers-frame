@@ -127,6 +127,7 @@ Scenario: admin visits the Timed page
   | duration  | forever       |
   | durations | 1             |
   | stripeId  |               |
+  | failed    |               |
 
 Scenario: admin chooses a Timed record to edit
   When member ".ZZA" visits page "sadmin/timed/id=5"
@@ -151,6 +152,25 @@ Scenario: admin chooses a Timed record to edit
   | Periods:    | 1 |
   | Duration:   | |
   | Durations:  | 1 |
+  | Paused Since: ||
   | Submit      ||
   # we need to check what is checked here also, in the radio buttons
  
+
+Scenario: admin sees and clears a paused card donation
+  Given these "people":
+  | pid | fullName | stripeCid |*
+  | 1   | Zee Zot  | cus1      |
+  And these "tx_timed":
+  | id | action | from         | to   | amount | purpose  | payerType   | payer | payeeType    | period | periods | duration | durations | start    | end  | stripeId | failed  |*
+  | 6  | pay    | %MATCH_PAYER | .ZZC | 10     | donation | %REF_PERSON | 1     | %REF_ANYBODY | month  | 1       | once     | 1         | %now-3m  | %NUL | seti6    | %now-2d |
+  When member ".ZZA" visits page "sadmin/timed/id=6"
+  Then we show "Tx Timed" with:
+  | Paused Since: | %mdY-2d |
+
+  When member ".ZZA" completes form "sadmin/timed/id=6" with values:
+  | failed |*
+  |        |
+  Then these "tx_timed":
+  | id | failed | stripeId |*
+  | 6  | %NUL   | seti6    |
