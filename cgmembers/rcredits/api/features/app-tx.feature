@@ -12,6 +12,7 @@ Setup:
   | .ZPB | Bea Two  | +20002 | b@    | ccB |      | ok       |      | Bton | MA    | 1000    | %now0-2w  |
   | .ZPC | Coco Co  | +20003 | c@    | ccC |      | ok,co    |      | Cton | CA    | 1000    | 0         |
   | .ZPD | Dee Co   | +20004 | d@    | ccD |      | ok,co    |      | Dton | DE    | 1000    | 0         |
+  | .ZPF | Flo Six  | +20006 | f@    | ccF |      |          |      | Fton | FL    | 0       | 0         |
   And these "u_company":
   | uid  | selling |*
   | .ZPC | stuff   |
@@ -65,6 +66,52 @@ Scenario: A transaction with a wrong proof is refused
   | %tokA | 123    | L6VMDCC0 | K6VMDCB | stuff       | %now    | L6VMDCC0123.00K6VMDCBccX%now | 1       | 0       |
   Then we reply "syntax" with: "bad proof"
   And count "txs" is 0
+  And these "tx_bads":
+  | deviceId | actorId  | otherId | amount | created | offline | problem   |*
+  | token    | L6VMDCC0 | K6VMDCB | 123    | %now    | 1       | bad proof |
+  And we message "bad forced tx|bad proof" to member ".ZPC" with subs:
+  | name    | account | amount | created | by                  |*
+  | Bea Two | NEWZPB  | $123   | %mdY    | %(" (agent Abe One)") |
+
+# Rule: A transaction taken offline that the server refuses is kept there, and the company is told, so the money can still be collected.
+
+Scenario: The app sends an offline charge to an account closed since
+  When cgpay posts "tx" with:
+  | token | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
+  | %tokA | 123    | L6VMDCC0 | K6VMDCF | stuff       | %now    | L6VMDCC0123.00K6VMDCFccF%now | 1       | 0       |
+  Then we reply "ok" with JSON:
+  | ok    | message                     |*
+  | false | That account is not active. |
+  And count "txs" is 0
+  And these "tx_bads":
+  | deviceId | actorId  | otherId | amount | created | offline | problem                     |*
+  | token    | L6VMDCC0 | K6VMDCF | 123    | %now    | 1       | That account is not active. |
+  And we message "bad forced tx|That account is not active." to member ".ZPC" with subs:
+  | name    | account | amount | created | by                    |*
+  | Flo Six | NEWZPF  | $123   | %mdY    | %(" (agent Abe One)") |
+
+Scenario: The app sends a charge to a closed account while online
+  When cgpay posts "tx" with:
+  | token | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
+  | %tokA | 123    | L6VMDCC0 | K6VMDCF | stuff       | %now    | L6VMDCC0123.00K6VMDCFccF%now | 0       | 0       |
+  Then we reply "ok" with JSON:
+  | ok    | message                     |*
+  | false | That account is not active. |
+  And count "tx_bads" is 0
+
+Scenario: The app sends an offline payment the token's member may not make
+  When cgpay posts "tx" with:
+  | token | amount | actorId  | otherId | description | created | proof                         | offline | pending |*
+  | %tokB | -123   | L6VMDCC0 | K6VMDCF | stuff       | %now    | L6VMDCC0-123.00K6VMDCF%now    | 1       | 0       |
+  Then we reply "forbidden" with JSON values:
+  | error     |*1
+  | bad-actor |
+  And these "tx_bads":
+  | deviceId | actorId  | otherId | amount | created | offline | problem                           |*
+  | token    | L6VMDCC0 | K6VMDCF | -123   | %now    | 1       | You may not act for that account. |
+  And we message "bad forced tx|You may not act for that account." to member ".ZPB" with subs:
+  | name    | account | amount | created | by |*
+  | Flo Six | NEWZPF  | $123   | %mdY    |    |
 
 # Rule: The token's member must be the one acting, for an account they may act for.
 
@@ -76,6 +123,7 @@ Scenario: A token acting as another member's agent is refused
   | error     |*1
   | bad-actor |
   And count "txs" is 0
+  And count "tx_bads" is 0
 
 Scenario: A token acting as a company with no agent named is refused
   When cgpay posts "tx" with:

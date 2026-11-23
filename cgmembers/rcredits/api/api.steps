@@ -116,6 +116,9 @@ function balances($list) {return t\balances($list);}
  *     TEST apptx TheAppChargesACustomerForACompany
  *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
  *     BOTH apptx TheAppUndoesAChargeItSent
+ *     TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -235,6 +238,8 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST apptx TheAppChargesACustomerForACompany
  *     TEST apptx TheAppPaysACustomerFromTheMembersOwnAccount
  *     TEST apptx TheAppUndoesAChargeItSent
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx TheAppIdentifiesACustomer
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
@@ -445,6 +450,7 @@ function testOpWith($op, $args) {
  *     TEST appdemo AfterDemoAccountsInADayNobodyGetsAnother
  *     TEST test TheAppAsksUsForTransactionData
  *     TEST test TheAppAsksUsForTheStoreAppsSigninTokens
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
  *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
@@ -499,6 +505,8 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST test TheAppAsksToInitializeTheTestData
  *     TEST test TheAppAsksToInitializeTheTestDataWhenThereArePreviousTransactions
  *     TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
  */
@@ -640,6 +648,9 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE apptx TheAppPaysACustomerFromTheMembersOwnAccount
  *     MAKE apptx TheAppUndoesAChargeItSent
  *     MAKE apptx ATransactionWithAWrongProofIsRefused
+ *     MAKE apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     MAKE apptx TheAppSendsAChargeToAClosedAccountWhileOnline
+ *     MAKE apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
  *     MAKE apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     MAKE apptx ATokenActingAsACompanyWithNoAgentNamedIsRefused
  *     MAKE apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
@@ -907,6 +918,15 @@ function memberOnetimePasswordIs($id, $pass) {
  *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
  */
 function theTimeNowIs($tm) {return t\timeIs($tm);}
+
+/**
+ * we message (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST apptx ATransactionWithAWrongProofIsRefused
+ *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
+ *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
+ */
+function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 
 /**
  * flood control is on
