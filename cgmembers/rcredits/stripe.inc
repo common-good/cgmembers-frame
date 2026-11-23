@@ -56,6 +56,19 @@ function setup($args) {
 }
 
 /**
+ * Retrieve a SetupIntent (to confirm that the browser completed it)
+ * @return the setupIntent object OR an error message
+ */
+function getSetup($args) {
+  extract(just('stripeId stripeCid', $args, NULL));
+  if (test()) return obj('id customer status', $stripeId, $stripeCid, 'succeeded');
+
+  try {
+    return str\SetupIntent::retrieve($stripeId);
+  } catch (Exception $e) { return $e->getMessage(); }
+}
+
+/**
  * Create a PaymentIntent to charge the saved payment method
  * @return: the PaymentIntent object OR an error message
  */

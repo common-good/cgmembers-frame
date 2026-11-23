@@ -12,10 +12,10 @@ use CG\Db as db;
  */
  
 const BOTH_FLDS = 'id payer payerType payee payeeType from to action amount portion purpose minimum useMax amtMax start end';
-const TIMED_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId';
+const TIMED_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId failed';
 const RULE_FLDS = BOTH_FLDS . ' template code';
-const EITHER_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId template code tnm flds';
-const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code stripeId';
+const EITHER_FLDS = BOTH_FLDS . ' flags period periods duration durations stripeId failed template code tnm flds';
+const NULL_FLDS = 'payer payee from to purpose useMax amtMax end template code stripeId failed';
 const ZERO_FLDS = 'amount portion minimum start flags';
 
 function formRules($form, &$sta, $type = '', $args = '') {
@@ -56,7 +56,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
   if ($rules) {
     $code = textFld(t('Code:'), '', dft($code));
     $template = textFld(t('Template:'), '', dft($template));
-    $flags = $periods = $period = $durations = $duration = $stripeId = NULL;
+    $flags = $periods = $period = $durations = $duration = $stripeId = $failed = NULL;
   } else {
     $flags = intFld(t('Flags:'), '', dft($flags));
     $periods = intFld(t('Periods:'), '', dft($periods ?: 1));
@@ -64,6 +64,7 @@ function formRules($form, &$sta, $type = '', $args = '') {
     $durations = intFld(t('Durations:'), '', dft($durations ?: 1));
     $duration = selectFld(t('Duration:'), '', dft($duration), r\recurRay(TRUE, PERIODS));
     $stripeId = textFld(t('Stripe ID:'), '', dft($stripeId));
+    $failed = dateFld(t('Paused Since:'), [t('empty unless a card charge failed')], dft($failed)); // clear it to resume charging
     $code = $template = NULL;
   }
   
@@ -90,7 +91,7 @@ function formRules_validate($form, &$sta) {
   foreach (ray('payerType payeeType') as $k) $$k = ray(REF_LIST)[$$k];
   $action = ray(ACT_LIST)[$action];
   
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k)) return say($err, $k);
+  foreach (ray('start end failed') as $k) if (nn($$k) and $err = u\badDate($$k)) return say($err, $k);
   if (!$start) $start = now();
 
   foreach (ray('amount portion minimum useMax amtMax') as $k) if ($$k and $err = u\badAmount($$k, '>=0', $k == 'useMax' ? 0 : 2)) return say("$err ($k)", $k);

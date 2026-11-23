@@ -267,6 +267,7 @@ function menu($submenu = '') {
     'cgpay/redeem' => ['call', 'CGPay Redeem', '', ANY, 'cgpayRedeem'], // server-to-server: one-time code -> uid and page (single use)
     'cgpay/revoke' => ['call', 'CGPay Revoke', '', ANY, 'cgpayRevoke'], // server-to-server: store app sign-out (one device or everywhere)
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
+    'update-card' => ['call', t('Update Card'), 'UpdateCard 1', ANY], // non-member donor replaces the card for recurring donations (link from cardLink())
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
 
