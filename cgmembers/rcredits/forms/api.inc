@@ -81,6 +81,7 @@ function accounts($params) {
      $a = r\acct($myid);
   } else {
     if (strlen($identifier) == 1) $identifier = 'newzp' . $identifier;
+    if (w\ipFlooding($sta, $err)) return exitJson($err, X_TOOMANY);
     if (!$myid = r\loginString($identifier)) return exitJust(X_NOTFOUND);
     if (w\flooding($myid, $sta, $err)) return exitJson($err, X_TOOMANY);
 
@@ -432,7 +433,7 @@ function resetTestAccts($uidMin, $uidMax) {
   $in = "BETWEEN $uidMin AND $uidMax";
   $ours = "uid $in OR uid=" . DEMO_CTTY; // the accounts and the community account they belong to
   $own = ['users' => $ours, 'u_photo' => $ours, 'u_company' => $ours, 'admins' => $ours, 'u_relations' => "main $in OR other $in"]; // what makeTestAccounts() makes
-  $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes']; // what scenarios add (all keyed by uid)
+  $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes', 'app_tokens', 'app_codes']; // what scenarios add (all keyed by uid)
   $db = db\q('SELECT DATABASE()')->fetchField();
   $f = sys_get_temp_dir() . '/cg-test-accts-' . md5(R_ROOT . $db) . '.ser';
   $v = md5(join(array_map(fn($k) => md5_file(R_ROOT . "/$k"), ray('admin/admin.inc classes/acct.class cg.inc'))) . serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
@@ -501,7 +502,7 @@ function testops($params) {
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'users' => "uid $uidCrit ORDER BY uid"];
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'app_tokens' => "uid $uidCrit ORDER BY id", 'users' => "uid $uidCrit ORDER BY uid"];
       if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
         $rows = db\rows('*', $table, $where);
@@ -511,6 +512,15 @@ function testops($params) {
         return exitJust(X_SYNTAX);
       }
       
+    case 'mfaOn': // turn multi-factor authentication on for a test account (initialize turns it off again)
+      if (!$uid = (int) nni($params, 'uid') or !db\exists('users', "uid=:uid AND uid $uidCrit", compact('uid'))) return exitJust(X_SYNTAX);
+      db\q('UPDATE users SET flags=flags | :bit WHERE uid=:uid', ['bit' => 1 << B_MFA, 'uid' => $uid]);
+      break;
+
+    case 'passcode': // the passcode that a store app sign-in handle (from /cgpay/signin) says was emailed
+      if (!$ray = u\decryRay(nni($params, 'handle')) or !$nonce = nni($ray, 'nonce')) return exitJust(X_SYNTAX);
+      return exitJson(compact('nonce'), X_OK);
+
     case 'update':
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);

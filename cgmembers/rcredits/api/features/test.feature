@@ -61,3 +61,19 @@ Scenario: The app asks us for transaction data
   | xid | uid1 | uid2 | amt | created |*
   | 1   | .ZPA | .ZPI | 12  | %now-1d |
   | 3   | .ZPI | .ZPA | 93  | %now-1d |
+
+Scenario: The app asks us for the store app's sign-in tokens
+  Given members:
+  | uid  | fullName | flags                                |*
+  | .ZPA | Abe One  | member,confirmed,ok,carded,ided,debt |
+  | .ZZA | Zeta1    | member,confirmed,ok,carded,ided,debt |
+  And these "app_tokens":
+  | uid  | tokenHash | label | trusted | created | lastUsed | expires  |*
+  | .ZPA | h1        | Pixel | 1       | %now-1d | %now-1d  | %now+30d |
+  | .ZZA | h2        | Other | 0       | %now-1d | %now-1d  | %now+30d |
+  When test op "rows" with:
+  | fieldList | table      |*
+  | *         | app_tokens |
+  Then we reply "ok" with JSON values:
+  | uid  | label | trusted |*
+  | .ZPA | Pixel | 1       |

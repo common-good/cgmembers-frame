@@ -1092,13 +1092,7 @@ define('MAX_IP_FAILS', 50);
 function flooding($uid, &$sta, &$err) {
   if (test()) return !$uid;
   $trigger = 'flood_control_triggered';
-  $window = HOUR_SECS; 
-  if (!\flood_is_allowed('failed_login_attempt_ip', MAX_IP_FAILS, $window)) {
-    $sta[$trigger] = 'ip';
-    $err = t('There have been too many failed sign-in attempts from your IP Address. Try again later.');
-    r\tellAdmin($err, ['ip' => $_SERVER['REMOTE_ADDR']]);
-    return TRUE;
-  }
+  if (ipFlooding($sta, $err)) return TRUE;
   
   $err = t('bad login', '_a', atag('/settings/password'));
   if (!$uid) return TRUE;
@@ -1113,6 +1107,18 @@ function flooding($uid, &$sta, &$err) {
   }
 
   return FALSE;
+}
+
+/**
+ * Say whether this IP address has failed to sign in too often. Check it before saying an account doesn't exist,
+ * so a blocked address gets the same answer for every identifier (otherwise "blocked" vs "bad login" tells it which accounts exist).
+ */
+function ipFlooding(&$sta, &$err) {
+  if (test() or \flood_is_allowed('failed_login_attempt_ip', MAX_IP_FAILS, HOUR_SECS)) return FALSE;
+  $sta['flood_control_triggered'] = 'ip';
+  $err = t('There have been too many failed sign-in attempts from your IP Address. Try again later.');
+  r\tellAdmin($err, ['ip' => $_SERVER['REMOTE_ADDR']]);
+  return TRUE;
 }
 
 function noFlood($sta) {\flood_clear_event('failed_login_attempt_user', nni($sta, 'flood_control_user_identifier')); return NULL;}
