@@ -44,6 +44,24 @@ Scenario: A member types an unknown username/ID
   | bogus | a1   |
   Then we say "error": "bad login"
 
+# Rule: Too many failed sign-ins block the account (from that address), and too many from one address block it for every account.
+
+Scenario: A member whose account had too many failed sign-ins is blocked
+  Given flood control is on
+  And member ".ZZA" has 10 failed sign-ins
+  When member "?" confirms form "signin" with values:
+  | qid  | pass |*
+  | .ZZA | a1   |
+  Then we say "error": "There have been too many failed sign-in attempts to your account (%MAX_PW_FAILS). Try again later."
+
+Scenario: An address with too many failed sign-ins is blocked even for an unknown account
+  Given flood control is on
+  And member "" has 50 failed sign-ins
+  When member "?" confirms form "signin" with values:
+  | qid   | pass |*
+  | bogus | a1   |
+  Then we say "error": "There have been too many failed sign-in attempts from your IP Address. Try again later."
+
 #.........................................................
 
 Scenario: A member asks for a new password for username

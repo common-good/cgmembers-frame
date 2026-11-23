@@ -145,6 +145,43 @@ Scenario: A wrong passcode gets no token
 
 # Rule: A device the member trusts skips the passcode next time, even after signing out.
 
+Scenario: Too many failed sign-ins block the account in the app too
+  Given flood control is on
+  And member ".ZPA" has 10 failed sign-ins
+  When cgpay posts "signin" with:
+  | identifier | password | label |*
+  | .ZPA       | Aa1      | Pixel |
+  Then we reply "toomany" with JSON values:
+  | error    |*1
+  | flooding |
+  And count "app_tokens" is 0
+
+Scenario: An address with too many failed sign-ins gets the same answer for an unknown account
+  Given flood control is on
+  And member "" has 50 failed sign-ins
+  When cgpay posts "signin" with:
+  | identifier | password | label |*
+  | nobody     | Zz9      | Pixel |
+  Then we reply "toomany" with JSON values:
+  | error    |*1
+  | flooding |
+
+Scenario: Too many wrong passcodes block the second sign-in step
+  Given flood control is on
+  And next random code is "12345678"
+  And cgpay posts "signin" with:
+  | identifier | password | label | deviceKey |*
+  | .ZPB       | Bb2      | Pixel | key2      |
+  And reply "mfa" is kept as var "mfa"
+  And member ".ZPB" has 10 failed sign-ins
+  When cgpay posts "mfa" with:
+  | mfa  | code     | trust |*
+  | %mfa | 12345678 | 0     |
+  Then we reply "toomany" with JSON values:
+  | error    |*1
+  | flooding |
+  And count "app_tokens" is 0
+
 Scenario: A trusted device signs in without a passcode
   Given next random code is "12345678"
   And cgpay posts "signin" with:
