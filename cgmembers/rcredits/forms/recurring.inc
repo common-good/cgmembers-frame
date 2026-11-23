@@ -35,7 +35,7 @@ function formRecurring($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT id as recId, IF(:myid=tm.from, tm.to, IF(tm.from=:MATCH_PAYER, tm.payer, tm.from)) AS fWho, tm.from=:myid AS paying, tm.payerType, 
-      tm.amount, tm.purpose AS fPurpose, tm.period, tm.periods, tm.start, tm.end,
+      tm.amount, tm.purpose AS fPurpose, tm.period, tm.periods, tm.start, tm.end, tm.failed,
       MAX(
         IF(tm.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
         i.created)
@@ -57,7 +57,7 @@ X;
     $fPeriod = ucfirst(r\recurDesc($period, $periods));
     $fCreated = fmtDt($start);
     $finished = ($end and $end < now());
-    $fNext = $finished ? '' : fmtDt(max($start, now(), u\dateIncr($maxStart, $periods, $period)));
+    $fNext = $finished ? '' : ($failed ? t('Paused') : fmtDt(max($start, now(), u\dateIncr($maxStart, $periods, $period))));
     $fEnd = $end ? fmtDt($end) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;
