@@ -43,7 +43,7 @@ function formUpdateCard_submit($form, &$sta) {
 
   require_once R_ROOT . '/stripe.inc';
   $intent = stripe('getSetup', ray('stripeId stripeCid', $setupId, $p->stripeCid));
-  if (!is_object($intent) or $intent->customer != $p->stripeCid or $intent->status != 'succeeded') {
+  if (!is_object($intent) or $intent->customer != $p->stripeCid or $intent->status != 'succeeded' or !is_object($pm = $intent->payment_method) or $pm->type != 'card') {
     r\tellAdmin(t('Card update failed'), ray('pid setupId erMsg', $p->pid, $setupId, is_object($intent) ? $intent->status : $intent));
     return softErr(t('Your new card could not be saved. Please try again.'));
   }

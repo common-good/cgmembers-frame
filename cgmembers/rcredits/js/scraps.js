@@ -255,15 +255,14 @@ function doit(what, vs) {
     window.addEventListener('load', () => { // stripe.js loads after this script
       const ucStripe = Stripe(vs['stripePublicKey']);
       const ucSecret = $('#edit-secret').val();
-      const ucElements = ucStripe.elements({ clientSecret:ucSecret });
-      const ucCard = ucElements.create('payment');
+      const ucCard = ucStripe.elements().create('card'); // card only (the payment element also offers bank payments)
       const ucErr = $('#edit-paymentErr .control-data');
       const ucForm = $('#edit-payment').closest('form')[0];
       ucCard.mount('#edit-payment .control-data');
       ucCard.on('change', (ev) => {if (!ev.empty) ucErr.html('');});
       ucForm.addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const { error } = await ucStripe.confirmSetup({ elements:ucElements, clientSecret:ucSecret, redirect:'if_required' });
+        const { error } = await ucStripe.confirmCardSetup(ucSecret, { payment_method:{ card:ucCard } });
         if (!error) return ucForm.submit(); // native submit skips this handler
         ucErr.html(error.message);
         $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
