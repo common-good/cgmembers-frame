@@ -540,7 +540,21 @@ function testops($params) {
         if (count($rest = justNOT($special, $row)) > 1) db\update($table, $rest, 'uid');
       }
       break;
-      
+
+    case 'insert': // transactions and invoices between test accounts, made the way the PHP features make them
+      foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
+      if (!$func = nni(ray('txs:doTxs, tx_requests:doRequests'), $table)) return exitJust(X_SYNTAX);
+      if (!is_array($ray = json_decode($keyedValues, TRUE))) return exitJust(X_SYNTAX);
+      foreach ($ray as $row) {
+        $uids = just('uid1 uid2 payer payee', $row);
+        if (count($uids) < 2) return exitJust(X_SYNTAX);
+        foreach ($uids as $uid) if ($uid < $uidMin or $uid > $uidMax) return exitJust(X_SYNTAX);
+        try {
+          if (!call_user_func("CG\\Testing\\$func", $row)) return exitJust(X_SYNTAX);
+        } catch (\Exception $er) {return exitJust(X_SYNTAX);}
+      }
+      break;
+
     default: return exitJust(X_SYNTAX);
   }
   return exitJson('', X_OK);
