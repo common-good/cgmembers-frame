@@ -285,6 +285,9 @@ function oneAcct($item) {
  * OBSCURE NOTE: if you want to count a transaction as the latest recurrence, give it the right rule and set its date/time AFTER the expected recur date/time
  */
 function recurs() {
+  $q = db\q('UPDATE tx_timed SET end=:NOW WHERE failed<:old AND IFNULL(end, :NOW + 1) > :NOW', ray('old', now() - CARD_LINK_DAYS * DAY_SECS));
+  if ($n = $q->rowCount()) r\tellAdmin(t('Ended paused card donations'), ray('count', $n)); // the donor did not update the card in time
+
   $sql = <<< EOF
     SELECT tm.*, MAX(
       IF(tm.action=:ACT_SURTX, ru.start, 
@@ -298,6 +301,7 @@ function recurs() {
     WHERE tm.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
     AND tm.start <= :NOW
     AND IFNULL(tm.end, :NOW+1) > :NOW
+    AND tm.failed IS NULL
     GROUP BY tm.id
     ORDER BY (tm.action=:ACT_SURTX) DESC, tm.id
 EOF;
@@ -360,18 +364,25 @@ function recur($template) {
       $paymentIntent = stripe('charge', $erReport = compact(ray('stripeId shouldStart to amount')) + $info);
       if (!is_object($erMsg = $paymentIntent) or $erMsg = nn($testCCFail)) {
         include_once R_ROOT . '/forms/code.inc';
+        include_once R_ROOT . '/forms/updatecard.inc';
         r\tellAdmin(t('Stripe charge failed'), $erReport + compact('erMsg'));
 
         $recurs = ($period != PER_1);
         $howOften = $recurs ? r\recurDesc($period, $periods) : '';
-        $recurCanceled = $recurs ? t('All future recurrences are canceled.') : '';
-        $giftLink = BASE_URL . '/pay/code=' . w\code(ray('item account secret', $purpose, $coA->mainQid, $coA->emailCode));
+        if ($pause = ($recurs and $stripeCid = db\get('stripeCid', 'people', compact('pid')))) { // pause until the donor updates the card
+          $paused = t('Your donation is paused until you update your card.');
+          $retry = t('Please <%a>update your card here</a> within %days days, or the donation will end.', '_a days', w\atag(w\cardLink($pid, $stripeCid)), CARD_LINK_DAYS);
+        } else {
+          $paused = $recurs ? t('All future recurrences are canceled.') : '';
+          $giftLink = BASE_URL . '/pay/code=' . w\code(ray('item account secret', $purpose, $coA->mainQid, $coA->emailCode));
+          $retry = t('Please retry your donation <%a>here</a> with updated credit card information.', '_a', w\atag($giftLink));
+        }
 
         $subs = ray('noFrame date amount', TRUE, fmtDt(now()), u\fmtAmt($amount));
         $subs += ray('coName coPostalAddr coPhone erMsg', $coA->bestName, $coA->postalAddr, u\fmtPhone($coA->phone), lcfirst($erMsg));
-        $subs += compact(ray('fullName howOften recurCanceled giftLink'));
+        $subs += compact(ray('fullName howOften paused retry'));
         r\rMail('cc-payment-failed', [$email => $fullName], $subs);
-        if ($recurs) db\update('tx_timed', ray('id end', $id, now()), 'id'); // end the recurring
+        if ($recurs) db\update('tx_timed', ray('id', $id) + ($pause ? ray('failed', now()) : ray('end', now())), 'id');
         return [FALSE, $erMsg]; // probably a canceled or expired card
       }
 

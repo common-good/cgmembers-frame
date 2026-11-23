@@ -235,7 +235,7 @@ function confirms($params) {
   extract(just('id yesno whyNot', $params, NULL));
 
   if (!$id or !isset($yesno)) return exitJust(X_SYNTAX);
-  if (!db\q('SELECT GET_LOCK(:k, 10)', ['k' => "inv$id"])->fetchField()) return exitJust(X_DENIED); // the app resends when a reply is slow, so handle repeats one at a time
+  if (!db\q('SELECT GET_LOCK(MD5(CONCAT(DATABASE(), :k)), 10)', ['k' => "inv$id"])->fetchField()) return exitJust(X_DENIED); // the app resends when a reply is slow, so handle repeats one at a time; locks are server-wide, so name the database too (test slots share a server)
   if (!$inv = db\get('*', 'tx_requests', 'nvid=:id', compact('id'))) return exitJust(X_NOTFOUND);
   if ($inv['payer'] != $mya->id) return exitJust(X_UNAUTH);
   $done = $inv['status'] >= TX_PAID ? 1 : ($inv['status'] == TX_DENIED ? 0 : -1);
@@ -486,7 +486,7 @@ function resetTestAccts($uidMin, $uidMax) {
  *     where fieldList is '*' --  eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
 function testops($params) {
-  if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
+  if (!!isPRODUCTION or !!isSTAGE or !(isLOCAL or test())) return exitJust(X_FORBIDDEN); // a developer's own machine (or the feature tests) only
 
   if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
    

@@ -244,6 +244,33 @@ function doit(what, vs) {
     $('.undo').click(function () {return yesGo(this.href, vs['msg']);});
     break;
 
+  case 'people':
+    $('.btn-cardlink').click(function () {
+      navigator.clipboard.writeText(this.href).then(() => alert('Link copied to clipboard. It works for ' + vs['days'] + ' days.'), () => alert('Copy failed. Right-click the button to copy the link.'));
+      return false;
+    });
+    break;
+
+  case 'update-card':
+    window.addEventListener('load', () => { // stripe.js loads after this script
+      const ucStripe = Stripe(vs['stripePublicKey']);
+      const ucSecret = $('#edit-secret').val();
+      const ucElements = ucStripe.elements({ clientSecret:ucSecret });
+      const ucCard = ucElements.create('payment');
+      const ucErr = $('#edit-paymentErr .control-data');
+      const ucForm = $('#edit-payment').closest('form')[0];
+      ucCard.mount('#edit-payment .control-data');
+      ucCard.on('change', (ev) => {if (!ev.empty) ucErr.html('');});
+      ucForm.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const { error } = await ucStripe.confirmSetup({ elements:ucElements, clientSecret:ucSecret, redirect:'if_required' });
+        if (!error) return ucForm.submit(); // native submit skips this handler
+        ucErr.html(error.message);
+        $('.form-item-submit .ladda-button').removeAttr('disabled data-loading');
+      });
+    });
+    break;
+
   case 'adminSummary': 
     $('.tickle').click(function () {
       var tickle = $(this).attr('data-tickle');

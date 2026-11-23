@@ -2261,6 +2261,19 @@ function fixTestVars(&$parm) {
 
 function itsLater() {return timeIs(now() + 1);}
 function timeIs($tm) {global $testOnly, $tTime; return $testOnly ? FALSE : ($tTime = $tm);}
+function floodOn() {global $testOnly; if ($testOnly) return FALSE; $on = &\drupal_static('testFlood'); return $on = TRUE;}
+
+/**
+ * Record this many failed sign-ins for the account (from this address), or for this address alone when the account is empty.
+ */
+function failedSignins($id, $n) {
+  global $testOnly; if ($testOnly) return FALSE;
+  for ($i = 0; $i < $n; $i++) {
+    \flood_register_event('failed_login_attempt_ip', HOUR_SECS);
+    if ($id) \flood_register_event('failed_login_attempt_user', 6 * HOUR_SECS, t\uid($id) . '-' . ip_address());
+  }
+  return TRUE;
+}
 function log($msg) {if (test()) u\log($msg, 'debug');}
 //function that($thing) {global $thatThing; return nni($thatThing, $thing, FALSE);}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
