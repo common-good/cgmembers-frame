@@ -139,6 +139,8 @@ Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_desc
 
 **Deleted-records archives:** a table with a corresponding deleted-records table (`x_<name>`, for example `u_relations` and `x_relations`) must get every structure change in both tables, in the same migration. Loop over both names; see `db/migrations/archived/20230811023357_thermometer.php` (`foreach (ray('u_company x_company') as $tnm)`).
 
+**Older code on a newer schema:** beta shares main's database, so a deploy to beta migrates production while main still runs the previous release (and a rollback runs older code too). Write every migration so the released code keeps working on the new schema: add tables, and columns that are nullable or have a default; never drop, rename or retype a column, table or view that released code uses. For a rename or removal, add the new name first, and drop the old one in a later migration, once main runs code that no longer uses it.
+
 **Names:** table names use underscores, but field names and other identifiers are camelCase (`txNotifyEmail`, not `tx_notify_email`).
 
 ## Branch / deploy flow
