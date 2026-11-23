@@ -29,7 +29,7 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   if ($code and $ray = u\decryRay($code)) extract(just('qid sid qr cardCode', $ray, NULL));
   $a = $qid ? r\acct($qid) : $mya;
   
-  if ($a and (!$qid or $sid == session_id() or $cardCode == $a->cardCode or $a->co)) {
+  if ($a and (!$qid or $sid == session_id() or ($cardCode and hash_equals((string) $a->cardCode, (string) $cardCode)) or $a->co)) {
     $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   } else { $photo = NULL; }
 

@@ -44,11 +44,55 @@ function appErr($code, $status = X_NOTFOUND) {return exitJson(['error' => $code]
 function appHash($s) {return hash('sha256', (string) $s);}
 
 /**
+ * Finish a sign-in: flood control, the password, the account checks, then a token or (with MFA) a handle for /cgpay/mfa.
+ * @param string $password: the member's password, or NULL when a scanned card was enough (demo only, see /cgpay/card)
+ * @param bool $skipMfa: no emailed passcode (demo only)
+ * @param int $actFor: the account the app should act for first (a company card's company), or NULL
+ */
+function appVerify($uid, $password, $label, $deviceKey, $skipMfa = FALSE, $actFor = NULL) {
+  $sta = [];
+  if (w\flooding($uid, $sta, $err)) return appErr('flooding', X_TOOMANY);
+  $a = r\acct($uid);
+  if (!is_null($password)) {
+    $success = ($a and $a->passwordOkay($password, 'pass', $err));
+    w\updateFlood($sta, $success, $err);
+    if (!$success) return appErr('bad-login', X_UNAUTH);
+  }
+  if (!$a->ok) return appErr('not-ok', X_FORBIDDEN);
+  if (isPRODUCTION and $a->admin and !u\strongPass((string) $password, u\pwAvoid($a))) return appErr('weak-admin-password', X_FORBIDDEN);
+
+  if ($skipMfa or !$a->canMfa or appTrusted($uid, $deviceKey)) return appIssue($uid, $label, $deviceKey, FALSE, $actFor);
+
+  $nonce = u\randomString(8, 'digits') . '';
+  r\rMail('confirm-signin', $uid, compact('nonce'));
+  $expires = now() + APP_MFA_SECS;
+  $uid .= '';
+  return exitJson(['mfa' => u\cryRay(compact(ray('uid nonce expires label deviceKey actFor')))], X_OK);
+}
+
+/**
+ * Return whether this server is demo. A developer's own machine can pretend to be (testops 'demo', and the feature tests), so the store app's env switching can be tested against one server; an online server never can.
+ */
+function appDemo() {global $testDemo; return (bool) (isDEMO or (test() and $testDemo) or (isLOCAL and !test() and getv('testDemo', 0)));}
+
+/**
+ * Return whether the token carries this server's tag. A developer's machine acting as demo also takes its own stage's tokens, since in the tests one server stands in for both envs.
+ */
+function appTagOk($token) {return u\starts($token, appEnv()) or (isLOCAL and !test() and appDemo() and u\starts($token, STAGE . '.'));}
+
+/**
+ * Return this server's tag for its tokens, so the app can tell which env a token is for and no env takes another's.
+ * beta shares main's config (and database), so its tokens are main's.
+ */
+function appEnv() {return (appDemo() ? 'demo' : STAGE) . '.';} // a developer's machine acting as demo tags its tokens as demo's, as the app expects
+
+/**
  * Make a token for the member, record it, and reply with it and the device credentials the transaction screens need.
  * @param bool $trust: this device skips MFA from now on
+ * @param int $actFor: the account the app should act for first, or NULL
  */
-function appIssue($uid, $label, $deviceKey, $trust) {
-  $token = bin2hex(random_bytes(32));
+function appIssue($uid, $label, $deviceKey, $trust, $actFor = NULL) {
+  $token = appEnv() . bin2hex(random_bytes(32));
   $created = $lastUsed = now();
   $expires = $created + APP_TOKEN_DAYS * DAY_SECS;
   $tokenHash = appHash($token);
@@ -56,7 +100,7 @@ function appIssue($uid, $label, $deviceKey, $trust) {
   $trusted = $trust ? 1 : 0;
   $label = mb_substr(trim((string) $label), 0, 60);
   db\insert('app_tokens', compact(ray('uid tokenHash deviceHash label trusted created lastUsed expires')));
-  return exitJson(['token' => $token] + appMember($uid), X_OK);
+  return exitJson(['token' => $token] + appMember($uid) + ($actFor ? ['account' => (int) $actFor] : []), X_OK);
 }
 
 /**
@@ -93,7 +137,7 @@ function appMayAct($uid, $id) {
  */
 function appRow($token) {
   $now = now();
-  $row = $token ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
+  $row = appTagOk((string) $token) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
   db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
   return $row;

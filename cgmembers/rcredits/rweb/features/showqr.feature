@@ -20,6 +20,6 @@ Scenario: A card member displays their QR
   Given member ".ZZA" has "card" steps done: "all"
   When member ".ZZA" visits "show-qr"
   Then we show "Abe One"
-  And with QR "HTTP://6VM.RC4.ME/KDJIaA1aA1aA1"
+  And with QR "HTTP://6VM.RC2.ME/KDJIaA1aA1aA1"
   And without:
   | complete |

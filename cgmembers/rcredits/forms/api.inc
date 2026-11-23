@@ -122,7 +122,8 @@ function accountInfo($a, $name, $version) {
   $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
   $qr = myQr($a);
   $selling = $isCo ? explode("\n", $a->selling) : NULL;
-  $real = (bool) isPRODUCTION; // real QR codes (RC2.ME) or test ones (RC4.ME)
+  require_once R_ROOT . '/forms/cgpay/token.inc';
+  $real = !appDemo(); // real QR codes (RC2.ME) or test ones (RC4.ME): REAL_CARDS, or not when a developer's machine acts as demo for the tests
   return compact(ray('accountId cardCode deviceId qr isCo name selling real'));
 }
 
@@ -498,6 +499,12 @@ function testops($params) {
   switch ($op) {
     case 'initialize': 
       resetTestAccts($uidMin, $uidMax);
+      setv('testDemo', 0);
+      break;
+
+    case 'demo': // make a developer's own server act as demo (cards of the other kind, no MFA) for the store app's env-switch tests; initialize turns it off again
+      if (!isLOCAL) return exitJust(X_FORBIDDEN);
+      setv('testDemo', (int) !!nni($params, 'on'));
       break;
       
     case 'rows':

@@ -31,8 +31,8 @@ Scenario: A member signs in to the app for a list of accounts to choose from
   Given next random code is "whatever"
   And var "accounts" is JSON:
   | accountId | cardCode | deviceId | qr   | isCo  | name    | selling | real  |*
-  | K6VMDCA   | ccA      | whatever | ?    | false | Abe One | %NUL    | false |
-  | L6VMDCC0  | ccA2     | whatever | ?    | true  | Coco Co | [bags]  | false |
+  | K6VMDCA   | ccA      | whatever | ?    | false | Abe One | %NUL    | true  |
+  | L6VMDCC0  | ccA2     | whatever | ?    | true  | Coco Co | [bags]  | true  |
   When app posts "accounts" with:
   | identifier | password |*
   | .ZPA       | Aa1      |
