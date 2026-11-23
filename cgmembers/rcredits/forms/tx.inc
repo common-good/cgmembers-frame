@@ -13,7 +13,7 @@ use CG\Db as db;
 function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args, ''));
   global $mya;
-
+  
   $fbo = $mya->sponsored;
   $hasCats = r\hasCats($mya->uid) ?: 0;
 
@@ -73,7 +73,9 @@ function formTx($form, &$sta, $type, $args = '') {
   
   $admin = $mya->admNonmemberTx;
   list ($byDft, $byCheck) = [B_ACH, B_CHECK];
-  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc fbo admin hasCats byDft byCheck')));
+  $porch = basename($_SERVER['REQUEST_URI']); // pay or charge (or dashboard, but that's going away soon)
+
+  jsx('tx', compact(ray('porch field question selfErr payDesc chargeDesc fbo admin hasCats byDft byCheck')));
   
   $paying = hidFld($pay);
   $hasCats = hidFld($hasCats);

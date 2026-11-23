@@ -72,7 +72,7 @@ Scenario: A sponsored partner visits the grants page
 
 Scenario: A sponsored partner adds an expected grant
   When member ".ZZC" visits "co/grants/id=add"
-  Then we show "Expected Grants" with:
+  Then we show "Grants Expected" with:
   | Grantor Name: ||
   | Email: ||
   | Phone: ||
@@ -102,7 +102,7 @@ Scenario: A sponsored partner adds an expected grant
 
 Scenario: An administrator views an expected grant
   When member "C:A" visits "co/grants/id=3"
-  Then we show "Expected Grants" with:
+  Then we show "Grants Expected" with:
   | Grantor Name:    | Flo Sixy |
   | Email:           | f@z.co |
   | Phone:           | 666 666 6666 |

@@ -16,7 +16,7 @@ use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const SPECIAL_IDS = 'ctty regulars crumb round stepups cgf bank';
-define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %CGID %UID_BANK', 'ctty', r\serverUid()));
+define ('SPECIAL_UIDS', tr('%ctty %UID_REGULARS %UID_CRUMBS %UID_ROUNDUPS %UID_STEPUPS %cgf %UID_BANK', 'ctty cgf', r\serverUid(), r\qo('NEWAAB')->id)); // can't use CGID here because when recreating db, CGID hasn't been set yet in call from createBasicAccounts()
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule received documented xid';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
@@ -114,7 +114,7 @@ function fixData(&$info, $direct = FALSE) {
   if (nni($info, 'item')) {
     if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat')); // fix cat for post_cats
   } else foreach (ray('cat cat1 cat2') as $k) if (isset($$k) and $$k) $$k = r\nick2cat($$k); // fix cat for tx_cats
-  if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if ($T and $T->feature == 'posts' and isset($method) and !$testOnly and !$isTableData) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
@@ -180,16 +180,12 @@ function fixData(&$info, $direct = FALSE) {
 }
 
 /**
- * Set vKeyE and vKeyPw for admin and optionally for the specified account. Return vKeyPw.
+ * Set vKeyE and vKeyPw for admin. Return vKeyPw.
  * @return vKeyPw
  */
-function setDevVKey($a = NULL) {
+function setDevVKey() {
   if (isPRODUCTION) return;
-  $key = file_get_contents(DEV_VPRIVK_FLNM);
-  $pw = getDevVKeyPw();
-  a(UID_SUPER)->makeVKeyE($key, $pw, FALSE);
-  if ($a and $a->id != UID_SUPER) $a->makeVKeyE($key, $pw, FALSE);
-  return $pw;
+  return a(UID_SUPER)->makeVKeyE(DEV_VPRIVK_FLNM, getDevVKeyPw(), FALSE);
 }
 
 /**
@@ -329,7 +325,7 @@ function doRecords($list, $thing) {
   global $testOnly;
 
   if (is_object($list)) $list = (array) $list;
-  u\EXPECT(is_array(nn($list)) and !is_numeric(key(nn($list[0]))), 'doThing object should be an assoc: ' . pr($list));
+  if (!(is_array(nn($list)) and !is_numeric(key(nn($list[0]))))) u\FAIL('doThing object should be an assoc: ' . pr($list));
   $func0 = 'CG\\Testing\\do';
   $func = $func0 . ucfirst(substr($thing, (strpos($thing, '_') ?: -1) + 1));
   if (!function_exists($func) or u\starts($thing, 'x_')) $func = $func0 . 'Thing';
@@ -406,7 +402,7 @@ function doAccounts($info = []) {
   $name = u\shortName($fullName);
   u\setDft($legalName, $fullName);
   //  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
-  if (trim(nn($pass)) === '') $pass = '123';
+  if (trim(nn($pass)) === '') $pass = 'k';
 
   $zza = r\qo('.ZZA')->id;
   $zpa = r\qo('.ZPA')->id;
@@ -488,6 +484,7 @@ function doTxs($info) {
   foreach ($info as $k => $v) if (!$v) $info[$k] = (in($k, 'flags risks goods channel amt id') ? 0 : NULL); // interpret empty fields
 
   if ($testOnly) {
+    if (isset($info['risks']) and !is_numeric($info['risks'])) $info['risks'] = getRisks($info['risks'], K_TX_RISKS); // risk names (eg b2p,toSuspect) to bits
     return verifyRecord('txs', $info);
  
   } else { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
@@ -593,12 +590,12 @@ function doRequests($info) {
   if ($testOnly) return verifyRecord('tx_requests', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
-  u\EXPECT($missing == [], "missing fields " . pr($missing));
+  if ($missing != []) u\FAIL("missing fields " . pr($missing));
 
   $invInfo = just('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, now()]);
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId reversesXid', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('tx_requests', $invInfo, 'nvid');
-  u\EXPECT(!empty($nvid), 'failed updateOrInsert into tx_requests: ' . pr($invInfo));
+  if (empty($nvid)) u\FAIL('failed updateOrInsert into tx_requests: ' . pr($invInfo));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
     // No -- don't do this, because there is insufficient information
@@ -1816,6 +1813,7 @@ function clear($ch = 0) {
     'r_tous',             // users
     'r_usd2',             // tx_hdrs
     'r_user_industries',  // r_industries, users
+    'reset_codes',        // users
     'semaphore',          // -
     'sessions',           // users
     'tx_bads',            // -
@@ -1947,7 +1945,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 
   if (!$content) return FALSE; // probably an accidental single-row array with no labels
-  u\EXPECT(is_numeric(key($content[0])), 'shown with should be array, not assoc: ' . pr($content));
+  if (!is_numeric(key($content[0]))) u\FAIL('shown with should be array, not assoc: ' . pr($content));
   $ray = call_user_func_array('array_merge', $content);
 
   $xi = $i = 0;
@@ -2299,3 +2297,43 @@ function transactionSets($name, $how) {
 }
 
 function variableIsSet($name, $want) {return t\eq("variable $name is set", (int) $want, (int) (bool) db\exists('variable', 'name=:name', compact('name')));}
+
+/**
+ * Check who may use the PHP window when the server is not a local machine.
+ * @param array $list: rows of who (account id, or "super" for the superAdmin) and open (yes or no)
+ */
+function phpWindowOpenTo($list) {
+  global $mya;
+  include_once R_ROOT . '/forms/php.inc';
+  $mya0 = $mya;
+  foreach ($list as $row) {
+    $mya = $row['who'] == 'super' ? r\acct(UID_SUPER) : t\acct($row['who']);
+    $res = t\eq("PHP window open to $row[who]", $row['open'], w\phpWindowOk(FALSE) ? 'yes' : 'no');
+    if ($res !== TRUE) {$mya = $mya0; return $res;}
+  }
+  $mya = $mya0;
+  return TRUE;
+}
+
+/**
+ * Check which passwords count as strong enough for an admin.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function strongPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] is strong", $row['ok'], u\strongPass($row['pw'], ray(nn($row['avoid']))) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}
+/**
+ * Check which passwords meet the minimum every member must meet.
+ * @param array $list: rows of pw and ok (yes or no)
+ */
+function okPasswords($list) {
+  foreach ($list as $row) {
+    $res = t\eq("password $row[pw] meets the member minimum", $row['ok'], u\okPass($row['pw'], FALSE, ray(nn($row['avoid']))) ? 'yes' : 'no');
+    if ($res !== TRUE) return $res;
+  }
+  return TRUE;
+}

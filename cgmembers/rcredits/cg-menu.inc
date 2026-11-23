@@ -111,6 +111,7 @@ function menu($submenu = '') {
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(), 'cog'],
     'settings/notices' => ['sub', t('Notices'), 'NoticePrefs', ANY, '', t(), 'envelope'],
+    'settings/notice-recipients' => ['call', t('Transaction Notification Recipients'), 'TxNotifyPrefs', ANY],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
@@ -175,7 +176,7 @@ function menu($submenu = '') {
     'sadmin/focuses' => ['sub', t('Focuses'), 'Focuses 2', 'admPrintChecks'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'admCode'],
     'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'admCode'],
-    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isDEV ? ANY : 'admCode'],
+    'sadmin/php' => ['sub', t('PHP'), 'Php 2', isLOCAL ? ANY : 'admCode'],
 
     'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admCode', 'checkSanity'],
     'sadmin/set-cats' => ['call', t('Set Accounting Categories'), 'SetCats', 'admEditTx'],
@@ -247,6 +248,16 @@ function menu($submenu = '') {
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from our JS scripts
     'api' => ['call', 'API', '1', ANY, 'api'],
+    'cgpay/sso' => ['call', 'CGPay SSO', '', ANY, 'cgpaySso'], // server-to-server: SvelteKit cgpay POC handing off a verified login to PHP
+    'cgpay/lookup' => ['call', 'CGPay Lookup', '', ANY, 'cgpayLookup'], // server-to-server: SvelteKit cgpay POC identifier (qid/name/email/phone) -> uid resolution
+    'cgpay/whoami' => ['call', 'CGPay Whoami', '', ANY, 'cgpayWhoami'], // server-to-server: SvelteKit cgpay POC session -> current uid/name/menu (called on every SSR so PHP is authoritative)
+    'cgpay/grants' => ['call', 'CGPay Grants', '', ANY, 'cgpayGrants'], // server-to-server: SvelteKit cgpay POC expected-grant list + create + update
+    'cgpay/people-autocomplete' => ['call', 'CGPay People Autocomplete', '', ANY, 'cgpayPeopleAutocomplete'], // server-to-server: SvelteKit cgpay POC grantor autocomplete
+    'cgpay/funders-export' => ['call', 'CGPay Funders Export', '', ANY, 'cgpayFundersExport'], // server-to-server: SvelteKit cgpay POC funder CRM CSV export
+    'cgpay/reset-deliver' => ['call', 'CGPay Reset Deliver', '', ANY, 'cgpayResetDeliver'], // server-to-server: SvelteKit cgpay password reset -- send the reset code the node app made, by email or text
+    'cgpay/reset-complete' => ['call', 'CGPay Reset Complete', '', ANY, 'cgpayResetComplete'], // server-to-server: SvelteKit cgpay password reset -- set the new password after node verified the code
+    'cgpay/signup' => ['call', 'CGPay Signup', '', ANY, 'cgpaySignup'], // server-to-server: SvelteKit cgpay signup flow -- create unverified account + email verification code
+    'cgpay/signup-verify' => ['call', 'CGPay Signup Verify', '', ANY, 'cgpaySignupVerify'], // server-to-server: SvelteKit cgpay signup flow -- confirm code + set password + create session
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],
     'donate-fbo' => ['call', t('Donate'), 'Pay 1', ANY], // deprecated (use donate instead), but still used by Kibilio as of 11/22/2021
   );
@@ -298,6 +309,7 @@ function menu1($path, $title, $type, $function, $args, $perms = '') {
 
   $formName = ($args and !is_numeric($args[0])) ? $args[0] : $function;
   $file = strtolower("forms/$formName.inc");
+  if (!file_exists(R_ROOT . "/$file") and u\starts(strtolower($formName), 'cgpay')) $file = strtolower('forms/cgpay/' . substr($formName, 5) . '.inc'); // server-to-server endpoints for the node app: cgpaySso is in forms/cgpay/sso.inc
   if (!file_exists(R_ROOT . "/$file")) $file = $smart ? 'rsmart/rsmart.inc' : ($admin ? 'admin/admin-forms.inc' : 'rweb/rweb.inc');
   
   $item = array(

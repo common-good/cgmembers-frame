@@ -13,7 +13,8 @@ use React\Socket\SecureServer;
  * @file
  * Switchboard to route messages from one instance of the CGPay app to another.
  * Most obviously: "I request that you pay me $x for whatever." (and the yes/no response)
- * Run in crontab with: <star>/5 * * * * php /home/new/cgmembers-frame/current/cgmembers/rcredits/rcron/app-socket.php  > /dev/null 2>&1 &
+ * OLD: Run in crontab with: <star>/5 * * * * php /home/new/cgmembers-frame/current/cgmembers/rcredits/rcron/app-socket.php  > /dev/null 2>&1 &
+ * Run in crontab with: <star>/5 * * * * php /home/main/cg/current/cgmembers/rcredits/rcron/app-socket.php  > /dev/null 2>&1 &
  *
  * Parameters for messaging:
  *   op deviceId actorId otherId action amount description created note
@@ -102,8 +103,9 @@ try {
 
   $app = new HttpServer(new WsServer(new MyWSSServer()));
   $server = new IoServer($app, $secure_websockets, $loop);
+  $pf = DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid'; @mkdir(dirname($pf), 0775, TRUE); // flog needs the dir
 /**/ flog($startMsg);
-  $pf = DRUPAL_ROOT . '/../cgLogs/Socket/switchboard.pid'; @mkdir(dirname($pf), 0775, TRUE); file_put_contents($pf, getmypid()); // lets a deploy restart us
+  file_put_contents($pf, getmypid()); // lets a deploy restart us
   $server->run();
 } catch (\Exception $er) {
 /**/ flog("App socket overall er: " . $er->getMessage());

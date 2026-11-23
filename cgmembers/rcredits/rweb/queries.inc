@@ -15,7 +15,6 @@ use CG\Util as u;
  */
 
 global $mya;
-const FSCATMAP = 'fsFeeCat:FS-FEE, fsInCat:D-FBO, stepupCat:D-STEPUP, fsStepupCat:D-FBO-STEPUP, fsOutCat1:FIRST-FS-EXPENSE, fsOutCat9:LAST-FS-EXPENSE, fsToPerson:GRANT-PERSON, fsToOrg:GRANT-ORG';
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = r\annualAmt();

@@ -11,30 +11,18 @@ Setup:
   | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3       |
   And member is logged out
 
-Scenario: A member clicks a CGPay button
+Scenario: A non-member clicks a CGPay button
   Given button code "buttonCode" for:
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23.50  |
   When member "?" visits page "pay/code=%buttonCode"
-  Then we show "Pay With %PROJECT" with:
-  | Pay      | 23.50 to Our Pub |
-  | For      | food |
-  | Email    |  |
-  | Continue |  |
-  
-Scenario: A newbie supplies email to continue CGPay
-  Given button code "buttonCode" for:
-  | account | secret | item | amount |*
-  | .ZZC    | Cc3    | food | 23     |
-  And next random code is "turkey"
-  And next random password is "quick brown fox jumped"
-  When member "?" clicks "continue" on page "pay/code=%buttonCode" with:
-  | name |
-  | d@   |
-  Then we show "Submit"
-  And we email "verify" to member "d@" with subs:
-  | fullName | qid    | site      | code   | pass                   |*
-  | Al Aargh | NEWAAA | %BASE_URL | turkey | quick brown fox jumped |
+  Then we show "Pay Our Pub" with:
+  | Pay          | 23.50 |
+  | For          | food  |
+  | Account ID   |       |
+  | Password     |       |
+  | Sign up here |       |
+  | Pay          |       |
 
-  
-  
+# The old "newbie supplies email to continue" scenario is gone: signing in or up from this page now
+# works like the regular sign-in and sign-up pages (see signin.feature and signup.feature).

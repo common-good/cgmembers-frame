@@ -91,7 +91,8 @@ Scenario: A company verifies email while signed in
   | .ZZA | ok     |
   And member ".ZZC" one-time password is "WHATEVER"
   When member "C:A" visits page "settings/verifyemail/qid=NEWZZC-A&verify=1&code=WHATEVER"
-  Then we show "You: Our Pub"
+  Then we redirect to "%CGPAY_URL"
+#  Then we show "You: Our Pub"
   And we say "status": "verified email"
   And we say "status": "info saved|success|co ok|pioneer thanks"
   And member ".ZZC" steps left ""
@@ -192,8 +193,9 @@ Scenario: A company supplies crumbs choices
 #  | gift      | |
  # | forOnly   | |
 
-  And we show "You: Our Pub" with:
-  | Balance: | $0 |
+  And we redirect to "%CGPAY_URL"
+#  And we show "You: Our Pub" with:
+#  | Balance: | $0 |
   And without:
   | Finish |
   And we say "status": "info saved|success|co ok|pioneer thanks"
@@ -210,5 +212,6 @@ Scenario: An unverified company agent completes a company account
   When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
   Then we say "status": "info saved|success"
-  And we say "status": "co tentative|pioneer thanks"
+  And we redirect to "%CGPAY_URL"
+#  And we say "status": "co tentative|pioneer thanks"
   And member ".ZZC" steps left ""

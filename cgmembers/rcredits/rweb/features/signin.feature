@@ -21,14 +21,16 @@ Scenario: A member signs in with account ID on the member site
   | qid  | pass |*
   | .ZZA | a1   |
   Then member ".ZZA" is logged in
-  And we show "You: Abe One"
+  And we redirect to "%CGPAY_URL"
+  #And we show "You: Abe One"
 
 Scenario: A member signs in with email on the member site
   When member "?" confirms form "signin" with values:
   | qid           | pass |*
   | a@example.com | a1   |
   Then member ".ZZA" is logged in
-  And we show "You: Abe One"
+  And we redirect to "%CGPAY_URL"
+  #And we show "You: Abe One"
 
 Scenario: A member types the wrong password
   When member "?" confirms form "signin" with values:
@@ -102,14 +104,26 @@ Scenario: A member clicks a link to reset password
   | pw       |*
   | %whatever|
   Then member ".ZZA" is logged in
-  And we show "You: Abe One"
+  And we redirect to "%CGPAY_URL"
+  #And we show "You: Abe One"
 
   Given member is logged out
   When member "?" confirms form "signin" with values:
   | qid    | pass      |*
   | .ZZA   | %whatever |
-  Then we show "You: Abe One"
+  Then we redirect to "%CGPAY_URL"
+  #Then we show "You: Abe One"
   And member ".ZZA" is logged in
+
+Scenario: A member tries to reset a password to a weak one
+  Given next random code is "wHatEveR"
+  And member "?" completes form "settings/password" with values:
+  | qid           |*
+  | a@example.com |
+  When member "?" confirms form "reset/qid=NEWZZA&code=wHatEveR" with values:
+  | pw       |*
+  | Passw0rd!|
+  Then we say "error": "weak pass"
 
 Scenario: A member clicks a link to reset password with wrong code
   Given next random code is "wHatEveR"

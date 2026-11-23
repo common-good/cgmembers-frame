@@ -104,14 +104,16 @@ function goFar($url, $params = '') {
 function superSignin($vKeyPw = '') {
   global $mya;
 
-  if (isDEV and !$vKeyPw and $mya->id == UID_SUPER and empty(db\get('vKeyE', 'admins', 'uid=:UID_SUPER'))) { // set up V-encryption automatically on dev
+  if ($vKeyPw) {
+    r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0); // this, together with the stored vKeyE in admins, make r\vKey() work
+    if (!r\vKey()) return softErr(t('Your superAdmin password is invalid.'));
+    if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+  } else {
+    if (!isDEV or $mya->id != UID_SUPER) return w\err(t('That is not a valid SuperAdmin QR or password.'));
     if (!test()) w\say(t('Setting up V-encryption automatically for user "admin" in development environment.')); // say this so we notice if it somehow gets on a non-dev machine
-    $vKeyPw = t\setDevVKey($mya); // sets up vKeyE
-  } elseif (!$vKeyPw) return r\deleteCook('vKeyPw');
-  
-  r\setCryptCook('vKeyPw', u\b64decode($vKeyPw), 0); // this, together with the stored vKeyE in admins, make r\vKey() work
-  if (!r\vKey()) return softErr(t('Your superAdmin password is invalid.'));
-  if (!$mya->admV) tellAdmin('Non-admin attempt at superAdmin permission: ' . "$mya->fullName ($mya->mainQid)");
+    $vKeyPw = t\setDevVKey(); // sets up vKeyE
+    r\setCryptCook('vKeyPw', u\b64decode($vKeyPw));    
+  }
   
   foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
     $a = r\acct($uid);
@@ -1057,8 +1059,10 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully (your password will not be visible when you sign in).'), autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
-  jsx('pw');
+  $admin = ($mya and $mya->admin);
+  $help = t('Type carefully (your password will not be visible when you sign in).') . ' ' . t('The bar fills as the password gets stronger: longer is better, and so are capitals, lower case, digits and punctuation. Common words, your name and your email count as only one letter each.');
+  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), $help, autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
+  jsx('pw', ['min' => $admin ? PW_MIN_SCORE_ADMIN : PW_MIN_SCORE, 'avoid' => join(',', array_merge(ray(PW_COMMON), $mya ? u\pwAvoid($mya) : []))]);
   focusOn('pw');
   return compact(ray('pw'));
 }

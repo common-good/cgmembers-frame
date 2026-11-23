@@ -11,17 +11,32 @@ define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, p
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
-const TEST_ANON = (FALSE and !isPRODUCTION); // set this to TRUE and... (in development) to test a\anonymize() -- then start by recreating the db
+const PW_MIN_SCORE = 5.14; // minimum password score for a member (u\pwScore): 8 characters with capital, lower case, digit and punctuation
+const PW_COMMON = 'password passw0rd p4ssword passwd pass1234 letmein welcome admin administrator login root toor guest '
+  . 'testing changeme default master secret access trustno1 temp1234 qwerty qwertyuiop qwerty123 asdfgh '
+  . 'asdfghjkl zxcvbn zxcvbnm azerty 1qaz2wsx 1q2w3e 123456 1234567 12345678 123456789 1234567890 654321 '
+  . '111111 000000 121212 112233 123123 abc123 abcd1234 abcdef abcdefg 7777777 888888 iloveyou iloveu forever '
+  . 'lovely family friend friends money dollar bitcoin blessed jesus heaven nothing anything monkey dragon '
+  . 'sunshine football baseball basketball soccer hockey golf1234 batman superman spiderman starwars pokemon '
+  . 'naruto matrix shadow ninja hunter killer ranger tiger eagle freedom princess angel angels babygirl '
+  . 'butterfly flower cookie cheese chocolate pepper ginger rainbow thunder lightning michael jennifer jessica '
+  . 'ashley daniel andrew joshua matthew jordan nicole hannah thomas charlie jackson george robert william '
+  . 'richard david james harley buster bailey maggie samantha elizabeth christopher anthony brandon austin '
+  . 'taylor computer internet monday sunday friday mustang ferrari porsche corvette yankees cowboys liverpool '
+  . 'arsenal chelsea barcelona madrid samsung google january february april june july august september october '
+  . 'november december summer winter spring autumn commongood common cgpay cgmembers rcredits rcredit'; // words that count as one character inside a password (see u\pwScore)
+const PW_MIN_SCORE_ADMIN = 5.42; // for an administrator: 10 characters with all four kinds (or 17 with three kinds)
+const TEST_ANON = FALSE; // set this to TRUE (in development) to test a\anonymize() -- then start by recreating the db
 $configFlnm = TEST_ANON ? (R_ROOT . '/misc/config-models/config-anon.json') : (SHARED_DIR . '/config/config.json');
 $configRay = (array) json_decode(iconv('ISO-8859-1', 'UTF-8', file_get_contents($configFlnm)));
 
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
-
-define('isDEV', in_array($stage, ['test', 'dev', 'development'])); // (used in settings file and elsewhere)
+/**/  if (!in_array($stage, explode(' ', 'test dev staging demo main'))) die('Invalid value for stage in configuration file.');
+define('isDEV', $stage == 'test' or $stage == 'dev'); // (used in settings file and elsewhere)
 define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
-define('isPRODUCTION', in_array($stage, ['main', 'production'])); // develop's names (test dev main) work here too, so one config.json serves both
-/**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
+define('isPRODUCTION', $stage == 'main'); // this includes beta, which symlinks main's config.json
+define('isLOCAL', in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) and in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) and empty($_SERVER['HTTP_X_FORWARDED_FOR'])); // a developer's own machine, never an online server
 
 define('SOCKET_PORT', (int) config('appSocketPort', 8081)); // app websocket port (environments that share a server need different ones)
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
@@ -44,11 +59,13 @@ const BANK = 'CFB'; // which bank we're using (index into BANK_DATA) - see r\ban
 const BANK_OFFSHORE = 'CFB'; // which bank of ours holds funds just to get interest (if any)
 const DEV_ROUTING = 211870281; // routing number to use in development by default (so we don't have to load the whole list of US banks)
 
-$env = preg_match('#/home/([^/]+)/cg/#', __DIR__, $m) ? $m[1] : NULL; // eg /home/main/cg/releases/...
+$host = $_SERVER['HTTP_HOST'] ?? NULL; // expect proper host unless running app-socket or cron
+if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
+$env = preg_match('#/home/([^/]+)/cg/#', __DIR__, $m) ? $m[1] : NULL; // eg /home/test/cg/releases/...
 if ($env === 'main') $env = 'members'; // special case for production URL
-$base_url = config('baseUrl') ?: ('https://' . ($_SERVER['HTTP_HOST'] ?? "$env.commongood.earth")); // use env for non-http requests, like cron
+$base_url = config('baseUrl') ?: ('https://' . ($host ?? "$env.commongood.earth")); // use env for non-http requests, like cron
 
-$requestUri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : NULL; // can't use nni() yet
+$requestUri = $_SERVER['REQUEST_URI'] ?? NULL;
 define('GEOCODE_KEY', config('geocodeKey'));
 define('BASE_URL', $base_url);
 define('LOCAL_URL', config('localUrl', $base_url));
@@ -71,6 +88,10 @@ define('STRIPE_PUBLIC', config('stripePublic'));
 define('STRIPE_SECRET', config('stripeSecret'));
 define('QBO_CREDS', config('qboCreds'));
 define('CLICKUP_CREDS', config('clickupCreds'));
+define('CGPAY_SSO_SECRET', config('cgpaySsoSecret', '')); // shared secret for the SvelteKit cgpay POC /cgpay/sso handoff; empty disables the endpoint
+define('CGPAY_URL', config('cgpayUrl', '')); // SvelteKit POC dashboard URL — if set, /dashboard redirects there so the new dashboard becomes the canonical landing place
+define('TURNSTILE_SECRET', config('turnstileSecret', '')); // Cloudflare Turnstile server-side secret used by /cgpay-signup to verify the captcha token; empty disables verification (fail-open for dev)
+define('TURNSTILE_SITEKEY', config('turnstileSitekey', '')); // Cloudflare Turnstile client-side sitekey; informational on PHP since the widget runs on node, but kept with the secret so both live in one place
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
@@ -114,8 +135,6 @@ const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes tx_requests'; // these t
 const DEV_ONLY_MSG = 'only on development machine';
 const DEMO_CTTY = -2; // uid of demo community on demo server
 
-$host = strtolower(@$_SERVER['HTTP_HOST']); // expect proper host unless running app-socket or cron
-if (!isDEV and $host) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
 define('PROTOCOL', strstr(BASE_URL, ':', TRUE)); // useful when dev machine uses HTTP instead of HTTPS
@@ -261,6 +280,12 @@ define('STORE_CREDIT', t('store credit'));
 const R_TEMP_NAME_PREFIX = 'unknown ';
 const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
 const MAX_UPLOAD_SIZE = 4; // maximum upload size in MB
+
+// Twilio config for SMS delivery (Phase 3.5 PR C). All optional — SMS is a silent no-op if unset (email still fires).
+// Used by cg-tx-notify.inc's twilioSend() when fanning out money-movement notices to a company's u_relations.
+if (!defined('TWILIO_ACCOUNT_SID')) define('TWILIO_ACCOUNT_SID', '');
+if (!defined('TWILIO_AUTH_TOKEN')) define('TWILIO_AUTH_TOKEN', '');
+if (!defined('TWILIO_FROM_NUMBER')) define('TWILIO_FROM_NUMBER', ''); // e.g. +14155552671
 
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
@@ -427,6 +452,8 @@ const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transactio
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
 define('FS_NOTE', t('fiscal sponsorship fee')); // standard message for this in tx_timed / aux transactions
 const FS_FEE_SPREAD = 3; // how many points between starting and end fiscal sponsorship fee percentages
+const FSCATMAP = 'fsFeeCat:FS-FEE, fsInCat:D-FBO, stepupCat:D-STEPUP, fsStepupCat:D-FBO-STEPUP, fsOutCat1:FIRST-FS-EXPENSE, fsOutCat9:LAST-FS-EXPENSE, fsToPerson:GRANT-PERSON, fsToOrg:GRANT-ORG';
+
 const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
 //const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
 const CREDIT_WITH_SSN = 200; // amount of initial creditline when SSN is verified
@@ -695,7 +722,8 @@ const B_WIRE = 21; // payment by wire transfer
 const B_OVERPAID = 22; // overpayment of invoice
 const B_COVERCC = 23; // covers processing fees
 const B_COVERFS = 24; // covers fiscal sponsorship fees
-const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs';
+const B_SHORTLOAN = 25; // short-term loan
+const TX_FLAGS = 'changed thx offline short u4 self crumbs check cc qbok gift loan investment stake fine noask funding food partial button ach wire overpaid covercc coverfs shortloan';
 
 // Invoice status (>= TX_PAID if paid, equal to the final payment xid)
 const TX_CANCELED = -5; // payee canceled the invoice
@@ -798,9 +826,12 @@ $GLOBALS['emailSubjects'] = array(
   'partner-report' => t('Solar Signup COMPLETE'),
   'partner-solar1report' => t('Solar Signup COMPLETE'),
   'verify' => t('NEXT STEP: Verify your email address.'),
+  'verify-cgpay' => t('NEXT STEP: Verify your email address.'), // cgpay signup flow (/cgpay/signup) -- links at the node /signup/verify page instead of the legacy PHP form
   'verify-co' => t('NEXT STEP: Verify your company email address.'),
 //  'verify-trial' => t('NEXT STEP: Verify your company email address.'),
   'password-reset' => t('New PASSWORD'),
+  'reset-code' => t('Your password reset code'),
+  'password-changed' => t('Your password was changed'),
   'tell-staff' => t('STAFF ALERT: %topic'),
   'notices' => t('Notices for %qid %todayDesc'),
   'message' => t('%topic'),

@@ -1,13 +1,13 @@
-DROP DATABASE IF EXISTS cg;
-CREATE DATABASE cg;
+DROP DATABASE IF EXISTS test;
+CREATE DATABASE test;
 
-DROP USER IF EXISTS cg_user@localhost;
+DROP USER IF EXISTS test@localhost;
 FLUSH PRIVILEGES;
 
-CREATE USER cg_user@localhost IDENTIFIED BY 'pass';
-GRANT ALL PRIVILEGES ON cg.* TO cg_user@localhost;
+CREATE USER test@localhost IDENTIFIED BY 'pass';
+GRANT ALL PRIVILEGES ON test.* TO test@localhost;
 FLUSH PRIVILEGES;
 
-USE cg;
+USE test;
 SOURCE db/startup.sql;
 set global log_bin_trust_function_creators = 1;

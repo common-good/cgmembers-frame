@@ -82,7 +82,7 @@ function queue($op, $item = [], $always = FALSE) {
     $item = serialize($item0 = $item);
     $dup = in($op, 'acctRisk1 geocode') ? FALSE : db\exists('queue', compact('item')); // allow dups just in this case
     if ($dup and in($op, 'payRequests getFunds1')) return; // not an error, but don't duplicate (payRequests was 5-minute getFunds followup on balChange)
-    u\EXPECT(!$dup, 'item already in queue: ' . u\jsonize($item0));
+    if ($dup) u\FAIL('item already in queue: ' . u\jsonize($item0));
     return db\insert('queue', ray('item created', $item, now()));
   }
 }

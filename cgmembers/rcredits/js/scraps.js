@@ -151,9 +151,10 @@ function doit(what, vs) {
     break;
     
   case 'pw':
-    var min = 5.14; // minimum score
+    var min = parseFloat(vs['min']) || 5.14; // minimum score (higher for an admin)
+    var avoid = (vs['avoid'] || '').split(',');
     $('#edit-pw').keyup(function () {
-      var e = pwScore($(this).val());
+      var e = pwScore($(this).val(), avoid);
       var pct = 100 * (1 - Math.min(min, e) / min);
       if (!$('.form-item-showPass').length || $('#edit-showpass-1').is(':checked')) {
         $('.form-item-submit').toggle(pct == 0);
@@ -298,14 +299,16 @@ function doit(what, vs) {
       if (toggleCkFlds(vs)) $('.form-item-ckNum input').focus();
     });
     $('.form-item-amount input').change(function () {$('.form-item-documented').toggle(this.value >= vs['undocMax'])});
+    suggestGrantor('#edit-fullname', vs['sponseeUid']);
     break;
     
   case 'tx':
     var pay;
     var purpose = $('#edit-purpose');
     var cat = $('#edit-cat');
-    $('.btn-pay, .btn-charge').click(function () {
-      pay = has($(this).attr('class'), 'btn-pay');
+
+    var porch = function () {
+      pay = vs['porch'] == 'dashboard' ? has($(this).attr('class'), 'btn-pay') : (vs['porch'] == 'pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
       $('#dashboard').hide();
       $('.w-pay').toggle(pay);
@@ -329,7 +332,10 @@ function doit(what, vs) {
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
       mem0Click(true);
-    });
+    };
+    
+    if (vs['porch'] == 'dashboard') $('.btn-pay, .btn-charge').click(porch); else porch();
+    
     if (vs['hasCats'] == 1) $('#edit-who').change(function () {
       var otherId = $('.whoId', $(this).parents('form:first'));
       if (purpose.val() == '' || cat.val() == '') post('suggestTxDesc', {
@@ -1119,7 +1125,11 @@ function setInvestFields() {
  * Return the log of the entropy of a given password
  * No. For now, return 1 point for each: UTF8, upper, lower, digit, punc, 7 chars
  */
-function pwScore(s) {
+function pwScore(s, avoid) {
+  avoid = (avoid || []).filter(function (w) {return w.length >= 4;}).sort(function (a, b) {return b.length - a.length;});
+  avoid.forEach(function (w) { // a common word, name or email inside the password counts as one character (as on the server)
+    s = s.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), function (m) {return m.charAt(0);});
+  });
   var e = u(s, 'U') + u(s, 'A') + u(s, 'a') + u(s, 'n') + u(s, 'p'); // character universe size (0-224)
 //  return s.length * Math.log(Math.max(1, e));
   return e + s.length / 7;

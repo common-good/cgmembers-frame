@@ -58,6 +58,7 @@ function setupBasicAccounts($withEIN = TRUE) {
   $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_OK, B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
+  $a1->update('pass', 'k'); // any non-empty password on DEV allows admin to sign in with any non-empty password (temporary)
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', mb_strtolower($v));
@@ -96,6 +97,8 @@ function setupBasicAccounts($withEIN = TRUE) {
 /**
  * Re-setup the test cards on the DEMO server (or other dev server).
  * @param bool $print: if true show corresponding objects for mocking in the app
+ * Abe is the administrator. Bea manages Citre. Flo manages Gisette, which is fiscally sponsored. Each company has just that one relation.
+ * Individuals: Abe, Bea, Dee, Eli, Flo, Hal, Ida (password k). Companies: Citre, Gisette.
  */
 function makeTestAccounts($print = FALSE) {
   global $mya, $channel;
@@ -159,15 +162,15 @@ function makeTestAccounts($print = FALSE) {
   
   foreach (str_split('abdefhi') as $id) { // the individual accounts
     $a = a(TEST_QID_HD . $id);
-    if (in($id, 'a b f')) {
+    if (in($id, 'b f')) {
       $cid = $id == 'f' ? 'g' : 'c';
       $CID = strtoupper("$cid:$id");
       $coA = a(TEST_QID_HD . $cid);
       $coA->setDftAppCans();
-      $perm = $id == 'b' ? B_SELL : B_MANAGE;
-      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $id == 'b' ? 2 : 1));
+      if ($cid == 'g') $coA->setCoBit(CO_SPONSORED); // Gisette is the fiscally sponsored test company
+      if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm(B_MANAGE), TRUE, 1));
       $a->update('cardCode2', $cardCode2 = "98765$id");
-      foreach (ray(S_CO) as $k) $coA->stepDone($k); // this gets done twice when there are 2 agents for a company, but no harm
+      foreach (ray(S_CO) as $k) $coA->stepDone($k);
       if ($print) {
         $firstName = ray($a->fullName)[0];
         $info = $coInfo[$cid];
@@ -177,6 +180,10 @@ function makeTestAccounts($print = FALSE) {
       }
     }
     foreach (ray(S_CARD) as $k) $a->stepDone($k);
+    if ($id == 'a') { // Abe is the test administrator, with every permission except the very secure ones
+      $a->setBit('admin');
+      $a->setAdminBits(array_diff(ray(A_LIST), ray(A_VLIST)));
+    }
   }
   
   db\del('txs', 'uid1 IN (:testUids) OR uid2 IN (:testUids)', compact('testUids'));
@@ -609,7 +616,7 @@ function fixStats() {
  f('a.getBanks');
 */
 function getBanks() {
-  return; // seldom used (and move SQL name fixes here? see changes.log)
+  return; // seldom used (and move SQL name fixes here? see misc/pre-git-changes.log)
   $fieldNames = 'route branch fedRoute type modified newRoute name address city state zip phone status view';
   $lens = ray('9 1 9 1 6 9 36 36 20 2 9 10 1 1'); // also 5 chars of filler at end
   $fields = array_combine(ray($fieldNames), $lens);
@@ -962,7 +969,7 @@ function anonymize($encrypting = FALSE) {
     $pin = randDigits(4);
     $snap = $a->snap ? randDigits() : '';
     if ($signupCo = $a->signupCo) { $signupCo['company'] = wordName() . ' Co'; $signupCo['companyPhone'] = '+1' . mt_rand(2, 9) . randDigits(9); }
-    if (!$a->co) $pass = '123'; // make it easy to sign into any account
+    if (!$a->co) $pass = 'k'; // make it easy to sign into any account
  
     foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer idProof') as $k) $$k = u\randomString(12, 'word');
     foreach (ray($empties = 'notes photo appData ssnData partnerInfo') as $k) $$k = '';
@@ -1010,9 +1017,9 @@ function anonymize($encrypting = FALSE) {
   foreach (ray('cache cache_bootstrap cache_form cu_folders cu_lists cu_members cu_spaces cu_tasks cu_times legacy_x_invoices legacy_x_txs messages r_boxes changes r_do r_honors r_invites r_near x_company x_photos x_relations x_shout x_txs2 x_users') as $k) db\q("TRUNCATE $k");
   
   if ($encrypting) { 
-    $vKeyPw = t\setDevVKey(a(UID_SUPER), TRUE); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
+    $vKeyPw = t\setDevVKey(); // this fails, so just delete all admin records and create admin's vKeyE automatically on startup
     db\q('DELETE FROM admins'); // should be db\q('DELETE FROM admins WHERE uid<>:UID_SUPER'); (make the previous line work)
-    a(1)->update('pass', '123');
+    a(1)->update('pass', 'k');
     $pass = db\get('pass', 'users', 'uid=1');
     db\q('UPDATE users SET pass=IF(:IS_CO, NULL, :pass) WHERE uid>:UID_CANON9', compact('pass'));
     w\say(t('<h2>Done anonymizing!</h2>

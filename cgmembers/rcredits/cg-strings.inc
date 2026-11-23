@@ -276,7 +276,11 @@ EOF
   'fs fee adjust' => t('fiscal sponsorship fee adjustment'),
   'sponsee notified' => t('The sponsee has been notified that this grant was received, but needs documentation.'),
   'grantdoc-required' => t('Your %amt grant from %grantorName has been received, but needs documentation before the funds can be released to your account. At your convenience, please email a copy of the grant agreement to %PROJECT at %CGF_EMAIL. Then sign in to your account and on the Company menu choose "Grants Expected" to enter the date you emailed us the agreement.'),
-    
+  'grantor-contact-changed' => t('Sponsee (uid %sponsee) changed contact info for grantor "%grantor" — fields updated: %fields.'),
+  'tx-notify-email-failed' => t('Transaction-notification email to %to failed: %err'),
+  'tx-notify-sms-failed' => t('Transaction-notification SMS to %to failed: %err'),
+
+
   // prompts
   'note' => '<b class="loud">' . t('NOTE:') . '</b>',
   'legalname desc' => t(' full legal name, properly capitalized, for tax reporting and banking.'),
@@ -328,6 +332,7 @@ EOF
   'qbo lost' => t('Connection lost to QBO. Sign in and click "Refresh QBO" on the Admin Panel.'),
   'no paypal cancel' => t('We apologize. This form does not yet handle cancelations from PayPal. Use your browser\'s "Back" button, to return to the form with your data filled in.'),
   'categorize txs' => t('You must resolve uncategorized transactions before exporting to QBO (see xid #%xid, eid #%eid).'),
+  'qbo rejected' => t('QuickBooks rejected %doc, so the export stopped there: %msg'),
   'auto bankout nsf' => t('Your %when transfer of %amount to your bank account failed because you have an available balance of only %avail. The system will try again tomorrow.'),
   'button expired' => t('That button has expired.'),
 //  'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),

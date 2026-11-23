@@ -84,6 +84,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -95,6 +96,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signin AMemberAsksForANewPasswordForAnUnknownAccount
  *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signupco ACompanySignsUp
@@ -118,7 +120,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE tx AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForGoods
  *     MAKE tx AMemberAsksToPayAnotherMemberForLoanreimbursement
- *     MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -175,9 +176,11 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberTypesTheWrongPassword
  *     MAKE signin AMemberTypesAnUnknownUsernameID
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
+ *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE signup AMemberRegistersWithCriminalName
@@ -383,6 +386,7 @@ function members($list) {return t\members($list);}
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
+ *     TEST signup AMemberRegistersBadName
  *     TEST signup AMemberRegistersAgain
  *     TEST sponsor ASponseeDrawsCreditFromTheBank
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
@@ -460,6 +464,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
+ *     TEST signin AMemberTriesToResetAPasswordToAWeakOne
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     TEST signupco ACompanySignsUp
@@ -490,7 +495,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST tx AMemberConfirmsRequestToMakeAShorttermLoan
- *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST txdetail AnAdminChangesADepositedBankTransactionAmount
  *     TEST undo AMemberTriesToReverseANonexistentTransaction
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
@@ -517,7 +521,6 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
- *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signup AMemberSignsUp
  */
@@ -536,27 +539,20 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST changeaccount AMemberChangesAccount
- *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
+ * in: TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invite AMemberInvites
- *     TEST joint AMemberAsksToJoinAnExistingAccount
  *     TEST joint AMemberAsksToJoinToSelf
- *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST showqr ACardMemberDisplaysTheirQR
- *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
- *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
- *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
- *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
@@ -569,7 +565,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberSetsBacking
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
- *     TEST signup AMemberConfirmsSocialSecurityNumber
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 
@@ -606,10 +601,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
- *     TEST dashboard AMemberClicksTheDashboardTab
- *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
- *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
- *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST donate AMemberDonates
  *     TEST donate AMemberMakesANewRecurringDonation
@@ -699,15 +690,12 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
- *     TEST signupandpay AMemberClicksACGPayButton
+ *     TEST signupandpay ANonmemberClicksACGPayButton
  *     TEST signupco ACompanyTriesToSignUpDirectly
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanySuppliesCompanyInformation
- *     TEST signupco ACompanySuppliesCrumbsChoices
  *     TEST signup AMemberDonates
- *     TEST signup AMemberVerifiesEmail
- *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ANonmemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinIndividualMemberAppliesForFiscalSponsorship
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
@@ -746,7 +734,6 @@ function with($content) {return weShow($content);}
  * in: TEST ccpay ANonmemberClicksALinkToDonateToAnUnauthorizedOrganization
  *     TEST ccpay ANonmemberClicksALinkToPayACcOkOrganizationByStripe
  *     TEST cgpay AMemberClicksAPayButtonWithVariableAmount
- *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST fbo ANonmemberDonatesToASponsoredMemberByCheck
  *     TEST fbo ASponsoredMemberPaysANonmember
  *     TEST fbo ASponsoredOrganizationMovesCreditToTheBank
@@ -774,7 +761,6 @@ function with($content) {return weShow($content);}
  *     TEST showrecurs ANonadminLooksAtTheirRecurringPayments
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanySuppliesCrumbsChoices
- *     TEST signup AMemberChoosesProxies
  *     TEST sponsor ASignedinCompanyAppliesForFiscalSponsorship
  *     TEST sponsor AFiscallySponsoredApplicantUpdatesItsSettings
  *     TEST stepup AMemberChoosesAPertransactionStepUp
@@ -945,6 +931,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE invoice AMemberMakesPartialPaymentsWithSufficientBalance
  *     MAKE invoice AMemberMakesPartialPaymentsWithInsufficientBalance
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AMemberWithAJoinedAccountViewsInvoices
@@ -982,7 +969,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signout AMemberSignsOut
  *     MAKE signout AMemberTimesOutAndSignsOutAutomatically
- *     MAKE signupandpay AMemberClicksACGPayButton
+ *     MAKE signupandpay ANonmemberClicksACGPayButton
  *     MAKE signupco ACompanyTriesToSignUpDirectly
  *     MAKE signupco SomeoneWantsToOpenACompanyAccount
  *     MAKE signupco ACompanySignsUp
@@ -1271,6 +1258,7 @@ function statisticsGetSet($time) {
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFundsWithoutAConnectedBankAccount
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccountFromTheRelationsPage
+ *     BOTH joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
@@ -1301,11 +1289,27 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST changeaccount AMemberChangesAccount
+ *     TEST dashboard AMemberClicksTheDashboardTab
+ *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
+ *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     TEST dashboard ACompanyAgentClicksTheDashboardTab
+ *     TEST joint AMemberAsksToJoinAnExistingAccount
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST mfa AMemberSignsInWithAccountIDOnTheMemberSiteWithMFA
  *     TEST posts SomeoneSubmitsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
+ *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
+ *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
+ *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
+ *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
+ *     TEST signupco ACompanySuppliesCrumbsChoices
+ *     TEST signupco AnUnverifiedCompanyAgentCompletesACompanyAccount
+ *     TEST signup AMemberVerifiesEmail
+ *     TEST signup AMemberChoosesProxies
+ *     TEST signup AMemberConfirmsSocialSecurityNumber
  *     TEST unsubscribe AMemberFollowsThroughOnUnsubscribing
  */
 function weRedirectTo($page) {
@@ -1437,9 +1441,9 @@ function memberIsLoggedIn($id) {return t\isSignedIn($id);}
  *     MAKE signin AMemberAsksForANewPasswordForAccountID
  *     MAKE signin AMemberAsksForANewPasswordForEmail
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signin AMemberTriesToResetAPasswordToAWeakOne
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -2025,7 +2029,7 @@ function strStarts($haystack, $needle) {
 /**
  * member (ARG) is unconfirmed
  *
- * in: MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ * in: 
  */
 function memberIsUnconfirmed($id) {
   global $testOnly;
@@ -2098,7 +2102,7 @@ function memberOnetimepasswordIsExpires($id, $pass, $expires) {
 /**
  * next random password is (ARG)
  *
- * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ * in: 
  */
 function nextRandomPasswordIs($code) {global $nextPass; return $nextPass = $code;}
 
@@ -2181,6 +2185,7 @@ function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $tas
  *
  * in: MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE joint AJoinedAccountSlaveMemberConnectsABankAccount
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  */
 function stepDone($step) {global $mya; return t\doneStep($mya->id, $step);}
@@ -2326,12 +2331,11 @@ function memberStepsUpWith($id, $rows) {
  */
 function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
   global $testOnly; if ($testOnly) return FALSE;
-  
+
   // assume relations page for now
-  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
-  $val = u\consta('b', $value) - B_RELATED;
-///  debug("$fld-$linei val=$val page=$page id=$id1");
-  return TRUE; // HANGS return t\dojs($page, $id1, "$('select[name=\"$fld-$linei\"').val($val).change();"); // js to simulate dropdown selection
+  $linei = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  $v = u\consta('b', $value) - B_RELATED;
+  return relationsAjax($id1, "$fld-$linei", $v); // what the page's JS posts when a dropdown changes
 }
 
 /**
@@ -2341,8 +2345,22 @@ function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
  */
 function memberDeletesRelationTo($id1, $id2) {
   global $testOnly; if ($testOnly) return FALSE;
-  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
-  return TRUE; // HANGS return t\dojs('settings/relations', $id1, "$('.btn[name=\"delete-$linei\"').click();"); // js to simulate dropdown selection
+  $linei = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  return relationsAjax($id1, "delete-$linei", 0);
+}
+
+/**
+ * Do what the relations page does (via ajax) when a dropdown changes or a delete button is clicked.
+ * We call the ajax handler directly (no browser), so the page's JS itself is not tested.
+ */
+function relationsAjax($id, $name, $v) {
+  global $mya;
+  include_once R_ROOT . '/forms/ajax.inc';
+  t\login($id);
+  [$myid, $aid] = [$mya->id, $mya->agentId];
+  [$sid, $data] = [session_id(), u\jsonize(compact('name', 'v'))];
+  t\output(w\ajax(['op' => 'relations'] + compact(ray('sid data myid aid'))));
+  return TRUE;
 }
 
 /**
@@ -2416,7 +2434,7 @@ function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 /**
  * member (ARG) clicks (ARG) on page (ARG) with: (ARG)
  *
- * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ * in: 
  */
 function memberClicksOnPageWith($id, $button, $page, $info) {
   global $testOnly;
@@ -2652,8 +2670,7 @@ function weShowPDFWith($list) {return t\pdfHas($list);}
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE fbo AMemberDonatesToASponsoredOrganization
- *     MAKE signupandpay AMemberClicksACGPayButton
- *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ *     MAKE signupandpay ANonmemberClicksACGPayButton
  */
 function buttonCodeFor($var, $args) { 
   include_once R_ROOT . '/forms/code.inc';
@@ -2771,3 +2788,10 @@ function showingTxDetails() {
  * in: MAKE bank AMemberRequestsMoreThanTheTotalTheBankAllowsInOneDay
  */
 function memberIsSignedIn($id) {return t\isSignedIn($id);}
+
+/**
+ * these passwords meet the member minimum: (ARG)
+ *
+ * in: TEST passwordstrength TheServerAppliesTheSameMinimumAsTheStrengthBar
+ */
+function thesePasswordsMeetTheMemberMinimum($list) {return t\okPasswords($list);}

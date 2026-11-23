@@ -1,4 +1,5 @@
 # Load DSL and set up stages
+lock "~> 3.20.1"
 require "capistrano/setup"
 
 # Include default deployment tasks

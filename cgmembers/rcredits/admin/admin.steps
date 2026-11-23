@@ -33,6 +33,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  */
 function extraSetup() {
   t\clear(TX_WEB);
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = NULL; $testQbHave = $testQbTxs = []; // QBO stand-ins, which would otherwise carry over from the last scenario
 }
 
 /**
@@ -176,6 +177,7 @@ function with($content) {return t\weShow($content);}
  *     MAKE deletion ARecordIsDeletedFromAnUntrackedTable
  *     MAKE rules Setup
  *     MAKE super AnAdminPrintsChecks
+ *     MAKE super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -506,3 +508,42 @@ function variableIsSet($name) {return t\variableIsSet($name, TRUE);}
  *     TEST dbtransactions AQueryFailsInsideATransaction
  */
 function variableIsNotSet($name) {return t\variableIsSet($name, FALSE);}
+
+/**
+ * the PHP window, away from a local machine, is open to: (ARG)
+ *
+ * in: TEST super ThePHPWindowIsForLocalMachinesAndForAdminsWithTheCodePermission
+ */
+function thePHPWindowAwayFromALocalMachineIsOpenTo($list) {return t\phpWindowOpenTo($list);}
+
+/**
+ * these passwords are strong enough for an admin: (ARG)
+ *
+ * in: TEST super AnAdministratorPasswordMustScoreHigherThanAMembers
+ */
+function thesePasswordsAreStrongEnoughForAnAdmin($list) {return t\strongPasswords($list);}
+
+/**
+ * QBO rejects tx (ARG)
+ *
+ * in: MAKE cats QBORejectsATransaction
+ *     MAKE cats QBORejectsATransactionInABankTransfer
+ */
+function qBORejectsTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbReject = $doc;
+  $testQbHave = $testQbTxs = []; // earlier scenarios can leave these set
+  return TRUE;
+}
+
+/**
+ * QBO has tx (ARG)
+ *
+ * in: MAKE cats QBOAlreadyHasABankTransferFromAnExportThatStoppedPartway
+ */
+function qBOHasTx($doc) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testQbReject, $testQbHave, $testQbTxs; $testQbHave = [$doc];
+  $testQbReject = NULL; $testQbTxs = []; // earlier scenarios can leave these set
+  return TRUE;
+}

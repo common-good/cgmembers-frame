@@ -1,0 +1,195 @@
+# cgmembers-frame - Common Good PHP member site
+
+The live Common Good member site, admin panel, and transaction engine. Drupal-7-derived PHP, evolving since ~2010. Handles authentication, accounts, transactions, grants, notifications, and admin tooling. The SvelteKit companion (`cgpay`) uses this app as the source of truth for identity and business logic.
+
+cgmembers-frame and cgpay are one application in two parts. Guidance for both lives in the "Shared guidance" section near the top of cgpay's CLAUDE.md; read it before working here. Use a local cgpay checkout if it is at least as current as cgpay's `develop`; otherwise read that section on GitHub (`develop` branch).
+
+## What this repo is
+
+- **`cgmembers/`** - the app (Drupal 7 install with the `rcredits` module carrying most Common Good logic)
+- **`cgmembers/rcredits/`** - Common Good's own module, where 95% of engineering work happens
+- **`config/deploy.rb`, `Capfile`, `Gemfile`** - Capistrano deploy config
+- **`db/migrations/`** - Phinx migrations (schema changes)
+- **`lib/`, `vendor/`** - Composer dependencies
+- **`unused/`, `_unused-tools (graveyard)`** - retired code; do not restore without asking William
+
+## Tech stack
+
+- PHP 7.4+ on Apache/nginx
+- MariaDB / MySQL 5.7+
+- Drupal 7 core (heavily customized; `hook_menu`, `db_query`, `drupal_form_submit`, etc.)
+- Gherkin for feature tests, via the in-repo compiler in the `cgmembers/gherkin` submodule (GherkinForDrupal); it has Common Good extensions (see Testing)
+- Phinx for migrations
+- Capistrano for deploys
+- Git submodule: `GherkinForDrupal` (SSH-aliased origin per environment)
+
+## Directory map
+
+```
+cgmembers/
+  index.php                    Drupal 7 entry point
+  includes/                    Drupal core
+  modules/                     contrib modules
+  rcredits/                    ** Common Good's module - where you work **
+    boot.inc                   bootstrap glue
+    bootstrap.inc              CLI bootstrap (menu rebuild etc.)
+    cg-*.inc                   top-level subsystems (see Namespaces below)
+    defs.inc                   constants (permission bits, coflags, config values)
+    admin/                     admin-only forms + tools
+    api/                       JSON/HTTP API handlers used by clients
+    classes/                   PHP classes (Acct, etc.)
+    forms/                     Drupal form callbacks (formFoo, formFoo_validate, formFoo_submit)
+      cgpay/                   server-to-server endpoints for the SvelteKit app (function cgpayFoo is in cgpay/foo.inc)
+        sso.inc                /cgpay/sso - create session for verified uid
+        lookup.inc             /cgpay/lookup - identifier -> uid
+        whoami.inc             /cgpay/whoami - session -> user identity
+        grants.inc             /cgpay/grants - grant CRUD from node
+    rweb/                      user-facing web pages (dashboard, history, etc.)
+    <module>/features/         Gherkin .feature files (in rweb, admin, api, rcron, rsmart, rvote, smp)
+      rweb-subs.inc            shared web utilities
+    rsmart/                    "smart" pos client (older mobile-first flow)
+    rcron/                     scheduled jobs
+    rvote/                     voting features
+    admin/                     admin console
+db/
+  migrations/                  Phinx migrations (dated filenames)
+config/
+  deploy.rb                    Capistrano main config
+  deploy/*.rb                  per-stage overrides (test, dev, staging, demo, beta, main)
+```
+
+## Namespaces + shorthand
+
+Every `cg-*.inc` file declares a namespace. In callers, they're imported with a short alias by convention:
+
+```php
+use CG as r;               // functions closely related to the Common Good payment system
+use CG\Backend as be;      // backend utilities, farther from the front than r\
+use CG\Util as u;          // generic utility functions
+use CG\Db as db;           // database helpers (the file declares CG\DB; both spellings appear)
+use CG\Web as w;           // web interface and form helpers
+use CG\Admin as a;         // administrator functions
+use CG\Txs as x;           // transactions
+use CG\Testing as t;       // behavioral test interface
+use CG\Risk as k;          // risk analysis
+use CG\Vote as v;          // democracy functions
+use CG\Cron as cr;         // cron jobs
+use CG\QR as qr;           // QR codes
+```
+
+Keep a file's alias lines even when it uses none of them, and copy the block from a neighboring file when starting a new one: the block is a fixed per-file convention, so code added later can use any alias without editing the header.
+
+Also: `y\` (CG\Special) and `san\` (CG\Sanity) are rarely used; `s\` was the ancient Android app and is going away.
+
+Drupal functions are called with just a leading backslash (`\drupal_function()`) so they stand out and can be eliminated eventually. Avoid adding new Drupal dependencies.
+
+Reading `r\loginString($id)` or `db\get('uid', 'sessions', ...)` or `u\fmtAmt($n)` is idiomatic. Match this style in new code.
+
+## Key patterns
+
+- **Drupal form callbacks:** `formFoo($form, &$sta, $args = '')` builds, `formFoo_validate` validates, `formFoo_submit` commits. Registered in `cg-menu.inc`.
+- **Menu registry (`cg-menu.inc`):**
+  ```php
+  'path/goes/here' => ['norm|sub|dft|call', 'Title', 'FormNameOrArgs', 'perm bits', 'funcName']
+  ```
+  `'call'` = server-to-server (JSON), no form UI. New routes need a menu rebuild after deploy.
+- **String translation:** `t('literal string with %sub', 'sub', $value)` for static strings, `tr('%foo', 'foo', $value)` for runtime string interpolation. Use `t()` when the whole string is known at code-write time; use `tr()` for dynamic substitution at runtime.
+- **DB access:**
+  - Reads: `db\get('col', 'table', 'where=:val', ['val' => ...])` for scalars, `db\row(...)` for rows, `db\col(...)` for columns.
+  - Writes: `db\insert('table', $assocArray)`, `db\update('table', $assocArray, $where)`. NEVER inline `db_query` for writes if a helper exists.
+- **Acct class:** `r\acct($uid)` returns an `Acct` instance with magic accessors (`$a->fullName`, `$a->bestName`, `$a->co`, `$a->sponsored`, `$a->can(B_ADMIN)`). Read `classes/acct.class` for available fields.
+- **Permission bits:** defined in `defs.inc` as `B_OK`, `B_ADMIN`, `B_CO`, etc. `$a->can(B_ADMIN)` for boolean check.
+- **Coflags:** company account subflags (`CO_SPONSORED`, `CO_OUROWN`, etc. in `defs.inc`).
+- **`exitJust(X_CODE)` / `exitJson($data, X_OK)`** - terminate a JSON endpoint with a status code (see `defs.inc` for `X_*`).
+
+## Server-to-server endpoints (cgpay integration)
+
+All POST-only, all require `X-CG-Internal-Token: <CGPAY_SSO_SECRET>` header, all use `hash_equals` for the compare (fail-closed on empty). Registered as `'call'` type in `cg-menu.inc`.
+
+| Path | Purpose | File |
+|---|---|---|
+| `/cgpay/sso` | create session for verified uid, set device cookie | `forms/cgpay/sso.inc` |
+| `/cgpay/lookup` | identifier (qid, email, phone, name) -> uid | `forms/cgpay/lookup.inc` |
+| `/cgpay/whoami` | session ssid -> `{uid, name, sponsored, menu}` | `forms/cgpay/whoami.inc` |
+| `/cgpay/grants` | grant CRUD from SvelteKit | `forms/cgpay/grants.inc` |
+| `/cgpay/people-autocomplete` | grantor typeahead | `forms/cgpay/peopleautocomplete.inc` |
+| `/cgpay/funders-export` | funder CSV export | `forms/cgpay/fundersexport.inc` |
+| `/cgpay/signup` | new-member signup -- create unverified Acct + email code | `forms/cgpay/signup.inc` |
+| `/cgpay/signup-verify` | confirm code + set password + create session | `forms/cgpay/signupverify.inc` |
+
+Shared secret: `config.json` key `cgpaySsoSecret` -> constant `CGPAY_SSO_SECRET` (see `defs.inc`).
+
+When adding a new endpoint: create `forms/cgpay/<name>.inc` with a function named `cgpay<Name>` (menu1() in `cg-menu.inc` maps the function name to that file), register the path `cgpay/<name>` in `cg-menu.inc`, mirror the existing pattern (POST-only guard, secret verify, JSON body parse, JSON response). Menu rebuild required on deploy.
+
+## Migrations
+
+Phinx migrations under `db/migrations/`. Naming: `YYYYMMDDHHMMSS_snake_case_description.php`. Run via `./migrate.sh` (production) or `./jr-migrate.sh` (jr environment).
+
+**Every database structure change is a Phinx migration** - no manual SQL. Each migration file documents its own change. A fresh install (`recreate.sh`) loads `db/startup.sql` and then runs all migrations, so anything not in a migration is missing on new installs. From time to time (before a release, not in every PR, since each run rewrites the whole file), run `db/make-startup.sh` to regenerate `db/startup.sql` from the old file plus all migrations; `phinxlog` marks them done, so they need not be archived. A new table must first be added to the script's KEEP or SKIP list. `cgmembers/rcredits/misc/pre-git-changes.log` is an old change log (mostly from before git), not a place to record schema changes.
+
+**Deleted-records archives:** a table with a corresponding deleted-records table (`x_<name>`, for example `u_relations` and `x_relations`) must get every structure change in both tables, in the same migration. Loop over both names; see `db/migrations/archived/20230811023357_thermometer.php` (`foreach (ray('u_company x_company') as $tnm)`).
+
+**Names:** table names use underscores, but field names and other identifiers are camelCase (`txNotifyEmail`, not `tx_notify_email`).
+
+## Branch / deploy flow
+
+- Default base branch: `develop`
+- Feature branches -> PR into `develop`
+- `develop` -> `test` branch (William maintains) for integration testing
+- Deploys via Capistrano: `cap test deploy`, `cap dev deploy`, `cap staging deploy`, `cap demo deploy`, `cap beta deploy`, `cap main deploy`
+- Menu rebuild after adding routes: `./cgmembers/rcredits/bootstrap.inc` (CLI) or the admin panel
+
+## Testing
+
+- **Feature files:** `cgmembers/rcredits/<module>/features/*.feature`. The in-repo Gherkin compiler (`cgmembers/gherkin/compile.php`; extensions documented in `cgmembers/gherkin/howto.txt`) compiles them into generated `.test` files and a `<module>.steps` file. Never edit the generated `.test` files; rerun the compiler. In a `.steps` file, edit only parameter names and the code inside function bodies. The compiler adds a stub for each new step at the end of the file and never changes existing bodies (so a new function's body is for you to write).
+- **Gherkin extensions:** matrix arguments (`*`, `**`), a `Variants:` section, a `Setup:` first scenario run before each scenario, magic `%` arguments (`%today-20d`, `%random`, ...), and `Skip`/`Resume`. Steps must make the Given true (and only test the Then); see `howto.txt`.
+- **Rules:** group scenarios under the business rule they illustrate with a comment line like `# Rule: ...` (see `rweb/features/bank.feature`). `compile.php` recognizes only `Feature`, `Variants`, `Setup`, and `Scenario`, so the real Gherkin `Rule:` keyword is not usable here yet.
+- **Test accounts:** features declare `Setup` fixtures with feature-local uids like `.ZZA`, `.ZZB`, `.ZZC`, `.ZZF`. Separately, `a\makeTestAccounts()` (admin.inc) creates the standard accounts Abe One, Bea Two, Citre, Dee Four, Eli Five, Flo Six, Gisette, Hal Ate, Ida Nine as `.ZPA` ... `.ZPI` (`NEWZPA`... in base-26 letters; the same accounts as the legacy app's `K6...` ids). cgpay's tests call them Abe, Bea, Cit, ... Prefer these names in new features here too, instead of `.ZZA`-style uids. Non-production servers only.
+- **Test passwords:** accounts created in features (`doAccounts()` in `cg-testing.inc`) default to password `k`, and so do the individual standard accounts from `makeTestAccounts()`. Company standard accounts (Citre, Gisette) have no password; sign in as an agent. Sign-in by full name (`Abe One`) is known to work; short names may not.
+- **Dev admin bypass:** on DEV, admin (uid=1) sign-in accepts any non-empty password (`forms/signin.inc`, around line 84). Not in production.
+- **Running the whole suite:** run each module through the web endpoint, one div at a time: `http://localhost/cg/cgmembers/tests?module=rcredits/<module>&div=<n>&feature=&scene=&variant=&restart=1&compile=1` (`curl -L` with a cookie jar works). Modules: admin (2 divs), rvote, rcron (2), rsmart (2), api, rweb (6). To run one feature, set `feature=<name>` and leave `div` empty. Run only one at a time: runs share the database and clobber each other. Local Apache needs `xdebug.mode=off`; when testing main-based branches, `config.json` stage must be `development`.
+- **Reading the results:** each run replaces the contents of the `test` table in the test database (the page `/sadmin/test-results/top=1` just shows it). Summary row: `SELECT value FROM test WHERE id<0` (ok count, and `no: _` when nothing failed). Failing scenarios: `SELECT value FROM test WHERE value LIKE '%FAIL....%'` (strip the HTML tags); the other rows have the step-by-step output.
+- **Expected state:** every scenario passes. A scenario turned off with `Skip` in a feature file is not a failure (each has a note saying why). Any failure is a regression: fix it or report it, and do not skip it to get green.
+- **Skips:** `Skip` switches a test off temporarily; it never fixes anything. Put the reason on the `Skip` line, end the skipped section with `Resume`, and take the `Skip` (and `Resume`) out as soon as the tests it covers should run again. Do not turn off several scenarios with one `Skip`: that would hide tests that were probably meant to come back, so make one skip per scenario. To list every current skip and commented-out scenario: `grep -rnE "^(Skip|#\s*Scenario)" cgmembers/rcredits --include=*.feature`.
+- **Test endpoint** (used by cgpay's Playwright tests): `testops()` in `forms/api.inc`, POST `<api base>/test` with `version` and `op`. Ops: `initialize` (reset the standard accounts and delete their stray txs), `rows` (txs among those accounts; txs table only), `update` (users table only). Answers only on a developer's own machine (`isLOCAL`) and in the feature tests; every online server gets 403. Spec: `api/features/test.feature`. The legacy cgpay PWA depends on the existing `api.inc` ops: never remove or change one (add a new op instead).
+
+## Conventions
+
+See also cgpay's Shared guidance (see the top of this file): plain ASCII, commit messages, comments and function headers, code style, public repos.
+
+- **Namespaces:** always alias with the standard short form (`CG\Db as db`, etc.), and keep the standard alias lines even when the file doesn't use them yet.
+- **`t()` vs `tr()`:** static-known strings use `t()`; runtime interpolation uses `tr()`.
+- **Whitespace and casing:** see Code style below; when in doubt, match the surrounding style.
+
+## Code style
+
+The general code style is in cgpay's Shared guidance. PHP specifics:
+
+- More conventional short names: `acct` account object (besides `a`), `ray` array.
+- Helpers used heavily: `ray()` (build arrays from space/comma-separated strings), `just()` (pick keys from an array), `in()` (search a list), and `compact()`/`extract()`.
+- Follow Eclipse defaults or PSR-2, except: two-space indent (no tabs); a simple `if` can go on one line; a simple `else` can follow the closing brace (`} else {zot();}`); `TRUE`, `FALSE`, `NULL` are capitalized; simple single-line functions can go on one line.
+- camelCase for variables and functions; lowercase-with-hyphens for filenames and URLs; lowercase_underscores only where Drupal requires them.
+- No inline scripts or styles (strict Content Security Policy): use `w\js()`, `w\jsx()`, `w\css()`.
+- Temporary debugging statements (`debug(`, `die(`, `print_r(`, `lug(`, `flog(`, `echo`) must be removed before upload. Any such line that is meant to stay begins with `///` (inactive) or `/**/` (active).
+
+## Common gotchas
+
+- **Menu registry is cached.** After editing `cg-menu.inc`, run the menu rebuild or your new route 404s.
+- **`.gitmodules` uses SSH aliases** (`github-cg:`, `github-pay:`) for `GherkinForDrupal`. If deploy fails on submodule fetch, check that the deploy user has the SSH stanza configured.
+- **Session cookies (`SSESS...`) are set with `Domain=.commongood.earth`** so both PHP and cgpay see them. Never scope narrower without coordinated changes on the cgpay side.
+- **`$mya`** is the global "current account" - populated by session bootstrap. In server-to-server endpoints (like `/cgpay/*`), it may be unset; use `r\acct($uid)` explicitly.
+- **Dev-only admin password bypass** at `signin.inc:84` accepts any non-empty password when uid=1 on DEV. Not present in production.
+
+## Watch list
+
+Before you add or change a `db_transaction()` / `$DBTX`, a `try/catch` that could swallow `u\FAIL()`, or a `db\q()` call inside a transaction, read the matching entry in `docs/watch-list.md`. Add new triggers there (and one line here), not details here.
+
+## Cross-repo
+
+Companion repo: `cgpay` (SvelteKit + adapter-node - modernized member-facing UI). See its `CLAUDE.md` for the node-side conventions and for local setup, which varies by developer (Windows and Mac).
+
+## People
+
+- **Jose** - CEO, product owner
+- **William Spademan** - founder, outgoing tech lead. Deepest knowledge of this codebase.
+- **Chris Schwab** - incoming lead engineer

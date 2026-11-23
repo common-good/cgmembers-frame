@@ -202,6 +202,7 @@ class QB {
    *   L   +   -
    *
    * @param bool $omitBankTxs: <don't handle txs for bank transfers> (normally called with this TRUE after handling txs through the latest bank transfer date)
+   * @return FALSE if QBO rejected a transaction (so the caller must not flag later ones as sent), else TRUE
    */
   public function sendTxs($omitBankTxs, $end = NOW) { // usually call only from sendBankTxs
     global $testQbTxs;
@@ -209,7 +210,7 @@ class QB {
     $start = strtotime('7/1/2022');
 //    if (!isset($end)) $end = db\max('deposit', 'txs JOIN txs2 USING (xid)', ':IS_QBOK'); // don't go beyond latest cgFund# export, in case some txs have both a cg# and a cgFund#
     $this->refresh();
-    $cnt = 0;
+    $cnt = 0; $ok = TRUE;
     $sql = 'SELECT DISTINCT uid2 FROM txs WHERE uid1=:UID_OUTER AND created BETWEEN :start AND :end';
     $uids = db\q($sql, compact(ray('start end')))->fetchCol(0); // sponsored only for CC processing
     $uids = array_unique(array_merge($uids, r\catUids()));
@@ -218,7 +219,7 @@ class QB {
 
     foreach ($txs as $entries) {
       extract(just('xid description created banking cat2 uif2 uid2 name', $entries[0]));
-      if (!$this->isNew("cg#$xid")) break;
+      if (!$this->isNew("cg#$xid")) {$ok = FALSE; break;}
 
       if ($banking) {
         if (r\acct($uid2)->sponsored) $description .= ': ' . strtolower(u\word9(db\get('category', 'tx_cats', ray('id', $cat2)), ': '));
@@ -232,8 +233,7 @@ class QB {
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (test()) $testQbTxs[] = $qbTx; else
-        $this->ds->Add($qbTx);
+        if (!$this->add($qbTx)) {$ok = FALSE; break;} // stop, so nothing gets flagged as sent unless QBO took it
         r\setQbOk($xid);
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
@@ -241,6 +241,7 @@ class QB {
     list ($xid1, $xid9) = $txs ? [$txs[0][0]['xid'], $xid] : ['', ''];
 //    r\tellAdmin(t('QBO export complete'), ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9));
     w\say(t('QBO export complete: ') . pr(ray('count xid1 xid9', sizeOf($txs), $xid1, $xid9)));
+    return $ok;
   }
 
   /**
@@ -271,7 +272,7 @@ X;
       extract($row);
       if ($cnt == 0) $dt1 = $deposit;
       $DocNumber = "cgFund#$deposit";
-      if (!$this->isNew($DocNumber)) break;
+      $have = $this->inQbo($DocNumber); // QBO already has it when an earlier export stopped partway through this deposit
       
       $PrivateNote = $reversal ? t('reversal') : ($txCnt > 1 ? t('ACH batch') : t('single bank transfer'));
       
@@ -286,10 +287,9 @@ X;
       if (QSEND_TEST) {
 /**/    debug($qbTx);
       } else {
-        if (test()) $testQbTxs[] = $qbTx; else
-        $this->ds->Add($qbTx);
+        if (!$have and !$this->add($qbTx)) break;
 
-        $this->sendTxs(FALSE, $deposit); // transfer all non-bank aspects of all transactions up through this deposit date/time
+        if (!$this->sendTxs(FALSE, $deposit)) break; // transfer all non-bank aspects of all transactions up through this deposit date/time
         db\q('UPDATE tx_hdrs h JOIN txs2 x2 USING (xid) SET h.flags=(h.flags|(1<<:B_QBOK)) WHERE x2.deposit=:deposit', compact('deposit')); // AFTER sendTxs()!!
       }
       $cnt++; if (MAX_QCNT and $cnt >= MAX_QCNT) break;
@@ -364,6 +364,16 @@ X;
     $qbTx->Line[] = new qbData\IPPLine($line);
   }
 
+  private function add($qbTx) {
+    global $testQbTxs, $testQbReject; // $testQbReject: DocNumber a test wants QBO to reject
+    $doc = $qbTx->DocNumber;
+    if (test() and $doc != nn($testQbReject)) {$testQbTxs[] = $qbTx; return TRUE;}
+    if (!test() and $this->ds->Add($qbTx)) return TRUE;
+    $error = test() ? NULL : $this->ds->getLastError();
+    w\err(tr('qbo rejected', ray('doc msg', $doc, $error ? $error->getResponseBody() : t('no details'))));
+    return FALSE;
+  }
+
   /**
    * In a given Journal Entry, change every occurrence of a given AccountRef to a given other AccountRef, identified by CG tx_cats IDs.
    * @param int $oldCat: the old CG tx_cats ID
@@ -400,14 +410,17 @@ X;
     return $cnt;
   }
    
+  private function inQbo($doc) {
+    global $testQbHave; // DocNumbers a test wants QBO to have already
+    return test() ? in_array($doc, $testQbHave ?: []) : (bool) $this->get('Id', 'JournalEntry', "DocNumber='$doc'");
+  }
+
   /**
    * If the transaction has already been sent to QBO, show an error message and return FALSE (else return TRUE).
    * @param string $id: the journal entry identifier
    */
   private function isNew($id) {
-    if (test() or QSEND_TEST) return TRUE;
-    if (!$this->get('Id', 'JournalEntry', "DocNumber='$id'")) return TRUE;
-    if (u\starts($id, 'cgFund#')) return TRUE; // ignore if QBO already has this bank transfer (no doubt caused by a crash while processing transactions up to that deposit date)
+    if (QSEND_TEST or !$this->inQbo($id)) return TRUE;
 //    $xid = substr($id, strpos($id, '#') + 1);
 //    if (TRUE or $xid <= 163686) {r\setQbOk($xid); return TRUE;} // delete this line and the preceding after 7/1/2022
     w\err(t('Transaction %id has already been transferred! Stopping...', compact('id')));

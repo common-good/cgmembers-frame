@@ -40,7 +40,7 @@ function api($arg = null) {
   $channel = TX_APP;
   unset($params['q']); // Drupal adds this
   u\loga('in:' . $arg, $params);
-  setHeaders();
+  setHeaders($arg);
   if ($arg == 'test') $arg = 'testops'; // avoid collision with our regular testing framework
   if (!function_exists($func = '\\CG\\Web\\' . $arg)) return exitJust(X_SYNTAX);
   $requireActive = in($arg, REQUIRE_ACTIVE);
@@ -74,8 +74,6 @@ function api($arg = null) {
  *         name is the name (fullName) on the account
  */
 function accounts($params) {
-  global $nextCode; // tests usurp generated device code, using this instead
-
   foreach (ray('identifier password version') as $k) if (!$$k = nni($params, $k)) return exitJust(X_UNAUTH);
 
   if ($identifier == 'getCardCodes' and $code = substr($password, 0, DEVICE_MAXLEN)) { // repairing older data
@@ -96,24 +94,56 @@ function accounts($params) {
   if (!$list = be\accountChoices(r\acct($myid), B_BUY, 'u.:IS_OK', TRUE)) return exitJust(X_NOTFOUND);
 
   foreach ($list as $uid => $name) {
-    $a = r\acct($uid, $myid);
-    $isCo = $a->co;
-    if ($a->stepsLeft($isCo ? 'coapp' : 'app')) continue; // no using app without card permission
-    $a->setAgentNum(); // legacy agents may lack a number, and the app needs one to identify itself later
-    $accountId = qr\url($a, 'main'); // r\acct($uid)
-    $cardCode = $a->cardCode();
-    $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
-///    flog("toCry=$toCry version=$version <=" . (+$version < 40200));
-    $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
-//    $qr = ($uid == $myid and !$a->stepsLeft('card')) ? myQr($a) : NULL;
-    $qr = myQr($a);
-    $selling = $isCo ? explode("\n", $a->selling) : NULL;
-    $accounts[] = compact(ray('accountId cardCode deviceId qr isCo name selling'));
+    if ($one = accountInfo(r\acct($uid, $myid), $name, $version)) $accounts[] = $one;
   }
 
   if (!nn($accounts)) return exitJust(X_NOTFOUND);
   
   return exitJson(compact(ray('accounts')), X_OK);
+}
+
+/**
+ * Build the description of one account for a device (shared by /accounts and /handoff).
+ * @param acct $a: the account (with the signed-in agent already set)
+ * @param string $name: the name to show for the account
+ * @param int $version: the app version
+ * @return assoc [accountId, cardCode, deviceId, qr, isCo, name, selling, real], or NULL if the account can't use the app yet
+ */
+function accountInfo($a, $name, $version) {
+  global $nextCode; // tests usurp generated device code, using this instead
+
+  $isCo = $a->co;
+  if ($a->stepsLeft($isCo ? 'coapp' : 'app')) return NULL; // no using app without card permission
+  $a->setAgentNum(); // legacy agents may lack a number, and the app needs one to identify itself later
+  $accountId = qr\url($a, 'main');
+  $cardCode = $a->cardCode();
+  $toCry = (+$version < 40200 ? '' : "$a->mainQid/") . now() . "/$name"; // < 40200 is for testing conversion
+  $deviceId = (isDEV or isDEMO) ? (nn($nextCode) ?: 'dev' . $a->fullName[0]) : base64_encode(u\cryPP($toCry, 'private')); // prove to customer who they're dealing with when offline
+  $qr = myQr($a);
+  $selling = $isCo ? explode("\n", $a->selling) : NULL;
+  $real = (bool) isPRODUCTION; // real QR codes (RC2.ME) or test ones (RC4.ME)
+  return compact(ray('accountId cardCode deviceId qr isCo name selling real'));
+}
+
+/**
+ * POST /handoff
+ * Return the signed-in node (SSO session) account in the same form as /accounts, so the legacy app can link to it.
+ * The session cookie identifies the account (no password, no device credentials).
+ *
+ * @return a JSON hash:
+ *   accounts: an array with one account (see /accounts)
+ *   dashboardUrl: where to return the member after the transaction (config cgpayUrl)
+ */
+function handoff($params) {
+  $ssid = nni($_COOKIE, session_name());
+  if (!$ssid or !$row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid])) return exitJust(X_UNAUTH);
+  $agent = (int) nni((array) $row, 'uid');
+  $uid = (int) nni((array) $row, 'acct') ?: $agent; // sessions.acct is the account being acted on (see cgpaywhoami.inc)
+  if (!$uid or !$a = r\acct($uid, $agent ?: $uid)) return exitJust(X_UNAUTH);
+  if (!$a->ok) return exitJust(X_FORBIDDEN);
+
+  if (!$info = accountInfo($a, $a->fullName, nni($params, 'version'))) return exitJust(X_NOTFOUND);
+  return exitJson(['accounts' => [$info], 'dashboardUrl' => CGPAY_URL], X_OK);
 }
 
 function myQr($a) {
@@ -395,13 +425,57 @@ function comments($params) {
 }
 
 /**
+ * Put the standard test accounts (.ZPA to .ZPI) back to their starting state: the accounts, their relations, and the rows scenarios add for them.
+ * The first call (and the first after makeTestAccounts() changes) makes the accounts the slow way and keeps a copy of their rows. Later calls clear the rows and put the copy back.
+ */
+function resetTestAccts($uidMin, $uidMax) {
+  $in = "BETWEEN $uidMin AND $uidMax";
+  $ours = "uid $in OR uid=" . DEMO_CTTY; // the accounts and the community account they belong to
+  $own = ['users' => $ours, 'u_photo' => $ours, 'u_company' => $ours, 'admins' => $ours, 'u_relations' => "main $in OR other $in"]; // what makeTestAccounts() makes
+  $more = ['r_boxes', 'sessions', 'r_ips', 'grants', 'reset_codes']; // what scenarios add (all keyed by uid)
+  $db = db\q('SELECT DATABASE()')->fetchField();
+  $f = sys_get_temp_dir() . '/cg-test-accts-' . md5(R_ROOT . $db) . '.ser';
+  $v = md5(join(array_map(fn($k) => md5_file(R_ROOT . "/$k"), ray('admin/admin.inc classes/acct.class cg.inc'))) . serialize([$own, $more])); // the copy is stale when the accounts' code or the list of tables changes
+  $snap = is_file($f) ? @unserialize(file_get_contents($f), ['allowed_classes' => FALSE]) : NULL;
+
+  db\del('txs', "uid1 $in OR uid2 $in");
+  db\del('txs2', "payee $in");
+  db\del('tx_requests', "payee $in OR payer $in");
+  db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $in); // including txs that were deleted before
+  foreach ($own as $t => $where) db\q("DELETE FROM $t WHERE $where");
+  foreach ($more as $t) if (db\q('SHOW TABLES LIKE :t', ['t' => $t])->fetchField()) db\q("DELETE FROM $t WHERE uid $in");
+  if (nni($snap, 'v') == $v) {
+    foreach ($snap['rows'] as $t => $rows) foreach ($rows as $row) {
+      if ($t == 'admins') unset($row['id']); // a counter only, and a row outside the test accounts may hold it by now
+      if ($t == 'u_relations') { // reid is a regional id, as newRelation() makes it: keep it unless another row took it meanwhile
+        if (db\exists($t, 'reid=:reid', ['reid' => $row['reid']])) unset($row['reid']);
+        r\regionalInsert($t, 'reid', $row, -r\acct($row['main'])->region);
+      } else db\q("INSERT INTO $t SET " . join(',', array_map(fn($k) => "`$k`=:$k", array_keys($row))), $row);
+    }
+    return;
+  }
+
+  a\makeTestAccounts();
+  db\q("UPDATE users SET floor=-9999 WHERE uid $in"); // undo what scenarios set with "update" that makeTestAccounts() leaves alone
+  foreach (db\col('uid', 'users', "uid $in") as $uid) r\acct($uid)->update('bankAccount', ''); // reading it first needs a key the API channel lacks
+
+  $rows = [];
+  foreach ($own as $t => $where) {
+    $q = db\q("SELECT * FROM $t WHERE $where");
+    while ($row = $q->fetchAssoc()) $rows[$t][] = $row;
+  }
+  file_put_contents($tmp = "$f." . getmypid(), serialize(['v' => $v, 'rows' => $rows]));
+  rename($tmp, $f); // atomic, so a concurrent reset never reads half a copy
+}
+
+/**
  * POST /test
  * 
  * Put or get test data.
  *
  * @param string $op: the test operation (see below)
  * plust other parameters depending on the operation:
- *   initialize (): creates default data (especially for Release A)
+ *   initialize (): puts the standard test accounts (.ZPA to .ZPI) and the rows scenarios add for them back to the starting state
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
  *   update (table, {keyedValues}) where the first keyed value is the record key
@@ -409,7 +483,7 @@ function comments($params) {
  *     where fieldList is '*' --  eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
 function testops($params) {
-  if (!!isPRODUCTION or !!isSTAGE) return exitJust(X_FORBIDDEN);
+  if (!!isPRODUCTION or !!isSTAGE or !(isLOCAL or test())) return exitJust(X_FORBIDDEN); // a developer's own machine (or the feature tests) only
 
   if (!$op = nni($params, 'op')) return exitJust(X_SYNTAX);
    
@@ -422,17 +496,16 @@ function testops($params) {
 
   switch ($op) {
     case 'initialize': 
-      //t\clear(TX_APP); 
-      a\makeTestAccounts(); // only in release A, reset to default accounts instead of clearing all test data
-      db\q('DELETE h,e FROM tx_hdrs_all h INNER JOIN tx_entries_all e USING (xid) WHERE uid ' . $uidCrit); // remove any txs that have been deleted by makeTestAccounts()
+      resetTestAccts($uidMin, $uidMax);
       break;
       
     case 'rows':
       foreach (ray('fieldList table') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      if (!in($table, 'txs')) return exitJust(X_SYNTAX);
+      $wheres = ['txs' => "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid", 'grants' => "uid $uidCrit ORDER BY id", 'tx_requests' => "payer $uidCrit AND payee $uidCrit ORDER BY nvid", 'users' => "uid $uidCrit ORDER BY uid"];
+      if (!$where = nni($wheres, $table)) return exitJust(X_SYNTAX);
       try {
-        $rows = db\rows('*', 'txs', "uid1 $uidCrit AND uid2 $uidCrit ORDER BY xid");
-        $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
+        $rows = db\rows('*', $table, $where);
+        if ($table == 'txs') $rows = json_decode(str_replace('actorId', 'actorUid', json_encode($rows))); // we really ought to rename the field
         return exitJson($rows, X_OK);
       } catch (\Exception $er) {
         return exitJust(X_SYNTAX);
@@ -442,7 +515,12 @@ function testops($params) {
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
       if (!in($table, 'users')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
-      foreach ($ray as $i => $row) db\update($table, (array) $row, 'uid');
+      $special = SECURE_FLDS . ' ' . VSECURE_FLDS; // encrypted fields (bankAccount, for example) go through the account object
+      foreach ($ray as $row) {
+        $row = (array) $row;
+        if ($sp = just($special, $row)) r\acct($row['uid'])->update($sp);
+        if (count($rest = justNOT($special, $row)) > 1) db\update($table, $rest, 'uid');
+      }
       break;
       
     default: return exitJust(X_SYNTAX);
@@ -556,7 +634,7 @@ function authOk($arg, $params, $requireActive, $noBox = FALSE) {
     }
     $device = substr($deviceId, 0, DEVICE_MAXLEN);
     if (!$noBox) $mya->boxId($device, nni($params, 'version', -1)); // find device in the db or put it there
-  } elseif (!in($arg, 'accounts lostPassword testops')) return exitJust(X_UNAUTH);
+  } elseif (!in($arg, 'accounts handoff lostPassword testops')) return exitJust(X_UNAUTH);
 
   return TRUE;
 }
@@ -571,8 +649,24 @@ function fixVersion(&$params) {
   if (count($vv) == 3) $params['version'] = $vv[0] * 10000 + $vv[1] * 100 + $vv[2] * 1;
 }
 
-function setHeaders() {
-  header('Access-Control-Allow-Origin: *');
+/**
+ * The origins of the legacy app that may call /handoff with the session cookie.
+ */
+function handoffOrigins() {
+  return HANDOFF_ORIGINS;
+}
+
+// Dev only: the legacy app on any localhost port (parallel test slots each use their own).
+function handoffOriginOk($origin) {
+  return in_array($origin, handoffOrigins()) or (isDEV and preg_match('~^http://localhost:\d+$~', $origin));
+}
+
+function setHeaders($arg = '') {
+  $origin = nni($_SERVER, 'HTTP_ORIGIN');
+  if ($arg == 'handoff' and $origin and handoffOriginOk($origin)) { // credentials need an exact origin, not *
+    header("Access-Control-Allow-Origin: $origin");
+    header('Vary: Origin');
+  } else header('Access-Control-Allow-Origin: *');
   header('Access-Control-Allow-Methods: *'); // GET,HEAD,OPTIONS,POST,PUT
   header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers');
   header('Access-Control-Expose-Headers: *');

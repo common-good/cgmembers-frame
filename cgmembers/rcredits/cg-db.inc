@@ -111,7 +111,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   $many = (substr($fieldName, -1, 1) == '*');
   $several = (!$many and $fieldCount > 1);
   $result = ($several or $many) ? $result->fetchAssoc() : $result->fetchField();
-  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off: result=' . pr($result) . ' count=' . $fieldCount); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
+  if ($several and $result and \count($result) != $fieldCount) u\FAIL('field count is off: result=' . pr($result) . ' count=' . $fieldCount); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
   return $result;
 }
 function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $where, $subs);}
@@ -319,7 +319,9 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
     
   } elseif ($isTxs2 = u\starts($tnm, 'txs2') or in($tnm, TRACK_DELETED)) {
     $xtnm = in($tnm, 'users') ? "x_$tnm" : ($isTxs2 ? 'x_txs2' : preg_replace('/^._/', 'x_', $tnm));
-    $q = db\q("INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where", $subs);
+    $sql = "INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where";
+    $q = db\q($sql, $subs);
+    u\EXPECT($q, 'bad delete query (probably field count mismatch): ' . showQ($sql, $subs)); // pr(compact(ray('xtnm tnm where subs'))));
     if ($q->rowCount() > 0 and $isTxs2) { // need to delete related txs records as well as txs2 records
       if ($xids = db\col('xid', $tnm, $where, $subs)) $ok = db\del('txs', 'xid IN (:xids)', compact('xids'));
     }

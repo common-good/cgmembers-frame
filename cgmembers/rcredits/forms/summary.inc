@@ -27,7 +27,7 @@ function formSummary($form, &$sta) {
   }
 
   if ($mya->can(B_MANAGE)) { // includes $mya->admManageAccts as well as admin's own company
-    $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
+    $buttons = CGPAY_URL ? btn(CGPAY_URL, t('Simple Dashboard')) : '';
     if (!$mya->isCtty) {
       if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
       $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
@@ -145,7 +145,7 @@ function formSummary_submit($form, &$sta) {
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
   extract($args = just('uid legalName shortName creditLine tickle note notes dob altId altSt helper moves active risks adminable adminCans coFlags', $sta['input'], NULL));
-  if (!$mya->admManageAccts) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
+  if (!$mya->admManageAccts) foreach ($args as $k => $v) if (isset($v) and !in($k, 'uid tickle note')) u\FAIL('unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
     $tickleDone = $mya->ok ? ($note and $mya->tickle) : 'activate';

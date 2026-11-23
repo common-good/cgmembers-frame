@@ -563,8 +563,27 @@ function deleteAllCooks($except = '') {foreach ($_COOKIE as $k => $v) if (!in($k
 function deleteAllCooksBut($except) {deleteAllCooks($except);} // use this if specifying $except (clearer)
 
 /**
+ * Make duplicate session cookies harmless. Older code set the session cookie on other scopes (the host alone, a parent
+ * domain), so a browser sends several with the same name, oldest first, and PHP keeps the first: a stale one logs the
+ * member out. Use the copy that has a live session here and expire the host-only and parent-domain copies (never the
+ * current scope, never another cookie name). Return the domains expired ('' is the host-only copy), for tests.
+ */
+function healSessionCookies() {
+  global $cookie_domain, $is_https;
+  $name = session_name();
+  if (preg_match_all('/(?:^|;\s*)' . preg_quote($name, '/') . '=([^;]*)/', nni($_SERVER, 'HTTP_COOKIE'), $m) < 2) return [];
+  $col = $is_https ? 'ssid' : 'sid';
+  foreach ($m[1] as $v) if (db\get('uid', 'sessions', "$col=:sid", ['sid' => $v = urldecode($v)])) {$_COOKIE[$name] = $v; break;}
+
+  $doms = ['']; $parts = explode('.', ltrim($cookie_domain, '.'));
+  while (count($parts) > 2) {array_shift($parts); $doms[] = '.' . join('.', $parts);}
+  if (!test()) foreach ($doms as $d) setcookie($name, '', ['expires' => 1, 'path' => '/', 'domain' => $d, 'secure' => $is_https, 'httponly' => TRUE]);
+  return $doms;
+}
+
+/**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
- * If no admin is signed in with super permission (or partially signed in -- see w\superSignin()), return FALSE.
+ * If no admin is signed in with super permission -- or partially signed in but not w\superSignin()ed) -- return FALSE.
  */
 function vKey() {
   global $mya, $channel;
@@ -572,10 +591,11 @@ function vKey() {
   $ermsg = t(' Create a new vKeyE and vKeyPw (see acct::makeVKeyE).');
 
   if (!$mya or empty($vKeyE = db\get('vKeyE', 'admins', ray('uid', $mya->agentId))) or empty($vKeyPw = r\cryptCook('vKeyPw'))) {
-    $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!');
-    r\tellAdmin($msg . trace());
+    $msg = t('missing ') . (empty($vKeyE) ? 'vKeyE!' : 'vKeyPw!') . $ermsg;
+    r\tellAdmin($msg . t(' (User %nm)', 'nm', $mya->fullName));
     return w\softErr($msg);
   }
+
   return u\decry('R', $vKeyE, $vKeyPw);
 }
 
@@ -1297,7 +1317,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
   
   $confirmed = ($a1->co ? ($a1->agentA->confirmed or $a1->helperA->confirmed) : $a1->confirmed);
-  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and !in($a2->id, BUCKET_UIDS)) { // actor is not confirmed (but newbs can transact with bank and CG)
+  if (!$confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and !in($a2->id, BUCKET_UIDS)) { // actor is not confirmed (but noobs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
