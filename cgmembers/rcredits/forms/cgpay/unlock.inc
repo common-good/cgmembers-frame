@@ -38,6 +38,6 @@ function cgpayUnlock() {
     if (!appManages($by = $a->agentId, $row->lockedTo)) return appErr('not-manager', X_FORBIDDEN);
   }
   if (!$row->lockedTo) return exitJson(['ok' => 1], X_OK);
-  db\update('app_tokens', ['id' => $row->id, 'unlockedUntil' => $row->unlockedUntil = now() + APP_UNLOCK_SECS, 'unlockedBy' => $row->unlockedBy = $by]);
+  db\update('app_tokens', ['id' => $row->id, 'unlockedUntil' => $row->unlockedUntil = now() + APP_UNLOCK_SECS, 'unlockedAt' => $row->unlockedAt = now(), 'unlockedBy' => $row->unlockedBy = $by]);
   return exitJson(['ok' => 1, 'unlockedBy' => (int) $by] + appMember($row->uid, $row), X_OK);
 }

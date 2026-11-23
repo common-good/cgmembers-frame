@@ -23,7 +23,7 @@ function cgpayLock() {
     $lockedTo = (int) $account ?: NULL;
     if ($lockedTo and (!$a = r\acct($lockedTo) or !$a->co or !appManages($row->uid, $lockedTo))) return appErr('not-allowed', X_FORBIDDEN);
   }
-  $unlockedUntil = $unlockedBy = NULL;
-  db\update('app_tokens', ['id' => $row->id] + compact(ray('lockedTo unlockedUntil unlockedBy')));
+  $unlockedUntil = $unlockedAt = $unlockedBy = NULL;
+  db\update('app_tokens', ['id' => $row->id] + compact(ray('lockedTo unlockedUntil unlockedAt unlockedBy')));
   return exitJson(appMember($row->uid, db\row('app_tokens', 'id=:id', ['id' => $row->id])), X_OK);
 }

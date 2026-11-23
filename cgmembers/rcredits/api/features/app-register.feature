@@ -154,8 +154,8 @@ Scenario: Another manager's card unlocks the cash register
   | uid  |*
   | .ZPC |
   And these "app_tokens":
-  | uid  | lockedTo | unlockedUntil | unlockedBy |*
-  | .ZPA | .ZPC     | %now+2n       | .ZPB       |
+  | uid  | lockedTo | unlockedUntil | unlockedAt | unlockedBy |*
+  | .ZPA | .ZPC     | %now+2n       | %now       | .ZPB       |
 
 Scenario: Another manager's unlock opens the company's live page
   Given cgpay posts "lock" with:
@@ -308,6 +308,29 @@ Scenario: An unlock in use lasts
   | lockedTo |*1
   | 0      |
 
+Scenario: An unlock in use ends five minutes after it began
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And cgpay posts "unlock" with:
+  | token  | password |*
+  | %token | Aa1      |
+  And the time now is "%now+2n"
+  And cgpay posts "device" with:
+  | token  |*
+  | %token |
+  And the time now is "%now+4n"
+  And cgpay posts "device" with:
+  | token  |*
+  | %token |
+  And the time now is "%now+6n"
+  When cgpay posts "device" with:
+  | token  |*
+  | %token |
+  Then we reply "ok" with JSON values:
+  | lockedTo |*1
+  | .ZPC   |
+
 Scenario: Locking again ends the unlock
   Given cgpay posts "lock" with:
   | token  | account |*
@@ -395,8 +418,26 @@ Scenario: A manager's card lets a locked cash register pay offline
   | ok   | message               |*
   | true | You paid Dee Four $12. |
   And these "txs":
-  | actorId | uid1 | uid2 | amt | for2  |*
-  | .ZPC    | .ZPC | .ZPD | 12  | stuff |
+  | actorId | actorAgentId | uid1 | uid2 | amt | for2  |*
+  | .ZPC    | .ZPB         | .ZPC | .ZPD | 12  | stuff |
+
+Scenario: A payment from an unlocked cash register names the manager who unlocked it
+  Given cgpay posts "lock" with:
+  | token  | account |*
+  | %token | .ZPC    |
+  And var "card" is the "real" card of ".ZPB"
+  And cgpay posts "unlock" with:
+  | token  | qr    |*
+  | %token | %card |
+  When cgpay posts "tx" with:
+  | token  | amount | actorId  | otherId | description | created | proof                        | offline | pending |*
+  | %token | -12    | L6VMDCC0 | K6VMDCD | stuff       | %now    | L6VMDCC0-12.00K6VMDCDccD%now | 0       | 0       |
+  Then we reply "ok" with JSON:
+  | ok   | message               |*
+  | true | You paid Dee Four $12. |
+  And these "txs":
+  | actorId | actorAgentId | uid1 | uid2 | amt | for2  |*
+  | .ZPC    | .ZPB         | .ZPC | .ZPD | 12  | stuff |
 
 Scenario: The card of someone who does not manage the company does not let it pay
   Given cgpay posts "lock" with:

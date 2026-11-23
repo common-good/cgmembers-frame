@@ -22,6 +22,7 @@ const APP_TOKEN_DAYS = 90; // a token not used for this long stops working
 const APP_CODE_SECS = 60; // life of a one-time code for opening a live page
 const APP_MFA_SECS = 600; // life of the second sign-in step
 const APP_UNLOCK_SECS = 120; // a manager's unlock of a locked token lasts this long without use
+const APP_UNLOCK_MAX_SECS = 300; // and never longer than this after the unlock
 const APP_API_VERSION = 40206; // the legacy app's version, so the device id has the current format
 
 /**
@@ -177,7 +178,7 @@ function appRow($token) {
 function appSlide($row) {
   $now = now();
   $slide = ['lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS];
-  if ((int) $row->unlockedUntil >= $now) $slide['unlockedUntil'] = $row->unlockedUntil = $now + APP_UNLOCK_SECS;
+  if ((int) $row->unlockedUntil >= $now) $slide['unlockedUntil'] = $row->unlockedUntil = min($now + APP_UNLOCK_SECS, (int) $row->unlockedAt + APP_UNLOCK_MAX_SECS);
   db\update('app_tokens', ['id' => $row->id] + $slide);
   return $row;
 }

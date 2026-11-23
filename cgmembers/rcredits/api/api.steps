@@ -129,6 +129,7 @@ function balances($list) {return t\balances($list);}
  *     MAKE appregister ALockedCashRegisterUndoesACharge
  *     TEST appregister ALockedCashRegisterDoesNotPay
  *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     TEST appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -254,6 +255,7 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST appregister ALockedCashRegisterCharges
  *     TEST appregister ALockedCashRegisterUndoesACharge
  *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     TEST appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -492,6 +494,7 @@ function testOpWith($op, $args) {
  *     TEST appregister TheTokenOwnersPasswordUnlocksTheCashRegister
  *     TEST appregister AnUnlockEndsAfterTwoMinutesWithoutUse
  *     TEST appregister AnUnlockInUseLasts
+ *     TEST appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
  *     TEST appregister LockingAgainEndsTheUnlock
  *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
  *     TEST appregister ALockedCashRegisterDoesNotPay
@@ -725,12 +728,14 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE appregister TheTokenOwnersPasswordUnlocksTheCashRegister
  *     MAKE appregister AnUnlockEndsAfterTwoMinutesWithoutUse
  *     MAKE appregister AnUnlockInUseLasts
+ *     MAKE appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
  *     MAKE appregister LockingAgainEndsTheUnlock
  *     MAKE appregister AnUnlockedCashRegisterCanBeLetGo
  *     MAKE appregister ALockedCashRegisterCharges
  *     MAKE appregister ALockedCashRegisterUndoesACharge
  *     MAKE appregister ALockedCashRegisterDoesNotPay
  *     MAKE appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     MAKE appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
  *     MAKE appregister AManagersProofMadeWithAnotherCardDoesNotLetItPay
  *     MAKE appregister ACashRegisterActsOnlyForItsCompany
@@ -892,6 +897,7 @@ function thisServerIsDemo() {
  *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
  *     MAKE appregister ATestCardDoesNotUnlockARealCashRegister
  *     MAKE appregister ACardDoesNotUnlockATokenThatIsNotLocked
+ *     MAKE appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function varIsTheCardOf($var, $kind, $who) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -1004,6 +1010,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
  *     MAKE appregister AnUnlockEndsAfterTwoMinutesWithoutUse
  *     MAKE appregister AnUnlockInUseLasts
+ *     MAKE appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
  */
 function theTimeNowIs($tm) {return t\timeIs($tm);}
 

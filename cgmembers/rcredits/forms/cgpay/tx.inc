@@ -13,11 +13,13 @@ require_once __DIR__ . '/token.inc';
  *   200 {ok, message} as from /api/transactions; 400 (plain text) a malformed transaction; 401 {error: bad-token}; 403 {error: bad-actor | locked}
  */
 function cgpayTx() {
+  global $mya;
   if (($in = appIn()) === FALSE) return;
   if (!$row = appRow(nni($in, 'token'))) return;
   $p = just('actorId otherId amount description created proof tip', $in, '') + ['version' => APP_API_VERSION, 'deviceId' => 'token'];
   foreach (ray('offline pending') as $k) $p[$k] = nni($in, $k) ? 'true' : 'false';
   if (!appActor($row, $p['actorId'], $p)) return;
+  if ($by = appSigner($row, $p, $in)) appAs($row, r\acct($mya->id, $by)); // the manager is the payment's agent
   if (($co = appLocked($row)) and !appRegisterMay($co, $p, $in)) {
     $msg = t('This device is a cash register. Only a manager can pay from it.');
     if ($p['offline'] == 'true') keepBadTx(getAcct((string) $p['otherId'], FALSE, FALSE), ['offline' => TRUE] + $p, $msg);
@@ -31,13 +33,31 @@ function cgpayTx() {
  * or a payment a manager of the company made after unlocking it with their card offline ($in's manager and managerProof, see cgpayTx).
  */
 function appRegisterMay($co, $p, $in) {
-  extract(just('actorId otherId amount created proof', $p));
+  extract(just('amount proof', $p));
   if ($amount > 0) return TRUE;
-  $proofOf = function ($amt, $code) use ($actorId, $otherId, $created) {$s = $actorId . number_format($amt, 2, '.', '') . $otherId . $code . $created; return test() ? $s : u\hash($s);};
-  if (!$other = getAcct((string) $otherId, FALSE, FALSE)) return FALSE;
-  if ($proof === $proofOf(-$amount, $other->cardCode())) return TRUE;
+  if (!$other = getAcct((string) $p['otherId'], FALSE, FALSE)) return FALSE;
+  if (hash_equals(appProof($p, -$amount, $other->cardCode()), (string) $proof)) return TRUE;
   if (!$m = getAcct((string) nni($in, 'manager'), FALSE) or !appManages($m->agentId, $co)) return FALSE;
-  return nni($in, 'managerProof') === $proofOf($amount, $m->cardCode());
+  return appManagerProofOk($p, $in, $m);
+}
+
+/**
+ * The proof of a transaction ($p) for amount $amt, made with card code $code, as /api/transactions makes it.
+ */
+function appProof($p, $amt, $code) {
+  $s = $p['actorId'] . number_format($amt, 2, '.', '') . $p['otherId'] . $code . $p['created'];
+  return test() ? $s : u\hash($s);
+}
+
+function appManagerProofOk($p, $in, $m) {return hash_equals(appProof($p, $p['amount'], $m->cardCode()), (string) nni($in, 'managerProof'));}
+
+/**
+ * The manager to record as the agent of a cash register's payment: the one whose card proof came with it, else the one whose unlock is on (0 if none).
+ */
+function appSigner($row, $p, $in) {
+  if (!$row->lockedTo or $p['amount'] >= 0) return 0;
+  if ($m = getAcct((string) nni($in, 'manager'), FALSE) and appManages($m->agentId, $row->lockedTo) and appManagerProofOk($p, $in, $m)) return (int) $m->agentId;
+  return appLocked($row) ? 0 : (int) $row->unlockedBy;
 }
 
 /**
@@ -59,7 +79,12 @@ function appActor($row, $actorId, $tx = NULL) {
     }
     appErr('bad-actor', X_FORBIDDEN); return FALSE;
   }
+  appAs($row, $a);
+  return TRUE;
+}
+
+function appAs($row, $a) {
+  global $mya;
   $mya = $a;
   $a->boxId($row->deviceHash ?: "app$row->id", APP_API_VERSION);
-  return TRUE;
 }
