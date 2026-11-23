@@ -255,7 +255,7 @@ function doit(what, vs) {
     window.addEventListener('load', () => { // stripe.js loads after this script
       const ucStripe = Stripe(vs['stripePublicKey']);
       const ucSecret = $('#edit-secret').val();
-      const ucCard = ucStripe.elements().create('card'); // card only (the payment element also offers bank payments)
+      const ucCard = ucStripe.elements().create('card', { disableLink:true }); // card only, no Link (the payment element also offers bank payments)
       const ucErr = $('#edit-paymentErr .control-data');
       const ucForm = $('#edit-payment').closest('form')[0];
       ucCard.mount('#edit-payment .control-data');
