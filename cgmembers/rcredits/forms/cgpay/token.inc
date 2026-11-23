@@ -114,13 +114,15 @@ function appMember($uid) {
 
 /**
  * Return one account as the app keeps it: uid, name, isCo, photo (a data URL of the thumbnail, so it shows offline, or NULL),
- * and device (the credentials the transaction screens use, or NULL if the account can't use the app yet).
+ * and device (what the transaction screens need: the account's ids and QR, or NULL if the account can't use the app yet).
+ * The old app's deviceId and cardCode stay off the phone: the app's transactions go with its token (see /cgpay/tx).
  */
 function appAccount($id, $agent, $name = '') {
   include_once R_ROOT . '/forms/api.inc';
   if (!$a = r\acct($id, $agent)) return NULL;
   $photo = $a->thumb ? 'data:image/jpeg;base64,' . base64_encode($a->thumb) : NULL;
-  return ['uid' => (int) $id, 'name' => $name ?: $a->bestName, 'isCo' => (bool) $a->co, 'photo' => $photo, 'device' => accountInfo($a, $a->fullName, APP_API_VERSION)];
+  $device = accountInfo($a, $a->fullName, APP_API_VERSION);
+  return ['uid' => (int) $id, 'name' => $name ?: $a->bestName, 'isCo' => (bool) $a->co, 'photo' => $photo, 'device' => $device ? just('accountId qr isCo name selling real', $device) : NULL];
 }
 
 /**
