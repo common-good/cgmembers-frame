@@ -77,3 +77,12 @@ Scenario: A company agent clicks the dashboard tab
   Then we redirect to "%CGPAY_URL"
 #  Then we show "You: Corner Pub" with:
 #  | Balance       | $365 |
+
+# Rule: an admin acting for a member gets the admin summary, except through its Simple Dashboard button
+Scenario: An admin acting for a member clicks the dashboard tab
+  When member "A:1" visits page "dashboard"
+  Then we redirect to "sadmin/summary"
+
+Scenario: An admin acting for a member clicks Simple Dashboard
+  When member "A:1" visits page "dashboard/simple"
+  Then we redirect to "%CGPAY_URL"

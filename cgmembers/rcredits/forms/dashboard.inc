@@ -18,11 +18,11 @@ function formDashboard($form, &$sta, $args = '') {
   global $mya; $myid = $mya->id;
   // Admin acting on someone else's account: show the admin summary so they don't
   // accidentally adjust settings on their own account via the member-view dashboard.
-  // (The "Simple Dashboard" button on /sadmin/summary links directly to CGPAY_URL to
-  // reach the node dashboard - no /dashboard round-trip needed.) Admins in their own
-  // account (proSe) fall through to CGPAY_URL like any other member. Per William,
-  // 2026-09-24.
-  if ($mya->admSeeAccts and !$mya->proSe) return go('/sadmin/summary');
+  // The "Simple Dashboard" button on /sadmin/summary links to CGPAY_URL, or to
+  // /dashboard/simple (this dashboard, past this redirect) when CGPAY_URL is empty.
+  // Admins in their own account (proSe) fall through to CGPAY_URL like any other
+  // member. Per William, 2026-09-24.
+  if ($mya->admSeeAccts and !$mya->proSe and $args != 'simple') return go('/sadmin/summary');
 
   if (CGPAY_URL) return go(CGPAY_URL);
 
