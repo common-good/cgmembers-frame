@@ -83,10 +83,12 @@ function cgpaySso() {
   // session_id() now holds the cookie value the browser will send back to demo
   // to authenticate as this user. Drupal writes it to both sid and ssid on
   // HTTPS-only sites.
+  $appToken = (int) nni($body, 'tokenId') ?: NULL; // the store app's token this session comes from (see appGate())
+  if ($appToken) $_SESSION[SVAR_HEADER . 'appToken'] = serialize($appToken);
   $cookieVal = session_id();
-  if ($acct != $uid) { // whoami reads the account from sessions.acct, which Drupal does not write: save the session now, then add it
+  if ($acct != $uid or $appToken) { // whoami reads these from the sessions row, which Drupal does not write: save the session now, then add them
     drupal_session_commit();
-    db\q('UPDATE sessions SET acct=:acct WHERE sid=:s OR ssid=:s', ['acct' => $acct, 's' => $cookieVal]);
+    db\q('UPDATE sessions SET acct=:acct, appToken=:appToken WHERE sid=:s OR ssid=:s', ['acct' => $acct, 'appToken' => $appToken, 's' => $cookieVal]);
   }
 
   // Create a fresh `box-<QID>` device record + cookie. Acct::boxId() normally

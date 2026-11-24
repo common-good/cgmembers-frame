@@ -481,7 +481,8 @@ function resetTestAccts($uidMin, $uidMax) {
  *   initialize (): puts the standard test accounts (.ZPA to .ZPI) and the rows scenarios add for them back to the starting state
  *   clear (): removes all test data
  *   insert (table, [{keyedValues}]) where the first keyed value is the record key
- *   update (table, {keyedValues}) where the first keyed value is the record key
+ *   update (table, {keyedValues}) where the first keyed value is the record key (users, or app_tokens by uid)
+ *   relate (rows: [{main, other, permission}]) relate test accounts (permission is a name in B_PERMISSIONS, like manage)
  *   rows (fieldList, table) -> [[values]]
  *     where fieldList is '*' --  eventually maybe a comma-separated list of fields or aggregates such as COUNT(*) or SUM(amt)
 */
@@ -531,7 +532,7 @@ function testops($params) {
 
     case 'update':
       foreach (ray('table keyedValues') as $k) if (!$$k = nni($params, $k)) return exitJust(X_SYNTAX);
-      if (!in($table, 'users')) return exitJust(X_SYNTAX);
+      if (!in($table, 'users app_tokens')) return exitJust(X_SYNTAX);
       if (!$ray = json_decode($keyedValues)) return exitJust(X_SYNTAX);
       $special = SECURE_FLDS . ' ' . VSECURE_FLDS; // encrypted fields (bankAccount, for example) go through the account object
       foreach ($ray as $row) {
@@ -541,6 +542,17 @@ function testops($params) {
       }
       break;
       
+    case 'relate': // initialize removes these relations again
+      if (!$rows = json_decode((string) nni($params, 'rows'))) return exitJust(X_SYNTAX);
+      foreach ($rows as $row) {
+        extract(just('main other permission', (array) $row, NULL));
+        foreach ([$main, $other] as $uid) if (!db\exists('users', "uid=:uid AND uid $uidCrit", compact('uid'))) return exitJust(X_SYNTAX);
+        if (($perm = array_search($permission, ray(B_PERMISSIONS))) === FALSE) return exitJust(X_SYNTAX);
+        $otherNum = db\max('otherNum', 'u_relations', 'main=:main', compact('main')) + 1;
+        r\acct($main)->newRelation(ray('other permission otherNum', $other, $perm, $otherNum));
+      }
+      break;
+
     default: return exitJust(X_SYNTAX);
   }
   return exitJson('', X_OK);

@@ -2123,6 +2123,11 @@ function drupal_bootstrap() {
     if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
   }
 
+  if ($mya and $appToken = w\svar('appToken')) { // a session opened from the store app ends when the app's token no longer allows it
+    require_once R_ROOT . '/forms/cgpay/token.inc';
+    w\appGate($appToken);
+  }
+
   global $channel; $channel = TX_WEB; // assume web unless this gets set otherwise downstream
 
   return DRUPAL_BOOTSTRAP_FULL;
