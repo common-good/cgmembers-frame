@@ -73,7 +73,7 @@ function formTx($form, &$sta, $type, $args = '') {
   
   $admin = $mya->admNonmemberTx;
   list ($byDft, $byCheck) = [B_ACH, B_CHECK];
-  $porch = basename($_SERVER['REQUEST_URI']); // pay or charge (or dashboard, but that's going away soon)
+  $porch = $type == 'both' ? 'dashboard' : $type; // from the form type, not the URL: the JS shows the charge form for any porch but dashboard or pay (/dashboard/simple)
 
   jsx('tx', compact(ray('porch field question selfErr payDesc chargeDesc fbo admin hasCats byDft byCheck')));
   
