@@ -67,7 +67,7 @@ namespace :deploy do
   desc 'Hit the site (rebuilds the menu if it changed) and warn if the /cgpay routes are missing'
   task :check_menu do
     on roles(:app) do
-      url = "https://#{subdomain}.commongood.earth"
+      url = "https://#{subdomain == 'main' ? 'members' : subdomain}.commongood.earth" # main. only redirects to members.
       execute :curl, "-s -o /dev/null -m 60 #{url}/", raise_on_non_zero_exit: false
       code = capture(:curl, "-s -o /dev/null -m 30 -w '%{http_code}' -X POST #{url}/cgpay/whoami", raise_on_non_zero_exit: false).to_s.strip
       warn "WARNING: #{url}/cgpay/whoami returned #{code}, expected 401. The menu may be stale (try /sadmin/util/reset-menu)." unless code == "401"
