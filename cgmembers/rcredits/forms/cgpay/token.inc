@@ -8,16 +8,21 @@ use CG\Util as u;
 
 /**
  * @file
- * Shared code of the store app's token sign-in endpoints (/cgpay/signin, mfa, device, account, enter, redeem, unlock, revoke).
+ * Shared code of the store app's token sign-in endpoints (/cgpay/signin, mfa, device, account, enter, redeem, lock, unlock, revoke).
  *
  * The app signs in once and keeps a revocable token (only its sha256 is stored, in app_tokens). Every call
  * comes from the node server (X-CG-Internal-Token, like /cgpay/sso), never from the browser. Errors are JSON
  * {"error": "<code>"} so the app can word them itself.
+ *
+ * A token can be locked to a company the member manages (the app as a cash register, see /cgpay/lock): it then works for
+ * that company only, and opens nothing else (no live pages, no other accounts) until a manager unlocks it for a while (/cgpay/unlock).
  */
 
 const APP_TOKEN_DAYS = 90; // a token not used for this long stops working
 const APP_CODE_SECS = 60; // life of a one-time code for opening a live page
 const APP_MFA_SECS = 600; // life of the second sign-in step
+const APP_UNLOCK_SECS = 120; // a manager's unlock of a locked token lasts this long without use
+const APP_UNLOCK_MAX_SECS = 300; // and never longer than this after the unlock
 const APP_API_VERSION = 40206; // the legacy app's version, so the device id has the current format
 
 /**
@@ -104,13 +109,35 @@ function appIssue($uid, $label, $deviceKey, $trust, $actFor = NULL) {
 }
 
 /**
- * Return what the app keeps about the member: uid, whether they switch accounts by typing (admins), and the accounts they may act for.
+ * Return what the app keeps about the member: uid, name (a locked cash register names whose password unlocks it), whether they switch accounts by typing (admins), the accounts they may act for
+ * (companies only if they manage them), and lockedTo (the company a locked token works for, or 0). A locked token gets just that company (see appOnly()).
  */
-function appMember($uid) {
+function appMember($uid, $row = NULL) {
   $accounts = [];
-  foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) if ($one = appAccount($id, $uid, $name)) $accounts[] = $one;
-  return ['uid' => (int) $uid, 'admin' => (bool) r\acct($uid)->admSeeAccts, 'accounts' => $accounts];
+  $locked = appLocked($row);
+  if ($only = appOnly($row)) {
+    if ($one = appAccount($only, $uid)) $accounts[] = $one;
+  } else foreach (be\accountChoices(r\acct($uid), B_BUY, 'u.:IS_OK', TRUE) ?: [] as $id => $name) {
+    if ((!r\acct($id)->co or appManages($uid, $id)) and $one = appAccount($id, $uid, $name)) $accounts[] = $one;
+  }
+  return ['uid' => (int) $uid, 'name' => r\acct($uid)->fullName, 'admin' => !$only && r\acct($uid)->admSeeAccts, 'accounts' => $accounts, 'lockedTo' => $locked];
 }
+
+/**
+ * Return the company the token is locked to, if it is locked now (not within a manager's unlock), else 0.
+ */
+function appLocked($row) {return ($row and $row->lockedTo and (int) $row->unlockedUntil < now()) ? (int) $row->lockedTo : 0;}
+
+/**
+ * Return the one account the token reaches, or 0 if not limited to one: a locked token reaches only its company, and so does one unlocked by
+ * another manager than the token's member (only the member's own password or card opens the member's other accounts).
+ */
+function appOnly($row) {return ($row and $row->lockedTo and (appLocked($row) or $row->unlockedBy != $row->uid)) ? (int) $row->lockedTo : 0;}
+
+/**
+ * Return whether the member manages the company (the "manage" permission, or an admin's equivalent): only a manager may make the app the company's cash register.
+ */
+function appManages($uid, $id) {return ($a = r\acct($id, $uid) and $a->can(B_MANAGE));}
 
 /**
  * Return one account as the app keeps it: uid, name, isCo, photo (a data URL of the thumbnail, so it shows offline, or NULL),
@@ -131,6 +158,7 @@ function appAccount($id, $agent, $name = '') {
 function appMayAct($uid, $id) {
   if ($id == $uid) return TRUE;
   if (!$a = r\acct($id, $uid)) return FALSE;
+  if ($a->co) return $a->can(B_MANAGE); // the app acts for a company only as its manager (see appManages())
   return $a->can() or ($a->admin and ($a->admRegion or $a->community == $a->agentA->community));
 }
 
@@ -141,9 +169,46 @@ function appRow($token) {
   $now = now();
   $row = appTagOk((string) $token) ? db\row('app_tokens', 'tokenHash=:h AND revoked IS NULL AND expires>:now', ['h' => appHash($token), 'now' => $now]) : NULL;
   if (!$row) {appErr('bad-token', X_UNAUTH); return FALSE;}
-  db\update('app_tokens', ['id' => $row->id, 'lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS]);
+  return appSlide($row);
+}
+
+/**
+ * Slide the token's expiry (and a manager's unlock) forward, since it is in use, and return the row.
+ */
+function appSlide($row) {
+  $now = now();
+  $slide = ['lastUsed' => $now, 'expires' => $now + APP_TOKEN_DAYS * DAY_SECS];
+  if ((int) $row->unlockedUntil >= $now) $slide['unlockedUntil'] = $row->unlockedUntil = min($now + APP_UNLOCK_SECS, (int) $row->unlockedAt + APP_UNLOCK_MAX_SECS);
+  db\update('app_tokens', ['id' => $row->id] + $slide);
   return $row;
 }
+
+/**
+ * Return the token a live-site session was opened from (app_tokens.id), slid forward; or NULL if the session must end:
+ * the token no longer works, or it is a cash register that has locked again (unused for APP_UNLOCK_SECS, or locked by the app).
+ */
+function appSessionRow($id) {
+  $row = db\row('app_tokens', 'id=:id AND revoked IS NULL AND expires>:now', ['id' => $id, 'now' => now()]);
+  return ($row and !appLocked($row)) ? appSlide($row) : NULL;
+}
+
+/**
+ * End this live-site session if it was opened from an app token that no longer allows it (see appSessionRow()), and send the page back to the app.
+ * Called on every live-site page of a session opened from the app.
+ */
+function appGate($id) {
+  if (appSessionRow($id)) return;
+  db\del('sessions', 'ssid', session_id());
+  session_unset();
+  r\setAcct(NULL);
+  header('Location: ' . (CGPAY_URL ?: '/'));
+  exit();
+}
+
+/**
+ * Return the one account this live-site session may act for (a cash register's company, see appOnly()), or 0 if it is not limited.
+ */
+function appSessionOnly() {return ($id = w\svar('appToken')) ? appOnly(appSessionRow($id)) : 0;}
 
 /**
  * Mark a one-time value used (kept with the one-time codes, by hash) and return whether this call was the first to use it.

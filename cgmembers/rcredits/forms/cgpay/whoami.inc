@@ -43,6 +43,12 @@ function cgpayWhoami() {
   // Fall back to uid when acct hasn't been written yet (fresh session).
   $row = db\row('sessions', 'ssid=:sid', ['sid' => $ssid]);
   if (!$row) return exitJust(X_UNAUTH);
+  $register = FALSE;
+  if ($row->appToken) { // opened from the store app: it lasts only while the app's token allows it (see appGate())
+    require_once __DIR__ . '/token.inc';
+    if (!$t = appSessionRow($row->appToken)) {db\del('sessions', 'ssid', $ssid); return exitJust(X_UNAUTH);}
+    $register = (bool) $t->lockedTo;
+  }
   $uid = (int) ($row->acct ?? 0) ?: (int) ($row->uid ?? 0);
   if (!$uid) return exitJust(X_UNAUTH);
 
@@ -63,5 +69,6 @@ function cgpayWhoami() {
     'sponsored' => (bool) $a->sponsored,
     'admin'     => $isAdmin,
     'menu'      => $menu,
+    'register'  => $register, // a cash register's session: it cannot change account, and ends when the register locks again
   ], X_OK);
 }

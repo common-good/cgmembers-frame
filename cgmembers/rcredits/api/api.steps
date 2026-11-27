@@ -61,6 +61,7 @@ function extraSetup() {
  *     MAKE identity TheAppAsksToIdentifyACustomerAsTheSoleLegacyAgentOfACompany
  *     MAKE identity TheAppAsksToIdentifyACustomerAsOneOfSeveralLegacyAgentsOfACompany
  *     MAKE apptx Setup
+ *     MAKE appregister Setup
  */
 function members($list) {return t\members($list);}
 
@@ -119,6 +120,16 @@ function balances($list) {return t\balances($list);}
  *     TEST apptx ATransactionWithAWrongProofIsRefused
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     TEST apptx TheAppSendsAnOfflinePaymentTheTokensMemberMayNotMake
+ *     MAKE appregister Setup
+ *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
+ *     TEST appregister ALockedTokenCannotUnlockItself
+ *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
+ *     TEST appregister ALockedCashRegisterCharges
+ *     MAKE appregister ALockedCashRegisterUndoesACharge
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     TEST appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -241,6 +252,10 @@ function appPostsWith($url, $params) {return appGetsWith($url, $params, 'post');
  *     TEST apptx TheAppSendsAnOfflineChargeToAnAccountClosedSince
  *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx TheAppIdentifiesACustomer
+ *     TEST appregister ALockedCashRegisterCharges
+ *     TEST appregister ALockedCashRegisterUndoesACharge
+ *     TEST appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     TEST appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function weReplyWithJSON($wantStatus, $want) {return weReplyWith($wantStatus, $want, TRUE);}
 
@@ -379,6 +394,7 @@ function memberStepsLeft($id, $left0) { return t\stepsLeft($id, $left0); }
  *     MAKE appcard Setup
  *     MAKE appsignin Setup
  *     TEST test TheAppAsksToInitializeTheTestData
+ *     MAKE appregister Setup
  */
 function memberHasStepsDone($id, $task, $steps) {return t\hasStepsDone($id, $task, $steps);}
 
@@ -459,6 +475,32 @@ function testOpWith($op, $args) {
  *     TEST apptx TheAppIdentifiesACustomerForAnotherMembersAccount
  *     TEST apptx TheAppShowsACustomersPhoto
  *     TEST apptx TheAppAsksForAPhotoWithoutTheCardsCode
+ *     TEST appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
+ *     TEST appregister APersonalAccountCannotBeACashRegister
+ *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
+ *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
+ *     TEST appregister ALockedTokenOpensNoLivePage
+ *     TEST appregister ALockedTokenCannotFetchAnotherAccount
+ *     TEST appregister ALockedTokenCannotUnlockItself
+ *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     TEST appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     TEST appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     TEST appregister TheTokenOwnersOwnCardUnlocksEverything
+ *     TEST appregister ACompanyCardOfAManagerUnlocksTheCashRegister
+ *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
+ *     TEST appregister ATestCardDoesNotUnlockARealCashRegister
+ *     TEST appregister ACardDoesNotUnlockATokenThatIsNotLocked
+ *     TEST appregister TheTokenOwnersPasswordUnlocksTheCashRegister
+ *     TEST appregister AnUnlockEndsAfterTwoMinutesWithoutUse
+ *     TEST appregister AnUnlockInUseLasts
+ *     TEST appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
+ *     TEST appregister LockingAgainEndsTheUnlock
+ *     TEST appregister AnUnlockedCashRegisterCanBeLetGo
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     TEST appregister AManagersProofMadeWithAnotherCardDoesNotLetItPay
+ *     TEST appregister ACashRegisterActsOnlyForItsCompany
  */
 function weReplyWithJSONValues($wantStatus, $want) {
   global $testOnly, $testVars; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
@@ -509,6 +551,10 @@ function weReplyWithJSONValues($wantStatus, $want) {
  *     TEST apptx TheAppSendsAChargeToAClosedAccountWhileOnline
  *     TEST apptx ATokenActingAsAnotherMembersAgentIsRefused
  *     TEST apptx AnAdminActingForACompanyTheyHaveNoRelationWithIsRefused
+ *     TEST appregister ALockedTokenOpensNoLivePage
+ *     TEST appregister ALockedCashRegisterDoesNotPay
+ *     TEST appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     TEST appregister ACashRegisterActsOnlyForItsCompany
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -660,6 +706,39 @@ function sessionBelongsToMember($sid, $id) {
  *     MAKE apptx TheAppIdentifiesACustomerForAnotherMembersAccount
  *     MAKE apptx TheAppShowsACustomersPhoto
  *     MAKE apptx TheAppAsksForAPhotoWithoutTheCardsCode
+ *     MAKE appregister Setup
+ *     MAKE appregister AManagerGetsTheCompanyWithTheirOwnAccount
+ *     MAKE appregister SomeoneWhoMayBuyForACompanyButNotManageItDoesNotGetTheCompany
+ *     MAKE appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
+ *     MAKE appregister APersonalAccountCannotBeACashRegister
+ *     MAKE appregister AManagerMakesTheAppTheCompanysCashRegister
+ *     MAKE appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
+ *     MAKE appregister ALockedTokenOpensNoLivePage
+ *     MAKE appregister ALockedTokenCannotFetchAnotherAccount
+ *     MAKE appregister ALockedTokenCannotUnlockItself
+ *     MAKE appregister AnotherManagersCardUnlocksTheCashRegister
+ *     MAKE appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     MAKE appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     MAKE appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     MAKE appregister TheTokenOwnersOwnCardUnlocksEverything
+ *     MAKE appregister ACompanyCardOfAManagerUnlocksTheCashRegister
+ *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
+ *     MAKE appregister ATestCardDoesNotUnlockARealCashRegister
+ *     MAKE appregister ACardDoesNotUnlockATokenThatIsNotLocked
+ *     MAKE appregister TheTokenOwnersPasswordUnlocksTheCashRegister
+ *     MAKE appregister AnUnlockEndsAfterTwoMinutesWithoutUse
+ *     MAKE appregister AnUnlockInUseLasts
+ *     MAKE appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
+ *     MAKE appregister LockingAgainEndsTheUnlock
+ *     MAKE appregister AnUnlockedCashRegisterCanBeLetGo
+ *     MAKE appregister ALockedCashRegisterCharges
+ *     MAKE appregister ALockedCashRegisterUndoesACharge
+ *     MAKE appregister ALockedCashRegisterDoesNotPay
+ *     MAKE appregister AManagersCardLetsALockedCashRegisterPayOffline
+ *     MAKE appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
+ *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotLetItPay
+ *     MAKE appregister AManagersProofMadeWithAnotherCardDoesNotLetItPay
+ *     MAKE appregister ACashRegisterActsOnlyForItsCompany
  */
 function cgpayPostsWith($op, $args) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -731,6 +810,9 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
  *     MAKE appsignin TheRightPasswordUnlocks
  *     MAKE appsignin AWrongPasswordDoesNotUnlock
  *     MAKE appdemo ADemoAccountIsMarkedForThePurge
+ *     MAKE appregister Setup
+ *     MAKE appregister SomeoneWhoMayBuyForACompanyButNotManageItDoesNotGetTheCompany
+ *     MAKE appregister SomeoneWhoDoesNotManageTheCompanyCannotMakeTheAppItsCashRegister
  */
 function replyIsKeptAsVar($field, $var) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -806,6 +888,16 @@ function thisServerIsDemo() {
  *     MAKE appcard SkippingMFAIsIgnoredAnywhereButDemo
  *     MAKE appcard ATestCardIsRefusedAnywhereButDemo
  *     MAKE appcard ARealCardIsRefusedOnDemo
+ *     MAKE appregister AnotherManagersCardUnlocksTheCashRegister
+ *     MAKE appregister AnotherManagersUnlockOpensTheCompanysLivePage
+ *     MAKE appregister AnotherManagersUnlockOpensNoneOfTheTokenOwnersOtherAccounts
+ *     MAKE appregister AnotherManagersUnlockCannotLetTheCashRegisterGo
+ *     MAKE appregister TheTokenOwnersOwnCardUnlocksEverything
+ *     MAKE appregister ACompanyCardOfAManagerUnlocksTheCashRegister
+ *     MAKE appregister TheCardOfSomeoneWhoDoesNotManageTheCompanyDoesNotUnlock
+ *     MAKE appregister ATestCardDoesNotUnlockARealCashRegister
+ *     MAKE appregister ACardDoesNotUnlockATokenThatIsNotLocked
+ *     MAKE appregister APaymentFromAnUnlockedCashRegisterNamesTheManagerWhoUnlockedIt
  */
 function varIsTheCardOf($var, $kind, $who) {
   global $testOnly, $testVars; if ($testOnly) return FALSE;
@@ -916,8 +1008,28 @@ function memberOnetimePasswordIs($id, $pass) {
  *     MAKE appsignin ATokenNotUsedForDaysStopsWorking
  *     MAKE appsignin ATokenInUseKeepsWorkingPastDays
  *     MAKE appsignin AOnetimeCodeExpiresAfterAMinute
+ *     MAKE appregister AnUnlockEndsAfterTwoMinutesWithoutUse
+ *     MAKE appregister AnUnlockInUseLasts
+ *     MAKE appregister AnUnlockInUseEndsFiveMinutesAfterItBegan
  */
 function theTimeNowIs($tm) {return t\timeIs($tm);}
+
+/**
+ * reply list (ARG) is: (ARG)
+ *
+ * in: TEST appregister AManagerGetsTheCompanyWithTheirOwnAccount
+ *     TEST appregister SomeoneWhoMayBuyForACompanyButNotManageItDoesNotGetTheCompany
+ *     TEST appregister AManagerMakesTheAppTheCompanysCashRegister
+ *     TEST appregister ALockedTokenGetsOnlyTheCompanysCredentialsAndItsMembersName
+ *     TEST appregister AnotherManagersCardUnlocksTheCashRegister
+ *     TEST appregister TheTokenOwnersOwnCardUnlocksEverything
+ */
+function replyListIs($field, $want) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $got = nni(json_decode(t\getExitMsg(), TRUE) ?: [], $field) ?: [];
+  if (count($got) != count($want)) return t\output("$field has " . count($got) . ' items, not ' . count($want) . ': ' . pr($got)) and FALSE;
+  return replyListIncludes($field, $want);
+}
 
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
