@@ -304,7 +304,7 @@ function transactions($params) {
     return badTx($a, $params, t('bad proof'), X_SYNTAX);
   }
   
-  $goods = FOR_GOODS; $selfhelp = FALSE;
+  $goods = nni($params, 'cash') ? FOR_USD : FOR_GOODS; $selfhelp = FALSE; // cash: an exchange for cash (only from the store app)
   $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
   
   if ($proofOkUndo) { // reversing (no effort is made to Undo in real time, so all reversals are offline-agnostic)
