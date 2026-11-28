@@ -167,6 +167,7 @@ function myQr($a) {
  *   agent: the name of the person acting on behalf of a company (empty for an individual account)
  *   location: the account’s city, state
  *   limit: the maximum amount this account can be charged at this time
+ *   cashLimit: the maximum it can be charged for cash (credit lines and gift credit do not count)
  *   selling: the account's list of transaction descriptions
  *   isell: the device owner's list of transaction descriptions
  */
@@ -183,6 +184,7 @@ function identity($params) {
   $big = 999999999;
   $limit = round($big - $a->shortfall(FOR_GOODS, $big, FALSE, $mya), 2);
   if ($limit > 0) $limit = round($limit - be\handleSurTx($zot, obj(), $a, $mya, $limit, FALSE, TRUE), 2);
+  $cashLimit = min($limit, round($big - $a->shortfall(FOR_USD, $big, FALSE, $mya), 2)); // no rules apply to cash
   $creditLine = 0 - $a->floor; // "0 -" to prevent -0
   $avgs = r\averageBalance($a->id, today(u\plusMonths(-6))); // based on 6 months even if member is new
   $avgBalance = round($avgs[0], 2);
@@ -191,7 +193,7 @@ function identity($params) {
   $selling = explode("\n", $a->selling ?: '');
   $isell = explode("\n", $mya->selling ?: '');
 
-  return exitJson(compact(ray('name agent location limit creditLine avgBalance trustRatio since selling isell')));
+  return exitJson(compact(ray('name agent location limit cashLimit creditLine avgBalance trustRatio since selling isell')));
 }
 
 /**
@@ -304,7 +306,7 @@ function transactions($params) {
     return badTx($a, $params, t('bad proof'), X_SYNTAX);
   }
   
-  $goods = FOR_GOODS; $selfhelp = FALSE;
+  $goods = nni($params, 'cash') ? FOR_USD : FOR_GOODS; $selfhelp = FALSE; // cash: an exchange for cash (only from the store app)
   $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
   
   if ($proofOkUndo) { // reversing (no effort is made to Undo in real time, so all reversals are offline-agnostic)
