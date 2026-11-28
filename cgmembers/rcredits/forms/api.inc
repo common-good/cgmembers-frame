@@ -348,7 +348,8 @@ function transactions($params) {
   }
   
   if (!$z->ok and $offline) return badTx($a, $params, $z->msg);
-  return exitJson(ray('ok message', $z->ok, $selfhelp ? 'selfhelp tx' : $z->msg), X_OK);
+  $balance = ($z->ok and !$pending and !$a->secret) ? ['balance' => round($a->balance, 2)] : []; // the other account's new balance, for the cashier to tell a customer who has only a card
+  return exitJson(ray('ok message', $z->ok, $selfhelp ? 'selfhelp tx' : $z->msg) + $balance, X_OK);
 }
 
 /**
