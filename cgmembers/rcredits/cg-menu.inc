@@ -270,6 +270,7 @@ function menu($submenu = '') {
     'cgpay/redeem' => ['call', 'CGPay Redeem', '', ANY, 'cgpayRedeem'], // server-to-server: one-time code -> uid and page (single use)
     'cgpay/revoke' => ['call', 'CGPay Revoke', '', ANY, 'cgpayRevoke'], // server-to-server: store app sign-out (one device or everywhere)
     'cgpay/identity' => ['call', 'CGPay Identity', '', ANY, 'cgpayIdentity'], // server-to-server: store app token -> the scanned account's name, location and limit
+    'cgpay/feedback' => ['call', 'CGPay Feedback', '', ANY, 'cgpayFeedback'], // server-to-server: a member's feedback from the store app (token, with the app's log) or node's website form (uid)
     'cgpay/photo' => ['call', 'CGPay Photo', '', ANY, 'cgpayPhoto'], // server-to-server: store app token -> the scanned account's photo
     'cgpay/tx' => ['call', 'CGPay Tx', '', ANY, 'cgpayTx'], // server-to-server: store app token -> a transaction (or its undo), as /api/transactions
     'cc' => ['call', 'Credit Card Donation', 'Pay 1', ANY],

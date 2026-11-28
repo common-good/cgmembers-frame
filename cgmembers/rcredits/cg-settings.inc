@@ -11,6 +11,7 @@ const HANDOFF_ORIGINS = ['https://cgpay.commongood.earth']; // legacy app origin
 const ADMIN_NAME = 'William Spademan';
 const SIGNATORY = 'Jose Cruz, Executive Director';
 const R_ADMIN_EMAIL = 'info@CommonGood.earth'; // regional admin email
+const TECH_EMAIL = 'tech@CommonGood.earth'; // the tech team: app logs sent with feedback
 const R_ADMIN_PHONE = '+14136281957';
 const R_REGION_EIN = '46-1821792';
 
