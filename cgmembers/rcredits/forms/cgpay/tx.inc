@@ -9,12 +9,14 @@ require_once __DIR__ . '/token.inc';
 /**
  * /cgpay/tx: the store app sends a transaction (or the undo of one) with its token, instead of the old API's device id.
  *   body: {token, actorId, otherId, amount, description, created, proof, offline, pending, tip, manager, managerProof}; the fields and the proof are those of /api/transactions.
+ *   dupOk: the app asked whether a repeat of a recent transaction (same account, same amount) was meant, and the member said yes.
  *   manager, managerProof: a locked cash register's payment, made after a manager's card unlocked it offline: the card's account id, and the proof made with that card's code instead of the other's.
  *   200 {ok, message} as from /api/transactions; 400 (plain text) a malformed transaction; 401 {error: bad-token}; 403 {error: bad-actor | locked}
  */
 function cgpayTx() {
-  global $mya;
+  global $mya, $allowDupTxs;
   if (($in = appIn()) === FALSE) return;
+  if (nni($in, 'dupOk')) $allowDupTxs = TRUE; // the app warned of a likely duplicate and the member went ahead
   if (!$row = appRow(nni($in, 'token'))) return;
   $p = just('actorId otherId amount description created proof tip', $in, '') + ['version' => APP_API_VERSION, 'deviceId' => 'token'];
   foreach (ray('offline pending') as $k) $p[$k] = nni($in, $k) ? 'true' : 'false';
